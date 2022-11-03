@@ -1,0 +1,42 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "noImplicitAny": true,
+    "module": "es6",
+    "target": "es5",
+    "jsx": "react",
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "Node",
+    "baseUrl": "src",
+    "paths": {
+      "@config/*": [
+        "config/*"
+      ],
+      "@app/*": [
+        "app/*"
+      ],
+      "@redux/*": [
+        "_redux/*"
+      ],
+      "@pages/*": [
+        "pages/*"
+      ],
+      "@components/*": [
+        "components/*"
+      ],
+      "@utils/*": [
+        "utils/*"
+      ],
+      "@services/*": [
+        "services/*"
+      ],
+      "@helpers/*": [
+        "helpers/*"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*",
+  ]
+}
