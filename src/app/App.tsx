@@ -1,23 +1,22 @@
 import React from 'react';
 
-import {
+/* import {
   createBrowserRouter,
   RouterProvider,
-} from 'react-router-dom';
-
+} from 'react-router-dom'; */
 // custom spinner component
-import Spinner from '@components/common/spinner';
+// import Spinner from '@components/common/spinner';
 // pages
-import About from '@pages/about';
+/* import About from '@pages/about';
 import Dashboard from '@pages/dashboard';
-import Home from '@pages/home';
+import Home from '@pages/home'; */
 import MainPage from '@pages/main';
 
 // css module
 import styles from './App.module.scss';
 
 // app router
-const router = createBrowserRouter([
+/* const router = createBrowserRouter([
   {
     path: "/",
     element: <MainPage />,
@@ -36,14 +35,15 @@ const router = createBrowserRouter([
       },
     ],
   },
-]);
+]); */
 
 // react functional component
 export default function App() {
   return (<div className={styles.App}>
-    <RouterProvider
+    <MainPage />
+    {/* <RouterProvider
       router={router}
       fallbackElement={<Spinner size={100} />}
-    />
+    /> */}
   </div>);
 }
