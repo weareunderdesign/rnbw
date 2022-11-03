@@ -20,7 +20,7 @@ import styles from './App.module.scss';
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Home />,
+    element: <MainPage />,
     children: [
       {
         path: "dashboard",
@@ -31,8 +31,8 @@ const router = createBrowserRouter([
         element: <About />,
       },
       {
-        path: "main",
-        element: <MainPage />,
+        path: "home",
+        element: <Home />,
       },
     ],
   },
