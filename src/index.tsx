@@ -1,4 +1,4 @@
-import './index.css';
+import './index.scss';
 
 import React from 'react';
 
@@ -17,9 +17,9 @@ const root = ReactDOMClient.createRoot(
   document.getElementById('root') as HTMLElement
 );
 root.render(
-  <React.StrictMode>
-    <Provider store={store}>
-      <App />
-    </Provider>
-  </React.StrictMode>
+  // <React.StrictMode>
+  <Provider store={store}>
+    <App />
+  </Provider>
+  // </React.StrictMode>
 );

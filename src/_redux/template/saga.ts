@@ -10,9 +10,9 @@ import {
   templateFetchRequest,
   templateFetchResponse,
 } from './slice';
-import * as TemplateTypes from './types';
+import { TemplateFetchRequestPayload } from './types';
 
-async function* fetchRequest(action: PayloadAction<TemplateTypes.TemplateFetchRequestPayload>) {
+async function* fetchRequest(action: PayloadAction<TemplateFetchRequestPayload>) {
   try {
     const response = {
       data: {

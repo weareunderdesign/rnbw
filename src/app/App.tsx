@@ -40,10 +40,12 @@ const router = createBrowserRouter([
 
 // react functional component
 export default function App() {
-  return (<div className={styles.App}>
-    {false ? <RouterProvider
-      router={router}
-      fallbackElement={<Spinner size={100} />}
-    /> : <MainPage />}
-  </div>);
+  return (<>
+    <div className={styles.App}>
+      <RouterProvider
+        router={router}
+        fallbackElement={<Spinner size={100} />}
+      />
+    </div>
+  </>);
 }
