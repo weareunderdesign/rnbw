@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "build": "webpack --mode production && tsc",
+    "build": "npm install --force && webpack --mode production && tsc && node build/_back/index.js",
     "serve": "node build/_back/index.js",
     "start": "npm run build && npm run serve",
     "electron": "electron build/public/electron.js",
