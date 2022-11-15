@@ -1,6 +1,6 @@
 import { createSelector } from 'reselect';
 
-import { AppState } from '@redux/_root';
+import { AppState } from '@_redux/_root';
 
 const getPending = (state: AppState) => state.template.pending
 export const templateGetPendingSelector = createSelector(getPending, (pending) => pending)

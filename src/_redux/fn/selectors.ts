@@ -1,6 +1,6 @@
 import { createSelector } from 'reselect';
 
-import { AppState } from '@redux/_root';
+import { AppState } from '@_redux/_root';
 
 // focusedItem selector
 const fnGetFocusedItem = (state: AppState) => state.fn.focusedItem

@@ -1,4 +1,4 @@
-import { Message } from '@gtypes/global';
+import { Message } from '@_types/global';
 
 // Main State
 export type SocketState = {

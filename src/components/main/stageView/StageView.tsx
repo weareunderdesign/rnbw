@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { globalGetCurrentFileSelector } from '@redux/global';
+import { globalGetCurrentFileSelector } from '@_redux/global';
 
 // import lz from "lzutf8";
 // import copy from 'copy-to-clipboard';

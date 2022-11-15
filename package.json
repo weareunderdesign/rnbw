@@ -7,7 +7,7 @@
     "serve": "node build/_back/index.js",
     "start": "npm run build && npm run serve",
     "electron": "electron build/public/electron.js",
-    "deploy": "gh-pages -d build"
+    "deploy": "npm install --force && npm start"
   },
   "keywords": [],
   "author": "",
@@ -42,7 +42,6 @@
     "babel-preset-react": "^6.24.1",
     "css-loader": "^6.7.1",
     "electron": "^21.2.3",
-    "file-loader": "^6.2.0",
     "gh-pages": "^4.0.0",
     "html-webpack-plugin": "^5.5.0",
     "monaco-editor-webpack-plugin": "^7.0.1",

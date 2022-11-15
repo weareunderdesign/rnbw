@@ -4,7 +4,7 @@ import {
   ActionsPanel,
   CodeView,
   StageView,
-} from '@components/main';
+} from '@_components/main';
 
 export default function MainPage() {
 

@@ -10,8 +10,6 @@ import {
   Icon,
   InputGroup,
 } from '@blueprintjs/core';
-import { ffGetSelectedItemsSelector } from '@redux/ff';
-import { FNObject } from '@gtypes/fn';
 
 const cx = (...classNames: Array<string | undefined | false>) =>
   classNames.filter(cn => !!cn).join(' ');

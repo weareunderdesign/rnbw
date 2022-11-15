@@ -6,11 +6,11 @@ import {
   FileExtension,
   Project,
   Workspace,
-} from '@gtypes/ff';
+} from '@_types/ff';
 import {
   ErrorRes,
   UID,
-} from '@gtypes/global';
+} from '@_types/global';
 
 // Main State
 export type GlobalState = {

@@ -1,4 +1,4 @@
-import { UID } from '@gtypes/global';
+import { UID } from '@_types/global';
 import {
   createSlice,
   PayloadAction,

@@ -9,16 +9,10 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, "build", "public"), // the bundle output path
     filename: "[name].bundle.js", // the name of the bundle
-    // publicPath: "/rnbw/", // same as the project name
   },
   devServer: {
     port: 8080, // you can change the port
   },
-  /* watch: true,
-  watchOptions: {
-    aggregateTimeout: 1000,
-    poll: 5000,
-  }, */
   resolve:
   {
     fallback: {
@@ -69,10 +63,6 @@ module.exports = {
         loader: "url-loader",
         options: { limit: false },
       },
-      /* {
-        test: /\.ttf$/,
-        use: ['file-loader'],
-      }, */
     ],
   },
   plugins: [

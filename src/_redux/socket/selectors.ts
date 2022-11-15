@@ -1,6 +1,6 @@
 import { createSelector } from 'reselect';
 
-import { AppState } from '@redux/_root';
+import { AppState } from '@_redux/_root';
 
 // connected selector
 const socketGetConnected = (state: AppState) => state.socket.connected

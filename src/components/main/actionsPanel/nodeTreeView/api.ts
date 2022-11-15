@@ -4,10 +4,11 @@ import {
 } from 'domhandler';
 import parse, { DOMNode } from 'html-react-parser';
 
+import { generateUID } from '@_services/global';
 import {
   FileContent,
   FileExtension,
-} from '@gtypes/ff';
+} from '@_types/ff';
 import {
   FNFile,
   FNHtmlObject,
@@ -17,9 +18,8 @@ import {
   FNNodeActionRemovePayload,
   FNNodeActionRenamePayload,
   FNObject,
-} from '@gtypes/fn';
-import { UID } from '@gtypes/global';
-import { generateUID } from '@services/global';
+} from '@_types/fn';
+import { UID } from '@_types/global';
 
 // Parser/Serializer
 const parseHTML = (content: FileContent): FNFile => {

@@ -1,7 +1,7 @@
 import {
   Message,
   ResMessage,
-} from '@gtypes/global';
+} from '@_types/global';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from '@reduxjs/toolkit';
 

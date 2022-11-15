@@ -8,18 +8,8 @@ import {
   useSelector,
 } from 'react-redux';
 
-import { TreeView } from '@components/common';
-import { TreeViewData } from '@components/common/treeView/types';
-import {
-  FNFile,
-  FNHtmlNodeType,
-  FNHtmlObject,
-  FNObject,
-} from '@gtypes/fn';
-import {
-  NAME,
-  UID,
-} from '@gtypes/global';
+import { TreeView } from '@_components/common';
+import { TreeViewData } from '@_components/common/treeView/types';
 import {
   collapseFNNode,
   expandFNNode,
@@ -28,21 +18,30 @@ import {
   fnGetSelectedItemsSelector,
   focusFNNode,
   selectFNNode,
-} from '@redux/fn';
+} from '@_redux/fn';
 import {
   globalGetCurrentFileSelector,
   globalGetProjectsSelector,
   globalGetWorkspaceSelector,
-} from '@redux/global';
-import { socketSendMessage } from '@redux/socket';
-import { generateUID } from '@services/global';
+} from '@_redux/global';
+import { socketSendMessage } from '@_redux/socket';
+import { generateUID } from '@_services/global';
+import {
+  FNFile,
+  FNHtmlObject,
+  FNObject,
+} from '@_types/fn';
+import {
+  NAME,
+  UID,
+} from '@_types/global';
 
 import {
   addFN,
+  moveFN,
   parseFileContent,
   removeFN,
   renameFN,
-  moveFN,
   serializeFileContent,
 } from './api';
 import { renderers } from './renderers';

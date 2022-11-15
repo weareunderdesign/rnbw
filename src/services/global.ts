@@ -1,4 +1,4 @@
-import { Message } from '@gtypes/global';
+import { Message } from '@_types/global';
 
 // return JSON string from the message
 export const createMessage = (message: Message): string => {

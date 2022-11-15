@@ -3,11 +3,11 @@ import {
   FFNodeActionRenamePayloadRes,
   FFObject,
   Project,
-} from '@gtypes/ff';
+} from '@_types/ff';
 import {
   ErrorRes,
   UID,
-} from '@gtypes/global';
+} from '@_types/global';
 import {
   createSlice,
   PayloadAction,

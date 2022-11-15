@@ -5,14 +5,14 @@ import {
   useSelector,
 } from 'react-redux';
 
-import { Spinner } from '@blueprintjs/core';
-import ConMenu from '@components/common/contextMenu';
-import MainPage from '@pages/main';
+import ConMenu from '@_components/common/contextMenu';
+import MainPage from '@_pages/main';
 import {
   socketGetConnectedSelector,
   socketGetInitedSelector,
   socketGetPendingSelector,
-} from '@redux/socket';
+} from '@_redux/socket';
+import { Spinner } from '@blueprintjs/core';
 
 // react functional component
 export default function App() {

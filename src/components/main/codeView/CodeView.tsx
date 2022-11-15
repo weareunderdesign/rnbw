@@ -6,8 +6,8 @@ import React, {
 import * as monaco from 'monaco-editor';
 import { useSelector } from 'react-redux';
 
+import { globalGetCurrentFileSelector } from '@_redux/global';
 import Editor, { loader } from '@monaco-editor/react';
-import { globalGetCurrentFileSelector } from '@redux/global';
 
 loader.config({ monaco })
 

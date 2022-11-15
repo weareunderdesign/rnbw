@@ -9,7 +9,7 @@ import {
   templateFetchRequest,
   templateGetPendingSelector,
   templateGetResponseSelector,
-} from '@redux/template';
+} from '@_redux/template';
 
 export default function Template() {
   const dispatch = useDispatch()
