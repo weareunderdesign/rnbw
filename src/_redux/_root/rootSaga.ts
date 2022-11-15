@@ -3,7 +3,7 @@ import {
   fork,
 } from 'redux-saga/effects';
 
-import { TemplateSaga } from '@redux/template';
+import { TemplateSaga } from '@_redux/template';
 
 export default function* rootSaga() {
   yield all([

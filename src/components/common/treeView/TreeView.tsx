@@ -1,29 +1,32 @@
-import React, {
-  useMemo,
-  useState,
-} from 'react';
+import React, { useMemo } from 'react';
 
 import {
   ControlledTreeEnvironment,
+  DraggingPositionItem,
   Tree,
+  TreeItemIndex,
 } from 'react-complex-tree';
 
-import { longTree } from './data';
-import { renderers } from './renders';
-import styles from './TreeView.module.scss';
+import { UID } from '@_types/global';
+
+import { TreeViewProps } from './types';
 
 export default function TreeView(props: TreeViewProps): JSX.Element {
   const width: string = useMemo(() => props.width, [props.width])
   const height: string = useMemo(() => props.height, [props.height])
 
-  const [data, setData] = useState(longTree.items)
+  const data = useMemo(() => props.data, [props.data])
 
-  const [focusedItem, setFocusedItem] = useState(undefined)
-  const [expandedItems, setExpandedItems] = useState([])
-  const [selectedItems, setSelectedItems] = useState([])
+  const focusedItem: TreeItemIndex = useMemo(() => props.focusedItem, [props.focusedItem])
+  const expandedItems: TreeItemIndex[] = useMemo(() => props.expandedItems, [props.expandedItems])
+  const selectedItems: TreeItemIndex[] = useMemo(() => props.selectedItems, [props.selectedItems])
 
   return (<>
-    <div className={styles.TreeView}>
+    <div style={{
+      cursor: "pointer",
+      color: "#dddddd",
+      fontSize: "12px",
+    }}>
       <ControlledTreeEnvironment
         viewState={{
           'tree': {
@@ -33,41 +36,24 @@ export default function TreeView(props: TreeViewProps): JSX.Element {
           }
         }}
 
-        getItemTitle={(item) => item.data} // string rendered at the tree view
+        getItemTitle={(item) => {
+          const dataType = typeof item.data
+          if (dataType === 'string') {
+            return item.data
+          } else {
+            return item.data.name
+          }
+        }} // string rendered at the tree view
 
-        {...renderers}
-
-        /* keyboardBindings={{
-          expandSiblings: ['control+*'],
-          moveFocusToFirstItem: ['home'],
-          moveFocusToLastItem: ['end'],
-          primaryAction: ['enter'], 
-          renameItem: ['f2'],
-          abortRenameItem: ['escape'],
-          toggleSelectItem: ['control+space'],
-          abortSearch: ['escape', 'enter'],
-          startSearch: ['control+f'],
-          selectAll: ['control+a'],
-          startProgrammaticDnd: ['control+d'],
-          completeProgrammaticDnd: ['enter'],
-          abortProgrammaticDnd: ['escape'],
-        }} */
-
-        /* showLiveDescription={true}
-        liveDescriptors={{
-          introduction: '123',
-          renamingItem: 'a',
-          searching: '123',
-          programmaticallyDragging: 'pro',
-          programmaticallyDraggingTarget: 'prog'
-        }} */
+        {...props.renderers}
 
         /* POSSIBILITIES */
-        canRename={true}
         canDragAndDrop={true}
         canDropOnItemWithChildren={true}
-        canDropOnItemWithoutChildren={true}
+        canDropOnItemWithoutChildren={false}
         canReorderItems={true}
+        canSearch={true}
+        /* canRename={true}
         canDrag={(items) => {
           return true
         }}
@@ -80,7 +66,7 @@ export default function TreeView(props: TreeViewProps): JSX.Element {
         autoFocus={true}
         doesSearchMatchItem={(search, item, itemTitle) => {
           return true
-        }}
+        }} */
 
         /* Tree CALLBACK */
         onRegisterTree={(tree) => {
@@ -96,6 +82,7 @@ export default function TreeView(props: TreeViewProps): JSX.Element {
         }}
         onRenameItem={(item, name, treeId) => {
           console.log('onRenameItem', item, name, treeId)
+          props.cb_renameNode && props.cb_renameNode(item.index as UID, name)
         }}
         onAbortRenamingItem={(item, treeId) => {
           console.log('onAbortRenamingItem', item, treeId)
@@ -103,21 +90,23 @@ export default function TreeView(props: TreeViewProps): JSX.Element {
 
         /* SELECT, FOCUS, EXPAND, COLLAPSE CALLBACK */
         onSelectItems={(items, treeId) => {
-          console.log('onSelectItems', items, treeId)
-          setSelectedItems(items)
+          console.log('onSelectItems', items)
+          props.cb_selectNode(items as UID[])
         }}
         onFocusItem={(item, treeId) => {
-          console.log('onFocusItem', item, treeId)
-          setFocusedItem(item.index)
+          console.log('onFocusItem', item.index)
+          props.cb_focusNode(item.index as UID)
         }}
         onExpandItem={(item, treeId) => {
-          console.log('onExpandItem', item, treeId)
-          setExpandedItems([...expandedItems, item.index])
+          console.log('onExpandItem', item.index)
+          props.cb_expandNode(item.index as UID)
         }}
         onCollapseItem={(item, treeId) => {
-          console.log('onCollapseItem', item, treeId)
-          setExpandedItems(expandedItems.filter(expandedItemIndex => expandedItemIndex !== item.index))
+          console.log('onCollapseItem', item.index)
+          props.cb_collapseNode(item.index as UID)
         }}
+
+        /* MISSING CALLBACK */
         onMissingItems={(itemIds) => {
           console.log('onMissingItems', itemIds)
         }}
@@ -128,12 +117,30 @@ export default function TreeView(props: TreeViewProps): JSX.Element {
         // DnD CALLBACK
         onDrop={(items, target) => {
           console.log('onDrop', items, target)
+          const uids: UID[] = []
+          for (const item of items) {
+            uids.push(item.index as string)
+          }
+
+          if (target.targetType === 'between-items') {
+            /* target.parentItem
+            target.childIndex
+            target.linePosition */
+          } else if (target.targetType === 'item') {
+            /* target.targetItem */
+          }
+
+          const targetUID: UID = (target as DraggingPositionItem).targetItem as string
+          console.log('onDrop', uids, targetUID)
+          props.cb_dropNode && props.cb_dropNode(uids, targetUID)
         }}
 
         // primary action
-        /* onPrimaryAction={(items, treeId) => {
-          console.log('onPrimaryAction', items, treeId)
-        }} */
+        onPrimaryAction={(item, treeId) => {
+          console.log('onPrimaryAction', item.index, treeId)
+          props.cb_readNode && props.cb_readNode(item.index as UID)
+        }}
+
         // ref
 
         // Load Data

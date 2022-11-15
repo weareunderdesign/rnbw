@@ -1,12 +1,13 @@
-import './index.scss';
+import './index.css';
 
 import React from 'react';
 
 import * as ReactDOMClient from 'react-dom/client';
 import { Provider } from 'react-redux';
 
-import App from '@app/index';
 import configureStore from '@redux/_root';
+
+import App from './app';
 
 // configure store
 const initialState = {};

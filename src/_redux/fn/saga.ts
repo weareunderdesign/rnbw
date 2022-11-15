@@ -1,0 +1,1 @@
+export const empty_fn_saga = {}

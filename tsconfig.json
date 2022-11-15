@@ -1,42 +1,59 @@
 {
   "compilerOptions": {
-    "outDir": "./dist/",
+    "experimentalDecorators": true,
+    "outDir": "./build",
     "noImplicitAny": true,
-    "module": "es6",
-    "target": "es5",
+    "module": "commonjs",
+    "target": "es6",
+    "esModuleInterop": true,
+    // 
+    "strict": true,
+    "sourceMap": true,
+    "typeRoots": [
+      "node_modules/@types"
+    ],
+    // 
     "jsx": "react",
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "Node",
-    "baseUrl": "src",
+    "baseUrl": ".",
     "paths": {
-      "@config/*": [
-        "config/*"
+      "@_types/*": [
+        "src/types/*",
       ],
-      "@app/*": [
-        "app/*"
+      "@_services/*": [
+        "src/services/*",
       ],
-      "@redux/*": [
-        "_redux/*"
+      "@_app/*": [
+        "src/app/*",
       ],
-      "@pages/*": [
-        "pages/*"
+      "@_pages/*": [
+        "src/pages/*",
       ],
-      "@components/*": [
-        "components/*"
+      "@_components/*": [
+        "src/components/*",
       ],
-      "@utils/*": [
-        "utils/*"
+      "@_back/*": [
+        "src/_back/*",
       ],
-      "@services/*": [
-        "services/*"
+      "@_electron/*": [
+        "src/_electron/*",
       ],
-      "@helpers/*": [
-        "helpers/*"
-      ]
-    }
+      "@_node/*": [
+        "src/_node/*",
+      ],
+      "@_redux/*": [
+        "src/_redux/*",
+      ],
+    },
   },
   "include": [
     "src/**/*",
-  ]
+    "src/_back/index.ts",
+  ],
+  "exclude": [
+    "build",
+    "node_modules",
+  ],
 }

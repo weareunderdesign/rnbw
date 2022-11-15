@@ -1,3 +1,1 @@
-# rnbw
-
-Rainbow v1.0
+# Rainbow v1.0
