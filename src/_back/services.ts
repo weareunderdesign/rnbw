@@ -107,10 +107,10 @@ export async function loadFolderStructure(folder: FFObject): Promise<FFObject[]>
 }
 // open folder-select-modal and return the selected ff path
 export async function selectFolderFromModal(): Promise<FolderSelectModalResponse> {
-  return {
+  /* return {
     success: true,
     path: "D:/",
-  }
+  } */
   const dialog = require('node-file-dialog')
 
   const config = { type: 'directory' }
