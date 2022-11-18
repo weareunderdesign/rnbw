@@ -65,13 +65,13 @@ const slice = createSlice({
         node.p_uid = null
       } else {
         const p_node = state.workspace[node.p_uid as string]
-        const length = p_node.children.length
+        let added: boolean = false
         p_node.children = p_node.children.reduce((prev: TUid[], cur: TUid): TUid[] => {
-          const curNode: FFNode = state.workspace[cur];
-          (curNode.isEntity && !node.isEntity) || (curNode.isEntity === node.isEntity && curNode.name > node.name) ? prev.push(node.uid, cur) : prev.push(cur)
+          const curNode: FFNode = state.workspace[cur]
+          !added && ((curNode.isEntity && !node.isEntity) || (curNode.isEntity === node.isEntity && curNode.name > node.name)) ? [added = true, prev.push(node.uid, cur)] : prev.push(cur)
           return prev
         }, [])
-        if (length === p_node.children.length) {
+        if (!added) {
           p_node.children.push(node.uid)
         }
       }
