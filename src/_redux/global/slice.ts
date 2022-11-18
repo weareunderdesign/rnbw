@@ -59,96 +59,23 @@ const slice = createSlice({
         delete state.workspace[uid]
       }
     },
-    addWatchedFFObject(state, action: PayloadAction<FFNode>) {
-      /* const ffNode: FFNode = action.payload
-
-      let found: boolean = false */
-      // check the parent
-      /*  for (const uid in state.workspace) {
-         const ffObject = state.workspace[uid]
-         const ffObjectFullPath = getFullPath(ffObject)
-         if (ffObjectFullPath === ffNode.path) {
-           found = true
-           ffNode.p_uid = ffObject.uid
-           ffObject.children.push(ffNode.uid)
-           break;
-         }
-       }
-       if (!found) {
-         for (const uid in state.projects) {
-           const ffObject = state.projects[uid]
-           const ffObjectFullPath = getFullPath(ffObject)
-           if (ffObjectFullPath === ffNode.path) {
-             found = true
-             ffNode.p_uid = ffObject.uid
-             ffObject.children.push(ffNode.uid)
-             break;
-           }
-         }
-       } */
-
-      // add to the projects state
-      /* state.workspace[ffNode.uid] = ffNode */
-    },
-    removeWatchedFFObject(state, action: PayloadAction<FFNode>) {
-      /* const ffNode: FFNode = action.payload
-      const fullPath = getFullPath(ffNode)
-
-      let found: boolean = false
-      // check the parent
-      for (const uid in state.workspace) {
-        const ffObject = state.workspace[uid]
-        const ffObjectFullPath = getFullPath(ffObject)
-        if (ffObjectFullPath === fullPath) {
-          found = true
-          ffNode.uid = ffObject.uid
-          break;
+    addWatchedFFNode(state, action: PayloadAction<FFNode>) {
+      const node = action.payload
+      if (state.workspace[node.p_uid as string] === undefined) {
+        node.p_uid = null
+      } else {
+        const p_node = state.workspace[node.p_uid as string]
+        let added: boolean = false
+        p_node.children = p_node.children.reduce((prev: TUid[], cur: TUid): TUid[] => {
+          const curNode: FFNode = state.workspace[cur]
+          !added && ((curNode.isEntity && !node.isEntity) || (curNode.isEntity === node.isEntity && curNode.name > node.name)) ? [added = true, prev.push(node.uid, cur)] : prev.push(cur)
+          return prev
+        }, [])
+        if (!added) {
+          p_node.children.push(node.uid)
         }
       }
-      if (!found) {
-        for (const uid in state.projects) {
-          const ffObject = state.projects[uid]
-          const ffObjectFullPath = getFullPath(ffObject)
-          if (ffObjectFullPath === fullPath) {
-            found = true
-            ffNode.uid = ffObject.uid
-            break;
-          }
-        }
-      }
-
-      // remove
-      if (found) {
-        const removeTree = (uid: UID) => {
-          const ffNode = state.workspace[uid] || state.projects[uid]
-          if (ffNode === undefined) {
-            return
-          }
-
-          // check the parent
-          if (ffNode.p_uid !== null) {
-            const parent = state.workspace[ffNode.p_uid] || state.projects[ffNode.p_uid]
-            if (parent !== undefined) {
-              parent.children = parent.children.filter((childUID: UID) => childUID !== uid)
-            }
-          }
-
-          // remove the current and its children
-          const removeUIDs = [uid]
-          while (removeUIDs.length) {
-            const removeUID: UID = removeUIDs.shift() as string
-            const ffNode: FFObject = state.workspace[removeUID] || state.projects[removeUID]
-            if (ffNode === undefined) {
-              continue
-            }
-            removeUIDs.push(...ffNode.children)
-            delete state.workspace[removeUID]
-            delete state.projects[removeUID]
-          }
-        }
-
-        removeTree(ffNode.uid)
-      } */
+      state.workspace[node.uid] = node
     },
     renameFFNode(state, action: PayloadAction<FFNodeActionRenamePayloadRes>) {
       const { nodes, name } = action.payload
@@ -176,5 +103,5 @@ const slice = createSlice({
 })
 
 // export the actions and reducer
-export const { addFFNode, removeFFNode, closeFFNode, addWatchedFFObject, removeWatchedFFObject, renameFFNode, setCurrentFile, setGlobalError } = slice.actions
+export const { addFFNode, removeFFNode, closeFFNode, addWatchedFFNode, renameFFNode, setCurrentFile, setGlobalError } = slice.actions
 export const GlobalReducer = slice.reducer

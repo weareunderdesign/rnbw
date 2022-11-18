@@ -165,19 +165,19 @@ export const addWebSocketServerEventHandlers = (wss: WebSocket.Server<WebSocket.
                 body: action,
               }))
             }))
-
-            // return the project structure
-            resPayload = await loadFolderStructure(payload)
-            console.log('ff open end')
-
-            ws.send(createResMessage({
-              header: 'ff-message',
-              body: {
-                type: 'open',
-                payload: resPayload,
-              },
-            }))
           }
+
+          // return the project structure
+          resPayload = await loadFolderStructure(payload)
+          console.log('ff open end')
+
+          ws.send(createResMessage({
+            header: 'ff-message',
+            body: {
+              type: 'open',
+              payload: resPayload,
+            },
+          }))
         } else if (type === 'close') {
           console.log('ff close begin')
 
@@ -253,10 +253,19 @@ export const addWebSocketServerEventHandlers = (wss: WebSocket.Server<WebSocket.
           const oldUid = renameNode.uid
           const newUid = joinPath(getPath(oldUid), name)
           const newNodes: FFNode[] = []
+          const watchers: boolean[] = []
 
-          for (const node of nodes) {
-            // backup new-named nodes
-            const p_uid = node.p_uid
+          // backup new-named nodes
+          for (let i = 0; i < nodes.length; ++i) {
+            const node = nodes[i]
+            const { uid, p_uid } = node
+
+            if (subscriptions.get(uid)) {
+              watchers.push(true)
+            } else {
+              watchers.push(false)
+            }
+
             newNodes.push({
               ...node,
               uid: newUid + node.uid.slice(oldUid.length),
@@ -264,32 +273,31 @@ export const addWebSocketServerEventHandlers = (wss: WebSocket.Server<WebSocket.
               children: node.children.map(childUid => newUid + childUid.slice(oldUid.length)),
               data: node.uid,
             })
-
-            // unsubscribe the watchers it it's a folder
-            const fullPath = node.uid
-            const nodeType: FFNodeType = await getFFNodeType(fullPath)
-            if (nodeType === "folder") {
-              const unsub = subscriptions.get(fullPath)
-              if (unsub) {
-                subscriptions.delete(fullPath)
-                unsub()
-              }
-            }
           }
           newNodes[0].name = name
-          console.log(newNodes)
+
+          // unsubscribe the watchers it it's a folder
+          for (let i = nodes.length - 1; i >= 0; --i) {
+            const fullPath = nodes[i].uid
+            const unsub = subscriptions.get(fullPath)
+            if (unsub) {
+              subscriptions.delete(fullPath)
+              unsub()
+            }
+          }
 
           // rename the ffNode
           const res = await renameFF(renameNode.uid, newUid)
           if (!res.success) {
             // restore the subscribers if failed
-            for (const node of nodes) {
+            for (let i = 0; i < nodes.length; ++i) {
+              const node = nodes[i]
               const fullPath = node.uid
-              const nodeType: FFNodeType = await getFFNodeType(fullPath)
+              if (watchers[i]) {
+                const nodeType: FFNodeType = await getFFNodeType(fullPath)
 
-              // subscribe the watchers it it's a folder
-              if (nodeType === "folder") {
-                if (!subscriptions.get(fullPath)) {
+                // subscribe the watchers it it's a folder
+                if (nodeType === "folder") {
                   subscriptions.set(fullPath, ffWatcher.subscribe(fullPath, (action: FFNodeActionRes) => {
                     ws.send(createResMessage({
                       header: 'ff-watch-message',
@@ -311,13 +319,13 @@ export const addWebSocketServerEventHandlers = (wss: WebSocket.Server<WebSocket.
           }
 
           // set the new subscribers if success
-          for (const node of newNodes) {
+          for (let i = 0; i < nodes.length; ++i) {
+            const node = nodes[i]
             const fullPath = node.uid
-            const nodeType: FFNodeType = await getFFNodeType(fullPath)
-
-            // subscribe the watchers it it's a folder
-            if (nodeType === "folder") {
-              if (!subscriptions.get(fullPath)) {
+            if (watchers[i]) {
+              const nodeType: FFNodeType = await getFFNodeType(fullPath)
+              // subscribe the watchers it it's a folder
+              if (nodeType === "folder") {
                 subscriptions.set(fullPath, ffWatcher.subscribe(fullPath, (action: FFNodeActionRes) => {
                   ws.send(createResMessage({
                     header: 'ff-watch-message',

@@ -4,13 +4,12 @@ import {
   focusFFNode,
   selectFFNode,
   setRemoveFFNodes,
-  setRenamedFFNodes,
 } from '@_redux/ff';
 import {
   addFFNode,
+  addWatchedFFNode,
   closeFFNode,
   removeFFNode,
-  renameFFNode,
   setCurrentFile,
   setGlobalError,
 } from '@_redux/global';
@@ -21,15 +20,15 @@ import {
   socketReceiveMessage,
   socketSendMessage,
 } from '@_redux/socket';
+import { getSubDirectoryUids } from '@_services/ff';
 import { createMessage } from '@_services/global';
 import {
-  FFNodeAction,
+  FFNode,
   FFNodeActionAddPayloadRes,
   FFNodeActionClosePayloadRes,
   FFNodeActionOpenPayloadRes,
   FFNodeActionReadPayloadRes,
   FFNodeActionRemovePayloadRes,
-  FFNodeActionRenamePayloadRes,
   FFNodeActionRes,
   FFNodeActionUpdatePayloadRes,
 } from '@_types/ff';
@@ -93,9 +92,9 @@ export const socketMiddleware = (url: string) => {
           const payload = messageBody?.payload as FFNodeActionReadPayloadRes
           store.dispatch(setCurrentFile(payload))
         } else if (type === 'rename') {
-          const payload = messageBody?.payload as FFNodeActionRenamePayloadRes
+          /* const payload = messageBody?.payload as FFNodeActionRenamePayloadRes
           store.dispatch(renameFFNode(payload))
-          store.dispatch(setRenamedFFNodes(payload))
+          store.dispatch(setRenamedFFNodes(payload)) */
         }
         /* ******************************* */
         else if (type === 'move') {
@@ -111,17 +110,22 @@ export const socketMiddleware = (url: string) => {
 
         store.dispatch(socketReceiveMessage())
       } else if (message.header === 'ff-watch-message') {
-        const messageBody = message.body as FFNodeAction
-        const { type } = messageBody
+        const { type, payload } = message.body
 
         if (type === 'rename') {
-          /* const payload = messageBody?.payload as FFObject
-          store.dispatch(addWatchedFFObject(payload)) */
+          const node: FFNode = payload
+          store.dispatch(addWatchedFFNode(node))
         } else if (type === 'remove') {
-          /* const payload = messageBody?.payload as FFObject
-          store.dispatch(removeWatchedFFObject(payload)) */
+          const uid = payload
+          const workspace = store.getState().global.workspace
+          store.dispatch(socketSendMessage({
+            header: 'ff-message',
+            body: {
+              type: 'remove',
+              payload: getSubDirectoryUids(uid, workspace),
+            }
+          }))
         }
-
       }
     }
     ws.onerror = (event) => {

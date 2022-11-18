@@ -19,6 +19,10 @@ import {
 import { globalGetWorkspaceSelector } from '@_redux/global';
 import { socketSendMessage } from '@_redux/socket';
 import {
+  getSubDirectoryNodes,
+  getSubDirectoryUids,
+} from '@_services/ff';
+import {
   FFNode,
   FFNodeActionAddPayload,
   FFNodeActionClosePayload,
@@ -113,39 +117,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       header: 'ff-message',
       body: {
         type: 'remove',
-        payload: getSubDirectoryUids(focusedItem) as FFNodeActionRemovePayload,
+        payload: getSubDirectoryUids(focusedItem, workspace) as FFNodeActionRemovePayload,
       },
     }))
-  }
-
-  // get all of the nested chidren uids
-  const getSubDirectoryUids = (uid: TUid): TUid[] => {
-    let nodes: FFNode[] = [workspace[uid]]
-    let uids: TUid[] = []
-    while (nodes.length) {
-      const node = nodes.shift() as FFNode
-      uids.push(node.uid)
-      for (const childUid of node.children) {
-        if (!workspace[childUid].isEntity) {
-          nodes.push(workspace[childUid])
-        }
-      }
-    }
-    return uids
-  }
-  // get all of the nested chidren nodes
-  const getSubDirectoryNodes = (uid: TUid): FFNode[] => {
-    let nodes: FFNode[] = []
-    let uids: TUid[] = [uid]
-    while (uids.length) {
-      const uid = uids.shift() as TUid
-      const node = workspace[uid]
-      nodes.push(node)
-      for (const childUid of node.children) {
-        uids.push(childUid)
-      }
-    }
-    return nodes
   }
 
   // cb
@@ -169,7 +143,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       header: 'ff-message',
       body: {
         type: 'close',
-        payload: getSubDirectoryUids(uid) as FFNodeActionClosePayload,
+        payload: getSubDirectoryUids(uid, workspace) as FFNodeActionClosePayload,
       },
     }))
   }
@@ -188,7 +162,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       body: {
         type: 'rename',
         payload: {
-          nodes: getSubDirectoryNodes(uid),
+          nodes: getSubDirectoryNodes(uid, workspace),
           name: name,
         } as FFNodeActionRenamePayload,
       },
@@ -287,7 +261,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           }}
         >
           {/* Create Node Button */}
-          <button
+          {/* <button
             style={{
               background: "rgb(23 111 44)",
               color: "white",
@@ -296,13 +270,12 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
               margin: "0px 5px",
             }}
             onClick={createFFNode}
-            disabled={true}
           >
             Create
-          </button>
+          </button> */}
 
           {/* Delete Node Button */}
-          <button
+          {/* <button
             style={{
               background: "rgb(23 111 44)",
               color: "white",
@@ -311,10 +284,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
               margin: "0px 5px",
             }}
             onClick={deleteFFNode}
-            disabled={true}
           >
             Delete
-          </button>
+          </button> */}
 
           {/* Add Project Button */}
           <button
