@@ -10,3 +10,7 @@ export const parsable: ParsableType = {/* parsable file types - we need this sin
   "js": false,
   "md": false,
 }
+
+export const generateNodeUID = (PID: string, index: number) => {
+  return PID + "_" + index.toString()
+}

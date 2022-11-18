@@ -70,7 +70,7 @@ export const getFileExtension = (fileName: string): TFileType => {
   const fileNameArr = fileName.split('.')
   if (fileNameArr.length) {
     const fileExtension = fileNameArr[fileNameArr.length - 1]
-    return parsable[fileExtension] ? 'unknown' : fileExtension as TFileType
+    return !parsable[fileExtension] ? 'unknown' : fileExtension as TFileType
   }
   return 'unknown'
 }
