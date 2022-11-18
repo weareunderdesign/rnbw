@@ -32,6 +32,10 @@ export const parseHtml = (content: string): TTree => {
   }
   parse(content, {
     replace: (node: DOMNode) => {
+      console.log(node, node.type)
+      if (node.type == "comment" || node.type == "doctype" || node.type == "cdata" || node.type == "script" || node.type == "directive") {
+        return;
+      }
       if (node.type == "text") {
         const converted_string = (node as unknown as Text).data.replace(/(\n|\t)/g, ' ').replace(/\s+/g, ' ').split(' ').filter(s => !!s).join(' ');
         console.log(JSON.stringify((node as unknown as Text).data), converted_string.length)
