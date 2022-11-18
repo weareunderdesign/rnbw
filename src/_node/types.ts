@@ -67,7 +67,7 @@ export type TMoveNodePayload = {
     childIndex: number,
     side: 'top' | 'bottom',
   },
-  nodes: TNode[],/* nodes to move - array for multiple feature */
+  uids: TUid[],/* nodes to move - array for multiple feature */
 }
 
 /**
