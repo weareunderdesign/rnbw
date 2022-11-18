@@ -1,0 +1,15 @@
+{
+  "name": "rainbow v1.0",
+  "builds": [
+    {
+      "src": "build/_back/index.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "build/_back/index.js"
+    }
+  ]
+}

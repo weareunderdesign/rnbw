@@ -49,7 +49,7 @@
     },
   },
   "include": [
-    "src/**/*",
+    // "src/**/*",
     "src/_back/index.ts",
   ],
   "exclude": [
