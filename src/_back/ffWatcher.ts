@@ -7,6 +7,9 @@ import {
 
 import {
   getFFNodeType,
+  getName,
+  getNormalizedPath,
+  getPath,
   joinPath,
 } from './services';
 
@@ -56,7 +59,7 @@ export default class FFWatcher {
 
     //Setup watcher
     const watcher = fs.watch(pathName, async (actionType, ffName) => {
-      const fullPath = joinPath(pathName, ffName)
+      const fullPath = getNormalizedPath(joinPath(pathName, ffName.replace(/\\/g, '')))
 
       // Check if the pathName+ffName is a valid node
       const nodeType: FFNodeType = await getFFNodeType(fullPath)
@@ -65,28 +68,21 @@ export default class FFWatcher {
           this.publish(pathName, {
             type: 'rename',
             payload: {
-              p_uid: null,
               uid: fullPath,
-              path: pathName,
-              name: ffName,
-              type: nodeType,
+              p_uid: getPath(fullPath),
+              name: getName(fullPath),
+              isEntity: nodeType === 'folder' ? false : true,
               children: [],
+              data: {},
             },
           })
-        } else { // File Content Change Event
-          console.log('ff changes')
+        } else {
+          // File Content Change Event
         }
       } else {
         this.publish(pathName, {
           type: 'remove',
-          payload: {
-            p_uid: null,
-            uid: null,
-            path: pathName,
-            name: ffName,
-            type: nodeType,
-            children: [],
-          },
+          payload: fullPath,
         })
       }
     })
