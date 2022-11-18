@@ -1,8 +1,8 @@
-import { UID } from '@_types/global';
+import { TUid } from '@_node/types';
 
 // Main State
 export type FNTreeViewState = {
-  focusedItem: UID,
-  expandedItems: UID[],
-  selectedItems: UID[],
+  focusedItem: TUid,
+  expandedItems: TUid[],
+  selectedItems: TUid[],
 }

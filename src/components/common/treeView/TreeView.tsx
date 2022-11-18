@@ -7,7 +7,7 @@ import {
   TreeItemIndex,
 } from 'react-complex-tree';
 
-import { UID } from '@_types/global';
+import { TUid } from '@_node/types';
 
 import { TreeViewProps } from './types';
 
@@ -82,7 +82,7 @@ export default function TreeView(props: TreeViewProps): JSX.Element {
         }}
         onRenameItem={(item, name, treeId) => {
           console.log('onRenameItem', item, name, treeId)
-          props.cb_renameNode && props.cb_renameNode(item.index as UID, name)
+          props.cb_renameNode && props.cb_renameNode(item.index as TUid, name)
         }}
         onAbortRenamingItem={(item, treeId) => {
           console.log('onAbortRenamingItem', item, treeId)
@@ -91,19 +91,19 @@ export default function TreeView(props: TreeViewProps): JSX.Element {
         /* SELECT, FOCUS, EXPAND, COLLAPSE CALLBACK */
         onSelectItems={(items, treeId) => {
           console.log('onSelectItems', items)
-          props.cb_selectNode(items as UID[])
+          props.cb_selectNode(items as TUid[])
         }}
         onFocusItem={(item, treeId) => {
           console.log('onFocusItem', item.index)
-          props.cb_focusNode(item.index as UID)
+          props.cb_focusNode(item.index as TUid)
         }}
         onExpandItem={(item, treeId) => {
           console.log('onExpandItem', item.index)
-          props.cb_expandNode(item.index as UID)
+          props.cb_expandNode(item.index as TUid)
         }}
         onCollapseItem={(item, treeId) => {
           console.log('onCollapseItem', item.index)
-          props.cb_collapseNode(item.index as UID)
+          props.cb_collapseNode(item.index as TUid)
         }}
 
         /* MISSING CALLBACK */
@@ -117,7 +117,7 @@ export default function TreeView(props: TreeViewProps): JSX.Element {
         // DnD CALLBACK
         onDrop={(items, target) => {
           console.log('onDrop', items, target)
-          const uids: UID[] = []
+          const uids: TUid[] = []
           for (const item of items) {
             uids.push(item.index as string)
           }
@@ -130,15 +130,15 @@ export default function TreeView(props: TreeViewProps): JSX.Element {
             /* target.targetItem */
           }
 
-          const targetUID: UID = (target as DraggingPositionItem).targetItem as string
-          console.log('onDrop', uids, targetUID)
-          props.cb_dropNode && props.cb_dropNode(uids, targetUID)
+          const targetTUid: TUid = (target as DraggingPositionItem).targetItem as string
+          console.log('onDrop', uids, targetTUid)
+          props.cb_dropNode && props.cb_dropNode(uids, targetTUid)
         }}
 
         // primary action
         onPrimaryAction={(item, treeId) => {
           console.log('onPrimaryAction', item.index, treeId)
-          props.cb_readNode && props.cb_readNode(item.index as UID)
+          props.cb_readNode && props.cb_readNode(item.index as TUid)
         }}
 
         // ref

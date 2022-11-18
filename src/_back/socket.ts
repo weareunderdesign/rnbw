@@ -1,11 +1,16 @@
 import * as WebSocket from 'ws';
 
 import {
+  FFNode,
   FFNodeAction,
   FFNodeActionAddPayload,
   FFNodeActionAddPayloadRes,
   FFNodeActionClosePayload,
   FFNodeActionClosePayloadRes,
+  FFNodeActionCreatePayload,
+  FFNodeActionCreatePayloadRes,
+  FFNodeActionDeletePayload,
+  FFNodeActionDeletePayloadRes,
   FFNodeActionDuplicatePayload,
   FFNodeActionDuplicatePayloadRes,
   FFNodeActionMovePayload,
@@ -22,13 +27,11 @@ import {
   FFNodeActionUpdatePayload,
   FFNodeActionUpdatePayloadRes,
   FFNodeType,
-  FileContent,
 } from '@_types/ff';
 import {
   Message,
-  PATH,
   ResMessage,
-} from '@_types/global';
+} from '@_types/socket';
 
 import {
   readFileContent,
@@ -38,13 +41,12 @@ import {
 import FFWatcher from './ffWatcher';
 import {
   createResMessage,
-  generateUID,
   getFFNodeType,
   getFileExtension,
-  getFullPath,
   getName,
   getNormalizedPath,
   getPath,
+  joinPath,
   loadFolderStructure,
   selectFolderFromModal,
 } from './services';
@@ -61,7 +63,8 @@ export const addWebSocketServerEventHandlers = (wss: WebSocket.Server<WebSocket.
 
   // event handlers
   wss.on('connection', (ws: WebSocket, req) => {
-    const subscriptions = new Map<PATH, () => void>()
+
+    const subscriptions = new Map<string, () => void>()
 
     // set isAlive as true by default
     const extWs = ws as ExtWebSocket
@@ -81,7 +84,6 @@ export const addWebSocketServerEventHandlers = (wss: WebSocket.Server<WebSocket.
     // handling the message from the client web sockets
     ws.on('message', async (msg: string) => {
       const message: Message = JSON.parse(msg)
-      console.log('received message', message)
 
       // if it's broadcasting message, send back the message to the other clients
       /* if (message.options?.isBroadcast === true) {
@@ -95,7 +97,6 @@ export const addWebSocketServerEventHandlers = (wss: WebSocket.Server<WebSocket.
       /*
       analysis the message and reply
       1. ff-message // folder file message
-      2. fn-message // file node message
       */
       if (message.header === 'ff-message') {/* Folder File Message */
         const { type } = message.body as FFNodeAction
@@ -109,24 +110,24 @@ export const addWebSocketServerEventHandlers = (wss: WebSocket.Server<WebSocket.
           const res: FolderSelectModalResponse = await selectFolderFromModal()
           if (!res.success) {
             ws.send(createResMessage({
-              header: 'error-message',
+              header: 'ff-message',
               body: {
-                errorMessage: res.error as string,
+                type: 'no-effect',
+                errorMessage: res.error
               },
             }))
             return
           }
 
           const fullPath = getNormalizedPath(res.path as string)
-          const pathName = getPath(fullPath)
           const folderName = getName(fullPath)
           resPayload = {
-            uid: generateUID(),
+            uid: fullPath,
             p_uid: null,
-            path: pathName,
             name: folderName,
-            type: 'folder',
+            isEntity: false,
             children: [],
+            data: {},
           }
           console.log('ff add end')
 
@@ -142,14 +143,13 @@ export const addWebSocketServerEventHandlers = (wss: WebSocket.Server<WebSocket.
 
           let resPayload: FFNodeActionOpenPayloadRes
           const payload = message.body?.payload as FFNodeActionOpenPayload
-          const fullPath = getFullPath(payload)
-          console.log(fullPath)
+          const fullPath = payload.uid
 
           // Check if it's a valid folder
           const nodeType: FFNodeType = await getFFNodeType(fullPath)
           if (nodeType !== "folder") {
             ws.send(createResMessage({
-              header: 'error-message',
+              header: 'e-message',
               body: {
                 errorMessage: nodeType === 'unlink' ? 'It doesn\'t exist' : 'It\'s a file, not a folder!',
               },
@@ -165,45 +165,41 @@ export const addWebSocketServerEventHandlers = (wss: WebSocket.Server<WebSocket.
                 body: action,
               }))
             }))
-
-            // return the project structure
-            resPayload = await loadFolderStructure(payload)
-            console.log('ff open end')
-
-            ws.send(createResMessage({
-              header: 'ff-message',
-              body: {
-                type: 'open',
-                payload: resPayload,
-              },
-            }))
           }
+
+          // return the project structure
+          resPayload = await loadFolderStructure(payload)
+          console.log('ff open end')
+
+          ws.send(createResMessage({
+            header: 'ff-message',
+            body: {
+              type: 'open',
+              payload: resPayload,
+            },
+          }))
         } else if (type === 'close') {
           console.log('ff close begin')
 
           let resPayload: FFNodeActionClosePayloadRes
           const payload = message.body?.payload as FFNodeActionClosePayload
-          const fullPath = getFullPath(payload)
 
-          // Check if it's a valid folder
-          const nodeType: FFNodeType = await getFFNodeType(fullPath)
-          if (nodeType !== "folder") {
-            ws.send(createResMessage({
-              header: 'error-message',
-              body: {
-                errorMessage: nodeType === 'unlink' ? 'It doesn\'t exist' : 'It\'s a File, not folder!',
-              },
-            }))
-            return
+          for (const uid of payload) {
+            // Check if it's a valid folder
+            const nodeType: FFNodeType = await getFFNodeType(uid)
+            if (nodeType !== "folder") {
+              continue
+            }
+
+            // unsubscribe the watchers
+            const unsub = subscriptions.get(uid)
+            if (!unsub) continue
+            subscriptions.delete(uid)
+            unsub()
           }
 
-          // unsubscribe the watchers
-          const unsub = subscriptions.get(fullPath)
-          if (!unsub) return
-          subscriptions.delete(fullPath)
-          unsub()
+          resPayload = payload
 
-          resPayload = payload.uid
           console.log('ff close end')
 
           ws.send(createResMessage({
@@ -218,23 +214,24 @@ export const addWebSocketServerEventHandlers = (wss: WebSocket.Server<WebSocket.
 
           let resPayload: FFNodeActionReadPayloadRes
           const payload = message.body?.payload as FFNodeActionReadPayload
-          const fullPath = getFullPath(payload)
+          const fullPath = payload.uid
 
+          // read the file content
           const res = await readFileContent(fullPath)
           if (!res.success) {
             ws.send(createResMessage({
-              header: 'error-message',
+              header: 'e-message',
               body: {
                 errorMessage: res.error as string,
               },
             }))
             return
           }
-          console.log(res.data)
+
           resPayload = {
             uid: payload.uid,
             type: getFileExtension(payload.name),
-            content: res.data as FileContent
+            content: res.data as string,
           }
           console.log('ff read end')
 
@@ -249,13 +246,71 @@ export const addWebSocketServerEventHandlers = (wss: WebSocket.Server<WebSocket.
           console.log('ff rename begin')
 
           let resPayload: FFNodeActionRenamePayloadRes
-          const { ffNode, name } = message.body?.payload as FFNodeActionRenamePayload
-          const fullPath = getFullPath(ffNode)
+          const { nodes, name } = message.body?.payload as FFNodeActionRenamePayload
 
-          const res = await renameFF(fullPath, name)
+          // get the main node to rename
+          const renameNode = nodes[0]
+          const oldUid = renameNode.uid
+          const newUid = joinPath(getPath(oldUid), name)
+          const newNodes: FFNode[] = []
+          const watchers: boolean[] = []
+
+          // backup new-named nodes
+          for (let i = 0; i < nodes.length; ++i) {
+            const node = nodes[i]
+            const { uid, p_uid } = node
+
+            if (subscriptions.get(uid)) {
+              watchers.push(true)
+            } else {
+              watchers.push(false)
+            }
+
+            newNodes.push({
+              ...node,
+              uid: newUid + node.uid.slice(oldUid.length),
+              p_uid: (p_uid !== null && p_uid.length >= oldUid.length) ? (newUid + p_uid.slice(oldUid.length)) : p_uid,
+              children: node.children.map(childUid => newUid + childUid.slice(oldUid.length)),
+              data: node.uid,
+            })
+          }
+          newNodes[0].name = name
+
+          // unsubscribe the watchers it it's a folder
+          for (let i = nodes.length - 1; i >= 0; --i) {
+            const fullPath = nodes[i].uid
+            const unsub = subscriptions.get(fullPath)
+            if (unsub) {
+              subscriptions.delete(fullPath)
+              unsub()
+            }
+          }
+
+          // rename the ffNode
+          const res = await renameFF(renameNode.uid, newUid)
           if (!res.success) {
+            // restore the subscribers if failed
+            for (let i = 0; i < nodes.length; ++i) {
+              const node = nodes[i]
+              const fullPath = node.uid
+              if (watchers[i]) {
+                const nodeType: FFNodeType = await getFFNodeType(fullPath)
+
+                // subscribe the watchers it it's a folder
+                if (nodeType === "folder") {
+                  subscriptions.set(fullPath, ffWatcher.subscribe(fullPath, (action: FFNodeActionRes) => {
+                    ws.send(createResMessage({
+                      header: 'ff-watch-message',
+                      body: action,
+                    }))
+                  }))
+                }
+              }
+            }
+
+            // return error
             ws.send(createResMessage({
-              header: 'error-message',
+              header: 'e-message',
               body: {
                 errorMessage: res.error as string,
               },
@@ -263,26 +318,66 @@ export const addWebSocketServerEventHandlers = (wss: WebSocket.Server<WebSocket.
             return
           }
 
+          // set the new subscribers if success
+          for (let i = 0; i < nodes.length; ++i) {
+            const node = nodes[i]
+            const fullPath = node.uid
+            if (watchers[i]) {
+              const nodeType: FFNodeType = await getFFNodeType(fullPath)
+              // subscribe the watchers it it's a folder
+              if (nodeType === "folder") {
+                subscriptions.set(fullPath, ffWatcher.subscribe(fullPath, (action: FFNodeActionRes) => {
+                  ws.send(createResMessage({
+                    header: 'ff-watch-message',
+                    body: action,
+                  }))
+                }))
+              }
+            }
+          }
+
           console.log('ff rename end')
 
+          resPayload = {
+            nodes: newNodes,
+            name: name,
+          }
           ws.send(createResMessage({
             header: 'ff-message',
             body: {
               type: 'rename',
-              payload: {
-                uid: ffNode.uid,
-                name: name,
-              },
+              payload: resPayload,
             },
           }))
         } else if (type === 'remove') {
           console.log('ff remove begin')
 
-          let resPayload: FFNodeActionRemovePayloadRes
+          let resPayload: FFNodeActionRemovePayloadRes = []
           const payload = message.body?.payload as FFNodeActionRemovePayload
+          resPayload = payload
 
-          console.log('ff remove begin')
+          for (const uid of payload) {
+            const fullPath = uid
+            const nodeType: FFNodeType = await getFFNodeType(fullPath)
 
+            // unsubscribe the watchers it it's a folder
+            if (nodeType === "folder") {
+              const unsub = subscriptions.get(fullPath)
+              if (!unsub) continue
+              subscriptions.delete(fullPath)
+              unsub()
+            }
+          }
+
+          console.log('ff remove end')
+
+          ws.send(createResMessage({
+            header: 'ff-message',
+            body: {
+              type: 'remove',
+              payload: payload,
+            },
+          }))
         } else if (type === 'move') {
           console.log('ff move begin')
 
@@ -299,18 +394,33 @@ export const addWebSocketServerEventHandlers = (wss: WebSocket.Server<WebSocket.
 
           console.log('ff duplicate begin')
 
-        }
+        } else if (type === 'create') {
+          console.log('ff create begin')
 
-        else if (type === 'update') {
+          let resPayload: FFNodeActionCreatePayloadRes
+          const payload = message.body?.payload as FFNodeActionCreatePayload
+
+          console.log('ff create begin')
+
+        } else if (type === 'delete') {
+          console.log('ff delete begin')
+
+          let resPayload: FFNodeActionDeletePayloadRes
+          const payload = message.body?.payload as FFNodeActionDeletePayload
+
+          console.log('ff delete begin')
+
+        } else if (type === 'update') {
           console.log('ff update begin')
 
           let resPayload: FFNodeActionUpdatePayloadRes
           const payload = message.body?.payload as FFNodeActionUpdatePayload
 
+          // write file content
           const res = await writeFileContent(payload)
           if (!res.success) {
             ws.send(createResMessage({
-              header: 'error-message',
+              header: 'e-message',
               body: {
                 errorMessage: res.error as string,
               },

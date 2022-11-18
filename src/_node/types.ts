@@ -1,7 +1,7 @@
 /**
  * unique id for each node
  */
-export type TUid = string | number
+export type TUid = string
 
 
 /**
@@ -87,16 +87,7 @@ export type TDuplicateNodePayload = {
 /**
  * ref to valid file types
  */
-export type TValidFileType = 'html' | 'css' | 'js' | 'md'/* file types that the app can classify */
-/**
- * ref to parsable file types
- */
-export const parsable = {/* parsable file types - we need this since the app can classify but impossible to parse it */
-  'html': true,
-  'css': false,
-  'js': false,
-  'md': false,
-}
+export type TFileType = 'html' | 'css' | 'js' | 'md' | 'unknown'/* file types that the app can classify */
 
 /**
  * parse file api payload type

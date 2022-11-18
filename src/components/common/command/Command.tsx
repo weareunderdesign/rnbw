@@ -9,7 +9,7 @@ import {
   MenuItem,
 } from '@blueprintjs/core';
 
-export default function ConMenu(props: any): JSX.Element {
+export default function Command(props: any): JSX.Element {
   const playground = useRef(null)
   const handleSave = () => {
   }

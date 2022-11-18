@@ -5,7 +5,7 @@ import {
   useSelector,
 } from 'react-redux';
 
-import ConMenu from '@_components/common/contextMenu';
+import ConMenu from '@_components/common/command';
 import MainPage from '@_pages/main';
 import {
   socketGetConnectedSelector,
@@ -14,8 +14,10 @@ import {
 } from '@_redux/socket';
 import { Spinner } from '@blueprintjs/core';
 
+import { AppProps } from './types';
+
 // react functional component
-export default function App() {
+export default function App(props: AppProps) {
   const dispatch = useDispatch()
 
   // fetch socket state

@@ -8,6 +8,7 @@ import {
 
 import { TreeView } from '@_components/common';
 import { TreeViewData } from '@_components/common/treeView/types';
+import { TUid } from '@_node/types';
 import {
   ffGetExpandedItemsSelector,
   ffGetFocusedItemSelector,
@@ -15,33 +16,30 @@ import {
   focusFFNode,
   selectFFNode,
 } from '@_redux/ff';
-import {
-  globalGetProjectsSelector,
-  globalGetWorkspaceSelector,
-} from '@_redux/global';
+import { globalGetWorkspaceSelector } from '@_redux/global';
 import { socketSendMessage } from '@_redux/socket';
 import {
+  getSubDirectoryNodes,
+  getSubDirectoryUids,
+} from '@_services/ff';
+import {
+  FFNode,
   FFNodeActionAddPayload,
   FFNodeActionClosePayload,
-  FFNodeActionMovePayload,
   FFNodeActionOpenPayload,
   FFNodeActionReadPayload,
+  FFNodeActionRemovePayload,
   FFNodeActionRenamePayload,
-  FFObject,
 } from '@_types/ff';
-import {
-  NAME,
-  UID,
-} from '@_types/global';
 
 import { renderers } from './renderers';
+import { WorkspaceTreeViewProps } from './types';
 
-export default function WorkspaceTreeView() {
+export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   const dispatch = useDispatch()
 
   // fetch global state
   const workspace = useSelector(globalGetWorkspaceSelector)
-  const projects = useSelector(globalGetProjectsSelector)
 
   // fetch ff state
   const focusedItem = useSelector(ffGetFocusedItemSelector)
@@ -62,31 +60,30 @@ export default function WorkspaceTreeView() {
       canRename: false,
     }
 
-    // push all of the ffnodes inside the workspace and the projects from the global state
+    // push all of the ffnodes in workspace from the global state
     for (const uid in workspace) {
-      const ffNode: FFObject = workspace[uid]
-      rootNode.children?.push(ffNode.uid)
-      rootNode.hasChildren = true
+      const node: FFNode = workspace[uid]
+      if (node.p_uid === null) {
+        rootNode.children?.push(node.uid)
+        rootNode.hasChildren = true
 
-      data[uid] = {
-        index: uid,
-        data: ffNode,
-        children: ffNode.children || [],
-        hasChildren: ffNode.type === 'folder' ? true : false,
-        canMove: true,
-        canRename: true,
-      }
-    }
-    for (const uid in projects) {
-      const ffNode: FFObject = projects[uid]
-
-      data[uid] = {
-        index: uid,
-        data: ffNode,
-        children: ffNode.children || [],
-        hasChildren: ffNode.type === 'folder' ? true : false,
-        canMove: true,
-        canRename: true,
+        data[uid] = {
+          index: uid,
+          data: node,
+          children: node.children,
+          hasChildren: !node.isEntity,
+          canMove: false,
+          canRename: true,
+        }
+      } else {
+        data[uid] = {
+          index: uid,
+          data: node,
+          children: node.children,
+          hasChildren: !node.isEntity,
+          canMove: true,
+          canRename: true,
+        }
       }
     }
 
@@ -96,9 +93,11 @@ export default function WorkspaceTreeView() {
       ...data
     }
     return treeViewData
-  }, [workspace, projects])
+  }, [workspace])
 
+  // import project folder to workspace
   const onAddBtnClick = () => {
+    // call add api
     dispatch(socketSendMessage({
       header: 'ff-message',
       body: {
@@ -107,58 +106,72 @@ export default function WorkspaceTreeView() {
       },
     }))
   }
+  // remove project folder from workspace
+  const onRemoveBtnClick = () => {
+    // return if it's not the project folder
+    if (workspace[focusedItem].p_uid !== null) {
+      return
+    }
+    // call remove api
+    dispatch(socketSendMessage({
+      header: 'ff-message',
+      body: {
+        type: 'remove',
+        payload: getSubDirectoryUids(focusedItem, workspace) as FFNodeActionRemovePayload,
+      },
+    }))
+  }
 
   // cb
-  const cb_focusFFNode = (uid: UID) => {
+  const cb_focusFFNode = (uid: TUid) => {
     dispatch(focusFFNode(uid))
   }
-  const cb_selectFFNode = (uids: UID[]) => {
+  const cb_selectFFNode = (uids: TUid[]) => {
     dispatch(selectFFNode(uids))
   }
-
-  const cb_expandFFNode = (uid: UID) => {
+  const cb_expandFFNode = (uid: TUid) => {
     dispatch(socketSendMessage({
       header: 'ff-message',
       body: {
         type: 'open',
-        payload: (workspace[uid] || projects[uid]) as FFNodeActionOpenPayload,
+        payload: workspace[uid] as FFNodeActionOpenPayload,
       },
     }))
   }
-  const cb_collapseFFNode = (uid: UID) => {
+  const cb_collapseFFNode = (uid: TUid) => {
     dispatch(socketSendMessage({
       header: 'ff-message',
       body: {
         type: 'close',
-        payload: (workspace[uid] || projects[uid]) as FFNodeActionClosePayload,
+        payload: getSubDirectoryUids(uid, workspace) as FFNodeActionClosePayload,
       },
     }))
   }
-
-  const cb_readFFNode = (uid: UID) => {
+  const cb_readFFNode = (uid: TUid) => {
     dispatch(socketSendMessage({
       header: 'ff-message',
       body: {
         type: 'read',
-        payload: projects[uid] as FFNodeActionReadPayload,
+        payload: workspace[uid] as FFNodeActionReadPayload,
       },
     }))
   }
-  const cb_renameFFNode = (uid: UID, name: NAME) => {
+  const cb_renameFFNode = (uid: TUid, name: string) => {
     dispatch(socketSendMessage({
       header: 'ff-message',
       body: {
         type: 'rename',
         payload: {
-          ffNode: workspace[uid] || projects[uid],
+          nodes: getSubDirectoryNodes(uid, workspace),
           name: name,
         } as FFNodeActionRenamePayload,
       },
     }))
   }
 
-  const cb_dropFFNode = (uids: UID[], targetUID: UID) => {
-    const ffNodes: FFObject[] = []
+  // move/duplicate create/delete actions
+  const cb_dropFFNode = (uids: TUid[], targetUID: TUid) => {
+    /* const ffNodes: FFNode[] = []
     for (const uid of uids) {
       ffNodes.push(workspace[uid] || projects[uid])
     }
@@ -173,12 +186,10 @@ export default function WorkspaceTreeView() {
           overwrite: true,
         } as FFNodeActionMovePayload,
       },
-    }))
+    })) */
   }
-
-  // create/delete actions
   const createFFNode = () => {
-    if (projects[focusedItem] && projects[focusedItem].type === 'file') {
+    /* if (projects[focusedItem] && projects[focusedItem].type === 'file') {
       return
     }
     const targetFFNode = workspace[focusedItem] || projects[focusedItem]
@@ -193,11 +204,11 @@ export default function WorkspaceTreeView() {
           type: 'file',
         },
       },
-    }))
+    })) */
   }
   const deleteFFNode = () => {
-    console.log('delete FFNode', selectedItems)
-    const ffNodes: FFObject[] = []
+    /* console.log('delete FFNode', selectedItems)
+    const ffNodes: FFNode[] = []
     for (const uid of selectedItems) {
       ffNodes.push(workspace[uid] || projects[uid])
     }
@@ -207,7 +218,7 @@ export default function WorkspaceTreeView() {
         type: 'delete',
         payload: ffNodes,
       },
-    }))
+    })) */
   }
 
   return (<>
@@ -250,7 +261,7 @@ export default function WorkspaceTreeView() {
           }}
         >
           {/* Create Node Button */}
-          <button
+          {/* <button
             style={{
               background: "rgb(23 111 44)",
               color: "white",
@@ -260,11 +271,11 @@ export default function WorkspaceTreeView() {
             }}
             onClick={createFFNode}
           >
-            +
-          </button>
+            Create
+          </button> */}
 
-          {/* Create Node Button */}
-          <button
+          {/* Delete Node Button */}
+          {/* <button
             style={{
               background: "rgb(23 111 44)",
               color: "white",
@@ -274,10 +285,10 @@ export default function WorkspaceTreeView() {
             }}
             onClick={deleteFFNode}
           >
-            -
-          </button>
+            Delete
+          </button> */}
 
-          {/* Import Project Button */}
+          {/* Add Project Button */}
           <button
             style={{
               background: "rgb(23 111 44)",
@@ -289,6 +300,20 @@ export default function WorkspaceTreeView() {
             onClick={onAddBtnClick}
           >
             Open
+          </button>
+
+          {/* Remove Project Button */}
+          <button
+            style={{
+              background: "red",
+              color: "white",
+              border: "none",
+              font: "normal lighter normal 12px Arial",
+              margin: "0px 5px",
+            }}
+            onClick={onRemoveBtnClick}
+          >
+            Close
           </button>
         </div>
       </div>

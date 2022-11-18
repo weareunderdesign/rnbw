@@ -1,4 +1,4 @@
-import {
+/* import {
   Element,
   Text,
 } from 'domhandler';
@@ -215,4 +215,4 @@ export const duplicateFN = ({ uid, fnNode, data }: FNNodeActionDuplicatePayload)
 export const renameFN = ({ uid, name, data }: FNNodeActionRenamePayload): FNFile => {
     data[uid].name = name;
     return data
-}
+} */

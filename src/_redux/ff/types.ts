@@ -1,8 +1,14 @@
-import { UID } from '@_types/global';
+import { TUid } from '@_node/types';
 
 // Main State
 export type FFTreeViewState = {
-  focusedItem: UID,
-  expandedItems: UID[],
-  selectedItems: UID[],
+  focusedItem: TUid,
+  expandedItems: TUid[],
+  expandedItemsObj: {
+    [uid: TUid]: boolean,
+  },
+  selectedItems: TUid[],
+  selectedItemsObj: {
+    [uid: TUid]: boolean,
+  },
 }

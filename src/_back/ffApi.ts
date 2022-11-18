@@ -1,24 +1,21 @@
+import { TUid } from '@_node/types';
 import {
   FFNodeActionUpdatePayload,
   FFNodeType,
 } from '@_types/ff';
-import {
-  NAME,
-  PATH,
-} from '@_types/global';
 
-import {
-  getFFNodeType,
-  getFullPath,
-  getPath,
-  joinPath,
-} from './services';
+import { getFFNodeType } from './services';
 import { FFApiRes } from './types';
 
 const fs = require('fs-extra')
 
-// read file content based on the path
-export async function readFileContent(pathName: PATH): Promise<FFApiRes> {
+/**
+ * read file content based on the path
+ * @param pathName 
+ * @returns 
+ */
+export async function readFileContent(pathName: string): Promise<FFApiRes> {
+  // validate
   const nodeType: FFNodeType = await getFFNodeType(pathName)
   if (nodeType !== 'file') {
     return {
@@ -27,6 +24,7 @@ export async function readFileContent(pathName: PATH): Promise<FFApiRes> {
     }
   }
 
+  // read file content
   return fs.readFile(pathName)
     .then((data: Buffer) => {
       return {
@@ -42,9 +40,13 @@ export async function readFileContent(pathName: PATH): Promise<FFApiRes> {
     })
 }
 
-// write File Content
+/**
+ * write File Content
+ * @param param0 
+ * @returns 
+ */
 export async function writeFileContent({ file, content }: FFNodeActionUpdatePayload): Promise<FFApiRes> {
-  const fullPath = getFullPath(file)
+  const fullPath = file.uid
 
   // validate
   const ffNodeType: FFNodeType = await getFFNodeType(fullPath)
@@ -70,8 +72,13 @@ export async function writeFileContent({ file, content }: FFNodeActionUpdatePayl
     })
 }
 
-// rename folder/file with the newName
-export async function renameFF(pathName: PATH, newName: NAME): Promise<FFApiRes> {
+/**
+ * rename folder/file with the newName
+ * @param pathName 
+ * @param newPathName 
+ * @returns 
+ */
+export async function renameFF(pathName: string, newPathName: string): Promise<FFApiRes> {
   // validate
   const nodeType: FFNodeType = await getFFNodeType(pathName)
   if (nodeType === 'unlink') {
@@ -82,7 +89,6 @@ export async function renameFF(pathName: PATH, newName: NAME): Promise<FFApiRes>
   }
 
   // rename the FF
-  const newPathName = joinPath(getPath(pathName), newName)
   return fs.rename(pathName, newPathName)
     .then(() => {
       return {
@@ -90,6 +96,54 @@ export async function renameFF(pathName: PATH, newName: NAME): Promise<FFApiRes>
       }
     })
     .catch((err: string) => {
+      return {
+        success: false,
+        error: err
+      }
+    })
+}
+
+/**
+ * delete folder/file with the name
+ * @param uid 
+ * @returns 
+ */
+export async function deleteFF(uid: TUid): Promise<FFApiRes> {
+  const fullPath = uid
+
+  // validate
+  const nodeType: FFNodeType = await getFFNodeType(fullPath)
+  if (nodeType === "unlink") {
+    return {
+      success: false,
+      error: 'It\'s not a valid folder or file',
+    }
+  }
+
+  // delete file
+  if (nodeType === 'file') {
+    return fs.unlink(fullPath)
+      .then(() => {
+        return {
+          success: true,
+        }
+      })
+      .catch((err: any) => {
+        return {
+          success: false,
+          error: err
+        }
+      })
+  }
+
+  // delete folder
+  return fs.rm(fullPath, { recursive: true, force: true })
+    .then(() => {
+      return {
+        success: true,
+      }
+    })
+    .catch((err: any) => {
       return {
         success: false,
         error: err
@@ -141,78 +195,6 @@ export async function createFF({ from, payload }: FFNodeActionAddPayload): Promi
   }
 }
 
-export async function saveFileContent({ from, payload }: FFNodeActionUpdatePayload): Promise<FFApiRes> {
-  const fullPath = getFullPath(from)
-  const { content } = payload
-
-  const ffNodeType: FFNodeType = await getFFNodeType(fullPath)
-  if (ffNodeType === "folder") {
-    return {
-      success: false,
-      error: "You are trying to update folder content",
-    }
-  }
-  if (ffNodeType === 'file') {
-    return fs.writeFile(fullPath, content)
-      .then(() => {
-        return {
-          success: true,
-        }
-      })
-      .catch((err: any) => {
-        return {
-          sucess: false,
-          error: err,
-        }
-      })
-  }
-  return {
-    success: false,
-    error: 'Unknown Error'
-  }
-}
-
-
-
-export async function removeFF({ from }: FFNodeActionRemovePayload): Promise<FFApiRes> {
-  const fullPath = getFullPath(from)
-
-  const ffNodeType: FFNodeType = await getFFNodeType(fullPath)
-  if (ffNodeType === "unlink") {
-    return {
-      success: false,
-      error: "You are trying to remove unlink file or folder",
-    }
-  }
-
-  if (ffNodeType === 'file') {
-    return fs.unlink(fullPath)
-      .then(() => {
-        return {
-          success: true,
-        }
-      })
-      .catch((err: any) => {
-        return {
-          success: false,
-          error: err
-        }
-      })
-  }
-
-  return fs.rm(fullPath, { recursive: true, force: true })
-    .then(() => {
-      return {
-        success: true,
-      }
-    })
-    .catch((err: any) => {
-      return {
-        success: false,
-        error: err
-      }
-    })
-}
 
 export async function moveFF({ from, to, payload }: FFNodeActionMovePayload): Promise<FFApiRes> {
   const to_fullpath = getFullPath(to)

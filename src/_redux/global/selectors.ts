@@ -6,10 +6,6 @@ import { AppState } from '@_redux/_root';
 const globalGetWorkspace = (state: AppState) => state.global.workspace
 export const globalGetWorkspaceSelector = createSelector(globalGetWorkspace, (workspace) => workspace)
 
-// project selector
-const globalGetProjects = (state: AppState) => state.global.projects
-export const globalGetProjectsSelector = createSelector(globalGetProjects, (projects) => projects)
-
 // currentFile selector
 const globalGetCurrentFile = (state: AppState) => state.global.currentFile
 export const globalGetCurrentFileSelector = createSelector(globalGetCurrentFile, (currentFile) => currentFile)
