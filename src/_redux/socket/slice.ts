@@ -1,7 +1,4 @@
-import {
-  Message,
-  ResMessage,
-} from '@_types/global';
+import { Message } from '@_types/socket';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from '@reduxjs/toolkit';
 
@@ -25,6 +22,7 @@ const slice = createSlice({
     },
     socketDisconnect(state, action: PayloadAction) {
       state.connected = false
+      state.inited = false
     },
     socketInit(state, action: PayloadAction) {
       state.inited = true
@@ -33,9 +31,8 @@ const slice = createSlice({
       state.pending = true
       state.pendingRequest = action.payload
     },
-    socketReceiveMessage(state, action: PayloadAction<ResMessage>) {
+    socketReceiveMessage(state, action: PayloadAction) {
       state.pending = false
-      state.pendingRequest = null
     },
   },
 })

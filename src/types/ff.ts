@@ -1,205 +1,152 @@
-/*  
-  Folder/File Types
+/*
+------------------------------------------------------------------------------------------
+---------------------------------Types for File Tree View---------------------------------
+------------------------------------------------------------------------------------------
 */
 
 import {
-  ADD,
-  CLOSE,
-  DUPLICATE,
-  MOVE,
-  NAME,
-  NONE,
-  OPEN,
-  PATH,
-  READ,
-  REMOVE,
-  RENAME,
-  UID,
-  UNKNOWN,
-  UNLINK,
-} from './global';
+  TFileType,
+  TNode,
+  TUid,
+} from '@_node/types';
 
-// File Extension
-export type HTML = 'html'
-export type CSS = 'css'
-export type SCSS = 'scss' | 'sass'
-export type JS = 'js'
-export type MD = 'md'
-export type FileExtension = HTML | CSS | SCSS | JS | MD | UNKNOWN | NONE
-export const validFileExtensions: FileExtension[] = ['html', 'css', 'scss', 'sass', 'js', 'md']
+/**
+ * node type in file-tree-view
+ */
+export type FFNodeType = 'folder' | 'file' | 'unlink'
 
-// Node Type in the File Tree View
-export type FOLDER = 'folder'
-export type FILE = 'file'
-export type FFNodeType = FOLDER | FILE | UNLINK
+/**
+ * node data object type in file-tree-view
+ */
+export type FFNode = TNode
 
-// File Content
-export type FileContent = string
-
-// Folder/File Object
-export type FFObject = {
-  uid: UID,
-  p_uid: UID | null, // parent UID
-  path: PATH, // folder path
-  name: NAME, // name.extension
-  type: FFNodeType,
-  children: UID[],
+/**
+ * tree type in file-tree-view
+ */
+export type FFTree = {
+  [uid: TUid]: FFNode,
 }
 
-// Workspace
-export type Project = FFObject
-export type Workspace = {
-  [uid: UID]: Project,
-}
-
-/* 
-FFNode Actions
-1. Action Types
-2. Action Payloads
-3. Action
-*/
-
-// 1. Action Types
-export type CREATE = 'create'
-export type DELETE = 'delete'
-export type UPDATE = 'update'
+/**
+ * node action types in file-tree-view
+ */
 export type FFNodeActionType =
-  ADD/* import the project to the workspace */
-  | REMOVE/* remove the project from the workspace */
+  'add'/* import the project to the workspace */
+  | 'remove'/* remove the project from the workspace */
+  | 'open'/* expand the folder in the treeview */
+  | 'close'/* collapse the folder in the treeview */
+  | 'read'/* select the file in the treeview */
+  | 'rename'/* rename the folder/file in the treeview */
+  | 'move'/* cut&paste the folder/file s in the treeview */
+  | 'duplicate'/* copy&paste the folder/file s in the treeview */
+  | 'create'/* create the folder/file in the treeview */
+  | 'delete'/* delete the folder/file s in the treeview */
+  | 'update'/* update the current file content */
 
-  | OPEN/* expand the folder in the treeview */
-  | CLOSE/* collapse the folder in the treeview */
-
-  | READ/* select the file in the treeview */
-  | RENAME/* rename the folder/file in the treeview */
-
-  | MOVE/* cut&paste the folder/file s in the treeview */
-  | DUPLICATE/* copy&paste the folder/file s in the treeview */
-
-  | CREATE/* create the folder/file in the treeview */
-  | DELETE/* delete the folder/file s in the treeview */
-
-  | UPDATE/* update the current file content */
-
-// 2. Action Payloads
+/* node action payloads in file-tree-view */
 export type FFNodeActionAddPayload = {}
-export type FFNodeActionRemovePayload = FFObject
-
-export type FFNodeActionOpenPayload = FFObject
-export type FFNodeActionClosePayload = FFObject
-
-export type FFNodeActionReadPayload = FFObject
+export type FFNodeActionRemovePayload = TUid[]
+export type FFNodeActionOpenPayload = FFNode
+export type FFNodeActionClosePayload = TUid[]
+export type FFNodeActionReadPayload = FFNode
 export type FFNodeActionRenamePayload = {
-  ffNode: FFObject,
-  name: NAME,
+  nodes: FFNode[],
+  name: string,
 }
-
 // ************************************************************************
 export type FFNodeActionMovePayload = {
-  ffNodes: FFObject[],
-  target: FFObject,
+  nodes: FFNode[],
+  target: FFNode,
   overwrite: boolean,
 }
 export type FFNodeActionDuplicatePayload = {
-  ffNodes: FFObject[],
-  target: FFObject,
+  nodes: FFNode[],
+  target: FFNode,
   overwrite: boolean,
 }
 
 export type FFNodeActionCreatePayload = {
-  target: FFObject,
+  target: FFNode,
   type: FFNodeType,
 }
 export type FFNodeActionDeletePayload = {
-  fnNodes: FFObject[],
+  nodes: FFNode[],
 }
 // ************************************************************************
-
 export type FFNodeActionUpdatePayload = {
-  file: FFObject,
-  content: FileContent,
+  file: FFNode,
+  content: string,
 }
 
+/**
+ * node action payload in file-tree-view
+ */
 export type FFNodeActionPayload =
   FFNodeActionAddPayload
   | FFNodeActionRemovePayload
-
   | FFNodeActionOpenPayload
   | FFNodeActionClosePayload
-
   | FFNodeActionReadPayload
   | FFNodeActionRenamePayload
-
   | FFNodeActionMovePayload
   | FFNodeActionDuplicatePayload
-
   | FFNodeActionCreatePayload
   | FFNodeActionDeletePayload
-
   | FFNodeActionUpdatePayload
 
-// 3. Action
+/**
+ * node action object type in file-tree-view
+ */
 export type FFNodeAction = {
   type: FFNodeActionType,
   payload: FFNodeActionPayload,
 }
 
-/*
-Specific Action Res
-1. Payloads
-2. Action
-*/
-
-// 1. Payloads
-export type FFNodeActionAddPayloadRes = Project
-export type FFNodeActionRemovePayloadRes = UID
-
-export type FFNodeActionOpenPayloadRes = FFObject[]
-export type FFNodeActionClosePayloadRes = UID
-
+/* node action api res payload */
+export type FFNodeActionAddPayloadRes = FFNode
+export type FFNodeActionRemovePayloadRes = TUid[]
+export type FFNodeActionOpenPayloadRes = FFNode[]
+export type FFNodeActionClosePayloadRes = TUid[]
 export type FFNodeActionReadPayloadRes = {
-  uid: UID,
-  type: FileExtension,
-  content: FileContent,
+  uid: TUid,
+  type: TFileType,
+  content: string,
 }
 export type FFNodeActionRenamePayloadRes = {
-  uid: UID,
-  name: NAME,
+  nodes: FFNode[],
+  name: string,
 }
-
 // ************************************************************************
 export type FFNodeActionMovePayloadRes = {}
 export type FFNodeActionDuplicatePayloadRes = {}
-
 export type FFNodeActionCreatePayloadRes = {}
 export type FFNodeActionDeletePayloadRes = {}
 // ************************************************************************
-
 export type FFNodeActionUpdatePayloadRes = {
-  uid: UID,
-  type: FileExtension,
-  content: FileContent,
+  uid: TUid,
+  type: TFileType,
+  content: string,
 }
 
+/**
+ * node action api res type in file-tree-view
+ */
 export type FFNodeActionPayloadRes =
   FFNodeActionAddPayloadRes
   | FFNodeActionRemovePayloadRes
-
   | FFNodeActionOpenPayloadRes
   | FFNodeActionClosePayloadRes
-
   | FFNodeActionReadPayloadRes
   | FFNodeActionRenamePayloadRes
-
   | FFNodeActionMovePayloadRes
   | FFNodeActionDuplicatePayloadRes
-
   | FFNodeActionCreatePayloadRes
   | FFNodeActionDeletePayloadRes
-
   | FFNodeActionUpdatePayloadRes
 
-// 2. Action
+/**
+ * node action api res type in file-tree-view
+ */
 export type FFNodeActionRes = {
   type: FFNodeActionType,
   payload: FFNodeActionPayloadRes,

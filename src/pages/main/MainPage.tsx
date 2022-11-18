@@ -6,7 +6,9 @@ import {
   StageView,
 } from '@_components/main';
 
-export default function MainPage() {
+import { MainPageProps } from './types';
+
+export default function MainPage(props: MainPageProps) {
 
   return (<>
     <div style={{

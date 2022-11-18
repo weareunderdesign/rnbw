@@ -3,10 +3,7 @@ import {
   TreeRenderProps,
 } from 'react-complex-tree';
 
-import {
-  NAME,
-  UID,
-} from '@_types/global';
+import { TUid } from '@_node/types';
 
 export type TreeViewProps = {
   width: string,
@@ -15,19 +12,19 @@ export type TreeViewProps = {
 
   renderers: TreeRenderProps,
 
-  focusedItem: UID,
-  expandedItems: UID[],
-  selectedItems: UID[],
+  focusedItem: TUid,
+  expandedItems: TUid[],
+  selectedItems: TUid[],
 
-  cb_focusNode: (payload: UID) => void,
-  cb_expandNode: (payload: UID) => void,
-  cb_collapseNode: (payload: UID) => void,
-  cb_selectNode: (payload: UID[]) => void,
+  cb_focusNode: (payload: TUid) => void,
+  cb_expandNode: (payload: TUid) => void,
+  cb_collapseNode: (payload: TUid) => void,
+  cb_selectNode: (payload: TUid[]) => void,
 
-  cb_readNode?: (payload: UID) => void,
+  cb_readNode?: (payload: TUid) => void,
 
-  cb_renameNode: (uid: UID, name: NAME) => void,
-  cb_dropNode: (uids: UID[], targetUID: UID) => void,
+  cb_renameNode: (uid: TUid, name: string) => void,
+  cb_dropNode: (uids: TUid[], targetTUid: TUid) => void,
 }
 
 export type TreeViewData = {

@@ -1,4 +1,4 @@
-import { Message } from '@_types/global';
+import { Message } from '@_types/socket';
 
 // return JSON string from the message
 export const createMessage = (message: Message): string => {

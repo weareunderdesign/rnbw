@@ -4,6 +4,7 @@ import React, {
 } from 'react';
 
 import * as monaco from 'monaco-editor';
+import { CodeViewProps } from 'react-code-view';
 import { useSelector } from 'react-redux';
 
 import { globalGetCurrentFileSelector } from '@_redux/global';
@@ -11,7 +12,7 @@ import Editor, { loader } from '@monaco-editor/react';
 
 loader.config({ monaco })
 
-export default function CodeView() {
+export default function CodeView(props: CodeViewProps) {
   const { uid, type, content } = useSelector(globalGetCurrentFileSelector)
   const codeContent = useMemo(() => content, [content])
 
@@ -25,7 +26,7 @@ export default function CodeView() {
   return <>
     <Editor
       height="100%"
-      width="100%"
+      width="calc(100% - 400px)"
       defaultLanguage=""
       language={'html'}
       defaultValue=""

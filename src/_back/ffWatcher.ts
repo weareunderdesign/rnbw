@@ -4,19 +4,17 @@ import {
   FFNodeActionRes,
   FFNodeType,
 } from '@_types/ff';
-import { PATH } from '@_types/global';
 
 import {
-  generateUID,
   getFFNodeType,
   joinPath,
 } from './services';
 
 export default class FFWatcher {
-  subscriptions = new Map<PATH, Set<(event: FFNodeActionRes) => void>>();
-  watchers = new Map<PATH, fs.FSWatcher>();
+  subscriptions = new Map<string, Set<(event: FFNodeActionRes) => void>>();
+  watchers = new Map<string, fs.FSWatcher>();
 
-  publish(pathName: PATH, action: FFNodeActionRes) {
+  publish(pathName: string, action: FFNodeActionRes) {
     // skip if there's no subscriber
     const subscribers = this.subscriptions.get(pathName)
     if (!subscribers) return
@@ -27,7 +25,7 @@ export default class FFWatcher {
     }
   }
 
-  subscribe(pathName: PATH, callback: (action: FFNodeActionRes) => void) {
+  subscribe(pathName: string, callback: (action: FFNodeActionRes) => void) {
     // if there's no watcher, add watcher
     if (!this.watchers.get(pathName)) this.watch(pathName)
 
@@ -52,21 +50,23 @@ export default class FFWatcher {
     }
   }
 
-  async watch(pathName: PATH) {
+  async watch(pathName: string) {
     // Skip if the watch already exists
     if (this.watchers.get(pathName)) return
 
     //Setup watcher
     const watcher = fs.watch(pathName, async (actionType, ffName) => {
+      const fullPath = joinPath(pathName, ffName)
+
       // Check if the pathName+ffName is a valid node
-      const nodeType: FFNodeType = await getFFNodeType(joinPath(pathName, ffName))
+      const nodeType: FFNodeType = await getFFNodeType(fullPath)
       if (nodeType !== 'unlink') {
         if (actionType == 'rename') { // Rename event
           this.publish(pathName, {
             type: 'rename',
             payload: {
               p_uid: null,
-              uid: generateUID(),
+              uid: fullPath,
               path: pathName,
               name: ffName,
               type: nodeType,
@@ -96,7 +96,7 @@ export default class FFWatcher {
     this.watchers.set(pathName, watcher);
   }
 
-  unwatch(pathName: PATH) {
+  unwatch(pathName: string) {
     // Skip if the watch already non exists
     const watcher = this.watchers.get(pathName)
     if (!watcher) return

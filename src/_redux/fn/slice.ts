@@ -1,4 +1,4 @@
-import { UID } from '@_types/global';
+import { TUid } from '@_node/types';
 import {
   createSlice,
   PayloadAction,
@@ -19,20 +19,20 @@ const slice = createSlice({
   name: 'fn',
   initialState,
   reducers: {
-    focusFNNode(state, action: PayloadAction<UID>) {
-      const uid: UID = action.payload
+    focusFNNode(state, action: PayloadAction<TUid>) {
+      const uid = action.payload
       state.focusedItem = uid
     },
-    expandFNNode(state, action: PayloadAction<UID>) {
-      const uid: UID = action.payload
+    expandFNNode(state, action: PayloadAction<TUid>) {
+      const uid = action.payload
       state.expandedItems.push(uid)
     },
-    collapseFNNode(state, action: PayloadAction<UID>) {
-      const uid: UID = action.payload
+    collapseFNNode(state, action: PayloadAction<TUid>) {
+      const uid = action.payload
       state.expandedItems = state.expandedItems.filter(u => u !== uid)
     },
-    selectFNNode(state, action: PayloadAction<UID[]>) {
-      const uids: UID[] = action.payload
+    selectFNNode(state, action: PayloadAction<TUid[]>) {
+      const uids = action.payload
       state.selectedItems = uids
     },
   },
