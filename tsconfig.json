@@ -49,8 +49,8 @@
     },
   },
   "include": [
-    // "src/**/*",
-    "src/_back/index.ts",
+    "src/**/*",
+    // "src/_back/index.ts",
   ],
   "exclude": [
     "build",

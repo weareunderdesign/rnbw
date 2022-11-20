@@ -6,7 +6,6 @@
     "build": "webpack --mode production && tsc",
     "serve": "node build/_back/index.js",
     "start": "npm run build && npm run serve",
-    "vercel-build": "npm install --force && npm start",
     "electron": "electron build/public/electron.js"
   },
   "keywords": [],
