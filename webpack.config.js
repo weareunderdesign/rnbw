@@ -7,8 +7,9 @@ module.exports = {
     client: "./src/index.tsx",
   },
   output: {
-    path: path.resolve(__dirname, "build"), // the bundle output path
+    path: path.resolve(__dirname, "dist"), // the bundle output path
     filename: "[name].bundle.js", // the name of the bundle
+    // public: "/rainbow/", // same as the project name
   },
   devServer: {
     port: 8080, // you can change the port

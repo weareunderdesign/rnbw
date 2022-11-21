@@ -1,1 +1,1 @@
-export type CodeViewTypes = {}
+export type CodeViewProps = {}
