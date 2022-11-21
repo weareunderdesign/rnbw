@@ -6,13 +6,13 @@ import {
   TAddNodePayload,
   TDuplicateNodePayload,
   TMoveNodePayload,
+  TNode,
   TNodeApiRes,
   TParseFilePayload,
   TRemoveNodePayload,
   TReplaceNodePayload,
   TSearializeFilePayload,
   TTree,
-  TNode,
   TUid,
 } from './types';
 
@@ -139,7 +139,7 @@ export const removeNode = ({ tree, nodeUids, deleted }: TRemoveNodePayload): TNo
     p_uids.map((uid) => {
       const result = updateUIDs(uid, tree)
       tree = _.cloneDeep(result.data)
-      if (deleted == true) 
+      if (deleted == true)
         convertUIDs = result.convertUIDs
     })
     return { success: true, tree: tree, child: child, convertUIDs }
@@ -178,17 +178,17 @@ export const moveNode = ({ tree, isBetween, parentUid, position, uids }: TMoveNo
     uids.map((uid) => {
       let node = _.cloneDeep(tree[uid])
 
-      const result = removeNode({ tree: treeData, nodeUids: [uid], deleted: true})
+      const result = removeNode({ tree: treeData, nodeUids: [uid], deleted: true })
       console.log(result)
       let child: TTree = result.child
       const convertUIDs = result.convertUIDs
       treeData = _.cloneDeep(result.tree as TTree)
 
       console.log("add", treeData)
-      
+
       convertUIDs?.has(parentUid) ? parentUid = convertUIDs.get(parentUid) as string : '';
       addNode({ tree: treeData as TTree, targetUid: parentUid, node });
-      treeData[node.uid].children = treeData[node.uid].children.map((key) => { return key.replace(uid, node.uid)});
+      treeData[node.uid].children = treeData[node.uid].children.map((key) => { return key.replace(uid, node.uid) });
       Object.keys(child).map((key) => {
 
         const oldChild: TNode = child[key] as TNode
@@ -229,7 +229,7 @@ export const duplicateNode = ({ tree, isBetween, parentUid, position, nodes }: T
  */
 export const parseFile = ({ type, content }: TParseFilePayload): TTree => {
   if (type === "html")
-    return parseHtml(content);
+    return parseHtml(content)
   return {}
 }
 

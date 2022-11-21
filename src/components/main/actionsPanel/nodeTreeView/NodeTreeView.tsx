@@ -50,7 +50,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   const { uid: fuid, type, content } = useSelector(globalGetCurrentFileSelector)
   const workspace = useSelector(globalGetWorkspaceSelector)
 
-  // fetch ff state
+  // fetch fn state
   const focusedItem = useSelector(fnGetFocusedItemSelector)
   const expandedItems = useSelector(fnGetExpandedItemsSelector)
   const selectedItems = useSelector(fnGetSelectedItemsSelector)
@@ -59,10 +59,9 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
   // node tree view data state
   const nodeTreeViewData = useMemo(() => {
-    console.log(type, content)
     const treedata: TTree = parseFile({ type, content })
     setTreeData(treedata)
-    console.log(treedata)
+
     let data: TreeViewData = {}
     for (const uid in treedata) {
       data[uid] = {
