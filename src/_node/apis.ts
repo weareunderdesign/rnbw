@@ -85,7 +85,7 @@ export const addNode = ({ tree, targetUid, node }: TAddNodePayload): TNodeApiRes
     /* set parent uid of the node and add it to the tree */
     tree[node.uid] = node
   } catch (err) {
-    return { success: false, error: err as string, child: {} }
+    return { success: false, error: err as string, child: {} , tree: tree}
   }
 
   return { success: true, child: {} }
