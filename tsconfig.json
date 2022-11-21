@@ -49,8 +49,7 @@
     },
   },
   "include": [
-    "src/**/*",
-    // "src/_back/index.ts",
+    "src/index.tsx",
   ],
   "exclude": [
     "build",

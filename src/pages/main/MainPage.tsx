@@ -9,7 +9,6 @@ import {
 import { MainPageProps } from './types';
 
 export default function MainPage(props: MainPageProps) {
-
   return (<>
     <div style={{
       width: "calc(100% - 4rem)",

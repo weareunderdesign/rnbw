@@ -1,5 +1,7 @@
-import { generateNodeUID } from '@_types/global';
-import { parseHtml, serializeHtml } from './html';
+import {
+  parseHtml,
+  serializeHtml,
+} from './html';
 import {
   TAddNodePayload,
   TDuplicateNodePayload,
@@ -14,6 +16,10 @@ import {
 } from './types';
 
 const _ = require("lodash");
+
+export const generateNodeUID = (PID: string, index: number) => {
+  return PID + "_" + index.toString()
+}
 
 export const updateUIDs = (PID: TUid, data: TTree) => {
   let convertUIDs = new Map<TUid, TUid>
@@ -104,7 +110,7 @@ export const removeNode = ({ tree, nodeUids }: TRemoveNodePayload): TNodeApiRes 
     // get removeable uids, only parent 
     let removeUids: TUid[] = getParentUids(nodeUids);
     // remove uids and it's desendent from tree
-    let p_uids:TUid[] = []
+    let p_uids: TUid[] = []
     removeUids.map((uid) => {
       Object.keys(tree).map((key) => {
         if (key.startsWith(uid)) {
@@ -153,7 +159,7 @@ export const moveNode = ({ tree, isBetween, parentUid, position, uids }: TMoveNo
     uids.map((uid) => {
       let node = _.cloneDeep(tree[uid])
       removeNode({ tree, nodeUids: [uid] })
-      addNode({tree, targetUid: parentUid, node})
+      addNode({ tree, targetUid: parentUid, node })
       console.log(tree)
     })
   } catch (err) {
@@ -180,7 +186,7 @@ export const duplicateNode = ({ tree, isBetween, parentUid, position, nodes }: T
  * this api parses the file content based on the type and return the tree data
  */
 export const parseFile = ({ type, content }: TParseFilePayload): TTree => {
-  if (type === "html") 
+  if (type === "html")
     return parseHtml(content);
   return {}
 }

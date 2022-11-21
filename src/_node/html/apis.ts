@@ -1,11 +1,15 @@
-import { TNode, TTree, TUid } from '../';
-import parse, { DOMNode } from 'html-react-parser';
 import {
   Element,
   Text,
 } from 'domhandler';
-import { generateNodeUID } from '@_types/global';
+import parse, { DOMNode } from 'html-react-parser';
 
+import {
+  generateNodeUID,
+  TNode,
+  TTree,
+  TUid,
+} from '../';
 
 /**
  * It will parse the content and build the tree data
