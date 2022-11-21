@@ -96,6 +96,10 @@ const slice = createSlice({
       const payload = action.payload
       state.currentFile = payload
     },
+    updateFileContent(state, action: PayloadAction<string>) {
+      const data = action.payload
+      state.currentFile.content = data
+    },
     setGlobalError(state, action: PayloadAction<string>) {
       const error = action.payload
       state.error = error
@@ -104,5 +108,5 @@ const slice = createSlice({
 })
 
 // export the actions and reducer
-export const { addFFNode, removeFFNode, closeFFNode, addWatchedFFNode, renameFFNode, setCurrentFile, setGlobalError } = slice.actions
+export const { addFFNode, removeFFNode, closeFFNode, addWatchedFFNode, renameFFNode, setCurrentFile, setGlobalError, updateFileContent } = slice.actions
 export const GlobalReducer = slice.reducer

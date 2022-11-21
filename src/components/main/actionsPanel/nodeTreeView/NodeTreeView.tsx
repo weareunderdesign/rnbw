@@ -1,4 +1,5 @@
 import React, {
+  useContext,
   useMemo,
   useState,
 } from 'react';
@@ -38,16 +39,21 @@ import {
   globalGetCurrentFileSelector,
   globalGetWorkspaceSelector,
   setGlobalError,
+  updateFileContent,
 } from '@_redux/global';
 
 import { renderers } from './renderers';
 import { NodeTreeViewProps } from './types';
+import { MainContext } from '@_pages/main/context';
+import { verifyPermission } from '@_services/global';
 
 export default function NodeTreeView(props: NodeTreeViewProps) {
   const dispatch = useDispatch()
 
   // fetch global state
   const { uid: fuid, type, content } = useSelector(globalGetCurrentFileSelector)
+  const { handlers } = useContext(MainContext)
+
   const workspace = useSelector(globalGetWorkspaceSelector)
 
   // fetch ff state
@@ -59,10 +65,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
   // node tree view data state
   const nodeTreeViewData = useMemo(() => {
-    console.log(type, content)
     const treedata: TTree = parseFile({ type, content })
     setTreeData(treedata)
-    console.log(treedata)
     let data: TreeViewData = {}
     for (const uid in treedata) {
       data[uid] = {
@@ -77,18 +81,14 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     return data
   }, [content])
 
-  const updateFFContent = (tree: TTree) => {
+  const updateFFContent = async (tree: TTree) => {
     const content = serializeFile({ type, tree })
-    /* dispatch(socketSendMessage({
-      header: 'ff-message',
-      body: {
-        type: 'update',
-        payload: {
-          file: workspace[fuid],
-          content: content,
-        },
-      },
-    })) */
+    if (handlers[fuid] === undefined || !verifyPermission(handlers[fuid]) || handlers[fuid].isDirectory)
+      return;
+    const writableStream = await (handlers[fuid] as FileSystemFileHandle).createWritable();
+    await writableStream.write(content)
+    await writableStream.close();
+    dispatch(updateFileContent(content))
   }
 
   const handleAddFNNode = () => {
@@ -119,7 +119,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       return;
     const result = removeNode({ tree: treeData, nodeUids: selectedItems, deleted: false })
     if (result.success == true)
-      updateFFContent(treeData)
+      updateFFContent(result.tree as TTree)
     else {
       dispatch(setGlobalError(result.error as string))
     }
@@ -163,7 +163,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       uids: uids
     })
     if (result.success == true)
-      updateFFContent(treeData)
+      updateFFContent(result.tree as TTree)
     else
       dispatch(setGlobalError(result.error as string))
   }
