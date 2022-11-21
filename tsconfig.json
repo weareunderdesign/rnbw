@@ -49,6 +49,7 @@
     },
   },
   "include": [
+    "src/**/*",
     "src/index.tsx",
   ],
   "exclude": [

@@ -1,5 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 
+import { showDirectoryPicker } from 'file-system-access';
+import {
+  get,
+  set,
+} from 'idb-keyval';
 import {
   DraggingPositionItem,
   TreeItem,
@@ -9,39 +14,45 @@ import {
   useSelector,
 } from 'react-redux';
 
-import { get, set } from 'idb-keyval';
-
 import { TreeView } from '@_components/common';
 import { TreeViewData } from '@_components/common/treeView/types';
+import { generateNodeUID } from '@_node/apis';
 import { TUid } from '@_node/types';
 import {
+  collapseFFNode,
+  expandFFNode,
   ffGetExpandedItemsSelector,
   ffGetFocusedItemSelector,
   ffGetSelectedItemsSelector,
   focusFFNode,
   selectFFNode,
 } from '@_redux/ff';
-import { addFFNode, globalGetPendingSelector, globalGetWorkspaceSelector } from '@_redux/global';
+import {
+  addFFNode,
+  closeFFNode,
+  globalGetPendingSelector,
+  globalGetWorkspaceSelector,
+} from '@_redux/global';
+import { getSubDirectoryUids } from '@_services/ff';
 import { FFNode } from '@_types/ff';
 
 import { renderers } from './renderers';
 import { WorkspaceTreeViewProps } from './types';
-import { generateNodeUID } from '@_node/apis';
-import { showDirectoryPicker } from 'file-system-access'
+
 export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   const dispatch = useDispatch()
 
   // fetch global state
   const workspace = useSelector(globalGetWorkspaceSelector)
   const pending = useSelector(globalGetPendingSelector)
+
   // fetch ff state
   const focusedItem = useSelector(ffGetFocusedItemSelector)
   const expandedItems = useSelector(ffGetExpandedItemsSelector)
   const selectedItems = useSelector(ffGetSelectedItemsSelector)
+
   // workspace tree view data state
   const workspaceTreeViewData = useMemo(() => {
-    let data: TreeViewData = {}
-
     // build the workspace main root ff node
     let rootNode: TreeItem = {
       index: 'root',
@@ -51,7 +62,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       canMove: false,
       canRename: false,
     }
-    // push all of the ffnodes in workspace from the global state
+
+    let data: TreeViewData = {}
+    // push all of the ff nodes in workspace from the global state
     for (const uid in workspace) {
       const node: FFNode = workspace[uid]
       if (node.p_uid === null) {
@@ -79,48 +92,56 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
 
     // return final object data
-    const treeViewData = {
+    return {
       root: rootNode,
       ...data
     }
-    console.log(treeViewData)
-    return treeViewData
   }, [workspace])
 
 
   // import project folder to workspace
   const onAddBtnClick = async () => {
-    const rootHandle = await showDirectoryPicker()
-
-    let nodes: FFNode[] = [];
-    let PID: string = ""
-    let index: number = 0;
-    for await (const entry of rootHandle.values()) {
-      let node: FFNode;
-      if (entry.kind === "directory") {
-        node = {
-          uid: generateNodeUID(PID, index++),
-          p_uid: null,
-          name: entry.name,
-          isEntity: false,
-          children: [],
-          data: entry.name,
-        };
-      } else {
-        node = {
-          uid: generateNodeUID(PID, index++),
-          p_uid: null,
-          name: entry.name,
-          isEntity: true,
-          children: [],
-          data: entry.name,
-        };
-      }
-      set(node.uid, entry)
-      nodes.push(node);
+    const projectHandle = await showDirectoryPicker()
+    // get the project count in the workspace
+    let projectCount = 0
+    for (const uid in workspace) {
+      const node = workspace[uid]
+      projectCount += (node.p_uid === null ? 1 : 0)
     }
-    dispatch(addFFNode({ nodes, p_uid: "" }))
+
+    let nodes: FFNode[] = []
+    // add project node
+    let projectUid = generateNodeUID("", projectCount)
+    set(projectUid, projectHandle)
+    const projectNode: FFNode = {
+      uid: projectUid,
+      p_uid: null,
+      name: projectHandle.name,
+      isEntity: false,
+      children: [],
+      data: projectHandle.name,
+    }
+    nodes.push(projectNode)
+
+    // add children nodes
+    let nodeIndex: number = 0
+    for await (const entry of projectHandle.values()) {
+      const nodeUid = generateNodeUID(projectUid, nodeIndex++)
+      projectNode.children.push(nodeUid)
+      set(nodeUid, entry)
+      nodes.push({
+        uid: nodeUid,
+        p_uid: projectUid,
+        name: entry.name,
+        isEntity: entry.kind !== "directory",
+        children: [],
+        data: entry.name,
+      })
+    }
+    dispatch(addFFNode(nodes))
+    dispatch(expandFFNode([projectUid]))
   }
+
   // remove project folder from workspace
   const onRemoveBtnClick = () => {
     // return if it's not the project folder
@@ -138,45 +159,33 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     dispatch(selectFFNode(uids))
   }
   const cb_expandFFNode = async (uid: TUid) => {
-    if (pending)
-      return
-
-    if (workspace[uid].isEntity === false) {
-      get(uid).then(async (handler) => {
-        let nodes: FFNode[] = [];
-        // dispatch(addFFNode([newNode]))
-        let PID: string = uid
-        let index: number = 0;
-        for await (const entry of handler.values()) {
-          let node: FFNode;
-          if (entry.kind === "directory") {
-            node = {
-              uid: generateNodeUID(PID, index++),
-              p_uid: PID,
-              name: entry.name,
-              isEntity: false,
-              children: [],
-              data: entry.name,
-            };
-          } else {
-            node = {
-              uid: generateNodeUID(PID, index++),
-              p_uid: PID,
-              name: entry.name,
-              isEntity: true,
-              children: [],
-              data: entry.name,
-            };
-          }
-          set(node.uid, entry)
-          nodes.push(node)
-        }
-        dispatch(addFFNode({ nodes, p_uid: uid }))
-      })
+    const parentNode: FFNode = JSON.parse(JSON.stringify(workspace[uid]))
+    const cb = async (handler: FileSystemDirectoryHandle) => {
+      let nodes: FFNode[] = [parentNode]
+      let p_uid: TUid = uid
+      let nodeIndex: number = 0
+      for await (const entry of handler.values()) {
+        const nodeUid = generateNodeUID(p_uid, nodeIndex++)
+        parentNode.children.push(nodeUid)
+        set(nodeUid, entry)
+        nodes.push({
+          uid: nodeUid,
+          p_uid: p_uid,
+          name: entry.name,
+          isEntity: entry.kind !== "directory",
+          children: [],
+          data: entry.name,
+        })
+      }
+      dispatch(addFFNode(nodes))
+      dispatch(expandFFNode([uid]))
     }
+    get(uid)
+      .then(cb)
   }
   const cb_collapseFFNode = (uid: TUid) => {
-
+    dispatch(closeFFNode(getSubDirectoryUids(uid, workspace)))
+    dispatch(collapseFFNode([uid]))
   }
   const cb_readFFNode = (uid: TUid) => {
 
