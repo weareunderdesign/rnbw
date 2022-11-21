@@ -8,7 +8,6 @@ import {
 
 import createReducer from './rootReducer';
 import rootSaga from './rootSaga';
-import { socketMiddleware } from './socketMiddleware';
 
 export default function configureAppStore(initialState = {}) {
   const reduxSagaMonitorOptions = {};
@@ -18,7 +17,7 @@ export default function configureAppStore(initialState = {}) {
 
   // sagaMiddleware: Makes redux-sagas work
   // socketMiddleware
-  const middlewares = [socketMiddleware(location.protocol.replace("http", "ws") + '//' + location.host), sagaMiddleware];
+  const middlewares = [sagaMiddleware];
 
   const enhancers = [
     createInjectorsEnhancer({

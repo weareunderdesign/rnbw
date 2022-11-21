@@ -1,5 +1,7 @@
 import {
+  DraggingPosition,
   TreeItem,
+  TreeItemIndex,
   TreeRenderProps,
 } from 'react-complex-tree';
 
@@ -8,23 +10,30 @@ import { TUid } from '@_node/types';
 export type TreeViewProps = {
   width: string,
   height: string,
+
   data: TreeViewData,
-
-  renderers: TreeRenderProps,
-
   focusedItem: TUid,
   expandedItems: TUid[],
   selectedItems: TUid[],
 
-  cb_focusNode: (payload: TUid) => void,
-  cb_expandNode: (payload: TUid) => void,
-  cb_collapseNode: (payload: TUid) => void,
-  cb_selectNode: (payload: TUid[]) => void,
+  renderers: TreeRenderProps,
 
-  cb_readNode?: (payload: TUid) => void,
+  props: {
+    [prop: string]: any,
+  },
 
-  cb_renameNode: (uid: TUid, name: string) => void,
-  cb_dropNode: (uids: TUid[], targetTUid: TUid) => void,
+  callbacks: {
+    onRenameItem?: ((item: TreeItem<any>, name: string, treeId: string) => void) | undefined,
+
+    onSelectItems?: ((items: TreeItemIndex[], treeId: string) => void) | undefined,
+    onFocusItem?: ((item: TreeItem<any>, treeId: string) => void) | undefined,
+    onExpandItem?: ((item: TreeItem<any>, treeId: string) => void) | undefined,
+    onCollapseItem?: ((item: TreeItem<any>, treeId: string) => void) | undefined,
+
+    onDrop?: ((items: TreeItem<any>[], target: DraggingPosition) => void) | undefined,
+
+    onPrimaryAction?: ((items: TreeItem<any>, treeId: string) => void) | undefined,
+  },
 }
 
 export type TreeViewData = {

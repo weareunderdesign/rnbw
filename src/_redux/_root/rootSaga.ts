@@ -1,12 +1,5 @@
-import {
-  all,
-  fork,
-} from 'redux-saga/effects';
-
-import { TemplateSaga } from '@_redux/template';
+import { all } from 'redux-saga/effects';
 
 export default function* rootSaga() {
-  yield all([
-    fork(TemplateSaga),
-  ]);
+  yield all([]);
 }

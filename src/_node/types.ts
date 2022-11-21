@@ -29,6 +29,9 @@ export type TTree = {
 export type TNodeApiRes = {
   success: boolean,/* true if successfully done */
   error?: string,/* error message if failed */
+  tree?: TTree,
+  child : TTree,
+  convertUIDs?: Map<TUid, TUid> 
 }
 
 /**
@@ -46,6 +49,7 @@ export type TAddNodePayload = {
 export type TRemoveNodePayload = {
   tree: TTree,/* tree data */
   nodeUids: TUid[],/* node uids to remove - array for multiple feature */
+  deleted: boolean
 }
 
 /**
@@ -88,6 +92,18 @@ export type TDuplicateNodePayload = {
  * ref to valid file types
  */
 export type TFileType = 'html' | 'css' | 'js' | 'md' | 'unknown'/* file types that the app can classify */
+/**
+ * ref to parsable file types
+ */
+export type ParsableType = {
+  [ext: string]: boolean,
+}
+export const parsable: ParsableType = {/* parsable file types - we need this since the app can classify but impossible to parse it */
+  "html": true,
+  "css": false,
+  "js": false,
+  "md": false,
+}
 
 /**
  * parse file api payload type

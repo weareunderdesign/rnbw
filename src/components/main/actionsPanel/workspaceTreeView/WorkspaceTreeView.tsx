@@ -1,6 +1,9 @@
 import React, { useMemo } from 'react';
 
-import { TreeItem } from 'react-complex-tree';
+import {
+  DraggingPositionItem,
+  TreeItem,
+} from 'react-complex-tree';
 import {
   useDispatch,
   useSelector,
@@ -17,20 +20,7 @@ import {
   selectFFNode,
 } from '@_redux/ff';
 import { globalGetWorkspaceSelector } from '@_redux/global';
-import { socketSendMessage } from '@_redux/socket';
-import {
-  getSubDirectoryNodes,
-  getSubDirectoryUids,
-} from '@_services/ff';
-import {
-  FFNode,
-  FFNodeActionAddPayload,
-  FFNodeActionClosePayload,
-  FFNodeActionOpenPayload,
-  FFNodeActionReadPayload,
-  FFNodeActionRemovePayload,
-  FFNodeActionRenamePayload,
-} from '@_types/ff';
+import { FFNode } from '@_types/ff';
 
 import { renderers } from './renderers';
 import { WorkspaceTreeViewProps } from './types';
@@ -96,15 +86,13 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   }, [workspace])
 
   // import project folder to workspace
-  const onAddBtnClick = () => {
-    // call add api
-    dispatch(socketSendMessage({
-      header: 'ff-message',
-      body: {
-        type: 'add',
-        payload: {} as FFNodeActionAddPayload,
-      },
-    }))
+  const onAddBtnClick = async () => {
+    const currentDirHandle = await window.showDirectoryPicker();
+    for await (const entry of currentDirHandle.values()) {
+      console.log(entry)
+    }
+    const values = await currentDirHandle.values()
+    console.log(currentDirHandle)
   }
   // remove project folder from workspace
   const onRemoveBtnClick = () => {
@@ -112,14 +100,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     if (workspace[focusedItem].p_uid !== null) {
       return
     }
-    // call remove api
-    dispatch(socketSendMessage({
-      header: 'ff-message',
-      body: {
-        type: 'remove',
-        payload: getSubDirectoryUids(focusedItem, workspace) as FFNodeActionRemovePayload,
-      },
-    }))
+
   }
 
   // cb
@@ -130,95 +111,27 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     dispatch(selectFFNode(uids))
   }
   const cb_expandFFNode = (uid: TUid) => {
-    dispatch(socketSendMessage({
-      header: 'ff-message',
-      body: {
-        type: 'open',
-        payload: workspace[uid] as FFNodeActionOpenPayload,
-      },
-    }))
+
   }
   const cb_collapseFFNode = (uid: TUid) => {
-    dispatch(socketSendMessage({
-      header: 'ff-message',
-      body: {
-        type: 'close',
-        payload: getSubDirectoryUids(uid, workspace) as FFNodeActionClosePayload,
-      },
-    }))
+
   }
   const cb_readFFNode = (uid: TUid) => {
-    dispatch(socketSendMessage({
-      header: 'ff-message',
-      body: {
-        type: 'read',
-        payload: workspace[uid] as FFNodeActionReadPayload,
-      },
-    }))
+
   }
   const cb_renameFFNode = (uid: TUid, name: string) => {
-    dispatch(socketSendMessage({
-      header: 'ff-message',
-      body: {
-        type: 'rename',
-        payload: {
-          nodes: getSubDirectoryNodes(uid, workspace),
-          name: name,
-        } as FFNodeActionRenamePayload,
-      },
-    }))
+
   }
 
   // move/duplicate create/delete actions
   const cb_dropFFNode = (uids: TUid[], targetUID: TUid) => {
-    /* const ffNodes: FFNode[] = []
-    for (const uid of uids) {
-      ffNodes.push(workspace[uid] || projects[uid])
-    }
-    const target = workspace[targetUID] || projects[targetUID]
-    dispatch(socketSendMessage({
-      header: 'ff-message',
-      body: {
-        type: 'move',
-        payload: {
-          ffNodes: ffNodes,
-          target: target,
-          overwrite: true,
-        } as FFNodeActionMovePayload,
-      },
-    })) */
+
   }
   const createFFNode = () => {
-    /* if (projects[focusedItem] && projects[focusedItem].type === 'file') {
-      return
-    }
-    const targetFFNode = workspace[focusedItem] || projects[focusedItem]
-    console.log('create FFNode', targetFFNode)
 
-    dispatch(socketSendMessage({
-      header: 'ff-message',
-      body: {
-        type: 'create',
-        payload: {
-          target: targetFFNode,
-          type: 'file',
-        },
-      },
-    })) */
   }
   const deleteFFNode = () => {
-    /* console.log('delete FFNode', selectedItems)
-    const ffNodes: FFNode[] = []
-    for (const uid of selectedItems) {
-      ffNodes.push(workspace[uid] || projects[uid])
-    }
-    dispatch(socketSendMessage({
-      header: 'ff-message',
-      body: {
-        type: 'delete',
-        payload: ffNodes,
-      },
-    })) */
+
   }
 
   return (<>
@@ -261,7 +174,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           }}
         >
           {/* Create Node Button */}
-          {/* <button
+          <button
             style={{
               background: "rgb(23 111 44)",
               color: "white",
@@ -272,10 +185,10 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
             onClick={createFFNode}
           >
             Create
-          </button> */}
+          </button>
 
           {/* Delete Node Button */}
-          {/* <button
+          <button
             style={{
               background: "rgb(23 111 44)",
               color: "white",
@@ -286,7 +199,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
             onClick={deleteFFNode}
           >
             Delete
-          </button> */}
+          </button>
 
           {/* Add Project Button */}
           <button
@@ -301,7 +214,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           >
             Open
           </button>
-
           {/* Remove Project Button */}
           <button
             style={{
@@ -320,26 +232,79 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
       {/* Main TreeView */}
       <TreeView
+        /* style */
         width={'300px'}
         height={'400px'}
-        data={workspaceTreeViewData}
-        renderers={renderers}
-        /* props={} */
 
+        /* data */
+        data={workspaceTreeViewData}
         focusedItem={focusedItem}
         expandedItems={expandedItems}
         selectedItems={selectedItems}
 
-        cb_focusNode={cb_focusFFNode}
-        cb_selectNode={cb_selectFFNode}
+        /* renderers */
+        renderers={renderers}
 
-        cb_expandNode={cb_expandFFNode}
-        cb_collapseNode={cb_collapseFFNode}
+        /* possibilities */
+        props={{
+          canDragAndDrop: true,
+          canDropOnItemWithChildren: true,
+          canDropOnItemWithoutChildren: false,
+        }}
 
-        cb_readNode={cb_readFFNode}
-        cb_renameNode={cb_renameFFNode}
+        /* cb */
+        callbacks={{
+          /* RENAME CALLBACK */
+          onRenameItem: (item, name, treeId) => {
+            console.log('onRenameItem', item, name, treeId)
+            cb_renameFFNode(item.index as TUid, name)
+          },
 
-        cb_dropNode={cb_dropFFNode}
+          /* SELECT, FOCUS, EXPAND, COLLAPSE CALLBACK */
+          onSelectItems: (items, treeId) => {
+            console.log('onSelectItems', items)
+            cb_selectFFNode(items as TUid[])
+          },
+          onFocusItem: (item, treeId) => {
+            console.log('onFocusItem', item.index)
+            cb_focusFFNode(item.index as TUid)
+          },
+          onExpandItem: (item, treeId) => {
+            console.log('onExpandItem', item.index)
+            cb_expandFFNode(item.index as TUid)
+          },
+          onCollapseItem: (item, treeId) => {
+            console.log('onCollapseItem', item.index)
+            cb_collapseFFNode(item.index as TUid)
+          },
+
+          /* READ CALLBACK */
+          onPrimaryAction: (item, treeId) => {
+            console.log('onPrimaryAction', item.index, treeId)
+            cb_readFFNode(item.index as TUid)
+          },
+
+          // DnD CALLBACK
+          onDrop: (items, target) => {
+            console.log('onDrop', items, target)
+            const uids: TUid[] = []
+            for (const item of items) {
+              uids.push(item.index as string)
+            }
+
+            if (target.targetType === 'between-items') {
+              /* target.parentItem
+              target.childIndex
+              target.linePosition */
+            } else if (target.targetType === 'item') {
+              /* target.targetItem */
+            }
+
+            const targetTUid: TUid = (target as DraggingPositionItem).targetItem as string
+            console.log('onDrop', uids, targetTUid)
+            cb_dropFFNode(uids, targetTUid)
+          }
+        }}
       />
     </div>
   </>)
@@ -352,3 +317,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     webkitdirectory?: string;
   }
 } */
+
+declare global {
+  interface Window {
+    showDirectoryPicker?: any;
+  }
+}

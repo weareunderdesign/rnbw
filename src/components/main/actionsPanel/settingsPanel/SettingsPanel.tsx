@@ -1,6 +1,8 @@
 import React from 'react';
 
-export default function SettingsPanel() {
+import { SettingsPanelProps } from './types';
+
+export default function SettingsPanel(props: SettingsPanelProps) {
   return <>
     <div></div>
   </>

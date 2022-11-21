@@ -2,12 +2,9 @@ import React, { useMemo } from 'react';
 
 import {
   ControlledTreeEnvironment,
-  DraggingPositionItem,
   Tree,
   TreeItemIndex,
 } from 'react-complex-tree';
-
-import { TUid } from '@_node/types';
 
 import { TreeViewProps } from './types';
 
@@ -37,111 +34,14 @@ export default function TreeView(props: TreeViewProps): JSX.Element {
         }}
 
         getItemTitle={(item) => {
-          const dataType = typeof item.data
-          if (dataType === 'string') {
-            return item.data
-          } else {
-            return item.data.name
-          }
+          return item.data.name
         }} // string rendered at the tree view
 
         {...props.renderers}
 
-        /* POSSIBILITIES */
-        canDragAndDrop={true}
-        canDropOnItemWithChildren={true}
-        canDropOnItemWithoutChildren={false}
-        canReorderItems={true}
-        canSearch={true}
-        /* canRename={true}
-        canDrag={(items) => {
-          return true
-        }}
-        canDropAt={(items, target) => {
-          return true
-        }}
-        canInvokePrimaryActionOnItemContainer={true}
-        canSearch={true}
-        canSearchByStartingTyping={true}
-        autoFocus={true}
-        doesSearchMatchItem={(search, item, itemTitle) => {
-          return true
-        }} */
+        {...props.props}
 
-        /* Tree CALLBACK */
-        onRegisterTree={(tree) => {
-          console.log('onRegisterTree', tree)
-        }}
-        onUnregisterTree={(tree) => {
-          console.log('onUnregisterTree', tree)
-        }}
-
-        /* RENAME CALLBACK */
-        onStartRenamingItem={(item, treeId) => {
-          console.log('onStartRenamingItem', item, treeId)
-        }}
-        onRenameItem={(item, name, treeId) => {
-          console.log('onRenameItem', item, name, treeId)
-          props.cb_renameNode && props.cb_renameNode(item.index as TUid, name)
-        }}
-        onAbortRenamingItem={(item, treeId) => {
-          console.log('onAbortRenamingItem', item, treeId)
-        }}
-
-        /* SELECT, FOCUS, EXPAND, COLLAPSE CALLBACK */
-        onSelectItems={(items, treeId) => {
-          console.log('onSelectItems', items)
-          props.cb_selectNode(items as TUid[])
-        }}
-        onFocusItem={(item, treeId) => {
-          console.log('onFocusItem', item.index)
-          props.cb_focusNode(item.index as TUid)
-        }}
-        onExpandItem={(item, treeId) => {
-          console.log('onExpandItem', item.index)
-          props.cb_expandNode(item.index as TUid)
-        }}
-        onCollapseItem={(item, treeId) => {
-          console.log('onCollapseItem', item.index)
-          props.cb_collapseNode(item.index as TUid)
-        }}
-
-        /* MISSING CALLBACK */
-        onMissingItems={(itemIds) => {
-          console.log('onMissingItems', itemIds)
-        }}
-        onMissingChildren={(itemIds) => {
-          console.log('onMissingChildren', itemIds)
-        }}
-
-        // DnD CALLBACK
-        onDrop={(items, target) => {
-          console.log('onDrop', items, target)
-          const uids: TUid[] = []
-          for (const item of items) {
-            uids.push(item.index as string)
-          }
-
-          if (target.targetType === 'between-items') {
-            /* target.parentItem
-            target.childIndex
-            target.linePosition */
-          } else if (target.targetType === 'item') {
-            /* target.targetItem */
-          }
-
-          const targetTUid: TUid = (target as DraggingPositionItem).targetItem as string
-          console.log('onDrop', uids, targetTUid)
-          props.cb_dropNode && props.cb_dropNode(uids, targetTUid)
-        }}
-
-        // primary action
-        onPrimaryAction={(item, treeId) => {
-          console.log('onPrimaryAction', item.index, treeId)
-          props.cb_readNode && props.cb_readNode(item.index as TUid)
-        }}
-
-        // ref
+        {...props.callbacks}
 
         // Load Data
         items={data}

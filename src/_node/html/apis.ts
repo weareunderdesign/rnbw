@@ -1,11 +1,15 @@
-import { TNode, TTree, TUid } from '../';
-import parse, { DOMNode } from 'html-react-parser';
 import {
   Element,
   Text,
 } from 'domhandler';
-import { generateNodeUID } from '@_types/global';
+import parse, { DOMNode } from 'html-react-parser';
 
+import {
+  generateNodeUID,
+  TNode,
+  TTree,
+  TUid,
+} from '../';
 
 /**
  * It will parse the content and build the tree data
@@ -43,7 +47,7 @@ export const parseHtml = (content: string): TTree => {
         (node as unknown as Text).data = converted_string
       }
       if (node.parent == null) {
-        const CID = generateNodeUID("", root["root"].children.length + 1)
+        const CID = generateNodeUID("root", root["root"].children.length + 1)
         root[CID] = {
           uid: CID,
           p_uid: "root",
@@ -83,9 +87,11 @@ export const parseHtml = (content: string): TTree => {
 export const serializeHtml = (data: TTree): string => {
   let html = ""
   const root: TNode = data["root"] as TNode
+  console.log(data)
   const getHTMLFromFNObject = (UID: string, level: number) => {
     const element: TNode = data[UID] as TNode
     let element_html: string = ""
+    console.log("UID:", UID, "data:", data[UID])
     if (element.isEntity === false) {
       element_html = "\t".repeat(level) + element.name + "\n";
     }
