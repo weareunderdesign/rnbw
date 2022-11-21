@@ -95,7 +95,7 @@ export default function NodeTreeView() {
   const handleRemoveFnNode = () => {
     if (selectedItems.length == 0)
       return;
-    const result = removeNode({ tree: treeData, nodeUids: selectedItems })
+    const result = removeNode({ tree: treeData, nodeUids: selectedItems, deleted: false })
     if (result.success == true)
       updateFFContent(treeData)
     else {
@@ -232,7 +232,7 @@ export default function NodeTreeView() {
             uids: uids
           })
           if (result.success == true)
-            updateFFContent(treeData)
+            updateFFContent(result.tree as TTree)
           else
             dispatch(setGlobalError(result.error as string))
         }}

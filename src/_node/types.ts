@@ -29,6 +29,9 @@ export type TTree = {
 export type TNodeApiRes = {
   success: boolean,/* true if successfully done */
   error?: string,/* error message if failed */
+  tree?: TTree,
+  child : TTree,
+  convertUIDs?: Map<TUid, TUid> 
 }
 
 /**
@@ -46,6 +49,7 @@ export type TAddNodePayload = {
 export type TRemoveNodePayload = {
   tree: TTree,/* tree data */
   nodeUids: TUid[],/* node uids to remove - array for multiple feature */
+  deleted: boolean
 }
 
 /**
