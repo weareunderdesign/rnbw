@@ -16,6 +16,7 @@ export type GlobalState = {
     type: TFileType,
     content: string,
   },
+  pending: boolean,
   error: string,
 }
 

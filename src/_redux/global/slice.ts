@@ -1,6 +1,7 @@
 import { TUid } from '@_node/types';
 import {
   FFNode,
+  FFNodeActionAddPayloadRes,
   FFNodeActionReadPayloadRes,
   FFNodeActionRenamePayloadRes,
   FFNodeActionUpdatePayloadRes,
@@ -21,6 +22,7 @@ const initialState: Types.GlobalState = {
     type: 'unknown',
     content: '',
   },
+  pending: false,
   error: '',
 }
 
@@ -29,11 +31,17 @@ const slice = createSlice({
   name: 'global',
   initialState,
   reducers: {
-    addFFNode(state, action: PayloadAction<FFNode[]>) {
-      let nodes = action.payload
+    addFFNode(state, action: PayloadAction<FFNodeActionAddPayloadRes>) {
+      let { nodes, p_uid} = action.payload
+      let children: TUid[] = []
       for (const node of nodes) {
         state.workspace[node.uid] = node
+        children.push(node.uid)
       }
+      if (p_uid !== "")
+        state.workspace[p_uid].children = children
+
+      console.log("state changed:", state.workspace)
     },
     removeFFNode(state, action: PayloadAction<TUid[]>) {
       const uids = action.payload

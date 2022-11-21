@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import {
   DraggingPositionItem,
@@ -8,6 +8,8 @@ import {
   useDispatch,
   useSelector,
 } from 'react-redux';
+
+import { get, set } from 'idb-keyval';
 
 import { TreeView } from '@_components/common';
 import { TreeViewData } from '@_components/common/treeView/types';
@@ -19,23 +21,23 @@ import {
   focusFFNode,
   selectFFNode,
 } from '@_redux/ff';
-import { globalGetWorkspaceSelector } from '@_redux/global';
+import { addFFNode, globalGetPendingSelector, globalGetWorkspaceSelector } from '@_redux/global';
 import { FFNode } from '@_types/ff';
 
 import { renderers } from './renderers';
 import { WorkspaceTreeViewProps } from './types';
-
+import { generateNodeUID } from '@_node/apis';
+import { showDirectoryPicker } from 'file-system-access'
 export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   const dispatch = useDispatch()
 
   // fetch global state
   const workspace = useSelector(globalGetWorkspaceSelector)
-
+  const pending = useSelector(globalGetPendingSelector)
   // fetch ff state
   const focusedItem = useSelector(ffGetFocusedItemSelector)
   const expandedItems = useSelector(ffGetExpandedItemsSelector)
   const selectedItems = useSelector(ffGetSelectedItemsSelector)
-
   // workspace tree view data state
   const workspaceTreeViewData = useMemo(() => {
     let data: TreeViewData = {}
@@ -49,7 +51,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       canMove: false,
       canRename: false,
     }
-
     // push all of the ffnodes in workspace from the global state
     for (const uid in workspace) {
       const node: FFNode = workspace[uid]
@@ -82,17 +83,43 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       root: rootNode,
       ...data
     }
+    console.log(treeViewData)
     return treeViewData
   }, [workspace])
 
+
   // import project folder to workspace
   const onAddBtnClick = async () => {
-    const currentDirHandle = await window.showDirectoryPicker();
-    for await (const entry of currentDirHandle.values()) {
-      console.log(entry)
+    const rootHandle = await showDirectoryPicker()
+
+    let nodes: FFNode[] = [];
+    let PID: string = ""
+    let index: number = 0;
+    for await (const entry of rootHandle.values()) {
+      let node: FFNode;
+      if (entry.kind === "directory") {
+        node = {
+          uid: generateNodeUID(PID, index++),
+          p_uid: null,
+          name: entry.name,
+          isEntity: false,
+          children: [],
+          data: entry.name,
+        };
+      } else {
+        node = {
+          uid: generateNodeUID(PID, index++),
+          p_uid: null,
+          name: entry.name,
+          isEntity: true,
+          children: [],
+          data: entry.name,
+        };
+      }
+      set(node.uid, entry)
+      nodes.push(node);
     }
-    const values = await currentDirHandle.values()
-    console.log(currentDirHandle)
+    dispatch(addFFNode({ nodes, p_uid: "" }))
   }
   // remove project folder from workspace
   const onRemoveBtnClick = () => {
@@ -110,8 +137,43 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   const cb_selectFFNode = (uids: TUid[]) => {
     dispatch(selectFFNode(uids))
   }
-  const cb_expandFFNode = (uid: TUid) => {
+  const cb_expandFFNode = async (uid: TUid) => {
+    if (pending)
+      return
 
+    if (workspace[uid].isEntity === false) {
+      get(uid).then(async (handler) => {
+        let nodes: FFNode[] = [];
+        // dispatch(addFFNode([newNode]))
+        let PID: string = uid
+        let index: number = 0;
+        for await (const entry of handler.values()) {
+          let node: FFNode;
+          if (entry.kind === "directory") {
+            node = {
+              uid: generateNodeUID(PID, index++),
+              p_uid: PID,
+              name: entry.name,
+              isEntity: false,
+              children: [],
+              data: entry.name,
+            };
+          } else {
+            node = {
+              uid: generateNodeUID(PID, index++),
+              p_uid: PID,
+              name: entry.name,
+              isEntity: true,
+              children: [],
+              data: entry.name,
+            };
+          }
+          set(node.uid, entry)
+          nodes.push(node)
+        }
+        dispatch(addFFNode({ nodes, p_uid: uid }))
+      })
+    }
   }
   const cb_collapseFFNode = (uid: TUid) => {
 

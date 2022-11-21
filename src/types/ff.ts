@@ -103,7 +103,10 @@ export type FFNodeAction = {
 }
 
 /* node action api res payload */
-export type FFNodeActionAddPayloadRes = FFNode
+export type FFNodeActionAddPayloadRes = {
+  nodes: FFNode[],
+  p_uid: TUid
+}
 export type FFNodeActionRemovePayloadRes = TUid[]
 export type FFNodeActionOpenPayloadRes = FFNode[]
 export type FFNodeActionClosePayloadRes = TUid[]
