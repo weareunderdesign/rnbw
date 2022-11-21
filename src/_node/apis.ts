@@ -1,5 +1,7 @@
-import { generateNodeUID } from '@_types/global';
-import { parseHtml, serializeHtml } from './html';
+import {
+  parseHtml,
+  serializeHtml,
+} from './html';
 import {
   TAddNodePayload,
   TDuplicateNodePayload,
@@ -15,6 +17,10 @@ import {
 } from './types';
 
 const _ = require("lodash");
+
+export const generateNodeUID = (PID: string, index: number) => {
+  return PID + "_" + index.toString()
+}
 
 export const updateUIDs = (PID: TUid, data: TTree) => {
   let convertUIDs = new Map<TUid, TUid>

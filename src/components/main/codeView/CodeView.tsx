@@ -4,11 +4,12 @@ import React, {
 } from 'react';
 
 import * as monaco from 'monaco-editor';
-import { CodeViewProps } from 'react-code-view';
 import { useSelector } from 'react-redux';
 
 import { globalGetCurrentFileSelector } from '@_redux/global';
 import Editor, { loader } from '@monaco-editor/react';
+
+import { CodeViewProps } from './types';
 
 loader.config({ monaco })
 

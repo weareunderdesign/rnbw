@@ -3,25 +3,47 @@ import React, {
   useState,
 } from 'react';
 
+import { DraggingPositionItem } from 'react-complex-tree';
 import {
   useDispatch,
   useSelector,
 } from 'react-redux';
+
+import { TreeView } from '@_components/common';
+import { TreeViewData } from '@_components/common/treeView/types';
+import {
+  addNode,
+  generateNodeUID,
+  moveNode,
+  parseFile,
+  removeNode,
+  replaceNode,
+  serializeFile,
+} from '@_node/index';
+import {
+  TNode,
+  TTree,
+  TUid,
+} from '@_node/types';
+import {
+  collapseFNNode,
+  expandFNNode,
+  fnGetExpandedItemsSelector,
+  fnGetFocusedItemSelector,
+  fnGetSelectedItemsSelector,
+  focusFNNode,
+  selectFNNode,
+} from '@_redux/fn';
 import {
   globalGetCurrentFileSelector,
   globalGetWorkspaceSelector,
   setGlobalError,
 } from '@_redux/global';
-import { collapseFNNode, expandFNNode, fnGetExpandedItemsSelector, fnGetFocusedItemSelector, fnGetSelectedItemsSelector, focusFNNode, selectFNNode } from '@_redux/fn';
-import { TNode, TTree, TUid } from '@_node/types';
-import { addNode, moveNode, parseFile, removeNode, replaceNode, serializeFile } from '@_node/index';
-import { TreeViewData } from '@_components/common/treeView/types';
-import { socketSendMessage } from '@_redux/socket';
-import { generateNodeUID } from '@_types/global';
-import { TreeView } from '@_components/common';
-import { renderers } from './renderers';
 
-export default function NodeTreeView() {
+import { renderers } from './renderers';
+import { NodeTreeViewProps } from './types';
+
+export default function NodeTreeView(props: NodeTreeViewProps) {
   const dispatch = useDispatch()
 
   // fetch global state
@@ -57,7 +79,7 @@ export default function NodeTreeView() {
 
   const updateFFContent = (tree: TTree) => {
     const content = serializeFile({ type, tree })
-    dispatch(socketSendMessage({
+    /* dispatch(socketSendMessage({
       header: 'ff-message',
       body: {
         type: 'update',
@@ -66,7 +88,7 @@ export default function NodeTreeView() {
           content: content,
         },
       },
-    }))
+    })) */
   }
 
   const handleAddFNNode = () => {
@@ -125,6 +147,21 @@ export default function NodeTreeView() {
     let node = treeData[uid]
     node.name = name
     const result = replaceNode({ tree: treeData, node: node })
+    if (result.success == true)
+      updateFFContent(treeData)
+    else
+      dispatch(setGlobalError(result.error as string))
+  }
+
+  const cb_dropNode = (uids: TUid[], targetUID: string) => {
+    if (treeData[uids[0]].p_uid == targetUID)
+      return;
+    const result = moveNode({
+      tree: treeData,
+      isBetween: false,
+      parentUid: targetUID,
+      uids: uids
+    })
     if (result.success == true)
       updateFFContent(treeData)
     else
@@ -205,36 +242,73 @@ export default function NodeTreeView() {
 
       {/* Main TreeView */}
       <TreeView
+        /* style */
         width={'300px'}
         height={'400px'}
+
+        /* data */
         data={nodeTreeViewData}
-
-        renderers={renderers}
-
         focusedItem={focusedItem}
         expandedItems={expandedItems}
         selectedItems={selectedItems}
 
-        cb_focusNode={cb_focusNode}
-        cb_expandNode={cb_expandNode}
-        cb_collapseNode={cb_collapseNode}
-        cb_selectNode={cb_selectNode}
+        /* renderers */
+        renderers={renderers}
 
-        cb_readNode={cb_readNode}
-        cb_renameNode={cb_renameNode}
-        cb_dropNode={(uids: TUid[], targetUID: string) => {
-          if (treeData[uids[0]].p_uid == targetUID)
-            return;
-          const result = moveNode({
-            tree: treeData,
-            isBetween: false,
-            parentUid: targetUID,
-            uids: uids
-          })
-          if (result.success == true)
-            updateFFContent(result.tree as TTree)
-          else
-            dispatch(setGlobalError(result.error as string))
+        /* possibilities */
+        props={{
+          canDragAndDrop: true,
+          canDropOnItemWithChildren: true,
+          canDropOnItemWithoutChildren: false,
+          canReorderItems: true,
+        }}
+
+        /* cb */
+        callbacks={{
+          /* RENAME CALLBACK */
+          onRenameItem: (item, name, treeId) => {
+            console.log('onRenameItem', item, name, treeId)
+            cb_renameNode(item.index as TUid, name)
+          },
+
+          /* SELECT, FOCUS, EXPAND, COLLAPSE CALLBACK */
+          onSelectItems: (items, treeId) => {
+            console.log('onSelectItems', items)
+            cb_selectNode(items as TUid[])
+          },
+          onFocusItem: (item, treeId) => {
+            console.log('onFocusItem', item.index)
+            cb_focusNode(item.index as TUid)
+          },
+          onExpandItem: (item, treeId) => {
+            console.log('onExpandItem', item.index)
+            cb_expandNode(item.index as TUid)
+          },
+          onCollapseItem: (item, treeId) => {
+            console.log('onCollapseItem', item.index)
+            cb_collapseNode(item.index as TUid)
+          },
+
+          // DnD CALLBACK
+          onDrop: (items, target) => {
+            console.log('onDrop', items, target)
+            const uids: TUid[] = []
+            for (const item of items) {
+              uids.push(item.index as string)
+            }
+
+            if (target.targetType === 'between-items') {
+              /* target.parentItem
+              target.childIndex
+              target.linePosition */
+            } else if (target.targetType === 'item') {
+              /* target.targetItem */
+            }
+
+            const targetTUid: TUid = (target as DraggingPositionItem).targetItem as string
+            console.log('onDrop', uids, targetTUid)
+            cb_dropNode(uids, targetTUid)
+          }
         }}
       />
     </div>

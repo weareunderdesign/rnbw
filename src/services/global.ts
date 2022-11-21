@@ -1,6 +1,58 @@
-import { Message } from '@_types/socket';
+import {
+  parsable,
+  TFileType,
+} from '@_node/types';
 
-// return JSON string from the message
-export const createMessage = (message: Message): string => {
-  return JSON.stringify(message)
+/**
+ * remove line terminator at the end of the path - remove double //
+ * @param pathName 
+ * @returns 
+ */
+export const getNormalizedPath = (pathName: string): string => {
+  return pathName.replace(/\n$/g, '').split('/').filter(p => !!p).join('/')
+}
+
+/**
+ * get parent path
+ * @param fullPath 
+ * @returns 
+ */
+export const getPath = (fullPath: string): string => {
+  const pathArr = fullPath.split('/').filter(p => !!p)
+  pathArr.pop()
+  return pathArr.join('/')
+}
+
+/**
+ * get the name from the full path
+ * @param fullPath 
+ * @returns 
+ */
+export const getName = (fullPath: string): string => {
+  const pathArr = fullPath.split('/').filter(p => !!p)
+  return pathArr.pop() as string
+}
+
+/**
+ * return pathName/ffName
+ * @param pathName 
+ * @param ffName 
+ * @returns 
+ */
+export const joinPath = (pathName: string, ffName: string): string => {
+  return `${pathName}/${ffName}`
+}
+
+/**
+ * get the file extension from the filename
+ * @param fileName 
+ * @returns 
+ */
+export const getFileExtension = (fileName: string): TFileType => {
+  const fileNameArr = fileName.split('.')
+  if (fileNameArr.length) {
+    const fileExtension = fileNameArr[fileNameArr.length - 1]
+    return !parsable[fileExtension] ? 'unknown' : fileExtension as TFileType
+  }
+  return 'unknown'
 }

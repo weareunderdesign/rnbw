@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "experimentalDecorators": true,
-    "outDir": "./build",
+    "outDir": "./dist",
     "noImplicitAny": true,
     "module": "commonjs",
     "target": "es6",
@@ -49,8 +49,7 @@
     },
   },
   "include": [
-    "src/**/*",
-    "src/_back/index.ts",
+    "src/index.tsx",
   ],
   "exclude": [
     "build",
