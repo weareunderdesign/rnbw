@@ -1,5 +1,10 @@
 import { TUid } from '@_node/types';
 
+/**
+ * 
+ * @param fileHandle 
+ * @returns 
+ */
 export const verifyPermission = async (fileHandle: FileSystemHandle): Promise<boolean> => {
   // Check if permission was already granted. If so, return true.
   const opts: FileSystemHandlePermissionDescriptor = {
@@ -21,11 +26,17 @@ export const verifyPermission = async (fileHandle: FileSystemHandle): Promise<bo
   return false
 }
 
+/**
+ * 
+ * @param uids 
+ * @param targetUid 
+ * @returns 
+ */
 export const validateUids = (uids: TUid[], targetUid?: TUid): TUid[] => {
   if (targetUid !== undefined) {
     uids = uids.filter((uid) => { return !uid.startsWith(targetUid) })
   }
-  uids = uids.sort((a: TUid, b: TUid) => { return a < b ? -1 : 1 });
+  uids = uids.sort((a: TUid, b: TUid) => { return a < b ? -1 : 1 })
   let result: TUid[] = [];
   while (uids.length) {
     const uid = uids.shift() as TUid

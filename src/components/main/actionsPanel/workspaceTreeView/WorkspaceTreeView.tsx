@@ -5,6 +5,9 @@ import React, {
 
 import { showDirectoryPicker } from 'file-system-access';
 import {
+  CustomDirectoryPickerOptions,
+} from 'file-system-access/lib/showDirectoryPicker';
+import {
   DraggingPositionItem,
   TreeItem,
 } from 'react-complex-tree';
@@ -18,11 +21,13 @@ import { TreeViewData } from '@_components/common/treeView/types';
 import {
   generateNodeUid,
   getSubNEUids,
+  getSubUids,
 } from '@_node/apis';
 import {
   TFileType,
   TNode,
   TUid,
+  validFileType,
 } from '@_node/types';
 import { MainContext } from '@_pages/main/context';
 import {
@@ -37,24 +42,24 @@ import {
 import {
   addFFNode,
   closeFFNode,
-  globalGetPendingSelector,
   globalGetWorkspaceSelector,
   setCurrentFile,
   setGlobalPending,
 } from '@_redux/global';
-import { validateUids, verifyPermission } from '@_services/global';
+import {
+  validateUids,
+  verifyPermission,
+} from '@_services/global';
 import { FFNode } from '@_types/ff';
 
 import { renderers } from './renderers';
 import { WorkspaceTreeViewProps } from './types';
-import { CustomDirectoryPickerOptions } from 'file-system-access/lib/showDirectoryPicker';
 
 export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   const dispatch = useDispatch()
 
   // fetch global state
   const workspace = useSelector(globalGetWorkspaceSelector)
-  const pending = useSelector(globalGetPendingSelector)
 
   // fetch ff state
   const focusedItem = useSelector(ffGetFocusedItemSelector)
@@ -110,20 +115,19 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
   }, [workspace])
 
-
   // import project folder to workspace
   const onAddBtnClick = async () => {
-    
-    const projectHandle = await showDirectoryPicker({_preferPolyfill: false, mode: 'readwrite' } as CustomDirectoryPickerOptions)
-    // get the project count in the workspace
     dispatch(setGlobalPending(true))
+
+    const projectHandle = await showDirectoryPicker({ _preferPolyfill: false, mode: 'readwrite' } as CustomDirectoryPickerOptions)
+
+    // get the project count in the workspace
     let projectCount = 0
     for (const uid in workspace) {
       const node = workspace[uid]
       projectCount += (node.p_uid === null ? 1 : 0)
     }
 
-    let nodes: FFNode[] = []
     // add project node
     let projectUid = generateNodeUid("", projectCount)
     let handlers = []
@@ -138,27 +142,24 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       data: projectHandle.name,
     }
 
-
     // add children nodes
+    let nodes: FFNode[] = []
     let nodeIndex: number = 0
     for await (const entry of projectHandle.values()) {
-      const nodeUid = generateNodeUid(projectUid, nodeIndex++)
+      const nodeUid = generateNodeUid(projectUid, ++nodeIndex)
       handlers.push({ uid: nodeUid, handler: entry })
-      console.log(entry)
       nodes.push({
         uid: nodeUid,
         p_uid: projectUid,
         name: entry.name,
         isEntity: entry.kind !== "directory",
         children: [],
-        data: entry.name,
+        data: {},
       })
     }
     nodes = nodes.sort((a: TNode, b: TNode) => {
-      return Number(a.isEntity) < Number(b.isEntity) ? -1 :
-        Number(a.isEntity) > Number(b.isEntity) ? 1 :
-          a.name.toLowerCase() < b.name.toLowerCase() ? -1 :
-            a.name.toLowerCase() > b.name.toLowerCase() ? 1 : 0
+      return a.isEntity && !b.isEntity ? 1 :
+        a.name.toLowerCase() > b.name.toLowerCase() ? 1 : 0
     })
     nodes.map((node) => {
       projectNode.children.push(node.uid)
@@ -166,17 +167,28 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     nodes.push(projectNode)
     setHandler(handlers)
     dispatch(addFFNode(nodes))
-    dispatch(expandFFNode([projectUid]))
+    dispatch(expandFFNode(projectUid))
+
     dispatch(setGlobalPending(false))
   }
 
   // remove project folder from workspace
   const onRemoveBtnClick = () => {
+    if (focusedItem === undefined) {
+      return
+    }
     // return if it's not the project folder
     if (workspace[focusedItem].p_uid !== null) {
       return
     }
 
+
+  }
+
+  // create/delete ff-node
+  const createFFNode = () => {
+  }
+  const deleteFFNode = () => {
   }
 
   // cb
@@ -184,37 +196,21 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     dispatch(focusFFNode(uid))
   }
   const cb_selectFFNode = (uids: TUid[]) => {
-    uids = validateUids(uids)
-    // console.log(validateUids(uids))
-    const uid = uids[0];
-    const handler = handlers[uid]
-
-    dispatch(selectFFNode(uids))
-
-    if (handler === undefined || handler.kind == "directory" || !verifyPermission(handler)) {
-      return;
-    }
-
-    (handler as FileSystemFileHandle).getFile().then(async (fileEntry) => {
-      let content = await fileEntry.text();
-      dispatch(setCurrentFile({
-        uid,
-        content,
-        type: handler.name.split('.').pop() as TFileType
-      }))
-    })
+    dispatch(selectFFNode(validateUids(uids)))
   }
   const cb_expandFFNode = async (uid: TUid) => {
+    dispatch(setGlobalPending(true))
+
     const parentNode: FFNode = JSON.parse(JSON.stringify(workspace[uid]))
     const cb = async (handler: FileSystemDirectoryHandle) => {
       if (!verifyPermission(handler))
         return
       let nodes: FFNode[] = []
       let p_uid: TUid = uid
-      let nodeIndex: number = 1
+      let nodeIndex: number = 0
       let handlers = []
       for await (const entry of handler.values()) {
-        const nodeUid = generateNodeUid(p_uid, nodeIndex++)
+        const nodeUid = generateNodeUid(p_uid, ++nodeIndex)
         handlers.push({ uid: nodeUid, handler: entry })
         nodes.push({
           uid: nodeUid,
@@ -222,14 +218,12 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           name: entry.name,
           isEntity: entry.kind !== "directory",
           children: [],
-          data: entry.name,
+          data: {},
         })
       }
       nodes = nodes.sort((a: TNode, b: TNode) => {
-        return Number(a.isEntity) < Number(b.isEntity) ? -1 :
-          Number(a.isEntity) > Number(b.isEntity) ? 1 :
-            a.name.toLowerCase() < b.name.toLowerCase() ? -1 :
-              a.name.toLowerCase() > b.name.toLowerCase() ? 1 : 0
+        return a.isEntity && !b.isEntity ? 1 :
+          a.name.toLowerCase() > b.name.toLowerCase() ? 1 : 0
       })
       nodes.map((node) => {
         parentNode.children.push(node.uid)
@@ -237,29 +231,40 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       nodes.push(parentNode)
       setHandler(handlers)
       dispatch(addFFNode(nodes))
-      dispatch(expandFFNode([uid]))
+      dispatch(expandFFNode(uid))
     }
-    handlers ? cb(handlers[uid] as FileSystemDirectoryHandle) : null
+    cb(handlers[uid] as FileSystemDirectoryHandle)
+
+    dispatch(setGlobalPending(false))
   }
   const cb_collapseFFNode = (uid: TUid) => {
-    dispatch(closeFFNode(getSubNEUids(uid, workspace)))
-    dispatch(collapseFFNode([uid]))
+    dispatch(closeFFNode(getSubUids(uid, workspace)))
+    dispatch(collapseFFNode(getSubNEUids(uid, workspace)))
   }
   const cb_readFFNode = (uid: TUid) => {
+    dispatch(setGlobalPending(true))
 
+    /* validate */
+    const handler = handlers[uid]
+    if (handler === undefined || handler.kind == "directory" || !verifyPermission(handler)) {
+      return
+    }
+
+    /* read the file content */
+    (handler as FileSystemFileHandle).getFile().then(async (fileEntry) => {
+      let fileType: string = handler.name.split('.').pop() as string
+      fileType = validFileType[fileType] ? fileType : 'unknown'
+      let content = await fileEntry.text()
+      dispatch(setCurrentFile({ uid, content, type: fileType as TFileType }))
+    })
+
+    dispatch(setGlobalPending(false))
   }
   const cb_renameFFNode = (uid: TUid, name: string) => {
-
   }
 
   // move/duplicate create/delete actions
   const cb_dropFFNode = (uids: TUid[], targetUid: TUid) => {
-
-  }
-  const createFFNode = () => {
-
-  }
-  const deleteFFNode = () => {
 
   }
 
@@ -303,7 +308,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           }}
         >
           {/* Create Node Button */}
-          <button
+          {/* <button
             style={{
               background: "rgb(23 111 44)",
               color: "white",
@@ -314,10 +319,10 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
             onClick={createFFNode}
           >
             Create
-          </button>
+          </button> */}
 
           {/* Delete Node Button */}
-          <button
+          {/* <button
             style={{
               background: "rgb(23 111 44)",
               color: "white",
@@ -328,7 +333,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
             onClick={deleteFFNode}
           >
             Delete
-          </button>
+          </button> */}
 
           {/* Add Project Button */}
           <button
@@ -343,6 +348,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           >
             Open
           </button>
+
           {/* Remove Project Button */}
           <button
             style={{
@@ -416,41 +422,21 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           // DnD CALLBACK
           onDrop: (items, target) => {
             console.log('onDrop', items, target)
-            let uids: TUid[] = []
-            for (const item of items) {
-              uids.push(item.index as string)
-            }
-            if (target.targetType === 'between-items') {
-              /* target.parentItem
-              target.childIndex
-              target.linePosition */
-            } else if (target.targetType === 'item') {
-              /* target.targetItem */
+
+            const uids: TUid[] = items.map(item => item.index as TUid)
+            const targetTUid: TUid = (target as DraggingPositionItem).targetItem as TUid
+
+            // validate dnd uids
+            let validatedUids: TUid[] = validateUids(uids, targetTUid)
+            if (validatedUids.length == 0) {
+              return
             }
 
-            const targetTUid: TUid = (target as DraggingPositionItem).targetItem as string
-            uids = validateUids(uids, targetTUid)
-            if (uids.length == 0)
-              return;
-            console.log('onDrop', uids, targetTUid)
-            cb_dropFFNode(uids, targetTUid)
+            // call cb
+            cb_dropFFNode(validatedUids, targetTUid)
           }
         }}
       />
     </div>
   </>)
-}
-
-/* declare module 'react' {
-  interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
-    // extends React's HTMLAttributes
-    directory?: string;        // remember to make these attributes optional....
-    webkitdirectory?: string;
-  }
-} */
-
-declare global {
-  interface Window {
-    showDirectoryPicker?: any;
-  }
 }

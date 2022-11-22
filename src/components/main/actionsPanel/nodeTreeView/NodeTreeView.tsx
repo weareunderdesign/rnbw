@@ -33,6 +33,7 @@ import {
   fnGetSelectedItemsSelector,
   focusFNNode,
   selectFNNode,
+  updateFNNode,
 } from '@_redux/fn';
 import {
   globalGetCurrentFileSelector,
@@ -72,35 +73,25 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
         canRename: true,
       }
     }
-    dispatch(expandFNNode(['root_1']))
+    dispatch(expandFNNode('root_1'))
     return data
   }, [content])
 
+  /* update the global state */
   const updateFFContent = async (tree: TTree) => {
     const content = serializeFile({ type, tree })
     dispatch(updateFileContent(content))
   }
 
-  const handleDuplicateFNNode = () => {
-    if (focusedItem === '') {
-      return
-    }
-    const tree = JSON.parse(JSON.stringify(treeData))
-    const res = duplicateNode({ tree, node: { ...tree[focusedItem] } })
-    if (res.success === true) {
-      updateFFContent(tree)
-    } else {
-      dispatch(setGlobalError(res.error as string))
-    }
-  }
-  const handleAddFNNode = () => {
+  /* add node handler */
+  const handleAddFNNode = (nodeType: string) => {
     const tree = JSON.parse(JSON.stringify(treeData))
     const p_uid: TUid = focusedItem === '' ? 'root' : focusedItem
     let newNode: TNode = {
       uid: generateNodeUid(p_uid, treeData[p_uid].children.length + 1),
       p_uid: p_uid,
-      name: 'div',
-      isEntity: true,
+      name: nodeType,
+      isEntity: false,
       children: [],
       data: {},
     }
@@ -111,6 +102,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       dispatch(setGlobalError(res.error as string))
     }
   }
+  /* remove node handler */
   const handleRemoveFnNode = () => {
     if (selectedItems.length === 0) return
 
@@ -118,6 +110,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     const res = removeNode({ tree, nodeUids: selectedItems })
     if (res.success === true) {
       updateFFContent(tree)
+      dispatch(updateFNNode({ deletedUids: res.deletedUids, convertedUids: res.convertedUids }))
     } else {
       dispatch(setGlobalError(res.error as string))
     }
@@ -128,10 +121,10 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     dispatch(focusFNNode(uid))
   }
   const cb_expandNode = (uid: TUid) => {
-    dispatch(expandFNNode([uid]))
+    dispatch(expandFNNode(uid))
   }
   const cb_collapseNode = (uid: TUid) => {
-    dispatch(collapseFNNode([uid]))
+    dispatch(collapseFNNode(uid))
   }
   const cb_selectNode = (uids: TUid[]) => {
     dispatch(selectFNNode(validateUids(uids)))
@@ -139,12 +132,12 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   const cb_renameNode = (uid: TUid, name: string) => {
     const tree = JSON.parse(JSON.stringify(treeData))
     const node = { ...tree[uid], name }
-    const result = replaceNode({ tree, node })
-    if (result.success === true) {
+    const res = replaceNode({ tree, node })
+    if (res.success === true) {
       updateFFContent(tree)
     }
     else {
-      dispatch(setGlobalError(result.error as string))
+      dispatch(setGlobalError(res.error as string))
     }
   }
   const cb_dropNode = (payload: { [key: string]: any }) => {
@@ -157,7 +150,22 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       uids: payload.uids
     })
     if (res.success === true) {
-      console.log(payload, tree)
+      dispatch(updateFNNode({ convertedUids: res.convertedUids }))
+      updateFFContent(tree)
+    } else {
+      dispatch(setGlobalError(res.error as string))
+    }
+  }
+
+  /* duplicate action handler */
+  const handleDuplicateFNNode = () => {
+    if (focusedItem === '') {
+      return
+    }
+    const tree = JSON.parse(JSON.stringify(treeData))
+    const res = duplicateNode({ tree, node: { ...tree[focusedItem] } })
+    if (res.success === true) {
+      dispatch(updateFNNode({ convertedUids: res.convertedUids }))
       updateFFContent(tree)
     } else {
       dispatch(setGlobalError(res.error as string))
@@ -214,9 +222,9 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
               border: "none",
               font: "normal lighter normal 12px Arial",
             }}
-            onClick={handleAddFNNode}
+            onClick={() => handleAddFNNode('div')}
           >
-            +
+            Add Div
           </button>
 
           {/* Duplicate Node Button */}
@@ -306,16 +314,20 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
           onDrop: (items, target) => {
             console.log('onDrop', items, target)
 
-            // moving uids
-            const uids: TUid[] = []
-            for (const item of items) {
-              uids.push(item.index as string)
-            }
-
+            // building drop-node-payload
+            const uids: TUid[] = items.map(item => item.index as TUid)
             const isBetween = target.targetType === 'between-items'
             const parentUid = isBetween ? target.parentItem : target.targetItem
-            const payload = { uids, isBetween, parentUid, position: {} }
-            payload.position = isBetween ? target.childIndex : 0
+            const position = isBetween ? target.childIndex : 0
+
+            // validate dnd uids
+            let validatedUids = validateUids(uids, parentUid as TUid)
+            if (validatedUids.length == 0) {
+              return
+            }
+
+            // call cb
+            const payload = { uids: validatedUids, isBetween, parentUid, position }
             cb_dropNode(payload)
           }
         }}

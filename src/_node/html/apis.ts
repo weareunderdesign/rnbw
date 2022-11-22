@@ -91,10 +91,9 @@ export const serializeHtml = (data: TTree): string => {
     const element: TNode = data[UID] as TNode
     let element_html: string = ""
     // console.log("UID:", UID, "data:", data[UID])
-    if (element.isEntity === false) {
+    if (element.isEntity === true) {
       element_html = "\t".repeat(level) + element.name + "\n";
-    }
-    else {
+    } else {
       element_html = "\t".repeat(level) + `<${element.name}>` + "\n"
       element_html += element.children?.reduce((result, item) => {
         return result + getHTMLFromFNObject(item, level + 1)

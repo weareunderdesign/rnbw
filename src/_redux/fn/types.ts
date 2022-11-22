@@ -12,3 +12,9 @@ export type FNTreeViewState = {
     [uid: TUid]: boolean,
   },
 }
+
+/* update fn node - convert from $a to $b */
+export type UpdateFNNodePayload = {
+  deletedUids?: TUid[],
+  convertedUids?: [TUid, TUid][],
+}

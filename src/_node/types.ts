@@ -29,7 +29,7 @@ export type TNodeApiRes = {
   success: boolean,/* true if successfully done */
   error?: string,/* error message if failed */
   deletedUids?: TUid[],/* deleted uid array */
-  convertedUids?: Map<TUid, TUid>,/* converted uid map */
+  convertedUids?: [TUid, TUid][],/* converted uid map */
 }
 
 /**
@@ -80,6 +80,15 @@ export type TDuplicateNodePayload = {
  * ref to valid file types
  */
 export type TFileType = 'html' | 'css' | 'js' | 'md' | 'unknown'/* file types that the app can classify */
+export type ValidFileTypeType = {
+  [ext: string]: boolean,
+}
+export const validFileType: ValidFileTypeType = {/* valid file types */
+  "html": true,
+  "css": false,
+  "js": false,
+  "md": false,
+}
 /**
  * ref to parsable file types
  */

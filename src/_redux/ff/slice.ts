@@ -24,19 +24,17 @@ const slice = createSlice({
       const uid = action.payload
       state.focusedItem = uid
     },
-    expandFFNode(state, action: PayloadAction<TUid[]>) {
-      const uids = action.payload
-      for (const uid of uids) {
-        state.expandedItems.push(uid)
-        state.expandedItemsObj[uid] = true
-      }
+    expandFFNode(state, action: PayloadAction<TUid>) {
+      const uid = action.payload
+      state.expandedItems.push(uid)
+      state.expandedItemsObj[uid] = true
     },
     collapseFFNode(state, action: PayloadAction<TUid[]>) {
       const uids = action.payload
       for (const uid of uids) {
         delete state.expandedItemsObj[uid]
       }
-      state.expandedItems = state.expandedItems.filter(uid => state.expandedItemsObj[uid])
+      state.expandedItems = Object.keys(state.expandedItemsObj)
     },
     selectFFNode(state, action: PayloadAction<TUid[]>) {
       const uids = action.payload
@@ -46,39 +44,9 @@ const slice = createSlice({
         state.selectedItemsObj[uid] = true
       }
     },
-    setRenamedFFNodes(state, action: PayloadAction<any>) {
-      const { nodes } = action.payload
-      for (const node of nodes) {
-        if (state.expandedItemsObj[node.data]) {
-          state.expandedItemsObj[node.uid] = true
-        }
-        if (state.selectedItemsObj[node.data]) {
-          state.selectedItemsObj[node.uid] = true
-        }
-        delete state.expandedItemsObj[node.data]
-        delete state.selectedItemsObj[node.data]
-      }
-      state.expandedItems = []
-      for (const uid in state.expandedItemsObj) {
-        state.expandedItems.push(uid)
-      }
-      state.selectedItems = []
-      for (const uid in state.selectedItemsObj) {
-        state.selectedItems.push(uid)
-      }
-    },
-    setRemoveFFNodes(state, action: PayloadAction<TUid[]>) {
-      const uids = action.payload
-      for (const uid of uids) {
-        delete state.expandedItemsObj[uid]
-        delete state.selectedItemsObj[uid]
-      }
-      state.expandedItems = state.expandedItems.filter(uid => state.expandedItemsObj[uid])
-      state.selectedItems = state.selectedItems.filter(uid => state.selectedItemsObj[uid])
-    },
   },
 })
 
 // export the actions and reducer
-export const { focusFFNode, expandFFNode, collapseFFNode, selectFFNode, setRenamedFFNodes, setRemoveFFNodes } = slice.actions
+export const { focusFFNode, expandFFNode, collapseFFNode, selectFFNode } = slice.actions
 export const FFReducer = slice.reducer
