@@ -3,7 +3,6 @@
  */
 export type TUid = string
 
-
 /**
  * node data object type
  */
@@ -26,7 +25,6 @@ export type TTree = {
 /**
  * node api res type
  */
-
 export type TNodeApiRes = {
   success: boolean,/* true if successfully done */
   error?: string,/* error message if failed */
@@ -78,13 +76,7 @@ export type TMoveNodePayload = {
  */
 export type TDuplicateNodePayload = {
   tree: TTree,/* tree data */
-  isBetween: boolean,/* true if it's reorder */
-  parentUid: TUid,/* parent uid which will be the parent of the nodes */
-  position?: {/* undefined if it's not reorder */
-    childIndex: number,
-    side: 'top' | 'bottom',
-  },
-  nodes: TNode[],/* nodes to duplicate - array for multiple feature */
+  node: TNode,/* node to duplicate */
 }
 
 /**
