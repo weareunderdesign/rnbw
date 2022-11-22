@@ -19,6 +19,7 @@ import {
   removeNode,
   replaceNode,
   serializeFile,
+  validateUids,
 } from '@_node/index';
 import {
   TNode,
@@ -40,7 +41,6 @@ import {
   setGlobalError,
   updateFileContent,
 } from '@_redux/global';
-import { validateUids } from '@_services/global';
 
 import { renderers } from './renderers';
 import { NodeTreeViewProps } from './types';
@@ -150,6 +150,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       uids: payload.uids
     })
     if (res.success === true) {
+      console.log(tree)
       dispatch(updateFNNode({ convertedUids: res.convertedUids }))
       updateFFContent(tree)
     } else {
@@ -165,7 +166,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     const tree = JSON.parse(JSON.stringify(treeData))
     const res = duplicateNode({ tree, node: { ...tree[focusedItem] } })
     if (res.success === true) {
-      dispatch(updateFNNode({ convertedUids: res.convertedUids }))
+      // dispatch(updateFNNode({ convertedUids: res.convertedUids }))
       updateFFContent(tree)
     } else {
       dispatch(setGlobalError(res.error as string))
@@ -321,7 +322,9 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
             const position = isBetween ? target.childIndex : 0
 
             // validate dnd uids
-            let validatedUids = validateUids(uids, parentUid as TUid)
+            let validatedUids: TUid[] = []
+            validatedUids = validateUids(uids, parentUid as TUid)
+
             if (validatedUids.length == 0) {
               return
             }

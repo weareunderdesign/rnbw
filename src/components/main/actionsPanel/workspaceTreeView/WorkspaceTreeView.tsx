@@ -22,6 +22,7 @@ import {
   generateNodeUid,
   getSubNEUids,
   getSubUids,
+  validateUids,
 } from '@_node/apis';
 import {
   TFileType,
@@ -46,10 +47,7 @@ import {
   setCurrentFile,
   setGlobalPending,
 } from '@_redux/global';
-import {
-  validateUids,
-  verifyPermission,
-} from '@_services/global';
+import { verifyPermission } from '@_services/global';
 import { FFNode } from '@_types/ff';
 
 import { renderers } from './renderers';

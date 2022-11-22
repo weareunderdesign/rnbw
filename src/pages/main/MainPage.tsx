@@ -52,7 +52,7 @@ export default function MainPage(props: MainPageProps) {
     /* for the remote rainbow */
     if (await verifyPermission(handler) === false) {
       console.log('show save file picker')
-      handler = await window.showSaveFilePicker({ suggestedName: handler.name })
+      handler = await showSaveFilePicker({ suggestedName: handler.name })
     }
 
     const writableStream = await (handler as FileSystemFileHandle).createWritable()

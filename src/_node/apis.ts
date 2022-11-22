@@ -69,6 +69,27 @@ export const getSubUids = (uid: TUid, tree: TTree): TUid[] => {
 }
 
 /**
+ * validate the uids - parent/child, nested...
+ * @param uids 
+ * @param targetUid 
+ * @returns 
+ */
+export const validateUids = (uids: TUid[], targetUid?: TUid): TUid[] => {
+  return uids
+  if (targetUid !== undefined) {
+    uids = uids.filter((uid) => { return !uid.startsWith(targetUid as string) })
+  }
+  uids = uids.sort((a: TUid, b: TUid) => { return a < b ? -1 : 1 })
+  let result: TUid[] = []
+  while (uids.length) {
+    const uid = uids.shift() as TUid
+    result.push(uid)
+    uids = uids.filter((curUid) => { return !curUid.startsWith(uid) })
+  }
+  return result
+}
+
+/**
  * reset all of the uids inside p_uid in the tree data
  * @param p_uid 
  * @param tree 

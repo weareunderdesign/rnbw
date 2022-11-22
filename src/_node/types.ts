@@ -89,6 +89,7 @@ export const validFileType: ValidFileTypeType = {/* valid file types */
   "js": false,
   "md": false,
 }
+
 /**
  * ref to parsable file types
  */
