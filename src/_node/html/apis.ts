@@ -53,7 +53,7 @@ export const parseHtml = (content: string): TTree => {
           p_uid: "root",
           name: getName(node),
           children: [],
-          data: node,
+          data: {}, // node
           isEntity: node.type !== 'text'
           // nodeType: node.type
         } as TNode
@@ -67,7 +67,7 @@ export const parseHtml = (content: string): TTree => {
           p_uid: PID,
           name: getName(node),
           children: [],
-          data: node,
+          data: {}, // node
           isEntity: node.type !== 'text',
           // nodeType: node.type
         } as TNode

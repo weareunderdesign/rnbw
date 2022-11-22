@@ -4,6 +4,7 @@ import React, {
   useRef,
 } from 'react';
 
+import { showSaveFilePicker } from 'file-system-access';
 import * as monaco from 'monaco-editor';
 import {
   useDispatch,
@@ -38,12 +39,12 @@ export default function CodeView(props: CodeViewProps) {
   }
   const handleSaveFFContent = async () => {
     // try {
-    const handler = handlers[uid]
+    let handler = handlers[uid]
     console.log(handler)
     if (handler === undefined)
       return;
     if (await verifyPermission(handler) === false) {
-      handler
+      handler = await showSaveFilePicker({ suggestedName: handler.name })
     }
     console.log("permissive")
     dispatch(setGlobalPending(true))
