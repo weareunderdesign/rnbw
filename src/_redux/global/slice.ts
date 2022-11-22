@@ -99,14 +99,18 @@ const slice = createSlice({
     updateFileContent(state, action: PayloadAction<string>) {
       const data = action.payload
       state.currentFile.content = data
+      state.pending = false
     },
     setGlobalError(state, action: PayloadAction<string>) {
       const error = action.payload
       state.error = error
     },
+    setGlobalPending(state, action:PayloadAction<boolean>) {
+      state.pending = action.payload
+    }
   },
 })
 
 // export the actions and reducer
-export const { addFFNode, removeFFNode, closeFFNode, addWatchedFFNode, renameFFNode, setCurrentFile, setGlobalError, updateFileContent } = slice.actions
+export const { addFFNode, removeFFNode, closeFFNode, addWatchedFFNode, renameFFNode, setCurrentFile, setGlobalError, updateFileContent, setGlobalPending } = slice.actions
 export const GlobalReducer = slice.reducer

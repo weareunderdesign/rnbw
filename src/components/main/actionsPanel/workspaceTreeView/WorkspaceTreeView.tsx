@@ -40,6 +40,7 @@ import {
   globalGetPendingSelector,
   globalGetWorkspaceSelector,
   setCurrentFile,
+  setGlobalPending,
 } from '@_redux/global';
 import { verifyPermission } from '@_services/global';
 import { FFNode } from '@_types/ff';
@@ -111,8 +112,10 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
   // import project folder to workspace
   const onAddBtnClick = async () => {
+    
     const projectHandle = await showDirectoryPicker()
     // get the project count in the workspace
+    dispatch(setGlobalPending(true))
     let projectCount = 0
     for (const uid in workspace) {
       const node = workspace[uid]
@@ -162,6 +165,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     setHandler(handlers)
     dispatch(addFFNode(nodes))
     dispatch(expandFFNode([projectUid]))
+    dispatch(setGlobalPending(false))
   }
 
   // remove project folder from workspace
@@ -179,14 +183,20 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   }
   const cb_selectFFNode = (uids: TUid[]) => {
     const uid = uids[0];
-    if (handlers[uid] === undefined || handlers[uid].isDirectory)
+    const handler = handlers[uid]
+
+    if (handler === undefined || handler.kind == "directory" || !verifyPermission(handler)) {
       return;
-    (handlers[uid] as FileSystemFileHandle).getFile().then(async (fileEntry) => {
+    }
+
+    console.log(handler);
+
+    (handler as FileSystemFileHandle).getFile().then(async (fileEntry) => {
       let content = await fileEntry.text();
       dispatch(setCurrentFile({
         uid,
         content,
-        type: handlers[uid].name.split('.').pop() as TFileType
+        type: handler.name.split('.').pop() as TFileType
       }))
       dispatch(selectFFNode(uids))
     })

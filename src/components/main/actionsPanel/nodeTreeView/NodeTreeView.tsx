@@ -81,11 +81,11 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
   const updateFFContent = async (tree: TTree) => {
     const content = serializeFile({ type, tree })
-    if (handlers[fuid] === undefined || !verifyPermission(handlers[fuid]) || handlers[fuid].isDirectory)
-      return;
-    const writableStream = await (handlers[fuid] as FileSystemFileHandle).createWritable();
-    await writableStream.write(content)
-    await writableStream.close();
+    // if (handlers[fuid] === undefined || !verifyPermission(handlers[fuid]) || handlers[fuid].isDirectory)
+    //   return;
+    // const writableStream = await (handlers[fuid] as FileSystemFileHandle).createWritable();
+    // await writableStream.write(content)
+    // await writableStream.close();
     dispatch(updateFileContent(content))
   }
 
