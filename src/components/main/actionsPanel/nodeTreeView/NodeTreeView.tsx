@@ -4,7 +4,6 @@ import React, {
   useState,
 } from 'react';
 
-import { DraggingPositionItem } from 'react-complex-tree';
 import {
   useDispatch,
   useSelector,
@@ -15,6 +14,7 @@ import { TreeViewData } from '@_components/common/treeView/types';
 import {
   addNode,
   generateNodeUid,
+  moveNode,
   parseFile,
   removeNode,
   replaceNode,
@@ -41,7 +41,6 @@ import {
   setGlobalError,
   updateFileContent,
 } from '@_redux/global';
-import { verifyPermission } from '@_services/global';
 
 import { renderers } from './renderers';
 import { NodeTreeViewProps } from './types';
@@ -112,9 +111,9 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     const tree = JSON.parse(JSON.stringify(treeData))
     const res = removeNode({ tree, nodeUids: selectedItems })
-    if (res.success === true)
+    if (res.success === true) {
       updateFFContent(tree)
-    else {
+    } else {
       dispatch(setGlobalError(res.error as string))
     }
   }
@@ -130,30 +129,34 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     dispatch(collapseFNNode([uid]))
   }
   const cb_selectNode = (uids: TUid[]) => {
+
     dispatch(selectFNNode(uids))
   }
   const cb_renameNode = (uid: TUid, name: string) => {
     const tree = JSON.parse(JSON.stringify(treeData))
     const node = { ...tree[uid], name }
     const result = replaceNode({ tree, node })
-    if (result.success === true)
+    if (result.success === true) {
       updateFFContent(tree)
-    else
+    }
+    else {
       dispatch(setGlobalError(result.error as string))
+    }
   }
-  const cb_dropNode = (uids: TUid[], targetUid: string) => {
-    if (treeData[uids[0]].p_uid == targetUid)
-      return;
-    /* const result = moveNode({
-      tree: treeData,
-      isBetween: false,
-      parentUid: targetUid,
-      uids: uids
+  const cb_dropNode = (payload: { [key: string]: any }) => {
+    const tree = JSON.parse(JSON.stringify(treeData))
+    const res = moveNode({
+      tree,
+      isBetween: payload.isBetween,
+      parentUid: payload.parentUid,
+      position: payload.position,
+      uids: payload.uids
     })
-    if (result.success == true)
-      updateFFContent(result.tree as TTree)
-    else
-      dispatch(setGlobalError(result.error as string)) */
+    if (res.success === true) {
+      updateFFContent(tree)
+    } else {
+      dispatch(setGlobalError(res.error as string))
+    }
   }
 
   return (<>
@@ -281,22 +284,22 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
           // DnD CALLBACK
           onDrop: (items, target) => {
             console.log('onDrop', items, target)
+
+            // moving uids
             const uids: TUid[] = []
             for (const item of items) {
               uids.push(item.index as string)
             }
 
-            if (target.targetType === 'between-items') {
-              /* target.parentItem
-              target.childIndex
-              target.linePosition */
-            } else if (target.targetType === 'item') {
-              /* target.targetItem */
+            const isBetween = target.targetType === 'between-items'
+            const parentUid = isBetween ? target.parentItem : target.targetItem
+            const payload = { uids, isBetween, parentUid, position: {} }
+            if (isBetween) {
+              const childIndex = target.childIndex
+              const side = target.linePosition
+              payload.position = { childIndex, side }
             }
-
-            const targetTUid: TUid = (target as DraggingPositionItem).targetItem as string
-            console.log('onDrop', uids, targetTUid)
-            cb_dropNode(uids, targetTUid)
+            cb_dropNode(payload)
           }
         }}
       />

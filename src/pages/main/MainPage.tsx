@@ -1,18 +1,15 @@
 import React, { useState } from 'react';
 
+import { useSelector } from 'react-redux';
+
 import {
   ActionsPanel,
   CodeView,
   StageView,
 } from '@_components/main';
-
-import { useSelector } from 'react-redux';
-
-import { Spinner } from '@blueprintjs/core';
-
-
 import { TUid } from '@_node/types';
 import { globalGetPendingSelector } from '@_redux/global';
+import { Spinner } from '@blueprintjs/core';
 
 import { MainContext } from './context';
 import { MainPageProps } from './types';
@@ -21,7 +18,7 @@ export default function MainPage(props: MainPageProps) {
   const [ffHandlers, setFFHandlers] = useState<{ [key: TUid]: FileSystemHandle }>({})
 
   const pending = useSelector(globalGetPendingSelector)
-  
+
   const setFFHandler = (handlers: { uid: TUid, handler: FileSystemHandle }[]) => {
     let newHandlers: { [key: TUid]: FileSystemHandle } = {}
     handlers.map(({ uid, handler }) => {
@@ -31,7 +28,7 @@ export default function MainPage(props: MainPageProps) {
   }
 
   return (<>
-    
+
     {pending &&
       <Spinner
         intent='success'
@@ -44,15 +41,13 @@ export default function MainPage(props: MainPageProps) {
         }}
       />
     }
-    
+
     <MainContext.Provider value={{ setHandler: setFFHandler, handlers: ffHandlers }}>
       <div style={{
         width: "calc(100% - 4rem)",
         height: "calc(100% - 4rem)",
 
-        marginLeft: "2rem",
-        marginRight: "2rem",
-        marginBottom: "2rem",
+        margin: "2rem",
         background: "rgb(36, 41, 46)",
         boxShadow: "1px 1px 5px 1px rgb(20, 20, 20)",
 

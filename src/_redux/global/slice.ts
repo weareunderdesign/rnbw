@@ -99,13 +99,12 @@ const slice = createSlice({
     updateFileContent(state, action: PayloadAction<string>) {
       const data = action.payload
       state.currentFile.content = data
-      state.pending = false
     },
     setGlobalError(state, action: PayloadAction<string>) {
       const error = action.payload
       state.error = error
     },
-    setGlobalPending(state, action:PayloadAction<boolean>) {
+    setGlobalPending(state, action: PayloadAction<boolean>) {
       state.pending = action.payload
     }
   },

@@ -90,20 +90,51 @@ export const getSubNodes = (uid: TUid, tree: TTree): TNode[] => {
   return nodes
 }
 
+
+
 /**
  * reset all of the uids inside p_uid in the tree data
  * @param p_uid 
  * @param tree 
  * @param convertedUids 
  */
-export const resetUids = (p_uid: TUid, tree: TTree, convertedUids: Map<TUid, TUid>) => {
-  tree[p_uid].children = tree[p_uid].children.map((c_uid, index) => {
+export const resetUids = (p_uid: TUid, tree: TTree, deletedUids: TUid[], convertedUids: Map<TUid, TUid>) => {
+  const addedNodes: TNode[] = []
+  const _deletedUids: TUid[] = []
+
+  tree[p_uid].children = tree[p_uid].children.map((uid, index) => {
     const newUid = generateNodeUid(p_uid, index + 1)
-    if (newUid !== c_uid) {
-      convertedUids.set(c_uid, newUid)
+    if (newUid !== uid) {
+      /* remove original node(nest) and add new nodes */
+      const subUids = getSubUids(uid, tree)
+      _deletedUids.push(...subUids)
+      for (const subUid of subUids) {
+        const newSubUid = newUid + subUid.slice(uid.length)
+        const subNode = tree[subUid]
+        addedNodes.push({
+          uid: newSubUid,
+          p_uid: (subNode.p_uid !== p_uid) ? newUid + subNode.p_uid?.slice(uid.length) : p_uid,
+          name: subNode.name,
+          isEntity: subNode.isEntity,
+          children: subNode.children.map(c_uid => newUid + c_uid.slice(uid.length)),
+          data: subNode.data,
+        })
+        convertedUids.set(subUid, newSubUid)
+      }
     }
     return newUid
   })
+
+  /* delete orignal node-nest */
+  for (const deletedUid of _deletedUids) {
+    delete tree[deletedUid]
+  }
+  deletedUids.push(..._deletedUids)
+
+  /* add the new renamed nodes */
+  for (const addedNode of addedNodes) {
+    tree[addedNode.uid] = addedNode
+  }
 }
 
 const getParentUids = (uids: TUid[]) => {
@@ -147,9 +178,12 @@ export const removeNode = ({ tree, nodeUids }: TRemoveNodePayload): TNodeApiRes 
   try {
     const convertedUids = new Map<TUid, TUid>()
     const deletedUids: TUid[] = []
+    const changedParent: { [uid: TUid]: boolean } = {}
 
     for (const nodeUid of nodeUids) {
       const node = tree[nodeUid]
+
+      changedParent[node.p_uid as TUid] = true
       const p_node = tree[node.p_uid as TUid]
       p_node.children = p_node.children.filter(c_uid => c_uid !== nodeUid)
 
@@ -159,10 +193,13 @@ export const removeNode = ({ tree, nodeUids }: TRemoveNodePayload): TNodeApiRes 
         delete tree[uid]
       }
       deletedUids.push(...uids)
-
-      /* reset the uids */
-      resetUids(node.p_uid as TUid, tree, convertedUids)
     }
+
+    /* reset the uids */
+    for (const uid in changedParent) {
+      resetUids(uid, tree, deletedUids, convertedUids)
+    }
+
     return { success: true, deletedUids, convertedUids }
   } catch (err) {
     return { success: false, error: err as string }
@@ -188,25 +225,69 @@ export const replaceNode = ({ tree, node }: TReplaceNodePayload): TNodeApiRes =>
  * this api moves the nodes inside the parent node
  */
 export const moveNode = ({ tree, isBetween, parentUid, position, uids }: TMoveNodePayload): TNodeApiRes => {
+  try {
+    const convertedUids = new Map<TUid, TUid>()
+    const deletedUids: TUid[] = []
+    const changedParent: { [uid: TUid]: boolean } = {}
+
+    const parentNode = tree[parentUid]
+    for (const uid of uids) {
+      const node = tree[uid]
+
+      /* reset the parent node */
+      const p_node = tree[node.p_uid as TUid]
+      changedParent[p_node.uid] = true
+      p_node.children = p_node.children.filter(c_uid => c_uid !== uid)
+
+      if (isBetween) {
+        /* get the correct position */
+        let childIndex = position?.side === 'top' ? position?.childIndex : position?.childIndex as number + 1
+        node.p_uid = parentUid
+
+        /* push the node at the specific position of the parent.children */
+        parentNode.children = parentNode.children.reduce((prev, cur, index) => {
+          if (index === childIndex) {
+            prev.push(uid)
+          }
+          prev.push(cur)
+          return prev
+        }, [] as TUid[])
+      } else {
+        /* push to back of the parent node */
+        node.p_uid = parentUid
+        parentNode.children.push(uid)
+      }
+    }
+
+    /* reset the uids */
+    for (const uid in changedParent) {
+      resetUids(uid, tree, deletedUids, convertedUids)
+    }
+    resetUids(parentUid, tree, deletedUids, convertedUids)
+
+    return { success: true, deletedUids, convertedUids }
+  } catch (err) {
+    return { success: false, error: err as string }
+  }
   /* try {
     console.log(tree, parentUid, uids)
     let treeData: TTree = tree;
     uids.map((uid) => {
       let node = _.cloneDeep(tree[uid])
-
+  
       const result = removeNode({ tree: treeData, nodeUids: [uid], deleted: true })
       console.log(result)
       let child: TTree = result.child
       const convertUids = result.convertUids
       treeData = _.cloneDeep(result.tree as TTree)
-
+  
       console.log("add", treeData)
-
+  
       convertUids?.has(parentUid) ? parentUid = convertUids.get(parentUid) as string : '';
       addNode({ tree: treeData as TTree, targetUid: parentUid, node });
       treeData[node.uid].children = treeData[node.uid].children.map((key) => { return key.replace(uid, node.uid) });
       Object.keys(child).map((key) => {
-
+  
         const oldChild: TNode = child[key] as TNode
         const newNewUid: string = key.replace(uid, node.uid as string) as string
         treeData[newNewUid] = {
@@ -223,7 +304,6 @@ export const moveNode = ({ tree, isBetween, parentUid, position, uids }: TMoveNo
   } catch (err) {
     return { success: false, error: err as string, child: {} }
   } */
-  return { success: true }
 }
 
 /**
@@ -232,11 +312,10 @@ export const moveNode = ({ tree, isBetween, parentUid, position, uids }: TMoveNo
  */
 export const duplicateNode = ({ tree, isBetween, parentUid, position, nodes }: TDuplicateNodePayload): TNodeApiRes => {
   try {
-
+    return { success: true }
   } catch (err) {
     return { success: false, error: err as string }
   }
-  return { success: true }
 }
 
 /**
