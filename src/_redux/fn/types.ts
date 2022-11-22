@@ -4,5 +4,11 @@ import { TUid } from '@_node/types';
 export type FNTreeViewState = {
   focusedItem: TUid,
   expandedItems: TUid[],
+  expandedItemsObj: {
+    [uid: TUid]: boolean,
+  },
   selectedItems: TUid[],
+  selectedItemsObj: {
+    [uid: TUid]: boolean,
+  },
 }

@@ -14,8 +14,7 @@ import { TreeView } from '@_components/common';
 import { TreeViewData } from '@_components/common/treeView/types';
 import {
   addNode,
-  generateNodeUID,
-  moveNode,
+  generateNodeUid,
   parseFile,
   removeNode,
   replaceNode,
@@ -26,6 +25,7 @@ import {
   TTree,
   TUid,
 } from '@_node/types';
+import { MainContext } from '@_pages/main/context';
 import {
   collapseFNNode,
   expandFNNode,
@@ -41,11 +41,10 @@ import {
   setGlobalError,
   updateFileContent,
 } from '@_redux/global';
+import { verifyPermission } from '@_services/global';
 
 import { renderers } from './renderers';
 import { NodeTreeViewProps } from './types';
-import { MainContext } from '@_pages/main/context';
-import { verifyPermission } from '@_services/global';
 
 export default function NodeTreeView(props: NodeTreeViewProps) {
   const dispatch = useDispatch()
@@ -56,14 +55,13 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
   const workspace = useSelector(globalGetWorkspaceSelector)
 
-  // fetch ff state
+  // fetch fn state
   const focusedItem = useSelector(fnGetFocusedItemSelector)
   const expandedItems = useSelector(fnGetExpandedItemsSelector)
   const selectedItems = useSelector(fnGetSelectedItemsSelector)
 
-  const [treeData, setTreeData] = useState<TTree>({})
-
   // node tree view data state
+  const [treeData, setTreeData] = useState<TTree>({})
   const nodeTreeViewData = useMemo(() => {
     const treedata: TTree = parseFile({ type, content })
     setTreeData(treedata)
@@ -92,36 +90,33 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   }
 
   const handleAddFNNode = () => {
-    let PID: string;
-    if (selectedItems.length == 0) {
-      PID = "root"
-    } else {
-      PID = selectedItems[0];
-    }
+    const tree = JSON.parse(JSON.stringify(treeData))
+    const p_uid: TUid = focusedItem === '' ? 'root' : focusedItem
     let newNode: TNode = {
-      uid: generateNodeUID(PID, treeData[PID].children.length + 1),
+      uid: generateNodeUid(p_uid, treeData[p_uid].children.length + 1),
+      p_uid: p_uid,
       name: 'div',
-      p_uid: PID,
       isEntity: true,
       children: [],
-      data: undefined
-    };
-    const result = addNode({ tree: treeData, targetUid: PID, node: newNode })
-    if (result.success == true)
-      updateFFContent(treeData)
-    else {
-      dispatch(setGlobalError(result.error as string))
+      data: {},
+    }
+    const res = addNode({ tree, targetUid: p_uid, node: newNode })
+    if (res.success === true) {
+      updateFFContent(tree)
+    } else {
+      dispatch(setGlobalError(res.error as string))
     }
   }
 
   const handleRemoveFnNode = () => {
-    if (selectedItems.length == 0)
-      return;
-    const result = removeNode({ tree: treeData, nodeUids: selectedItems, deleted: false })
-    if (result.success == true)
-      updateFFContent(result.tree as TTree)
+    if (selectedItems.length === 0) return
+
+    const tree = JSON.parse(JSON.stringify(treeData))
+    const res = removeNode({ tree, nodeUids: selectedItems })
+    if (res.success === true)
+      updateFFContent(tree)
     else {
-      dispatch(setGlobalError(result.error as string))
+      dispatch(setGlobalError(res.error as string))
     }
   }
 
@@ -130,16 +125,13 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     dispatch(focusFNNode(uid))
   }
   const cb_expandNode = (uid: TUid) => {
-    dispatch(expandFNNode(uid))
+    dispatch(expandFNNode([uid]))
   }
   const cb_collapseNode = (uid: TUid) => {
-    dispatch(collapseFNNode(uid))
+    dispatch(collapseFNNode([uid]))
   }
   const cb_selectNode = (uids: TUid[]) => {
     dispatch(selectFNNode(uids))
-  }
-
-  const cb_readNode = (uid: TUid) => {
   }
 
   const cb_renameNode = (uid: TUid, name: string) => {
@@ -153,19 +145,19 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       dispatch(setGlobalError(result.error as string))
   }
 
-  const cb_dropNode = (uids: TUid[], targetUID: string) => {
-    if (treeData[uids[0]].p_uid == targetUID)
+  const cb_dropNode = (uids: TUid[], targetUid: string) => {
+    if (treeData[uids[0]].p_uid == targetUid)
       return;
-    const result = moveNode({
+    /* const result = moveNode({
       tree: treeData,
       isBetween: false,
-      parentUid: targetUID,
+      parentUid: targetUid,
       uids: uids
     })
     if (result.success == true)
       updateFFContent(result.tree as TTree)
     else
-      dispatch(setGlobalError(result.error as string))
+      dispatch(setGlobalError(result.error as string)) */
   }
 
   return (<>
@@ -222,6 +214,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
           >
             +
           </button>
+          {/* Delete Node Button */}
           <button
             style={{
               zIndex: "2",

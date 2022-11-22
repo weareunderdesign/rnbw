@@ -10,10 +10,12 @@ import { useSelector } from 'react-redux';
 
 import { Spinner } from '@blueprintjs/core';
 
-import { MainPageProps } from './types';
-import { MainContext } from './context';
+
 import { TUid } from '@_node/types';
 import { globalGetPendingSelector } from '@_redux/global';
+
+import { MainContext } from './context';
+import { MainPageProps } from './types';
 
 export default function MainPage(props: MainPageProps) {
   const [ffHandlers, setFFHandlers] = useState<{ [key: TUid]: FileSystemHandle }>({})
@@ -22,13 +24,10 @@ export default function MainPage(props: MainPageProps) {
   
   const setFFHandler = (handlers: { uid: TUid, handler: FileSystemHandle }[]) => {
     let newHandlers: { [key: TUid]: FileSystemHandle } = {}
-    for (const x in ffHandlers) {
-      newHandlers[x] = ffHandlers[x]
-    }
     handlers.map(({ uid, handler }) => {
       newHandlers[uid] = handler
     })
-    setFFHandlers(newHandlers)
+    setFFHandlers({ ...ffHandlers, ...newHandlers })
   }
 
   return (<>

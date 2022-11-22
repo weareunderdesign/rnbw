@@ -11,7 +11,9 @@ import * as Types from './types';
 const initialState: Types.FNTreeViewState = {
   focusedItem: '',
   expandedItems: [],
+  expandedItemsObj: {},
   selectedItems: [],
+  selectedItemsObj: {},
 }
 
 // create the slice
@@ -23,17 +25,27 @@ const slice = createSlice({
       const uid = action.payload
       state.focusedItem = uid
     },
-    expandFNNode(state, action: PayloadAction<TUid>) {
-      const uid = action.payload
-      state.expandedItems.push(uid)
+    expandFNNode(state, action: PayloadAction<TUid[]>) {
+      const uids = action.payload
+      for (const uid of uids) {
+        state.expandedItems.push(uid)
+        state.expandedItemsObj[uid] = true
+      }
     },
-    collapseFNNode(state, action: PayloadAction<TUid>) {
-      const uid = action.payload
-      state.expandedItems = state.expandedItems.filter(u => u !== uid)
+    collapseFNNode(state, action: PayloadAction<TUid[]>) {
+      const uids = action.payload
+      for (const uid of uids) {
+        delete state.expandedItemsObj[uid]
+      }
+      state.expandedItems = state.expandedItems.filter(uid => state.expandedItemsObj[uid])
     },
     selectFNNode(state, action: PayloadAction<TUid[]>) {
       const uids = action.payload
       state.selectedItems = uids
+      state.selectedItemsObj = {}
+      for (const uid of uids) {
+        state.selectedItemsObj[uid] = true
+      }
     },
   },
 })
