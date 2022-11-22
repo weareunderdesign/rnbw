@@ -48,9 +48,9 @@ export default function CodeView(props: CodeViewProps) {
     }
     console.log("permissive")
     dispatch(setGlobalPending(true))
-    const writableStream = await (handler as FileSystemFileHandle).createWritable();
+    const writableStream = await (handler as FileSystemFileHandle).createWritable()
     await writableStream.write(content)
-    await writableStream.close();
+    await writableStream.close()
     dispatch(updateFileContent(content))
 
     // } catch (error) {
