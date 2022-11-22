@@ -133,10 +133,10 @@ export const addNode = ({ tree, targetUid, node }: TAddNodePayload): TNodeApiRes
     node.p_uid = targetUid
     target.children.push(node.uid)
     tree[node.uid] = node
+    return { success: true }
   } catch (err) {
     return { success: false, error: err as string }
   }
-  return { success: true }
 }
 
 /**
@@ -163,7 +163,6 @@ export const removeNode = ({ tree, nodeUids }: TRemoveNodePayload): TNodeApiRes 
       /* reset the uids */
       resetUids(node.p_uid as TUid, tree, convertedUids)
     }
-
     return { success: true, deletedUids, convertedUids }
   } catch (err) {
     return { success: false, error: err as string }
@@ -176,17 +175,12 @@ export const removeNode = ({ tree, nodeUids }: TRemoveNodePayload): TNodeApiRes 
  */
 export const replaceNode = ({ tree, node }: TReplaceNodePayload): TNodeApiRes => {
   try {
-    // node validate
-    if (tree[node.uid] === undefined) {
-      throw 'invalid node'
-    }
-
     // replace node in the tree
     tree[node.uid] = node
+    return { success: true }
   } catch (err) {
     return { success: false, error: err as string }
   }
-  return { success: true }
 }
 
 /**

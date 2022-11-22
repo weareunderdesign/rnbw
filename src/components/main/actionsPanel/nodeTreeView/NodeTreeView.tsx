@@ -107,7 +107,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       dispatch(setGlobalError(res.error as string))
     }
   }
-
   const handleRemoveFnNode = () => {
     if (selectedItems.length === 0) return
 
@@ -133,18 +132,15 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   const cb_selectNode = (uids: TUid[]) => {
     dispatch(selectFNNode(uids))
   }
-
   const cb_renameNode = (uid: TUid, name: string) => {
-    // call API
-    let node = treeData[uid]
-    node.name = name
-    const result = replaceNode({ tree: treeData, node: node })
-    if (result.success == true)
-      updateFFContent(treeData)
+    const tree = JSON.parse(JSON.stringify(treeData))
+    const node = { ...tree[uid], name }
+    const result = replaceNode({ tree, node })
+    if (result.success === true)
+      updateFFContent(tree)
     else
       dispatch(setGlobalError(result.error as string))
   }
-
   const cb_dropNode = (uids: TUid[], targetUid: string) => {
     if (treeData[uids[0]].p_uid == targetUid)
       return;
