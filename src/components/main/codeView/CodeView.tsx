@@ -8,7 +8,7 @@ import React, {
 import * as monaco from 'monaco-editor';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { globalGetCurrentFileSelector, setGlobalPending, updateFileContent } from '@_redux/global';
+import { globalGetCurrentFileSelector, globalGetWorkspaceSelector, setGlobalPending, updateFileContent } from '@_redux/global';
 import Editor, { loader } from '@monaco-editor/react';
 
 import { CodeViewProps } from './types';
@@ -21,7 +21,7 @@ export default function CodeView(props: CodeViewProps) {
   const dispatch = useDispatch()
   const { uid, type, content } = useSelector(globalGetCurrentFileSelector)
   const codeContent = useMemo(() => content, [content])
-
+  const workspace = useSelector(globalGetWorkspaceSelector)
   const { handlers } = useContext(MainContext)
 
   const monacoRef = useRef(null);
@@ -37,6 +37,7 @@ export default function CodeView(props: CodeViewProps) {
     if (handler === undefined)
       return;
     if (await verifyPermission(handler) === false) {
+      // const directoryHandler = handlers[workspace[uid].p_uid as string]
       handler = await showSaveFilePicker({ suggestedName: handler.name })
     }
     console.log("permissive")
@@ -87,4 +88,9 @@ export default function CodeView(props: CodeViewProps) {
       />
     </div>
   </>
+}
+declare  global{
+  interface Window {
+    showSaveFilePicker?: any;
+  }
 }
