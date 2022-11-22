@@ -1,6 +1,7 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MonacoEditorWebpackPlugin = require('monaco-editor-webpack-plugin')
+/* const { SourceMapDevToolPlugin } = require("webpack"); */
 
 module.exports = {
   entry: { // index entry file
@@ -50,6 +51,11 @@ module.exports = {
           loader: "babel-loader",
         },
       },
+      /* {
+        test: /\.js$/,
+        enforce: 'pre',
+        use: ['source-map-loader'],
+      }, */
       {
         test: /\.(sa|sc|c)ss$/, // styles files
         use: ["style-loader", "css-loader", "sass-loader"],
@@ -65,6 +71,9 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: path.join(__dirname, 'src/index.html'), // index html file
     }),
-    new MonacoEditorWebpackPlugin(),
+    new MonacoEditorWebpackPlugin(), // CodeView - monaco-editor
+    /* new SourceMapDevToolPlugin({
+      filename: "[file].map",
+    }), */
   ],
 }

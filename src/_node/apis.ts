@@ -157,9 +157,10 @@ export const removeNode = ({ tree, nodeUids }: TRemoveNodePayload): TNodeApiRes 
     }
 
     /* reset the uids */
-    for (const uid in changedParent) {
-      resetUids(uid, tree, deletedUids, convertedUids)
-    }
+    Object.keys(changedParent).sort((a, b) => a > b ? -1 : 1)
+      .map(uid =>
+        resetUids(uid, tree, deletedUids, convertedUids)
+      )
 
     return { success: true, deletedUids, convertedUids }
   } catch (err) {
@@ -203,17 +204,26 @@ export const moveNode = ({ tree, isBetween, parentUid, position, uids }: TMoveNo
 
       if (isBetween) {
         /* get the correct position */
-        let childIndex = position?.side === 'top' ? position?.childIndex : position?.childIndex as number + 1
+        // let childIndex = position?.side === 'top' ? position?.childIndex : position?.childIndex as number - 1
+        let childIndex = position?.childIndex
         node.p_uid = parentUid
+        let pushed = false
 
         /* push the node at the specific position of the parent.children */
         parentNode.children = parentNode.children.reduce((prev, cur, index) => {
           if (index === childIndex) {
+            pushed = true
             prev.push(uid)
+          }
+          if (cur === uid) {
+            return prev
           }
           prev.push(cur)
           return prev
         }, [] as TUid[])
+        if (!pushed) {
+          parentNode.children.push(uid)
+        }
       } else {
         /* push to back of the parent node */
         node.p_uid = parentUid
@@ -222,10 +232,11 @@ export const moveNode = ({ tree, isBetween, parentUid, position, uids }: TMoveNo
     }
 
     /* reset the uids */
-    for (const uid in changedParent) {
-      resetUids(uid, tree, deletedUids, convertedUids)
-    }
-    resetUids(parentUid, tree, deletedUids, convertedUids)
+    changedParent[parentUid] = true
+    Object.keys(changedParent).sort((a, b) => a > b ? -1 : 1)
+      .map(uid =>
+        resetUids(uid, tree, deletedUids, convertedUids)
+      )
 
     return { success: true, deletedUids, convertedUids }
   } catch (err) {
@@ -248,7 +259,7 @@ export const duplicateNode = ({ tree, node }: TDuplicateNodePayload): TNodeApiRe
     p_node.children = p_node.children.reduce((prev, cur, index) => {
       prev.push(cur)
       if (cur === node.uid) {
-        newUid = generateNodeUid(p_node.uid, index + 1)
+        newUid = generateNodeUid(p_node.uid, p_node.children.length + 1)
         prev.push(newUid)
       }
       return prev
