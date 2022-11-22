@@ -70,11 +70,12 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
         index: treedata[uid].uid,
         data: treedata[uid],
         children: treedata[uid].children,
-        hasChildren: treedata[uid].isEntity,
+        hasChildren: !treedata[uid].isEntity,
         canMove: true,
         canRename: true,
       }
     }
+    dispatch(expandFNNode(['root_1']))
     return data
   }, [content])
 

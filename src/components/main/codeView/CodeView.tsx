@@ -33,22 +33,26 @@ export default function CodeView(props: CodeViewProps) {
   const { handlers } = useContext(MainContext)
 
   const monacoRef = useRef(null);
+  
   function handleEditorDidMount(editor: any, monaco: any) {
     // here is another way to get monaco instance
     // you can also store it in `useRef` for further usage
     monacoRef.current = editor;
   }
+  
+  function handleEditorChange(value: any, event: any) {
+    dispatch(updateFileContent(value))
+  }
+  
   const handleSaveFFContent = async () => {
     // try {
     let handler = handlers[uid]
-    console.log(handler)
     if (handler === undefined)
       return;
     if (await verifyPermission(handler) === false) {
       // const directoryHandler = handlers[workspace[uid].p_uid as string]
       handler = await showSaveFilePicker({ suggestedName: handler.name })
     }
-    console.log("permissive")
     dispatch(setGlobalPending(true))
     const writableStream = await (handler as FileSystemFileHandle).createWritable()
     await writableStream.write(content)
@@ -88,6 +92,7 @@ export default function CodeView(props: CodeViewProps) {
         value={codeContent}
         theme="vs-dark"
         onMount={handleEditorDidMount}
+        onChange={handleEditorChange}
         options={{
           // enableBasicAutocompletion: true,
           // enableLiveAutocompletion: true,
