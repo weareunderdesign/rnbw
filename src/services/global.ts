@@ -3,13 +3,14 @@ export const verifyPermission = async (fileHandle: FileSystemHandle) => {
   const opts: FileSystemHandlePermissionDescriptor = {
     mode: 'readwrite'
   }
-
+  console.log("handle check")
   if (fileHandle === undefined)
     return false
-    
+  console.log("query check")  
   if ((await fileHandle.queryPermission(opts)) === 'granted') {
     return true
   }
+  console.log("request check")
   // Request permission. If the user grants permission, return true.
   if ((await fileHandle.requestPermission(opts)) === 'granted') {
     return true

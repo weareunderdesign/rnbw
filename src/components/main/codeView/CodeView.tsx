@@ -14,7 +14,7 @@ import Editor, { loader } from '@monaco-editor/react';
 import { CodeViewProps } from './types';
 import { MainContext } from '@_pages/main/context';
 import { verifyPermission } from '@_services/global';
-
+import { showSaveFilePicker } from 'file-system-access'
 loader.config({ monaco })
 
 export default function CodeView(props: CodeViewProps) {
@@ -32,19 +32,19 @@ export default function CodeView(props: CodeViewProps) {
   }
   const handleSaveFFContent = async () => {
     // try {
-      const handler = handlers[uid]
-      console.log(handler)
-      if (handler === undefined)
-        return;
-      if (await verifyPermission(handler) === false) {
-        handler
-      }
-      console.log("permissive")
-      dispatch(setGlobalPending(true))
-      const writableStream = await (handler as FileSystemFileHandle).createWritable();
-      await writableStream.write(content)
-      await writableStream.close();
-      dispatch(updateFileContent(content))
+    let handler = handlers[uid]
+    console.log(handler)
+    if (handler === undefined)
+      return;
+    if (await verifyPermission(handler) === false) {
+      handler = await showSaveFilePicker({ suggestedName: handler.name })
+    }
+    console.log("permissive")
+    dispatch(setGlobalPending(true))
+    const writableStream = await (handler as FileSystemFileHandle).createWritable();
+    await writableStream.write(content)
+    await writableStream.close();
+    dispatch(updateFileContent(content))
 
     // } catch (error) {
     //   console.log(error)
