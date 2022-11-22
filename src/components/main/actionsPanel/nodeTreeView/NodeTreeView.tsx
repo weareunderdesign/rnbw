@@ -1,5 +1,4 @@
 import React, {
-  useContext,
   useMemo,
   useState,
 } from 'react';
@@ -13,6 +12,7 @@ import { TreeView } from '@_components/common';
 import { TreeViewData } from '@_components/common/treeView/types';
 import {
   addNode,
+  duplicateNode,
   generateNodeUid,
   moveNode,
   parseFile,
@@ -25,7 +25,6 @@ import {
   TTree,
   TUid,
 } from '@_node/types';
-import { MainContext } from '@_pages/main/context';
 import {
   collapseFNNode,
   expandFNNode,
@@ -37,10 +36,10 @@ import {
 } from '@_redux/fn';
 import {
   globalGetCurrentFileSelector,
-  globalGetWorkspaceSelector,
   setGlobalError,
   updateFileContent,
 } from '@_redux/global';
+import { validateUids } from '@_services/global';
 
 import { renderers } from './renderers';
 import { NodeTreeViewProps } from './types';
@@ -49,10 +48,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   const dispatch = useDispatch()
 
   // fetch global state
-  const { uid: fuid, type, content } = useSelector(globalGetCurrentFileSelector)
-  const { handlers } = useContext(MainContext)
-
-  const workspace = useSelector(globalGetWorkspaceSelector)
+  const { type, content } = useSelector(globalGetCurrentFileSelector)
 
   // fetch fn state
   const focusedItem = useSelector(fnGetFocusedItemSelector)
@@ -64,6 +60,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   const nodeTreeViewData = useMemo(() => {
     const treedata: TTree = parseFile({ type, content })
     setTreeData(treedata)
+
     let data: TreeViewData = {}
     for (const uid in treedata) {
       data[uid] = {
@@ -81,14 +78,21 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
   const updateFFContent = async (tree: TTree) => {
     const content = serializeFile({ type, tree })
-    // if (handlers[fuid] === undefined || !verifyPermission(handlers[fuid]) || handlers[fuid].isDirectory)
-    //   return;
-    // const writableStream = await (handlers[fuid] as FileSystemFileHandle).createWritable();
-    // await writableStream.write(content)
-    // await writableStream.close();
     dispatch(updateFileContent(content))
   }
 
+  const handleDuplicateFNNode = () => {
+    if (focusedItem === '') {
+      return
+    }
+    const tree = JSON.parse(JSON.stringify(treeData))
+    const res = duplicateNode({ tree, node: { ...tree[focusedItem] } })
+    if (res.success === true) {
+      updateFFContent(tree)
+    } else {
+      dispatch(setGlobalError(res.error as string))
+    }
+  }
   const handleAddFNNode = () => {
     const tree = JSON.parse(JSON.stringify(treeData))
     const p_uid: TUid = focusedItem === '' ? 'root' : focusedItem
@@ -130,8 +134,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     dispatch(collapseFNNode([uid]))
   }
   const cb_selectNode = (uids: TUid[]) => {
-
-    dispatch(selectFNNode(uids))
+    dispatch(selectFNNode(validateUids(uids)))
   }
   const cb_renameNode = (uid: TUid, name: string) => {
     const tree = JSON.parse(JSON.stringify(treeData))
@@ -154,6 +157,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       uids: payload.uids
     })
     if (res.success === true) {
+      console.log(payload, tree)
       updateFFContent(tree)
     } else {
       dispatch(setGlobalError(res.error as string))
@@ -214,6 +218,22 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
           >
             +
           </button>
+
+          {/* Duplicate Node Button */}
+          <button
+            style={{
+              zIndex: "2",
+              margin: "0 5px",
+              background: "rgb(23 111 44)",
+              color: "white",
+              border: "none",
+              font: "normal lighter normal 12px Arial",
+            }}
+            onClick={handleDuplicateFNNode}
+          >
+            Duplicate
+          </button>
+
           {/* Delete Node Button */}
           <button
             style={{

@@ -14,9 +14,9 @@ import {
 import { MainContext } from '@_pages/main/context';
 import {
   globalGetCurrentFileSelector,
+  globalGetWorkspaceSelector,
   setGlobalPending,
   updateFileContent,
-  globalGetWorkspaceSelector
 } from '@_redux/global';
 import { verifyPermission } from '@_services/global';
 import Editor, { loader } from '@monaco-editor/react';
@@ -48,7 +48,7 @@ export default function CodeView(props: CodeViewProps) {
     // try {
     let handler = handlers[uid]
     if (handler === undefined)
-      return;
+      return
     if (await verifyPermission(handler) === false) {
       // const directoryHandler = handlers[workspace[uid].p_uid as string]
       handler = await showSaveFilePicker({ suggestedName: handler.name })
@@ -58,6 +58,7 @@ export default function CodeView(props: CodeViewProps) {
     await writableStream.write(content)
     await writableStream.close()
     dispatch(updateFileContent(content))
+    dispatch(setGlobalPending(false))
 
     // } catch (error) {
     //   console.log(error)
@@ -104,7 +105,8 @@ export default function CodeView(props: CodeViewProps) {
     </div>
   </>
 }
-declare  global{
+
+declare global {
   interface Window {
     showSaveFilePicker?: any;
   }
