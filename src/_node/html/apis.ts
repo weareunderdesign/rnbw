@@ -5,7 +5,7 @@ import {
 import parse, { DOMNode } from 'html-react-parser';
 
 import {
-  generateNodeUID,
+  generateNodeUid,
   TNode,
   TTree,
   TUid,
@@ -47,7 +47,7 @@ export const parseHtml = (content: string): TTree => {
         (node as unknown as Text).data = converted_string
       }
       if (node.parent == null) {
-        const CID = generateNodeUID("root", root["root"].children.length + 1)
+        const CID = generateNodeUid("root", root["root"].children.length + 1)
         root[CID] = {
           uid: CID,
           p_uid: "root",
@@ -61,7 +61,7 @@ export const parseHtml = (content: string): TTree => {
         uids.set(node, CID)
       } else {
         const PID = uids.get(node.parent) as TUid
-        const CID = generateNodeUID(PID, root[PID].children.length + 1)
+        const CID = generateNodeUid(PID, root[PID].children.length + 1)
         root[CID] = {
           uid: CID,
           p_uid: PID,

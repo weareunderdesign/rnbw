@@ -1,8 +1,5 @@
 import { TUid } from '@_node/types';
-import {
-  FFNodeActionRemovePayloadRes,
-  FFNodeActionRenamePayloadRes,
-} from '@_types/ff';
+import { FFNodeActionRenamePayloadRes } from '@_types/ff';
 import {
   createSlice,
   PayloadAction,
@@ -72,7 +69,7 @@ const slice = createSlice({
         state.selectedItems.push(uid)
       }
     },
-    setRemoveFFNodes(state, action: PayloadAction<FFNodeActionRemovePayloadRes>) {
+    setRemoveFFNodes(state, action: PayloadAction<TUid[]>) {
       const uids = action.payload
       for (const uid of uids) {
         delete state.expandedItemsObj[uid]

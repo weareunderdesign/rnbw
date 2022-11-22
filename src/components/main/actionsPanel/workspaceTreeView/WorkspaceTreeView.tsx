@@ -1,13 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, {
+  useContext,
+  useMemo,
+} from 'react';
 
-import { FileSystemHandle, showDirectoryPicker } from 'file-system-access';
-import {
-  get,
-  set,
-} from 'idb-keyval';
-
-import { createContext, useContext } from 'react';
-
+import { showDirectoryPicker } from 'file-system-access';
 import {
   DraggingPositionItem,
   TreeItem,
@@ -19,9 +15,16 @@ import {
 
 import { TreeView } from '@_components/common';
 import { TreeViewData } from '@_components/common/treeView/types';
-import { generateNodeUID } from '@_node/apis';
-import { TFileType, TNode, TUid } from '@_node/types';
-
+import {
+  generateNodeUid,
+  getSubNEUids,
+} from '@_node/apis';
+import {
+  TFileType,
+  TNode,
+  TUid,
+} from '@_node/types';
+import { MainContext } from '@_pages/main/context';
 import {
   collapseFFNode,
   expandFFNode,
@@ -38,14 +41,11 @@ import {
   globalGetWorkspaceSelector,
   setCurrentFile,
 } from '@_redux/global';
-
-import { getSubDirectoryUids } from '@_services/ff';
+import { verifyPermission } from '@_services/global';
 import { FFNode } from '@_types/ff';
 
 import { renderers } from './renderers';
 import { WorkspaceTreeViewProps } from './types';
-import { MainContext } from '@_pages/main/context';
-import { verifyPermission } from '@_services/global';
 
 export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   const dispatch = useDispatch()
@@ -121,7 +121,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
     let nodes: FFNode[] = []
     // add project node
-    let projectUid = generateNodeUID("", projectCount)
+    let projectUid = generateNodeUid("", projectCount)
     let handlers = []
     handlers.push({ uid: projectUid, handler: projectHandle })
 
@@ -138,7 +138,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     // add children nodes
     let nodeIndex: number = 0
     for await (const entry of projectHandle.values()) {
-      const nodeUid = generateNodeUID(projectUid, nodeIndex++)
+      const nodeUid = generateNodeUid(projectUid, nodeIndex++)
       handlers.push({ uid: nodeUid, handler: entry })
       nodes.push({
         uid: nodeUid,
@@ -183,9 +183,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       return;
     (handlers[uid] as FileSystemFileHandle).getFile().then(async (fileEntry) => {
       let content = await fileEntry.text();
-      dispatch(setCurrentFile({ 
-        uid, 
-        content, 
+      dispatch(setCurrentFile({
+        uid,
+        content,
         type: handlers[uid].name.split('.').pop() as TFileType
       }))
       dispatch(selectFFNode(uids))
@@ -198,10 +198,10 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         return
       let nodes: FFNode[] = []
       let p_uid: TUid = uid
-      let nodeIndex: number = 0
+      let nodeIndex: number = 1
       let handlers = []
       for await (const entry of handler.values()) {
-        const nodeUid = generateNodeUID(p_uid, nodeIndex++)
+        const nodeUid = generateNodeUid(p_uid, nodeIndex++)
         handlers.push({ uid: nodeUid, handler: entry })
         nodes.push({
           uid: nodeUid,
@@ -229,7 +229,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     handlers ? cb(handlers[uid] as FileSystemDirectoryHandle) : null
   }
   const cb_collapseFFNode = (uid: TUid) => {
-    dispatch(closeFFNode(getSubDirectoryUids(uid, workspace)))
+    dispatch(closeFFNode(getSubNEUids(uid, workspace)))
     dispatch(collapseFFNode([uid]))
   }
   const cb_readFFNode = (uid: TUid) => {
@@ -240,7 +240,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   }
 
   // move/duplicate create/delete actions
-  const cb_dropFFNode = (uids: TUid[], targetUID: TUid) => {
+  const cb_dropFFNode = (uids: TUid[], targetUid: TUid) => {
 
   }
   const createFFNode = () => {
