@@ -1,5 +1,4 @@
 import { TUid } from '@_node/types';
-import { FFNodeActionRenamePayloadRes } from '@_types/ff';
 import {
   createSlice,
   PayloadAction,
@@ -7,7 +6,6 @@ import {
 
 // import types
 import * as Types from './types';
-import { setGlobalPending } from '@_redux/global';
 
 // initial state of reducer
 const initialState: Types.FFTreeViewState = {
@@ -48,7 +46,7 @@ const slice = createSlice({
         state.selectedItemsObj[uid] = true
       }
     },
-    setRenamedFFNodes(state, action: PayloadAction<FFNodeActionRenamePayloadRes>) {
+    setRenamedFFNodes(state, action: PayloadAction<any>) {
       const { nodes } = action.payload
       for (const node of nodes) {
         if (state.expandedItemsObj[node.data]) {

@@ -27,9 +27,15 @@ loader.config({ monaco })
 
 export default function CodeView(props: CodeViewProps) {
   const dispatch = useDispatch()
+
+  // fetch global state
   const { uid, type, content } = useSelector(globalGetCurrentFileSelector)
+
+
   const codeContent = useMemo(() => content, [content])
+
   const workspace = useSelector(globalGetWorkspaceSelector)
+
   const { handlers } = useContext(MainContext)
 
   const monacoRef = useRef(null);

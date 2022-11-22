@@ -2,11 +2,7 @@ import {
   TFileType,
   TUid,
 } from '@_node/types';
-import {
-  FFNodeActionReadPayloadRes,
-  FFNodeActionUpdatePayloadRes,
-  FFTree,
-} from '@_types/ff';
+import { FFTree } from '@_types/ff';
 
 // Main State
 export type GlobalState = {
@@ -19,6 +15,3 @@ export type GlobalState = {
   pending: boolean,
   error: string,
 }
-
-// SetCurrentFile Payload
-export type SetCurrentFilePayload = FFNodeActionReadPayloadRes | FFNodeActionUpdatePayloadRes

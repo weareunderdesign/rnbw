@@ -314,11 +314,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
             const isBetween = target.targetType === 'between-items'
             const parentUid = isBetween ? target.parentItem : target.targetItem
             const payload = { uids, isBetween, parentUid, position: {} }
-            if (isBetween) {
-              const childIndex = target.childIndex
-              const side = target.linePosition
-              payload.position = { childIndex, side }
-            }
+            payload.position = isBetween ? target.childIndex : 0
             cb_dropNode(payload)
           }
         }}

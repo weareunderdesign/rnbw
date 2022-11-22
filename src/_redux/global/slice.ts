@@ -1,10 +1,8 @@
-import { TUid } from '@_node/types';
 import {
-  FFNode,
-  FFNodeActionReadPayloadRes,
-  FFNodeActionRenamePayloadRes,
-  FFNodeActionUpdatePayloadRes,
-} from '@_types/ff';
+  TFileType,
+  TUid,
+} from '@_node/types';
+import { FFNode } from '@_types/ff';
 import {
   createSlice,
   PayloadAction,
@@ -78,7 +76,7 @@ const slice = createSlice({
       }
       state.workspace[node.uid] = node
     },
-    renameFFNode(state, action: PayloadAction<FFNodeActionRenamePayloadRes>) {
+    renameFFNode(state, action: PayloadAction<any>) {
       const { nodes, name } = action.payload
       if (nodes.length === 0) {
         return
@@ -92,7 +90,9 @@ const slice = createSlice({
         state.workspace[renameNode.p_uid].children = state.workspace[renameNode.p_uid].children.map(childUid => childUid === renameNode.data ? renameNode.uid : childUid)
       }
     },
-    setCurrentFile(state, action: PayloadAction<FFNodeActionReadPayloadRes | FFNodeActionUpdatePayloadRes>) {
+    setCurrentFile(state, action: PayloadAction<{
+      uid: TUid, type: TFileType, content: string,
+    }>) {
       const payload = action.payload
       state.currentFile = payload
     },

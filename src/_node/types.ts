@@ -64,10 +64,7 @@ export type TMoveNodePayload = {
   tree: TTree,/* tree data */
   isBetween: boolean,/* true if it's reorder */
   parentUid: TUid,/* parent uid which will be the parent of the nodes */
-  position?: {/* undefined if it's not reorder */
-    childIndex: number,
-    side: 'top' | 'bottom',
-  },
+  position: number,/* child-index if it's reorder */
   uids: TUid[],/* nodes to move - array for multiple feature */
 }
 

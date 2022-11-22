@@ -15,10 +15,10 @@ import { MainContext } from './context';
 import { MainPageProps } from './types';
 
 export default function MainPage(props: MainPageProps) {
-  const [ffHandlers, setFFHandlers] = useState<{ [key: TUid]: FileSystemHandle }>({})
-
   const pending = useSelector(globalGetPendingSelector)
 
+  // file system handlers - context
+  const [ffHandlers, setFFHandlers] = useState<{ [key: TUid]: FileSystemHandle }>({})
   const setFFHandler = (handlers: { uid: TUid, handler: FileSystemHandle }[]) => {
     let newHandlers: { [key: TUid]: FileSystemHandle } = {}
     handlers.map(({ uid, handler }) => {
@@ -28,7 +28,6 @@ export default function MainPage(props: MainPageProps) {
   }
 
   return (<>
-
     {pending &&
       <Spinner
         intent='success'

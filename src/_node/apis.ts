@@ -205,7 +205,7 @@ export const moveNode = ({ tree, isBetween, parentUid, position, uids }: TMoveNo
       if (isBetween) {
         /* get the correct position */
         // let childIndex = position?.side === 'top' ? position?.childIndex : position?.childIndex as number - 1
-        let childIndex = position?.childIndex
+        let childIndex = position
         node.p_uid = parentUid
         let pushed = false
 
