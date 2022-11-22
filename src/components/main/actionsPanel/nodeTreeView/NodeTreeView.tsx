@@ -41,7 +41,6 @@ import {
   setGlobalError,
   updateFileContent,
 } from '@_redux/global';
-import { verifyPermission } from '@_services/global';
 
 import { renderers } from './renderers';
 import { NodeTreeViewProps } from './types';

@@ -10,7 +10,6 @@ export default function ActionsPanel(props: ActionsPanelProps) {
     <div style={{
       width: "400px",
       height: "100%",
-      marginTop: "4rem",
       background: "rgb(31, 36, 40)",
       border: "1px solid rgb(30, 30, 30)",
     }}>

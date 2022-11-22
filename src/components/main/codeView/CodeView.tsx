@@ -4,16 +4,22 @@ import React, {
   useRef,
 } from 'react';
 
-
 import * as monaco from 'monaco-editor';
-import { useDispatch, useSelector } from 'react-redux';
+import {
+  useDispatch,
+  useSelector,
+} from 'react-redux';
 
-import { globalGetCurrentFileSelector, setGlobalPending, updateFileContent } from '@_redux/global';
+import { MainContext } from '@_pages/main/context';
+import {
+  globalGetCurrentFileSelector,
+  setGlobalPending,
+  updateFileContent,
+} from '@_redux/global';
+import { verifyPermission } from '@_services/global';
 import Editor, { loader } from '@monaco-editor/react';
 
 import { CodeViewProps } from './types';
-import { MainContext } from '@_pages/main/context';
-import { verifyPermission } from '@_services/global';
 
 loader.config({ monaco })
 
@@ -32,19 +38,19 @@ export default function CodeView(props: CodeViewProps) {
   }
   const handleSaveFFContent = async () => {
     // try {
-      const handler = handlers[uid]
-      console.log(handler)
-      if (handler === undefined)
-        return;
-      if (await verifyPermission(handler) === false) {
-        handler
-      }
-      console.log("permissive")
-      dispatch(setGlobalPending(true))
-      const writableStream = await (handler as FileSystemFileHandle).createWritable();
-      await writableStream.write(content)
-      await writableStream.close();
-      dispatch(updateFileContent(content))
+    const handler = handlers[uid]
+    console.log(handler)
+    if (handler === undefined)
+      return;
+    if (await verifyPermission(handler) === false) {
+      handler
+    }
+    console.log("permissive")
+    dispatch(setGlobalPending(true))
+    const writableStream = await (handler as FileSystemFileHandle).createWritable();
+    await writableStream.write(content)
+    await writableStream.close();
+    dispatch(updateFileContent(content))
 
     // } catch (error) {
     //   console.log(error)
@@ -53,23 +59,25 @@ export default function CodeView(props: CodeViewProps) {
   }
   return <>
     <div style={{
-      marginTop: "2rem",
       height: "100%",
-      width: "calc(100% - 400px)"
+      width: "calc(100% - 400px)",
+      position: "relative",
     }}>
-      <button style={{
-        float: "right",
-        height: "calc(2rem - 3px)",
-        marginRight: "10px",
-        marginBottom: "3px",
-        backgroundColor: "#086e2f",
-        border: "0px",
-        borderRadius: "6px",
-        color: "white",
-        padding: "0 10px",
-      }} onClick={handleSaveFFContent}> Save </button>
+      <button
+        style={{
+          position: "absolute",
+          zIndex: "1",
+          top: "0px",
+          right: "1rem",
+          background: "rgb(23 111 44)",
+          color: "white",
+          border: "none",
+          font: "normal lighter normal 12px Arial",
+        }}
+        onClick={handleSaveFFContent}
+      > Save </button>
       <Editor
-        height="calc(100% - 2rem)"
+        height="100%"
         width="100%"
         defaultLanguage=""
         language={'html'}
