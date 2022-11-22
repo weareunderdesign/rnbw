@@ -88,6 +88,7 @@ export const serializeHtml = (data: TTree): string => {
   let html = ""
   const root: TNode = data["root"] as TNode
   console.log(data)
+  
   const getHTMLFromFNObject = (UID: string, level: number) => {
     const element: TNode = data[UID] as TNode
     let element_html: string = ""

@@ -16,8 +16,6 @@ import {
   TUid,
 } from './types';
 
-const _ = require("lodash")
-
 /**
  * generate the new uid inside p_uid
  * @param p_uid 
@@ -71,28 +69,6 @@ export const getSubUids = (uid: TUid, tree: TTree): TUid[] => {
 }
 
 /**
- * get all of the nested chidren nodes
- * @param uid 
- * @param tree 
- * @returns 
- */
-export const getSubNodes = (uid: TUid, tree: TTree): TNode[] => {
-  let nodes: TNode[] = []
-  let uids: TUid[] = [uid]
-  while (uids.length) {
-    const uid = uids.shift() as TUid
-    const node = tree[uid]
-    nodes.push(node)
-    for (const childUid of node.children) {
-      uids.push(childUid)
-    }
-  }
-  return nodes
-}
-
-
-
-/**
  * reset all of the uids inside p_uid in the tree data
  * @param p_uid 
  * @param tree 
@@ -137,22 +113,6 @@ export const resetUids = (p_uid: TUid, tree: TTree, deletedUids: TUid[], convert
   }
 }
 
-const getParentUids = (uids: TUid[]) => {
-  let p_uids: TUid[] = []
-  uids.sort().map((uid) => {
-    if (p_uids.length == 0) {
-      p_uids.push(uid)
-    } else {
-      if (uid.startsWith(p_uids[p_uids.length - 1])) {
-        return;
-      }
-      p_uids.push(uid)
-    }
-  })
-  return p_uids
-}
-
-
 /**
  * add node api
  * this api adds the node just child of the target node in the tree
@@ -164,6 +124,7 @@ export const addNode = ({ tree, targetUid, node }: TAddNodePayload): TNodeApiRes
     node.p_uid = targetUid
     target.children.push(node.uid)
     tree[node.uid] = node
+
     return { success: true }
   } catch (err) {
     return { success: false, error: err as string }
@@ -214,6 +175,7 @@ export const replaceNode = ({ tree, node }: TReplaceNodePayload): TNodeApiRes =>
   try {
     // replace node in the tree
     tree[node.uid] = node
+
     return { success: true }
   } catch (err) {
     return { success: false, error: err as string }
@@ -269,50 +231,48 @@ export const moveNode = ({ tree, isBetween, parentUid, position, uids }: TMoveNo
   } catch (err) {
     return { success: false, error: err as string }
   }
-  /* try {
-    console.log(tree, parentUid, uids)
-    let treeData: TTree = tree;
-    uids.map((uid) => {
-      let node = _.cloneDeep(tree[uid])
-  
-      const result = removeNode({ tree: treeData, nodeUids: [uid], deleted: true })
-      console.log(result)
-      let child: TTree = result.child
-      const convertUids = result.convertUids
-      treeData = _.cloneDeep(result.tree as TTree)
-  
-      console.log("add", treeData)
-  
-      convertUids?.has(parentUid) ? parentUid = convertUids.get(parentUid) as string : '';
-      addNode({ tree: treeData as TTree, targetUid: parentUid, node });
-      treeData[node.uid].children = treeData[node.uid].children.map((key) => { return key.replace(uid, node.uid) });
-      Object.keys(child).map((key) => {
-  
-        const oldChild: TNode = child[key] as TNode
-        const newNewUid: string = key.replace(uid, node.uid as string) as string
-        treeData[newNewUid] = {
-          uid: newNewUid,
-          p_uid: oldChild.p_uid?.replace(uid, node.uid) as string,
-          name: oldChild.name,
-          isEntity: oldChild.isEntity,
-          children: oldChild.children.map((old_key) => { return old_key.replace(uid, node.uid as string) }),
-          data: oldChild.data,
-        }
-      })
-    })
-    return { success: true, tree: treeData as TTree, child: {} }
-  } catch (err) {
-    return { success: false, error: err as string, child: {} }
-  } */
 }
 
 /**
  * duplicate(copy & paste) node api
  * this api duplicates the nodes inside the parent node
  */
-export const duplicateNode = ({ tree, isBetween, parentUid, position, nodes }: TDuplicateNodePayload): TNodeApiRes => {
+export const duplicateNode = ({ tree, node }: TDuplicateNodePayload): TNodeApiRes => {
   try {
-    return { success: true }
+    const convertedUids = new Map<TUid, TUid>()
+    const deletedUids: TUid[] = []
+
+    /* insert the duplicated node uid to the parent.children */
+    const p_node = tree[node.p_uid as TUid]
+    let newUid: TUid = node.uid
+    p_node.children = p_node.children.reduce((prev, cur, index) => {
+      prev.push(cur)
+      if (cur === node.uid) {
+        newUid = generateNodeUid(p_node.uid, index + 1)
+        prev.push(newUid)
+      }
+      return prev
+    }, [] as TUid[])
+
+    /* generate the new nodes and add them to the tree */
+    const subUids = getSubUids(node.uid, tree)
+    for (const subUid of subUids) {
+      const newSubUid = newUid + subUid.slice(node.uid.length)
+      const subNode = tree[subUid]
+      tree[newSubUid] = {
+        uid: newSubUid,
+        p_uid: (subNode.p_uid !== p_node.uid) ? newUid + subNode.p_uid?.slice(node.uid.length) : p_node.uid,
+        name: subNode.name,
+        isEntity: subNode.isEntity,
+        children: subNode.children.map(c_uid => newUid + c_uid.slice(node.uid.length)),
+        data: subNode.data,
+      }
+    }
+
+    /* reset the node uids */
+    resetUids(p_node.uid, tree, deletedUids, convertedUids)
+
+    return { success: true, deletedUids, convertedUids }
   } catch (err) {
     return { success: false, error: err as string }
   }
@@ -323,8 +283,9 @@ export const duplicateNode = ({ tree, isBetween, parentUid, position, nodes }: T
  * this api parses the file content based on the type and return the tree data
  */
 export const parseFile = ({ type, content }: TParseFilePayload): TTree => {
-  if (type === "html")
+  if (type === "html") {
     return parseHtml(content)
+  }
   return {}
 }
 
@@ -333,7 +294,8 @@ export const parseFile = ({ type, content }: TParseFilePayload): TTree => {
  * this api searializes the file content based on the type and tree data
  */
 export const serializeFile = ({ type, tree }: TSearializeFilePayload): string => {
-  if (type === "html")
+  if (type === "html") {
     return serializeHtml(tree)
+  }
   return ''
 }
