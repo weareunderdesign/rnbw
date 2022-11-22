@@ -10,6 +10,7 @@ import {
 
 // import types
 import * as Types from './types';
+import { setGlobalPending } from '@_redux/global';
 
 // initial state of reducer
 const initialState: Types.FFTreeViewState = {
@@ -19,7 +20,6 @@ const initialState: Types.FFTreeViewState = {
   selectedItems: [],
   selectedItemsObj: {},
 }
-
 // create the slice
 const slice = createSlice({
   name: 'ff',
