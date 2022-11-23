@@ -75,18 +75,38 @@ export const getSubUids = (uid: TUid, tree: TTree): TUid[] => {
  * @returns 
  */
 export const validateUids = (uids: TUid[], targetUid?: TUid): TUid[] => {
-  return uids
-  if (targetUid !== undefined) {
-    uids = uids.filter((uid) => { return !uid.startsWith(targetUid as string) })
+  if (uids.length == 0)
+    return uids
+
+  // check move action
+  if (targetUid == undefined) {
+    // think prev items already validate, so you need validate the last one
+    const uid: TUid = uids.pop() as TUid
+    let flag: boolean = false // true: the last one modified prev items, false: current uids are already validate
+    let result: TUid[] = []
+
+    result = uids.filter((curUid) => {
+      // check curUid related uid
+      if (curUid.startsWith(uid) || uid.startsWith(curUid))
+        flag = true
+      return !curUid.startsWith(uid) && !uid.startsWith(curUid)
+    })
+
+    if (flag === false) {
+      uids.push(uid)
+      return uids
+    }
+    else {
+      result.push(uid)
+      return result
+    }
+  } else {
+    // remove target's parent uids from uids
+    return uids.filter((uid) => {
+      return !targetUid.startsWith(uid)
+    })
   }
-  uids = uids.sort((a: TUid, b: TUid) => { return a < b ? -1 : 1 })
-  let result: TUid[] = []
-  while (uids.length) {
-    const uid = uids.shift() as TUid
-    result.push(uid)
-    uids = uids.filter((curUid) => { return !curUid.startsWith(uid) })
-  }
-  return result
+
 }
 
 /**
