@@ -115,16 +115,13 @@ export const validateUids = (uids: TUid[], targetUid?: TUid): TUid[] => {
  * @param tree 
  * @param convertedUids 
  */
-export const resetUids = (p_uid: TUid, tree: TTree, convertedUids: Map<TUid, TUid>) => {
-  const addedNodes: TNode[] = []
-  const _deletedUids: TUid[] = []
-
+export const resetUids = (p_uid: TUid, tree: TTree, addedNodes: TNode[], deletedUids: TUid[], convertedUids: Map<TUid, TUid>) => {
   tree[p_uid].children = tree[p_uid].children.map((uid, index) => {
     const newUid = generateNodeUid(p_uid, index + 1)
     if (newUid !== uid) {
       /* remove original node(nest) and add new nodes */
       const subUids = getSubUids(uid, tree)
-      _deletedUids.push(...subUids)
+      deletedUids.push(...subUids)
       for (const subUid of subUids) {
         const newSubUid = newUid + subUid.slice(uid.length)
         const subNode = tree[subUid]
@@ -141,16 +138,6 @@ export const resetUids = (p_uid: TUid, tree: TTree, convertedUids: Map<TUid, TUi
     }
     return newUid
   })
-
-  /* delete orignal node-nest */
-  for (const deletedUid of _deletedUids) {
-    delete tree[deletedUid]
-  }
-
-  /* add the new renamed nodes */
-  for (const addedNode of addedNodes) {
-    tree[addedNode.uid] = addedNode
-  }
 }
 
 /**
@@ -178,6 +165,9 @@ export const addNode = ({ tree, targetUid, node }: TAddNodePayload): TNodeApiRes
 export const removeNode = ({ tree, nodeUids }: TRemoveNodePayload): TNodeApiRes => {
   try {
     const _convertedUids = new Map<TUid, TUid>()
+    const _addedNodes: TNode[] = []
+    const _deletedUids: TUid[] = []
+
     const deletedUids: TUid[] = []
     const changedParent: { [uid: TUid]: boolean } = {}
 
@@ -199,8 +189,18 @@ export const removeNode = ({ tree, nodeUids }: TRemoveNodePayload): TNodeApiRes 
     /* reset the uids */
     Object.keys(changedParent).sort((a, b) => a > b ? -1 : 1)
       .map(uid =>
-        resetUids(uid, tree, _convertedUids)
+        resetUids(uid, tree, _addedNodes, _deletedUids, _convertedUids)
       )
+
+    /* delete orignal node-nest */
+    for (const deletedUid of _deletedUids) {
+      delete tree[deletedUid]
+    }
+
+    /* add the new renamed nodes */
+    for (const addedNode of _addedNodes) {
+      tree[addedNode.uid] = addedNode
+    }
 
     const convertedUids: [TUid, TUid][] = []
     for (const [prev, cur] of _convertedUids) {
@@ -234,6 +234,9 @@ export const replaceNode = ({ tree, node }: TReplaceNodePayload): TNodeApiRes =>
 export const moveNode = ({ tree, isBetween, parentUid, position, uids }: TMoveNodePayload): TNodeApiRes => {
   try {
     const _convertedUids = new Map<TUid, TUid>()
+    const _addedNodes: TNode[] = []
+    const _deletedUids: TUid[] = []
+
     const changedParent: { [uid: TUid]: boolean } = {}
 
     const parentNode = tree[parentUid]
@@ -241,17 +244,20 @@ export const moveNode = ({ tree, isBetween, parentUid, position, uids }: TMoveNo
       const node = tree[uid]
 
       /* reset the parent node */
-      const p_node = tree[node.p_uid as TUid]
-      changedParent[p_node.uid] = true
-      p_node.children = p_node.children.filter(c_uid => c_uid !== uid)
+      if (node.p_uid !== parentUid) {
+        const p_node = tree[node.p_uid as TUid]
+        changedParent[p_node.uid] = true
+        p_node.children = p_node.children.filter(c_uid => c_uid !== uid)
+      }
 
       if (isBetween) {
         node.p_uid = parentUid
 
         /* push the node at the specific position of the parent.children */
         let pushed = false
+        let childIndex = position
         parentNode.children = parentNode.children.reduce((prev, cur, index) => {
-          if (index === position) {
+          if (index === childIndex) {
             pushed = true
             prev.push(uid)
           }
@@ -273,10 +279,21 @@ export const moveNode = ({ tree, isBetween, parentUid, position, uids }: TMoveNo
 
     /* reset the uids */
     changedParent[parentUid] = true
+
     Object.keys(changedParent).sort((a, b) => a > b ? -1 : 1)
       .map(uid =>
-        resetUids(uid, tree, _convertedUids)
+        resetUids(uid, tree, _addedNodes, _deletedUids, _convertedUids)
       )
+
+    /* delete orignal node-nest */
+    for (const deletedUid of _deletedUids) {
+      delete tree[deletedUid]
+    }
+
+    /* add the new renamed nodes */
+    for (const addedNode of _addedNodes) {
+      tree[addedNode.uid] = addedNode
+    }
 
     const convertedUids: [TUid, TUid][] = []
     for (const [prev, cur] of _convertedUids) {
@@ -295,6 +312,8 @@ export const moveNode = ({ tree, isBetween, parentUid, position, uids }: TMoveNo
 export const duplicateNode = ({ tree, node }: TDuplicateNodePayload): TNodeApiRes => {
   try {
     const _convertedUids = new Map<TUid, TUid>()
+    const _addedNodes: TNode[] = []
+    const _deletedUids: TUid[] = []
 
     /* insert the duplicated node uid to the parent.children */
     const p_node = tree[node.p_uid as TUid]
@@ -324,7 +343,17 @@ export const duplicateNode = ({ tree, node }: TDuplicateNodePayload): TNodeApiRe
     }
 
     /* reset the node uids */
-    resetUids(p_node.uid, tree, _convertedUids)
+    resetUids(p_node.uid, tree, _addedNodes, _deletedUids, _convertedUids)
+
+    /* delete orignal node-nest */
+    for (const deletedUid of _deletedUids) {
+      delete tree[deletedUid]
+    }
+
+    /* add the new renamed nodes */
+    for (const addedNode of _addedNodes) {
+      tree[addedNode.uid] = addedNode
+    }
 
     const convertedUids: [TUid, TUid][] = []
     for (const [prev, cur] of _convertedUids) {
