@@ -59,21 +59,24 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   // node tree view data state
   const [treeData, setTreeData] = useState<TTree>({})
   const nodeTreeViewData = useMemo(() => {
-    const treedata: TTree = parseFile({ type, content })
-    setTreeData(treedata)
+    const _treeData: TTree = parseFile({ type, content })
+    setTreeData(_treeData)
 
     let data: TreeViewData = {}
-    for (const uid in treedata) {
+    for (const uid in _treeData) {
       data[uid] = {
-        index: treedata[uid].uid,
-        data: treedata[uid],
-        children: treedata[uid].children,
-        hasChildren: !treedata[uid].isEntity,
+        index: _treeData[uid].uid,
+        data: _treeData[uid],
+        children: _treeData[uid].children,
+        hasChildren: !_treeData[uid].isEntity,
         canMove: true,
         canRename: true,
       }
     }
-    dispatch(expandFNNode('root_1'))
+
+    /* if (_treeData['root_1'] !== undefined) {
+      dispatch(expandFNNode('root_1'))
+    } */
     return data
   }, [content])
 

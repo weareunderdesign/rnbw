@@ -15,8 +15,6 @@ export default function StageView(props: StageViewProps) {
     return content
   }, [content])
 
-  return (
-    <div>
-    </div>
-  )
+  return <>
+  </>
 }

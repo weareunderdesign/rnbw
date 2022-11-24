@@ -37,9 +37,6 @@
       "@_back/*": [
         "src/_back/*",
       ],
-      "@_electron/*": [
-        "src/_electron/*",
-      ],
       "@_node/*": [
         "src/_node/*",
       ],
@@ -52,7 +49,7 @@
     "src/**/*",
   ],
   "exclude": [
-    "build",
+    "dist",
     "node_modules",
   ],
 }

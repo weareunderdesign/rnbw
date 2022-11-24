@@ -68,7 +68,7 @@ const slice = createSlice({
       }
       state.expandedItems = Object.keys(state.expandedItemsObj)
       state.selectedItems = Object.keys(state.selectedItemsObj)
-    }
+    },
   },
 })
 

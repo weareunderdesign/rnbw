@@ -157,7 +157,8 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
     nodes = nodes.sort((a: TNode, b: TNode) => {
       return a.isEntity && !b.isEntity ? 1 :
-        a.name.toLowerCase() > b.name.toLowerCase() ? 1 : 0
+        !a.isEntity && b.isEntity ? -1 :
+          a.name.toLowerCase() > b.name.toLowerCase() ? 1 : 0
     })
     nodes.map((node) => {
       projectNode.children.push(node.uid)
@@ -221,7 +222,8 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       }
       nodes = nodes.sort((a: TNode, b: TNode) => {
         return a.isEntity && !b.isEntity ? 1 :
-          a.name.toLowerCase() > b.name.toLowerCase() ? 1 : 0
+          !a.isEntity && b.isEntity ? -1 :
+            a.name.toLowerCase() > b.name.toLowerCase() ? 1 : 0
       })
       nodes.map((node) => {
         parentNode.children.push(node.uid)

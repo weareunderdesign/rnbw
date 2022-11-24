@@ -22,7 +22,8 @@
     "react-router-dom": "^6.4.3",
     "react-scripts": "^5.0.1",
     "redux-injectors": "^2.0.0",
-    "redux-saga": "^1.2.1"
+    "redux-saga": "^1.2.1",
+    "redux-undo": "^1.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.19.6",

@@ -1,4 +1,4 @@
-const path = require('path');
+const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MonacoEditorWebpackPlugin = require('monaco-editor-webpack-plugin')
 
@@ -9,7 +9,6 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, "dist"), // the bundle output path
     filename: "[name].bundle.js", // the name of the bundle
-    // publicPath: "/rainbow/", // same as the project name
   },
   devServer: {
     port: 8080, // you can change the port
@@ -29,7 +28,6 @@ module.exports = {
 
       // back
       "@_back": path.resolve(__dirname, 'src/_back/'),
-      "@_electron": path.resolve(__dirname, 'src/_electron/'),
       "@_node": path.resolve(__dirname, 'src/_node/'),
       "@_redux": path.resolve(__dirname, 'src/_redux/'),
     },
