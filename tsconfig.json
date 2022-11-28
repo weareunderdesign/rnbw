@@ -47,6 +47,7 @@
   },
   "include": [
     "src/**/*",
+    "src/types/global.d.ts",
   ],
   "exclude": [
     "dist",

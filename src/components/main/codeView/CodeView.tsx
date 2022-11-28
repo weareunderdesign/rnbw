@@ -56,7 +56,7 @@ export default function CodeView(props: CodeViewProps) {
   return <>
     <div style={{
       height: "100%",
-      width: "calc(100% - 400px)",
+      width: "400px",
     }}>
       <Editor
         height="100%"
