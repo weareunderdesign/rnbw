@@ -92,18 +92,25 @@ export const renderers: TreeRenderProps = {
     </li>
   ),
 
-  renderItemArrow: props => (
-    <Icon
-      icon="chevron-right"
-      className={cx(
-        Classes.TREE_NODE_CARET,
-        props.context.isExpanded
-          ? Classes.TREE_NODE_CARET_OPEN
-          : Classes.TREE_NODE_CARET_CLOSED
-      )}
-      {...(props.context.arrowProps as any)}
-    />
-  ),
+  renderItemArrow: props => {
+    // console.log(props)
+    return (
+      <Icon
+        icon="chevron-right"
+        className={cx(
+          Classes.TREE_NODE_CARET,
+          props.context.isExpanded
+            ? Classes.TREE_NODE_CARET_OPEN
+            : Classes.TREE_NODE_CARET_CLOSED
+        )}
+        onClick={(e) => {
+          e.stopPropagation()
+          props.context.arrowProps.onClick ? props.context.arrowProps.onClick(e) : null
+        }}
+      /* {...(props.context.arrowProps as any)} */
+      />
+    )
+  },
 
   renderItemTitle: ({ title, context, info }) => {
     if (!info.isSearching || !context.isSearchMatching) {

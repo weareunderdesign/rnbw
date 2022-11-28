@@ -13,7 +13,12 @@
   "dependencies": {
     "@blueprintjs/core": "^4.11.6",
     "@monaco-editor/react": "^4.4.6",
+    "@radix-ui/react-context-menu": "^2.0.1",
+    "@radix-ui/react-dialog": "^1.0.2",
+    "@radix-ui/react-icons": "^1.1.1",
+    "@radix-ui/react-toast": "^1.1.2",
     "@reduxjs/toolkit": "^1.8.6",
+    "cmdk": "^0.1.20",
     "file-system-access": "^1.0.3",
     "html-react-parser": "^3.0.4",
     "react": "^18.2.0",
@@ -23,7 +28,8 @@
     "react-scripts": "^5.0.1",
     "redux-injectors": "^2.0.0",
     "redux-saga": "^1.2.1",
-    "redux-undo": "^1.0.1"
+    "redux-undo": "^1.0.1",
+    "renecss": "^1.1.1"
   },
   "devDependencies": {
     "@babel/core": "^7.19.6",

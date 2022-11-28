@@ -74,9 +74,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       }
     }
 
-    /* if (_treeData['root_1'] !== undefined) {
-      dispatch(expandFNNode('root_1'))
-    } */
     return data
   }, [content])
 
@@ -86,10 +83,16 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     dispatch(updateFileContent(content))
   }
 
-  /* add node handler */
+  /* add/remove/duplicate handlers */
   const handleAddFNNode = (nodeType: string) => {
+    /* check focusedItem is valid */
+    const focusedNode = treeData[focusedItem]
+    if (focusedNode === undefined || focusedNode.isEntity) {
+      return
+    }
+
     const tree = JSON.parse(JSON.stringify(treeData))
-    const p_uid: TUid = focusedItem === '' ? 'root' : focusedItem
+    const p_uid: TUid = focusedItem
     let newNode: TNode = {
       uid: generateNodeUid(p_uid, treeData[p_uid].children.length + 1),
       p_uid: p_uid,
@@ -105,15 +108,30 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       dispatch(setGlobalError(res.error as string))
     }
   }
-  /* remove node handler */
   const handleRemoveFnNode = () => {
-    if (selectedItems.length === 0) return
+    /* validate the selected items */
+    const uids = validateUids(selectedItems)
+    if (uids.length === 0) return
 
     const tree = JSON.parse(JSON.stringify(treeData))
-    const res = removeNode({ tree, nodeUids: selectedItems })
+    const res = removeNode({ tree, nodeUids: uids })
     if (res.success === true) {
       updateFFContent(tree)
       dispatch(updateFNNode({ deletedUids: res.deletedUids, convertedUids: res.convertedUids }))
+    } else {
+      dispatch(setGlobalError(res.error as string))
+    }
+  }
+  const handleDuplicateFNNode = () => {
+    /* check if it's root */
+    if (focusedItem === 'root') {
+      return
+    }
+
+    const tree = JSON.parse(JSON.stringify(treeData))
+    const res = duplicateNode({ tree, node: { ...tree[focusedItem] } })
+    if (res.success === true) {
+      updateFFContent(tree)
     } else {
       dispatch(setGlobalError(res.error as string))
     }
@@ -123,14 +141,14 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   const cb_focusNode = (uid: TUid) => {
     dispatch(focusFNNode(uid))
   }
+  const cb_selectNode = (uids: TUid[]) => {
+    dispatch(selectFNNode(uids))
+  }
   const cb_expandNode = (uid: TUid) => {
-    dispatch(expandFNNode(uid))
+    dispatch(expandFNNode([uid]))
   }
   const cb_collapseNode = (uid: TUid) => {
-    dispatch(collapseFNNode(uid))
-  }
-  const cb_selectNode = (uids: TUid[]) => {
-    dispatch(selectFNNode(validateUids(uids)))
+    dispatch(collapseFNNode([uid]))
   }
   const cb_renameNode = (uid: TUid, name: string) => {
     const tree = JSON.parse(JSON.stringify(treeData))
@@ -144,6 +162,13 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     }
   }
   const cb_dropNode = (payload: { [key: string]: any }) => {
+    // validate dnd uids
+    let validatedUids: TUid[] = []
+    validatedUids = validateUids(payload.uids, payload.parentUid)
+    if (validatedUids.length == 0) {
+      return
+    }
+
     const tree = JSON.parse(JSON.stringify(treeData))
     const res = moveNode({
       tree,
@@ -153,23 +178,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       uids: payload.uids
     })
     if (res.success === true) {
-      console.log(tree)
       dispatch(updateFNNode({ convertedUids: res.convertedUids }))
-      updateFFContent(tree)
-    } else {
-      dispatch(setGlobalError(res.error as string))
-    }
-  }
-
-  /* duplicate action handler */
-  const handleDuplicateFNNode = () => {
-    if (focusedItem === '') {
-      return
-    }
-    const tree = JSON.parse(JSON.stringify(treeData))
-    const res = duplicateNode({ tree, node: { ...tree[focusedItem] } })
-    if (res.success === true) {
-      // dispatch(updateFNNode({ convertedUids: res.convertedUids }))
       updateFFContent(tree)
     } else {
       dispatch(setGlobalError(res.error as string))
@@ -202,7 +211,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       >
         Node
 
-
+        {/* Nav Bar */}
         <div
           style={{
             zIndex: "2",
@@ -260,7 +269,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
             }}
             onClick={handleRemoveFnNode}
           >
-            x
+            Delete
           </button>
         </div>
       </div>
@@ -292,49 +301,31 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
         callbacks={{
           /* RENAME CALLBACK */
           onRenameItem: (item, name, treeId) => {
-            console.log('onRenameItem', item, name, treeId)
             cb_renameNode(item.index as TUid, name)
           },
 
           /* SELECT, FOCUS, EXPAND, COLLAPSE CALLBACK */
           onSelectItems: (items, treeId) => {
-            console.log('onSelectItems', items)
             cb_selectNode(items as TUid[])
           },
           onFocusItem: (item, treeId) => {
-            console.log('onFocusItem', item.index)
             cb_focusNode(item.index as TUid)
           },
           onExpandItem: (item, treeId) => {
-            console.log('onExpandItem', item.index)
             cb_expandNode(item.index as TUid)
           },
           onCollapseItem: (item, treeId) => {
-            console.log('onCollapseItem', item.index)
             cb_collapseNode(item.index as TUid)
           },
 
           // DnD CALLBACK
           onDrop: (items, target) => {
-            console.log('onDrop', items, target)
-
             // building drop-node-payload
             const uids: TUid[] = items.map(item => item.index as TUid)
             const isBetween = target.targetType === 'between-items'
             const parentUid = isBetween ? target.parentItem : target.targetItem
             const position = isBetween ? target.childIndex : 0
-
-            // validate dnd uids
-            let validatedUids: TUid[] = []
-            validatedUids = validateUids(uids, parentUid as TUid)
-
-            if (validatedUids.length == 0) {
-              return
-            }
-
-            // call cb
-            const payload = { uids: validatedUids, isBetween, parentUid, position }
-            cb_dropNode(payload)
+            cb_dropNode({ uids: uids, isBetween, parentUid, position })
           }
         }}
       />

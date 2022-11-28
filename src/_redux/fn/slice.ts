@@ -9,9 +9,9 @@ import * as Types from './types';
 
 // initial state of reducer
 const initialState: Types.FNTreeViewState = {
-  focusedItem: '',
-  expandedItems: [],
-  expandedItemsObj: {},
+  focusedItem: 'root',
+  expandedItems: ['root'],
+  expandedItemsObj: { 'root': true },
   selectedItems: [],
   selectedItemsObj: {},
 }
@@ -21,21 +21,37 @@ const slice = createSlice({
   name: 'fn',
   initialState,
   reducers: {
+    clearFNState(state, action: PayloadAction) {
+      console.log(action)
+      state.focusedItem = initialState.focusedItem
+      state.expandedItems = initialState.expandedItems
+      state.expandedItemsObj = initialState.expandedItemsObj
+      state.selectedItems = initialState.selectedItems
+      state.selectedItemsObj = initialState.selectedItemsObj
+    },
     focusFNNode(state, action: PayloadAction<TUid>) {
+      console.log(action)
       const uid = action.payload
       state.focusedItem = uid
     },
-    expandFNNode(state, action: PayloadAction<TUid>) {
-      const uid = action.payload
-      state.expandedItems.push(uid)
-      state.expandedItemsObj[uid] = true
+    expandFNNode(state, action: PayloadAction<TUid[]>) {
+      console.log(action)
+      const uids = action.payload
+      for (const uid of uids) {
+        state.expandedItemsObj[uid] = true
+      }
+      state.expandedItems = Object.keys(state.expandedItemsObj)
     },
-    collapseFNNode(state, action: PayloadAction<TUid>) {
-      const uid = action.payload
-      delete state.expandedItemsObj[uid]
+    collapseFNNode(state, action: PayloadAction<TUid[]>) {
+      console.log(action)
+      const uids = action.payload
+      for (const uid of uids) {
+        delete state.expandedItemsObj[uid]
+      }
       state.expandedItems = Object.keys(state.expandedItemsObj)
     },
     selectFNNode(state, action: PayloadAction<TUid[]>) {
+      console.log(action)
       const uids = action.payload
       state.selectedItems = uids
       state.selectedItemsObj = {}
@@ -44,6 +60,7 @@ const slice = createSlice({
       }
     },
     updateFNNode(state, action: PayloadAction<Types.UpdateFNNodePayload>) {
+      console.log(action)
       const { deletedUids, convertedUids } = action.payload
       if (deletedUids) {
         for (const uid of deletedUids) {
@@ -73,5 +90,5 @@ const slice = createSlice({
 })
 
 // export the actions and reducer
-export const { focusFNNode, expandFNNode, collapseFNNode, selectFNNode, updateFNNode } = slice.actions
+export const { clearFNState, focusFNNode, expandFNNode, collapseFNNode, selectFNNode, updateFNNode } = slice.actions
 export const FNReducer = slice.reducer

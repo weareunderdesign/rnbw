@@ -8,8 +8,10 @@ import { AppProps } from './types';
 export default function App(props: AppProps) {
   return <>
     <div style={{
-      position: "absolute",
+      position: "fixed",
 
+      top: "0px",
+      left: "0px",
       width: "100%",
       height: "100%",
 

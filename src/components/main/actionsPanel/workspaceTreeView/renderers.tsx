@@ -101,7 +101,7 @@ export const renderers: TreeRenderProps = {
           ? Classes.TREE_NODE_CARET_OPEN
           : Classes.TREE_NODE_CARET_CLOSED
       )}
-      {...(props.context.arrowProps as any)}
+      /* {...(props.context.arrowProps as any)} */
     />
   ),
 

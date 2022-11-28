@@ -85,9 +85,9 @@ export type ValidFileTypeType = {
 }
 export const validFileType: ValidFileTypeType = {/* valid file types */
   "html": true,
-  "css": false,
-  "js": false,
-  "md": false,
+  "css": true,
+  "js": true,
+  "md": true,
 }
 
 /**

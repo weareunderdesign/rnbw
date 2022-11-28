@@ -75,8 +75,7 @@ export const getSubUids = (uid: TUid, tree: TTree): TUid[] => {
  * @returns 
  */
 export const validateUids = (uids: TUid[], targetUid?: TUid): TUid[] => {
-  if (uids.length == 0)
-    return uids
+  return uids
 
   // check move action
   if (targetUid == undefined) {
@@ -103,7 +102,7 @@ export const validateUids = (uids: TUid[], targetUid?: TUid): TUid[] => {
   } else {
     // remove target's parent uids from uids
     return uids.filter((uid) => {
-      return !targetUid.startsWith(uid)
+      return !(targetUid as TUid).startsWith(uid)
     })
   }
 

@@ -1,0 +1,54 @@
+.rdialog-overlay {
+  position: fixed;
+  inset: 0;
+
+  animation: RDialogOverlayShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.rdialog-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  animation: RDialogContentShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  background-color: rgb(47, 54, 61);
+  color: #dddddd;
+
+  border-radius: 10px;
+  box-shadow: 2px 2px 10px 1px black;
+
+  width: 90vw;
+  max-width: 450px;
+  max-height: 85vh;
+
+  padding: 25px;
+}
+
+.rdialog-content:focus {
+  outline: none;
+}
+
+@keyframes RDialogOverlayShow {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes RDialogContentShow {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}

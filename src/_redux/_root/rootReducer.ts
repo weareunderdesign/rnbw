@@ -17,11 +17,13 @@ let rootReducer = undoable(combineReducers({
   ...fn,
 }), {
   filter: function filterActions(action, currentState, previousHistory) {
-    console.log(currentState.fn.selectedItems, previousHistory.index)
-    // excludeAction(["global/setGlobalPending", "global/setGlobalError"])
-    return action.type !== "global/setGlobalPending" // only add to history if action is SOME_ACTION
+    /* remove spinner action - global/setGlobalPending action */
+    return action.type !== "global/setGlobalPending"
   },
-  groupBy: groupByActionTypes([]),
+  groupBy: (action, currentState, previousHistory) => {
+
+  },
+  limit: 10000,
 })
 export default function createReducer(injectedReducers = {}) {
   rootReducer = undoable(combineReducers({
@@ -31,9 +33,8 @@ export default function createReducer(injectedReducers = {}) {
     ...injectedReducers,
   }), {
     filter: function filterActions(action, currentState, previousHistory) {
-      // console.log(currentState.fn.selectedItems, previousHistory.index)
-      // excludeAction(["global/setGlobalPending", "global/setGlobalError"])
-      return action.type !== "global/setGlobalPending" // only add to history if action is SOME_ACTION
+      /* remove spinner action - global/setGlobalPending action */
+      return action.type !== "global/setGlobalPending"
     },
     groupBy: groupByActionTypes([]),
   })
@@ -42,7 +43,6 @@ export default function createReducer(injectedReducers = {}) {
 
 // Root State
 export type AppState = ReturnType<typeof rootReducer>
-
 
 /* 
 import undoable, {combineFilters} from 'redux-undo'
@@ -58,7 +58,4 @@ function areWeRecording(action, state) {
 undoable(reducer, {
   filter: combineFilters(isActionSelfExcluded, areWeRecording)
 })
-
-
-
 */

@@ -12,3 +12,9 @@ export type FFTreeViewState = {
     [uid: TUid]: boolean,
   },
 }
+
+/* update ff node - delete / convert from $a to $b */
+export type UpdateFFNodePayload = {
+  deletedUids?: TUid[],
+  convertedUids?: [TUid, TUid][],
+}

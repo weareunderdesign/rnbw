@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import React, {
+  useEffect,
+  useState,
+} from 'react';
 
 import {
   useDispatch,
   useSelector,
 } from 'react-redux';
 
+import { Toast } from '@_components/common';
 import {
   ActionsPanel,
   CodeView,
@@ -14,13 +18,15 @@ import {
 import { TUid } from '@_node/types';
 import {
   globalGetCurrentFileSelector,
+  globalGetErrorSelector,
   globalGetPendingSelector,
   setGlobalPending,
 } from '@_redux/global';
 import { verifyPermission } from '@_services/global';
+import { FFHandlers } from '@_types/ff';
 import { Spinner } from '@blueprintjs/core';
 
-import { MainContext } from './context';
+import { FFContext } from '../../_redux/ff/context';
 import { MainPageProps } from './types';
 
 export default function MainPage(props: MainPageProps) {
@@ -28,16 +34,31 @@ export default function MainPage(props: MainPageProps) {
 
   // fetch global state
   const pending = useSelector(globalGetPendingSelector)
+  const error = useSelector(globalGetErrorSelector)
   const { uid, content } = useSelector(globalGetCurrentFileSelector)
 
+  /* toast for global errors */
+  const [toastOpen, setToastOpen] = useState(false)
+  useEffect(() => {
+    setToastOpen(true)
+  }, [error])
+
   // file system handlers - context
-  const [ffHandlers, setFFHandlers] = useState<{ [key: TUid]: FileSystemHandle }>({})
-  const setFFHandler = (handlers: { uid: TUid, handler: FileSystemHandle }[]) => {
-    let newHandlers: { [key: TUid]: FileSystemHandle } = {}
-    handlers.map(({ uid, handler }) => {
-      newHandlers[uid] = handler
-    })
-    setFFHandlers({ ...ffHandlers, ...newHandlers })
+  const [ffHandlers, setFFHandlers] = useState<FFHandlers>({})
+  const _setFFHandlers = (handlers: { [uid: TUid]: FileSystemHandle }) => {
+    setFFHandlers({ ...ffHandlers, ...handlers })
+  }
+  const _unsetFFHandlers = (uids: TUid[]) => {
+    const uidObj: { [uid: TUid]: boolean } = {}
+    uids.map(uid => uidObj[uid] = true)
+
+    let newHandlers: FFHandlers = {}
+    for (const uid in ffHandlers) {
+      if (uidObj[uid] === undefined) {
+        newHandlers[uid] = ffHandlers[uid]
+      }
+    }
+    setFFHandlers(newHandlers)
   }
 
   // file-content saving handler
@@ -77,7 +98,9 @@ export default function MainPage(props: MainPageProps) {
       />
     }
 
-    <MainContext.Provider value={{ setHandler: setFFHandler, handlers: ffHandlers }}>
+    <Toast open={false} />
+
+    <FFContext.Provider value={{ ffHandlers: ffHandlers, setFFHandlers: _setFFHandlers, unsetFFHandlers: _unsetFFHandlers }}>
       <div style={{
         width: "calc(100% - 4rem)",
         height: "calc(100% - 4rem)",
@@ -105,12 +128,33 @@ export default function MainPage(props: MainPageProps) {
             font: "normal lighter normal 12px Arial",
           }}
           onClick={handleSaveFFContent}
-        > Save </button>
+        >
+          Save
+        </button>
 
         <ActionsPanel />
         <StageView />
         <CodeView />
       </div>
-    </MainContext.Provider>
+    </FFContext.Provider>
   </>)
 }
+
+/* class XSearch extends HTMLElement {
+  connectedCallback() {
+    const mountPoint = document.createElement('span');
+    this.attachShadow({ mode: 'open' }).appendChild(mountPoint);
+
+    const name = this.getAttribute('name');
+    const url = 'https://www.google.com/search?q=' + encodeURIComponent(name);
+    const root = ReactDOM.createRoot(mountPoint);
+    root.render(<a href={url}>{name}</a>);
+  }
+}
+customElements.define('x-search', XSearch);
+
+class HelloMessage extends React.Component {
+  render() {
+    return <div>Hello <x-search>{this.props.name}</x-search>!</div>;
+  }
+} */
