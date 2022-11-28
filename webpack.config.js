@@ -9,7 +9,6 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, "dist"), // the bundle output path
     filename: "[name].bundle.js", // the name of the bundle
-    // publicPath: "/rainbow/", // same as the project name
   },
   devServer: {
     port: 8080, // you can change the port
@@ -55,9 +54,20 @@ module.exports = {
         use: ["style-loader", "css-loader", "sass-loader"],
       },
       {
-        test: /\.(png|woff|woff2|eot|ttf|svg)$/, // to import images and fonts
+        test: /\.(png|woff|woff2|eot|ttf)$/, // to import images and fonts
         loader: "url-loader",
         options: { limit: false },
+      },
+      {
+        test: /\.svg$/i,
+        type: 'asset',
+        resourceQuery: /url/, // *.svg?url
+      },
+      {
+        test: /\.svg$/i,
+        issuer: /\.[jt]sx?$/,
+        resourceQuery: { not: [/url/] }, // exclude react component if *.svg?url
+        use: ['@svgr/webpack'],
       },
     ],
   },
