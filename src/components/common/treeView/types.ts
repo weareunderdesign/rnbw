@@ -16,7 +16,7 @@ export type TreeViewProps = {
   expandedItems: TUid[],
   selectedItems: TUid[],
 
-  renderers: TreeRenderProps,
+  renderers?: TreeRenderProps,
 
   props: {
     [prop: string]: any,

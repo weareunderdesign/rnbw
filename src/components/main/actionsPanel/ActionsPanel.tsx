@@ -6,7 +6,7 @@ import { ActionsPanelProps } from './types';
 import WorkspaceTreeView from './workspaceTreeView';
 
 export default function ActionsPanel(props: ActionsPanelProps) {
-  return (<>
+  return <>
     <div style={{
       width: "400px",
       height: "100%",
@@ -17,5 +17,5 @@ export default function ActionsPanel(props: ActionsPanelProps) {
       <NodeTreeView />
       <SettingsPanel />
     </div>
-  </>)
+  </>
 }

@@ -57,6 +57,7 @@ const slice = createSlice({
     },
     setGlobalError(state, action: PayloadAction<string>) {
       const error = action.payload
+      console.log(error)
       state.error = error
     },
   },

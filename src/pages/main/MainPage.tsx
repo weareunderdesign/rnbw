@@ -8,6 +8,7 @@ import {
 import {
   ActionsPanel,
   CodeView,
+  HmsModule,
   StageView,
 } from '@_components/main';
 import { TUid } from '@_node/types';
@@ -88,6 +89,9 @@ export default function MainPage(props: MainPageProps) {
         display: "flex",
         position: "relative",
       }}>
+
+        <HmsModule />
+
         {/* Save btn */}
         <button
           style={{

@@ -1,4 +1,4 @@
-const path = require('path');
+const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MonacoEditorWebpackPlugin = require('monaco-editor-webpack-plugin')
 
@@ -28,7 +28,6 @@ module.exports = {
 
       // back
       "@_back": path.resolve(__dirname, 'src/_back/'),
-      "@_electron": path.resolve(__dirname, 'src/_electron/'),
       "@_node": path.resolve(__dirname, 'src/_node/'),
       "@_redux": path.resolve(__dirname, 'src/_redux/'),
     },

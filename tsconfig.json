@@ -37,9 +37,6 @@
       "@_back/*": [
         "src/_back/*",
       ],
-      "@_electron/*": [
-        "src/_electron/*",
-      ],
       "@_node/*": [
         "src/_node/*",
       ],
@@ -53,7 +50,7 @@
     "src/types/global.d.ts",
   ],
   "exclude": [
-    "build",
+    "dist",
     "node_modules",
   ],
 }
