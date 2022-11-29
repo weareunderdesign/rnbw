@@ -7,6 +7,7 @@ import { Node, NodeTree, NodeData, NodeId, FreshNode } from '@craftjs/core'
 import parse, { DOMNode } from 'html-react-parser';
 
 import { Container, Text } from './components/selectors';
+import { Button } from './components/selectors/Button';
 
 const convertStylesStringToObject = (stringStyles: string): Object => typeof stringStyles == "string" ? stringStyles
     .split(';')
@@ -42,13 +43,21 @@ export const parseHtml = (content: string) => {
     let uids: Map<DOMNode, string> = new Map<DOMNode, NodeId>;
     // Create a new valid Node object from the fresh Node
     const getName = (element: DOMNode) => {
-        return element.type == "text"
-            ? (element as unknown as TextElement).data
-            : (element as unknown as Element).name
+        if (element.type == 'text')
+            return Text;
+        switch((element as Element).tagName) {
+            case 'button':
+                return Button;
+            // case 'p': case 'span': case 'h1': case 'h2': case 'h3': case 'h4': case 'h5': case 'h6':
+            //     return Text;
+            default:
+                return (element as Element).tagName
+        }
     }
 
     let root_child_cnt = 0
-
+    let hasHTMLTag: boolean = false;
+    let body_tag_index: string;
     parse(content, {
         replace: (node: DOMNode) => {
 
@@ -64,6 +73,7 @@ export const parseHtml = (content: string) => {
             }
             let pid: string
             let cid: string
+
             if (node.parent == null) {
                 cid = generateNodeUid("root", ++root_child_cnt);
                 pid = "ROOT"
@@ -71,14 +81,23 @@ export const parseHtml = (content: string) => {
                 pid = uids.get(node.parent) as NodeId
                 cid = generateNodeUid(pid, (nodetree[pid].data as any).nodes.length + 1);
             }
+            if (node.type !== 'text') {
+                (node as Element).tagName === 'html' ? hasHTMLTag = true : {};
+                (node as Element).tagName === 'body' ? body_tag_index = cid : {};
+            }
+            if (node.type == "text"){
+                (nodetree[pid].data.props as Record<string, any>)["children"] = (node as TextElement).data
+                return;
+            }
             pid != "ROOT" ? (nodetree[pid].data as any).nodes.push(cid) : {}
+
             nodetree[cid] = {
                 id: cid,
                 data: {
-                    type: node.type != "text" ?  getName(node) : Text,
+                    type:  getName(node),
                     props: {
-                        children: node.type === "text" ? getName(node) : [],
-                        style: node.type !== "text" ? convertStylesStringToObject((node as Element).attribs["style"]) : {},
+                        children: [],
+                        style: convertStylesStringToObject((node as Element).attribs["style"]),
                     } as Record<string, any>,
                     parent: pid,
                     nodes: [],
@@ -87,11 +106,21 @@ export const parseHtml = (content: string) => {
 
             uids.set(node, cid)
             /*@ts-ignore*/
-            node.type === "text" ? nodetree[cid].data.props["text"] = (node as TextElement).data : {}
+            // node.type === "text" ? nodetree[cid].data.props["text"] = (node as TextElement).data : {}
         }
     })
 
     // filter HTML tag, start <body> tag
-
+    if (hasHTMLTag) {
+        let node_temp_tree: Record<string, FreshNode> = {};
+        Object.keys(nodetree).map((key) => {
+            if (key.startsWith(body_tag_index) && key != body_tag_index) {
+                if (nodetree[key].data.parent === body_tag_index)
+                    nodetree[key].data.parent = "ROOT"
+                node_temp_tree[key] = nodetree[key]
+            }
+        })
+        return node_temp_tree;
+    }
     return nodetree
 }
