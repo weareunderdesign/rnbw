@@ -13,7 +13,7 @@ import {
 import {
   globalGetCurrentFileSelector,
   updateFileContent,
-} from '@_redux/global';
+} from '@_redux/main';
 import Editor, { loader } from '@monaco-editor/react';
 
 import { CodeViewProps } from './types';

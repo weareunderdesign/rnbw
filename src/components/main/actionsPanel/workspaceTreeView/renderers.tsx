@@ -101,7 +101,7 @@ export const renderers: TreeRenderProps = {
           ? Classes.TREE_NODE_CARET_OPEN
           : Classes.TREE_NODE_CARET_CLOSED
       )}
-      /* {...(props.context.arrowProps as any)} */
+    /* {...(props.context.arrowProps as any)} */
     />
   ),
 
@@ -147,7 +147,7 @@ export const renderers: TreeRenderProps = {
   ),
 
   renderRenameInput: props => (
-    <form {...props.formProps} style={{ display: 'contents' }}>
+    <form {...props.formProps} style={{ display: 'contents', color: "black" }} onClick={(e) => { e.stopPropagation() }}>
       <span className={Classes.TREE_NODE_LABEL}>
         <input
           {...props.inputProps}

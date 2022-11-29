@@ -10,6 +10,11 @@ import {
 } from '@_node/types';
 
 /**
+ * project location the users import
+ */
+export type ProjectLocation = 'localhost' | 'git'
+
+/**
  * node data object type in file-tree-view
  */
 export type FFNode = TNode
@@ -25,17 +30,3 @@ export type FFNodeType = 'folder' | 'file'
 export type FFTree = {
   [uid: TUid]: FFNode,
 }
-
-/**
- * context type for main page
- */
-export type FFContextType = {
-  ffHandlers: FFHandlers,
-  setFFHandlers: (handlers: { [uid: TUid]: FileSystemHandle }) => void,
-  unsetFFHandlers: (uids: TUid[]) => void,
-}
-
-/**
- * ff handler collection
- */
-export type FFHandlers = { [key: TUid]: FileSystemHandle }

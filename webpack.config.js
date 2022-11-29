@@ -27,7 +27,7 @@ module.exports = {
       "@_components": path.resolve(__dirname, 'src/components/'),
 
       // back
-      "@_back": path.resolve(__dirname, 'src/_back/'),
+      "@_config": path.resolve(__dirname, 'src/_config/'),
       "@_node": path.resolve(__dirname, 'src/_node/'),
       "@_redux": path.resolve(__dirname, 'src/_redux/'),
     },

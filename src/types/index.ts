@@ -1,1 +1,1 @@
-export * from './ff'
+export * from './main'

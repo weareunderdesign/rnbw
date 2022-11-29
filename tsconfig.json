@@ -34,8 +34,8 @@
       "@_components/*": [
         "src/components/*",
       ],
-      "@_back/*": [
-        "src/_back/*",
+      "@_config/*": [
+        "src/_config/*",
       ],
       "@_node/*": [
         "src/_node/*",

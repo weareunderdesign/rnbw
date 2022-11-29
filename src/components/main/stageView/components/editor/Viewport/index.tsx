@@ -1,18 +1,19 @@
-import { FreshNode, Nodes, NodeTree, QueryMethods, useEditor, Node, NodeId, useNode, NodeRules } from '@craftjs/core';
-import cx from 'classnames';
+import React, { useEffect } from 'react';
 
-import React, { useEffect, useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { globalGetCurrentFileSelector } from '@_redux/global';
 
-
-import { Header } from './Header';
-import { Sidebar } from './Sidebar';
-import { Toolbox } from './Toolbox';
 import { parseHtml } from '@_components/main/stageView/api';
+import { globalGetCurrentFileSelector } from '@_redux/main';
+import {
+  FreshNode,
+  Node,
+  NodeId,
+  NodeTree,
+  useEditor,
+} from '@craftjs/core';
 
-import { Text } from '../../selectors/Text/index'
 import { Container } from '../../selectors';
+
 export type ViewportProps =
   {
     children: any,

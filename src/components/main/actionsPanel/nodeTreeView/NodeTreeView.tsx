@@ -26,21 +26,7 @@ import {
   TTree,
   TUid,
 } from '@_node/types';
-import {
-  collapseFNNode,
-  expandFNNode,
-  fnGetExpandedItemsSelector,
-  fnGetFocusedItemSelector,
-  fnGetSelectedItemsSelector,
-  focusFNNode,
-  selectFNNode,
-  updateFNNode,
-} from '@_redux/fn';
-import {
-  globalGetCurrentFileSelector,
-  setGlobalError,
-  updateFileContent,
-} from '@_redux/global';
+import * as Main from '@_redux/main';
 
 import { renderers } from './renderers';
 import { NodeTreeViewProps } from './types';
@@ -49,12 +35,12 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   const dispatch = useDispatch()
 
   // fetch global state
-  const { type, content } = useSelector(globalGetCurrentFileSelector)
+  const { type, content } = useSelector(Main.globalGetCurrentFileSelector)
 
   // fetch fn state
-  const focusedItem = useSelector(fnGetFocusedItemSelector)
-  const expandedItems = useSelector(fnGetExpandedItemsSelector)
-  const selectedItems = useSelector(fnGetSelectedItemsSelector)
+  const focusedItem = useSelector(Main.fnGetFocusedItemSelector)
+  const expandedItems = useSelector(Main.fnGetExpandedItemsSelector)
+  const selectedItems = useSelector(Main.fnGetSelectedItemsSelector)
 
   // node tree view data state
   const [treeData, setTreeData] = useState<TTree>({})
@@ -80,7 +66,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   /* update the global state */
   const updateFFContent = async (tree: TTree) => {
     const content = serializeFile({ type, tree })
-    dispatch(updateFileContent(content))
+    dispatch(Main.updateFileContent(content))
   }
 
   /* add/remove/duplicate handlers */
@@ -105,7 +91,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     if (res.success === true) {
       updateFFContent(tree)
     } else {
-      dispatch(setGlobalError(res.error as string))
+      // dispatch(Main.setGlobalError(res.error as string))
     }
   }
   const handleRemoveFnNode = () => {
@@ -117,9 +103,9 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     const res = removeNode({ tree, nodeUids: uids })
     if (res.success === true) {
       updateFFContent(tree)
-      dispatch(updateFNNode({ deletedUids: res.deletedUids, convertedUids: res.convertedUids }))
+      dispatch(Main.updateFNNode({ deletedUids: res.deletedUids, convertedUids: res.convertedUids }))
     } else {
-      dispatch(setGlobalError(res.error as string))
+      // dispatch(Main.setGlobalError(res.error as string))
     }
   }
   const handleDuplicateFNNode = () => {
@@ -133,22 +119,22 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     if (res.success === true) {
       updateFFContent(tree)
     } else {
-      dispatch(setGlobalError(res.error as string))
+      // dispatch(Main.setGlobalError(res.error as string))
     }
   }
 
   // cb
   const cb_focusNode = (uid: TUid) => {
-    dispatch(focusFNNode(uid))
+    dispatch(Main.focusFNNode(uid))
   }
   const cb_selectNode = (uids: TUid[]) => {
-    dispatch(selectFNNode(uids))
+    dispatch(Main.selectFNNode(uids))
   }
   const cb_expandNode = (uid: TUid) => {
-    dispatch(expandFNNode([uid]))
+    dispatch(Main.expandFNNode([uid]))
   }
   const cb_collapseNode = (uid: TUid) => {
-    dispatch(collapseFNNode([uid]))
+    dispatch(Main.collapseFNNode([uid]))
   }
   const cb_renameNode = (uid: TUid, name: string) => {
     const tree = JSON.parse(JSON.stringify(treeData))
@@ -158,7 +144,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       updateFFContent(tree)
     }
     else {
-      dispatch(setGlobalError(res.error as string))
+      // dispatch(Main.setGlobalError(res.error as string))
     }
   }
   const cb_dropNode = (payload: { [key: string]: any }) => {
@@ -178,10 +164,10 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       uids: payload.uids
     })
     if (res.success === true) {
-      dispatch(updateFNNode({ convertedUids: res.convertedUids }))
+      dispatch(Main.updateFNNode({ convertedUids: res.convertedUids }))
       updateFFContent(tree)
     } else {
-      dispatch(setGlobalError(res.error as string))
+      // dispatch(Main.setGlobalError(res.error as string))
     }
   }
 
@@ -225,7 +211,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
             height: '100%',
           }}
         >
-          {/* Create Node Button */}
+          {/* Create DIV node Button */}
           <button
             style={{
               zIndex: "2",

@@ -1,1 +1,0 @@
-export const empty_ff_saga = {}
