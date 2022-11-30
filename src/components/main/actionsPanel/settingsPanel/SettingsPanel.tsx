@@ -2,12 +2,33 @@ import React from 'react';
 
 import { SettingsPanelProps } from './types';
 import "./SettingsPanel.css"
+import { useEditor, useNode } from '@craftjs/core';
+import { useEffect } from 'react';
 
 export default function SettingsPanel(props: SettingsPanelProps) {
+  const { actions, selected, isEnabled } = useEditor((state, query) => {
+    const currentNodeId = query.getEvent('selected').last();
+    let selected;
+    if (currentNodeId) {
+      selected = {
+        id: currentNodeId,
+        name: state.nodes[currentNodeId].data.name,
+        settings:
+          state.nodes[currentNodeId].related &&
+          state.nodes[currentNodeId].related.settings,
+        isDeletable: query.node(currentNodeId).isDeletable(),
+      };
+    }
+    return {
+      selected,
+      isEnabled: state.options.enabled,
+    };
+  });
+
   return <>
     <div style={{
       width: "100%",
-      height: "calc(100% - 800px)",
+      height: "calc(100% - 600px)",
       overflow: "auto",
       borderBottom: "1px solid rgb(10, 10, 10)",
     }}>
@@ -27,19 +48,7 @@ export default function SettingsPanel(props: SettingsPanelProps) {
       >
         Settings
       </div>
-      <div style={{
-        color: "white",
-      }}>
-        <div className="row">
-          <label className="col-md-4" >font-size:</label>
-          <input className="col-md-8" type="text"/>
-        </div>
-        <div className="row">
-          <label className="col-md-4">Padding:</label>
-          <input className="col-md-8" type="text"/>
-        </div>
-
-      </div>
+      {selected && selected.settings && React.createElement(selected.settings)}
     </div>
 
   </>

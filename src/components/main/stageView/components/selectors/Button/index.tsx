@@ -5,22 +5,12 @@ import { ButtonSettings } from './ButtonSettings';
 
 import { Text } from '../Text';
 
-type ButtonProps = {
-  background?: Record<'r' | 'g' | 'b' | 'a', number>;
-  color?: Record<'r' | 'g' | 'b' | 'a', number>;
-  buttonStyle?: string;
-  margin?: any[];
-  text?: string;
-  textComponent?: any;
-};
-
-export const Button: UserComponent<ButtonProps> = (props: any) => {
+export const Button: UserComponent<any> = (props: any) => {
   const {
     connectors: { connect, drag },
   } = useNode((node) => ({
     selected: node.events.selected,
   }));
-  const { text, textComponent, color, margin, background, ...otherProps } = props;
   return (
     <button
       ref={ref => connect(drag(ref as HTMLElement))}
@@ -34,6 +24,6 @@ export const Button: UserComponent<ButtonProps> = (props: any) => {
 Button.craft = {
   displayName: 'Button',
   related: {
-    toolbar: ButtonSettings,
+    settings: ButtonSettings,
   },
 };

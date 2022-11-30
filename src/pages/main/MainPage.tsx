@@ -1,7 +1,10 @@
 import React, {
+  useCallback,
   useEffect,
   useState,
 } from 'react';
+
+import { Editor } from '@craftjs/core';
 
 import {
   useDispatch,
@@ -17,17 +20,19 @@ import {
 } from '@_components/main';
 import { TUid } from '@_node/types';
 import {
+  FFHandlers,
   globalGetCurrentFileSelector,
   globalGetErrorSelector,
   globalGetPendingSelector,
+  MainContext,
   setGlobalPending,
-} from '@_redux/global';
-import { verifyPermission } from '@_services/global';
-import { FFHandlers } from '@_types/ff';
+} from '@_redux/main';
+import { verifyPermission } from '@_services/main';
 import { Spinner } from '@blueprintjs/core';
 
-import { FFContext } from '../../_redux/ff/context';
 import { MainPageProps } from './types';
+import { Container, Text, Button } from '@_components/main/stageView/components/selectors';
+
 
 export default function MainPage(props: MainPageProps) {
   const dispatch = useDispatch()
@@ -45,12 +50,9 @@ export default function MainPage(props: MainPageProps) {
 
   // file system handlers - context
   const [ffHandlers, setFFHandlers] = useState<FFHandlers>({})
-  const _setFFHandlers = (handlers: { [uid: TUid]: FileSystemHandle }) => {
-    setFFHandlers({ ...ffHandlers, ...handlers })
-  }
-  const _unsetFFHandlers = (uids: TUid[]) => {
+  const _setFFHandlers = useCallback((deletedUids: TUid[], handlers: { [uid: TUid]: FileSystemHandle }) => {
     const uidObj: { [uid: TUid]: boolean } = {}
-    uids.map(uid => uidObj[uid] = true)
+    deletedUids.map(uid => uidObj[uid] = true)
 
     let newHandlers: FFHandlers = {}
     for (const uid in ffHandlers) {
@@ -58,8 +60,8 @@ export default function MainPage(props: MainPageProps) {
         newHandlers[uid] = ffHandlers[uid]
       }
     }
-    setFFHandlers(newHandlers)
-  }
+    setFFHandlers({ ...newHandlers, ...handlers })
+  }, [ffHandlers])
 
   // file-content saving handler
   const handleSaveFFContent = async () => {
@@ -100,7 +102,7 @@ export default function MainPage(props: MainPageProps) {
 
     <Toast open={false} />
 
-    <FFContext.Provider value={{ ffHandlers: ffHandlers, setFFHandlers: _setFFHandlers, unsetFFHandlers: _unsetFFHandlers }}>
+    <MainContext.Provider value={{ ffHandlers: ffHandlers, setFFHandlers: _setFFHandlers }}>
       <div style={{
         width: "calc(100% - 4rem)",
         height: "calc(100% - 4rem)",
@@ -132,29 +134,19 @@ export default function MainPage(props: MainPageProps) {
           Save
         </button>
 
-        <ActionsPanel />
-        <StageView />
-        <CodeView />
+        <Editor
+          resolver={{
+            Container,
+            Text,
+            Button,
+          }}
+        >
+          <ActionsPanel />
+          <StageView />
+          <CodeView />
+        </Editor>
+
       </div>
-    </FFContext.Provider>
+    </MainContext.Provider>
   </>)
 }
-
-/* class XSearch extends HTMLElement {
-  connectedCallback() {
-    const mountPoint = document.createElement('span');
-    this.attachShadow({ mode: 'open' }).appendChild(mountPoint);
-
-    const name = this.getAttribute('name');
-    const url = 'https://www.google.com/search?q=' + encodeURIComponent(name);
-    const root = ReactDOM.createRoot(mountPoint);
-    root.render(<a href={url}>{name}</a>);
-  }
-}
-customElements.define('x-search', XSearch);
-
-class HelloMessage extends React.Component {
-  render() {
-    return <div>Hello <x-search>{this.props.name}</x-search>!</div>;
-  }
-} */

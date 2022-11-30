@@ -36,9 +36,6 @@ export const Text: UserComponent<TextProps> = ({ text }: Partial<TextProps>) => 
   
   const [editable, setEditable] = useState(false);
 
-  useEffect(() => {
-    setEditable(hasSelectedNode);
-  }, [hasSelectedNode]);
   return (
     editable ? <>
       <input type="text" value={text} onChange={e => {
@@ -46,12 +43,10 @@ export const Text: UserComponent<TextProps> = ({ text }: Partial<TextProps>) => 
           props.children = e.target.value;
         }, 500);
       }} onBlur={(e) => {
-        console.log(e)
-        
         setEditable(false)
-      }}/>
+      }} />
     </>
-      : <div>{text}</div>
+      : <div onDoubleClick={(e) => setEditable(true)}>{text}</div>
   )
 };
 

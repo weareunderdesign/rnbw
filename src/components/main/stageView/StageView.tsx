@@ -3,10 +3,7 @@ import React, { ReactNode, useEffect, useMemo } from 'react';
 import { StageViewProps } from './types';
 
 import { Container, Text } from './components/selectors';
-import { Button } from './components/selectors/Button';
 
-import { Typography } from '@material-ui/core';
-import RenderNode from './components/editor/RenderNode';
 import { Editor, Frame, Element } from '@craftjs/core';
 import Viewport from './components/editor/Viewport';
 import ReactShadowRoot from 'react-shadow-root';
@@ -55,29 +52,21 @@ export default function StageView(props: StageViewProps) {
       overflow: "auto",
       backgroundColor: "white"
     }}>
-      <Editor
-        resolver={{
-          Container,
-          Text,
-          Button,
-        }}
-      >
-        <ReactShadowRoot >
-          <Viewport>
-            <Frame>
-              <Element
-                canvas
-                is={Container}
-                width="100%"
-                height="100%"
-                background={{ r: 255, g: 255, b: 255, a: 1 }}
-                custom={{ displayName: 'App' }}
-              >
-              </Element>
-            </Frame> 
-          </Viewport>
-        </ReactShadowRoot>
-      </Editor>
+      <ReactShadowRoot >
+        <Viewport>
+          <Frame>
+            <Element
+              canvas
+              is={Container}
+              width="100%"
+              height="100%"
+              background={{ r: 255, g: 255, b: 255, a: 1 }}
+              custom={{ displayName: 'App' }}
+            >
+            </Element>
+          </Frame>
+        </Viewport>
+      </ReactShadowRoot>
     </div>
   )
 }

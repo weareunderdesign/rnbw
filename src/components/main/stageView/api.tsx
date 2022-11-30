@@ -2,32 +2,65 @@ import { generateNodeUid } from '@_node/apis';
 import {
     Element,
     Text as TextElement,
+    isTag
 } from 'domhandler';
 import { Node, NodeTree, NodeData, NodeId, FreshNode } from '@craftjs/core'
-import parse, { DOMNode } from 'html-react-parser';
+import parse, { DOMNode, domToReact, HTMLReactParserOptions, attributesToProps  } from "html-react-parser";
+import React from "react";
+import { render } from "react-dom";
 
 import { Container, Text } from './components/selectors';
 import { Button } from './components/selectors/Button';
 
-const convertStylesStringToObject = (stringStyles: string): Object => typeof stringStyles == "string" ? stringStyles
-    .split(';')
-    .reduce((acc, style) => {
-        const colonPosition = style.indexOf(':')
-
-        if (colonPosition === -1) {
-            return acc
+const convertStylesStringToObject = (stringStyles: string): Object => {
+    const getShortHand = (style: string, ...values: (string | number)[]) => {
+        if (values.length === 1) {
+            return { [style]: values[0] }
         }
+        const _genCss = (...values: (string | number)[]) => ({
+            [style + 'Top']: values[0],
+            [style + 'Right']: values[1],
+            [style + 'Bottom']: values[2],
+            [style + 'Left']: values[3],
+        })
+        if (values.length === 2) {
+            return _genCss(values[0], values[1], values[0], values[1])
+        }
+        if (values.length === 3) {
+            return _genCss(values[0], values[1], values[2], values[1])
+        }
+        return _genCss(values[0], values[1], values[2], values[3])
+    }
 
-        const
-            camelCaseProperty = style
-                .substr(0, colonPosition)
-                .trim()
-                .replace(/^-ms-/, 'ms-')
-                .replace(/-./g, c => c.substr(1).toUpperCase()),
-            value = style.substr(colonPosition + 1).trim()
+    const padding = (...values: Array<number | string>) => getShortHand('padding', ...values)
+    const margin = (...values: Array<number | string>) => getShortHand('margin', ...values)
+    return typeof stringStyles == "string" ? stringStyles
+        .split(';')
+        .reduce((acc, style) => {
+            const colonPosition = style.indexOf(':')
 
-        return value ? { ...acc, [camelCaseProperty]: value } : acc
-    }, {}) : {}
+            if (colonPosition === -1) {
+                return acc
+            }
+            const
+                camelCaseProperty = style
+                    .substr(0, colonPosition)
+                    .trim()
+                    .replace(/^-ms-/, 'ms-')
+                    .replace(/-./g, c => c.substr(1).toUpperCase()),
+                value = style.substr(colonPosition + 1).trim()
+            if (value) {
+                switch (camelCaseProperty) {
+                    case 'padding':
+                        return { ...acc, ...padding(value) }
+                    case 'margin':
+                        return { ...acc, ...margin(value) }
+                }
+            }
+            return value ? { ...acc, [camelCaseProperty]: value } : acc
+        }, {}) : {}
+
+}
 
 export const parseHtml = (content: string) => {
     //  nodetree style 
@@ -45,14 +78,23 @@ export const parseHtml = (content: string) => {
     const getName = (element: DOMNode) => {
         if (element.type == 'text')
             return Text;
-        switch((element as Element).tagName) {
+        switch ((element as Element).tagName) {
             case 'button':
                 return Button;
             // case 'p': case 'span': case 'h1': case 'h2': case 'h3': case 'h4': case 'h5': case 'h6':
             //     return Text;
+            case 'div':
+                return Container;
             default:
                 return (element as Element).tagName
         }
+    }
+    const isCanvas = (element: DOMNode) => {
+        if (element.type == 'text')
+            return false;
+        
+        if ((element as Element).tagName === 'div') return true;
+        return false;
     }
 
     let root_child_cnt = 0
@@ -67,10 +109,10 @@ export const parseHtml = (content: string) => {
             }
             if (node.type == "text") {
                 const converted_string = (node as unknown as TextElement).data.replace(/(\n|\t)/g, ' ').replace(/\s+/g, ' ').split(' ').filter(s => !!s).join(' ');
-                // console.log(JSON.stringify((node as unknown as Text).data), converted_string.length)
                 if (converted_string.length == 0) return;
                 (node as unknown as TextElement).data = converted_string
             }
+
             let pid: string
             let cid: string
 
@@ -85,25 +127,27 @@ export const parseHtml = (content: string) => {
                 (node as Element).tagName === 'html' ? hasHTMLTag = true : {};
                 (node as Element).tagName === 'body' ? body_tag_index = cid : {};
             }
-            if (node.type == "text"){
+
+            if (node.type == "text") {
                 (nodetree[pid].data.props as Record<string, any>)["children"] = (node as TextElement).data
-                return;
+                 return;
             }
             pid != "ROOT" ? (nodetree[pid].data as any).nodes.push(cid) : {}
-
+            const props = attributesToProps((node as Element).attribs);
+            // console.log(props)
             nodetree[cid] = {
                 id: cid,
                 data: {
-                    type:  getName(node),
+                    type: getName(node),
                     props: {
-                        children: [],
-                        style: convertStylesStringToObject((node as Element).attribs["style"]),
+                        ...props
                     } as Record<string, any>,
                     parent: pid,
                     nodes: [],
-                }
+                    isCanvas: isCanvas(node)                    
+                },
             }
-
+            /*@ts-ignore                                      */
             uids.set(node, cid)
             /*@ts-ignore*/
             // node.type === "text" ? nodetree[cid].data.props["text"] = (node as TextElement).data : {}
@@ -124,3 +168,23 @@ export const parseHtml = (content: string) => {
     }
     return nodetree
 }
+// const replaceOptions: HTMLReactParserOptions = {
+//     replace: (node: DOMNode) => {
+//         /*@ts-ignore*/
+//         const { name, children } = node;
+//         if (children && ["body", "div", "ul", "ol"].includes(name)) {
+//             return (
+//                 <CraftElement is={Container} canvas>
+//                     {
+//                         domToReact(children, replaceOptions)
+//                     }
+//                 </CraftElement>
+//             )
+//         }
+//     }
+// };
+// export const parseHtml2 = (content: string) => {
+
+//     return parse(content, replaceOptions);
+
+// }

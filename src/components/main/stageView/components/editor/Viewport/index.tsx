@@ -1,18 +1,19 @@
-import { FreshNode, Nodes, NodeTree, QueryMethods, useEditor, Node, NodeId, useNode, NodeRules } from '@craftjs/core';
-import cx from 'classnames';
+import React, { useEffect, useState } from 'react';
 
-import React, { useEffect, useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { globalGetCurrentFileSelector } from '@_redux/global';
 
-
-import { Header } from './Header';
-import { Sidebar } from './Sidebar';
-import { Toolbox } from './Toolbox';
 import { parseHtml } from '@_components/main/stageView/api';
+import { globalGetCurrentFileSelector } from '@_redux/main';
+import {
+  FreshNode,
+  Node,
+  NodeId,
+  NodeTree,
+  useEditor,
+} from '@craftjs/core';
 
-import { Text } from '../../selectors/Text/index'
 import { Container } from '../../selectors';
+
 export type ViewportProps =
   {
     children: any,
@@ -29,27 +30,12 @@ export default function Viewport(props: ViewportProps) {
     selectedNodeId: state.events.selected
   }));
 
-  const [ selected, setSelected ] = useState<Object>({})
-
   const { uid, type, content } = useSelector(globalGetCurrentFileSelector)
-  useEffect(() => {
-    const currentNodeId = query.getEvent('selected').last();
-    console.log(selectedNodeId)
-    if (currentNodeId) {
-      setSelected({
-        id: currentNodeId,
-        name: query.getState().nodes[currentNodeId].data.name,
-        settings:
-          query.getState().nodes[currentNodeId].related &&
-          query.getState().nodes[currentNodeId].related.settings,
-        isDeletable: query.node(currentNodeId).isDeletable(),
-      });
-      // call reducer
-    }
-  }, [selectedNodeId])
 
   useEffect(() => {
-    console.log(query.parseReactElement(<h1>asdfsadf</h1>).toNodeTree())
+    const temptree = query.parseReactElement(<div><a>df</a>dfdd</div>).toNodeTree()
+    actions.addNodeTree(temptree, "ROOT")
+    console.log(temptree)
 
     if (content !== "" && type == "html") {
 

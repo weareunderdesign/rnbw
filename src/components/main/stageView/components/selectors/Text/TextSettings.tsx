@@ -2,6 +2,7 @@ import { useNode } from '@craftjs/core';
 import React from 'react';
 
 export const TextSettings = () => {
+  /* @ts-ignore */
   // const {props, setProp} = useNode();
   // return (
   //   <div>

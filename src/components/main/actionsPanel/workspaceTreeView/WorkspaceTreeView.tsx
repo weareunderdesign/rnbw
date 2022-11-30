@@ -1,5 +1,7 @@
 import React, {
+  useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from 'react';
@@ -24,6 +26,7 @@ import {
   TreeView,
 } from '@_components/common';
 import { TreeViewData } from '@_components/common/treeView/types';
+import { FileSystemWatchInterval } from '@_config/main';
 import {
   generateNodeUid,
   getSubUids,
@@ -35,37 +38,17 @@ import {
   TUid,
   validFileType,
 } from '@_node/types';
-import { FFContext } from '@_pages/main';
-import {
-  clearFFState,
-  collapseFFNode,
-  expandFFNode,
-  ffGetExpandedItemsSelector,
-  ffGetFocusedItemSelector,
-  ffGetSelectedItemsObjSelector,
-  ffGetSelectedItemsSelector,
-  focusFFNode,
-  selectFFNode,
-  updateFFNode,
-} from '@_redux/ff';
-import { clearFNState } from '@_redux/fn';
-import {
-  addFFNode,
-  clearGlobalState,
-  globalGetWorkspaceSelector,
-  removeFFNode,
-  setCurrentFile,
-  setGlobalError,
-  setGlobalPending,
-} from '@_redux/global';
+import * as Main from '@_redux/main';
+import { MainContext } from '@_redux/main';
 import {
   getFileExtension,
   verifyPermission,
-} from '@_services/global';
+} from '@_services/main';
 import {
   FFNode,
   FFNodeType,
-} from '@_types/ff';
+  ProjectLocation,
+} from '@_types/main';
 
 import { renderers } from './renderers';
 import { WorkspaceTreeViewProps } from './types';
@@ -73,16 +56,21 @@ import { WorkspaceTreeViewProps } from './types';
 export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   const dispatch = useDispatch()
 
+  /* project source location - localhost, git, dropbox, etc.. */
+  const [projectLocation, setProjectLocation] = useState<ProjectLocation>()
+
   // fetch global state
-  const workspace = useSelector(globalGetWorkspaceSelector)
+  const workspace = useSelector(Main.globalGetWorkspaceSelector)
 
   // fetch ff state
-  const focusedItem = useSelector(ffGetFocusedItemSelector)
-  const expandedItems = useSelector(ffGetExpandedItemsSelector)
-  const selectedItems = useSelector(ffGetSelectedItemsSelector)
-  const selectedItemsObj = useSelector(ffGetSelectedItemsObjSelector)
+  const focusedItem = useSelector(Main.ffGetFocusedItemSelector)
+  const expandedItems = useSelector(Main.ffGetExpandedItemsSelector)
+  const expandedItemsObj = useSelector(Main.ffGetExpandedItemsObjSelector)
+  const selectedItems = useSelector(Main.ffGetSelectedItemsSelector)
+  const selectedItemsObj = useSelector(Main.ffGetSelectedItemsObjSelector)
 
-  const { ffHandlers, setFFHandlers, unsetFFHandlers } = useContext(FFContext)
+  /* fetch dat afrom context */
+  const { ffHandlers, setFFHandlers } = useContext(MainContext)
 
   // workspace tree view data state
   const workspaceTreeViewData = useMemo(() => {
@@ -102,71 +90,169 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     return data
   }, [workspace])
 
-  // import project folder to workspace
-  const importRootDirectory = async (projectHandle: FileSystemDirectoryHandle) => {
-    /* clear the original state and restore initial state */
-    dispatch(clearGlobalState())
-    dispatch(clearFFState())
-    dispatch(clearFNState())
-
-    // add sub nodes
-    let handlers: { [uid: TUid]: FileSystemHandle } = { 'root': projectHandle }
-    const parentNode: FFNode = {
-      uid: 'root',
-      p_uid: null,
-      name: projectHandle.name,
-      isEntity: false,
-      children: [],
-      data: {},
+  /* import project from localhost using filesystemdirectoryhandle */
+  const importLocalhostProject = useCallback(async (projectHandle: FileSystemDirectoryHandle) => {
+    /* verify handler permission */
+    if (!verifyPermission(projectHandle)) {
+      dispatch(Main.setGlobalError({
+        type: 'error',
+        errorMessage: 'Project folder is not valid. Please import valid project.',
+      }))
+      throw 'error'
     }
+
+    // import all sub nodes
     let nodes: FFNode[] = []
-    let nodeIndex: number = 0
-    for await (const entry of projectHandle.values()) {
-      const relativePaths = await projectHandle.resolve(entry)
-      const nodeUid = generateNodeUid('root', ++nodeIndex)
-      handlers[nodeUid] = entry
-      nodes.push({
-        uid: nodeUid,
-        p_uid: 'root',
-        name: entry.name,
-        isEntity: entry.kind !== "directory",
+    const deletedUids: TUid[] = []
+    let handlers: { [uid: TUid]: FileSystemHandle } = { 'root': projectHandle }
+    let dirHandlers: { node: FFNode, handler: FileSystemDirectoryHandle }[] = [{
+      node: {
+        uid: 'root',
+        p_uid: null,
+        name: projectHandle.name,
+        isEntity: false,
         children: [],
-        data: relativePaths,
+        data: {
+          new: workspace['root'] === undefined,
+        },
+      },
+      handler: projectHandle,
+    }]
+    while (dirHandlers.length) {
+      const { node, handler } = dirHandlers.shift() as { node: FFNode, handler: FileSystemDirectoryHandle }
+      let hasChange = {
+        create: false,
+        delete: false,
+      }
+
+      let subNodes: FFNode[] = []
+      let maxChildIndex = node.children.reduce((prev: number, cur: TUid): number => {
+        const childIndex = Number(cur.split("_").pop())
+        return prev < childIndex ? childIndex : prev
+      }, 0)
+
+      /* access file system handle */
+      const children: { [uid: TUid]: boolean } = {}
+      try {
+        for await (const entry of handler.values()) {
+          let hasChild = false
+          let subNodeUid: TUid = ''
+          node.children.map((childUid) => {
+            if (workspace[childUid] && workspace[childUid].name === entry.name) {
+              subNodeUid = childUid
+              children[childUid] = true
+              hasChild = true
+            }
+          })
+          if (!hasChild) {
+            hasChange.create = true
+            subNodeUid = generateNodeUid(node.uid, ++maxChildIndex)
+          }
+          handlers[subNodeUid] = entry
+          const subNode: FFNode = {
+            uid: subNodeUid,
+            p_uid: node.uid,
+            name: entry.name,
+            isEntity: entry.kind !== "directory",
+            children: [],
+            data: {
+              new: !hasChild,
+            },
+          }
+          subNodes.push(subNode)
+          expandedItemsObj[subNodeUid] && dirHandlers.push({ node: subNode, handler: entry as FileSystemDirectoryHandle })
+        }
+      } catch (err) {
+        dispatch(Main.setGlobalError({
+          type: 'error',
+          errorMessage: 'Error occurred during project importing.',
+        }))
+        return
+      }
+      node.children.map((childUid) => {
+        if (children[childUid] === undefined) {
+          hasChange.delete = true
+          deletedUids.push(childUid)
+        }
       })
-    }
-    nodes = nodes.sort((a: TNode, b: TNode) => {
-      return a.isEntity && !b.isEntity ? 1 :
-        !a.isEntity && b.isEntity ? -1 :
-          a.name.toLowerCase() > b.name.toLowerCase() ? 1 : 0
-    })
-    nodes.map(node => parentNode.children.push(node.uid))
-    nodes.push(parentNode)
-
-    setFFHandlers(handlers)
-    dispatch(addFFNode(nodes))
-  }
-  const onAddBtnClick = async () => {
-    // open directory picker and get the project
-    let projectHandle
-    try {
-      projectHandle = await showDirectoryPicker({ _preferPolyfill: false, mode: 'readwrite' } as CustomDirectoryPickerOptions)
-    } catch (err) {
-      dispatch(setGlobalError(err as string))
-      return
+      node.data.modified = hasChange.create || hasChange.delete
+      subNodes = subNodes.sort((a: TNode, b: TNode) => {
+        return a.isEntity && !b.isEntity ? 1 :
+          !a.isEntity && b.isEntity ? -1 :
+            a.name.toLowerCase() > b.name.toLowerCase() ? 1 : 0
+      })
+      node.children = []
+      subNodes.map(subNode => node.children.push(subNode.uid))
+      nodes.push(node)
+      nodes.push(...subNodes)
     }
 
-    dispatch(setGlobalPending(true))
+    setFFHandlers(deletedUids, handlers)
+    dispatch(Main.updateFFNode({ deletedUids }))
+    dispatch(Main.setFFNode({ deletedUids, nodes }))
+  }, [workspace, expandedItemsObj])
 
-    importRootDirectory(projectHandle as FileSystemDirectoryHandle)
+  // file system watcher
+  const watchFileSystem = useCallback(async () => {
+    if (projectLocation === 'localhost') {
+      try {
+        if (ffHandlers['root'] === undefined) {
+          dispatch(Main.clearMainState())/* clear the original state and restore initial state */
+        } else {
+          await importLocalhostProject(ffHandlers['root'] as FileSystemDirectoryHandle)/* reload the project */
+        }
+      } catch (err) { // error occurred
+        dispatch(Main.clearMainState())/* clear the original state and restore initial state */
+      }
+    }
+  }, [projectLocation, ffHandlers, importLocalhostProject])
 
-    dispatch(setGlobalPending(false))
-  }
+  /* set file system watch timer */
+  useEffect(() => {
+    // create a fs watch interval and get the id
+    const fsWatchInterval = setInterval(() => {
+      watchFileSystem()
+    }, FileSystemWatchInterval)
+    // clear out the fs watch interval using the id when unmounting the component
+    return () => clearInterval(fsWatchInterval)
+  }, [watchFileSystem])
+
+  // open project button handler
+  const onAddBtnClick = useCallback(async (location: ProjectLocation = 'localhost') => {
+    setProjectLocation(location)
+
+    if (location === 'localhost') {
+      // open directory picker and get the project
+      let projectHandle: FileSystemHandle
+      try {
+        projectHandle = await showDirectoryPicker({ _preferPolyfill: false, mode: 'readwrite' } as CustomDirectoryPickerOptions)
+      } catch (err) {
+        dispatch(Main.setGlobalError({
+          type: 'warning',
+          errorMessage: '"Project import" canceled..',
+        }))
+        return
+      }
+
+      /* import localhost porject */
+      try {
+        dispatch(Main.setGlobalPending(true))
+        await importLocalhostProject(projectHandle as FileSystemDirectoryHandle)
+        dispatch(Main.setGlobalPending(false))
+      } catch (err) {
+        // error occurred
+        return
+      }
+    } else if (location === 'git') {
+
+    }
+  }, [projectLocation])
 
   // cb
-  const cb_focusFFNode = (uid: TUid) => {
-    dispatch(focusFFNode(uid))
-  }
-  const cb_selectFFNode = (uids: TUid[]) => {
+  const cb_focusFFNode = useCallback((uid: TUid) => {
+    dispatch(Main.focusFFNode(uid))
+  }, [])
+  const cb_selectFFNode = useCallback((uids: TUid[]) => {
     /* check if it's new state */
     if (uids.length === selectedItems.length) {
       let same = true
@@ -179,66 +265,21 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       if (same) return
     }
 
-    dispatch(selectFFNode(uids))
-  }
-  const cb_expandFFNode = async (uid: TUid) => {
-    dispatch(expandFFNode([uid]))
-
-    /* If it's already expanded item before, just expand it */
-    if (workspace[uid].children.length > 0) {
-      return
-    }
-
-    dispatch(setGlobalPending(true))
-
-    /* verify handler permission */
-    const handler = ffHandlers[uid] as FileSystemDirectoryHandle
-    if (!verifyPermission(handler)) {
-      dispatch(setGlobalPending(false))
-      return
-    }
-
-    const parentNode: FFNode = JSON.parse(JSON.stringify(workspace[uid]))
-    let nodes: FFNode[] = []
-    let p_uid: TUid = uid
-    let nodeIndex: number = 0
-    let handlers: { [uid: TUid]: FileSystemHandle } = {}
-    for await (const entry of handler.values()) {
-      const nodeUid = generateNodeUid(p_uid, ++nodeIndex)
-      handlers[nodeUid] = entry
-      nodes.push({
-        uid: nodeUid,
-        p_uid: p_uid,
-        name: entry.name,
-        isEntity: entry.kind !== "directory",
-        children: [],
-        data: {},
-      })
-    }
-    nodes = nodes.sort((a: TNode, b: TNode) => {
-      return a.isEntity && !b.isEntity ? 1 :
-        !a.isEntity && b.isEntity ? -1 :
-          a.name.toLowerCase() > b.name.toLowerCase() ? 1 : 0
-    })
-    nodes.map(node => parentNode.children.push(node.uid))
-    if (nodes.length > 0) {
-      nodes.push(parentNode)
-      setFFHandlers(handlers)
-      dispatch(addFFNode(nodes))
-    }
-
-    dispatch(setGlobalPending(false))
-  }
-  const cb_collapseFFNode = (uid: TUid) => {
-    dispatch(collapseFFNode([uid]))
-  }
-  const cb_readFFNode = async (uid: TUid) => {
-    dispatch(setGlobalPending(true))
+    dispatch(Main.selectFFNode(uids))
+  }, [])
+  const cb_expandFFNode = useCallback(async (uid: TUid) => {
+    dispatch(Main.expandFFNode([uid]))
+  }, [])
+  const cb_collapseFFNode = useCallback((uid: TUid) => {
+    dispatch(Main.collapseFFNode([uid]))
+  }, [])
+  const cb_readFFNode = useCallback(async (uid: TUid) => {
+    dispatch(Main.setGlobalPending(true))
 
     /* verify handler permission */
     const handler = ffHandlers[uid] as FileSystemFileHandle
     if (!verifyPermission(handler)) {
-      dispatch(setGlobalPending(false))
+      dispatch(Main.setGlobalPending(false))
       return
     }
 
@@ -246,45 +287,121 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     let fileType: string = handler.name.split('.').pop() as string
     fileType = validFileType[fileType] === true ? fileType : 'unknown'
     let content = await fileEntry.text()
-    dispatch(setCurrentFile({ uid, type: fileType as TFileType, content }))
+    dispatch(Main.setCurrentFile({ uid, type: fileType as TFileType, content }))
 
-    dispatch(setGlobalPending(false))
-  }
-  const cb_renameFFNode = async (uid: TUid, name: string) => {
-    /* check if it's a new state */
-    if (workspace[uid].name === name) return
-
-    dispatch(setGlobalPending(true))
-
+    dispatch(Main.setGlobalPending(false))
+  }, [ffHandlers])
+  const cb_renameFFNode = useCallback(async (uid: TUid, name: string) => {
+    /* validate */
     const node = workspace[uid]
-    if (!node.isEntity) return
+    if (node === undefined || node.name === name) return
+    const parentNode = workspace[node.p_uid as TUid]
+    if (parentNode === undefined) return
+
+    dispatch(Main.setGlobalPending(true))
 
     /* verify handler permission */
     const handler = ffHandlers[uid] as FileSystemHandle
-    if (!verifyPermission(handler)) {
-      dispatch(setGlobalPending(false))
+    const parentHandler = ffHandlers[parentNode.uid] as FileSystemDirectoryHandle
+    if (!verifyPermission(handler) || !verifyPermission(parentHandler)) {
+      dispatch(Main.setGlobalPending(false))
+      dispatch(Main.setGlobalError({
+        type: 'error',
+        errorMessage: 'Error occurred on File System Handle ...',
+      }))
       return
     }
 
     if (handler.kind === 'directory') {
+      /* validate if the new name exists */
+      let exists: boolean = true
+      try {
+        await parentHandler.getDirectoryHandle(name, { create: false })
+        exists = true
+      } catch (err) {
+        exists = false
+      }
+      if (exists) {
+        dispatch(Main.setGlobalPending(false))
+        dispatch(Main.setGlobalError({
+          type: 'warning',
+          errorMessage: 'Folder with the same name already exists.',
+        }))
+        return
+      }
 
+      /* create a new folder with the new name and move the nested directory */
+      /* let newHandler
+      try {
+        newHandler = await parentHandler.getDirectoryHandle(name, { create: true })
+      } catch (err) {
+        dispatch(Main.setGlobalPending(false))
+        dispatch(Main.setGlobalError({
+          type: 'warning',
+          errorMessage: 'Error occurred while creating a new folder ...',
+        }))
+        return
+      }
+      try {
+        const content = await (handler as FileSystemFileHandle).getFile()
+        const writableStream = await (newHandler as FileSystem).createWritable()
+        await writableStream.write(content)
+        await writableStream.close()
+        await parentHandler.removeEntry(handler.name, { recursive: true })
+      } catch (err) {
+        dispatch(Main.setGlobalPending(false))
+        dispatch(Main.setGlobalError({
+          type: 'error',
+          errorMessage: 'Error occurred while writing file content',
+        }))
+      } */
     } else {/* it's a file */
-      const content = (handler as FileSystemFileHandle).getFile()
-    }
-    const subUids: TUid[] = getSubUids(uid, workspace)
-    subUids.map((subUid) => {
-    })
+      /* validate if the new name exists */
+      let exists: boolean = true
+      try {
+        await parentHandler.getFileHandle(name, { create: false })
+        exists = true
+      } catch (err) {
+        exists = false
+      }
+      if (exists) {
+        dispatch(Main.setGlobalPending(false))
+        dispatch(Main.setGlobalError({
+          type: 'warning',
+          errorMessage: 'File with the same name already exists.',
+        }))
+        return
+      }
 
-    dispatch(setGlobalPending(false))
-    /* 
-    // Rename the file.
-    await file.move('new_name');
-    // Move the file to a new directory.
-    await file.move(directory);
-    // Move the file to a new directory and rename it.
-    await file.move(directory, 'newer_name');
-    */
-  }
+      /* create a new file with the new name and write the content */
+      let newHandler
+      try {
+        newHandler = await parentHandler.getFileHandle(name, { create: true })
+      } catch (err) {
+        dispatch(Main.setGlobalPending(false))
+        dispatch(Main.setGlobalError({
+          type: 'warning',
+          errorMessage: 'Error occurred while creating a new file ...',
+        }))
+        return
+      }
+      try {
+        const content = await (handler as FileSystemFileHandle).getFile()
+        const writableStream = await (newHandler as FileSystemFileHandle).createWritable()
+        await writableStream.write(content)
+        await writableStream.close()
+        await parentHandler.removeEntry(handler.name, { recursive: true })
+      } catch (err) {
+        dispatch(Main.setGlobalPending(false))
+        dispatch(Main.setGlobalError({
+          type: 'error',
+          errorMessage: 'Error occurred while writing file content',
+        }))
+      }
+    }
+
+    dispatch(Main.setGlobalPending(false))
+  }, [workspace, ffHandlers])
   const cb_dropFFNode = (uids: TUid[], targetUid: TUid) => {
     // validate dnd uids
     let validatedUids: TUid[] = validateUids(uids, targetUid)
@@ -292,18 +409,18 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       return
     }
 
-    dispatch(setGlobalPending(true))
+    dispatch(Main.setGlobalPending(true))
 
     /* verify handler permission */
     const focusedItemHandler = ffHandlers[focusedItem] as FileSystemDirectoryHandle
     if (!verifyPermission(focusedItemHandler)) {
-      dispatch(setGlobalPending(false))
+      dispatch(Main.setGlobalPending(false))
       return
     }
 
 
 
-    dispatch(setGlobalPending(false))
+    dispatch(Main.setGlobalPending(false))
   }
 
   // create/delete/duplicate actions
@@ -327,12 +444,12 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   const createFFNode = async () => {
     setCreateFFModalOpen(false)
 
-    dispatch(setGlobalPending(true))
+    dispatch(Main.setGlobalPending(true))
 
     /* verify handler permission */
     const focusedItemHandler = ffHandlers[focusedItem] as FileSystemDirectoryHandle
     if (!verifyPermission(focusedItemHandler)) {
-      dispatch(setGlobalPending(false))
+      dispatch(Main.setGlobalPending(false))
       return
     }
 
@@ -399,14 +516,14 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       }
     }
 
-    dispatch(setGlobalPending(false))
+    dispatch(Main.setGlobalPending(false))
   }
   const deleteFFNode = async () => {
     /* validate uids and see if there are selected items */
     const uids = validateUids(selectedItems)
     if (uids.length === 0) return
 
-    dispatch(setGlobalPending(true))
+    dispatch(Main.setGlobalPending(true))
 
     let allDone = true
     for (const uid of uids) {
@@ -425,15 +542,15 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
         /* side effect */
         const subUids = getSubUids(uid, workspace)
-        dispatch(removeFFNode(subUids))
-        dispatch(updateFFNode({ deletedUids: subUids }))
-        unsetFFHandlers(subUids)
+        dispatch(Main.setFFNode({ deletedUids: subUids, nodes: [] }))
+        dispatch(Main.updateFFNode({ deletedUids: subUids }))
+        setFFHandlers(subUids, {})
       } catch (err) {
         console.log(err)
       }
     }
 
-    dispatch(setGlobalPending(false))
+    dispatch(Main.setGlobalPending(false))
   }
   const duplicateFFNode = () => {
     /* check if it's root */
@@ -446,7 +563,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     <div
       style={{
         width: "100%",
-        height: "400px",
+        height: "300px",
         overflow: "auto",
         borderBottom: "1px solid rgb(10, 10, 10)",
       }}
@@ -547,7 +664,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
               font: "normal lighter normal 12px Arial",
               margin: "0px 5px",
             }}
-            onClick={onAddBtnClick}
+            onClick={() => {
+              onAddBtnClick()
+            }}
           >
             Open
           </button>
@@ -555,6 +674,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         </div>
       </div>
 
+      {/* ff name input modal */}
       <Dialog
         open={createFFModalOpen}
         onClose={() => { setCreateFFModalOpen(false) }}
