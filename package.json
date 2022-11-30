@@ -11,7 +11,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@blueprintjs/core": "^4.12.0",
     "@craftjs/core": "^0.2.0-beta.8",
     "@monaco-editor/react": "^4.4.6",
     "@radix-ui/react-toast": "^1.1.2",

@@ -76,7 +76,6 @@ export const getSubUids = (uid: TUid, tree: TTree): TUid[] => {
  */
 export const validateUids = (uids: TUid[], targetUid?: TUid): TUid[] => {
   return uids
-
   // check move action
   if (targetUid == undefined) {
     // think prev items already validate, so you need validate the last one

@@ -1,11 +1,16 @@
-import { UserComponent, useNode, UserComponentConfig } from '@craftjs/core';
-import cx from 'classnames';
 import React from 'react';
+
+import cx from 'classnames';
 import styled from 'styled-components';
 
-import { ButtonSettings } from './ButtonSettings';
+import {
+  useNode,
+  UserComponent,
+  UserComponentConfig,
+} from '@craftjs/core';
 
 import { Text } from '../Text';
+import { ButtonSettings } from './ButtonSettings';
 
 type ButtonProps = {
   background?: Record<'r' | 'g' | 'b' | 'a', number>;

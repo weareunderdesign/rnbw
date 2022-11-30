@@ -1,30 +1,31 @@
 /**
- * 
+ * return joined classNames
+ * @param classNames 
+ * @returns 
+ */
+export const cx = (...classNames: Array<string | undefined | false>): string =>
+  classNames.filter(cn => !!cn).join(' ')
+
+/**
+ * check the permission of file handle, return true/false
  * @param fileHandle 
  * @returns 
  */
 export const verifyPermission = async (fileHandle: FileSystemHandle): Promise<boolean> => {
+  // If the file handle is undefined, return false
+  if (fileHandle === undefined) return false
+
   try {
     // Check if permission was already granted. If so, return true.
-    const opts: FileSystemHandlePermissionDescriptor = {
-      mode: 'readwrite'
-    }
-
-    if (fileHandle === undefined)
-      return false
-
-    if ((await fileHandle.queryPermission(opts)) === 'granted') {
-      return true
-    }
+    const opts: FileSystemHandlePermissionDescriptor = { mode: 'readwrite' }
+    if ((await fileHandle.queryPermission(opts)) === 'granted') return true
 
     // Request permission. If the user grants permission, return true.
-    if ((await fileHandle.requestPermission(opts)) === 'granted') {
-      return true
-    }
+    if ((await fileHandle.requestPermission(opts)) === 'granted') return true
+
     // The user didn't grant permission, so return false.
     return false
   } catch (err) {
-    console.log(err)
     return false
   }
 }
@@ -36,9 +37,5 @@ export const verifyPermission = async (fileHandle: FileSystemHandle): Promise<bo
  */
 export const getFileExtension = (fileName: string) => {
   const arr: string[] = fileName.split('.')
-  if (arr.length === 1) {
-    return ''
-  } else {
-    return `.${arr.pop()}`
-  }
+  return arr.length === 1 ? '' : `.${arr.pop()}`
 }

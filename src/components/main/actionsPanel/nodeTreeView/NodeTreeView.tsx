@@ -13,7 +13,6 @@ import { TreeViewData } from '@_components/common/treeView/types';
 import {
   addNode,
   duplicateNode,
-  generateNodeUid,
   moveNode,
   parseFile,
   removeNode,
@@ -27,7 +26,10 @@ import {
   TUid,
 } from '@_node/types';
 import * as Main from '@_redux/main';
+import { OpenedFile } from '@_redux/main';
+import { cx } from '@_services/main';
 
+import { icons } from '../workspaceTreeView/tempIcons';
 import { renderers } from './renderers';
 import { NodeTreeViewProps } from './types';
 
@@ -35,14 +37,16 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   const dispatch = useDispatch()
 
   // fetch global state
-  const { type, content } = useSelector(Main.globalGetCurrentFileSelector)
+  const { type, content }: OpenedFile = useSelector(Main.globalGetCurrentFileSelector)
 
-  // fetch fn state
+  // node-tree-view view state
   const focusedItem = useSelector(Main.fnGetFocusedItemSelector)
   const expandedItems = useSelector(Main.fnGetExpandedItemsSelector)
+  const expandedItemsObj = useSelector(Main.fnGetExpandedItemsObjSelector)
   const selectedItems = useSelector(Main.fnGetSelectedItemsSelector)
+  const selectedItemsObj = useSelector(Main.fnGetSelectedItemsObjSelector)
 
-  // node tree view data state
+  // generate TTree and TreeViewData from file content
   const [treeData, setTreeData] = useState<TTree>({})
   const nodeTreeViewData = useMemo(() => {
     const _treeData: TTree = parseFile({ type, content })
@@ -50,13 +54,14 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     let data: TreeViewData = {}
     for (const uid in _treeData) {
+      const node: TNode = _treeData[uid]
       data[uid] = {
-        index: _treeData[uid].uid,
-        data: _treeData[uid],
-        children: _treeData[uid].children,
-        hasChildren: !_treeData[uid].isEntity,
-        canMove: true,
-        canRename: true,
+        index: node.uid,
+        data: node,
+        children: node.children,
+        hasChildren: !node.isEntity,
+        canMove: uid !== 'root',
+        canRename: uid !== 'root',
       }
     }
 
@@ -69,30 +74,40 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     dispatch(Main.updateFileContent(content))
   }
 
-  /* add/remove/duplicate handlers */
+  // add node api
   const handleAddFNNode = (nodeType: string) => {
-    /* check focusedItem is valid */
+    // validate
     const focusedNode = treeData[focusedItem]
     if (focusedNode === undefined || focusedNode.isEntity) {
       return
     }
 
+    dispatch(Main.setGlobalPending(true))
+
+    // add node using addNode api
     const tree = JSON.parse(JSON.stringify(treeData))
-    const p_uid: TUid = focusedItem
     let newNode: TNode = {
-      uid: generateNodeUid(p_uid, treeData[p_uid].children.length + 1),
-      p_uid: p_uid,
+      uid: '',
+      p_uid: null,
       name: nodeType,
       isEntity: false,
       children: [],
       data: {},
     }
-    const res = addNode({ tree, targetUid: p_uid, node: newNode })
+    const res = addNode({ tree, targetUid: focusedItem, node: newNode })
+
+    dispatch(Main.setGlobalPending(false))
+
+    // handle response
     if (res.success === true) {
       updateFFContent(tree)
     } else {
-      // dispatch(Main.setGlobalError(res.error as string))
+      dispatch(Main.setGlobalError({
+        type: 'error',
+        errorMessage: res.error as string,
+      }))
     }
+
   }
   const handleRemoveFnNode = () => {
     /* validate the selected items */
@@ -172,90 +187,27 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   }
 
   return (<>
-    <div
-      style={{
-        width: "100%",
-        height: "400px",
-        overflow: "auto",
-        borderBottom: "1px solid rgb(10, 10, 10)",
-      }}
-    >
-      {/* Name Bar */}
-      <div
-        style={{
-          zIndex: "1",
-          position: "sticky",
-          top: "0",
-          width: "100%",
-          color: "white",
-          fontSize: "13px",
-          padding: "2px 0px 5px 5px",
-          marginBottom: "5px",
-          borderBottom: "1px solid black",
-          background: "rgb(31, 36, 40)"
-        }}
-      >
-        Node
+    <div className='direction-row border-bottom' style={{ flexWrap: "nowrap", height: "400px", overflow: "auto" }}>
+      {/* Nav Bar */}
+      <div className='sticky box-l justify-stretch padding-s background-secondary border-bottom'>
+        {/* Current Title */}
+        <p className='text-s'>Node</p>
 
-        {/* Nav Bar */}
-        <div
-          style={{
-            zIndex: "2",
-            position: "absolute",
-            top: "0px",
-            right: "0px",
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: "flex-end",
-            width: "100%",
-            height: '100%',
-          }}
-        >
-          {/* Create DIV node Button */}
-          <button
-            style={{
-              zIndex: "2",
-              margin: "0 5px",
-              background: "rgb(23 111 44)",
-              color: "white",
-              border: "none",
-              font: "normal lighter normal 12px Arial",
-            }}
-            onClick={() => handleAddFNNode('div')}
-          >
-            Add Div
+        {/* Actoin Button Bar */}
+        <div className='gap-xs'>
+          {/* Create DIV Node Button */}
+          <button className='text-s' onClick={() => handleAddFNNode('div')}>
+            +Div
           </button>
 
           {/* Duplicate Node Button */}
-          <button
-            style={{
-              zIndex: "2",
-              margin: "0 5px",
-              background: "rgb(23 111 44)",
-              color: "white",
-              border: "none",
-              font: "normal lighter normal 12px Arial",
-            }}
-            onClick={handleDuplicateFNNode}
-          >
-            Duplicate
+          <button className='text-s' onClick={handleDuplicateFNNode}>
+            Dup
           </button>
 
           {/* Delete Node Button */}
-          <button
-            style={{
-              zIndex: "2",
-              top: "3px",
-              right: "28px",
-              background: "rgb(193 22 22)",
-              color: "white",
-              border: "none",
-              margin: "0 5px",
-              font: "normal lighter normal 12px Arial",
-            }}
-            onClick={handleRemoveFnNode}
-          >
-            Delete
+          <button className='text-s' onClick={handleRemoveFnNode}>
+            Del
           </button>
         </div>
       </div>
@@ -263,8 +215,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       {/* Main TreeView */}
       <TreeView
         /* style */
-        width={'300px'}
-        height={'400px'}
+        width={'100%'}
+        height={'100%'}
 
         /* data */
         data={nodeTreeViewData}
@@ -273,7 +225,74 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
         selectedItems={selectedItems}
 
         /* renderers */
-        renderers={renderers}
+        renderers={{
+          ...renderers,
+          renderItem: (props) => {
+            return <>
+              <li
+                className={cx(
+                  props.context.isDraggingOver && 'background-secondary',
+                )}
+                {...(props.context.itemContainerWithChildrenProps) as any}
+              >
+                {/* self */}
+                <div
+                  className={cx(
+                    'box-l',
+                    'justify-start',
+                    props.context.isSelected && 'color-primary',
+                    props.context.isDraggingOver && 'color-primary',
+                    props.context.isDraggingOverParent && 'draggingOverParent',
+                    props.context.isFocused && 'border',
+                  )}
+                  style={{ flexWrap: "nowrap", height: "25px", paddingLeft: `${props.depth * 23}px` }}
+
+                  {...(props.context.itemContainerWithoutChildrenProps as any)}
+                  {...(props.context.interactiveElementProps as any)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+
+                    props.context.isFocused ? null : props.context.focusItem()
+
+                    if (e.shiftKey) {
+                      props.context.selectUpTo()
+                    } else if (e.ctrlKey) {
+                      props.context.isSelected ? props.context.unselectItem() : props.context.addToSelectedItems()
+                    } else {
+                      props.context.selectItem()
+                      props.item.hasChildren ? props.context.toggleExpandedState() : props.context.primaryAction()
+                    }
+                  }}
+                  onFocus={() => { }}
+                >
+                  {/* render arrow */}
+                  {props.item.hasChildren ? props.arrow : <img className='icon-xs' src={''}></img>}
+
+                  {/* render icon */}
+                  <img
+                    className='icon-xs'
+                    src={
+                      props.item.hasChildren ?
+                        (props.context.isExpanded ? icons.FOLDER_OPEN : icons.FOLDER_CLOSE) :
+                        icons.HTML/* this will be differet based on the file type */
+                    }
+                  >
+                  </img>
+
+                  {/* render title */}
+                  {props.title}
+                </div>
+
+                {/* render children */}
+                {props.context.isExpanded ? <>
+                  <div>
+                    {props.children} {/* this calls the renderItemsContainer again */}
+                  </div>
+                </> : null}
+              </li>
+            </>
+          },
+        }}
 
         /* possibilities */
         props={{

@@ -1,10 +1,6 @@
 import undoable from 'redux-undo';
 
-import {
-  TFileType,
-  TUid,
-} from '@_node/types';
-import { FFNode } from '@_types/main';
+import { TUid } from '@_node/types';
 import {
   createSlice,
   PayloadAction,
@@ -20,8 +16,10 @@ const initialState: Types.MainState = {
 
     currentFile: {
       uid: '',
+      name: '',
       type: 'unknown',
       content: '',
+      saved: false,
     },
 
     pending: false,
@@ -61,18 +59,7 @@ const slice = createSlice({
       console.log(action)
       state.global = initialState.global
     },
-    setFFNode(state, action: PayloadAction<{ deletedUids: TUid[], nodes: FFNode[] }>) {
-      const { deletedUids, nodes } = action.payload
-      for (const uid of deletedUids) {
-        delete state.global.workspace[uid]
-      }
-      for (const node of nodes) {
-        state.global.workspace[node.uid] = node
-      }
-    },
-    setCurrentFile(state, action: PayloadAction<{
-      uid: TUid, type: TFileType, content: string,
-    }>) {
+    setFileContent(state, action: PayloadAction<Types.OpenedFile>) {
       console.log(action)
       const payload = action.payload
       state.global.currentFile = payload
@@ -83,7 +70,6 @@ const slice = createSlice({
       state.global.currentFile.content = data
     },
     setGlobalPending(state, action: PayloadAction<boolean>) {
-      console.log(action)
       state.global.pending = action.payload
     },
     setGlobalError(state, action: PayloadAction<Types._Error>) {
@@ -156,17 +142,11 @@ const slice = createSlice({
     },
 
     /* ff */
-    clearFFState(state, action: PayloadAction) {
-      console.log(action)
-      state.ff = initialState.ff
-    },
     focusFFNode(state, action: PayloadAction<TUid>) {
-      console.log(action)
       const uid = action.payload
       state.ff.focusedItem = uid
     },
     expandFFNode(state, action: PayloadAction<TUid[]>) {
-      console.log(action)
       const uids = action.payload
       for (const uid of uids) {
         state.ff.expandedItemsObj[uid] = true
@@ -174,7 +154,6 @@ const slice = createSlice({
       state.ff.expandedItems = Object.keys(state.ff.expandedItemsObj)
     },
     collapseFFNode(state, action: PayloadAction<TUid[]>) {
-      console.log(action)
       const uids = action.payload
       for (const uid of uids) {
         delete state.ff.expandedItemsObj[uid]
@@ -182,7 +161,6 @@ const slice = createSlice({
       state.ff.expandedItems = Object.keys(state.ff.expandedItemsObj)
     },
     selectFFNode(state, action: PayloadAction<TUid[]>) {
-      console.log(action)
       const uids = action.payload
       state.ff.selectedItems = uids
       state.ff.selectedItemsObj = {}
@@ -190,7 +168,20 @@ const slice = createSlice({
         state.ff.selectedItemsObj[uid] = true
       }
     },
-    updateFFNode(state, action: PayloadAction<Types.UpdateFFNodePayload>) {
+    updateFFTreeView(state, action: PayloadAction<Types.UpdateFFTreeViewPayload>) {
+      const { deletedUids, nodes } = action.payload
+      if (deletedUids) {
+        for (const uid of deletedUids) {
+          delete state.global.workspace[uid]
+        }
+      }
+      if (nodes) {
+        for (const node of nodes) {
+          state.global.workspace[node.uid] = node
+        }
+      }
+    },
+    updateFFTreeViewState(state, action: PayloadAction<Types.UpdateFFTreeViewStatePayload>) {
       const { deletedUids, convertedUids } = action.payload
       if (deletedUids) {
         for (const uid of deletedUids) {
@@ -226,8 +217,7 @@ export const {
 
   /* global */
   clearGlobalState,
-  setFFNode,
-  setCurrentFile,
+  setFileContent,
   updateFileContent,
   setGlobalPending,
   setGlobalError,
@@ -241,19 +231,19 @@ export const {
   updateFNNode,
 
   /* ff */
-  clearFFState,
   focusFFNode,
   expandFFNode,
   collapseFFNode,
   selectFFNode,
-  updateFFNode,
+  updateFFTreeView,
+  updateFFTreeViewState,
 } = slice.actions
 
 export const MainReducer = undoable(slice.reducer, {
   filter: function filterActions(action, currentState, previousHistory) {
     /* remove message-toast and spinner-pending */
-    if (action.type === 'main/global/setGlobalError' ||
-      action.type === 'main/global/setGlobalPending') {
+    if (action.type === 'main/setGlobalError' ||
+      action.type === 'main/setGlobalPending') {
       return false
     }
 
