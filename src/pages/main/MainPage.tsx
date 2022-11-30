@@ -4,6 +4,8 @@ import React, {
   useState,
 } from 'react';
 
+import { Editor } from '@craftjs/core';
+
 import {
   useDispatch,
   useSelector,
@@ -27,6 +29,8 @@ import {
 import { verifyPermission } from '@_services/main';
 
 import { MainPageProps } from './types';
+import { Container, Text, Button } from '@_components/main/stageView/components/selectors';
+
 
 export default function MainPage(props: MainPageProps) {
   const dispatch = useDispatch()
@@ -95,9 +99,18 @@ export default function MainPage(props: MainPageProps) {
           Save
         </button> */}
 
-        <ActionsPanel />
-        <StageView />
-        <CodeView />
+        <Editor
+          resolver={{
+            Container,
+            Text,
+            Button,
+          }}
+        >
+          <ActionsPanel />
+          <StageView />
+          <CodeView />
+        </Editor>
+
       </div>
     </MainContext.Provider>
   </>)

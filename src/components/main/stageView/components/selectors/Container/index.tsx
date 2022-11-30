@@ -92,7 +92,4 @@ Container.craft = {
   rules: {
     canDrag: () => true,
   },
-  related: {
-    toolbar: ContainerSettings,
-  },
 };

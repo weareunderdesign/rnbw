@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
@@ -30,23 +30,22 @@ export default function Viewport(props: ViewportProps) {
     selectedNodeId: state.events.selected
   }));
 
-
   const { uid, type, content } = useSelector(globalGetCurrentFileSelector)
-  useEffect(() => {
-    console.log(selectedNodeId.entries)
-    console.log(query.getEvent("selected").first())
-  }, [selectedNodeId])
 
   useEffect(() => {
-    
+    const temptree = query.parseReactElement(<div><a>df</a>dfdd</div>).toNodeTree()
+    actions.addNodeTree(temptree, "ROOT")
+    console.log(temptree)
+
     if (content !== "" && type == "html") {
+
       let root_node = JSON.parse(JSON.stringify(query.node("ROOT").get().data))
-        
+
       // clear nodes inside ROOT
       const nodes: Record<NodeId, Node> = query.getNodes()
       nodes["root"] !== undefined ? actions.delete("root") : {}
       // parseHTML fresh nodes
-    
+
       const nodetree: Record<string, FreshNode> = parseHtml(content)
       let customtree: NodeTree = {
         rootNodeId: "ROOT",
@@ -58,29 +57,24 @@ export default function Viewport(props: ViewportProps) {
         const node = query.parseFreshNode(nodetree[key]).toNode()
         node.id = key
         customtree.nodes[node.id] = node
-        if (node.data.parent == "ROOT"){
-          root_child_nodes.push(node.id) 
+        if (node.data.parent == "ROOT") {
+          root_child_nodes.push(node.id)
         }
         // index == 0 ? customtree.rootNodeId = node.id : {}
       })
       root_node.nodes = root_child_nodes
       root_node.type = Container
-      console.log({
-        id: "ROOT",
-        data: root_node
-      })
       customtree.nodes["ROOT"] = query.parseFreshNode({
         id: "ROOT",
         data: root_node
       }).toNode()
-
       console.log(customtree)
       actions.addNodeTree(customtree);
     }
   }, [content])
 
   return (
-    <div className="viewport" style={{width: "100%"}}>
+    <div className="viewport" style={{ width: "100%" }}>
       {props.children}
     </div>
   );

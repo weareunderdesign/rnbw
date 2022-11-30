@@ -22,6 +22,11 @@ const initialState: Types.MainState = {
       saved: false,
     },
 
+    // currentNode: {
+    //   uid: '',
+    //   settings: ''
+    // },
+
     pending: false,
     error: null,
   },

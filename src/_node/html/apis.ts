@@ -2,7 +2,7 @@ import {
   Element,
   Text,
 } from 'domhandler';
-import parse, { DOMNode } from 'html-react-parser';
+import parse, { attributesToProps, DOMNode } from 'html-react-parser';
 
 import {
   generateNodeUid,
@@ -46,36 +46,38 @@ export const parseHtml = (content: string): TTree => {
         if (converted_string.length == 0) return;
         (node as unknown as Text).data = converted_string
       }
+
+      let CID: string;
+      let PID: string;
+      
       if (node.parent == null) {
-        const CID = generateNodeUid("root", root["root"].children.length + 1)
-        root[CID] = {
-          uid: CID,
-          p_uid: "root",
-          name: getName(node),
-          children: [],
-          data: {}, // node
-          isEntity: node.type === 'text'
-          // nodeType: node.type
-        } as TNode
-        root["root"].children?.push(CID)
-        uids.set(node, CID)
+        PID = "root"
+        CID = generateNodeUid("root", root["root"].children.length + 1)
       } else {
-        const PID = uids.get(node.parent) as TUid
-        const CID = generateNodeUid(PID, root[PID].children.length + 1)
-        root[CID] = {
-          uid: CID,
-          p_uid: PID,
-          name: getName(node),
-          children: [],
-          data: {}, // node
-          isEntity: node.type === 'text',
-          // nodeType: node.type
-        } as TNode
-        root[PID].children?.push(CID)
-        uids.set(node, CID)
+        PID = uids.get(node.parent) as TUid
+        CID = generateNodeUid(PID, root[PID].children.length + 1)
       }
+
+      if (node.type == "text") {
+          root[PID].data.children = (node as Text).data;
+          return;
+      }
+      root[CID] = {
+        uid: CID,
+        p_uid: PID,
+        name: getName(node),
+        children: [],
+        data: {
+          ...attributesToProps((node as Element).attribs)
+        }, // node props
+        isEntity: false
+        // nodeType: node.type
+      } as TNode
+      root[PID].children?.push(CID)
+      uids.set(node, CID)
     }
   })
+  console.log(root)
   return root
 }
 
@@ -91,15 +93,23 @@ export const serializeHtml = (data: TTree): string => {
     const element: TNode = data[UID] as TNode
     let element_html: string = ""
     // console.log("UID:", UID, "data:", data[UID])
-    if (element.isEntity === true) {
-      element_html = "\t".repeat(level) + element.name + "\n";
-    } else {
-      element_html = "\t".repeat(level) + `<${element.name}>` + "\n"
-      element_html += element.children?.reduce((result, item) => {
-        return result + getHTMLFromFNObject(item, level + 1)
-      }, '');
-      element_html += "\t".repeat(level) + `</${element.name}>` + "\n"
+    element_html = "\t".repeat(level) + `<${element.name}`;
+    if (element.data.classNames != undefined) {
+      element_html += ` class="` + element.data.classNames + `"`;
     }
+    if (element.data.style != undefined) {
+      Object.keys(element.data.style).map((css_name: string) => {
+        
+      })
+    }
+    element_html += `>` + "\n"
+    element_html += element.children?.reduce((result, item) => {
+      return result + getHTMLFromFNObject(item, level + 1)
+    }, '');
+    if (element.data.children != undefined ){
+      element_html += element.data.children;
+    }
+    element_html += "\t".repeat(level) + `</${element.name}>` + "\n"
     return element_html
   }
 
