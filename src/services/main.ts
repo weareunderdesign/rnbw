@@ -1,12 +1,4 @@
 /**
- * return joined classNames
- * @param classNames 
- * @returns 
- */
-export const cx = (...classNames: Array<string | undefined | false>): string =>
-  classNames.filter(cn => !!cn).join(' ')
-
-/**
  * check the permission of file handle, return true/false
  * @param fileHandle 
  * @returns 

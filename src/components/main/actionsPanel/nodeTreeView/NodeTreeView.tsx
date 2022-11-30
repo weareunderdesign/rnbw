@@ -3,6 +3,7 @@ import React, {
   useState,
 } from 'react';
 
+import cx from 'classnames';
 import {
   useDispatch,
   useSelector,
@@ -27,7 +28,6 @@ import {
 } from '@_node/types';
 import * as Main from '@_redux/main';
 import { OpenedFile } from '@_redux/main';
-import { cx } from '@_services/main';
 
 import { icons } from '../workspaceTreeView/tempIcons';
 import { renderers } from './renderers';
