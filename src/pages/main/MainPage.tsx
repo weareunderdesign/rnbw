@@ -11,7 +11,6 @@ import {
   useSelector,
 } from 'react-redux';
 
-import { Toast } from '@_components/common';
 import {
   ActionsPanel,
   CodeView,
@@ -28,7 +27,6 @@ import {
   setGlobalPending,
 } from '@_redux/main';
 import { verifyPermission } from '@_services/main';
-import { Spinner } from '@blueprintjs/core';
 
 import { MainPageProps } from './types';
 import { Container, Text, Button } from '@_components/main/stageView/components/selectors';
@@ -36,17 +34,6 @@ import { Container, Text, Button } from '@_components/main/stageView/components/
 
 export default function MainPage(props: MainPageProps) {
   const dispatch = useDispatch()
-
-  // fetch global state
-  const pending = useSelector(globalGetPendingSelector)
-  const error = useSelector(globalGetErrorSelector)
-  const { uid, content } = useSelector(globalGetCurrentFileSelector)
-
-  /* toast for global errors */
-  const [toastOpen, setToastOpen] = useState(false)
-  useEffect(() => {
-    setToastOpen(true)
-  }, [error])
 
   // file system handlers - context
   const [ffHandlers, setFFHandlers] = useState<FFHandlers>({})
@@ -62,6 +49,18 @@ export default function MainPage(props: MainPageProps) {
     }
     setFFHandlers({ ...newHandlers, ...handlers })
   }, [ffHandlers])
+
+  // fetch global state
+  const pending = useSelector(globalGetPendingSelector)
+  const error = useSelector(globalGetErrorSelector)
+  const { uid, content } = useSelector(globalGetCurrentFileSelector)
+
+  // toast for global errors
+  const [toastOpen, setToastOpen] = useState(false)
+  useEffect(() => {
+    setToastOpen(true)
+  }, [error])
+
 
   // file-content saving handler
   const handleSaveFFContent = async () => {
@@ -88,51 +87,17 @@ export default function MainPage(props: MainPageProps) {
 
   return (<>
     {pending &&
-      <Spinner
-        intent='success'
-        style={{
-          position: "absolute",
-          width: "100%",
-          height: "100%",
-          zIndex: "9999",
-          background: "rgba(0, 0, 0, 0.5)",
-        }}
-      />
+      <div style={{ zIndex: "9999", position: "fixed", top: "0", right: "0", bottom: "0", left: "0" }}>
+      </div>
     }
-
-    <Toast open={false} />
-
     <MainContext.Provider value={{ ffHandlers: ffHandlers, setFFHandlers: _setFFHandlers }}>
-      <div style={{
-        width: "calc(100% - 4rem)",
-        height: "calc(100% - 4rem)",
+      {/* history management system module */}
+      <HmsModule />
 
-        margin: "2rem",
-        background: "rgb(36, 41, 46)",
-        boxShadow: "1px 1px 5px 1px rgb(20, 20, 20)",
-
-        display: "flex",
-        position: "relative",
-      }}>
-
-        <HmsModule />
-
-        {/* Save btn */}
-        <button
-          style={{
-            position: "absolute",
-            zIndex: "1",
-            top: "0px",
-            right: "1rem",
-            background: "rgb(23 111 44)",
-            color: "white",
-            border: "none",
-            font: "normal lighter normal 12px Arial",
-          }}
-          onClick={handleSaveFFContent}
-        >
+      <div className='view box-l padding-xs foreground-primary' data-theme='light' style={{ height: "0px" }}>
+        {/* <button className='' onClick={handleSaveFFContent}>
           Save
-        </button>
+        </button> */}
 
         <Editor
           resolver={{

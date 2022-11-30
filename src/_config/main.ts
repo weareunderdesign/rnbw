@@ -1,1 +1,1 @@
-export const FileSystemWatchInterval = 1000 /* by msec */
+export const FileSystemWatchInterval = 100 /* by msec */

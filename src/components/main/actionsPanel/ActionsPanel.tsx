@@ -7,12 +7,7 @@ import WorkspaceTreeView from './workspaceTreeView';
 
 export default function ActionsPanel(props: ActionsPanelProps) {
   return <>
-    <div style={{
-      width: "400px",
-      height: "100%",
-      background: "rgb(31, 36, 40)",
-      border: "1px solid rgb(30, 30, 30)",
-    }}>
+    <div className='panel background-primary border-top border-right border-bottom border-left' style={{ width: "300px", height: "100%" }}>
       <WorkspaceTreeView />
       <NodeTreeView />
       <SettingsPanel />

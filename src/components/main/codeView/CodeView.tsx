@@ -50,7 +50,7 @@ export default function CodeView(props: CodeViewProps) {
     if (timer !== undefined) {
       clearTimeout(timer)
     }
-    setTimer(setTimeout(() => { dispatch(updateFileContent(value)) }, 0))
+    setTimer(setTimeout(() => { dispatch(updateFileContent(value)) }, 1000))
   }
 
   return <>

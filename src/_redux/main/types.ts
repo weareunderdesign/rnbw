@@ -2,33 +2,23 @@ import {
   TFileType,
   TUid,
 } from '@_node/types';
-import { FFTree } from '@_types/main';
-import React from 'react';
+import {
+  FFNode,
+  FFTree,
+} from '@_types/main';
 
 /* Error Type */
 export type ErrorType = 'warning' | 'error' | 'info' | 'success'
 export type _Error = {
   type: ErrorType,
   errorMessage: string,
-  error?: any,
 }
 
-// global
+// Main State
 export type MainState = {
   global: {
     workspace: FFTree,
-    currentFile: {
-      uid: TUid,
-      type: TFileType,
-      content: string,
-    },
-    // currentNode: {
-    //   uid: TUid,
-    //   settings: {
-    //     name: string,
-    //     props: 
-    //   }
-    // },
+    currentFile: OpenedFile,
     pending: boolean,
     error: _Error | null,
   },
@@ -36,7 +26,16 @@ export type MainState = {
   fn: FNTreeViewState,
 }
 
-// ff
+// open file type
+export type OpenedFile = {
+  uid: TUid,
+  name: string,
+  type: TFileType,
+  content: string,
+  saved: boolean,
+}
+
+// ff tree view state type
 export type FFTreeViewState = {
   focusedItem: TUid,
   expandedItems: TUid[],
@@ -49,8 +48,14 @@ export type FFTreeViewState = {
   },
 }
 
-/* update ff node - delete / convert from $a to $b */
-export type UpdateFFNodePayload = {
+// update ff tree view payload type - delete / add nodes to workspace
+export type UpdateFFTreeViewPayload = {
+  deletedUids?: TUid[],
+  nodes?: FFNode[],
+}
+
+// update ff tree view state payload type - delete / convert from $a to $b
+export type UpdateFFTreeViewStatePayload = {
   deletedUids?: TUid[],
   convertedUids?: [TUid, TUid][],
 }

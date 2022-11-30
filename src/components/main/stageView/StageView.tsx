@@ -1,12 +1,15 @@
-import React, { ReactNode, useEffect, useMemo } from 'react';
+import React from 'react';
 
-import { StageViewProps } from './types';
-
-import { Container, Text } from './components/selectors';
-
-import { Editor, Frame, Element } from '@craftjs/core';
-import Viewport from './components/editor/Viewport';
 import ReactShadowRoot from 'react-shadow-root';
+
+import {
+  Element,
+  Frame,
+} from '@craftjs/core';
+
+import Viewport from './components/editor/Viewport';
+import { Container } from './components/selectors';
+import { StageViewProps } from './types';
 
 // const colors = [
 //   'black', 'red', 'rebeccapurple', 'blue', 'brown',

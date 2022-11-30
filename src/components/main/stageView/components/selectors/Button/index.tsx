@@ -1,9 +1,12 @@
-import { UserComponent, useNode, UserComponentConfig } from '@craftjs/core';
-import cx from 'classnames';
 import React from 'react';
-import { ButtonSettings } from './ButtonSettings';
+
+import {
+  useNode,
+  UserComponent,
+} from '@craftjs/core';
 
 import { Text } from '../Text';
+import { ButtonSettings } from './ButtonSettings';
 
 export const Button: UserComponent<any> = (props: any) => {
   const {

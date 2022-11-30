@@ -21,11 +21,7 @@ export default function TreeView(props: TreeViewProps): JSX.Element {
   const selectedItems: TreeItemIndex[] = useMemo(() => props.selectedItems, [props.selectedItems])
 
   return (<>
-    <div style={{
-      cursor: "pointer",
-      color: "#dddddd",
-      fontSize: "12px",
-    }}>
+    <div style={{ width: width, height: height }}>
       <ControlledTreeEnvironment
         viewState={{
           'tree': {
