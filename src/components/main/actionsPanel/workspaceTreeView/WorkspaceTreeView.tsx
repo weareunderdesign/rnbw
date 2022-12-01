@@ -68,11 +68,11 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       runningActions.current[actionName] = true
     }
   }
-  const removeRunningAction = (actionNames: string[]) => {
+  const removeRunningAction = (actionNames: string[], effect: boolean = true) => {
     for (const actionName of actionNames) {
       delete runningActions.current[actionName]
     }
-    if (noRunningAction()) {
+    if (effect && noRunningAction()) {
       dispatch(Main.increaseActionGroupIndex())
     }
   }
@@ -312,7 +312,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         }
       }
       if (same) {
-        removeRunningAction(['selectFFNode'])
+        removeRunningAction(['selectFFNode'], false)
         return
       }
     }
@@ -934,9 +934,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                       }
 
                       // call back
-                      if (!props.context.isFocused) {
-                        props.context.focusItem()
-                      }
+                      props.context.isFocused ? null : props.context.focusItem()
                       if (e.shiftKey) {
                         props.context.selectUpTo()
                       } else if (e.ctrlKey) {
