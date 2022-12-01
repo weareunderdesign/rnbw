@@ -49,22 +49,24 @@ export default function StageView(props: StageViewProps) {
   // styleSheets = [sheet];
 
   return (
-    <div className="box padding-xs shadow border-left">
-      <ReactShadowRoot>
-        <Viewport>
-          <Frame>
-            <Element
-              canvas
-              is={Container}
-              width="100%"
-              height="100%"
-              background={{ r: 255, g: 255, b: 255, a: 1 }}
-              custom={{ displayName: 'App' }}
-            >
-            </Element>
-          </Frame>
-        </Viewport>
-      </ReactShadowRoot>
+    <div className="panel box padding-xs shadow border-left">
+      <div className='box border-top border-right border-bottom border-left'>
+        <ReactShadowRoot>
+          <Viewport>
+            <Frame>
+              <Element
+                canvas
+                is={Container}
+                width="100%"
+                height="100%"
+                background={{ r: 255, g: 255, b: 255, a: 1 }}
+                custom={{ displayName: 'App' }}
+              >
+              </Element>
+            </Frame>
+          </Viewport>
+        </ReactShadowRoot>
+      </div>
     </div>
   )
 }

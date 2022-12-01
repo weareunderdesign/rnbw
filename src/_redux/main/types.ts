@@ -1,32 +1,32 @@
 import {
   TFileType,
+  TTree,
   TUid,
-  TTree
 } from '@_node/types';
 import {
   FFNode,
   FFTree,
 } from '@_types/main';
 
-/* Error Type */
-export type ErrorType = 'warning' | 'error' | 'info' | 'success'
-export type _Error = {
-  type: ErrorType,
-  errorMessage: string,
-}
-
 // Main State
 export type MainState = {
   actionGroupIndex: number,
   global: {
     workspace: FFTree,
-    nodetree: TTree,
     currentFile: OpenedFile,
+    nodeTree: TTree,
     pending: boolean,
     error: _Error | null,
   },
   ff: FFTreeViewState,
   fn: FNTreeViewState,
+}
+
+/* Error Type */
+export type ErrorType = 'warning' | 'error' | 'info' | 'success'
+export type _Error = {
+  type: ErrorType,
+  errorMessage: string,
 }
 
 // open file type
@@ -77,7 +77,7 @@ export type FNTreeViewState = {
 }
 
 /* update fn node - delete / convert from $a to $b */
-export type UpdateFNNodePayload = {
+export type UpdateFNTreeViewStatePayload = {
   deletedUids?: TUid[],
   convertedUids?: [TUid, TUid][],
 }

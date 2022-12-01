@@ -18,7 +18,6 @@ const initialState: Types.MainState = {
   actionGroupIndex: 0,
   global: {
     workspace: {},
-    nodetree: {},
     currentFile: {
       uid: '',
       name: '',
@@ -26,6 +25,7 @@ const initialState: Types.MainState = {
       content: '',
       saved: false,
     },
+    nodeTree: {},
     pending: false,
     error: null,
   },
@@ -52,28 +52,20 @@ const slice = createSlice({
   reducers: {
     /* main */
     increaseActionGroupIndex(state, action: PayloadAction) {
-      console.log(action)
       state.actionGroupIndex++
     },
     clearMainState(state, action: PayloadAction) {
-      // console.log(action)
       state.global = initialState.global
       state.ff = initialState.ff
       state.fn = initialState.fn
     },
 
     /* global */
-    clearGlobalState(state, action: PayloadAction) {
-      console.log(action)
-      state.global = initialState.global
-    },
     setFileContent(state, action: PayloadAction<Types.OpenedFile>) {
-      console.log(action)
       const payload = action.payload
       state.global.currentFile = payload
     },
     updateFileContent(state, action: PayloadAction<string>) {
-      console.log(action)
       const data = action.payload
       state.global.currentFile.content = data
     },
@@ -81,23 +73,16 @@ const slice = createSlice({
       state.global.pending = action.payload
     },
     setGlobalError(state, action: PayloadAction<Types._Error>) {
-      console.log(action)
       const error = action.payload
       state.global.error = error
     },
 
     /* fn */
-    clearFNState(state, action: PayloadAction) {
-      console.log(action)
-      state.fn = initialState.fn
-    },
     focusFNNode(state, action: PayloadAction<TUid>) {
-      console.log(action)
       const uid = action.payload
       state.fn.focusedItem = uid
     },
     expandFNNode(state, action: PayloadAction<TUid[]>) {
-      console.log(action)
       const uids = action.payload
       for (const uid of uids) {
         state.fn.expandedItemsObj[uid] = true
@@ -105,7 +90,6 @@ const slice = createSlice({
       state.fn.expandedItems = Object.keys(state.fn.expandedItemsObj)
     },
     collapseFNNode(state, action: PayloadAction<TUid[]>) {
-      console.log(action)
       const uids = action.payload
       for (const uid of uids) {
         delete state.fn.expandedItemsObj[uid]
@@ -113,7 +97,6 @@ const slice = createSlice({
       state.fn.expandedItems = Object.keys(state.fn.expandedItemsObj)
     },
     selectFNNode(state, action: PayloadAction<TUid[]>) {
-      console.log(action)
       const uids = action.payload
       state.fn.selectedItems = uids
       state.fn.selectedItemsObj = {}
@@ -121,8 +104,7 @@ const slice = createSlice({
         state.fn.selectedItemsObj[uid] = true
       }
     },
-    updateFNNode(state, action: PayloadAction<Types.UpdateFNNodePayload>) {
-      console.log(action)
+    updateFNTreeViewState(state, action: PayloadAction<Types.UpdateFNTreeViewStatePayload>) {
       const { deletedUids, convertedUids } = action.payload
       if (deletedUids) {
         for (const uid of deletedUids) {
@@ -148,9 +130,9 @@ const slice = createSlice({
       state.fn.expandedItems = Object.keys(state.fn.expandedItemsObj)
       state.fn.selectedItems = Object.keys(state.fn.selectedItemsObj)
     },
-    updateTTree(state, action: PayloadAction<TTree>) {
+    updateFNTreeView(state, action: PayloadAction<TTree>) {
       const treeData = action.payload
-      state.global.nodetree = treeData
+      state.global.nodeTree = treeData
     },
 
     /* ff */
@@ -180,19 +162,6 @@ const slice = createSlice({
         state.ff.selectedItemsObj[uid] = true
       }
     },
-    updateFFTreeView(state, action: PayloadAction<Types.UpdateFFTreeViewPayload>) {
-      const { deletedUids, nodes } = action.payload
-      if (deletedUids) {
-        for (const uid of deletedUids) {
-          delete state.global.workspace[uid]
-        }
-      }
-      if (nodes) {
-        for (const node of nodes) {
-          state.global.workspace[node.uid] = node
-        }
-      }
-    },
     updateFFTreeViewState(state, action: PayloadAction<Types.UpdateFFTreeViewStatePayload>) {
       const { deletedUids, convertedUids } = action.payload
       if (deletedUids) {
@@ -219,6 +188,19 @@ const slice = createSlice({
       state.ff.expandedItems = Object.keys(state.ff.expandedItemsObj)
       state.ff.selectedItems = Object.keys(state.ff.selectedItemsObj)
     },
+    updateFFTreeView(state, action: PayloadAction<Types.UpdateFFTreeViewPayload>) {
+      const { deletedUids, nodes } = action.payload
+      if (deletedUids) {
+        for (const uid of deletedUids) {
+          delete state.global.workspace[uid]
+        }
+      }
+      if (nodes) {
+        for (const node of nodes) {
+          state.global.workspace[node.uid] = node
+        }
+      }
+    },
   },
 })
 
@@ -229,28 +211,26 @@ export const {
   clearMainState,
 
   /* global */
-  clearGlobalState,
   setFileContent,
   updateFileContent,
   setGlobalPending,
   setGlobalError,
 
   /* fn */
-  clearFNState,
   focusFNNode,
   expandFNNode,
   collapseFNNode,
   selectFNNode,
-  updateFNNode,
-  updateTTree,
+  updateFNTreeViewState,
+  updateFNTreeView,
 
   /* ff */
   focusFFNode,
   expandFFNode,
   collapseFFNode,
   selectFFNode,
-  updateFFTreeView,
   updateFFTreeViewState,
+  updateFFTreeView,
 } = slice.actions
 
 export const MainReducer = undoable(slice.reducer, {

@@ -1,5 +1,6 @@
 import React, {
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -29,10 +30,8 @@ import {
   TUid,
 } from '@_node/types';
 import * as Main from '@_redux/main';
-import { OpenedFile } from '@_redux/main';
 
 import { NodeTreeViewProps } from './types';
-import { useEffect } from 'react';
 
 export default function NodeTreeView(props: NodeTreeViewProps) {
   const dispatch = useDispatch()
@@ -60,7 +59,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   }
 
   // fetch necessary state
-  const { type, content }: OpenedFile = useSelector(Main.globalGetCurrentFileSelector)
+  const { type, content }: Main.OpenedFile = useSelector(Main.globalGetCurrentFileSelector)
+  const treeData: TTree = useSelector(Main.globalGetNodeTreeSelector)
 
   // node-tree-view view state
   const focusedItem = useSelector(Main.fnGetFocusedItemSelector)
@@ -69,21 +69,18 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   const selectedItems = useSelector(Main.fnGetSelectedItemsSelector)
   const selectedItemsObj = useSelector(Main.fnGetSelectedItemsObjSelector)
 
-  const treeData: TTree = useSelector(Main.globalGetNodeTreeSelector)
-
-
   // generate TTree and TreeViewData from file content
-  const [_treeData1, _setTreeData] = useState<TTree>({})
+  const [_treeData, _setTreeData] = useState<TTree>({})
   useEffect(() => {
-    dispatch(Main.updateTTree(_treeData1))
-  }, [_treeData1])
+    dispatch(Main.updateFNTreeView(_treeData))
+  }, [_treeData])
   const nodeTreeViewData = useMemo(() => {
-    const _treeData: TTree = parseFile({ type, content })
-    _setTreeData(_treeData)
+    const __treeData: TTree = parseFile({ type, content })
+    _setTreeData(__treeData)
 
     let data: TreeViewData = {}
-    for (const uid in _treeData) {
-      const node: TNode = _treeData[uid]
+    for (const uid in __treeData) {
+      const node: TNode = __treeData[uid]
       data[uid] = {
         index: node.uid,
         data: node,
@@ -96,9 +93,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     return data
   }, [content])
 
-  /* update the global state */
+  // update the file content
   const updateFFContent = async (tree: TTree) => {
-    console.log("update content")
     const content = serializeFile({ type, tree })
     dispatch(Main.updateFileContent(content))
   }
@@ -152,7 +148,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     const res = removeNode({ tree, nodeUids: uids })
     if (res.success === true) {
       updateFFContent(tree)
-      dispatch(Main.updateFNNode({ deletedUids: res.deletedUids, convertedUids: res.convertedUids }))
+      dispatch(Main.updateFNTreeViewState({ deletedUids: res.deletedUids, convertedUids: res.convertedUids }))
     } else {
       // dispatch(Main.setGlobalError(res.error as string))
     }
@@ -198,10 +194,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       return
     }
 
-    // validate the uids
+    // validate the uids and check if it's new state
     uids = validateUids(uids)
-
-    // check if it's new state
     if (uids.length === selectedItems.length) {
       let same = true
       for (const uid of uids) {
@@ -275,7 +269,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       uids: payload.uids
     })
     if (res.success === true) {
-      dispatch(Main.updateFNNode({ convertedUids: res.convertedUids }))
+      dispatch(Main.updateFNTreeViewState({ convertedUids: res.convertedUids }))
       updateFFContent(tree)
     } else {
       // dispatch(Main.setGlobalError(res.error as string))
