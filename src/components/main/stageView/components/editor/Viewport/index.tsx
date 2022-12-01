@@ -24,7 +24,7 @@ export default function Viewport(props: ViewportProps) {
     enabled,
     actions,
     query,
-    selectedNodeId
+    selectedNodeId,
   } = useEditor((state) => ({
     enabled: state.options.enabled,
     selectedNodeId: state.events.selected
@@ -33,10 +33,6 @@ export default function Viewport(props: ViewportProps) {
   const { uid, type, content } = useSelector(globalGetCurrentFileSelector)
 
   useEffect(() => {
-    const temptree = query.parseReactElement(<div><a>df</a>dfdd</div>).toNodeTree()
-    actions.addNodeTree(temptree, "ROOT")
-    console.log(temptree)
-
     if (content !== "" && type == "html") {
 
       let root_node = JSON.parse(JSON.stringify(query.node("ROOT").get().data))
@@ -68,7 +64,6 @@ export default function Viewport(props: ViewportProps) {
         id: "ROOT",
         data: root_node
       }).toNode()
-      console.log(customtree)
       actions.addNodeTree(customtree);
     }
   }, [content])

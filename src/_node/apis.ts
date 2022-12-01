@@ -14,6 +14,7 @@ import {
   TSearializeFilePayload,
   TTree,
   TUid,
+  TUpdateNodePayload,
 } from './types';
 
 /**
@@ -191,6 +192,7 @@ export const removeNode = ({ tree, nodeUids }: TRemoveNodePayload): TNodeApiRes 
  */
 export const moveNode = ({ tree, isBetween, parentUid, position, uids }: TMoveNodePayload): TNodeApiRes => {
   try {
+    console.log(tree, isBetween, parentUid, position, uids)
     const _convertedUids = new Map<TUid, TUid>()
     const _addedNodes: TNode[] = []
     const _deletedUids: TUid[] = []
@@ -358,4 +360,13 @@ export const serializeFile = ({ type, tree }: TSearializeFilePayload): string =>
     return serializeHtml(tree)
   }
   return ''
+}
+
+export const updateNode = ({ tree, uid, data }: TUpdateNodePayload): TNodeApiRes => {
+  try {
+    tree[uid].data = data
+    return { success: true }    
+  } catch (error) {
+    return { success: false, error: error as string }
+  }
 }

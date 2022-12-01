@@ -1,7 +1,10 @@
 import undoable from 'redux-undo';
 
 import { HistoryStoreLimit } from '@_config/main';
-import { TUid } from '@_node/types';
+import {
+  TTree,
+  TUid,
+} from '@_node/types';
 import {
   createSlice,
   PayloadAction,
@@ -15,7 +18,7 @@ const initialState: Types.MainState = {
   actionGroupIndex: 0,
   global: {
     workspace: {},
-
+    nodetree: {},
     currentFile: {
       uid: '',
       name: '',
@@ -23,12 +26,6 @@ const initialState: Types.MainState = {
       content: '',
       saved: false,
     },
-
-    // currentNode: {
-    //   uid: '',
-    //   settings: ''
-    // },
-
     pending: false,
     error: null,
   },
@@ -151,6 +148,10 @@ const slice = createSlice({
       state.fn.expandedItems = Object.keys(state.fn.expandedItemsObj)
       state.fn.selectedItems = Object.keys(state.fn.selectedItemsObj)
     },
+    updateTTree(state, action: PayloadAction<TTree>) {
+      const treeData = action.payload
+      state.global.nodetree = treeData
+    },
 
     /* ff */
     focusFFNode(state, action: PayloadAction<TUid>) {
@@ -241,6 +242,7 @@ export const {
   collapseFNNode,
   selectFNNode,
   updateFNNode,
+  updateTTree,
 
   /* ff */
   focusFFNode,

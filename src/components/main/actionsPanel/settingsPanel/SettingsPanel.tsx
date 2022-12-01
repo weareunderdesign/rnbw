@@ -1,10 +1,33 @@
 import './SettingsPanel.css';
 
-import React from 'react';
+import React, {
+  useEffect,
+  useState,
+} from 'react';
 
+import {
+  useDispatch,
+  useSelector,
+} from 'react-redux';
+
+import {
+  serializeFile,
+  updateNode,
+} from '@_node/apis';
+import { TTree } from '@_node/types';
+import {
+  globalGetCurrentFileSelector,
+  globalGetNodeTreeSelector,
+  updateFileContent,
+} from '@_redux/main';
 import { useEditor } from '@craftjs/core';
 
 import { SettingsPanelProps } from './types';
+
+type StyleProperty = {
+  name: string,
+  value: string,
+}
 
 export default function SettingsPanel(props: SettingsPanelProps) {
   const { actions, selected, isEnabled } = useEditor((state, query) => {
@@ -14,9 +37,8 @@ export default function SettingsPanel(props: SettingsPanelProps) {
       selected = {
         id: currentNodeId,
         name: state.nodes[currentNodeId].data.name,
-        settings:
-          state.nodes[currentNodeId].related &&
-          state.nodes[currentNodeId].related.settings,
+        style: state.nodes[currentNodeId].data.props.style,
+        props: state.nodes[currentNodeId].data.props,
         isDeletable: query.node(currentNodeId).isDeletable(),
       };
     }
@@ -26,6 +48,52 @@ export default function SettingsPanel(props: SettingsPanelProps) {
     };
   });
 
+
+  const [styleLists, setStyleLists] = useState<Record<string, StyleProperty>>({})
+  const nodetree = useSelector(globalGetNodeTreeSelector)
+  const dispatch = useDispatch()
+  const { type } = useSelector(globalGetCurrentFileSelector)
+
+  useEffect(() => {
+
+    let elements: Record<string, StyleProperty> = {};
+    const defaultStyles = ["margin", "padding"];
+
+    defaultStyles.map((name) => {
+      elements[name] = {
+        name,
+        value: "",
+      };
+    });
+
+    if (selected !== undefined && selected.style !== undefined) {
+
+      Object.keys(selected.style).map((name) => {
+        elements[name] = {
+          name: name,
+          value: selected.style[name],
+        };
+      })
+    }
+    setStyleLists(elements)
+  }, [selected])
+
+  const convertStyle = (styleList: Record<string, StyleProperty>) => {
+    const result: Object = {}
+    Object.keys(styleList).map((key) => {
+      const styleItem = styleList[key]
+      /*@ts-ignore*/
+      result[styleItem.name] = styleItem.value
+    })
+    return result
+  }
+
+  /* update the global state */
+  const updateFFContent = async (tree: TTree) => {
+    console.log("update content")
+    const content = serializeFile({ type, tree })
+    dispatch(updateFileContent(content))
+  }
   return <>
     <div className="panel">
       <div className="border-bottom" style={{ height: "200px", overflow: "auto" }}>
@@ -40,9 +108,40 @@ export default function SettingsPanel(props: SettingsPanelProps) {
             {/* <div className="icon-add opacity-m icon-xs" onClick={() => { }}></div> */}
           </div>
         </div>
+        {/* panel body */}
+        <div className="direction-row">
+          {
+            selected && Object.keys(styleLists).map((key) => {
+              const styleItem = styleLists[key]
+              return <div key={'attr_' + styleItem.name}>
+                <label >{styleItem.name}:</label>
+                <input type="text" value={styleItem.value} onChange={
+                  (e) => {
+                    const newStyleList = JSON.parse(JSON.stringify(styleLists))
+                    newStyleList[key].value = e.target.value;
+                    setStyleLists(newStyleList)
+                    // props changed
+                    if (selected) {
+                      const tree = JSON.parse(JSON.stringify(nodetree))
+                      const result = updateNode({
+                        tree: tree,
+                        data: {
+                          ...selected.props,
+                          style: convertStyle(newStyleList),
+                        },
+                        uid: selected.id
+                      })
+                      if (result.success == true) {
+                        updateFFContent(tree)
+                      }
+                    }
+                  }
+                }></input>
+              </div>
+            })
+          }
+        </div>
       </div>
-
-      {selected && selected.settings && React.createElement(selected.settings)}
-    </div>
+    </div >
   </>
 }

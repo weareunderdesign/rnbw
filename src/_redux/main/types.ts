@@ -1,6 +1,7 @@
 import {
   TFileType,
   TUid,
+  TTree
 } from '@_node/types';
 import {
   FFNode,
@@ -19,6 +20,7 @@ export type MainState = {
   actionGroupIndex: number,
   global: {
     workspace: FFTree,
+    nodetree: TTree,
     currentFile: OpenedFile,
     pending: boolean,
     error: _Error | null,

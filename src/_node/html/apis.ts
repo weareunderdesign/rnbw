@@ -77,7 +77,6 @@ export const parseHtml = (content: string): TTree => {
       uids.set(node, CID)
     }
   })
-  console.log(root)
   return root
 }
 
@@ -98,9 +97,12 @@ export const serializeHtml = (data: TTree): string => {
       element_html += ` class="` + element.data.classNames + `"`;
     }
     if (element.data.style != undefined) {
+      element_html += ` style="`
       Object.keys(element.data.style).map((css_name: string) => {
-        
+        const style_name = css_name.replace(/[A-Z]/g, c => '-' + c.substr(0).toLowerCase())
+        element_html += `${style_name}:${element.data.style[css_name]};`
       })
+      element_html += `"`
     }
     element_html += `>` + "\n"
     element_html += element.children?.reduce((result, item) => {
