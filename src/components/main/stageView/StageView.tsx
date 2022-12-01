@@ -55,7 +55,7 @@ export default function StageView(props: StageViewProps) {
       overflow: "auto",
       backgroundColor: "white"
     }}>
-      <ReactShadowRoot >
+      <ReactShadowRoot>
         <Viewport>
           <Frame>
             <Element

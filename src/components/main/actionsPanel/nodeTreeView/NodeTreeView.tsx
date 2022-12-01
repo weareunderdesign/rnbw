@@ -32,6 +32,7 @@ import { OpenedFile } from '@_redux/main';
 import { icons } from '../workspaceTreeView/tempIcons';
 import { renderers } from './renderers';
 import { NodeTreeViewProps } from './types';
+import { useEffect } from 'react';
 
 export default function NodeTreeView(props: NodeTreeViewProps) {
   const dispatch = useDispatch()
@@ -46,11 +47,17 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   const selectedItems = useSelector(Main.fnGetSelectedItemsSelector)
   const selectedItemsObj = useSelector(Main.fnGetSelectedItemsObjSelector)
 
+  const treeData: TTree = useSelector(Main.globalGetNodeTreeSelector)
+
+
   // generate TTree and TreeViewData from file content
-  const [treeData, setTreeData] = useState<TTree>({})
+  const [_treeData1, _setTreeData] = useState<TTree>({})
+  useEffect(() => {
+    dispatch(Main.updateTTree(_treeData1))
+  }, [_treeData1])
   const nodeTreeViewData = useMemo(() => {
     const _treeData: TTree = parseFile({ type, content })
-    setTreeData(_treeData)
+    _setTreeData(_treeData)
 
     let data: TreeViewData = {}
     for (const uid in _treeData) {
@@ -64,12 +71,12 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
         canRename: uid !== 'root',
       }
     }
-
     return data
   }, [content])
 
   /* update the global state */
   const updateFFContent = async (tree: TTree) => {
+    console.log("update content")
     const content = serializeFile({ type, tree })
     dispatch(Main.updateFileContent(content))
   }

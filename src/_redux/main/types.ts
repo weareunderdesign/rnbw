@@ -1,6 +1,7 @@
 import {
   TFileType,
   TUid,
+  TTree
 } from '@_node/types';
 import {
   FFNode,
@@ -18,6 +19,7 @@ export type _Error = {
 export type MainState = {
   global: {
     workspace: FFTree,
+    nodetree: TTree,
     currentFile: OpenedFile,
     pending: boolean,
     error: _Error | null,

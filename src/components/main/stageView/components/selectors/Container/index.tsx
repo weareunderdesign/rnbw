@@ -3,7 +3,7 @@ import React from 'react';
 import { ContainerSettings } from './ContainerSettings';
 
 import { Resizer } from '../Resizer';
-import { useNode } from '@craftjs/core';
+import { useEditor, useNode } from '@craftjs/core';
 
 export type ContainerProps = {
   background: Record<'r' | 'g' | 'b' | 'a', number>;
@@ -58,6 +58,8 @@ export const Container = (props: Partial<ContainerProps>) => {
     radius,
     children,
   } = props;
+
+
   return (
     <Resizer
       propKey={{ width: 'width', height: 'height' }}

@@ -19,6 +19,10 @@ const globalGetError = (state: AppState) => state.main.present.global.error
 export const globalGetErrorSelector = createSelector(globalGetError, (error) => error)
 
 /* *********************** fn *********************** */
+// nodetree selector
+const globalGetNodeTree = (state: AppState) => state.main.present.global.nodetree
+export const globalGetNodeTreeSelector = createSelector(globalGetNodeTree, (nodetree) => nodetree)
+
 // focusedItem selector
 const fnGetFocusedItem = (state: AppState) => state.main.present.fn.focusedItem
 export const fnGetFocusedItemSelector = createSelector(fnGetFocusedItem, (focusedItem) => focusedItem)

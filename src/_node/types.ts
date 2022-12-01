@@ -76,6 +76,12 @@ export type TDuplicateNodePayload = {
   node: TNode,/* node to duplicate */
 }
 
+export type TUpdateNodePayload = {
+  tree: TTree,
+  uid: TUid,
+  data: any
+}
+
 /**
  * ref to valid file types
  */

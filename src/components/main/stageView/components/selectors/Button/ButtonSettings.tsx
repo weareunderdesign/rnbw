@@ -20,7 +20,6 @@ export const ButtonSettings = () => {
   }));
   const styleLists: Record<string, StyleProperty> = useMemo(() => {
     let elements: Record<string, StyleProperty> = {};
-    
     const defaultStyles = ["margin", "padding"];
     defaultStyles.map((name) => {
       elements[name] = {
@@ -28,7 +27,6 @@ export const ButtonSettings = () => {
         value: "",
       };
     });
-
     if (style == undefined) {
       return elements;
     }
@@ -48,7 +46,7 @@ export const ButtonSettings = () => {
         Object.keys(styleLists).map( (key) => {
           const styleItem = styleLists[key]
           return <div key={'attr_' + styleItem.name}>
-            <label style={{ color: "white" }}>{styleItem.name}:</label>
+            <label >{styleItem.name}:</label>
             <input type="text" value={styleItem.value} onChange={
               (e) => {
                 setProp((props: any) => {
