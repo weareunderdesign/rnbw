@@ -49,13 +49,8 @@ export default function StageView(props: StageViewProps) {
   // styleSheets = [sheet];
 
   return (
-    <div style={{
-      width: "calc(100% - 700px)",
-      height: "100%",
-      overflow: "auto",
-      backgroundColor: "white"
-    }}>
-      <ReactShadowRoot >
+    <div className="box padding-xs shadow border-left">
+      <ReactShadowRoot>
         <Viewport>
           <Frame>
             <Element

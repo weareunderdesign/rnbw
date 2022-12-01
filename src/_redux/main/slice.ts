@@ -1,5 +1,6 @@
 import undoable from 'redux-undo';
 
+import { HistoryStoreLimit } from '@_config/main';
 import { TUid } from '@_node/types';
 import {
   createSlice,
@@ -11,6 +12,7 @@ import * as Types from './types';
 
 // initial state of reducer
 const initialState: Types.MainState = {
+  actionGroupIndex: 0,
   global: {
     workspace: {},
 
@@ -52,6 +54,10 @@ const slice = createSlice({
   initialState,
   reducers: {
     /* main */
+    increaseActionGroupIndex(state, action: PayloadAction) {
+      console.log(action)
+      state.actionGroupIndex++
+    },
     clearMainState(state, action: PayloadAction) {
       // console.log(action)
       state.global = initialState.global
@@ -217,7 +223,8 @@ const slice = createSlice({
 
 // export the actions and reducer
 export const {
-  /* naub */
+  /* main */
+  increaseActionGroupIndex,
   clearMainState,
 
   /* global */
@@ -247,15 +254,20 @@ export const {
 export const MainReducer = undoable(slice.reducer, {
   filter: function filterActions(action, currentState, previousHistory) {
     /* remove message-toast and spinner-pending */
-    if (action.type === 'main/setGlobalError' ||
-      action.type === 'main/setGlobalPending') {
+    if (action.type === 'main/setGlobalPending' ||
+      action.type === 'main/setGlobalError' ||
+      action.type === 'main/updateFFTreeView' ||
+      action.type === 'main/updateFFTreeViewState') {
       return false
     }
 
     return true
   },
   groupBy: (action, currentState, previousHistory) => {
-
+    if (action.type === 'main/increaseActionGroupIndex') {
+      return currentState.actionGroupIndex - 1
+    }
+    return currentState.actionGroupIndex
   },
-  limit: 10000,/* limit the history stack size to 10,000 */
+  limit: HistoryStoreLimit,/* limit the history stack size to HistoryStoreLimit */
 })

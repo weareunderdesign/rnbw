@@ -1,4 +1,5 @@
 import React, {
+  useCallback,
   useMemo,
   useState,
 } from 'react';
@@ -29,8 +30,6 @@ import {
 import * as Main from '@_redux/main';
 import { OpenedFile } from '@_redux/main';
 
-import { icons } from '../workspaceTreeView/tempIcons';
-import { renderers } from './renderers';
 import { NodeTreeViewProps } from './types';
 
 export default function NodeTreeView(props: NodeTreeViewProps) {
@@ -139,18 +138,33 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   }
 
   // cb
-  const cb_focusNode = (uid: TUid) => {
+  const cb_focusNode = useCallback((uid: TUid) => {
     dispatch(Main.focusFNNode(uid))
-  }
-  const cb_selectNode = (uids: TUid[]) => {
+  }, [])
+  const cb_selectNode = useCallback((uids: TUid[]) => {
+    // validate the uids
+    uids = validateUids(uids)
+
+    // check if it's new state
+    if (uids.length === selectedItems.length) {
+      let same = true
+      for (const uid of uids) {
+        if (selectedItemsObj[uid] === undefined) {
+          same = false
+          break
+        }
+      }
+      if (same) return
+    }
+
     dispatch(Main.selectFNNode(uids))
-  }
-  const cb_expandNode = (uid: TUid) => {
+  }, [selectedItems, selectedItemsObj])
+  const cb_expandNode = useCallback((uid: TUid) => {
     dispatch(Main.expandFNNode([uid]))
-  }
-  const cb_collapseNode = (uid: TUid) => {
+  }, [])
+  const cb_collapseNode = useCallback((uid: TUid) => {
     dispatch(Main.collapseFNNode([uid]))
-  }
+  }, [])
   const cb_renameNode = (uid: TUid, name: string) => {
     const tree = JSON.parse(JSON.stringify(treeData))
     const node = { ...tree[uid], name }
@@ -187,153 +201,207 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   }
 
   return (<>
-    <div className='direction-row border-bottom' style={{ flexWrap: "nowrap", height: "400px", overflow: "auto" }}>
-      {/* Nav Bar */}
-      <div className='sticky box-l justify-stretch padding-s background-secondary border-bottom'>
-        {/* Current Title */}
-        <p className='text-s'>Node</p>
+    <div className="panel">
+      <div className="border-bottom" style={{ height: "300px", overflow: "auto" }}>
+        {/* Nav Bar */}
+        <div className="sticky direction-column padding-s box-l justify-stretch border-bottom background-primary">
+          <div className="gap-s box justify-start">
+            {/* label */}
+            <span className="text-s">Nodes</span>
+          </div>
+          <div className="gap-s justify-end box">
+            {/* Create Folder Button */}
+            <div className="icon-addelement opacity-m icon-xs" onClick={() => handleAddFNNode('div')}></div>
 
-        {/* Actoin Button Bar */}
-        <div className='gap-xs'>
-          {/* Create DIV Node Button */}
-          <button className='text-s' onClick={() => handleAddFNNode('div')}>
-            +Div
-          </button>
+            {/* Duplicate Button */}
+            <div className="icon-copy opacity-m icon-xs" onClick={handleDuplicateFNNode}></div>
 
-          {/* Duplicate Node Button */}
-          <button className='text-s' onClick={handleDuplicateFNNode}>
-            Dup
-          </button>
-
-          {/* Delete Node Button */}
-          <button className='text-s' onClick={handleRemoveFnNode}>
-            Del
-          </button>
+            {/* Delete Node Button */}
+            <div className="icon-delete opacity-m icon-xs" onClick={handleRemoveFnNode}></div>
+          </div>
         </div>
-      </div>
 
-      {/* Main TreeView */}
-      <TreeView
-        /* style */
-        width={'100%'}
-        height={'100%'}
+        {/* Main TreeView */}
+        <TreeView
+          /* style */
+          width={'100%'}
+          height={'auto'}
 
-        /* data */
-        data={nodeTreeViewData}
-        focusedItem={focusedItem}
-        expandedItems={expandedItems}
-        selectedItems={selectedItems}
+          /* info */
+          info={{ id: 'node-tree-view' }}
 
-        /* renderers */
-        renderers={{
-          ...renderers,
-          renderItem: (props) => {
-            return <>
-              <li
-                className={cx(
-                  props.context.isDraggingOver && 'background-secondary',
-                )}
-                {...(props.context.itemContainerWithChildrenProps) as any}
-              >
-                {/* self */}
+          /* data */
+          data={nodeTreeViewData}
+          focusedItem={focusedItem}
+          expandedItems={expandedItems}
+          selectedItems={selectedItems}
+
+          /* renderers */
+          renderers={{
+            renderTreeContainer: (props) => {
+              return <>
+                <ul {...props.containerProps}>
+                  {props.children}
+                </ul>
+              </>
+            },
+            renderItemsContainer: (props) => {
+              return <>
+                <ul {...props.containerProps}>
+                  {props.children}
+                </ul>
+              </>
+            },
+            renderItem: (props) => {
+              return <>
+                <li
+                  className={cx(
+                    props.context.isSelected && '',
+                    props.context.isDraggingOver && 'background-secondary',
+                    props.context.isDraggingOverParent && '',
+                    props.context.isFocused && '',
+                  )}
+                  {...(props.context.itemContainerWithChildrenProps) as any}
+                >
+                  {/* self */}
+                  <div
+                    className={cx(
+                      'justify-stretch',
+                      'padding-xs',
+                      props.context.isSelected && 'background-secondary',
+                      props.context.isDraggingOver && 'color-primary',
+                      props.context.isDraggingOverParent && 'draggingOverParent',
+                      props.context.isFocused && 'border',
+                    )}
+                    style={{ flexWrap: "nowrap", paddingLeft: `${props.depth * 10}px` }}
+
+                    {...(props.context.itemContainerWithoutChildrenProps as any)}
+                    {...(props.context.interactiveElementProps as any)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+
+                      props.context.isFocused ? null : props.context.focusItem()
+
+                      if (e.shiftKey) {
+                        props.context.selectUpTo()
+                      } else if (e.ctrlKey) {
+                        props.context.isSelected ? props.context.unselectItem() : props.context.addToSelectedItems()
+                      } else {
+                        props.context.selectItem()
+                        props.item.hasChildren ? props.context.toggleExpandedState() : null
+                      }
+                    }}
+                    onFocus={() => { }}
+                  >
+                    <div className="gap-xs padding-xs" style={{ width: "100%" }}>
+                      {/* render arrow */}
+                      {props.arrow}
+
+                      {/* render icon */}
+                      <div
+                        className={cx(
+                          'icon-xs',
+                          props.item.hasChildren ? (props.context.isExpanded ? 'icon-div' : 'icon-div') :
+                            'icon-component'
+                        )}
+                      >
+                      </div>
+
+                      {/* render title */}
+                      {props.title}
+                    </div>
+                  </div>
+
+                  {/* render children */}
+                  {props.context.isExpanded ? <>
+                    <div>
+                      {props.children} {/* this calls the renderItemsContainer again */}
+                    </div>
+                  </> : null}
+                </li>
+              </>
+            },
+            renderItemArrow: (props) => {
+              return <>
                 <div
                   className={cx(
-                    'box-l',
-                    'justify-start',
-                    props.context.isSelected && 'color-primary',
-                    props.context.isDraggingOver && 'color-primary',
-                    props.context.isDraggingOverParent && 'draggingOverParent',
-                    props.context.isFocused && 'border',
+                    'icon-xs',
+                    props.item.hasChildren ? (props.context.isExpanded ? 'icon-down' : 'icon-right') : '',
                   )}
-                  style={{ flexWrap: "nowrap", height: "25px", paddingLeft: `${props.depth * 23}px` }}
-
-                  {...(props.context.itemContainerWithoutChildrenProps as any)}
-                  {...(props.context.interactiveElementProps as any)}
-                  onClick={(e) => {
-                    e.stopPropagation()
-
-                    props.context.isFocused ? null : props.context.focusItem()
-
-                    if (e.shiftKey) {
-                      props.context.selectUpTo()
-                    } else if (e.ctrlKey) {
-                      props.context.isSelected ? props.context.unselectItem() : props.context.addToSelectedItems()
-                    } else {
-                      props.context.selectItem()
-                      props.item.hasChildren ? props.context.toggleExpandedState() : props.context.primaryAction()
-                    }
-                  }}
-                  onFocus={() => { }}
                 >
-                  {/* render arrow */}
-                  {props.item.hasChildren ? props.arrow : <img className='icon-xs' src={''}></img>}
-
-                  {/* render icon */}
-                  <img
-                    className='icon-xs'
-                    src={
-                      props.item.hasChildren ?
-                        (props.context.isExpanded ? icons.FOLDER_OPEN : icons.FOLDER_CLOSE) :
-                        icons.HTML/* this will be differet based on the file type */
-                    }
-                  >
-                  </img>
-
-                  {/* render title */}
-                  {props.title}
                 </div>
+              </>
+            },
+            renderItemTitle: (props) => {
+              return <>
+                <span className='text-s' style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "calc(100% - 32px)" }}>
+                  {props.title}
+                </span>
+              </>
+            },
+            renderDragBetweenLine: ({ draggingPosition, lineProps }) => (
+              <div
+                {...lineProps}
+                style={{
+                  position: 'absolute',
+                  right: '0',
+                  top:
+                    draggingPosition.targetType === 'between-items' &&
+                      draggingPosition.linePosition === 'top'
+                      ? '0px'
+                      : draggingPosition.targetType === 'between-items' &&
+                        draggingPosition.linePosition === 'bottom'
+                        ? '-4px'
+                        : '-2px',
+                  left: `${draggingPosition.depth * 10}px`,
+                  height: '2px',
+                  backgroundColor: 'black',
+                }}
+              />
+            ),
+          }}
 
-                {/* render children */}
-                {props.context.isExpanded ? <>
-                  <div>
-                    {props.children} {/* this calls the renderItemsContainer again */}
-                  </div>
-                </> : null}
-              </li>
-            </>
-          },
-        }}
+          /* possibilities */
+          props={{
+            canDragAndDrop: true,
+            canDropOnItemWithChildren: true,
+            canDropOnItemWithoutChildren: false,
+            canReorderItems: true,
+          }}
 
-        /* possibilities */
-        props={{
-          canDragAndDrop: true,
-          canDropOnItemWithChildren: true,
-          canDropOnItemWithoutChildren: false,
-          canReorderItems: true,
-        }}
+          /* cb */
+          callbacks={{
+            /* RENAME CALLBACK */
+            onRenameItem: (item, name, treeId) => {
+              cb_renameNode(item.index as TUid, name)
+            },
 
-        /* cb */
-        callbacks={{
-          /* RENAME CALLBACK */
-          onRenameItem: (item, name, treeId) => {
-            cb_renameNode(item.index as TUid, name)
-          },
+            /* SELECT, FOCUS, EXPAND, COLLAPSE CALLBACK */
+            onSelectItems: (items, treeId) => {
+              cb_selectNode(items as TUid[])
+            },
+            onFocusItem: (item, treeId) => {
+              cb_focusNode(item.index as TUid)
+            },
+            onExpandItem: (item, treeId) => {
+              cb_expandNode(item.index as TUid)
+            },
+            onCollapseItem: (item, treeId) => {
+              cb_collapseNode(item.index as TUid)
+            },
 
-          /* SELECT, FOCUS, EXPAND, COLLAPSE CALLBACK */
-          onSelectItems: (items, treeId) => {
-            cb_selectNode(items as TUid[])
-          },
-          onFocusItem: (item, treeId) => {
-            cb_focusNode(item.index as TUid)
-          },
-          onExpandItem: (item, treeId) => {
-            cb_expandNode(item.index as TUid)
-          },
-          onCollapseItem: (item, treeId) => {
-            cb_collapseNode(item.index as TUid)
-          },
-
-          // DnD CALLBACK
-          onDrop: (items, target) => {
-            // building drop-node-payload
-            const uids: TUid[] = items.map(item => item.index as TUid)
-            const isBetween = target.targetType === 'between-items'
-            const parentUid = isBetween ? target.parentItem : target.targetItem
-            const position = isBetween ? target.childIndex : 0
-            cb_dropNode({ uids: uids, isBetween, parentUid, position })
-          }
-        }}
-      />
+            // DnD CALLBACK
+            onDrop: (items, target) => {
+              // building drop-node-payload
+              const uids: TUid[] = items.map(item => item.index as TUid)
+              const isBetween = target.targetType === 'between-items'
+              const parentUid = isBetween ? target.parentItem : target.targetItem
+              const position = isBetween ? target.childIndex : 0
+              cb_dropNode({ uids: uids, isBetween, parentUid, position })
+            }
+          }}
+        />
+      </div>
     </div>
   </>)
 }

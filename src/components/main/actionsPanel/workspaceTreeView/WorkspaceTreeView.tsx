@@ -3,6 +3,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 
@@ -39,7 +40,6 @@ import {
   validFileType,
 } from '@_node/types';
 import * as Main from '@_redux/main';
-import { MainContext } from '@_redux/main';
 import {
   getFileExtension,
   verifyPermission,
@@ -50,12 +50,32 @@ import {
   ProjectLocation,
 } from '@_types/main';
 
-import { renderers } from './renderers';
-import { icons } from './tempIcons';
 import { WorkspaceTreeViewProps } from './types';
 
 export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   const dispatch = useDispatch()
+
+  // for groupping action - it contains the actionNames as keys which should be in the same group
+  const runningActions = useRef<{ [actionName: string]: boolean }>({})
+  const runningActionExists = (actionName: string) => {
+    return runningActions.current[actionName] === true ? true : false
+  }
+  const noRunningAction = () => {
+    return Object.keys(runningActions.current).length === 0 ? true : false
+  }
+  const addRunningAction = (actionNames: string[]) => {
+    for (const actionName of actionNames) {
+      runningActions.current[actionName] = true
+    }
+  }
+  const removeRunningAction = (actionNames: string[]) => {
+    for (const actionName of actionNames) {
+      delete runningActions.current[actionName]
+    }
+    if (noRunningAction()) {
+      dispatch(Main.increaseActionGroupIndex())
+    }
+  }
 
   // project source location - localhost, git, dropbox, etc..
   const [projectLocation, setProjectLocation] = useState<ProjectLocation>()
@@ -72,7 +92,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   const selectedItemsObj = useSelector(Main.ffGetSelectedItemsObjSelector)
 
   // file handlers from context
-  const { ffHandlers, setFFHandlers } = useContext(MainContext)
+  const { ffHandlers, setFFHandlers } = useContext(Main.MainContext)
 
   // generate TreeViewData from workspace
   const workspaceTreeViewData = useMemo(() => {
@@ -205,7 +225,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   const watchFileSystem = useCallback(async () => {
     // if the project is from localhost
     if (projectLocation === 'localhost') {
-      if (ffHandlers['root'] === undefined) {
+      if (ffHandlers['root'] === undefined || workspace['root'] === undefined) {
         // do nothing
       } else {
         try {
@@ -248,6 +268,8 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         return
       }
 
+      addRunningAction(['importProject'])
+
       /* import localhost porject */
       try {
         dispatch(Main.setGlobalPending(true))
@@ -256,15 +278,31 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       } catch (err) {
         // error occurred
       }
+
+      removeRunningAction(['importProject'])
     }
   }, [])
 
   // cb
   const cb_focusFFNode = useCallback((uid: TUid) => {
+    // check running action
+    if (!runningActionExists('focusFFNode')) {
+      console.log('something wrong with the call backs')
+      return
+    }
+
     dispatch(Main.focusFFNode(uid))
+    removeRunningAction(['focusFFNode'])
   }, [])
   const cb_selectFFNode = useCallback((uids: TUid[]) => {
-    // check if it's new state
+    // check running action
+    if (!runningActionExists('selectFFNode')) {
+      console.log('something wrong with the call backs')
+      return
+    }
+
+    // validate the uids and check if it's new state
+    uids = validateUids(uids)
     if (uids.length === selectedItems.length) {
       let same = true
       for (const uid of uids) {
@@ -273,16 +311,34 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           break
         }
       }
-      if (same) return
+      if (same) {
+        removeRunningAction(['selectFFNode'])
+        return
+      }
     }
 
     dispatch(Main.selectFFNode(uids))
-  }, [])
+    removeRunningAction(['selectFFNode'])
+  }, [selectedItems, selectedItemsObj])
   const cb_expandFFNode = useCallback(async (uid: TUid) => {
+    // check running action
+    if (!runningActionExists('expandFFNode')) {
+      console.log('something wrong with the call backs')
+      return
+    }
+
     dispatch(Main.expandFFNode([uid]))
+    removeRunningAction(['expandFFNode'])
   }, [])
   const cb_collapseFFNode = useCallback((uid: TUid) => {
+    // check running action
+    if (!runningActionExists('collapseFFNode')) {
+      console.log('something wrong with the call backs')
+      return
+    }
+
     dispatch(Main.collapseFFNode([uid]))
+    removeRunningAction(['collapseFFNode'])
   }, [])
 
   // create directory/file dialog handle
@@ -443,10 +499,16 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
 
     dispatch(Main.setGlobalPending(false))
-  }, [selectedItems])
+  }, [selectedItems, workspace, ffHandlers])
 
   // read file content call back
   const cb_readFFNode = useCallback(async (uid: TUid) => {
+    // check running action
+    if (!runningActionExists('readFFNode')) {
+      console.log('something wrong with the call backs')
+      return
+    }
+
     dispatch(Main.setGlobalPending(true))
 
     // verify handler permission
@@ -457,6 +519,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         type: 'error',
         errorMessage: 'Invalid file. Check if you have "read" permission for the file.',
       }))
+      removeRunningAction(['readFFNode'])
       return
     }
 
@@ -484,6 +547,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
 
     dispatch(Main.setGlobalPending(false))
+    removeRunningAction(['readFFNode'])
   }, [ffHandlers])
 
   /**
@@ -496,7 +560,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
    * @param copy 
    * @returns 
    */
-  const moveFF = async (handler: FileSystemHandle, parentHandler: FileSystemDirectoryHandle, targetHandler: FileSystemDirectoryHandle, newName: string, copy: boolean = false) => {
+  const moveFF = async (handler: FileSystemHandle, parentHandler: FileSystemDirectoryHandle, targetHandler: FileSystemDirectoryHandle, newName: string, copy: boolean = false, showWarning: boolean = false) => {
     if (handler.kind === 'directory') {
       // validate if the new name exists
       let exists: boolean = true
@@ -507,7 +571,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         exists = false
       }
       if (exists) {
-        dispatch(Main.setGlobalError({
+        showWarning && dispatch(Main.setGlobalError({
           type: 'error',
           errorMessage: 'Folder with the same name already exists.',
         }))
@@ -552,7 +616,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         exists = false
       }
       if (exists) {
-        dispatch(Main.setGlobalError({
+        showWarning && dispatch(Main.setGlobalError({
           type: 'error',
           errorMessage: 'File with the same name already exists.',
         }))
@@ -599,7 +663,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
     // rename using moveFF api
     try {
-      await moveFF(handler, parentHandler, parentHandler, newName)
+      await moveFF(handler, parentHandler, parentHandler, newName, false, true)
     } catch (err) {
       dispatch(Main.setGlobalError({
         type: 'error',
@@ -764,165 +828,216 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   }, [focusedItem, workspace, ffHandlers])
 
   return (<>
-    <div className='direction-row border-bottom' style={{ flexWrap: "nowrap", height: "400px", overflow: "auto" }}>
-      {/* Nav Bar */}
-      <div className='sticky box-l justify-stretch padding-s background-secondary border-bottom'>
-        {/* Workspace Name */}
-        <p className='text-s'>Workspace</p>
+    <div className="panel">
+      <div className="border-bottom" style={{ height: "300px", overflow: "auto" }}>
+        {/* Nav Bar */}
+        <div className="sticky direction-column padding-s box-l justify-stretch border-bottom background-primary">
+          <div className="gap-s box justify-start">
+            {/* label */}
+            <span className="text-s">Workspace</span>
+          </div>
+          <div className="gap-s justify-end box">
+            {/* Create Folder Button */}
+            <div className="icon-addelement opacity-m icon-xs" onClick={() => openCreateFFNodeModal('folder')}></div>
 
-        {/* Actoin Button Bar */}
-        <div className='gap-xs'>
-          {/* Create Folder Button */}
-          <button className='text-s' onClick={() => openCreateFFNodeModal('folder')}>
-            +Dir
-          </button>
+            {/* Create File Button */}
+            <div className="icon-addelement opacity-m icon-xs" onClick={() => openCreateFFNodeModal('file')}></div>
 
-          {/* Create File Button */}
-          <button className='text-s' onClick={() => openCreateFFNodeModal('file')}>
-            +File
-          </button>
+            {/* Duplicate Button */}
+            <div className="icon-copy opacity-m icon-xs" onClick={duplicateFFNode}></div>
 
-          {/* Duplicate Button */}
-          <button className='text-s' onClick={duplicateFFNode}>
-            Dup
-          </button>
+            {/* Delete Node Button */}
+            <div className="icon-delete opacity-m icon-xs" onClick={deleteFFNode}></div>
 
-          {/* Delete Node Button */}
-          <button className='text-s' onClick={deleteFFNode}>
-            Del
-          </button>
-
-          {/* Import Project Button */}
-          <button className='text-s' onClick={() => onImportProject()}>
-            Open
-          </button>
+            {/* Import Project Button */}
+            <div className="icon-import opacity-m icon-xs" onClick={() => onImportProject()}></div>
+          </div>
         </div>
-      </div>
 
-      {/* Main TreeView */}
-      <TreeView
-        /* style */
-        width={'100%'}
-        height={'100%'}
+        {/* Main TreeView */}
+        <TreeView
+          /* style */
+          width={'100%'}
+          height={'auto'}
 
-        /* data */
-        data={workspaceTreeViewData}
-        focusedItem={focusedItem}
-        expandedItems={expandedItems}
-        selectedItems={selectedItems}
+          /* info */
+          info={{ id: 'file-tree-view' }}
 
-        /* renderers */
-        renderers={{
-          ...renderers,
-          renderItem: (props) => {
-            return <>
-              <li
-                className={cx(
-                  props.context.isDraggingOver && 'background-secondary',
-                )}
-                {...(props.context.itemContainerWithChildrenProps) as any}
-              >
-                {/* self */}
+          /* data */
+          data={workspaceTreeViewData}
+          focusedItem={focusedItem}
+          expandedItems={expandedItems}
+          selectedItems={selectedItems}
+
+          /* renderers */
+          renderers={{
+            renderTreeContainer: (props) => {
+              return <>
+                <ul {...props.containerProps}>
+                  {props.children}
+                </ul>
+              </>
+            },
+            renderItemsContainer: (props) => {
+              return <>
+                <ul {...props.containerProps}>
+                  {props.children}
+                </ul>
+              </>
+            },
+            renderItem: (props) => {
+              return <>
+                <li
+                  className={cx(
+                    props.context.isSelected && '',
+                    props.context.isDraggingOver && 'background-secondary',
+                    props.context.isDraggingOverParent && '',
+                    props.context.isFocused && '',
+                  )}
+                  {...(props.context.itemContainerWithChildrenProps) as any}
+                >
+                  {/* self */}
+                  <div
+                    className={cx(
+                      'justify-stretch',
+                      'padding-xs',
+                      props.context.isSelected && 'background-secondary',
+                      props.context.isDraggingOver && 'color-primary',
+                      props.context.isDraggingOverParent && 'draggingOverParent',
+                      props.context.isFocused && 'border',
+                    )}
+                    style={{ flexWrap: "nowrap", paddingLeft: `${props.depth * 10}px` }}
+
+                    {...(props.context.itemContainerWithoutChildrenProps as any)}
+                    {...(props.context.interactiveElementProps as any)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+
+                      // check running action
+                      if (!noRunningAction()) {
+                        return
+                      }
+                      if (!props.context.isFocused) {
+                        addRunningAction(['focusFFNode'])
+                      }
+                      if (e.shiftKey) {
+                        addRunningAction(['selectFFNode'])
+                      } else if (e.ctrlKey) {
+                        addRunningAction(['selectFFNode'])
+                      } else {
+                        addRunningAction(['selectFFNode'])
+                        if (props.item.hasChildren) {
+                          addRunningAction([props.context.isExpanded ? 'collapseFFNode' : 'expandFFNode'])
+                        } else {
+                          addRunningAction(['readFFNode'])
+                        }
+                      }
+
+                      // call back
+                      if (!props.context.isFocused) {
+                        props.context.focusItem()
+                      }
+                      if (e.shiftKey) {
+                        props.context.selectUpTo()
+                      } else if (e.ctrlKey) {
+                        props.context.isSelected ? props.context.unselectItem() : props.context.addToSelectedItems()
+                      } else {
+                        props.context.selectItem()
+                        props.item.hasChildren ? props.context.toggleExpandedState() : props.context.primaryAction()
+                      }
+                    }}
+                    onFocus={() => { }}
+                  >
+                    <div className="gap-xs padding-xs" style={{ width: "100%" }}>
+                      {/* render arrow */}
+                      {props.arrow}
+
+                      {/* render icon */}
+                      <div
+                        className={cx(
+                          'icon-xs',
+                          props.item.hasChildren ? (props.context.isExpanded ? 'icon-folder' : 'icon-folder') :
+                            'icon-pages'
+                        )}
+                      >
+                      </div>
+
+                      {/* render title */}
+                      {props.title}
+                    </div>
+                  </div>
+
+                  {/* render children */}
+                  {props.context.isExpanded ? <>
+                    <div>
+                      {props.children} {/* this calls the renderItemsContainer again */}
+                    </div>
+                  </> : null}
+                </li>
+              </>
+            },
+            renderItemArrow: (props) => {
+              return <>
                 <div
                   className={cx(
-                    'box-l',
-                    'justify-start',
-                    props.context.isSelected && 'color-primary',
-                    props.context.isDraggingOver && 'color-primary',
-                    props.context.isDraggingOverParent && 'draggingOverParent',
-                    props.context.isFocused && 'border',
+                    'icon-xs',
+                    props.item.hasChildren ? (props.context.isExpanded ? 'icon-down' : 'icon-right') : '',
                   )}
-                  style={{ flexWrap: "nowrap", height: "25px", paddingLeft: `${props.depth * 23}px` }}
-
-                  {...(props.context.itemContainerWithoutChildrenProps as any)}
-                  {...(props.context.interactiveElementProps as any)}
-                  onClick={(e) => {
-                    e.stopPropagation()
-
-                    props.context.isFocused ? null : props.context.focusItem()
-
-                    if (e.shiftKey) {
-                      props.context.selectUpTo()
-                    } else if (e.ctrlKey) {
-                      props.context.isSelected ? props.context.unselectItem() : props.context.addToSelectedItems()
-                    } else {
-                      props.context.selectItem()
-                      props.item.hasChildren ? props.context.toggleExpandedState() : props.context.primaryAction()
-                    }
-                  }}
-                  onFocus={() => { }}
                 >
-                  {/* render arrow */}
-                  {props.item.hasChildren ? props.arrow : <img className='icon-xs' src={''}></img>}
-
-                  {/* render icon */}
-                  <div className='icon-pages icon-xs'></div>
-                  {false && <img
-                    className='icon-xs'
-                    src={
-                      props.item.hasChildren ?
-                        (props.context.isExpanded ? icons.FOLDER_OPEN : icons.FOLDER_CLOSE) :
-                        icons.HTML/* this will be differet based on the file type */
-                    }
-                  >
-                  </img>}
-
-                  {/* render title */}
-                  {props.title}
                 </div>
+              </>
+            },
+            renderItemTitle: (props) => {
+              return <>
+                <span className='text-s' style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "calc(100% - 32px)" }}>
+                  {props.title}
+                </span>
+              </>
+            },
+          }}
 
-                {/* render children */}
-                {props.context.isExpanded ? <>
-                  <div>
-                    {props.children} {/* this calls the renderItemsContainer again */}
-                  </div>
-                </> : null}
-              </li>
-            </>
-          },
-        }}
+          /* possibilities */
+          props={{
+            canDragAndDrop: true,
+            canDropOnItemWithChildren: true,
+            canDropOnItemWithoutChildren: false,
+          }}
 
-        /* possibilities */
-        props={{
-          canDragAndDrop: true,
-          canDropOnItemWithChildren: true,
-          canDropOnItemWithoutChildren: false,
-        }}
+          /* cb */
+          callbacks={{
+            /* RENAME CALLBACK */
+            onRenameItem: (item, name, treeId) => {
+              cb_renameFFNode(item.index as TUid, name)
+            },
 
-        /* cb */
-        callbacks={{
-          /* RENAME CALLBACK */
-          onRenameItem: (item, name, treeId) => {
-            cb_renameFFNode(item.index as TUid, name)
-          },
+            /* SELECT, FOCUS, EXPAND, COLLAPSE CALLBACK */
+            onSelectItems: (items, treeId) => {
+              cb_selectFFNode(items as TUid[])
+            },
+            onFocusItem: (item, treeId) => {
+              cb_focusFFNode(item.index as TUid)
+            },
+            onExpandItem: (item, treeId) => {
+              cb_expandFFNode(item.index as TUid)
+            },
+            onCollapseItem: (item, treeId) => {
+              cb_collapseFFNode(item.index as TUid)
+            },
 
-          /* SELECT, FOCUS, EXPAND, COLLAPSE CALLBACK */
-          onSelectItems: (items, treeId) => {
-            cb_selectFFNode(items as TUid[])
-          },
-          onFocusItem: (item, treeId) => {
-            cb_focusFFNode(item.index as TUid)
-          },
-          onExpandItem: (item, treeId) => {
-            cb_expandFFNode(item.index as TUid)
-          },
-          onCollapseItem: (item, treeId) => {
-            cb_collapseFFNode(item.index as TUid)
-          },
+            /* READ CALLBACK */
+            onPrimaryAction: (item, treeId) => {
+              cb_readFFNode(item.index as TUid)
+            },
 
-          /* READ CALLBACK */
-          onPrimaryAction: (item, treeId) => {
-            cb_readFFNode(item.index as TUid)
-          },
-
-          // DnD CALLBACK
-          onDrop: (items, target) => {
-            const uids: TUid[] = items.map(item => item.index as TUid)
-            const targetUid: TUid = (target as DraggingPositionItem).targetItem as TUid
-            cb_dropFFNode(uids, targetUid)
-          }
-        }}
-      />
+            // DnD CALLBACK
+            onDrop: (items, target) => {
+              const uids: TUid[] = items.map(item => item.index as TUid)
+              const targetUid: TUid = (target as DraggingPositionItem).targetItem as TUid
+              cb_dropFFNode(uids, targetUid)
+            }
+          }}
+        />
+      </div>
     </div>
 
     {/* ff name input modal */}

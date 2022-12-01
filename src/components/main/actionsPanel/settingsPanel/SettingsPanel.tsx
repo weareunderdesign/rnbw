@@ -1,9 +1,10 @@
+import './SettingsPanel.css';
+
 import React from 'react';
 
+import { useEditor } from '@craftjs/core';
+
 import { SettingsPanelProps } from './types';
-import "./SettingsPanel.css"
-import { useEditor, useNode } from '@craftjs/core';
-import { useEffect } from 'react';
 
 export default function SettingsPanel(props: SettingsPanelProps) {
   const { actions, selected, isEnabled } = useEditor((state, query) => {
@@ -26,30 +27,22 @@ export default function SettingsPanel(props: SettingsPanelProps) {
   });
 
   return <>
-    <div style={{
-      width: "100%",
-      height: "calc(100% - 600px)",
-      overflow: "auto",
-      borderBottom: "1px solid rgb(10, 10, 10)",
-    }}>
-      <div
-        style={{
-          zIndex: "1",
-          position: "sticky",
-          top: "0",
-          width: "100%",
-          color: "white",
-          fontSize: "13px",
-          padding: "2px 0px 5px 5px",
-          marginBottom: "5px",
-          borderBottom: "1px solid black",
-          background: "rgb(31, 36, 40)"
-        }}
-      >
-        Settings
+    <div className="panel">
+      <div className="border-bottom" style={{ height: "200px", overflow: "auto" }}>
+        {/* Nav Bar */}
+        <div className="sticky direction-column padding-s box-l justify-stretch border-bottom background-primary">
+          <div className="gap-s box justify-start">
+            {/* label */}
+            <span className="text-s">Settings</span>
+          </div>
+          <div className="gap-s justify-end box">
+            {/* action button */}
+            {/* <div className="icon-add opacity-m icon-xs" onClick={() => { }}></div> */}
+          </div>
+        </div>
       </div>
+
       {selected && selected.settings && React.createElement(selected.settings)}
     </div>
-
   </>
 }

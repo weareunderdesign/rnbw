@@ -11,6 +11,11 @@ export type TreeViewProps = {
   width: string,
   height: string,
 
+  info: {
+    id: string,
+    label?: string,
+  }
+
   data: TreeViewData,
   focusedItem: TUid,
   expandedItems: TUid[],

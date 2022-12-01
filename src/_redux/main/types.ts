@@ -16,6 +16,7 @@ export type _Error = {
 
 // Main State
 export type MainState = {
+  actionGroupIndex: number,
   global: {
     workspace: FFTree,
     currentFile: OpenedFile,

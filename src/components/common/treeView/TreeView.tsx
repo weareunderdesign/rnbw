@@ -5,35 +5,43 @@ import React, { useMemo } from 'react';
 import {
   ControlledTreeEnvironment,
   Tree,
-  TreeItemIndex,
 } from 'react-complex-tree';
 
 import { TreeViewProps } from './types';
 
-export default function TreeView(props: TreeViewProps): JSX.Element {
+export default function TreeView(props: TreeViewProps) {
+  // styles
   const width: string = useMemo(() => props.width, [props.width])
   const height: string = useMemo(() => props.height, [props.height])
 
+  // tree id, label
+  const info = useMemo(() => props.info, [props.info])
+
+  // render items
   const data = useMemo(() => props.data, [props.data])
 
-  const focusedItem: TreeItemIndex = useMemo(() => props.focusedItem, [props.focusedItem])
-  const expandedItems: TreeItemIndex[] = useMemo(() => props.expandedItems, [props.expandedItems])
-  const selectedItems: TreeItemIndex[] = useMemo(() => props.selectedItems, [props.selectedItems])
+  // view state
+  const focusedItem = useMemo(() => props.focusedItem, [props.focusedItem])
+  const expandedItems = useMemo(() => props.expandedItems, [props.expandedItems])
+  const selectedItems = useMemo(() => props.selectedItems, [props.selectedItems])
+  const viewState = useMemo(() => {
+    const state: { [treeId: string]: object } = {}
+    state[info.id] = {
+      focusedItem,
+      selectedItems,
+      expandedItems,
+    }
+    return state
+  }, [info.id, focusedItem, expandedItems, selectedItems])
 
   return (<>
     <div style={{ width: width, height: height }}>
       <ControlledTreeEnvironment
-        viewState={{
-          'tree': {
-            expandedItems: expandedItems,
-            focusedItem: focusedItem,
-            selectedItems: selectedItems,
-          }
-        }}
+        viewState={viewState}
 
         getItemTitle={(item) => {
           return item.data.name
-        }} // string rendered at the tree view
+        }}
 
         {...props.renderers}
 
@@ -44,7 +52,7 @@ export default function TreeView(props: TreeViewProps): JSX.Element {
         // Load Data
         items={data}
       >
-        <Tree treeId="tree" rootItem="root" treeLabel="Tree" />
+        <Tree treeId={info.id} rootItem="root" treeLabel={info.label} />
       </ControlledTreeEnvironment>
     </div>
   </>)

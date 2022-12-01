@@ -27,28 +27,6 @@ export const generateNodeUid = (p_uid: TUid, nodeIndex: number): TUid => {
 }
 
 /**
- * get all of the nested chidren(not entity) uids
- * @param uid 
- * @param tree 
- * @returns 
- */
-export const getSubNEUids = (uid: TUid, tree: TTree): TUid[] => {
-  let subUids: TUid[] = [uid]
-  let uids: TUid[] = []
-  while (subUids.length) {
-    const subUid = subUids.shift() as TUid
-    uids.push(subUid)
-    const node = tree[subUid]
-    for (const childUid of node.children) {
-      if (!tree[childUid].isEntity) {
-        subUids.push(childUid)
-      }
-    }
-  }
-  return uids
-}
-
-/**
  * get all of the nested chidren uids
  * @param uid 
  * @param tree 
@@ -75,36 +53,35 @@ export const getSubUids = (uid: TUid, tree: TTree): TUid[] => {
  * @returns 
  */
 export const validateUids = (uids: TUid[], targetUid?: TUid): TUid[] => {
-  return uids
-  // check move action
-  if (targetUid == undefined) {
-    // think prev items already validate, so you need validate the last one
-    const uid: TUid = uids.pop() as TUid
-    let flag: boolean = false // true: the last one modified prev items, false: current uids are already validate
-    let result: TUid[] = []
+  let _uids: TUid[] = [...uids]
+  if (_uids.length === 0) return _uids
 
-    result = uids.filter((curUid) => {
-      // check curUid related uid
-      if (curUid.startsWith(uid) || uid.startsWith(curUid))
-        flag = true
-      return !curUid.startsWith(uid) && !uid.startsWith(curUid)
+  const deleted: { [uid: TUid]: boolean } = {}
+  // sort uids
+  _uids = _uids.sort((a, b) => a < b ? -1 : 1)
+
+  // validate the uids generally
+  _uids = _uids.filter((uid) => {
+    const arr = uid.split('_')
+    let parentDeleted = false
+    let _uid = ''
+    arr.map((_arr) => {
+      _uid += `${_uid === '' ? '' : '_'}${_arr}`
+      if (deleted[_uid] === true) {
+        parentDeleted = true
+      }
     })
-
-    if (flag === false) {
-      uids.push(uid)
-      return uids
-    }
-    else {
-      result.push(uid)
-      return result
-    }
-  } else {
-    // remove target's parent uids from uids
-    return uids.filter((uid) => {
+    !parentDeleted ? deleted[uid] = true : null
+    return !parentDeleted
+  })
+  // validate uids for move action
+  if (targetUid !== undefined) {
+    _uids = _uids.filter((uid) => {
       return !(targetUid as TUid).startsWith(uid)
     })
   }
 
+  return _uids
 }
 
 /**
@@ -186,9 +163,7 @@ export const removeNode = ({ tree, nodeUids }: TRemoveNodePayload): TNodeApiRes 
 
     /* reset the uids */
     Object.keys(changedParent).sort((a, b) => a > b ? -1 : 1)
-      .map(uid =>
-        resetUids(uid, tree, _addedNodes, _deletedUids, _convertedUids)
-      )
+      .map(uid => resetUids(uid, tree, _addedNodes, _deletedUids, _convertedUids))
 
     /* delete orignal node-nest */
     for (const deletedUid of _deletedUids) {
@@ -205,21 +180,6 @@ export const removeNode = ({ tree, nodeUids }: TRemoveNodePayload): TNodeApiRes 
       convertedUids.push([prev, cur])
     }
     return { success: true, deletedUids, convertedUids }
-  } catch (err) {
-    return { success: false, error: err as string }
-  }
-}
-
-/**
- * replace node api
- * this api replaces the node in the tree - it can also use for rename
- */
-export const replaceNode = ({ tree, node }: TReplaceNodePayload): TNodeApiRes => {
-  try {
-    // replace node in the tree
-    tree[node.uid] = node
-
-    return { success: true }
   } catch (err) {
     return { success: false, error: err as string }
   }
@@ -358,6 +318,21 @@ export const duplicateNode = ({ tree, node }: TDuplicateNodePayload): TNodeApiRe
       convertedUids.push([prev, cur])
     }
     return { success: true, convertedUids }
+  } catch (err) {
+    return { success: false, error: err as string }
+  }
+}
+
+/**
+ * replace node api
+ * this api replaces the node in the tree - it can also use for rename
+ */
+export const replaceNode = ({ tree, node }: TReplaceNodePayload): TNodeApiRes => {
+  try {
+    // replace node in the tree
+    tree[node.uid] = node
+
+    return { success: true }
   } catch (err) {
     return { success: false, error: err as string }
   }

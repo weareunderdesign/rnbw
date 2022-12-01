@@ -1,6 +1,12 @@
 import { AppState } from '@_redux/_root';
 import { createSelector } from '@reduxjs/toolkit';
 
+/* *********************** main *********************** */
+// action group index selector
+const mainGetActionGroupIndex = (state: AppState) => state.main.present.actionGroupIndex
+export const mainGetActionGroupIndexSelector = createSelector(mainGetActionGroupIndex, (actionGroupIndex) => actionGroupIndex)
+
+
 /* *********************** global *********************** */
 // workspace selector
 const globalGetWorkspace = (state: AppState) => state.main.present.global.workspace
