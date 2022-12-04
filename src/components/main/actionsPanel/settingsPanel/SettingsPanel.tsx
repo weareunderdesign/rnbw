@@ -1,13 +1,28 @@
-import React, { useMemo, useState } from 'react';
+import './SettingsPanel.css';
+
+import React, {
+  useEffect,
+  useState,
+} from 'react';
+
+import {
+  useDispatch,
+  useSelector,
+} from 'react-redux';
+
+import {
+  serializeFile,
+  updateNode,
+} from '@_node/apis';
+import { TTree } from '@_node/types';
+import {
+  globalGetCurrentFileSelector,
+  globalGetNodeTreeSelector,
+  updateFileContent,
+} from '@_redux/main';
+import { useEditor } from '@craftjs/core';
 
 import { SettingsPanelProps } from './types';
-import "./SettingsPanel.css"
-import { useEditor, useNode } from '@craftjs/core';
-import { useEffect } from 'react';
-import { serializeFile, updateNode } from '@_node/apis';
-import { useDispatch, useSelector } from 'react-redux';
-import { globalGetCurrentFileSelector, globalGetNodeTreeSelector, updateFileContent } from '@_redux/main';
-import { TTree } from '@_node/types';
 
 type StyleProperty = {
   name: string,
@@ -80,61 +95,53 @@ export default function SettingsPanel(props: SettingsPanelProps) {
     dispatch(updateFileContent(content))
   }
   return <>
-    <div style={{
-      width: "100%",
-      height: "calc(100% - 600px)",
-      overflow: "auto",
-      borderBottom: "1px solid rgb(10, 10, 10)",
-    }}>
-      <div
-        style={{
-          zIndex: "1",
-          position: "sticky",
-          top: "0",
-          width: "100%",
-          color: "white",
-          fontSize: "13px",
-          padding: "2px 0px 5px 5px",
-          marginBottom: "5px",
-          borderBottom: "1px solid black",
-          background: "rgb(31, 36, 40)"
-        }}
-      >
-        Settings
-      </div>
-      <div className="direction-row">
-        {
-          selected && Object.keys(styleLists).map((key) => {
-            const styleItem = styleLists[key]
-            return <div key={'attr_' + styleItem.name}>
-              <label >{styleItem.name}:</label>
-              <input type="text" value={styleItem.value} onChange={
-                (e) => {
-                  const newStyleList = JSON.parse(JSON.stringify(styleLists))
-                  newStyleList[key].value = e.target.value;
-                  setStyleLists(newStyleList)
-                  // props changed
-                  if (selected) {
-                    const tree = JSON.parse(JSON.stringify(nodetree))
-                    const result = updateNode({
-                      tree: tree,
-                      data: {
-                        ...selected.props,
-                        style: convertStyle(newStyleList),
-                      },
-                      uid: selected.id
-                    })
-                    if (result.success == true) {
-                      updateFFContent(tree)
+    <div className="panel">
+      <div className="border-bottom" style={{ height: "200px", overflow: "auto" }}>
+        {/* Nav Bar */}
+        <div className="sticky direction-column padding-s box-l justify-stretch border-bottom background-primary">
+          <div className="gap-s box justify-start">
+            {/* label */}
+            <span className="text-s">Settings</span>
+          </div>
+          <div className="gap-s justify-end box">
+            {/* action button */}
+            {/* <div className="icon-add opacity-m icon-xs" onClick={() => { }}></div> */}
+          </div>
+        </div>
+        {/* panel body */}
+        <div className="direction-row">
+          {
+            selected && Object.keys(styleLists).map((key) => {
+              const styleItem = styleLists[key]
+              return <div key={'attr_' + styleItem.name}>
+                <label >{styleItem.name}:</label>
+                <input type="text" value={styleItem.value} onChange={
+                  (e) => {
+                    const newStyleList = JSON.parse(JSON.stringify(styleLists))
+                    newStyleList[key].value = e.target.value;
+                    setStyleLists(newStyleList)
+                    // props changed
+                    if (selected) {
+                      const tree = JSON.parse(JSON.stringify(nodetree))
+                      const result = updateNode({
+                        tree: tree,
+                        data: {
+                          ...selected.props,
+                          style: convertStyle(newStyleList),
+                        },
+                        uid: selected.id
+                      })
+                      if (result.success == true) {
+                        updateFFContent(tree)
+                      }
                     }
                   }
-                }
-              }></input>
-            </div>
-          })
-        }
+                }></input>
+              </div>
+            })
+          }
+        </div>
       </div>
-    </div>
-
+    </div >
   </>
 }

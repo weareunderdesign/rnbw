@@ -1,45 +1,8 @@
-import React from 'react';
-
 import { TreeRenderProps } from 'react-complex-tree';
 
-import { icons } from './tempIcons';
-
 export const renderers: TreeRenderProps = {
-  // main renderers
-  renderTreeContainer: (props) => {
-    return <>
-      <ul {...props.containerProps} style={{ paddingLeft: "0px", position: "relative" }}>
-        {props.children}
-      </ul>
-    </>
-  },
-  renderItemsContainer: (props) => {
-    return <>
-      <ul {...props.containerProps} style={{ paddingLeft: "0px" }}>
-        {props.children}
-      </ul>
-    </>
-  },
-  renderItemArrow: (props) => {
-    return <>
-      <img
-        className='icon-xs'
-        src={
-          props.item.hasChildren ?
-            (props.context.isExpanded ? icons.ARROW_DOWN : icons.ARROW_UP) :
-            icons.NONE_ARROW
-        }
-      >
-      </img>
-    </>
-  },
-  renderItemTitle: (props) => {
-    return <>
-      <span className='text-s'>
-        {props.title}
-      </span>
-    </>
-    /* if (!info.isSearching || !context.isSearchMatching) {
+  /* renderItemTitle: (props) => {
+    if (!info.isSearching || !context.isSearchMatching) {
       return <span className={Classes.TREE_NODE_LABEL}>{title}</span>;
     }
     const startIndex = title.toLowerCase().indexOf(info.search!.toLowerCase());
@@ -55,8 +18,8 @@ export const renderers: TreeRenderProps = {
           </span>
         )}
       </>
-    ); */
-  },
+    );
+  }, */
 
   /* renderRenameInput: props => (
     <form {...props.formProps} style={{ display: 'contents', color: "black" }} onClick={(e) => { e.stopPropagation() }}>

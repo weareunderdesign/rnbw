@@ -17,11 +17,11 @@
 }
 
 *::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0);
+  background: rgba(0, 0, 0, 0.1);
 }
 
 *::-webkit-scrollbar-thumb {
-  background-color: rgba(150, 100, 50, 0.5);
+  background-color: rgba(0, 0, 0, 0.2);
   border-radius: 3px;
 }
 
@@ -37,7 +37,15 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
-#root li {
+#root ul {
+  padding: 0px;
+}
+
+#root ul>li {
   line-height: 100%;
   padding: 0px;
+}
+
+#root ul>li::marker {
+  display: none;
 }

@@ -1,6 +1,12 @@
 import { AppState } from '@_redux/_root';
 import { createSelector } from '@reduxjs/toolkit';
 
+/* *********************** main *********************** */
+// action group index selector
+const mainGetActionGroupIndex = (state: AppState) => state.main.present.actionGroupIndex
+export const mainGetActionGroupIndexSelector = createSelector(mainGetActionGroupIndex, (actionGroupIndex) => actionGroupIndex)
+
+
 /* *********************** global *********************** */
 // workspace selector
 const globalGetWorkspace = (state: AppState) => state.main.present.global.workspace
@@ -9,6 +15,10 @@ export const globalGetWorkspaceSelector = createSelector(globalGetWorkspace, (wo
 // currentFile selector
 const globalGetCurrentFile = (state: AppState) => state.main.present.global.currentFile
 export const globalGetCurrentFileSelector = createSelector(globalGetCurrentFile, (currentFile) => currentFile)
+
+// nodeTree selector
+const globalGetNodeTree = (state: AppState) => state.main.present.global.nodeTree
+export const globalGetNodeTreeSelector = createSelector(globalGetNodeTree, (nodeTree) => nodeTree)
 
 // pending selector
 const globalGetPending = (state: AppState) => state.main.present.global.pending
@@ -19,9 +29,6 @@ const globalGetError = (state: AppState) => state.main.present.global.error
 export const globalGetErrorSelector = createSelector(globalGetError, (error) => error)
 
 /* *********************** fn *********************** */
-// nodetree selector
-const globalGetNodeTree = (state: AppState) => state.main.present.global.nodetree
-export const globalGetNodeTreeSelector = createSelector(globalGetNodeTree, (nodetree) => nodetree)
 
 // focusedItem selector
 const fnGetFocusedItem = (state: AppState) => state.main.present.fn.focusedItem
