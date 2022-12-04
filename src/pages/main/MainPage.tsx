@@ -196,6 +196,7 @@ export default function MainPage(props: MainPageProps) {
             }}
             onBeforeMoveEnd={onBeforeMoveEnd}
             onNodesChange={onNodesChange}
+            onRender={RenderNode}
           >
             <ActionsPanel />
             <StageView />

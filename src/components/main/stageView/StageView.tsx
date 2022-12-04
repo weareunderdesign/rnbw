@@ -32,7 +32,7 @@ export default function StageView(props: StageViewProps) {
   return (
     <div className="panel box padding-xs shadow border-left">
       <div className='box border-top border-right border-bottom border-left'>
-        <ReactShadowRoot>
+        <ReactShadowRoot stylesheets={styleSheets}>
           <Viewport>
             <Frame>
               <Element
