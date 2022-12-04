@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { parseHtml } from '@_components/main/stageView/api';
-import { globalGetCurrentFileSelector } from '@_redux/main';
+import * as Main from '@_redux/main';
 import {
   FreshNode,
   Node,
@@ -13,6 +13,7 @@ import {
 } from '@craftjs/core';
 
 import { Container } from '../../selectors';
+import { useDispatch } from 'react-redux';
 
 export type ViewportProps =
   {
@@ -20,17 +21,52 @@ export type ViewportProps =
   }
 
 export default function Viewport(props: ViewportProps) {
+  const dispatch = useDispatch()
   const {
     enabled,
     actions,
     query,
-    selectedNodeId,
+    selectedNodeIds,
+    hoveredNodeIds
   } = useEditor((state) => ({
     enabled: state.options.enabled,
-    selectedNodeId: state.events.selected
+    selectedNodeIds: state.events.selected,
+    hoveredNodeIds: state.events.hovered
   }));
 
-  const { uid, type, content } = useSelector(globalGetCurrentFileSelector)
+  const selectedItems = useSelector(Main.fnGetSelectedItemsSelector)
+
+  const { uid, type, content } = useSelector(Main.globalGetCurrentFileSelector)
+  
+  useEffect(() => {
+    console.log(selectedItems)
+    actions.selectNode(selectedItems)
+
+    // selectedItems.map((uid) => {
+    //   query.node(uid).get().dom?.classList.add("component-selected")
+    // })
+  }, [selectedItems])
+  useEffect(() => {
+    // fire selected Node Event
+    let selectedItems: string[] = []
+    selectedNodeIds.forEach((nodeId) => {
+      selectedItems.push(nodeId)
+    });
+    if (selectedItems.length) {
+      dispatch(Main.selectFNNode(selectedItems))
+    }
+  }, [selectedNodeIds])
+  
+  useEffect(() => {
+    // fire focus Node Event
+    let hoveredItems: string[] = []
+    hoveredNodeIds.forEach((nodeId) => {
+      hoveredItems.push(nodeId)
+    });
+    if (hoveredItems.length) {
+      dispatch(Main.focusFNNode(hoveredItems[0]))
+    }
+  }, [hoveredNodeIds])
 
   useEffect(() => {
     if (content !== "" && type == "html") {
@@ -74,3 +110,4 @@ export default function Viewport(props: ViewportProps) {
     </div>
   );
 };
+

@@ -35,6 +35,7 @@ import { Container, Text, Button } from '@_components/main/stageView/components/
 import { Node } from '@craftjs/core';
 import { QueryCallbacksFor } from '@craftjs/utils';
 import { moveNode, serializeFile, updateNode } from '@_node/apis';
+import { RenderNode } from '@_components/main/stageView/components/RenderNode';
 
 export default function MainPage(props: MainPageProps) {
   const dispatch = useDispatch()
@@ -153,10 +154,11 @@ export default function MainPage(props: MainPageProps) {
           resolver={{
             Container,
             Text,
-            Button,
+            Button,          
           }}
           onBeforeMoveEnd={onBeforeMoveEnd}
           onNodesChange={onNodesChange}
+          onRender={RenderNode}
         >
           <ActionsPanel />
           <StageView />
