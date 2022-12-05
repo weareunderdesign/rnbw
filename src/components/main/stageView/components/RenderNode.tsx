@@ -32,6 +32,7 @@ export const RenderNode = (props: RenderNodeProp) => {
         if (dom && !isRoot) {
             dom.classList.remove('component-selected')
             dom.classList.remove('component-hovered')
+            console.log(isActive, isHover)
             isActive ? dom.classList.add('component-selected')
                 : isHover ? dom.classList.add('component-hovered') 
                 : {}

@@ -110,20 +110,21 @@ export default function MainPage(props: MainPageProps) {
   }
 
   const onBeforeMoveEnd = (targetNode: Node, newParentNode: Node, existingParentNode: Node) => {
-    console.log(targetNode.id, newParentNode.id, existingParentNode.id)
-    newParentNode.data.nodes.map((node) => console.log(node))    // console.log(targetNode, newParentNode)
   };
 
   const onNodesChange = (query: QueryCallbacksFor<typeof QueryMethods>) => {
     const state: EditorState = query.getState();
     if (state.events.selected.size == 0)
       return;
-    let selectedNode: string = "";
+
+    let selectedNodes: string[] = [];
+    // get selected node ids
     state.events.selected.forEach((key) => {
-      selectedNode = key;
+      selectedNodes.push(key);
     });
 
     const tree = JSON.parse(JSON.stringify(nodetree))
+    
     if (state.events.dragged.size != 0) {
       // dragged and drop event
       console.log("drop action")
@@ -135,15 +136,15 @@ export default function MainPage(props: MainPageProps) {
         isBetween: true,
         parentUid: parentId,
         position,
-        uids: [selectedNode]
+        uids: selectedNodes
       }
       const result = moveNode(movePayload)
       if (result.success == true) {
         updateFFContent(tree)
       } else {
+        console.log(result.error)
       }
     }
-
   }
 
   /* update the global state */
@@ -196,7 +197,7 @@ export default function MainPage(props: MainPageProps) {
             }}
             onBeforeMoveEnd={onBeforeMoveEnd}
             onNodesChange={onNodesChange}
-            onRender={RenderNode}
+            // onRender={RenderNode}
           >
             <ActionsPanel />
             <StageView />

@@ -35,28 +35,37 @@ export default function Viewport(props: ViewportProps) {
   }));
 
   const selectedItems = useSelector(Main.fnGetSelectedItemsSelector)
-
+  const focusedItem = useSelector(Main.fnGetFocusedItemSelector)
   const { uid, type, content } = useSelector(Main.globalGetCurrentFileSelector)
-  
-  useEffect(() => {
-    console.log(selectedItems)
-    actions.selectNode(selectedItems)
 
-    // selectedItems.map((uid) => {
-    //   query.node(uid).get().dom?.classList.add("component-selected")
-    // })
-  }, [selectedItems])
+  useEffect(() => {
+    const nodes: Record<string, Node> = query.getNodes()
+    let curSelectedItems: string[] = []
+    Object.keys(nodes).map((uid) => {
+      nodes[uid].dom?.classList.remove("component-selected")
+      nodes[uid].dom?.classList.remove("component-hovered")
+      selectedItems.findIndex((cid) => cid == uid) >= 0
+        ? (nodes[uid].dom?.classList.add("component-selected"), curSelectedItems.push(uid))
+        : focusedItem === uid
+          ? nodes[uid].dom?.classList.add("component-hovered")
+          : {}
+    })
+    actions.selectNode(curSelectedItems)
+  }, [selectedItems, focusedItem])
   useEffect(() => {
     // fire selected Node Event
-    let selectedItems: string[] = []
+    let curSelectedItems: string[] = []
     selectedNodeIds.forEach((nodeId) => {
-      selectedItems.push(nodeId)
+      curSelectedItems.push(nodeId)
     });
-    if (selectedItems.length) {
-      dispatch(Main.selectFNNode(selectedItems))
+    if (curSelectedItems.length) {
+      console.log(selectedItems, curSelectedItems)
+      if (selectedItems.length != 0 && JSON.stringify([...selectedItems].sort()) === JSON.stringify([...curSelectedItems].sort()))
+        return
+      dispatch(Main.selectFNNode(curSelectedItems))
     }
   }, [selectedNodeIds])
-  
+
   useEffect(() => {
     // fire focus Node Event
     let hoveredItems: string[] = []
@@ -66,6 +75,7 @@ export default function Viewport(props: ViewportProps) {
     if (hoveredItems.length) {
       dispatch(Main.focusFNNode(hoveredItems[0]))
     }
+    // console.log("hover:", hoveredItems)
   }, [hoveredNodeIds])
 
   useEffect(() => {
