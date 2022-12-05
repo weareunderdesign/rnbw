@@ -235,11 +235,12 @@ export const {
 
 export const MainReducer = undoable(slice.reducer, {
   filter: function filterActions(action, currentState, previousHistory) {
-    /* remove message-toast and spinner-pending */
+    // file the actions
     if (action.type === 'main/setGlobalPending' ||
       action.type === 'main/setGlobalError' ||
       action.type === 'main/updateFFTreeView' ||
-      action.type === 'main/updateFFTreeViewState') {
+      action.type === 'main/updateFFTreeViewState' ||
+      action.type === 'main/updateFNTreeView') {
       return false
     }
 

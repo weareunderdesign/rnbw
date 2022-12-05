@@ -29,7 +29,10 @@ import {
   TUid,
 } from '@_node/types';
 import * as Main from '@_redux/main';
-import { updateFileContent } from '@_redux/main';
+import {
+  updateFileContent,
+  updateFNTreeViewState,
+} from '@_redux/main';
 import { verifyPermission } from '@_services/main';
 import {
   Editor,
@@ -63,6 +66,8 @@ export default function MainPage(props: MainPageProps) {
   const pending = useSelector(Main.globalGetPendingSelector)
   const error = useSelector(Main.globalGetErrorSelector)
   const { uid, content, type } = useSelector(Main.globalGetCurrentFileSelector)
+
+  const mainWholeState = useSelector(Main.mainWholeStateSelector)
 
   // toast for global errors
   const [toastOpen, setToastOpen] = useState(false)
@@ -105,7 +110,7 @@ export default function MainPage(props: MainPageProps) {
 
   /* toogle code  view */
   const [showCodeView, setShowCodeView] = useState(false)
-  const toogleCodeView = () => {
+  const toogleCodeView = async () => {
     setShowCodeView(!showCodeView)
   }
 
@@ -137,13 +142,9 @@ export default function MainPage(props: MainPageProps) {
         position,
         uids: [selectedNode]
       }
-      const result = moveNode(movePayload)
-      if (result.success == true) {
-        updateFFContent(tree)
-      } else {
-      }
+      const res = moveNode(movePayload)
+      dispatch(updateFNTreeViewState(res))
     }
-
   }
 
   /* update the global state */
@@ -183,7 +184,8 @@ export default function MainPage(props: MainPageProps) {
 
           {/* spinner */}
           {pending &&
-            <div style={{ zIndex: "9999", position: "fixed", top: "0", right: "0", bottom: "0", left: "0" }}>
+            <div className='justify-center align-center background-secondary opacity-m' style={{ zIndex: "9999", position: "fixed", top: "0", right: "0", bottom: "0", left: "0" }}>
+              <span className='text-s'>Pending...</span>
             </div>}
 
           {/* wrap with the craft.js editor */}

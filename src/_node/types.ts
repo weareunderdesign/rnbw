@@ -26,8 +26,6 @@ export type TTree = {
  * node api res type
  */
 export type TNodeApiRes = {
-  success: boolean,/* true if successfully done */
-  error?: string,/* error message if failed */
   deletedUids?: TUid[],/* deleted uid array */
   convertedUids?: [TUid, TUid][],/* converted uid map */
 }

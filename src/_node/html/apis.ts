@@ -2,7 +2,10 @@ import {
   Element,
   Text,
 } from 'domhandler';
-import parse, { attributesToProps, DOMNode } from 'html-react-parser';
+import parse, {
+  attributesToProps,
+  DOMNode,
+} from 'html-react-parser';
 
 import {
   generateNodeUid,
@@ -49,7 +52,7 @@ export const parseHtml = (content: string): TTree => {
 
       let CID: string;
       let PID: string;
-      
+
       if (node.parent == null) {
         PID = "root"
         CID = generateNodeUid("root", root["root"].children.length + 1)
@@ -59,8 +62,8 @@ export const parseHtml = (content: string): TTree => {
       }
 
       if (node.type == "text") {
-          root[PID].data.children = (node as Text).data;
-          return;
+        root[PID].data.children = (node as Text).data;
+        return;
       }
       root[CID] = {
         uid: CID,
@@ -108,7 +111,7 @@ export const serializeHtml = (data: TTree): string => {
     element_html += element.children?.reduce((result, item) => {
       return result + getHTMLFromFNObject(item, level + 1)
     }, '');
-    if (element.data.children != undefined ){
+    if (element.data.children != undefined) {
       element_html += element.data.children;
     }
     element_html += "\t".repeat(level) + `</${element.name}>` + "\n"

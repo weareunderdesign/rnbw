@@ -123,7 +123,7 @@ export default function SettingsPanel(props: SettingsPanelProps) {
                     // props changed
                     if (selected) {
                       const tree = JSON.parse(JSON.stringify(nodetree))
-                      const result = updateNode({
+                      updateNode({
                         tree: tree,
                         data: {
                           ...selected.props,
@@ -131,9 +131,6 @@ export default function SettingsPanel(props: SettingsPanelProps) {
                         },
                         uid: selected.id
                       })
-                      if (result.success == true) {
-                        updateFFContent(tree)
-                      }
                     }
                   }
                 }></input>
