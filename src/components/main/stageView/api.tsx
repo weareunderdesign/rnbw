@@ -1,15 +1,22 @@
+import {
+  Element,
+  Text as TextElement,
+} from 'domhandler';
+import parse, {
+  attributesToProps,
+  DOMNode,
+} from 'html-react-parser';
+
 import { generateNodeUid } from '@_node/apis';
 import {
-    Element,
-    Text as TextElement,
-    isTag
-} from 'domhandler';
-import { Node, NodeTree, NodeData, NodeId, FreshNode } from '@craftjs/core'
-import parse, { DOMNode, domToReact, HTMLReactParserOptions, attributesToProps  } from "html-react-parser";
-import React from "react";
-import { render } from "react-dom";
+  FreshNode,
+  NodeId,
+} from '@craftjs/core';
 
-import { Container, Text } from './components/selectors';
+import {
+  Container,
+  Text,
+} from './components/selectors';
 import { Button } from './components/selectors/Button';
 
 const convertStylesStringToObject = (stringStyles: string): Object => {
@@ -92,7 +99,7 @@ export const parseHtml = (content: string) => {
     const isCanvas = (element: DOMNode) => {
         if (element.type == 'text')
             return false;
-        
+
         if ((element as Element).tagName === 'div') return true;
         return false;
     }
@@ -130,7 +137,7 @@ export const parseHtml = (content: string) => {
 
             if (node.type == "text") {
                 (nodetree[pid].data.props as Record<string, any>)["children"] = (node as TextElement).data
-                 return;
+                return;
             }
             pid != "ROOT" ? (nodetree[pid].data as any).nodes.push(cid) : {}
             const props = attributesToProps((node as Element).attribs);
@@ -144,7 +151,7 @@ export const parseHtml = (content: string) => {
                     } as Record<string, any>,
                     parent: pid,
                     nodes: [],
-                    isCanvas: isCanvas(node)                    
+                    isCanvas: isCanvas(node)
                 },
             }
             /*@ts-ignore                                      */

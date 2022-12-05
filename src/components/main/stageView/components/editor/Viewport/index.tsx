@@ -1,6 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 
-import { useSelector } from 'react-redux';
+import {
+  useDispatch,
+  useSelector,
+} from 'react-redux';
 
 import { parseHtml } from '@_components/main/stageView/api';
 import * as Main from '@_redux/main';
@@ -13,7 +16,6 @@ import {
 } from '@craftjs/core';
 
 import { Container } from '../../selectors';
-import { useDispatch } from 'react-redux';
 
 export type ViewportProps =
   {

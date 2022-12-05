@@ -11,6 +11,10 @@ import {
 } from 'react-redux';
 
 import {
+  CodeViewSyncDelay,
+  FileAutoSaveInterval,
+} from '@_config/main';
+import {
   globalGetCurrentFileSelector,
   updateFileContent,
 } from '@_redux/main';
@@ -34,23 +38,33 @@ export default function CodeView(props: CodeViewProps) {
 
 
   // Monaco Ref
-  const monacoRef = useRef(null);
+  const monacoRef = useRef(null)
   function handleEditorDidMount(editor: any, monaco: any) {
     // here is another way to get monaco instance
     // you can also store it in `useRef` for further usage
-    monacoRef.current = editor;
+    monacoRef.current = editor
   }
 
-  // Local Save Deplay - 0
-  const [timer, setTimer] = useState<NodeJS.Timeout>()
-  function handleEditorChange(value: any, event: any) {
-    setCodeContent(value)
+  // Local Save/ Auto Save with Deplay - config.FileAutoSaveInterval
+  const [syncTimer, setSyncTimer] = useState<NodeJS.Timeout>()
+  const [autoSaveTimer, setAutoSaveTimer] = useState<NodeJS.Timeout>()
+  const saveFileContent = () => {
+  }
+  function handleEditorChange(value: string | undefined, ev: monaco.editor.IModelContentChangedEvent) {
+    let editorContent = value || ''
+    setCodeContent(editorContent)
 
-    // save delay
-    if (timer !== undefined) {
-      clearTimeout(timer)
+    // local save delay
+    if (syncTimer !== undefined) {
+      clearTimeout(syncTimer)
     }
-    setTimer(setTimeout(() => { dispatch(updateFileContent(value)) }, 0))
+    setSyncTimer(setTimeout(() => { dispatch(updateFileContent(editorContent)) }, CodeViewSyncDelay))
+
+    // file system auto save delay
+    if (autoSaveTimer !== undefined) {
+      clearTimeout(autoSaveTimer)
+    }
+    setAutoSaveTimer(setTimeout(saveFileContent, FileAutoSaveInterval))
   }
 
   return <>
@@ -58,7 +72,7 @@ export default function CodeView(props: CodeViewProps) {
       <Editor
         height="100%"
         width="100%"
-        defaultLanguage=""
+        defaultLanguage={"html"}
         language={'html'}
         defaultValue=""
         value={codeContent}
