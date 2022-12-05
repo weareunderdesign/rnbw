@@ -30,6 +30,7 @@ type StyleProperty = {
 }
 
 export default function SettingsPanel(props: SettingsPanelProps) {
+
   const { actions, selected, isEnabled } = useEditor((state, query) => {
     const currentNodeId = query.getEvent('selected').last();
     let selected;
@@ -57,6 +58,8 @@ export default function SettingsPanel(props: SettingsPanelProps) {
   useEffect(() => {
 
     let elements: Record<string, StyleProperty> = {};
+
+    // show default styles like margin, padding, etc...
     const defaultStyles = ["margin", "padding"];
 
     defaultStyles.map((name) => {
@@ -67,7 +70,6 @@ export default function SettingsPanel(props: SettingsPanelProps) {
     });
 
     if (selected !== undefined && selected.style !== undefined) {
-
       Object.keys(selected.style).map((name) => {
         elements[name] = {
           name: name,
@@ -78,6 +80,11 @@ export default function SettingsPanel(props: SettingsPanelProps) {
     setStyleLists(elements)
   }, [selected])
 
+  /**
+   * It's for saving styles
+   * @param styleList 
+   * @returns Object { name : value }
+   */
   const convertStyle = (styleList: Record<string, StyleProperty>) => {
     const result: Object = {}
     Object.keys(styleList).map((key) => {
@@ -117,9 +124,11 @@ export default function SettingsPanel(props: SettingsPanelProps) {
                 <label >{styleItem.name}:</label>
                 <input type="text" value={styleItem.value} onChange={
                   (e) => {
+                    // display chages of style properties
                     const newStyleList = JSON.parse(JSON.stringify(styleLists))
                     newStyleList[key].value = e.target.value;
                     setStyleLists(newStyleList)
+                    
                     // props changed
                     if (selected) {
                       const tree = JSON.parse(JSON.stringify(nodetree))

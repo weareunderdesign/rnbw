@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { parseHtml } from '@_components/main/stageView/api';
-import { globalGetCurrentFileSelector } from '@_redux/main';
+import * as Main from '@_redux/main';
 import {
   FreshNode,
   Node,
@@ -13,6 +13,7 @@ import {
 } from '@craftjs/core';
 
 import { Container } from '../../selectors';
+import { useDispatch } from 'react-redux';
 
 export type ViewportProps =
   {
@@ -20,17 +21,62 @@ export type ViewportProps =
   }
 
 export default function Viewport(props: ViewportProps) {
+  const dispatch = useDispatch()
   const {
     enabled,
     actions,
     query,
-    selectedNodeId,
+    selectedNodeIds,
+    hoveredNodeIds
   } = useEditor((state) => ({
     enabled: state.options.enabled,
-    selectedNodeId: state.events.selected
+    selectedNodeIds: state.events.selected,
+    hoveredNodeIds: state.events.hovered
   }));
 
-  const { uid, type, content } = useSelector(globalGetCurrentFileSelector)
+  const selectedItems = useSelector(Main.fnGetSelectedItemsSelector)
+  const focusedItem = useSelector(Main.fnGetFocusedItemSelector)
+  const { uid, type, content } = useSelector(Main.globalGetCurrentFileSelector)
+
+  useEffect(() => {
+    const nodes: Record<string, Node> = query.getNodes()
+    let curSelectedItems: string[] = []
+    Object.keys(nodes).map((uid) => {
+      nodes[uid].dom?.classList.remove("component-selected")
+      nodes[uid].dom?.classList.remove("component-hovered")
+      selectedItems.findIndex((cid) => cid == uid) >= 0
+        ? (nodes[uid].dom?.classList.add("component-selected"), curSelectedItems.push(uid))
+        : focusedItem === uid
+          ? nodes[uid].dom?.classList.add("component-hovered")
+          : {}
+    })
+    actions.selectNode(curSelectedItems)
+  }, [selectedItems, focusedItem])
+  useEffect(() => {
+    // fire selected Node Event
+    let curSelectedItems: string[] = []
+    selectedNodeIds.forEach((nodeId) => {
+      curSelectedItems.push(nodeId)
+    });
+    if (curSelectedItems.length) {
+      console.log(selectedItems, curSelectedItems)
+      if (selectedItems.length != 0 && JSON.stringify([...selectedItems].sort()) === JSON.stringify([...curSelectedItems].sort()))
+        return
+      dispatch(Main.selectFNNode(curSelectedItems))
+    }
+  }, [selectedNodeIds])
+
+  useEffect(() => {
+    // fire focus Node Event
+    let hoveredItems: string[] = []
+    hoveredNodeIds.forEach((nodeId) => {
+      hoveredItems.push(nodeId)
+    });
+    if (hoveredItems.length) {
+      dispatch(Main.focusFNNode(hoveredItems[0]))
+    }
+    // console.log("hover:", hoveredItems)
+  }, [hoveredNodeIds])
 
   useEffect(() => {
     if (content !== "" && type == "html") {
@@ -74,3 +120,4 @@ export default function Viewport(props: ViewportProps) {
     </div>
   );
 };
+
