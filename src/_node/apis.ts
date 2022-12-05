@@ -239,6 +239,13 @@ export const duplicateNode = ({ tree, node }: TDuplicateNodePayload): TNodeApiRe
 }
 
 /**
+ * update the data of the node in the tree based on the uid
+ */
+export const updateNode = ({ tree, uid, data }: TUpdateNodePayload) => {
+  tree[uid].data = data
+}
+
+/**
  * replace node api
  * this api replaces the node in the tree - it can also use for rename
  */
@@ -267,8 +274,4 @@ export const serializeFile = ({ type, tree }: TSearializeFilePayload): string =>
     return serializeHtml(tree)
   }
   return ''
-}
-
-export const updateNode = ({ tree, uid, data }: TUpdateNodePayload) => {
-  tree[uid].data = data
 }

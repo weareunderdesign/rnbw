@@ -74,10 +74,13 @@ export type TDuplicateNodePayload = {
   node: TNode,/* node to duplicate */
 }
 
+/**
+ * update the node data
+ */
 export type TUpdateNodePayload = {
   tree: TTree,
   uid: TUid,
-  data: any
+  data: any,
 }
 
 /**

@@ -68,15 +68,15 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   // generate TTree and TreeViewData from file content
   const [nodeTreeViewData, setNodeTreeViewData] = useState<TreeViewData>({})
   useEffect(() => {
-    const treeData: TTree = parseFile({ type, content })
+    const _treeData: TTree = parseFile({ type, content })
 
     // update global state
-    dispatch(Main.updateFNTreeView(treeData))
+    dispatch(Main.updateFNTreeView(_treeData))
 
     // generate data for node-tree-view
     let data: TreeViewData = {}
-    for (const uid in treeData) {
-      const node: TNode = treeData[uid]
+    for (const uid in _treeData) {
+      const node: TNode = _treeData[uid]
       data[uid] = {
         index: node.uid,
         data: node,
@@ -90,10 +90,10 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   }, [type, content])
 
   // update the file content
-  const updateFFContent = useCallback(async (_tree: TTree) => {
-    const content = serializeFile({ type, tree: _tree })
+  const updateFFContent = useCallback(async (tree: TTree) => {
+    const content = serializeFile({ type, tree })
     dispatch(Main.updateFileContent(content))
-  }, [treeData])
+  }, [])
 
   // add/remove/duplicate node apis
   const handleAddFNNode = useCallback((nodeType: string) => {
