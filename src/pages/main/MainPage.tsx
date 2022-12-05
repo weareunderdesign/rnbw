@@ -67,8 +67,6 @@ export default function MainPage(props: MainPageProps) {
   const error = useSelector(Main.globalGetErrorSelector)
   const { uid, content, type } = useSelector(Main.globalGetCurrentFileSelector)
 
-  const mainWholeState = useSelector(Main.mainWholeStateSelector)
-
   // toast for global errors
   const [toastOpen, setToastOpen] = useState(false)
   useEffect(() => {

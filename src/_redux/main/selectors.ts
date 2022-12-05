@@ -1,9 +1,6 @@
 import { AppState } from '@_redux/_root';
 import { createSelector } from '@reduxjs/toolkit';
 
-const mainWholeState = (state: AppState) => state.main.present
-export const mainWholeStateSelector = createSelector(mainWholeState, (wholState) => wholState)
-
 /* *********************** main *********************** */
 // action group index selector
 const mainGetActionGroupIndex = (state: AppState) => state.main.present.actionGroupIndex

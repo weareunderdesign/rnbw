@@ -27,7 +27,7 @@ export type TTree = {
  */
 export type TNodeApiRes = {
   deletedUids?: TUid[],/* deleted uid array */
-  convertedUids?: [TUid, TUid][],/* converted uid map */
+  convertedUids?: [TUid, TUid][],/* converted uid array */
 }
 
 /**

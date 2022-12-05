@@ -140,8 +140,10 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     addRunningAction(['duplicateFNNode'])
 
     const tree = JSON.parse(JSON.stringify(treeData))
-    duplicateNode({ tree, node: focusedNode })
+    const res = duplicateNode({ tree, node: focusedNode })
     updateFFContent(tree)
+    dispatch(Main.updateFNTreeViewState(res))
+
     removeRunningAction(['duplicateFNNode'])
   }, [focusedItem, treeData])
 
