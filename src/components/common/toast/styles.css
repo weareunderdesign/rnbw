@@ -77,3 +77,23 @@
     transform: translateX(calc(100% + var(--viewport-padding)));
   }
 }
+
+.rtoast-title {
+  grid-area: title;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: var(--slate12);
+  font-size: 15px;
+}
+
+.rtoast-description {
+  grid-area: description;
+  margin: 0;
+  color: var(--slate11);
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.ToastAction {
+  grid-area: action;
+}

@@ -40,6 +40,7 @@ import {
 import { QueryCallbacksFor } from '@craftjs/utils';
 import { MainPageProps } from './types';
 import { RenderNode } from '@_components/main/stageView/components/RenderNode';
+import { Toast } from '@_components/common';
 
 export default function MainPage(props: MainPageProps) {
   const dispatch = useDispatch()
@@ -155,6 +156,7 @@ export default function MainPage(props: MainPageProps) {
   }
 
   return (<>
+    <Toast/>
     <div className="page">
       <div className="direction-row">
         <h1 className="center text-s"><span className="text-s opacity-m">Rainbow v1.0 /</span> Main Page</h1>

@@ -74,6 +74,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   useEffect(() => {
     dispatch(Main.updateFNTreeView(_treeData))
   }, [_treeData])
+  
   const nodeTreeViewData = useMemo(() => {
     const __treeData: TTree = parseFile({ type, content })
     _setTreeData(__treeData)

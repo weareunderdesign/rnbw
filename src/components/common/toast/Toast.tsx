@@ -1,21 +1,26 @@
 import './styles.css';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import * as RToast from '@radix-ui/react-toast';
 
-import { ToastProps } from './types';
+import ToastItem from './ToastItem';
+import { useSelector } from 'react-redux';
 
-export default function Toast(props: ToastProps) {
+import * as Main from '@_redux/main';
+import { _Error } from '@_redux/main';
+
+export default function Toast() {
+
+  const toastItems = useSelector(Main.globalGetErrorSelector)
+  
   return <>
-    <RToast.Provider>
-      <RToast.Root className='rtoast-root' open={props.open}>
-        <RToast.Title />
-        <RToast.Description />
-        <RToast.Action altText='123' />
-        <RToast.Close />
-      </RToast.Root>
-
+    <RToast.Provider duration={5000}>
+      {
+        toastItems?.map((item: _Error, index: number) => {
+          return <ToastItem key={index} title={item.type} description={item.errorMessage}/>
+        })
+      }
       <RToast.Viewport className='rtoast-viewport' />
     </RToast.Provider>
   </>

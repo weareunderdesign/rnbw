@@ -4,3 +4,8 @@ export type ToastProps = {
   open: boolean,
   onClose: () => void, */
 }
+export type ToastItemProps = {
+  description: string,
+  title: string,  
+  key: number,
+}

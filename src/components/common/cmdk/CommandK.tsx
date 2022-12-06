@@ -10,6 +10,7 @@ export default function CommandK(props: CommandKProps) {
   // Toggle the menu when ⌘K is pressed
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
+      console.log(e)
       if (e.key === '\\' && e.metaKey) {
         setOpen((open) => !open)
       }

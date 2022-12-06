@@ -74,7 +74,11 @@ const slice = createSlice({
     },
     setGlobalError(state, action: PayloadAction<Types._Error>) {
       const error = action.payload
-      state.global.error = error
+      state.global.error?.push(error) 
+    },
+    updateGlobalError(state, action: PayloadAction<number>) {
+      const index = action.payload
+      state.global.error?.splice(index)
     },
 
     /* fn */
@@ -215,6 +219,7 @@ export const {
   updateFileContent,
   setGlobalPending,
   setGlobalError,
+  updateGlobalError,
 
   /* fn */
   focusFNNode,
