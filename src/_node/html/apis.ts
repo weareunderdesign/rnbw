@@ -2,7 +2,10 @@ import {
   Element,
   Text,
 } from 'domhandler';
-import parse, { attributesToProps, DOMNode } from 'html-react-parser';
+import parse, {
+  attributesToProps,
+  DOMNode,
+} from 'html-react-parser';
 
 import {
   generateNodeUid,
@@ -144,7 +147,7 @@ export const serializeHtml = (data: TTree): string => {
 
     // end tag
     element_html += "\t".repeat(level) + `</${element.name}>` + "\n"
-    
+
     return element_html
   }
 

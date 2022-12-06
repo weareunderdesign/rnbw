@@ -18,7 +18,7 @@ export default function Toast() {
     <RToast.Provider duration={5000}>
       {
         toastItems?.map((item: _Error, index: number) => {
-          return <ToastItem key={index} title={item.type} description={item.errorMessage}/>
+          return <ToastItem key={index} index={index} title={item.type} description={item.errorMessage}/>
         })
       }
       <RToast.Viewport className='rtoast-viewport' />

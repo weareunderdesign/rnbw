@@ -16,7 +16,7 @@ export type MainState = {
     currentFile: OpenedFile,
     nodeTree: TTree,
     pending: boolean,
-    error: _Error[] | null,
+    error: _Error[],
   },
   ff: FFTreeViewState,
   fn: FNTreeViewState,

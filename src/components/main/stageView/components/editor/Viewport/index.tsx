@@ -1,6 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 
-import { useSelector } from 'react-redux';
+import {
+  useDispatch,
+  useSelector,
+} from 'react-redux';
 
 import { parseHtml } from '@_components/main/stageView/api';
 import * as Main from '@_redux/main';
@@ -13,7 +16,6 @@ import {
 } from '@craftjs/core';
 
 import { Container } from '../../selectors';
-import { useDispatch } from 'react-redux';
 
 export type ViewportProps =
   {
@@ -59,7 +61,7 @@ export default function Viewport(props: ViewportProps) {
       curSelectedItems.push(nodeId)
     });
     if (curSelectedItems.length) {
-      console.log(selectedItems, curSelectedItems)
+      // console.log(selectedItems, curSelectedItems)
       if (selectedItems.length != 0 && JSON.stringify([...selectedItems].sort()) === JSON.stringify([...curSelectedItems].sort()))
         return
       dispatch(Main.selectFNNode(curSelectedItems))

@@ -7,5 +7,5 @@ export type ToastProps = {
 export type ToastItemProps = {
   description: string,
   title: string,  
-  key: number,
+  index: number,
 }

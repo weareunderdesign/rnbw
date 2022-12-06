@@ -27,7 +27,7 @@ const initialState: Types.MainState = {
     },
     nodeTree: {},
     pending: false,
-    error: null,
+    error: [],
   },
   ff: {
     focusedItem: 'root',
@@ -74,11 +74,11 @@ const slice = createSlice({
     },
     setGlobalError(state, action: PayloadAction<Types._Error>) {
       const error = action.payload
-      state.global.error?.push(error) 
+      state.global.error.push(error) 
     },
     updateGlobalError(state, action: PayloadAction<number>) {
       const index = action.payload
-      state.global.error?.splice(index)
+      state.global.error.splice(index, 1)
     },
 
     /* fn */
@@ -111,26 +111,48 @@ const slice = createSlice({
     updateFNTreeViewState(state, action: PayloadAction<Types.UpdateFNTreeViewStatePayload>) {
       const { deletedUids, convertedUids } = action.payload
       if (deletedUids) {
-        for (const uid of deletedUids) {
+        deletedUids.map((uid) => {
           if (state.fn.focusedItem === uid) {
             state.fn.focusedItem = ''
           }
           delete state.fn.expandedItemsObj[uid]
           delete state.fn.selectedItemsObj[uid]
-        }
+        })
       }
       if (convertedUids) {
+        let f_uid: TUid = ''
+        const e_deletedUids: TUid[] = [], e_addedUids: TUid[] = []
+        const s_deletedUids: TUid[] = [], s_addedUids: TUid[] = []
+
         for (const [prev, cur] of convertedUids) {
+          if (state.fn.focusedItem === prev) {
+            f_uid = cur
+          }
           if (state.fn.expandedItemsObj[prev]) {
-            delete state.fn.expandedItemsObj[prev]
-            state.fn.expandedItemsObj[cur] = true
+            e_deletedUids.push(prev)
+            e_addedUids.push(cur)
           }
           if (state.fn.selectedItemsObj[prev]) {
-            delete state.fn.selectedItemsObj[prev]
-            state.fn.selectedItemsObj[cur] = true
+            s_deletedUids.push(prev)
+            s_addedUids.push(cur)
           }
         }
+
+        state.fn.focusedItem = f_uid !== '' ? f_uid : state.fn.focusedItem
+        e_deletedUids.map((_deletedUid) => {
+          delete state.fn.expandedItemsObj[_deletedUid]
+        })
+        e_addedUids.map((_addedUid) => {
+          state.fn.expandedItemsObj[_addedUid] = true
+        })
+        s_deletedUids.map((_deletedUid) => {
+          delete state.fn.selectedItemsObj[_deletedUid]
+        })
+        s_addedUids.map((_addedUid) => {
+          state.fn.selectedItemsObj[_addedUid] = true
+        })
       }
+
       state.fn.expandedItems = Object.keys(state.fn.expandedItemsObj)
       state.fn.selectedItems = Object.keys(state.fn.selectedItemsObj)
     },
@@ -240,11 +262,12 @@ export const {
 
 export const MainReducer = undoable(slice.reducer, {
   filter: function filterActions(action, currentState, previousHistory) {
-    /* remove message-toast and spinner-pending */
+    // file the actions
     if (action.type === 'main/setGlobalPending' ||
       action.type === 'main/setGlobalError' ||
       action.type === 'main/updateFFTreeView' ||
-      action.type === 'main/updateFFTreeViewState') {
+      action.type === 'main/updateFFTreeViewState' ||
+      action.type === 'main/updateFNTreeView') {
       return false
     }
 

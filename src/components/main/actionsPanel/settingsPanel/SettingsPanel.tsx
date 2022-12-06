@@ -1,6 +1,7 @@
 import './SettingsPanel.css';
 
 import React, {
+  useCallback,
   useEffect,
   useState,
 } from 'react';
@@ -15,11 +16,7 @@ import {
   updateNode,
 } from '@_node/apis';
 import { TTree } from '@_node/types';
-import {
-  globalGetCurrentFileSelector,
-  globalGetNodeTreeSelector,
-  updateFileContent,
-} from '@_redux/main';
+import * as Main from '@_redux/main';
 import { useEditor } from '@craftjs/core';
 
 import { SettingsPanelProps } from './types';
@@ -51,9 +48,9 @@ export default function SettingsPanel(props: SettingsPanelProps) {
 
 
   const [styleLists, setStyleLists] = useState<Record<string, StyleProperty>>({})
-  const nodetree = useSelector(globalGetNodeTreeSelector)
+  const nodetree = useSelector(Main.globalGetNodeTreeSelector)
   const dispatch = useDispatch()
-  const { type } = useSelector(globalGetCurrentFileSelector)
+  const { type } = useSelector(Main.globalGetCurrentFileSelector)
 
   useEffect(() => {
 
@@ -95,12 +92,11 @@ export default function SettingsPanel(props: SettingsPanelProps) {
     return result
   }
 
-  /* update the global state */
-  const updateFFContent = async (tree: TTree) => {
-    console.log("update content")
+  // update the file content
+  const updateFFContent = useCallback(async (tree: TTree) => {
     const content = serializeFile({ type, tree })
-    dispatch(updateFileContent(content))
-  }
+    dispatch(Main.updateFileContent(content))
+  }, [])
   return <>
     <div className="panel">
       <div className="border-bottom" style={{ height: "200px", overflow: "auto" }}>
@@ -128,11 +124,11 @@ export default function SettingsPanel(props: SettingsPanelProps) {
                     const newStyleList = JSON.parse(JSON.stringify(styleLists))
                     newStyleList[key].value = e.target.value;
                     setStyleLists(newStyleList)
-                    
+
                     // props changed
                     if (selected) {
                       const tree = JSON.parse(JSON.stringify(nodetree))
-                      const result = updateNode({
+                      updateNode({
                         tree: tree,
                         data: {
                           ...selected.props,
@@ -140,9 +136,7 @@ export default function SettingsPanel(props: SettingsPanelProps) {
                         },
                         uid: selected.id
                       })
-                      if (result.success == true) {
-                        updateFFContent(tree)
-                      }
+                      updateFFContent(tree)
                     }
                   }
                 }></input>

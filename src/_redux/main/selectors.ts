@@ -6,7 +6,6 @@ import { createSelector } from '@reduxjs/toolkit';
 const mainGetActionGroupIndex = (state: AppState) => state.main.present.actionGroupIndex
 export const mainGetActionGroupIndexSelector = createSelector(mainGetActionGroupIndex, (actionGroupIndex) => actionGroupIndex)
 
-
 /* *********************** global *********************** */
 // workspace selector
 const globalGetWorkspace = (state: AppState) => state.main.present.global.workspace

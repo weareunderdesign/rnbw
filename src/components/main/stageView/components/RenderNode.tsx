@@ -1,6 +1,9 @@
-import { useEditor, useNode } from "@craftjs/core";
-import React from "react";
-import { useCallback, useEffect, useRef } from "react";
+import React, { useEffect } from 'react';
+
+import {
+  useEditor,
+  useNode,
+} from '@craftjs/core';
 
 type RenderNodeProp = {
     render: React.ReactElement
@@ -34,8 +37,8 @@ export const RenderNode = (props: RenderNodeProp) => {
             dom.classList.remove('component-hovered')
             console.log(isActive, isHover)
             isActive ? dom.classList.add('component-selected')
-                : isHover ? dom.classList.add('component-hovered') 
-                : {}
+                : isHover ? dom.classList.add('component-hovered')
+                    : {}
         }
     }, [dom, isActive, isHover]);
 

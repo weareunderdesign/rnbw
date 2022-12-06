@@ -41,6 +41,10 @@ import {
 } from '@_node/types';
 import * as Main from '@_redux/main';
 import {
+  OpenedFile,
+  setGlobalPending,
+} from '@_redux/main';
+import {
   getFileExtension,
   verifyPermission,
 } from '@_services/main';
@@ -57,9 +61,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
   // for groupping action - it contains the actionNames as keys which should be in the same group
   const runningActions = useRef<{ [actionName: string]: boolean }>({})
-  const runningActionExists = (actionName: string) => {
-    return runningActions.current[actionName] === true ? true : false
-  }
   const noRunningAction = () => {
     return Object.keys(runningActions.current).length === 0 ? true : false
   }
@@ -219,6 +220,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     setFFHandlers(deletedUids, handlers)
     dispatch(Main.updateFFTreeView({ deletedUids, nodes }))
     dispatch(Main.updateFFTreeViewState({ deletedUids }))
+
   }, [workspace, expandedItemsObj])
 
   // watch file system
@@ -256,6 +258,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     setProjectLocation(location)
 
     if (location === 'localhost') {
+      addRunningAction(['importProject'])
+      dispatch(setGlobalPending(true))
+
       // open directory picker and get the project folde handle
       let projectHandle: FileSystemHandle
       try {
@@ -265,48 +270,55 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           type: 'info',
           errorMessage: 'You canceled importing project.',
         }))
+
+        dispatch(setGlobalPending(false))
+        removeRunningAction(['importProject'], false)
         return
       }
 
-      addRunningAction(['importProject'])
 
       /* import localhost porject */
       try {
-        dispatch(Main.setGlobalPending(true))
         await importLocalhostProject(projectHandle as FileSystemDirectoryHandle)
-        dispatch(Main.setGlobalPending(false))
       } catch (err) {
         // error occurred
       }
 
+      dispatch(Main.setGlobalPending(false))
       removeRunningAction(['importProject'])
     }
   }, [])
 
   // cb
   const cb_focusFFNode = useCallback((uid: TUid) => {
-    // check running action
-    if (!runningActionExists('focusFFNode')) {
-      console.log('something wrong with the call backs')
+    // for key-nav
+    addRunningAction(['focusFFNode'])
+
+    // validate
+    if (focusedItem === uid || workspace[uid] === undefined) {
+      removeRunningAction(['focusFFNode'], false)
       return
     }
 
     dispatch(Main.focusFFNode(uid))
     removeRunningAction(['focusFFNode'])
-  }, [])
+  }, [focusedItem, workspace])
   const cb_selectFFNode = useCallback((uids: TUid[]) => {
-    // check running action
-    if (!runningActionExists('selectFFNode')) {
-      console.log('something wrong with the call backs')
-      return
-    }
+    // for key-nav
+    addRunningAction(['selectFFNode'])
 
-    // validate the uids and check if it's new state
-    uids = validateUids(uids)
-    if (uids.length === selectedItems.length) {
+    // validate
+    let _uids = [...uids]
+    _uids = validateUids(_uids)
+    _uids = _uids.filter((_uid) => {
+      return !(workspace[_uid] === undefined)
+    })
+
+    // check if it's new state
+    if (_uids.length === selectedItems.length) {
       let same = true
-      for (const uid of uids) {
-        if (selectedItemsObj[uid] === undefined) {
+      for (const _uid of _uids) {
+        if (selectedItemsObj[_uid] === undefined) {
           same = false
           break
         }
@@ -317,43 +329,52 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       }
     }
 
-    dispatch(Main.selectFFNode(uids))
+    dispatch(Main.selectFFNode(_uids))
+    console.log("dispatch Error")
+    dispatch(Main.setGlobalError({
+      type: 'error',
+      errorMessage: 'Project folder is not valid. Please import valid project.',
+    }))
+
     removeRunningAction(['selectFFNode'])
-  }, [selectedItems, selectedItemsObj])
+  }, [workspace, selectedItems, selectedItemsObj])
   const cb_expandFFNode = useCallback(async (uid: TUid) => {
-    // check running action
-    if (!runningActionExists('expandFFNode')) {
-      console.log('something wrong with the call backs')
+    // for key-nav
+    addRunningAction(['expandFFNode'])
+
+    // validate
+    const node = workspace[uid]
+    if (node === undefined || node.isEntity || expandedItemsObj[uid] === true) {
+      removeRunningAction(['expandFFNode'], false)
       return
     }
 
     dispatch(Main.expandFFNode([uid]))
     removeRunningAction(['expandFFNode'])
-  }, [])
+  }, [workspace, expandedItemsObj])
   const cb_collapseFFNode = useCallback((uid: TUid) => {
-    // check running action
-    if (!runningActionExists('collapseFFNode')) {
-      console.log('something wrong with the call backs')
+    // for key-nav
+    addRunningAction(['collapseFFNode'])
+
+    // validate
+    const node = workspace[uid]
+    if (node === undefined || node.isEntity || expandedItemsObj[uid] === undefined) {
+      removeRunningAction(['collapseFFNode'], false)
       return
     }
 
     dispatch(Main.collapseFFNode([uid]))
     removeRunningAction(['collapseFFNode'])
-  }, [])
+  }, [workspace, expandedItemsObj])
 
   // create directory/file dialog handle
   const [createFFModalOpen, setCreateFFModalOpen] = useState<boolean>(false)
   const [creatingFFType, setCreatingFFType] = useState<FFNodeType>()
   const [newFFName, setNewFFName] = useState<string>('')
   const openCreateFFNodeModal = useCallback((ffNodeType: FFNodeType) => {
-    // check if the workspace exists
-    if (workspace['root'] === undefined) return
-
-    // check focusedItem is directory
-    const focusedNode: FFNode = workspace[focusedItem]
-    if (focusedNode === undefined || focusedNode.isEntity) {
-      return
-    }
+    // validate
+    const node = workspace[focusedItem]
+    if (node === undefined || node.isEntity) return
 
     setCreatingFFType(ffNodeType)
     setNewFFName('')
@@ -365,16 +386,19 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     // close name input modal
     setCreateFFModalOpen(false)
 
+    // addRunningAction(['createFFNode'])
     dispatch(Main.setGlobalPending(true))
 
     // verify handler permission
     const focusedItemHandler = ffHandlers[focusedItem] as FileSystemDirectoryHandle
     if (!(await verifyPermission(focusedItemHandler))) {
-      dispatch(Main.setGlobalPending(false))
       dispatch(Main.setGlobalError({
         type: 'error',
         errorMessage: `Invalid target directory. Check if you have "write" permission for the directory.`,
       }))
+
+      dispatch(Main.setGlobalPending(false))
+      // removeRunningAction(['createFFNode'], false)
       return
     }
 
@@ -452,14 +476,16 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
 
     dispatch(Main.setGlobalPending(false))
-  }, [ffHandlers, focusedItem])
+    // removeRunningAction(['createFFNode'])
+  }, [ffHandlers, focusedItem, creatingFFType])
 
   // delete folder/file api
   const deleteFFNode = useCallback(async () => {
     // validate selected uids
-    const uids = validateUids(selectedItems)
+    const uids = selectedItems
     if (uids.length === 0) return
 
+    // addRunningAction(['deleteFFNode'])
     dispatch(Main.setGlobalPending(true))
 
     let allDone = true
@@ -499,13 +525,18 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
 
     dispatch(Main.setGlobalPending(false))
+    // removeRunningAction(['deleteFFNode'])
   }, [selectedItems, workspace, ffHandlers])
 
   // read file content call back
   const cb_readFFNode = useCallback(async (uid: TUid) => {
-    // check running action
-    if (!runningActionExists('readFFNode')) {
-      console.log('something wrong with the call backs')
+    // for key-nav
+    addRunningAction(['readFFNode'])
+
+    // validate
+    const node = workspace[uid]
+    if (node === undefined || !node.isEntity) {
+      removeRunningAction(['readFFNode'], false)
       return
     }
 
@@ -514,12 +545,13 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     // verify handler permission
     const handler = ffHandlers[uid] as FileSystemFileHandle
     if (!(await verifyPermission(handler))) {
-      dispatch(Main.setGlobalPending(false))
       dispatch(Main.setGlobalError({
         type: 'error',
         errorMessage: 'Invalid file. Check if you have "read" permission for the file.',
       }))
-      removeRunningAction(['readFFNode'])
+
+      dispatch(Main.setGlobalPending(false))
+      removeRunningAction(['readFFNode'], false)
       return
     }
 
@@ -532,13 +564,14 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     try {
       const fileEntry = await handler.getFile()
       let content = await fileEntry.text()
-      dispatch(Main.setFileContent({
+      const file: OpenedFile = {
         uid,
         name: handler.name,
         type: fileType as TFileType,
         content,
         saved: true
-      }))
+      }
+      dispatch(Main.setFileContent(file))
     } catch (err) {
       dispatch(Main.setGlobalError({
         type: 'error',
@@ -548,7 +581,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
     dispatch(Main.setGlobalPending(false))
     removeRunningAction(['readFFNode'])
-  }, [ffHandlers])
+  }, [workspace, ffHandlers])
 
   /**
    * general move api - for rename, copy/paste(duplicate), cut/paste(move)
@@ -647,17 +680,20 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     const parentNode = workspace[node.p_uid as TUid]
     if (parentNode === undefined) return
 
+    // addRunningAction(['renameFFNode'])
     dispatch(Main.setGlobalPending(true))
 
     /* verify handler permission */
     const handler = ffHandlers[uid] as FileSystemHandle
     const parentHandler = ffHandlers[parentNode.uid] as FileSystemDirectoryHandle
     if (!(await verifyPermission(handler)) || !(await verifyPermission(parentHandler))) {
-      dispatch(Main.setGlobalPending(false))
       dispatch(Main.setGlobalError({
         type: 'error',
         errorMessage: `Invalid directory/file. Check if you have "write" permission for the directory/file.`,
       }))
+
+      dispatch(Main.setGlobalPending(false))
+      // removeRunningAction(['renameFFNode'], false)
       return
     }
 
@@ -672,26 +708,28 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
 
     dispatch(Main.setGlobalPending(false))
+    // removeRunningAction(['renameFFNode'])
   }, [workspace, ffHandlers])
 
   // dnd fole/file call back - multiple
   const cb_dropFFNode = useCallback(async (uids: TUid[], targetUid: TUid) => {
     // validate
     let validatedUids: TUid[] = validateUids(uids, targetUid)
-    if (validatedUids.length == 0) {
-      return
-    }
+    if (validatedUids.length == 0 || workspace[targetUid] === undefined) return
 
+    // addRunningAction(['dropFFNode'])
     dispatch(Main.setGlobalPending(true))
 
     /* verify target handler permission */
     const targetHandler = ffHandlers[targetUid] as FileSystemDirectoryHandle
     if (!verifyPermission(targetHandler)) {
-      dispatch(Main.setGlobalPending(false))
       dispatch(Main.setGlobalError({
         type: 'error',
         errorMessage: `Invalid target directory. Check if you have "write" permission for the directory.`,
       }))
+
+      dispatch(Main.setGlobalPending(false))
+      // removeRunningAction(['dropFFNode'], false)
       return
     }
 
@@ -731,7 +769,8 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
 
     dispatch(Main.setGlobalPending(false))
-  }, [ffHandlers, workspace])
+    // removeRunningAction(['dropFFNode'])
+  }, [workspace, ffHandlers])
 
   // duplicate directory/file api
   const duplicateFFNode = useCallback(async () => {
@@ -742,17 +781,20 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     const parentNode = workspace[node.p_uid as TUid]
     if (parentNode === undefined) return
 
+    // addRunningAction(['duplicateFFNode'])
     dispatch(Main.setGlobalPending(true))
 
     // verify handler permission
     const handler = ffHandlers[node.uid] as FileSystemHandle
     const parentHandler = ffHandlers[parentNode.uid] as FileSystemDirectoryHandle
     if (!(await verifyPermission(handler)) || !(await verifyPermission(parentHandler))) {
-      dispatch(Main.setGlobalPending(false))
       dispatch(Main.setGlobalError({
         type: 'error',
         errorMessage: `Invalid directory/file. Check if you have "write" permission for the directory/file.`,
       }))
+
+      dispatch(Main.setGlobalPending(false))
+      // removeRunningAction(['duplicateFFNode'], false)
       return
     }
 
@@ -825,6 +867,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
 
     dispatch(Main.setGlobalPending(false))
+    // removeRunningAction(['duplicateFFNode'])
   }, [focusedItem, workspace, ffHandlers])
 
   return (<>

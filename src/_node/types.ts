@@ -26,10 +26,8 @@ export type TTree = {
  * node api res type
  */
 export type TNodeApiRes = {
-  success: boolean,/* true if successfully done */
-  error?: string,/* error message if failed */
   deletedUids?: TUid[],/* deleted uid array */
-  convertedUids?: [TUid, TUid][],/* converted uid map */
+  convertedUids?: [TUid, TUid][],/* converted uid array */
 }
 
 /**
@@ -76,10 +74,13 @@ export type TDuplicateNodePayload = {
   node: TNode,/* node to duplicate */
 }
 
+/**
+ * update the node data
+ */
 export type TUpdateNodePayload = {
   tree: TTree,
   uid: TUid,
-  data: any
+  data: any,
 }
 
 /**

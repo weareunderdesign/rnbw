@@ -1,7 +1,6 @@
 import React, {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -38,9 +37,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
   // for groupping action - it contains the actionNames as keys which should be in the same group
   const runningActions = useRef<{ [actionName: string]: boolean }>({})
-  const runningActionExists = (actionName: string) => {
-    return runningActions.current[actionName] === true ? true : false
-  }
   const noRunningAction = () => {
     return Object.keys(runningActions.current).length === 0 ? true : false
   }
@@ -70,18 +66,17 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   const selectedItemsObj = useSelector(Main.fnGetSelectedItemsObjSelector)
 
   // generate TTree and TreeViewData from file content
-  const [_treeData, _setTreeData] = useState<TTree>({})
+  const [nodeTreeViewData, setNodeTreeViewData] = useState<TreeViewData>({})
   useEffect(() => {
-    dispatch(Main.updateFNTreeView(_treeData))
-  }, [_treeData])
-  
-  const nodeTreeViewData = useMemo(() => {
-    const __treeData: TTree = parseFile({ type, content })
-    _setTreeData(__treeData)
+    const _treeData: TTree = parseFile({ type, content })
 
+    // update global state
+    dispatch(Main.updateFNTreeView(_treeData))
+
+    // generate data for node-tree-view
     let data: TreeViewData = {}
-    for (const uid in __treeData) {
-      const node: TNode = __treeData[uid]
+    for (const uid in _treeData) {
+      const node: TNode = _treeData[uid]
       data[uid] = {
         index: node.uid,
         data: node,
@@ -91,26 +86,22 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
         canRename: uid !== 'root',
       }
     }
-    return data
-  }, [content])
+    setNodeTreeViewData(data)
+  }, [type, content])
 
   // update the file content
-  const updateFFContent = async (tree: TTree) => {
+  const updateFFContent = useCallback(async (tree: TTree) => {
     const content = serializeFile({ type, tree })
     dispatch(Main.updateFileContent(content))
-  }
+  }, [])
 
   // add/remove/duplicate node apis
-  const handleAddFNNode = (nodeType: string) => {
+  const handleAddFNNode = useCallback((nodeType: string) => {
     // validate
     const focusedNode = treeData[focusedItem]
-    if (focusedNode === undefined || focusedNode.isEntity) {
-      return
-    }
+    if (focusedNode === undefined || focusedNode.isEntity) return
 
     addRunningAction(['addFNNode'])
-
-    dispatch(Main.setGlobalPending(true))
 
     // add node using addNode api
     const tree = JSON.parse(JSON.stringify(treeData))
@@ -118,86 +109,71 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       uid: '',
       p_uid: null,
       name: nodeType,
-      isEntity: false,
+      isEntity: true,
       children: [],
       data: {},
     }
-    const res = addNode({ tree, targetUid: focusedItem, node: newNode })
-
-    dispatch(Main.setGlobalPending(false))
-
-    // handle response
-    if (res.success === true) {
-      updateFFContent(tree)
-    } else {
-      dispatch(Main.setGlobalError({
-        type: 'error',
-        errorMessage: res.error as string,
-      }))
-    }
+    addNode({ tree, targetUid: focusedItem, node: newNode })
+    updateFFContent(tree)
 
     removeRunningAction(['addFNNode'])
-  }
-  const handleRemoveFNNode = () => {
-    /* validate the selected items */
-    const uids = validateUids(selectedItems)
-    if (uids.length === 0) return
+  }, [treeData, focusedItem])
+  const handleRemoveFNNode = useCallback(() => {
+    // validate
+    if (selectedItems.length === 0) return
 
     addRunningAction(['removeFNNode'])
 
     const tree = JSON.parse(JSON.stringify(treeData))
-    const res = removeNode({ tree, nodeUids: uids })
-    if (res.success === true) {
-      updateFFContent(tree)
-      dispatch(Main.updateFNTreeViewState({ deletedUids: res.deletedUids, convertedUids: res.convertedUids }))
-    } else {
-      // dispatch(Main.setGlobalError(res.error as string))
-    }
+    const res = removeNode({ tree, nodeUids: selectedItems })
+    updateFFContent(tree)
+    dispatch(Main.updateFNTreeViewState(res))
 
     removeRunningAction(['removeFNNode'])
-  }
-  const handleDuplicateFNNode = () => {
-    /* check if it's root */
-    if (focusedItem === 'root') {
-      return
-    }
+  }, [selectedItems, treeData])
+  const handleDuplicateFNNode = useCallback(() => {
+    // validate
+    if (focusedItem === 'root') return
+    const focusedNode = treeData[focusedItem]
+    if (focusedNode === undefined || focusedNode === null) return
 
     addRunningAction(['duplicateFNNode'])
 
     const tree = JSON.parse(JSON.stringify(treeData))
-    const res = duplicateNode({ tree, node: { ...tree[focusedItem] } })
-    if (res.success === true) {
-      updateFFContent(tree)
-    } else {
-      // dispatch(Main.setGlobalError(res.error as string))
-    }
+    const res = duplicateNode({ tree, node: focusedNode })
+    updateFFContent(tree)
+    dispatch(Main.updateFNTreeViewState(res))
 
     removeRunningAction(['duplicateFNNode'])
-  }
+  }, [focusedItem, treeData])
 
   // cb
   const cb_focusNode = useCallback((uid: TUid) => {
-    console.log(uid)
+    // for key-nav
+    addRunningAction(['focusFNNode'])
 
-    // check running action
-    if (!runningActionExists('focusFNNode')) {
-      console.log('something wrong with the call backs')
+    // validate
+    if (focusedItem === uid || treeData[uid] === undefined) {
+      removeRunningAction(['focusFNNode'], false)
       return
     }
 
     dispatch(Main.focusFNNode(uid))
     removeRunningAction(['focusFNNode'])
-  }, [])
+  }, [focusedItem, treeData])
   const cb_selectNode = useCallback((uids: TUid[]) => {
-    // check running action
-    if (!runningActionExists('selectFNNode')) {
-      console.log('something wrong with the call backs')
-      return
-    }
+    // for key-nav
+    addRunningAction(['selectFNNode'])
 
-    // validate the uids and check if it's new state
-    uids = validateUids(uids)
-    if (uids.length === selectedItems.length) {
+    // validate
+    let _uids = [...uids]
+    _uids = validateUids(_uids)
+    _uids = _uids.filter((_uid) => {
+      return !(treeData[_uid] === undefined)
+    })
+
+    // check if it's new state
+    if (_uids.length === selectedItems.length) {
       let same = true
       for (const uid of uids) {
         if (selectedItemsObj[uid] === undefined) {
@@ -211,53 +187,56 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       }
     }
 
-    dispatch(Main.selectFNNode(uids))
+    dispatch(Main.selectFNNode(_uids))
     removeRunningAction(['selectFNNode'])
-  }, [selectedItems, selectedItemsObj])
+  }, [treeData, selectedItems, selectedItemsObj])
   const cb_expandNode = useCallback((uid: TUid) => {
-    // check running action
-    if (!runningActionExists('expandFNNode')) {
-      console.log('something wrong with the call backs')
+    // for key-nav
+    addRunningAction(['expandFNNode'])
+
+    // validate
+    const node = treeData[uid]
+    if (node === undefined || node.isEntity || expandedItemsObj[uid] === true) {
+      removeRunningAction(['expandFNNode'], false)
       return
     }
 
     dispatch(Main.expandFNNode([uid]))
     removeRunningAction(['expandFNNode'])
-  }, [])
+  }, [treeData, expandedItemsObj])
   const cb_collapseNode = useCallback((uid: TUid) => {
-    // check running action
-    if (!runningActionExists('collapseFNNode')) {
-      console.log('something wrong with the call backs')
+    // for key-nav
+    addRunningAction(['collapseFNNode'])
+
+    // validate
+    const node = treeData[uid]
+    if (node === undefined || node.isEntity || expandedItemsObj[uid] === undefined) {
+      removeRunningAction(['collapseFNNode'], false)
       return
     }
 
     dispatch(Main.collapseFNNode([uid]))
     removeRunningAction(['collapseFNNode'])
-  }, [])
-  const cb_renameNode = (uid: TUid, newName: string) => {
+  }, [treeData, expandedItemsObj])
+  const cb_renameNode = useCallback((uid: TUid, newName: string) => {
     // validate
-    if (treeData[uid] === undefined || treeData[uid].name === newName) return
+    const focusedNode = treeData[uid]
+    if (focusedNode === undefined || focusedNode.name === newName) return
 
     addRunningAction(['renameFNNode'])
 
     const tree = JSON.parse(JSON.stringify(treeData))
-    const node = { ...tree[uid], newName }
-    const res = replaceNode({ tree, node })
-    if (res.success === true) {
-      updateFFContent(tree)
-    } else {
-      // dispatch(Main.setGlobalError(res.error as string))
-    }
+    const node = { ...tree[uid], name: newName }
+    replaceNode({ tree, node })
+    updateFFContent(tree)
 
     removeRunningAction(['renameFNNode'])
-  }
-  const cb_dropNode = (payload: { [key: string]: any }) => {
-    // validate dnd uids
-    let validatedUids: TUid[] = []
-    validatedUids = validateUids(payload.uids, payload.parentUid)
-    if (validatedUids.length == 0) {
-      return
-    }
+  }, [treeData])
+  const cb_dropNode = useCallback((payload: { [key: string]: any }) => {
+    // validate
+    let uids: TUid[] = []
+    uids = validateUids(payload.uids, payload.parentUid)
+    if (uids.length == 0 || treeData[payload.parentUid] === undefined) return
 
     addRunningAction(['dropFNNode'])
 
@@ -267,17 +246,13 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       isBetween: payload.isBetween,
       parentUid: payload.parentUid,
       position: payload.position,
-      uids: payload.uids
+      uids: uids
     })
-    if (res.success === true) {
-      dispatch(Main.updateFNTreeViewState({ convertedUids: res.convertedUids }))
-      updateFFContent(tree)
-    } else {
-      // dispatch(Main.setGlobalError(res.error as string))
-    }
+    updateFFContent(tree)
+    dispatch(Main.updateFNTreeViewState(res))
 
     removeRunningAction(['dropFNNode'])
-  }
+  }, [treeData])
 
   return (<>
     <div className="panel">
@@ -359,10 +334,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                     onClick={(e) => {
                       e.stopPropagation()
 
-                      // check running action
-                      if (!noRunningAction()) {
-                        return
-                      }
                       if (!props.context.isFocused) {
                         addRunningAction(['focusFNNode'])
                       }
@@ -373,6 +344,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                       } else {
                         addRunningAction(['selectFNNode'])
                       }
+
+                      removeRunningAction(['clickEvent'])
 
                       // call back
                       props.context.isFocused ? null : props.context.focusItem()
@@ -428,6 +401,9 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                     } else {
                       // do nothing
                     }
+
+                    // to merge with the click event
+                    addRunningAction(['clickEvent'])
 
                     // call back
                     props.item.hasChildren ? props.context.toggleExpandedState() : null

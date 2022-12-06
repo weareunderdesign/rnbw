@@ -29,7 +29,10 @@ import {
   TUid,
 } from '@_node/types';
 import * as Main from '@_redux/main';
-import { updateFileContent } from '@_redux/main';
+import {
+  updateFileContent,
+  updateFNTreeViewState,
+} from '@_redux/main';
 import { verifyPermission } from '@_services/main';
 import {
   Editor,
@@ -38,8 +41,8 @@ import {
   QueryMethods,
 } from '@craftjs/core';
 import { QueryCallbacksFor } from '@craftjs/utils';
+
 import { MainPageProps } from './types';
-import { RenderNode } from '@_components/main/stageView/components/RenderNode';
 import { Toast } from '@_components/common';
 
 export default function MainPage(props: MainPageProps) {
@@ -106,7 +109,7 @@ export default function MainPage(props: MainPageProps) {
 
   /* toogle code  view */
   const [showCodeView, setShowCodeView] = useState(false)
-  const toogleCodeView = () => {
+  const toogleCodeView = async () => {
     setShowCodeView(!showCodeView)
   }
 
@@ -125,7 +128,7 @@ export default function MainPage(props: MainPageProps) {
     });
 
     const tree = JSON.parse(JSON.stringify(nodetree))
-    
+
     if (state.events.dragged.size != 0) {
       // dragged and drop event
       console.log("drop action")
@@ -139,12 +142,9 @@ export default function MainPage(props: MainPageProps) {
         position,
         uids: selectedNodes
       }
-      const result = moveNode(movePayload)
-      if (result.success == true) {
-        updateFFContent(tree)
-      } else {
-        console.log(result.error)
-      }
+      const res = moveNode(movePayload)
+      updateFFContent(tree)
+      dispatch(updateFNTreeViewState(res))
     }
   }
 
@@ -186,7 +186,8 @@ export default function MainPage(props: MainPageProps) {
 
           {/* spinner */}
           {pending &&
-            <div style={{ zIndex: "9999", position: "fixed", top: "0", right: "0", bottom: "0", left: "0" }}>
+            <div className='justify-center align-center background-secondary opacity-m' style={{ zIndex: "9999", position: "fixed", top: "0", right: "0", bottom: "0", left: "0" }}>
+              <span className='text-s'>Pending...</span>
             </div>}
 
           {/* wrap with the craft.js editor */}
@@ -199,7 +200,7 @@ export default function MainPage(props: MainPageProps) {
             }}
             onBeforeMoveEnd={onBeforeMoveEnd}
             onNodesChange={onNodesChange}
-            // onRender={RenderNode}
+          // onRender={RenderNode}
           >
             <ActionsPanel />
             <StageView />

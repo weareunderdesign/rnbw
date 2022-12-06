@@ -20,14 +20,12 @@ const styles = `:host {
 .component-hovered {
   border: 1px dashed blue;
 }
-`;
+`
 
 export default function StageView(props: StageViewProps) {
-  let sheet;
-  let styleSheets;
-  sheet = new CSSStyleSheet();
-  sheet.replaceSync(styles);
-  styleSheets = [sheet];
+  const sheet: CSSStyleSheet = new CSSStyleSheet()
+  sheet.replaceSync(styles)
+  const styleSheets = [sheet]
 
   return (
     <div className="panel box padding-xs shadow border-left">

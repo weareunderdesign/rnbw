@@ -1,15 +1,25 @@
-import { useNode, useEditor } from '@craftjs/core';
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+
 import cx from 'classnames';
 import { debounce } from 'debounce';
 import { Resizable } from 're-resizable';
-import React, { useRef, useEffect, useState, useCallback } from 'react';
 import styled from 'styled-components';
 
 import {
-  isPercentage,
-  pxToPercent,
-  percentToPx,
+  useEditor,
+  useNode,
+} from '@craftjs/core';
+
+import {
   getElementDimensions,
+  isPercentage,
+  percentToPx,
+  pxToPercent,
 } from '../../utils/numToMeasurement';
 
 const Indicators = styled.div<{ bound?: 'row' | 'column' }>`
@@ -32,19 +42,19 @@ const Indicators = styled.div<{ bound?: 'row' | 'column' }>`
     border: 2px solid #36a9e0;
     &:nth-child(1) {
       ${(props) =>
-        props.bound
-          ? props.bound === 'row'
-            ? `
+    props.bound
+      ? props.bound === 'row'
+        ? `
                 left: 50%;
                 top: -5px;
                 transform:translateX(-50%);
               `
-            : `
+        : `
               top: 50%;
               left: -5px;
               transform:translateY(-50%);
             `
-          : `
+      : `
               left: -5px;
               top:-5px;
             `}
@@ -56,19 +66,19 @@ const Indicators = styled.div<{ bound?: 'row' | 'column' }>`
     }
     &:nth-child(3) {
       ${(props) =>
-        props.bound
-          ? props.bound === 'row'
-            ? `
+    props.bound
+      ? props.bound === 'row'
+        ? `
                 left: 50%;
                 bottom: -5px;
                 transform:translateX(-50%);
               `
-            : `
+        : `
                 bottom: 50%;
                 left: -5px;
                 transform:translateY(-50%);
               `
-          : `
+      : `
               left: -5px;
               bottom:-5px;
             `}
