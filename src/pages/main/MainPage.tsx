@@ -29,10 +29,6 @@ import {
   TUid,
 } from '@_node/types';
 import * as Main from '@_redux/main';
-import {
-  updateFileContent,
-  updateFNTreeViewState,
-} from '@_redux/main';
 import { verifyPermission } from '@_services/main';
 import {
   Editor,
@@ -43,7 +39,8 @@ import {
 import { QueryCallbacksFor } from '@craftjs/utils';
 
 import { MainPageProps } from './types';
-import { Toast } from '@_components/common';
+import { Toast, CommandK } from '@_components/common';
+import { CmdKGroupProps, CmdKItemGeneralProps } from '@_components/common/cmdk';
 
 export default function MainPage(props: MainPageProps) {
   const dispatch = useDispatch()
@@ -63,17 +60,14 @@ export default function MainPage(props: MainPageProps) {
     setFFHandlers({ ...newHandlers, ...handlers })
   }, [ffHandlers])
 
+  const [command, setCommand] = useState<Main.Command>({ action: '', changed: false })
+
   // fetch global state
   const pending = useSelector(Main.globalGetPendingSelector)
   const error = useSelector(Main.globalGetErrorSelector)
   const { uid, content, type } = useSelector(Main.globalGetCurrentFileSelector)
 
-  // toast for global errors
-  const [toastOpen, setToastOpen] = useState(false)
-  useEffect(() => {
-    setToastOpen(true)
-  }, [error])
-
+  const [cmdkOpen, setCmdkOpen] = useState(false)
   const nodetree = useSelector(Main.globalGetNodeTreeSelector)
 
   // file-content saving handler
@@ -144,7 +138,7 @@ export default function MainPage(props: MainPageProps) {
       }
       const res = moveNode(movePayload)
       updateFFContent(tree)
-      dispatch(updateFNTreeViewState(res))
+      dispatch(Main.updateFNTreeViewState(res))
     }
   }
 
@@ -152,18 +146,68 @@ export default function MainPage(props: MainPageProps) {
   const updateFFContent = async (tree: TTree) => {
     console.log("update content")
     const content = serializeFile({ type, tree })
-    dispatch(updateFileContent(content))
+    dispatch(Main.updateFileContent(content))
   }
 
+  const makeCmkItems = () => {
+    const items: CmdKItemGeneralProps[] = []
+    items.push({
+      heading: 'Start',
+      items: [
+        { title: 'Open', shortcut: '⌘ 🄾', onSelect: () => { setCommand({ action: "OpenProject", changed: !command.changed }) } },
+        { title: 'New File', shortcut: '⌘ 🄽', onSelect: () => { } },
+      ]
+    }, {
+      heading: 'Action',
+      items: [
+        { title: 'Undo', shortcut: 'Ctrl Z', onSelect: () => { setCommand({ action: "cmdz", changed: !command.changed }) } },
+        { title: 'Redo', shortcut: 'Ctrl Y', onSelect: () => { setCommand({ action: "cmdy", changed: !command.changed }) } }
+      ]
+    })
+    return items
+  }
+
+  useEffect(() => {
+    setCmdkOpen(false)
+  }, [command.changed])
+  useEffect(() => {
+    switch (command.action) {
+      case 'cmdz':
+        cmdz()
+        break
+      case 'cmdy':
+        cmdy()
+        break
+    }
+  }, [command.action])
+
+  const down = useCallback((e: KeyboardEvent) => {
+    if (e.key === '\\' && e.metaKey) {
+      e.preventDefault()
+      setCmdkOpen(!cmdkOpen)
+    }
+    if (e.key === 'o' && e.ctrlKey) {
+      e.preventDefault()
+      setCommand({ action: "OpenProject", changed: !command.changed })
+    }
+    if (e.key === 'z' && e.ctrlKey) {
+      setCommand({ action: "cmdz", changed: !command.changed })
+    }
+    if (e.key === 'y' && e.ctrlKey) {
+      setCommand({ action: "cmdy", changed: !command.changed })
+    }
+  }, [cmdkOpen, command.changed])
+
   return (<>
-    <Toast/>
+    <Toast />
+    <CommandK onKeyDownCallback={down} open={cmdkOpen} setOpen={setCmdkOpen} items={makeCmkItems()} />
     <div className="page">
       <div className="direction-row">
         <h1 className="center text-s"><span className="text-s opacity-m">Rainbow v1.0 /</span> Main Page</h1>
       </div>
       <div className="direction-column background-primary border shadow">
         {/* wrap with the context */}
-        <Main.MainContext.Provider value={{ ffHandlers: ffHandlers, setFFHandlers: _setFFHandlers }}>
+        <Main.MainContext.Provider value={{ ffHandlers: ffHandlers, setFFHandlers: _setFFHandlers, command: command, setCommand: setCommand }}>
           {/* top bar */}
           <div className="direction-column padding-s box-l justify-stretch border-bottom">
             <div className="gap-s box justify-start">

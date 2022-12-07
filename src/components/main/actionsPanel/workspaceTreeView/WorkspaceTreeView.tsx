@@ -93,7 +93,17 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   const selectedItemsObj = useSelector(Main.ffGetSelectedItemsObjSelector)
 
   // file handlers from context
-  const { ffHandlers, setFFHandlers } = useContext(Main.MainContext)
+  const { ffHandlers, setFFHandlers, command } = useContext(Main.MainContext)
+
+  useEffect(() => {
+    if (command.action === '') return
+    
+    switch(command.action) {
+      case 'OpenProject':
+        onImportProject()
+        break
+    }
+  }, [command.changed])
 
   // generate TreeViewData from workspace
   const workspaceTreeViewData = useMemo(() => {
