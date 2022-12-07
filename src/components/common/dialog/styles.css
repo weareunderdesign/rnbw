@@ -3,7 +3,6 @@
   inset: 0;
 
   animation: RDialogOverlayShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
-  background-color: rgba(0, 0, 0, 0.2);
 }
 
 .rdialog-content {
@@ -14,11 +13,9 @@
 
   animation: RDialogContentShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
 
-  background-color: rgb(47, 54, 61);
   color: #dddddd;
 
   border-radius: 10px;
-  box-shadow: 2px 2px 10px 1px black;
 
   width: 90vw;
   max-width: 450px;

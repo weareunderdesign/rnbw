@@ -18,6 +18,7 @@ const initialState: Types.MainState = {
   actionGroupIndex: 0,
   global: {
     workspace: {},
+    openedFiles: [],
     currentFile: {
       uid: '',
       name: '',
@@ -27,7 +28,7 @@ const initialState: Types.MainState = {
     },
     nodeTree: {},
     pending: false,
-    error: [],
+    messages: [],
   },
   ff: {
     focusedItem: 'root',
@@ -35,6 +36,7 @@ const initialState: Types.MainState = {
     expandedItemsObj: { 'root': true },
     selectedItems: [],
     selectedItemsObj: {},
+    hoveredItem: '',
   },
   fn: {
     focusedItem: 'root',
@@ -42,6 +44,7 @@ const initialState: Types.MainState = {
     expandedItemsObj: { 'root': true },
     selectedItems: [],
     selectedItemsObj: {},
+    hoveredItem: '',
   },
 }
 
@@ -69,19 +72,33 @@ const slice = createSlice({
       const data = action.payload
       state.global.currentFile.content = data
     },
+    updateFileStatus(state, action: PayloadAction<boolean>) {
+      const saved = action.payload
+      state.global.currentFile.saved = saved
+    },
     setGlobalPending(state, action: PayloadAction<boolean>) {
-      state.global.pending = action.payload
+      const pending = action.payload
+      state.global.pending = pending
     },
-    setGlobalError(state, action: PayloadAction<Types._Error>) {
-      const error = action.payload
-      state.global.error.push(error) 
+    setGlobalMessage(state, action: PayloadAction<Types.Message>) {
+      const message = action.payload
+      state.global.messages.push(message)
     },
-    updateGlobalError(state, action: PayloadAction<number>) {
+    removeGlobalMessage(state, action: PayloadAction<number>) {
       const index = action.payload
-      state.global.error.splice(index, 1)
+      state.global.messages.splice(index)
     },
 
     /* fn */
+    clearFNState(state, action: PayloadAction) {
+      state.global.currentFile = initialState.global.currentFile
+      state.global.nodeTree = initialState.global.nodeTree
+      state.fn = initialState.fn
+    },
+    hoverFNNode(state, action: PayloadAction<TUid>) {
+      const uid = action.payload
+      state.fn.hoveredItem = uid
+    },
     focusFNNode(state, action: PayloadAction<TUid>) {
       const uid = action.payload
       state.fn.focusedItem = uid
@@ -162,6 +179,10 @@ const slice = createSlice({
     },
 
     /* ff */
+    hoverFFNode(state, action: PayloadAction<TUid>) {
+      const uid = action.payload
+      state.ff.hoveredItem = uid
+    },
     focusFFNode(state, action: PayloadAction<TUid>) {
       const uid = action.payload
       state.ff.focusedItem = uid
@@ -239,11 +260,14 @@ export const {
   /* global */
   setFileContent,
   updateFileContent,
+  updateFileStatus,
   setGlobalPending,
-  setGlobalError,
-  updateGlobalError,
+  setGlobalMessage,
+  removeGlobalMessage,
 
   /* fn */
+  clearFNState,
+  hoverFNNode,
   focusFNNode,
   expandFNNode,
   collapseFNNode,
@@ -252,6 +276,7 @@ export const {
   updateFNTreeView,
 
   /* ff */
+  hoverFFNode,
   focusFFNode,
   expandFFNode,
   collapseFFNode,
@@ -264,10 +289,17 @@ export const MainReducer = undoable(slice.reducer, {
   filter: function filterActions(action, currentState, previousHistory) {
     // file the actions
     if (action.type === 'main/setGlobalPending' ||
-      action.type === 'main/setGlobalError' ||
+
+      action.type === 'main/setGlobalMessage' ||
+      action.type === 'main/removeGlobalMessage' ||
+
       action.type === 'main/updateFFTreeView' ||
       action.type === 'main/updateFFTreeViewState' ||
-      action.type === 'main/updateFNTreeView') {
+
+      action.type === 'main/updateFNTreeView' ||
+
+      action.type === 'main/hoverFFNode' ||
+      action.type === 'main/hoverFNNode') {
       return false
     }
 

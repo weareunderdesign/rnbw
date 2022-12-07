@@ -1,1 +1,3 @@
-export * from './Viewport';
+import Viewport from './Viewport';
+
+export { Viewport };

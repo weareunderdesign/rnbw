@@ -59,6 +59,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   const treeData: TTree = useSelector(Main.globalGetNodeTreeSelector)
 
   // node-tree-view view state
+  const hoveredItem = useSelector(Main.fnGetHoveredItemSelector)
   const focusedItem = useSelector(Main.fnGetFocusedItemSelector)
   const expandedItems = useSelector(Main.fnGetExpandedItemsSelector)
   const expandedItemsObj = useSelector(Main.fnGetExpandedItemsObjSelector)
@@ -91,9 +92,9 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
   // update the file content
   const updateFFContent = useCallback(async (tree: TTree) => {
-    const content = serializeFile({ type, tree })
-    dispatch(Main.updateFileContent(content))
-  }, [])
+    const newContent = serializeFile({ type, tree })
+    dispatch(Main.updateFileContent(newContent))
+  }, [type])
 
   // add/remove/duplicate node apis
   const handleAddFNNode = useCallback((nodeType: string) => {
@@ -126,7 +127,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     const tree = JSON.parse(JSON.stringify(treeData))
     const res = removeNode({ tree, nodeUids: selectedItems })
-    updateFFContent(tree)
+    updateFFContent(res.tree)
     dispatch(Main.updateFNTreeViewState(res))
 
     removeRunningAction(['removeFNNode'])
@@ -141,7 +142,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     const tree = JSON.parse(JSON.stringify(treeData))
     const res = duplicateNode({ tree, node: focusedNode })
-    updateFFContent(tree)
+    updateFFContent(res.tree)
     dispatch(Main.updateFNTreeViewState(res))
 
     removeRunningAction(['duplicateFNNode'])
@@ -248,7 +249,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       position: payload.position,
       uids: uids
     })
-    updateFFContent(tree)
+    updateFFContent(res.tree)
     dispatch(Main.updateFNTreeViewState(res))
 
     removeRunningAction(['dropFNNode'])
@@ -322,12 +323,17 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                     className={cx(
                       'justify-stretch',
                       'padding-xs',
+                      props.item.index === hoveredItem && 'background-secondary',
                       props.context.isSelected && 'background-secondary',
                       props.context.isDraggingOver && 'color-primary',
                       props.context.isDraggingOverParent && 'draggingOverParent',
                       props.context.isFocused && 'border',
                     )}
-                    style={{ flexWrap: "nowrap", paddingLeft: `${props.depth * 10}px` }}
+                    style={{
+                      flexWrap: "nowrap",
+                      paddingLeft: `${props.depth * 10}px`,
+                      ...(!props.context.isFocused ? { border: "1px solid transparent" } : {}),
+                    }}
 
                     {...(props.context.itemContainerWithoutChildrenProps as any)}
                     {...(props.context.interactiveElementProps as any)}
@@ -358,6 +364,9 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                       }
                     }}
                     onFocus={() => { }}
+                    onMouseMove={() => {
+                      dispatch(Main.hoverFNNode(props.item.index as TUid))
+                    }}
                   >
                     <div className="gap-xs padding-xs" style={{ width: "100%" }}>
                       {/* render arrow */}
@@ -445,7 +454,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
           props={{
             canDragAndDrop: true,
             canDropOnItemWithChildren: true,
-            canDropOnItemWithoutChildren: false,
+            canDropOnItemWithoutChildren: true,
             canReorderItems: true,
           }}
 
@@ -477,6 +486,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
               const isBetween = target.targetType === 'between-items'
               const parentUid = isBetween ? target.parentItem : target.targetItem
               const position = isBetween ? target.childIndex : 0
+
               cb_dropNode({ uids: uids, isBetween, parentUid, position })
             }
           }}

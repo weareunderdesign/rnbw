@@ -1,11 +1,11 @@
+import { Message } from '@_redux/main';
+
 export type ToastProps = {
-  open: boolean,
-  /* children: ReactNode[] | ReactNode,
-  open: boolean,
-  onClose: () => void, */
+  messages: Message[],
 }
+
 export type ToastItemProps = {
-  description: string,
-  title: string,  
   index: number,
+  title: string,
+  description: string,
 }

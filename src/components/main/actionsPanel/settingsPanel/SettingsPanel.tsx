@@ -3,6 +3,7 @@ import './SettingsPanel.css';
 import React, {
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 
@@ -27,51 +28,65 @@ type StyleProperty = {
 }
 
 export default function SettingsPanel(props: SettingsPanelProps) {
+  const dispatch = useDispatch()
 
-  const { actions, selected, isEnabled } = useEditor((state, query) => {
-    const currentNodeId = query.getEvent('selected').last();
-    let selected;
-    if (currentNodeId) {
+  // for groupping action - it contains the actionNames as keys which should be in the same group
+  const runningActions = useRef<{ [actionName: string]: boolean }>({})
+  const noRunningAction = () => {
+    return Object.keys(runningActions.current).length === 0 ? true : false
+  }
+  const addRunningAction = (actionNames: string[]) => {
+    for (const actionName of actionNames) {
+      runningActions.current[actionName] = true
+    }
+  }
+  const removeRunningAction = (actionNames: string[], effect: boolean = true) => {
+    for (const actionName of actionNames) {
+      delete runningActions.current[actionName]
+    }
+    if (effect && noRunningAction()) {
+      dispatch(Main.increaseActionGroupIndex())
+    }
+  }
+
+  // get the current selected node
+  const { selected } = useEditor((state, query) => {
+    const currentNodeId = query.getEvent('selected').last()
+    let selected
+    if (currentNodeId !== undefined && currentNodeId !== 'ROOT') {
       selected = {
         id: currentNodeId,
         name: state.nodes[currentNodeId].data.name,
         style: state.nodes[currentNodeId].data.props.style,
         props: state.nodes[currentNodeId].data.props,
         isDeletable: query.node(currentNodeId).isDeletable(),
-      };
+      }
     }
-    return {
-      selected,
-      isEnabled: state.options.enabled,
-    };
-  });
-
+    return { selected }
+  })
 
   const [styleLists, setStyleLists] = useState<Record<string, StyleProperty>>({})
-  const nodetree = useSelector(Main.globalGetNodeTreeSelector)
-  const dispatch = useDispatch()
+  const nodeTree = useSelector(Main.globalGetNodeTreeSelector)
   const { type } = useSelector(Main.globalGetCurrentFileSelector)
 
   useEffect(() => {
-
-    let elements: Record<string, StyleProperty> = {};
+    let elements: Record<string, StyleProperty> = {}
 
     // show default styles like margin, padding, etc...
-    const defaultStyles = ["margin", "padding"];
-
+    const defaultStyles = ["margin", "padding"]
     defaultStyles.map((name) => {
       elements[name] = {
         name,
         value: "",
-      };
-    });
+      }
+    })
 
     if (selected !== undefined && selected.style !== undefined) {
       Object.keys(selected.style).map((name) => {
         elements[name] = {
           name: name,
           value: selected.style[name],
-        };
+        }
       })
     }
     setStyleLists(elements)
@@ -83,10 +98,9 @@ export default function SettingsPanel(props: SettingsPanelProps) {
    * @returns Object { name : value }
    */
   const convertStyle = (styleList: Record<string, StyleProperty>) => {
-    const result: Object = {}
+    const result: { [styleName: string]: string } = {}
     Object.keys(styleList).map((key) => {
       const styleItem = styleList[key]
-      /*@ts-ignore*/
       result[styleItem.name] = styleItem.value
     })
     return result
@@ -94,9 +108,10 @@ export default function SettingsPanel(props: SettingsPanelProps) {
 
   // update the file content
   const updateFFContent = useCallback(async (tree: TTree) => {
-    const content = serializeFile({ type, tree })
-    dispatch(Main.updateFileContent(content))
-  }, [])
+    const newContent = serializeFile({ type, tree })
+    dispatch(Main.updateFileContent(newContent))
+  }, [type])
+
   return <>
     <div className="panel">
       <div className="border-bottom" style={{ height: "200px", overflow: "auto" }}>
@@ -108,43 +123,47 @@ export default function SettingsPanel(props: SettingsPanelProps) {
           </div>
           <div className="gap-s justify-end box">
             {/* action button */}
-            {/* <div className="icon-add opacity-m icon-xs" onClick={() => { }}></div> */}
+            <div className="icon-add opacity-m icon-xs" onClick={() => { }}></div>
           </div>
         </div>
+
         {/* panel body */}
         <div className="direction-row">
-          {
-            selected && Object.keys(styleLists).map((key) => {
-              const styleItem = styleLists[key]
-              return <div key={'attr_' + styleItem.name}>
-                <label >{styleItem.name}:</label>
-                <input type="text" value={styleItem.value} onChange={
-                  (e) => {
-                    // display chages of style properties
-                    const newStyleList = JSON.parse(JSON.stringify(styleLists))
-                    newStyleList[key].value = e.target.value;
-                    setStyleLists(newStyleList)
+          {selected !== undefined && Object.keys(styleLists).map((key) => {
+            const styleItem = styleLists[key]
+            return <div key={'attr_' + styleItem.name}>
+              <label className='text-s'>{styleItem.name}:</label>
+              <input
+                className='text-s opacity-m'
+                type="text"
+                value={styleItem.value}
+                onChange={(e) => {
+                  console.log(e)
 
-                    // props changed
-                    if (selected) {
-                      const tree = JSON.parse(JSON.stringify(nodetree))
-                      updateNode({
-                        tree: tree,
-                        data: {
-                          ...selected.props,
-                          style: convertStyle(newStyleList),
-                        },
-                        uid: selected.id
-                      })
-                      updateFFContent(tree)
-                    }
-                  }
-                }></input>
-              </div>
-            })
-          }
+                  // display chages of style properties
+                  const newStyleList = JSON.parse(JSON.stringify(styleLists))
+                  newStyleList[key].value = e.target.value
+                  setStyleLists(newStyleList)
+
+                  // props changed
+                  addRunningAction(['updateNode'])
+                  const tree = JSON.parse(JSON.stringify(nodeTree))
+                  updateNode({
+                    tree: tree,
+                    data: {
+                      ...selected.props,
+                      style: convertStyle(newStyleList),
+                    },
+                    uid: selected.id
+                  })
+                  updateFFContent(tree)
+                  removeRunningAction(['updateNode'])
+                }}
+              />
+            </div>
+          })}
         </div>
       </div>
-    </div >
+    </div>
   </>
 }

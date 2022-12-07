@@ -20,8 +20,8 @@ import {
  * @returns 
  */
 export const parseHtml = (content: string): TTree => {
-  let root: TTree = {};
-  let uids: Map<DOMNode, string> = new Map<DOMNode, string>;
+  let root: TTree = {}
+  let uids: Map<DOMNode, string> = new Map<DOMNode, string>()
 
   // root element
   const root_element: TNode = {
@@ -46,55 +46,58 @@ export const parseHtml = (content: string): TTree => {
       : (element as unknown as Element).name
   }
 
-  parse(content, {
-    replace: (node: DOMNode) => {
-      // We can parse only Element & Text node, the others are removed
-      if (node.type == "comment" || node.type == "doctype" || node.type == "cdata" || node.type == "script" || node.type == "directive") {
-        return;
+  try {
+    parse(content, {
+      replace: (node: DOMNode) => {
+        // We can parse only Element & Text node, the others are removed
+        if (node.type == "comment" || node.type == "doctype" || node.type == "cdata" || node.type == "script" || node.type == "directive") {
+          return;
+        }
+
+        if (node.type == "text") {
+          // remove all tabs and lines in text
+          const converted_string = (node as unknown as Text).data.replace(/(\n|\t)/g, ' ').replace(/\s+/g, ' ').split(' ').filter(s => !!s).join(' ');
+          if (converted_string.length == 0) return;
+          (node as unknown as Text).data = converted_string
+        }
+
+        let cid: string;
+        let pid: string;
+
+        if (node.parent == null) {
+          pid = "root"
+          cid = generateNodeUid("root", root["root"].children.length + 1)
+        } else {
+          pid = uids.get(node.parent) as TUid
+          cid = generateNodeUid(pid, root[pid].children.length + 1)
+        }
+
+        if (node.type == "text") {
+          // Text is children of Element tag, this is not node child.
+          root[pid].data.children = (node as Text).data
+          return
+        }
+
+        root[cid] = {
+          uid: cid,
+          p_uid: pid,
+          name: getName(node),
+          children: [],
+          data: { // all attributes converted -> style, classNames, ... 
+            ...attributesToProps((node as Element).attribs)
+          }, // node props
+          isEntity: true
+          // nodeType: node.type
+        } as TNode
+
+        root[pid].children?.push(cid)
+        root[pid].isEntity = false // set node to parent node
+        uids.set(node, cid)
       }
-
-
-      if (node.type == "text") {
-        // remove all tabs and lines in text
-        const converted_string = (node as unknown as Text).data.replace(/(\n|\t)/g, ' ').replace(/\s+/g, ' ').split(' ').filter(s => !!s).join(' ');
-        if (converted_string.length == 0) return;
-        (node as unknown as Text).data = converted_string
-      }
-
-      let cid: string;
-      let pid: string;
-
-      if (node.parent == null) {
-        pid = "root"
-        cid = generateNodeUid("root", root["root"].children.length + 1)
-      } else {
-        pid = uids.get(node.parent) as TUid
-        cid = generateNodeUid(pid, root[pid].children.length + 1)
-      }
-
-      if (node.type == "text") {
-        // Text is children of Element tag, this is not node child.
-        root[pid].data.children = (node as Text).data;
-        return;
-      }
-
-      root[cid] = {
-        uid: cid,
-        p_uid: pid,
-        name: getName(node),
-        children: [],
-        data: { // all attributes converted -> style, classNames, ... 
-          ...attributesToProps((node as Element).attribs)
-        }, // node props
-        isEntity: true
-        // nodeType: node.type
-      } as TNode
-
-      root[pid].children?.push(cid)
-      root[pid].isEntity = false // set node to parent node
-      uids.set(node, cid)
-    }
-  })
+    })
+  } catch (err) {
+    console.log(err)
+  }
 
   return root
 }
@@ -115,7 +118,6 @@ export const serializeHtml = (data: TTree): string => {
    * @returns html
    */
   const getHTMLFromFNObject = (uid: string, level: number) => {
-
     const element: TNode = data[uid] as TNode
     let element_html: string = ""
 
@@ -151,7 +153,7 @@ export const serializeHtml = (data: TTree): string => {
     return element_html
   }
 
-  for (const child of (root.children || [])) {
+  for (const child of root.children) {
     html += getHTMLFromFNObject(child, 0)
   }
   return html

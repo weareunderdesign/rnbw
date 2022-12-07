@@ -1,6 +1,7 @@
 import React, {
   useCallback,
   useEffect,
+  useMemo,
   useState,
 } from 'react';
 
@@ -20,6 +21,7 @@ import {
   Container,
   Text,
 } from '@_components/main/stageView/components/selectors';
+import NodeRenderer from '@_components/main/stageView/nodeRenderer';
 import {
   moveNode,
   serializeFile,
@@ -29,7 +31,10 @@ import {
   TUid,
 } from '@_node/types';
 import * as Main from '@_redux/main';
-import { verifyPermission } from '@_services/main';
+import {
+  updateFileContent,
+  updateFNTreeViewState,
+} from '@_redux/main';
 import {
   Editor,
   EditorState,
@@ -40,7 +45,8 @@ import { QueryCallbacksFor } from '@craftjs/utils';
 
 import { MainPageProps } from './types';
 import { Toast, CommandK } from '@_components/common';
-import { CmdKGroupProps, CmdKItemGeneralProps } from '@_components/common/cmdk';
+import { CmdKItemGeneralProps } from '@_components/common/cmdk';
+import { verifyPermission } from '@_services/main';
 
 export default function MainPage(props: MainPageProps) {
   const dispatch = useDispatch()
@@ -64,11 +70,12 @@ export default function MainPage(props: MainPageProps) {
 
   // fetch global state
   const pending = useSelector(Main.globalGetPendingSelector)
-  const error = useSelector(Main.globalGetErrorSelector)
   const { uid, content, type } = useSelector(Main.globalGetCurrentFileSelector)
+  const _messages = useSelector(Main.globalGetMessagesSelector)
+  const messages = useMemo(() => _messages, [_messages])
 
   const [cmdkOpen, setCmdkOpen] = useState(false)
-  const nodetree = useSelector(Main.globalGetNodeTreeSelector)
+  const nodeTree = useSelector(Main.globalGetNodeTreeSelector)
 
   // file-content saving handler
   const handleSaveFFContent = async () => {
@@ -101,19 +108,25 @@ export default function MainPage(props: MainPageProps) {
     dispatch(ActionCreators.redo())
   }
 
-  /* toogle code  view */
-  const [showCodeView, setShowCodeView] = useState(false)
+  // toogle code  view
+  const [showCodeView, setShowCodeView] = useState(true)
   const toogleCodeView = async () => {
     setShowCodeView(!showCodeView)
   }
 
+  /* update the currnet file content global state */
+  const updateFFContent = async (tree: TTree) => {
+    const content = serializeFile({ type, tree })
+    dispatch(updateFileContent(content))
+  }
+
   const onBeforeMoveEnd = (targetNode: Node, newParentNode: Node, existingParentNode: Node) => {
-  };
+  }
 
   const onNodesChange = (query: QueryCallbacksFor<typeof QueryMethods>) => {
-    const state: EditorState = query.getState();
+    const state: EditorState = query.getState()
     if (state.events.selected.size == 0)
-      return;
+      return
 
     let selectedNodes: string[] = [];
     // get selected node ids
@@ -121,7 +134,7 @@ export default function MainPage(props: MainPageProps) {
       selectedNodes.push(key);
     });
 
-    const tree = JSON.parse(JSON.stringify(nodetree))
+    const tree = JSON.parse(JSON.stringify(nodeTree))
 
     if (state.events.dragged.size != 0) {
       // dragged and drop event
@@ -140,13 +153,6 @@ export default function MainPage(props: MainPageProps) {
       updateFFContent(tree)
       dispatch(Main.updateFNTreeViewState(res))
     }
-  }
-
-  /* update the global state */
-  const updateFFContent = async (tree: TTree) => {
-    console.log("update content")
-    const content = serializeFile({ type, tree })
-    dispatch(Main.updateFileContent(content))
   }
 
   const makeCmkItems = () => {
@@ -170,6 +176,7 @@ export default function MainPage(props: MainPageProps) {
   useEffect(() => {
     setCmdkOpen(false)
   }, [command.changed])
+
   useEffect(() => {
     switch (command.action) {
       case 'cmdz':
@@ -179,7 +186,7 @@ export default function MainPage(props: MainPageProps) {
         cmdy()
         break
     }
-  }, [command.action])
+  }, [command])
 
   const down = useCallback((e: KeyboardEvent) => {
     if (e.key === '\\' && e.metaKey) {
@@ -199,7 +206,7 @@ export default function MainPage(props: MainPageProps) {
   }, [cmdkOpen, command.changed])
 
   return (<>
-    <Toast />
+    <Toast messages={messages} />
     <CommandK onKeyDownCallback={down} open={cmdkOpen} setOpen={setCmdkOpen} items={makeCmkItems()} />
     <div className="page">
       <div className="direction-row">
@@ -220,11 +227,6 @@ export default function MainPage(props: MainPageProps) {
 
               {/* toogle codeview */}
               <div className="icon-code opacity-m icon-s" onClick={toogleCodeView}></div>
-
-              {/* avatar */}
-              <div className="radius-m icon-s align-center background-secondary">
-                <span className="text-s">V</span>
-              </div>
             </div >
           </div >
 
@@ -235,7 +237,6 @@ export default function MainPage(props: MainPageProps) {
             </div>}
 
           {/* wrap with the craft.js editor */}
-
           <Editor
             resolver={{
               Container,
@@ -244,7 +245,7 @@ export default function MainPage(props: MainPageProps) {
             }}
             onBeforeMoveEnd={onBeforeMoveEnd}
             onNodesChange={onNodesChange}
-          // onRender={RenderNode}
+            onRender={NodeRenderer}
           >
             <ActionsPanel />
             <StageView />
