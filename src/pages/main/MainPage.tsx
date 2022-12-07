@@ -1,7 +1,7 @@
 import React, {
   useCallback,
   useEffect,
-  useMemo,
+  useRef,
   useState,
 } from 'react';
 
@@ -11,6 +11,11 @@ import {
 } from 'react-redux';
 import { ActionCreators } from 'redux-undo';
 
+import {
+  CommandK,
+  Toast,
+} from '@_components/common';
+import { CmdKItemGeneralProps } from '@_components/common/cmdk';
 import {
   ActionsPanel,
   CodeView,
@@ -31,10 +36,8 @@ import {
   TUid,
 } from '@_node/types';
 import * as Main from '@_redux/main';
-import {
-  updateFileContent,
-  updateFNTreeViewState,
-} from '@_redux/main';
+import { updateFileContent } from '@_redux/main';
+import { verifyPermission } from '@_services/main';
 import {
   Editor,
   EditorState,
@@ -44,12 +47,28 @@ import {
 import { QueryCallbacksFor } from '@craftjs/utils';
 
 import { MainPageProps } from './types';
-import { Toast, CommandK } from '@_components/common';
-import { CmdKItemGeneralProps } from '@_components/common/cmdk';
-import { verifyPermission } from '@_services/main';
 
 export default function MainPage(props: MainPageProps) {
   const dispatch = useDispatch()
+
+  // for groupping action - it contains the actionNames as keys which should be in the same group
+  const runningActions = useRef<{ [actionName: string]: boolean }>({})
+  const noRunningAction = () => {
+    return Object.keys(runningActions.current).length === 0 ? true : false
+  }
+  const addRunningAction = (actionNames: string[]) => {
+    for (const actionName of actionNames) {
+      runningActions.current[actionName] = true
+    }
+  }
+  const removeRunningAction = (actionNames: string[], effect: boolean = true) => {
+    for (const actionName of actionNames) {
+      delete runningActions.current[actionName]
+    }
+    if (effect && noRunningAction()) {
+      dispatch(Main.increaseActionGroupIndex())
+    }
+  }
 
   // file system handlers - context
   const [ffHandlers, setFFHandlers] = useState<Main.FFHandlers>({})
@@ -66,16 +85,80 @@ export default function MainPage(props: MainPageProps) {
     setFFHandlers({ ...newHandlers, ...handlers })
   }, [ffHandlers])
 
+  // cmdk - context
   const [command, setCommand] = useState<Main.Command>({ action: '', changed: false })
 
-  // fetch global state
+  // fetch necessary state
   const pending = useSelector(Main.globalGetPendingSelector)
+  const messages = useSelector(Main.globalGetMessagesSelector)
   const { uid, content, type } = useSelector(Main.globalGetCurrentFileSelector)
-  const _messages = useSelector(Main.globalGetMessagesSelector)
-  const messages = useMemo(() => _messages, [_messages])
-
-  const [cmdkOpen, setCmdkOpen] = useState(false)
   const nodeTree = useSelector(Main.globalGetNodeTreeSelector)
+
+  // cmdk handle
+  const [cmdkOpen, setCmdkOpen] = useState(false)
+  const makeCmkItems = useCallback(() => {
+    const items: CmdKItemGeneralProps[] = []
+    items.push({
+      heading: 'Start',
+      items: [
+        { title: 'Open', shortcut: '⌘ 🄾', onSelect: () => { setCommand({ action: "OpenProject", changed: !command.changed }) } },
+        { title: 'New File', shortcut: '⌘ 🄽', onSelect: () => { } },
+      ]
+    }, {
+      heading: 'Action',
+      items: [
+        { title: 'Undo', shortcut: 'Ctrl Z', onSelect: () => { setCommand({ action: "cmdz", changed: !command.changed }) } },
+        { title: 'Redo', shortcut: 'Ctrl Y', onSelect: () => { setCommand({ action: "cmdy", changed: !command.changed }) } }
+      ]
+    })
+    return items
+  }, [command.changed])
+  const cb_onKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === '\\' && e.metaKey) {
+      e.preventDefault()
+      setCmdkOpen(!cmdkOpen)
+    }
+    if (e.key === 'o' && e.ctrlKey) {
+      e.preventDefault()
+      setCommand({ action: "OpenProject", changed: !command.changed })
+    }
+    if (e.key === 'z' && e.ctrlKey) {
+      setCommand({ action: "cmdz", changed: !command.changed })
+    }
+    if (e.key === 'y' && e.ctrlKey) {
+      setCommand({ action: "cmdy", changed: !command.changed })
+    }
+  }, [cmdkOpen, command.changed])
+  useEffect(() => {
+    // cmdk actions handle
+    switch (command.action) {
+      case 'cmdz':
+        cmdz()
+        break
+      case 'cmdy':
+        cmdy()
+        break
+      default:
+        break
+    }
+
+    // close modal
+    setCmdkOpen(false)
+  }, [command.changed])
+
+  /* hms methods */
+  const cmdz = () => {
+    dispatch(ActionCreators.undo())
+  }
+  const cmdy = () => {
+    dispatch(ActionCreators.redo())
+  }
+
+  // toogle code  view
+  const [showCodeView, setShowCodeView] = useState(false)
+  const toogleCodeView = async () => {
+    setShowCodeView(!showCodeView)
+  }
 
   // file-content saving handler
   const handleSaveFFContent = async () => {
@@ -100,21 +183,7 @@ export default function MainPage(props: MainPageProps) {
     dispatch(Main.setGlobalPending(false))
   }
 
-  /* hms methods */
-  const cmdz = () => {
-    dispatch(ActionCreators.undo())
-  }
-  const cmdy = () => {
-    dispatch(ActionCreators.redo())
-  }
-
-  // toogle code  view
-  const [showCodeView, setShowCodeView] = useState(true)
-  const toogleCodeView = async () => {
-    setShowCodeView(!showCodeView)
-  }
-
-  /* update the currnet file content global state */
+  // update the currnet file content global state
   const updateFFContent = async (tree: TTree) => {
     const content = serializeFile({ type, tree })
     dispatch(updateFileContent(content))
@@ -123,91 +192,50 @@ export default function MainPage(props: MainPageProps) {
   const onBeforeMoveEnd = (targetNode: Node, newParentNode: Node, existingParentNode: Node) => {
   }
 
-  const onNodesChange = (query: QueryCallbacksFor<typeof QueryMethods>) => {
+  // StageView DnD
+  const onNodesChange = useCallback((query: QueryCallbacksFor<typeof QueryMethods>) => {
     const state: EditorState = query.getState()
-    if (state.events.selected.size == 0)
-      return
+    if (state.events.selected.size === 0) return
 
-    let selectedNodes: string[] = [];
-    // get selected node ids
-    state.events.selected.forEach((key) => {
-      selectedNodes.push(key);
-    });
+    // get selected node uids
+    let selectedNodeUids: TUid[] = []
+    state.events.selected.forEach((uid) => {
+      selectedNodeUids.push(uid)
+    })
 
-    const tree = JSON.parse(JSON.stringify(nodeTree))
+    if (state.events.dragged.size !== 0) {
+      const tree = JSON.parse(JSON.stringify(nodeTree))
 
-    if (state.events.dragged.size != 0) {
       // dragged and drop event
-      console.log("drop action")
       const parentId = state.indicator.placement.parent.id
       const position = state.indicator.placement.index
+
+      addRunningAction(['moveFNNode'])
 
       const movePayload = {
         tree: tree,
         isBetween: true,
-        parentUid: parentId,
+        parentUid: parentId === 'ROOT' ? 'root' : parentId,
         position,
-        uids: selectedNodes
+        uids: selectedNodeUids
       }
+      console.log(movePayload)
       const res = moveNode(movePayload)
-      updateFFContent(tree)
+      updateFFContent(res.tree)
       dispatch(Main.updateFNTreeViewState(res))
-    }
-  }
 
-  const makeCmkItems = () => {
-    const items: CmdKItemGeneralProps[] = []
-    items.push({
-      heading: 'Start',
-      items: [
-        { title: 'Open', shortcut: '⌘ 🄾', onSelect: () => { setCommand({ action: "OpenProject", changed: !command.changed }) } },
-        { title: 'New File', shortcut: '⌘ 🄽', onSelect: () => { } },
-      ]
-    }, {
-      heading: 'Action',
-      items: [
-        { title: 'Undo', shortcut: 'Ctrl Z', onSelect: () => { setCommand({ action: "cmdz", changed: !command.changed }) } },
-        { title: 'Redo', shortcut: 'Ctrl Y', onSelect: () => { setCommand({ action: "cmdy", changed: !command.changed }) } }
-      ]
-    })
-    return items
-  }
+      removeRunningAction(['moveFNNode'])
+    }
+  }, [nodeTree])
 
-  useEffect(() => {
-    setCmdkOpen(false)
-  }, [command.changed])
-
-  useEffect(() => {
-    switch (command.action) {
-      case 'cmdz':
-        cmdz()
-        break
-      case 'cmdy':
-        cmdy()
-        break
-    }
-  }, [command])
-
-  const down = useCallback((e: KeyboardEvent) => {
-    if (e.key === '\\' && e.metaKey) {
-      e.preventDefault()
-      setCmdkOpen(!cmdkOpen)
-    }
-    if (e.key === 'o' && e.ctrlKey) {
-      e.preventDefault()
-      setCommand({ action: "OpenProject", changed: !command.changed })
-    }
-    if (e.key === 'z' && e.ctrlKey) {
-      setCommand({ action: "cmdz", changed: !command.changed })
-    }
-    if (e.key === 'y' && e.ctrlKey) {
-      setCommand({ action: "cmdy", changed: !command.changed })
-    }
-  }, [cmdkOpen, command.changed])
 
   return (<>
+    {/* toast */}
     <Toast messages={messages} />
-    <CommandK onKeyDownCallback={down} open={cmdkOpen} setOpen={setCmdkOpen} items={makeCmkItems()} />
+
+    {/* cmdk */}
+    <CommandK onKeyDownCallback={cb_onKeyDown} open={cmdkOpen} setOpen={setCmdkOpen} items={makeCmkItems()} />
+
     <div className="page">
       <div className="direction-row">
         <h1 className="center text-s"><span className="text-s opacity-m">Rainbow v1.0 /</span> Main Page</h1>

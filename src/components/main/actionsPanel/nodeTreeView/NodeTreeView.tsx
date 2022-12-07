@@ -100,7 +100,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   const handleAddFNNode = useCallback((nodeType: string) => {
     // validate
     const focusedNode = treeData[focusedItem]
-    if (focusedNode === undefined || focusedNode.isEntity) return
+    if (focusedNode === undefined) return
 
     addRunningAction(['addFNNode'])
 

@@ -88,6 +88,7 @@ export default function Viewport(props: ViewportProps) {
     } else {
       same = false
     }
+
     if (same) return
 
     addRunningAction(['selectFNNode', 'focusFNNode', 'expandFNNode'])
@@ -106,8 +107,15 @@ export default function Viewport(props: ViewportProps) {
 
   // update the editor based on the file content
   useEffect(() => {
-    if (content !== "" && type === "html") {
+    if (content === '') {
+      const nodes: Record<TUid, Node> = query.getNodes()
+      nodes['ROOT'].data.nodes.map((c_uid) => {
+        actions.delete(c_uid)
+      })
+      return
+    }
 
+    if (content !== "" && type === "html") {
       let root_node = JSON.parse(JSON.stringify(query.node("ROOT").get().data))
 
       // clear nodes inside ROOT

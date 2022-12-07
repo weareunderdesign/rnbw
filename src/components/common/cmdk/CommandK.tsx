@@ -1,12 +1,15 @@
+import './style.css';
+
 import React, { useEffect } from 'react';
 
 import { Command } from 'cmdk';
 
-import './style.css';
-
-import { CmdKItemProps, CmdKProps, CmdKGroupProps, isGroup } from './types';
-
-
+import {
+  CmdKGroupProps,
+  CmdKItemProps,
+  CmdKProps,
+  isGroup,
+} from './types';
 
 const Item = (props: CmdKItemProps) => {
   const { shortcut, title, onSelect } = props
@@ -36,6 +39,7 @@ const getGroup = (group: CmdKGroupProps, key: number) => {
     </Command.Group>
   );
 }
+
 export default function CmdK(props: CmdKProps) {
   const { open, setOpen, onKeyDownCallback, items } = props
   const [search, setSearch] = React.useState('')

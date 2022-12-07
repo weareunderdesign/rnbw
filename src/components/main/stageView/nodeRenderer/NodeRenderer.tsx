@@ -30,16 +30,12 @@ export default function NodeRenderer(props: RenderNodeProp) {
 
   // hover, select sync
   useEffect(() => {
-    if (nodeId === 'ROOT') return
-    selected ? [dom?.classList.remove('component-hovered'), dom?.classList.add('component-selected')] : dom?.classList.remove('component-selected')
-  }, [selected])
-  useEffect(() => {
-    if (selected) true
-    hoveredItem === nodeId ? dom?.classList.add('component-hovered') : dom?.classList.remove('component-hovered')
-  }, [hoveredItem])
-  useEffect(() => {
-    hoveredItem !== nodeId && nodeId !== 'ROOT' && dispatch(Main.hoverFNNode(nodeId))
-  }, [hovered])
+    dom?.classList.remove('component-hovered', 'component-selected')
+
+    selected ? (nodeId !== 'ROOT' && dom?.classList.add('component-selected')) :
+      (nodeId === hoveredItem || (nodeId === 'ROOT' && hoveredItem === 'root')) ? (nodeId !== 'ROOT' && dom?.classList.add('component-hovered')) :
+        (hovered && dispatch(Main.hoverFNNode(nodeId === 'ROOT' ? 'root' : nodeId)))
+  }, [selected, hovered, hoveredItem])
 
   return <>
     {props.render}

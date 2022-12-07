@@ -30,8 +30,8 @@ const Text: UserComponent<TextProps> = ({ text }: Partial<TextProps>) => {
         }}
         onBlur={(e) => {
           setEditable(false)
-        }} 
-        />
+        }}
+      />
     </>
       : <div onDoubleClick={(e) => setEditable(true)}>{text}</div>
   )

@@ -129,6 +129,7 @@ export const addNode = ({ tree, targetUid, node }: TAddNodePayload) => {
   node.uid = generateNodeUid(targetUid, target.children.length + 1)
   node.p_uid = targetUid
   target.children.push(node.uid)
+  target.isEntity = false
   tree[node.uid] = node
 }
 
@@ -145,6 +146,7 @@ export const removeNode = ({ tree, nodeUids }: TRemoveNodePayload): TNodeApiRes 
     // update parent
     const p_node = tree[node.p_uid as TUid]
     p_node.children = p_node.children.filter(c_uid => c_uid !== nodeUid)
+    p_node.isEntity = p_node.children.length === 0
 
     changedParent[p_node.uid] = true
 
@@ -177,7 +179,7 @@ export const moveNode = ({ tree, isBetween, parentUid, position, uids }: TMoveNo
     const node = tree[uid]
     const p_node = tree[node.p_uid as TUid]
     p_node.children = p_node.children.filter(c_uid => c_uid !== uid)
-    p_node.children.length === 0 && (p_node.isEntity = true)
+    p_node.isEntity = p_node.children.length === 0
 
     node.p_uid = parentUid
     if (isBetween) {

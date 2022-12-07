@@ -40,14 +40,21 @@ export default function CodeView(props: CodeViewProps) {
   const [syncTimer, setSyncTimer] = useState<NodeJS.Timeout>()
   const [autoSaveTimer, setAutoSaveTimer] = useState<NodeJS.Timeout>()
   const { ffHandlers } = useContext(Main.MainContext)
+  useEffect(() => {
+    // file system auto save delay
+    if (autoSaveTimer !== undefined) {
+      clearTimeout(autoSaveTimer)
+    }
+    setAutoSaveTimer(setTimeout(() => {
+      saveFileContent()
+    }, FileAutoSaveInterval))
+  }, [codeContent])
   const saveFileContent = async () => {
-    return
-
     // get the current file handler
     let handler = ffHandlers[uid]
     if (handler === undefined) return
 
-    /* for the remote rainbow */
+    // verify permission
     if (await verifyPermission(handler) === false) {
       dispatch(Main.setGlobalMessage({
         type: 'error',
@@ -55,6 +62,7 @@ export default function CodeView(props: CodeViewProps) {
       }))
     }
 
+    // update file content
     const writableStream = await (handler as FileSystemFileHandle).createWritable()
     await writableStream.write(content)
     await writableStream.close()
@@ -63,9 +71,11 @@ export default function CodeView(props: CodeViewProps) {
   }
   const handleEditorChange = useCallback((value: string | undefined, ev: monaco.editor.IModelContentChangedEvent) => {
     let editorContent = value || ''
-    if (editorContent === content) return
 
-    console.log(content.localeCompare(editorContent))
+    // skip same content
+    const _editorContent = editorContent.replace(/\n/g, "").replace(/\t/g, "").replace(/\r/g, "")
+    const _content = content.replace(/\n/g, "").replace(/\t/g, "").replace(/\r/g, "")
+    if (_editorContent === _content) return
 
     setCodeContent(editorContent)
 
@@ -76,12 +86,6 @@ export default function CodeView(props: CodeViewProps) {
     setSyncTimer(setTimeout(() => {
       dispatch(Main.updateFileContent(editorContent))
     }, CodeViewSyncDelay))
-
-    // file system auto save delay
-    if (autoSaveTimer !== undefined) {
-      clearTimeout(autoSaveTimer)
-    }
-    setAutoSaveTimer(setTimeout(saveFileContent, FileAutoSaveInterval))
   }, [content, syncTimer, autoSaveTimer])
 
   // Monaco Ref

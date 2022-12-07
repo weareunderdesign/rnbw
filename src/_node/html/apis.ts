@@ -135,10 +135,14 @@ export const serializeHtml = (data: TTree): string => {
       })
       element_html += `"`
     }
-    element_html += `>` + "\n"
+    if (element.children.length == 0) {
+      element_html += `>`
+    } else {
+      element_html += `>` + "\n"
+    }
 
     // children tages
-    element_html += element.children?.reduce((result, item) => {
+    element_html += element.children.reduce((result, item) => {
       return result + getHTMLFromFNObject(item, level + 1)
     }, '');
 
@@ -148,7 +152,10 @@ export const serializeHtml = (data: TTree): string => {
     }
 
     // end tag
-    element_html += "\t".repeat(level) + `</${element.name}>` + "\n"
+    if (element.children.length != 0)
+      element_html += "\t".repeat(level)
+
+    element_html += `</${element.name}>` + "\n"
 
     return element_html
   }

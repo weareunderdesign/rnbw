@@ -1,7 +1,4 @@
-import React, {
-  useEffect,
-  useRef,
-} from 'react';
+import React from 'react';
 
 import {
   useNode,
@@ -18,12 +15,6 @@ const Button: UserComponent<ButtonProps> = (props: ButtonProps) => {
   } = useNode((node) => ({
     selected: node.events.selected,
   }))
-
-  const ref = useRef()
-
-  useEffect(() => {
-    console.log('button selected')
-  }, [selected])
 
   return <>
     <button
