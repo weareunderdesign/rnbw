@@ -92,9 +92,19 @@ export type UpdateFNTreeViewStatePayload = {
 export type MainContextType = {
   ffHandlers: FFHandlers,
   setFFHandlers: (deletedUids: TUid[], handlers: { [uid: TUid]: FileSystemHandle }) => void,
+  command: Command,
+  setCommand: (command: Command) => void,
 }
 
 /**
+ * Cmdk
+ */
+export type Command = {
+  action: string,
+  changed: boolean,
+}
+
+/**,
  * ff handler collection
  */
 export type FFHandlers = { [key: TUid]: FileSystemHandle }

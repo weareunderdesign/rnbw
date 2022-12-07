@@ -1,5 +1,6 @@
 import React, {
   useCallback,
+  useEffect,
   useMemo,
   useState,
 } from 'react';
@@ -10,7 +11,6 @@ import {
 } from 'react-redux';
 import { ActionCreators } from 'redux-undo';
 
-import { Toast } from '@_components/common';
 import {
   ActionsPanel,
   CodeView,
@@ -44,6 +44,9 @@ import {
 import { QueryCallbacksFor } from '@craftjs/utils';
 
 import { MainPageProps } from './types';
+import { Toast, CommandK } from '@_components/common';
+import { CmdKItemGeneralProps } from '@_components/common/cmdk';
+import { verifyPermission } from '@_services/main';
 
 export default function MainPage(props: MainPageProps) {
   const dispatch = useDispatch()
@@ -63,16 +66,41 @@ export default function MainPage(props: MainPageProps) {
     setFFHandlers({ ...newHandlers, ...handlers })
   }, [ffHandlers])
 
-  // fetch necessary state
+  const [command, setCommand] = useState<Main.Command>({ action: '', changed: false })
+
+  // fetch global state
   const pending = useSelector(Main.globalGetPendingSelector)
   const { uid, content, type } = useSelector(Main.globalGetCurrentFileSelector)
   const _messages = useSelector(Main.globalGetMessagesSelector)
   const messages = useMemo(() => _messages, [_messages])
 
-  // fetch necessary state
+  const [cmdkOpen, setCmdkOpen] = useState(false)
   const nodeTree = useSelector(Main.globalGetNodeTreeSelector)
 
-  // hms methods
+  // file-content saving handler
+  const handleSaveFFContent = async () => {
+    // get the current file handler
+    let handler = ffHandlers[uid]
+    if (handler === undefined) {
+      return
+    }
+
+    dispatch(Main.setGlobalPending(true))
+
+    /* for the remote rainbow */
+    if (await verifyPermission(handler) === false) {
+      console.log('show save file picker')
+      handler = await showSaveFilePicker({ suggestedName: handler.name })
+    }
+
+    const writableStream = await (handler as FileSystemFileHandle).createWritable()
+    await writableStream.write(content)
+    await writableStream.close()
+
+    dispatch(Main.setGlobalPending(false))
+  }
+
+  /* hms methods */
   const cmdz = () => {
     dispatch(ActionCreators.undo())
   }
@@ -123,19 +151,70 @@ export default function MainPage(props: MainPageProps) {
       }
       const res = moveNode(movePayload)
       updateFFContent(tree)
-      dispatch(updateFNTreeViewState(res))
+      dispatch(Main.updateFNTreeViewState(res))
     }
   }
 
+  const makeCmkItems = () => {
+    const items: CmdKItemGeneralProps[] = []
+    items.push({
+      heading: 'Start',
+      items: [
+        { title: 'Open', shortcut: '⌘ 🄾', onSelect: () => { setCommand({ action: "OpenProject", changed: !command.changed }) } },
+        { title: 'New File', shortcut: '⌘ 🄽', onSelect: () => { } },
+      ]
+    }, {
+      heading: 'Action',
+      items: [
+        { title: 'Undo', shortcut: 'Ctrl Z', onSelect: () => { setCommand({ action: "cmdz", changed: !command.changed }) } },
+        { title: 'Redo', shortcut: 'Ctrl Y', onSelect: () => { setCommand({ action: "cmdy", changed: !command.changed }) } }
+      ]
+    })
+    return items
+  }
+
+  useEffect(() => {
+    setCmdkOpen(false)
+  }, [command.changed])
+
+  useEffect(() => {
+    switch (command.action) {
+      case 'cmdz':
+        cmdz()
+        break
+      case 'cmdy':
+        cmdy()
+        break
+    }
+  }, [command])
+
+  const down = useCallback((e: KeyboardEvent) => {
+    if (e.key === '\\' && e.metaKey) {
+      e.preventDefault()
+      setCmdkOpen(!cmdkOpen)
+    }
+    if (e.key === 'o' && e.ctrlKey) {
+      e.preventDefault()
+      setCommand({ action: "OpenProject", changed: !command.changed })
+    }
+    if (e.key === 'z' && e.ctrlKey) {
+      setCommand({ action: "cmdz", changed: !command.changed })
+    }
+    if (e.key === 'y' && e.ctrlKey) {
+      setCommand({ action: "cmdy", changed: !command.changed })
+    }
+  }, [cmdkOpen, command.changed])
+
   return (<>
     <Toast messages={messages} />
+    <CommandK onKeyDownCallback={down} open={cmdkOpen} setOpen={setCmdkOpen} items={makeCmkItems()} />
     <div className="page">
       <div className="direction-row">
         <h1 className="center text-s"><span className="text-s opacity-m">Rainbow v1.0 /</span> Main Page</h1>
       </div>
       <div className="direction-column background-primary border shadow">
         {/* wrap with the context */}
-        <Main.MainContext.Provider value={{ ffHandlers: ffHandlers, setFFHandlers: _setFFHandlers }}>
+        <Main.MainContext.Provider value={{ ffHandlers: ffHandlers, setFFHandlers: _setFFHandlers, command: command, setCommand: setCommand }}>
           {/* top bar */}
           <div className="direction-column padding-s box-l justify-stretch border-bottom">
             <div className="gap-s box justify-start">
