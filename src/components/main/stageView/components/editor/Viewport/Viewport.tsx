@@ -1,4 +1,7 @@
-import React, { useEffect } from 'react';
+import React, {
+  useEffect,
+  useRef,
+} from 'react';
 
 import {
   useDispatch,
@@ -35,7 +38,27 @@ export default function Viewport(props: ViewportProps) {
   const focusedItem = useSelector(Main.fnGetFocusedItemSelector)
   const selectedItems = useSelector(Main.fnGetSelectedItemsSelector)
   const selectedItemsObj = useSelector(Main.fnGetSelectedItemsObjSelector)
-  const { uid, type, content } = useSelector(Main.globalGetCurrentFileSelector)
+  const nodeTree = useSelector(Main.globalGetNodeTreeSelector)
+  const { type, content } = useSelector(Main.globalGetCurrentFileSelector)
+
+  // for groupping action - it contains the actionNames as keys which should be in the same group
+  const runningActions = useRef<{ [actionName: string]: boolean }>({})
+  const noRunningAction = () => {
+    return Object.keys(runningActions.current).length === 0 ? true : false
+  }
+  const addRunningAction = (actionNames: string[]) => {
+    for (const actionName of actionNames) {
+      runningActions.current[actionName] = true
+    }
+  }
+  const removeRunningAction = (actionNames: string[], effect: boolean = true) => {
+    for (const actionName of actionNames) {
+      delete runningActions.current[actionName]
+    }
+    if (effect && noRunningAction()) {
+      dispatch(Main.increaseActionGroupIndex())
+    }
+  }
 
   // sync with the state
   useEffect(() => {
@@ -44,28 +67,20 @@ export default function Viewport(props: ViewportProps) {
     Object.keys(nodes).map((uid) => {
       const node = nodes[uid]
       node.dom?.classList.remove("component-selected")
-      if (selectedItemsObj[uid] === true) {
+      if (selectedItemsObj[uid] === true || uid === focusedItem) {
         node.dom?.classList.add("component-selected")
         _selectedItems.push(uid)
       }
     })
     actions.selectNode(_selectedItems)
-  }, [selectedItemsObj])
-  useEffect(() => {
-    const nodes: Record<TUid, Node> = query.getNodes()
-    Object.keys(nodes).map((uid) => {
-      const node = nodes[uid]
-      node.dom?.classList.remove("component-hovered")
-      if (focusedItem !== 'root' && focusedItem === uid) {
-        node.dom?.classList.add("component-hovered")
-      }
-    })
-  }, [focusedItem])
+  }, [selectedItemsObj, focusedItem])
   useEffect(() => {
     let _selectedItems: TUid[] = []
     selectedNodeIds.forEach((nodeId) => {
+      if (nodeId === 'ROOT') return
       _selectedItems.push(nodeId)
     })
+    if (_selectedItems.length === 0) return
 
     let same = true
     if (selectedItems.length === _selectedItems.length) {
@@ -78,20 +93,29 @@ export default function Viewport(props: ViewportProps) {
     } else {
       same = false
     }
+    if (same) return
 
-    !same && dispatch(Main.selectFNNode(_selectedItems))
+    addRunningAction(['selectFNNode', 'focusFNNode', 'expandFNNode'])
+    dispatch(Main.selectFNNode(_selectedItems))
+    dispatch(Main.focusFNNode(_selectedItems[0] === 'ROOT' ? 'root' : _selectedItems[0]))
+    const expandedItems: TUid[] = []
+    let node = nodeTree[_selectedItems[0]]
+    while (node.uid !== 'root') {
+      const parentNode = nodeTree[node.p_uid as TUid]
+      expandedItems.push(parentNode.uid)
+      node = parentNode
+    }
+    dispatch(Main.expandFNNode(expandedItems))
+    removeRunningAction(['selectFNNode', 'focusFNNode', 'expandFNNode'])
   }, [selectedNodeIds])
   useEffect(() => {
     let hoveredItems: TUid[] = []
     hoveredNodeIds.forEach((nodeId) => {
       hoveredItems.push(nodeId)
     })
-
     if (hoveredItems.length === 0) return
 
-    console.log('hoverNodeIds changed', hoveredNodeIds)
-
-    dispatch(Main.focusFNNode(hoveredItems[0] === 'ROOT' ? 'root' : hoveredItems[0]))
+    dispatch(Main.hoverFNNode(hoveredItems[0]))
   }, [hoveredNodeIds])
 
   // update the editor based on the file content

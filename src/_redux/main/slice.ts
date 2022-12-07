@@ -36,6 +36,7 @@ const initialState: Types.MainState = {
     expandedItemsObj: { 'root': true },
     selectedItems: [],
     selectedItemsObj: {},
+    hoveredItem: '',
   },
   fn: {
     focusedItem: 'root',
@@ -43,6 +44,7 @@ const initialState: Types.MainState = {
     expandedItemsObj: { 'root': true },
     selectedItems: [],
     selectedItemsObj: {},
+    hoveredItem: '',
   },
 }
 
@@ -78,11 +80,11 @@ const slice = createSlice({
       const pending = action.payload
       state.global.pending = pending
     },
-    setGlobalError(state, action: PayloadAction<Types.Message>) {
+    setGlobalMessage(state, action: PayloadAction<Types.Message>) {
       const message = action.payload
       state.global.messages.push(message)
     },
-    removeGlobalError(state, action: PayloadAction<number>) {
+    removeGlobalMessage(state, action: PayloadAction<number>) {
       const index = action.payload
       state.global.messages.splice(index)
     },
@@ -92,6 +94,10 @@ const slice = createSlice({
       state.global.currentFile = initialState.global.currentFile
       state.global.nodeTree = initialState.global.nodeTree
       state.fn = initialState.fn
+    },
+    hoverFNNode(state, action: PayloadAction<TUid>) {
+      const uid = action.payload
+      state.fn.hoveredItem = uid
     },
     focusFNNode(state, action: PayloadAction<TUid>) {
       const uid = action.payload
@@ -173,6 +179,10 @@ const slice = createSlice({
     },
 
     /* ff */
+    hoverFFNode(state, action: PayloadAction<TUid>) {
+      const uid = action.payload
+      state.ff.hoveredItem = uid
+    },
     focusFFNode(state, action: PayloadAction<TUid>) {
       const uid = action.payload
       state.ff.focusedItem = uid
@@ -252,11 +262,12 @@ export const {
   updateFileContent,
   updateFileStatus,
   setGlobalPending,
-  setGlobalError,
-  removeGlobalError,
+  setGlobalMessage,
+  removeGlobalMessage,
 
   /* fn */
   clearFNState,
+  hoverFNNode,
   focusFNNode,
   expandFNNode,
   collapseFNNode,
@@ -265,6 +276,7 @@ export const {
   updateFNTreeView,
 
   /* ff */
+  hoverFFNode,
   focusFFNode,
   expandFFNode,
   collapseFFNode,
@@ -277,11 +289,17 @@ export const MainReducer = undoable(slice.reducer, {
   filter: function filterActions(action, currentState, previousHistory) {
     // file the actions
     if (action.type === 'main/setGlobalPending' ||
-      action.type === 'main/setGlobalError' ||
-      action.type === 'main/removeGlobalError' ||
+
+      action.type === 'main/setGlobalMessage' ||
+      action.type === 'main/removeGlobalMessage' ||
+
       action.type === 'main/updateFFTreeView' ||
       action.type === 'main/updateFFTreeViewState' ||
-      action.type === 'main/updateFNTreeView') {
+
+      action.type === 'main/updateFNTreeView' ||
+
+      action.type === 'main/hoverFFNode' ||
+      action.type === 'main/hoverFNNode') {
       return false
     }
 

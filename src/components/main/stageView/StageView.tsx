@@ -11,15 +11,16 @@ import Viewport from './components/editor/Viewport';
 import { Container } from './components/selectors';
 import { StageViewProps } from './types';
 
-const styles = `:host {
-  display: inline-flex;
-}
-.component-selected {
-  border: 1px solid blue;
-}
-.component-hovered {
-  border: 1px dashed blue;
-}
+const styles = `
+  :host {
+    display: inline-flex;
+  }
+  .component-selected {
+    border: 1px solid blue;
+  }
+  .component-hovered {
+    border: 1px dashed blue;
+  }
 `
 
 export default function StageView(props: StageViewProps) {

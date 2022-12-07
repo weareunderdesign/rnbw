@@ -86,6 +86,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   const workspace = useSelector(Main.globalGetWorkspaceSelector)
 
   // file-tree-view view state
+  const hoveredItem = useSelector(Main.ffGetHoveredItemSelector)
   const focusedItem = useSelector(Main.ffGetFocusedItemSelector)
   const expandedItems = useSelector(Main.ffGetExpandedItemsSelector)
   const expandedItemsObj = useSelector(Main.ffGetExpandedItemsObjSelector)
@@ -116,7 +117,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   const importLocalhostProject = useCallback(async (projectHandle: FileSystemDirectoryHandle) => {
     // verify handler permission
     if (!(await verifyPermission(projectHandle))) {
-      dispatch(Main.setGlobalError({
+      dispatch(Main.setGlobalMessage({
         type: 'error',
         message: 'Project folder is not valid. Please import valid project.',
       }))
@@ -188,7 +189,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           expandedItemsObj[childNodeUid] && dirHandlers.push({ node: subNode, handler: entry as FileSystemDirectoryHandle })
         }
       } catch (err) {
-        dispatch(Main.setGlobalError({
+        dispatch(Main.setGlobalMessage({
           type: 'error',
           message: 'Error occurred during importing project.',
         }))
@@ -265,7 +266,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       try {
         projectHandle = await showDirectoryPicker({ _preferPolyfill: false, mode: 'readwrite' } as CustomDirectoryPickerOptions)
       } catch (err) {
-        dispatch(Main.setGlobalError({
+        dispatch(Main.setGlobalMessage({
           type: 'info',
           message: 'You canceled importing project.',
         }))
@@ -385,7 +386,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     // verify handler permission
     const focusedItemHandler = ffHandlers[focusedItem] as FileSystemDirectoryHandle
     if (!(await verifyPermission(focusedItemHandler))) {
-      dispatch(Main.setGlobalError({
+      dispatch(Main.setGlobalMessage({
         type: 'error',
         message: `Invalid target directory. Check if you have "write" permission for the directory.`,
       }))
@@ -424,7 +425,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       try {
         await focusedItemHandler.getDirectoryHandle(folderName, { create: true })
       } catch (err) {
-        dispatch(Main.setGlobalError({
+        dispatch(Main.setGlobalMessage({
           type: 'error',
           message: 'Error occurred while creating a new folder.',
         }))
@@ -461,7 +462,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       try {
         await focusedItemHandler.getFileHandle(fileName, { create: true })
       } catch (err) {
-        dispatch(Main.setGlobalError({
+        dispatch(Main.setGlobalMessage({
           type: 'error',
           message: 'Error occurred while creating a new file.',
         }))
@@ -511,7 +512,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
 
     if (!allDone) {
-      dispatch(Main.setGlobalError({
+      dispatch(Main.setGlobalMessage({
         type: 'warning',
         message: 'Some directory/file couldn\'t be deleted.',
       }))
@@ -538,7 +539,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     // verify handler permission
     const handler = ffHandlers[uid] as FileSystemFileHandle
     if (!(await verifyPermission(handler))) {
-      dispatch(Main.setGlobalError({
+      dispatch(Main.setGlobalMessage({
         type: 'error',
         message: 'Invalid file. Check if you have "read" permission for the file.',
       }))
@@ -566,7 +567,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       }
       dispatch(Main.setFileContent(file))
     } catch (err) {
-      dispatch(Main.setGlobalError({
+      dispatch(Main.setGlobalMessage({
         type: 'error',
         message: 'Error occurred while reading the file content.',
       }))
@@ -597,7 +598,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         exists = false
       }
       if (exists) {
-        showWarning && dispatch(Main.setGlobalError({
+        showWarning && dispatch(Main.setGlobalMessage({
           type: 'error',
           message: 'Folder with the same name already exists.',
         }))
@@ -642,7 +643,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         exists = false
       }
       if (exists) {
-        showWarning && dispatch(Main.setGlobalError({
+        showWarning && dispatch(Main.setGlobalMessage({
           type: 'error',
           message: 'File with the same name already exists.',
         }))
@@ -680,7 +681,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     const handler = ffHandlers[uid] as FileSystemHandle
     const parentHandler = ffHandlers[parentNode.uid] as FileSystemDirectoryHandle
     if (!(await verifyPermission(handler)) || !(await verifyPermission(parentHandler))) {
-      dispatch(Main.setGlobalError({
+      dispatch(Main.setGlobalMessage({
         type: 'error',
         message: `Invalid directory/file. Check if you have "write" permission for the directory/file.`,
       }))
@@ -694,7 +695,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     try {
       await moveFF(handler, parentHandler, parentHandler, newName, false, true)
     } catch (err) {
-      dispatch(Main.setGlobalError({
+      dispatch(Main.setGlobalMessage({
         type: 'error',
         message: 'Error occurred while renaming ...',
       }))
@@ -716,7 +717,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     /* verify target handler permission */
     const targetHandler = ffHandlers[targetUid] as FileSystemDirectoryHandle
     if (!verifyPermission(targetHandler)) {
-      dispatch(Main.setGlobalError({
+      dispatch(Main.setGlobalMessage({
         type: 'error',
         message: `Invalid target directory. Check if you have "write" permission for the directory.`,
       }))
@@ -755,7 +756,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       }
     }
     if (!allDone) {/* toast error message */
-      dispatch(Main.setGlobalError({
+      dispatch(Main.setGlobalMessage({
         type: 'warning',
         message: 'Some directory/file couldn\'t be moved.',
       }))
@@ -781,7 +782,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     const handler = ffHandlers[node.uid] as FileSystemHandle
     const parentHandler = ffHandlers[parentNode.uid] as FileSystemDirectoryHandle
     if (!(await verifyPermission(handler)) || !(await verifyPermission(parentHandler))) {
-      dispatch(Main.setGlobalError({
+      dispatch(Main.setGlobalMessage({
         type: 'error',
         message: `Invalid directory/file. Check if you have "write" permission for the directory/file.`,
       }))
@@ -853,7 +854,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     try {
       await moveFF(handler, parentHandler, parentHandler, newName, true)
     } catch (err) {
-      dispatch(Main.setGlobalError({
+      dispatch(Main.setGlobalMessage({
         type: 'error',
         message: 'Error occurred while duplicating ...',
       }))
@@ -937,12 +938,17 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                     className={cx(
                       'justify-stretch',
                       'padding-xs',
+                      props.item.index === hoveredItem && 'background-secondary',
                       props.context.isSelected && 'background-secondary',
                       props.context.isDraggingOver && 'color-primary',
                       props.context.isDraggingOverParent && 'draggingOverParent',
                       props.context.isFocused && 'border',
                     )}
-                    style={{ flexWrap: "nowrap", paddingLeft: `${props.depth * 10}px` }}
+                    style={{
+                      flexWrap: "nowrap",
+                      paddingLeft: `${props.depth * 10}px`,
+                      ...(!props.context.isFocused ? { border: "1px solid transparent" } : {}),
+                    }}
 
                     {...(props.context.itemContainerWithoutChildrenProps as any)}
                     {...(props.context.interactiveElementProps as any)}
@@ -981,6 +987,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                       }
                     }}
                     onFocus={() => { }}
+                    onMouseMove={() => {
+                      dispatch(Main.hoverFFNode(props.item.index as TUid))
+                    }}
                   >
                     <div className="gap-xs padding-xs" style={{ width: "100%" }}>
                       {/* render arrow */}

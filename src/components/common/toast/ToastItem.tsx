@@ -14,16 +14,16 @@ import { ToastItemProps } from './types';
 export default function ToastItem(props: ToastItemProps) {
   const dispatch = useDispatch()
 
-  const { key, title, description } = useMemo(() => props, [props])
+  const { index, title, description } = useMemo(() => props, [props])
 
   const [open, setOpen] = useState(true)
 
   const handlerClose = useCallback((open: boolean) => {
     if (!open) {
-      dispatch(Main.removeGlobalError(key))
+      dispatch(Main.removeGlobalMessage(index))
       setOpen(false)
     }
-  }, [key])
+  }, [index])
 
   return <>
     <RToast.Root className='rtoast-root' open={open} onOpenChange={handlerClose}>

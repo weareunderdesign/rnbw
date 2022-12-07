@@ -16,6 +16,7 @@ export default function Toast(props: ToastProps) {
       {messages.map((item, index) =>
         <ToastItem
           key={index}
+          index={index}
           title={item.type}
           description={item.message}
         />

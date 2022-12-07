@@ -28,6 +28,9 @@ const globalGetMessages = (state: AppState) => state.main.present.global.message
 export const globalGetMessagesSelector = createSelector(globalGetMessages, (messages) => messages)
 
 /* *********************** fn *********************** */
+// hoveredItem selector
+const fnGetHoveredItem = (state: AppState) => state.main.present.fn.hoveredItem
+export const fnGetHoveredItemSelector = createSelector(fnGetHoveredItem, (hoveredItem) => hoveredItem)
 
 // focusedItem selector
 const fnGetFocusedItem = (state: AppState) => state.main.present.fn.focusedItem
@@ -48,6 +51,10 @@ const fnGetSelectedItemsObj = (state: AppState) => state.main.present.fn.selecte
 export const fnGetSelectedItemsObjSelector = createSelector(fnGetSelectedItemsObj, (selectedItemsObj) => selectedItemsObj)
 
 /* *********************** ff *********************** */
+// hoveredItem selector
+const ffGetHoveredItem = (state: AppState) => state.main.present.ff.hoveredItem
+export const ffGetHoveredItemSelector = createSelector(ffGetHoveredItem, (hoveredItem) => hoveredItem)
+
 // focusedItem selector
 const ffGetFocusedItem = (state: AppState) => state.main.present.ff.focusedItem
 export const ffGetFocusedItemSelector = createSelector(ffGetFocusedItem, (focusedItem) => focusedItem)

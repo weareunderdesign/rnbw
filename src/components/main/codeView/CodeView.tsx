@@ -1,4 +1,5 @@
 import React, {
+  useCallback,
   useContext,
   useEffect,
   useRef,
@@ -40,13 +41,18 @@ export default function CodeView(props: CodeViewProps) {
   const [autoSaveTimer, setAutoSaveTimer] = useState<NodeJS.Timeout>()
   const { ffHandlers } = useContext(Main.MainContext)
   const saveFileContent = async () => {
+    return
+
     // get the current file handler
     let handler = ffHandlers[uid]
     if (handler === undefined) return
 
     /* for the remote rainbow */
     if (await verifyPermission(handler) === false) {
-      console.log('auto save failed cause of invalid handler')
+      dispatch(Main.setGlobalMessage({
+        type: 'error',
+        message: 'auto save failed cause of invalid handler',
+      }))
     }
 
     const writableStream = await (handler as FileSystemFileHandle).createWritable()
@@ -55,8 +61,10 @@ export default function CodeView(props: CodeViewProps) {
 
     dispatch(Main.updateFileStatus(true))
   }
-  function handleEditorChange(value: string | undefined, ev: monaco.editor.IModelContentChangedEvent) {
+  const handleEditorChange = useCallback((value: string | undefined, ev: monaco.editor.IModelContentChangedEvent) => {
     let editorContent = value || ''
+    if (editorContent === content) return
+
     setCodeContent(editorContent)
 
     // local save delay
@@ -70,11 +78,11 @@ export default function CodeView(props: CodeViewProps) {
       clearTimeout(autoSaveTimer)
     }
     setAutoSaveTimer(setTimeout(saveFileContent, FileAutoSaveInterval))
-  }
+  }, [content, syncTimer, autoSaveTimer])
 
   // Monaco Ref
   const monacoRef = useRef(null)
-  function handleEditorDidMount(editor: any, monaco: any) {
+  const handleEditorDidMount = (editor: any, monaco: any) => {
     // here is another way to get monaco instance
     // you can also store it in `useRef` for further usage
     monacoRef.current = editor

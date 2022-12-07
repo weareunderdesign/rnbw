@@ -16,12 +16,12 @@ import {
   CodeView,
   StageView,
 } from '@_components/main';
-import { RenderNode } from '@_components/main/stageView/components/RenderNode';
 import {
   Button,
   Container,
   Text,
 } from '@_components/main/stageView/components/selectors';
+import NodeRenderer from '@_components/main/stageView/nodeRenderer';
 import {
   moveNode,
   serializeFile,
@@ -81,7 +81,7 @@ export default function MainPage(props: MainPageProps) {
   }
 
   // toogle code  view
-  const [showCodeView, setShowCodeView] = useState(false)
+  const [showCodeView, setShowCodeView] = useState(true)
   const toogleCodeView = async () => {
     setShowCodeView(!showCodeView)
   }
@@ -93,12 +93,12 @@ export default function MainPage(props: MainPageProps) {
   }
 
   const onBeforeMoveEnd = (targetNode: Node, newParentNode: Node, existingParentNode: Node) => {
-  };
+  }
 
   const onNodesChange = (query: QueryCallbacksFor<typeof QueryMethods>) => {
-    const state: EditorState = query.getState();
+    const state: EditorState = query.getState()
     if (state.events.selected.size == 0)
-      return;
+      return
 
     let selectedNodes: string[] = [];
     // get selected node ids
@@ -166,7 +166,7 @@ export default function MainPage(props: MainPageProps) {
             }}
             onBeforeMoveEnd={onBeforeMoveEnd}
             onNodesChange={onNodesChange}
-            onRender={RenderNode}
+            onRender={NodeRenderer}
           >
             <ActionsPanel />
             <StageView />

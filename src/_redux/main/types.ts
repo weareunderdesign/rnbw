@@ -50,6 +50,7 @@ export type FFTreeViewState = {
   selectedItemsObj: {
     [uid: TUid]: boolean,
   },
+  hoveredItem: TUid,
 }
 
 // update ff tree view payload type - delete / add nodes to workspace
@@ -75,6 +76,7 @@ export type FNTreeViewState = {
   selectedItemsObj: {
     [uid: TUid]: boolean,
   },
+  hoveredItem: TUid,
 }
 
 /* update fn node - delete / convert from $a to $b */
