@@ -11,7 +11,7 @@ export default function Dialog(props: DialogProps) {
     <RDialog.Root open={props.open}>
       <RDialog.Portal>
         <RDialog.Overlay onClick={props.onClose} className="rdialog-overlay" />
-        <RDialog.Content className="rdialog-content">
+        <RDialog.Content className="rdialog-content shadow border">
           {props.children}
         </RDialog.Content>
       </RDialog.Portal>

@@ -14,10 +14,10 @@ import {
 } from '@craftjs/core';
 
 import {
+  Button,
   Container,
   Text,
 } from './components/selectors';
-import { Button } from './components/selectors/Button';
 
 const convertStylesStringToObject = (stringStyles: string): Object => {
     const getShortHand = (style: string, ...values: (string | number)[]) => {

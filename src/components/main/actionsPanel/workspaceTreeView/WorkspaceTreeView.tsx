@@ -118,7 +118,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     if (!(await verifyPermission(projectHandle))) {
       dispatch(Main.setGlobalError({
         type: 'error',
-        errorMessage: 'Project folder is not valid. Please import valid project.',
+        message: 'Project folder is not valid. Please import valid project.',
       }))
       throw 'error'
     }
@@ -190,7 +190,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       } catch (err) {
         dispatch(Main.setGlobalError({
           type: 'error',
-          errorMessage: 'Error occurred during importing project.',
+          message: 'Error occurred during importing project.',
         }))
         throw 'error'
       }
@@ -220,7 +220,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     setFFHandlers(deletedUids, handlers)
     dispatch(Main.updateFFTreeView({ deletedUids, nodes }))
     dispatch(Main.updateFFTreeViewState({ deletedUids }))
-
   }, [workspace, expandedItemsObj])
 
   // watch file system
@@ -268,7 +267,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       } catch (err) {
         dispatch(Main.setGlobalError({
           type: 'info',
-          errorMessage: 'You canceled importing project.',
+          message: 'You canceled importing project.',
         }))
 
         dispatch(setGlobalPending(false))
@@ -330,12 +329,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
 
     dispatch(Main.selectFFNode(_uids))
-    console.log("dispatch Error")
-    dispatch(Main.setGlobalError({
-      type: 'error',
-      errorMessage: 'Project folder is not valid. Please import valid project.',
-    }))
-
     removeRunningAction(['selectFFNode'])
   }, [workspace, selectedItems, selectedItemsObj])
   const cb_expandFFNode = useCallback(async (uid: TUid) => {
@@ -394,7 +387,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     if (!(await verifyPermission(focusedItemHandler))) {
       dispatch(Main.setGlobalError({
         type: 'error',
-        errorMessage: `Invalid target directory. Check if you have "write" permission for the directory.`,
+        message: `Invalid target directory. Check if you have "write" permission for the directory.`,
       }))
 
       dispatch(Main.setGlobalPending(false))
@@ -433,7 +426,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       } catch (err) {
         dispatch(Main.setGlobalError({
           type: 'error',
-          errorMessage: 'Error occurred while creating a new folder.',
+          message: 'Error occurred while creating a new folder.',
         }))
       }
     } else if (creatingFFType === 'file') {
@@ -470,7 +463,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       } catch (err) {
         dispatch(Main.setGlobalError({
           type: 'error',
-          errorMessage: 'Error occurred while creating a new file.',
+          message: 'Error occurred while creating a new file.',
         }))
       }
     }
@@ -520,7 +513,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     if (!allDone) {
       dispatch(Main.setGlobalError({
         type: 'warning',
-        errorMessage: 'Some directory/file couldn\'t be deleted.',
+        message: 'Some directory/file couldn\'t be deleted.',
       }))
     }
 
@@ -547,7 +540,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     if (!(await verifyPermission(handler))) {
       dispatch(Main.setGlobalError({
         type: 'error',
-        errorMessage: 'Invalid file. Check if you have "read" permission for the file.',
+        message: 'Invalid file. Check if you have "read" permission for the file.',
       }))
 
       dispatch(Main.setGlobalPending(false))
@@ -575,7 +568,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     } catch (err) {
       dispatch(Main.setGlobalError({
         type: 'error',
-        errorMessage: 'Error occurred while reading the file content.',
+        message: 'Error occurred while reading the file content.',
       }))
     }
 
@@ -606,7 +599,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       if (exists) {
         showWarning && dispatch(Main.setGlobalError({
           type: 'error',
-          errorMessage: 'Folder with the same name already exists.',
+          message: 'Folder with the same name already exists.',
         }))
         return
       }
@@ -651,7 +644,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       if (exists) {
         showWarning && dispatch(Main.setGlobalError({
           type: 'error',
-          errorMessage: 'File with the same name already exists.',
+          message: 'File with the same name already exists.',
         }))
         return
       }
@@ -689,7 +682,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     if (!(await verifyPermission(handler)) || !(await verifyPermission(parentHandler))) {
       dispatch(Main.setGlobalError({
         type: 'error',
-        errorMessage: `Invalid directory/file. Check if you have "write" permission for the directory/file.`,
+        message: `Invalid directory/file. Check if you have "write" permission for the directory/file.`,
       }))
 
       dispatch(Main.setGlobalPending(false))
@@ -703,7 +696,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     } catch (err) {
       dispatch(Main.setGlobalError({
         type: 'error',
-        errorMessage: 'Error occurred while renaming ...',
+        message: 'Error occurred while renaming ...',
       }))
     }
 
@@ -725,7 +718,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     if (!verifyPermission(targetHandler)) {
       dispatch(Main.setGlobalError({
         type: 'error',
-        errorMessage: `Invalid target directory. Check if you have "write" permission for the directory.`,
+        message: `Invalid target directory. Check if you have "write" permission for the directory.`,
       }))
 
       dispatch(Main.setGlobalPending(false))
@@ -764,7 +757,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     if (!allDone) {/* toast error message */
       dispatch(Main.setGlobalError({
         type: 'warning',
-        errorMessage: 'Some directory/file couldn\'t be moved.',
+        message: 'Some directory/file couldn\'t be moved.',
       }))
     }
 
@@ -790,7 +783,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     if (!(await verifyPermission(handler)) || !(await verifyPermission(parentHandler))) {
       dispatch(Main.setGlobalError({
         type: 'error',
-        errorMessage: `Invalid directory/file. Check if you have "write" permission for the directory/file.`,
+        message: `Invalid directory/file. Check if you have "write" permission for the directory/file.`,
       }))
 
       dispatch(Main.setGlobalPending(false))
@@ -862,7 +855,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     } catch (err) {
       dispatch(Main.setGlobalError({
         type: 'error',
-        errorMessage: 'Error occurred while duplicating ...',
+        message: 'Error occurred while duplicating ...',
       }))
     }
 

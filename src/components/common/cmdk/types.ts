@@ -1,1 +1,3 @@
-export type CommandKProps = {}
+export type CommandKProps = {
+  commandsHandler: {},
+}

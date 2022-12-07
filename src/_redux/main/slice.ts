@@ -18,6 +18,7 @@ const initialState: Types.MainState = {
   actionGroupIndex: 0,
   global: {
     workspace: {},
+    openedFiles: [],
     currentFile: {
       uid: '',
       name: '',
@@ -27,7 +28,7 @@ const initialState: Types.MainState = {
     },
     nodeTree: {},
     pending: false,
-    error: [],
+    messages: [],
   },
   ff: {
     focusedItem: 'root',
@@ -69,19 +70,29 @@ const slice = createSlice({
       const data = action.payload
       state.global.currentFile.content = data
     },
+    updateFileStatus(state, action: PayloadAction<boolean>) {
+      const saved = action.payload
+      state.global.currentFile.saved = saved
+    },
     setGlobalPending(state, action: PayloadAction<boolean>) {
-      state.global.pending = action.payload
+      const pending = action.payload
+      state.global.pending = pending
     },
-    setGlobalError(state, action: PayloadAction<Types._Error>) {
-      const error = action.payload
-      state.global.error.push(error) 
+    setGlobalError(state, action: PayloadAction<Types.Message>) {
+      const message = action.payload
+      state.global.messages.push(message)
     },
-    updateGlobalError(state, action: PayloadAction<number>) {
+    removeGlobalError(state, action: PayloadAction<number>) {
       const index = action.payload
-      state.global.error.splice(index, 1)
+      state.global.messages.splice(index)
     },
 
     /* fn */
+    clearFNState(state, action: PayloadAction) {
+      state.global.currentFile = initialState.global.currentFile
+      state.global.nodeTree = initialState.global.nodeTree
+      state.fn = initialState.fn
+    },
     focusFNNode(state, action: PayloadAction<TUid>) {
       const uid = action.payload
       state.fn.focusedItem = uid
@@ -239,11 +250,13 @@ export const {
   /* global */
   setFileContent,
   updateFileContent,
+  updateFileStatus,
   setGlobalPending,
   setGlobalError,
-  updateGlobalError,
+  removeGlobalError,
 
   /* fn */
+  clearFNState,
   focusFNNode,
   expandFNNode,
   collapseFNNode,
@@ -265,6 +278,7 @@ export const MainReducer = undoable(slice.reducer, {
     // file the actions
     if (action.type === 'main/setGlobalPending' ||
       action.type === 'main/setGlobalError' ||
+      action.type === 'main/removeGlobalError' ||
       action.type === 'main/updateFFTreeView' ||
       action.type === 'main/updateFFTreeViewState' ||
       action.type === 'main/updateFNTreeView') {

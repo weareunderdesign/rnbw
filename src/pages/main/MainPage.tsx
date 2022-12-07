@@ -1,6 +1,6 @@
 import React, {
   useCallback,
-  useEffect,
+  useMemo,
   useState,
 } from 'react';
 
@@ -10,11 +10,13 @@ import {
 } from 'react-redux';
 import { ActionCreators } from 'redux-undo';
 
+import { Toast } from '@_components/common';
 import {
   ActionsPanel,
   CodeView,
   StageView,
 } from '@_components/main';
+import { RenderNode } from '@_components/main/stageView/components/RenderNode';
 import {
   Button,
   Container,
@@ -33,7 +35,6 @@ import {
   updateFileContent,
   updateFNTreeViewState,
 } from '@_redux/main';
-import { verifyPermission } from '@_services/main';
 import {
   Editor,
   EditorState,
@@ -43,7 +44,6 @@ import {
 import { QueryCallbacksFor } from '@craftjs/utils';
 
 import { MainPageProps } from './types';
-import { Toast } from '@_components/common';
 
 export default function MainPage(props: MainPageProps) {
   const dispatch = useDispatch()
@@ -63,43 +63,16 @@ export default function MainPage(props: MainPageProps) {
     setFFHandlers({ ...newHandlers, ...handlers })
   }, [ffHandlers])
 
-  // fetch global state
+  // fetch necessary state
   const pending = useSelector(Main.globalGetPendingSelector)
-  const error = useSelector(Main.globalGetErrorSelector)
   const { uid, content, type } = useSelector(Main.globalGetCurrentFileSelector)
+  const _messages = useSelector(Main.globalGetMessagesSelector)
+  const messages = useMemo(() => _messages, [_messages])
 
-  // toast for global errors
-  const [toastOpen, setToastOpen] = useState(false)
-  useEffect(() => {
-    setToastOpen(true)
-  }, [error])
+  // fetch necessary state
+  const nodeTree = useSelector(Main.globalGetNodeTreeSelector)
 
-  const nodetree = useSelector(Main.globalGetNodeTreeSelector)
-
-  // file-content saving handler
-  const handleSaveFFContent = async () => {
-    // get the current file handler
-    let handler = ffHandlers[uid]
-    if (handler === undefined) {
-      return
-    }
-
-    dispatch(Main.setGlobalPending(true))
-
-    /* for the remote rainbow */
-    if (await verifyPermission(handler) === false) {
-      console.log('show save file picker')
-      handler = await showSaveFilePicker({ suggestedName: handler.name })
-    }
-
-    const writableStream = await (handler as FileSystemFileHandle).createWritable()
-    await writableStream.write(content)
-    await writableStream.close()
-
-    dispatch(Main.setGlobalPending(false))
-  }
-
-  /* hms methods */
+  // hms methods
   const cmdz = () => {
     dispatch(ActionCreators.undo())
   }
@@ -107,10 +80,16 @@ export default function MainPage(props: MainPageProps) {
     dispatch(ActionCreators.redo())
   }
 
-  /* toogle code  view */
+  // toogle code  view
   const [showCodeView, setShowCodeView] = useState(false)
   const toogleCodeView = async () => {
     setShowCodeView(!showCodeView)
+  }
+
+  /* update the currnet file content global state */
+  const updateFFContent = async (tree: TTree) => {
+    const content = serializeFile({ type, tree })
+    dispatch(updateFileContent(content))
   }
 
   const onBeforeMoveEnd = (targetNode: Node, newParentNode: Node, existingParentNode: Node) => {
@@ -127,7 +106,7 @@ export default function MainPage(props: MainPageProps) {
       selectedNodes.push(key);
     });
 
-    const tree = JSON.parse(JSON.stringify(nodetree))
+    const tree = JSON.parse(JSON.stringify(nodeTree))
 
     if (state.events.dragged.size != 0) {
       // dragged and drop event
@@ -148,15 +127,8 @@ export default function MainPage(props: MainPageProps) {
     }
   }
 
-  /* update the global state */
-  const updateFFContent = async (tree: TTree) => {
-    console.log("update content")
-    const content = serializeFile({ type, tree })
-    dispatch(updateFileContent(content))
-  }
-
   return (<>
-    <Toast/>
+    <Toast messages={messages} />
     <div className="page">
       <div className="direction-row">
         <h1 className="center text-s"><span className="text-s opacity-m">Rainbow v1.0 /</span> Main Page</h1>
@@ -176,11 +148,6 @@ export default function MainPage(props: MainPageProps) {
 
               {/* toogle codeview */}
               <div className="icon-code opacity-m icon-s" onClick={toogleCodeView}></div>
-
-              {/* avatar */}
-              <div className="radius-m icon-s align-center background-secondary">
-                <span className="text-s">V</span>
-              </div>
             </div >
           </div >
 
@@ -191,7 +158,6 @@ export default function MainPage(props: MainPageProps) {
             </div>}
 
           {/* wrap with the craft.js editor */}
-
           <Editor
             resolver={{
               Container,
@@ -200,7 +166,7 @@ export default function MainPage(props: MainPageProps) {
             }}
             onBeforeMoveEnd={onBeforeMoveEnd}
             onNodesChange={onNodesChange}
-          // onRender={RenderNode}
+            onRender={RenderNode}
           >
             <ActionsPanel />
             <StageView />

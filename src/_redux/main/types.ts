@@ -14,19 +14,20 @@ export type MainState = {
   global: {
     workspace: FFTree,
     currentFile: OpenedFile,
+    openedFiles: OpenedFile[],
     nodeTree: TTree,
     pending: boolean,
-    error: _Error[],
+    messages: Message[],
   },
   ff: FFTreeViewState,
   fn: FNTreeViewState,
 }
 
 /* Error Type */
-export type ErrorType = 'warning' | 'error' | 'info' | 'success'
-export type _Error = {
-  type: ErrorType,
-  errorMessage: string,
+export type MessageType = 'warning' | 'error' | 'info' | 'success'
+export type Message = {
+  type: MessageType,
+  message: string,
 }
 
 // open file type

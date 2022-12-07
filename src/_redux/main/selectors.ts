@@ -23,9 +23,9 @@ export const globalGetNodeTreeSelector = createSelector(globalGetNodeTree, (node
 const globalGetPending = (state: AppState) => state.main.present.global.pending
 export const globalGetPendingSelector = createSelector(globalGetPending, (pending) => pending)
 
-// globalError selector
-const globalGetError = (state: AppState) => state.main.present.global.error
-export const globalGetErrorSelector = createSelector(globalGetError, (error) => error)
+// globalMessages selector
+const globalGetMessages = (state: AppState) => state.main.present.global.messages
+export const globalGetMessagesSelector = createSelector(globalGetMessages, (messages) => messages)
 
 /* *********************** fn *********************** */
 
