@@ -65,13 +65,17 @@ export default function CodeView(props: CodeViewProps) {
     let editorContent = value || ''
     if (editorContent === content) return
 
+    console.log(content.localeCompare(editorContent))
+
     setCodeContent(editorContent)
 
     // local save delay
     if (syncTimer !== undefined) {
       clearTimeout(syncTimer)
     }
-    setSyncTimer(setTimeout(() => { dispatch(Main.updateFileContent(editorContent)) }, CodeViewSyncDelay))
+    setSyncTimer(setTimeout(() => {
+      dispatch(Main.updateFileContent(editorContent))
+    }, CodeViewSyncDelay))
 
     // file system auto save delay
     if (autoSaveTimer !== undefined) {

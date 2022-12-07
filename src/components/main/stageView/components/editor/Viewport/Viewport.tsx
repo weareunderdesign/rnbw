@@ -28,10 +28,8 @@ export default function Viewport(props: ViewportProps) {
     actions,
     query,
     selectedNodeIds,
-    hoveredNodeIds
   } = useEditor((state) => ({
     selectedNodeIds: state.events.selected,
-    hoveredNodeIds: state.events.hovered
   }))
 
   // fetch necessary state
@@ -65,10 +63,7 @@ export default function Viewport(props: ViewportProps) {
     const nodes: Record<TUid, Node> = query.getNodes()
     let _selectedItems: TUid[] = []
     Object.keys(nodes).map((uid) => {
-      const node = nodes[uid]
-      node.dom?.classList.remove("component-selected")
       if (selectedItemsObj[uid] === true || uid === focusedItem) {
-        node.dom?.classList.add("component-selected")
         _selectedItems.push(uid)
       }
     })
@@ -108,15 +103,6 @@ export default function Viewport(props: ViewportProps) {
     dispatch(Main.expandFNNode(expandedItems))
     removeRunningAction(['selectFNNode', 'focusFNNode', 'expandFNNode'])
   }, [selectedNodeIds])
-  useEffect(() => {
-    let hoveredItems: TUid[] = []
-    hoveredNodeIds.forEach((nodeId) => {
-      hoveredItems.push(nodeId)
-    })
-    if (hoveredItems.length === 0) return
-
-    dispatch(Main.hoverFNNode(hoveredItems[0]))
-  }, [hoveredNodeIds])
 
   // update the editor based on the file content
   useEffect(() => {
