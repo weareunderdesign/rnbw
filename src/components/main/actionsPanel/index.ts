@@ -5,6 +5,6 @@ import WorkspaceTreeView from './workspaceTreeView';
 
 export default ActionPanel
 
-export { NodeTreeView, SettingsPanel, WorkspaceTreeView };
-
 export * from './types'
+
+export { NodeTreeView, SettingsPanel, WorkspaceTreeView };

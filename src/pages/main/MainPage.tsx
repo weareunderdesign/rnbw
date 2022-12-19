@@ -22,22 +22,11 @@ import {
   StageView,
 } from '@_components/main';
 import {
-  moveNode,
-  serializeFile,
-} from '@_node/apis';
-import {
   TTree,
   TUid,
 } from '@_node/types';
 import * as Main from '@_redux/main';
-import { updateFileContent } from '@_redux/main';
 import { verifyPermission } from '@_services/main';
-import {
-  EditorState,
-  Node,
-  QueryMethods,
-} from '@craftjs/core';
-import { QueryCallbacksFor } from '@craftjs/utils';
 
 import { MainPageProps } from './types';
 
@@ -192,60 +181,6 @@ export default function MainPage(props: MainPageProps) {
 
     dispatch(Main.setGlobalPending(false))
   }
-
-  // update the currnet file content global state
-  const updateFFContent = async (tree: TTree) => {
-    const content = serializeFile({ type, tree })
-    dispatch(updateFileContent(content))
-  }
-
-  // ---------------- stage view ----------------
-  const onBeforeMoveEnd = (targetNode: Node, newParentNode: Node, existingParentNode: Node) => {
-    console.log('onBeforeMoveEnd', targetNode, newParentNode, existingParentNode)
-  }
-
-  // StageView DnD
-  const onNodesChange = useCallback((query: QueryCallbacksFor<typeof QueryMethods>) => {
-    console.log('onNodesChange')
-
-    // get editor state
-    const state: EditorState = query.getState()
-    let selectedNodeUids: TUid[] = []
-    state.events.selected.forEach((uid) => {
-      selectedNodeUids.push(uid)
-    })
-    let draggedNodeUids: TUid[] = []
-    state.events.dragged.forEach((uid) => {
-      draggedNodeUids.push(uid)
-    })
-
-    if (selectedNodeUids.length === 0) return
-
-    if (draggedNodeUids.length !== 0) {
-      const tree = JSON.parse(JSON.stringify(nodeTree))
-
-      // dragged and drop event
-      const parentId = state.indicator.placement.parent.id
-      const position = state.indicator.placement.index
-
-      addRunningAction(['moveFNNode'])
-
-      const movePayload = {
-        tree: tree,
-        isBetween: true,
-        parentUid: parentId,
-        position,
-        uids: selectedNodeUids
-      }
-
-      const res = moveNode(movePayload)
-      updateFFContent(res.tree)
-      dispatch(Main.updateFNTreeViewState(res))
-
-      removeRunningAction(['moveFNNode'])
-    }
-  }, [nodeTree])
-  // ---------------- stage view ----------------
 
   return (<>
     {/* toast */}

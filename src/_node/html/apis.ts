@@ -188,11 +188,6 @@ export const parseHtml = (content: string): THtmlParserResponse => {
     }
   })
 
-  // remove html props in the tree
-  uids.map((uid) => {
-    delete tree[uid].data.html
-  })
-
   return { content: newContent, tree, info }
 }
 
@@ -229,16 +224,16 @@ export const serializeHtml = (tree: TTree): string => {
     } else if (data.type === 'comment') {
       nodeHtml = `<!--${data.data}-->`
     } else if (data.type === 'text') {
-      nodeHtml = data.data
+      nodeHtml = data.data.replace(/</g, `&lt;`).replace(/>/g, `&gt;`)
     } else if (data.type === 'script') {
       nodeHtml = `<script${attribsHtml}>` + childrenHtml + `</script>`
     } else if (data.type === 'style') {
       nodeHtml = `<style${attribsHtml}>` + childrenHtml + `</style>`
     } else if (data.type === 'tag') {
-      if (data.name === 'meta' || data.name === 'link' || data.name === 'img') {
-        nodeHtml = `<${data.name}${attribsHtml} />`
-      } else if (data.name === 'title') {
+      if (data.name === 'title') {
         nodeHtml = `<title>` + childrenHtml + `</title>`
+      } else if (data.name === 'meta' || data.name === 'link' || data.name === 'img' || data.name === 'br') {
+        nodeHtml = `<${data.name}${attribsHtml} />`
       } else {
         nodeHtml = `<${data.name}${attribsHtml}>` + childrenHtml + `</${data.name}>`
       }
@@ -251,24 +246,6 @@ export const serializeHtml = (tree: TTree): string => {
   })
 
   return tree['ROOT'].data.html
-}
-
-/**
- * return custom renderer name from the "name"
- * @param tagName 
- * @returns 
- */
-export const getElementType = (tagName: string) => {
-  return tagName
-}
-
-/**
- * return if it's canvas or not - means droppable
- * @param tagName 
- * @returns 
- */
-export const isCanvas = (tagName: string) => {
-  return false
 }
 
 /**

@@ -1,15 +1,19 @@
 import React, {
+  FormEvent,
   MouseEvent,
   useCallback,
   useContext,
   useEffect,
   useMemo,
+  useRef,
+  useState,
 } from 'react';
 
 import {
   useDispatch,
   useSelector,
 } from 'react-redux';
+import { Resizable } from 'react-resizable';
 
 import {
   Attributes,
@@ -24,22 +28,32 @@ import { NodeRendererProp } from './types';
 export default function NodeRenderer({ id }: NodeRendererProp) {
   const dispatch = useDispatch()
 
+  // for groupping action - it contains the actionNames as keys which should be in the same group
+  const runningActions = useRef<{ [actionName: string]: boolean }>({})
+  const noRunningAction = () => {
+    return Object.keys(runningActions.current).length === 0 ? true : false
+  }
+  const addRunningAction = (actionNames: string[]) => {
+    for (const actionName of actionNames) {
+      runningActions.current[actionName] = true
+    }
+  }
+  const removeRunningAction = (actionNames: string[], effect: boolean = true) => {
+    for (const actionName of actionNames) {
+      delete runningActions.current[actionName]
+    }
+    if (effect && noRunningAction()) {
+      dispatch(Main.increaseActionGroupIndex())
+    }
+  }
+
   // main context
   const { ffHoveredItem, setFFHoveredItem, ffHandlers, setFFHandlers, fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree, command } = useContext(MainContext)
 
   // redux state
   const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(Main.fnSelector)
 
-  // hover, select sync
-  useEffect(() => {
-    /* dom?.classList.remove('rnbwdev-rainbow-component-hovered', 'rnbwdev-rainbow-component-selected')
-
-    selected ? (dom?.classList.add('rnbwdev-rainbow-component-selected')) :
-      id === fnHoveredItem ? dom?.classList.add('rnbwdev-rainbow-component-hovered') : null
-
-    hovered && setFNHoveredItem(id) */
-  }, [fnHoveredItem])
-
+  // buidl node info
   const node = useMemo<TNode>(() => nodeTree[id], [nodeTree, id])
   const Tag = useMemo<keyof JSX.IntrinsicElements>(() => {
     return (node === undefined ? '' :
@@ -51,27 +65,31 @@ export default function NodeRenderer({ id }: NodeRendererProp) {
   const attribs = useMemo<Attributes>(() => {
     return node === undefined ? {} : getShortHand(node.data.attribs)
   }, [node])
+  const [contentEditable, setContentEditable] = useState<boolean>(false)
 
+  // events
   const onMouseMove = useCallback((e: MouseEvent) => {
     e.stopPropagation()
     setFNHoveredItem(id)
-    // console.log('onMouseEnter', id)
-  }, [id])
-  const onMouseLeave = useCallback((e: MouseEvent) => {
-    e.stopPropagation()
-    // setFNHoveredItem('')
-    // console.log('onMouseLeave', id)
   }, [id])
   const onClick = useCallback((e: MouseEvent) => {
     e.stopPropagation()
     dispatch(Main.focusFNNode(id))
-    // console.log('onClick', id)
   }, [id])
   const onDoubleClick = useCallback((e: MouseEvent) => {
     e.stopPropagation()
-    // console.log('onDoubleClick', id)
-  }, [id])
+    setContentEditable(true)
+  }, [])
+  const onInput = useCallback((e: FormEvent) => {
+    e.stopPropagation()
+    console.log('onInput', (e.target as HTMLElement).innerHTML)
+  }, [])
 
+  // sync with the redux
+  useEffect(() => {
+    if (id !== focusedItem)
+      setContentEditable(false)
+  }, [focusedItem])
   const className = useMemo(() => {
     return id === focusedItem ? 'rnbwdev-rainbow-component-focus' :
       id === fnHoveredItem ? 'rnbwdev-rainbow-component-hover' : ''
@@ -87,26 +105,48 @@ export default function NodeRenderer({ id }: NodeRendererProp) {
             node.name === 'link' ? <Tag
               {...attribs}
             /> :
-              node.name === 'img' ? <Tag
+              node.name === 'br' ? <Tag
                 {...attribs}
-                onMouseMove={onMouseMove}
-                onMouseLeave={onMouseLeave}
-                onClick={onClick}
-                onDoubleClick={onDoubleClick}
-                className={attribs.className === undefined ? className : `${attribs.className} ${className}`}
               /> :
-                node.name === 'comment' ? null :
-                  node.name === 'text' ? node.data.data :
-                    <Tag
-                      {...attribs}
-                      onMouseMove={onMouseMove}
-                      onMouseLeave={onMouseLeave}
-                      onClick={onClick}
-                      onDoubleClick={onDoubleClick}
-                      className={attribs.className === undefined ? className : `${attribs.className} ${className}`}
-                    >
-                      {node.children.map(c_uid => <NodeRenderer key={c_uid} id={c_uid}></NodeRenderer>)}
-                    </Tag>
+                node.name === 'img' ? <Tag
+                  {...attribs}
+                  onMouseMove={onMouseMove}
+                  onClick={onClick}
+                  onDoubleClick={onDoubleClick}
+                  className={attribs.className === undefined ? className : `${attribs.className} ${className}`}
+                  contentEditable={contentEditable}
+                  suppressContentEditableWarning={true}
+                  onInput={onInput}
+                /> :
+                  node.name === 'comment' ? null :
+                    node.name === 'text' ? (node.data.data) :
+                      node.name === 'div' ? <Resizable width={200} height={200} draggableOpts={{}}
+                        minConstraints={[100, 100]} maxConstraints={[300, 300]}>
+                        <Tag
+                          {...attribs}
+                          onMouseMove={onMouseMove}
+                          onClick={onClick}
+                          onDoubleClick={onDoubleClick}
+                          className={attribs.className === undefined ? className : `${attribs.className} ${className}`}
+                          contentEditable={contentEditable}
+                          suppressContentEditableWarning={true}
+                          onInput={onInput}
+                        >
+                          {node.children.map(c_uid => <NodeRenderer key={c_uid} id={c_uid}></NodeRenderer>)}
+                        </Tag>
+                      </Resizable> :
+                        <Tag
+                          {...attribs}
+                          onMouseMove={onMouseMove}
+                          onClick={onClick}
+                          onDoubleClick={onDoubleClick}
+                          className={attribs.className === undefined ? className : `${attribs.className} ${className}`}
+                          contentEditable={contentEditable}
+                          suppressContentEditableWarning={true}
+                          onInput={onInput}
+                        >
+                          {node.children.map(c_uid => <NodeRenderer key={c_uid} id={c_uid}></NodeRenderer>)}
+                        </Tag>
     )}
   </>
 }

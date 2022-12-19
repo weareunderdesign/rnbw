@@ -1,6 +1,5 @@
 import React, {
   useContext,
-  useEffect,
   useRef,
 } from 'react';
 
@@ -17,15 +16,12 @@ import NodeRenderer from './nodeRenderer';
 import { StageViewProps } from './types';
 
 const styles = `
-  :host {
-    display: inline-flex;
-  }
   .rnbwdev-rainbow-component-hover {
-    outline: 1px dashed blue;
+    outline: 1px dashed red;
     outline-offset: -1px;
   }
   .rnbwdev-rainbow-component-focus {
-    outline: 1px solid blue;
+    outline: 1px solid red;
     outline-offset: -1px;
   }
 `
@@ -63,11 +59,6 @@ export default function StageView(props: StageViewProps) {
   // redux state
   const { workspace, openedFiles, currentFile: { uid: currentFileUid, type, content }, pending, messages } = useSelector(Main.globalSelector)
   const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(Main.fnSelector)
-
-
-  useEffect(() => {
-    console.log(nodeTree)
-  }, [nodeTree])
 
   return (
     <div className="panel box padding-xs shadow border-left">

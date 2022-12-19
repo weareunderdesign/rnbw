@@ -114,7 +114,6 @@ export const validateUids = (uids: TUid[], targetUid?: TUid): TUid[] => {
   // validate the uids generally
   _uids.map((uid) => {
     const arr = uid.split('_')
-    let _parentSelected = false
     let _uid = ''
     arr.map((_arr) => {
       _uid += `${_uid === '' ? '' : '_'}${_arr}`

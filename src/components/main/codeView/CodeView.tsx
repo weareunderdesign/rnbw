@@ -16,7 +16,6 @@ import * as config from '@_config/main';
 import { getBfsUids } from '@_node/apis';
 import { TUid } from '@_node/types';
 import * as Main from '@_redux/main';
-import { MainContext } from '@_redux/main';
 import { verifyPermission } from '@_services/main';
 import Editor, {
   loader,
@@ -50,11 +49,11 @@ export default function CodeView(props: CodeViewProps) {
   }
 
   // main context
-  const { ffHoveredItem, setFFHoveredItem, ffHandlers, setFFHandlers, fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree: treeData, setValidNodeTree, command } = useContext(MainContext)
+  const { ffHandlers, nodeTree, setNodeTree, validNodeTree, setValidNodeTree, command } = useContext(Main.MainContext)
 
   // redux state
-  const { workspace, openedFiles, currentFile: { uid: currentFileUid, content }, pending, messages } = useSelector(Main.globalSelector)
-  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(Main.fnSelector)
+  const { workspace, openedFiles, currentFile } = useSelector(Main.globalSelector)
+  const { focusedItem } = useSelector(Main.fnSelector)
 
   // Monaco Instance Ref
   const monacoRef = useRef<monaco.editor.IEditor | null>(null)
@@ -70,24 +69,23 @@ export default function CodeView(props: CodeViewProps) {
   const toogleWrap = () => setWordWrap(wordWrap === 'on' ? 'off' : 'on')
 
   // sync with the redux
-  const _focusedItem = useRef<TUid>(focusedItem)
-  const contentRef = useRef<string>(content)
+  const focusedItemRef = useRef<TUid>(focusedItem)
+  const contentRef = useRef<string>(currentFile.content)
   const syncWithNodeTreeView = useRef<boolean>(true)
   useEffect(() => {
     syncWithNodeTreeView.current = true
 
-    if (contentRef.current === content) return
-    contentRef.current = content
-  }, [content])
+    contentRef.current = currentFile.content
+  }, [currentFile.content])
 
   // select html code in code view based on the view state in nodeTreeView&StageView
   useEffect(() => {
-    if (_focusedItem.current === focusedItem) return
-    _focusedItem.current = focusedItem
+    if (focusedItemRef.current === focusedItem) return
+    focusedItemRef.current = focusedItem
 
     if (monacoRef.current === null) return
 
-    let node = treeData[focusedItem]
+    let node = validNodeTree[focusedItem]
     if (node === undefined) return
 
     const { startLineNumber, startColumn, endLineNumber, endColumn } = node.data
@@ -99,12 +97,6 @@ export default function CodeView(props: CodeViewProps) {
       endLineNumber,
       endColumn,
     })
-    // editor.revealRangeInCenter({
-    //   startLineNumber,
-    //   startColumn,
-    //   endLineNumber,
-    //   endColumn,
-    // })
     editor.revealRange({
       startLineNumber,
       startColumn,
@@ -115,19 +107,20 @@ export default function CodeView(props: CodeViewProps) {
 
   // sync nodeTreeView&StageView based on editor's cursor pos
   const cursorPos = monacoRef.current === null ? null : monacoRef.current.getPosition()
+  const cursorPosRef = useRef<monaco.Position>(cursorPos)
   useEffect(() => {
     // validate
-    if (cursorPos === null) return
-    if (currentFileUid === '') return
+    if (cursorPos === null || (cursorPosRef.current?.lineNumber === cursorPos.lineNumber && cursorPosRef.current.column === cursorPos.column)) return
+    if (currentFile.uid === '') return
     if (reduxTimeout.current !== null) return
 
     let _uid: TUid = ''
 
-    let uids: TUid[] = Object.keys(treeData)
+    let uids: TUid[] = Object.keys(validNodeTree)
     uids = getBfsUids(uids)
     uids.reverse()
     for (const uid of uids) {
-      const node = treeData[uid]
+      const node = validNodeTree[uid]
       const { startLineNumber, startColumn, endLineNumber, endColumn } = node.data
       if (startLineNumber === endLineNumber) {
         if (cursorPos.lineNumber === startLineNumber && (startColumn < cursorPos.column && cursorPos.column <= endColumn)) {
@@ -146,14 +139,14 @@ export default function CodeView(props: CodeViewProps) {
 
     if (_uid === '') return
 
-    let node = treeData[_uid]
+    let node = validNodeTree[_uid]
     while (!node.data.valid) {
-      node = treeData[node.p_uid as TUid]
+      node = validNodeTree[node.p_uid as TUid]
     }
 
     _uid = node.uid
-    if (_focusedItem.current === _uid) return
-    _focusedItem.current = _uid
+    if (focusedItemRef.current === _uid) return
+    focusedItemRef.current = _uid
 
     // update redux
     addRunningAction(['cursorChange'])
@@ -161,6 +154,7 @@ export default function CodeView(props: CodeViewProps) {
     dispatch(Main.selectFNNode([_uid]))
     removeRunningAction(['cursorChange'])
   }, [cursorPos])
+
   useEffect(() => {
     if (monacoRef.current === null || cursorPos === null) return
 
@@ -174,9 +168,9 @@ export default function CodeView(props: CodeViewProps) {
       endLineNumber: cursorPos.lineNumber,
       endColumn: cursorPos.column,
     })
-  }, [treeData])
+  }, [validNodeTree])
 
-  // Local Save with Debounce - config.CodeViewSyncDelay & Auto Save with Deplay - config.FileAutoSaveInterval
+  // ---------- Local Save with Debounce - config.CodeViewSyncDelay & Auto Save with Deplay - config.FileAutoSaveInterval ----------
   const reduxTimeout = useRef<NodeJS.Timeout | null>(null)
   const fsTimeout = useRef<NodeJS.Timeout | null>(null)
   const handleEditorChange = useCallback((value: string | undefined, ev: monaco.editor.IModelContentChangedEvent) => {
@@ -208,8 +202,11 @@ export default function CodeView(props: CodeViewProps) {
   // save file content to real file system
   const saveFileContentToFs = useCallback(async () => {
     // get the current file handler
-    let handler = ffHandlers[currentFileUid]
-    if (handler === undefined) return
+    let handler = ffHandlers[currentFile.uid]
+    if (handler === undefined) {
+      fsTimeout.current = null
+      return
+    }
 
     // verify permission
     if (await verifyPermission(handler) === false) {
@@ -217,17 +214,24 @@ export default function CodeView(props: CodeViewProps) {
         type: 'error',
         message: 'auto save failed cause of invalid handler',
       }))
+      fsTimeout.current = null
+      return
     }
 
     // update file content
-    const writableStream = await (handler as FileSystemFileHandle).createWritable()
-    await writableStream.write(content)
-    await writableStream.close()
+    try {
+      const writableStream = await (handler as FileSystemFileHandle).createWritable()
+      await writableStream.write(currentFile.content)
+      await writableStream.close()
 
-    dispatch(Main.updateFileStatus(true))
+      // dispatch(Main.updateFileStatus(true))
+    } catch (err) {
+      console.log(err)
+    }
 
     fsTimeout.current = null
-  }, [ffHandlers, currentFileUid])
+  }, [ffHandlers, currentFile.uid])
+  // ---------- Local Save with Debounce - config.CodeViewSyncDelay & Auto Save with Deplay - config.FileAutoSaveInterval ----------
 
   return <>
     <div className='box'>
