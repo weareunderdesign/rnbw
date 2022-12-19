@@ -21,12 +21,6 @@ import {
   CodeView,
   StageView,
 } from '@_components/main';
-import NodeRenderer from '@_components/main/stageView/nodeRenderer';
-import {
-  Button,
-  Container,
-  Text,
-} from '@_components/main/stageView/nodeRenderer/customRenderers';
 import {
   moveNode,
   serializeFile,
@@ -39,7 +33,6 @@ import * as Main from '@_redux/main';
 import { updateFileContent } from '@_redux/main';
 import { verifyPermission } from '@_services/main';
 import {
-  Editor,
   EditorState,
   Node,
   QueryMethods,
@@ -317,21 +310,12 @@ export default function MainPage(props: MainPageProps) {
               <span className='text-s'>Pending...</span>
             </div>}
 
-          {/* wrap with the craft.js editor */}
-          <Editor
-            resolver={{
-              Container,
-              Text,
-              Button,
-            }}
-            onRender={NodeRenderer}
-            onBeforeMoveEnd={onBeforeMoveEnd}
-            onNodesChange={onNodesChange}
-          >
-            <ActionsPanel />
-            {true && <StageView />}
-            {showCodeView && <CodeView />}
-          </Editor>
+          {/* panels */}
+          <ActionsPanel />
+
+          {<StageView />}
+
+          {showCodeView && <CodeView />}
         </Main.MainContext.Provider >
       </div >
     </div >

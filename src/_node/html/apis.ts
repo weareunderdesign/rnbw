@@ -1,12 +1,6 @@
 import ReactHtmlParser from 'react-html-parser';
 
 import {
-  Button,
-  Container,
-  Text,
-} from '@_components/main/stageView/nodeRenderer';
-
-import {
   generateNodeUid,
   getBfsUids,
   getDfsUids,
@@ -265,42 +259,7 @@ export const serializeHtml = (tree: TTree): string => {
  * @returns 
  */
 export const getElementType = (tagName: string) => {
-  if (tagName === 'ROOT' || tagName === 'html' || tagName === 'head' || tagName === 'body' /* || tagName === 'div' */) return Container
-  if (tagName === 'text') return Text
-  if (tagName === '!doctype' || tagName === 'comment') return 'invalid'
   return tagName
-  
-  switch (tagName) {
-    case 'ROOT':
-    case 'html':
-    case 'head':
-    case 'body':
-    case 'div':
-      return Container
-
-    case 'h1':
-    case 'h2':
-    case 'h3':
-    case 'h4':
-    case 'h5':
-    case 'h6':
-    case 'p':
-    case 'span':
-    // return PlainText
-
-    case 'text':
-      return Text
-
-    case 'button':
-      return Button
-
-    case '!doctype':
-    case 'comment':
-      return 'invalid'
-
-    default:
-      return tagName
-  }
 }
 
 /**
@@ -331,7 +290,8 @@ export const getShortHand = (attrs: Attributes): Attributes => {
     } else {
       const newAttrName = attrName === 'class' ? 'className' :
         attrName === 'charset' ? 'charSet' :
-          attrName.replace(/-./g, c => c.substr(1).toUpperCase())
+          attrName === 'contenteditable' ? 'contentEditable' :
+            attrName.replace(/-./g, c => c.substr(1).toUpperCase())
 
       newAttr[newAttrName] = attrs[attrName]
     }

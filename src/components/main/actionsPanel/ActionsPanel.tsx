@@ -10,7 +10,7 @@ export default function ActionsPanel(props: ActionsPanelProps) {
     <div className='panel justify-stretch'>
       <WorkspaceTreeView />
       <NodeTreeView />
-      <SettingsPanel />
+      {false && <SettingsPanel />}
     </div>
   </>
 }

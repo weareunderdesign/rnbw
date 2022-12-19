@@ -1,3 +1,5 @@
-export type RenderNodeProp = {
-  render: React.ReactElement,
+import { TUid } from '@_node/types';
+
+export type NodeRendererProp = {
+  id: TUid,
 }
