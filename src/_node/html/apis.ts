@@ -1,105 +1,205 @@
+import ReactHtmlParser from 'react-html-parser';
+
 import {
-  Element,
+  Button,
+  Container,
   Text,
-} from 'domhandler';
-import parse, {
-  attributesToProps,
-  DOMNode,
-} from 'html-react-parser';
+} from '@_components/main/stageView/nodeRenderer';
 
 import {
   generateNodeUid,
+  getBfsUids,
+  getDfsUids,
   TNode,
   TTree,
   TUid,
 } from '../';
+import {
+  Attributes,
+  THtmlInfo,
+  THtmlParserResponse,
+} from './types';
 
 /**
  * It will parse the content and build the tree data
  * @param content 
  * @returns 
  */
-export const parseHtml = (content: string): TTree => {
-  let root: TTree = {}
-  let uids: Map<DOMNode, string> = new Map<DOMNode, string>()
+export const parseHtml = (content: string): THtmlParserResponse => {
+  const tree: TTree = {}
+  const tmpTree: TTree = {}
 
-  // root element
-  const root_element: TNode = {
-    uid: "root",
-    p_uid: "",
-    name: "root",
-    isEntity: false,
-    children: [],
-    data: null
+  // parse html using react-html-parser
+  interface ProcessableNode extends HTMLElement {
+    uid: TUid,
   }
-
-  root["root"] = root_element
-
-  /**
-   * 
-   * @param element current DomNode
-   * @returns display DOM Name
-   */
-  const getName = (element: DOMNode) => {
-    return element.type == "text"
-      ? (element as unknown as Text).data
-      : (element as unknown as Element).name
-  }
-
-  try {
-    parse(content, {
-      replace: (node: DOMNode) => {
-        // We can parse only Element & Text node, the others are removed
-        if (node.type == "comment" || node.type == "doctype" || node.type == "cdata" || node.type == "script" || node.type == "directive") {
-          return;
-        }
-
-        if (node.type == "text") {
-          // remove all tabs and lines in text
-          const converted_string = (node as unknown as Text).data.replace(/(\n|\t)/g, ' ').replace(/\s+/g, ' ').split(' ').filter(s => !!s).join(' ');
-          if (converted_string.length == 0) return;
-          (node as unknown as Text).data = converted_string
-        }
-
-        let cid: string;
-        let pid: string;
-
-        if (node.parent == null) {
-          pid = "root"
-          cid = generateNodeUid("root", root["root"].children.length + 1)
-        } else {
-          pid = uids.get(node.parent) as TUid
-          cid = generateNodeUid(pid, root[pid].children.length + 1)
-        }
-
-        if (node.type == "text") {
-          // Text is children of Element tag, this is not node child.
-          root[pid].data.children = (node as Text).data
-          return
-        }
-
-        root[cid] = {
-          uid: cid,
-          p_uid: pid,
-          name: getName(node),
-          children: [],
-          data: { // all attributes converted -> style, classNames, ... 
-            ...attributesToProps((node as Element).attribs)
-          }, // node props
-          isEntity: true
-          // nodeType: node.type
-        } as TNode
-
-        root[pid].children?.push(cid)
-        root[pid].isEntity = false // set node to parent node
-        uids.set(node, cid)
+  type ProcessableNodes = ProcessableNode[]
+  ReactHtmlParser(content, {
+    decodeEntities: true,
+    transform: (node, index, transform) => {
+      node.valid = true
+    },
+    preprocessNodes: (_nodes: ProcessableNodes) => {
+      tmpTree['ROOT'] = {
+        uid: 'ROOT',
+        p_uid: null,
+        name: 'ROOT',
+        isEntity: false,
+        children: [],
+        data: {},
       }
-    })
-  } catch (err) {
-    console.log(err)
+
+      // build the depth-1 seed nodes
+      const seedNodes: TNode[] = []
+      _nodes.map((_node, _index) => {
+        const uid = generateNodeUid('ROOT', _index + 1)
+        _node.uid = uid
+        tmpTree['ROOT'].children.push(uid)
+        tmpTree[uid] = {
+          uid,
+          p_uid: 'ROOT',
+          name: '',
+          isEntity: true,
+          children: [],
+          data: _node,
+        }
+        seedNodes.push(tmpTree[uid])
+      })
+
+      // build the whole node tree from the seed nodes - BFS
+      while (seedNodes.length) {
+        const _node = seedNodes.shift() as TNode
+        if (_node.data.children === undefined || _node.data.children.length === 0) continue
+        _node.data.children.map((_child: ProcessableNode, _index: number) => {
+          const uid = generateNodeUid(_node.uid, _index + 1)
+          _child.uid = uid
+          _node.children.push(uid)
+          _node.isEntity = false
+          tmpTree[uid] = {
+            uid,
+            p_uid: _node.uid,
+            name: '',
+            isEntity: true,
+            children: [],
+            data: _child,
+          }
+          seedNodes.push(tmpTree[uid])
+        })
+      }
+
+      return _nodes
+    },
+  })
+
+  // validate the nodes
+  let uids: TUid[] = Object.keys(tmpTree)
+  uids = getDfsUids(uids)
+
+  let info: THtmlInfo = {
+    titles: [],
+    links: [],
   }
 
-  return root
+  uids.map((uid) => {
+    const node = tmpTree[uid]
+    const { data } = node
+
+    // set isFormatText & valid
+    let isFormatText: boolean = false
+    let valid: boolean = true
+    if (uid === 'ROOT') {
+      // do nothing
+    } else if (data.valid !== true) {
+      valid = false
+      isFormatText = true
+    } else {
+      if (data.type === 'directive') {
+        valid = false
+      } else if (data.type === 'comment') {
+        valid = false
+      } else if (data.type === 'text') {
+        valid = false
+      } else if (data.type === 'script') {
+        valid = false
+      } else if (data.type === 'style') {
+        valid = false
+      } else if (data.type === 'tag') {
+        if (data.name === 'meta') {
+          valid = false
+        } else if (data.name === 'link') {
+          info.links.push(data.attribs)
+          valid = false
+        } else if (data.name === 'title') {
+          let title: string = ''
+          if (data.children.length !== 0) {
+            title = data.children[0].data
+          }
+          info.titles.push(title)
+          valid = false
+        } else if (data.name === 'html') {
+          valid = false
+        } else if (data.name === 'head') {
+          valid = false
+        } else {
+          // do nothing
+        }
+      } else {
+        // do nothing
+      }
+
+      valid = (data.type !== 'text')
+    }
+
+    tree[uid] = {
+      ...node,
+      name: uid === 'ROOT' ? 'ROOT' : (data.name || data.type),
+      data: {
+        valid,
+        isFormatText,
+        type: data.type,
+        name: data.name,
+        data: data.data,
+        attribs: data.attribs,
+      },
+    }
+  })
+
+  // set html and its range on codeview
+  let newContent = serializeHtml(tree)
+  let tmpContent = newContent
+  let detected: Map<string, number> = new Map<string, number>()
+
+  uids.map((uid) => {
+    const node = tree[uid]
+
+    // set the html range
+    const { html } = node.data
+    const htmlArr = tmpContent.split(html)
+    const detectedCount = detected.get(html) || 0
+    const beforeHtml = htmlArr.slice(0, detectedCount + 1).join(html)
+    detected.set(html, detectedCount + 1)
+    const beforeHtmlArr = beforeHtml.split(`\r\n`)
+    const startLineNumber = beforeHtmlArr.length
+    const startColumn = (beforeHtmlArr.pop()?.length || 0) + 1
+    const contentArr = html.split(`\r\n`)
+    const endLineNumber = startLineNumber + contentArr.length - 1
+    const endColumn = (contentArr.length === 1 ? startColumn : 1) + (contentArr.pop()?.length || 0)
+
+    node.data = {
+      ...node.data,
+      startLineNumber,
+      startColumn,
+      endLineNumber,
+      endColumn,
+    }
+  })
+
+  // remove html props in the tree
+  uids.map((uid) => {
+    delete tree[uid].data.html
+  })
+
+  return { content: newContent, tree, info }
 }
 
 /**
@@ -107,61 +207,143 @@ export const parseHtml = (content: string): TTree => {
  * @param tree 
  * @returns 
  */
-export const serializeHtml = (data: TTree): string => {
-  let html = ""
-  const root: TNode = data["root"] as TNode
+export const serializeHtml = (tree: TTree): string => {
+  let html: string = ``
 
-  /**
-   * 
-   * @param uid UID of TTree 
-   * @param level children deeps, this is used for tabs
-   * @returns html
-   */
-  const getHTMLFromFNObject = (uid: string, level: number) => {
-    const element: TNode = data[uid] as TNode
-    let element_html: string = ""
+  let uids: TUid[] = Object.keys(tree)
+  uids = getBfsUids(uids)
+  uids.reverse()
 
-    // starting tag
-    element_html = "\t".repeat(level) + `<${element.name}`;
-    // attributes 
-    if (element.data.classNames != undefined) {
-      element_html += ` class="` + element.data.classNames + `"`;
-    }
-    if (element.data.style != undefined) {
-      element_html += ` style="`
-      Object.keys(element.data.style).map((css_name: string) => {
-        const style_name = css_name.replace(/[A-Z]/g, c => '-' + c.substr(0).toLowerCase())
-        element_html += `${style_name}:${element.data.style[css_name]};`
-      })
-      element_html += `"`
-    }
-    if (element.children.length == 0) {
-      element_html += `>`
+  uids.map((uid) => {
+    const node = tree[uid]
+
+    // collect children html
+    let childrenHtml = ``
+    node.children.map((c_uid) => {
+      const child = tree[c_uid]
+      childrenHtml += child.data.html
+    })
+
+    // wrap with the current node
+    const { data } = node
+    let nodeHtml = ``
+
+    const attribsHtml = data.attribs === undefined ? '' : Object.keys(data.attribs).map(attr => ` ${attr}="${data.attribs[attr]}"`).join('')
+
+    if (data.type === 'directive') {
+      nodeHtml = `<${data.data}>`
+    } else if (data.type === 'comment') {
+      nodeHtml = `<!--${data.data}-->`
+    } else if (data.type === 'text') {
+      nodeHtml = data.data
+    } else if (data.type === 'script') {
+      nodeHtml = `<script${attribsHtml}>` + childrenHtml + `</script>`
+    } else if (data.type === 'style') {
+      nodeHtml = `<style${attribsHtml}>` + childrenHtml + `</style>`
+    } else if (data.type === 'tag') {
+      if (data.name === 'meta' || data.name === 'link' || data.name === 'img') {
+        nodeHtml = `<${data.name}${attribsHtml} />`
+      } else if (data.name === 'title') {
+        nodeHtml = `<title>` + childrenHtml + `</title>`
+      } else {
+        nodeHtml = `<${data.name}${attribsHtml}>` + childrenHtml + `</${data.name}>`
+      }
     } else {
-      element_html += `>` + "\n"
+      // do nothing
+      nodeHtml = childrenHtml
     }
 
-    // children tages
-    element_html += element.children.reduce((result, item) => {
-      return result + getHTMLFromFNObject(item, level + 1)
-    }, '');
+    node.data.html = nodeHtml
+  })
 
-    if (element.data.children != undefined) {
-      // Text is children data
-      element_html += element.data.children;
+  return tree['ROOT'].data.html
+}
+
+/**
+ * return custom renderer name from the "name"
+ * @param tagName 
+ * @returns 
+ */
+export const getElementType = (tagName: string) => {
+  if (tagName === 'ROOT' || tagName === 'html' || tagName === 'head' || tagName === 'body' /* || tagName === 'div' */) return Container
+  if (tagName === 'text') return Text
+  if (tagName === '!doctype' || tagName === 'comment') return 'invalid'
+  return tagName
+  
+  switch (tagName) {
+    case 'ROOT':
+    case 'html':
+    case 'head':
+    case 'body':
+    case 'div':
+      return Container
+
+    case 'h1':
+    case 'h2':
+    case 'h3':
+    case 'h4':
+    case 'h5':
+    case 'h6':
+    case 'p':
+    case 'span':
+    // return PlainText
+
+    case 'text':
+      return Text
+
+    case 'button':
+      return Button
+
+    case '!doctype':
+    case 'comment':
+      return 'invalid'
+
+    default:
+      return tagName
+  }
+}
+
+/**
+ * return if it's canvas or not - means droppable
+ * @param tagName 
+ * @returns 
+ */
+export const isCanvas = (tagName: string) => {
+  return false
+}
+
+/**
+ * get shortHand of attrs obj
+ * @param attrs 
+ */
+export const getShortHand = (attrs: Attributes): Attributes => {
+  const newAttr: Attributes = {}
+
+  for (const attrName in attrs) {
+    if (attrName === 'style') {
+      newAttr['style'] = {}
+
+      const style = attrs[attrName]
+      for (const styleName in style) {
+        const newStyleName = styleName.replace(/-./g, c => c.substr(1).toUpperCase())
+        newAttr['style'][newStyleName] = style[styleName]
+      }
+    } else {
+      const newAttrName = attrName === 'class' ? 'className' :
+        attrName === 'charset' ? 'charSet' :
+          attrName.replace(/-./g, c => c.substr(1).toUpperCase())
+
+      newAttr[newAttrName] = attrs[attrName]
     }
-
-    // end tag
-    if (element.children.length != 0)
-      element_html += "\t".repeat(level)
-
-    element_html += `</${element.name}>` + "\n"
-
-    return element_html
   }
 
-  for (const child of root.children) {
-    html += getHTMLFromFNObject(child, 0)
-  }
-  return html
+  return newAttr
+}
+
+/**
+ * get long-hand of attrs obj
+ * @param attrs 
+ */
+export const getLongHand = (attrs: Attributes) => {
+
 }

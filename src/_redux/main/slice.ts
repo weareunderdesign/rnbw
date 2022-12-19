@@ -1,10 +1,7 @@
 import undoable from 'redux-undo';
 
 import { HistoryStoreLimit } from '@_config/main';
-import {
-  TTree,
-  TUid,
-} from '@_node/types';
+import { TUid } from '@_node/types';
 import {
   createSlice,
   PayloadAction,
@@ -16,6 +13,7 @@ import * as Types from './types';
 // initial state of reducer
 const initialState: Types.MainState = {
   actionGroupIndex: 0,
+
   global: {
     workspace: {},
     openedFiles: [],
@@ -26,25 +24,22 @@ const initialState: Types.MainState = {
       content: '',
       saved: false,
     },
-    nodeTree: {},
     pending: false,
     messages: [],
   },
   ff: {
-    focusedItem: 'root',
-    expandedItems: ['root'],
-    expandedItemsObj: { 'root': true },
+    focusedItem: 'ROOT',
+    expandedItems: ['ROOT'],
+    expandedItemsObj: { 'ROOT': true },
     selectedItems: [],
     selectedItemsObj: {},
-    hoveredItem: '',
   },
   fn: {
-    focusedItem: 'root',
-    expandedItems: ['root'],
-    expandedItemsObj: { 'root': true },
+    focusedItem: 'ROOT',
+    expandedItems: ['ROOT'],
+    expandedItemsObj: { 'ROOT': true },
     selectedItems: [],
     selectedItemsObj: {},
-    hoveredItem: '',
   },
 }
 
@@ -76,6 +71,7 @@ const slice = createSlice({
       const saved = action.payload
       state.global.currentFile.saved = saved
     },
+
     setGlobalPending(state, action: PayloadAction<boolean>) {
       const pending = action.payload
       state.global.pending = pending
@@ -92,12 +88,7 @@ const slice = createSlice({
     /* fn */
     clearFNState(state, action: PayloadAction) {
       state.global.currentFile = initialState.global.currentFile
-      state.global.nodeTree = initialState.global.nodeTree
       state.fn = initialState.fn
-    },
-    hoverFNNode(state, action: PayloadAction<TUid>) {
-      const uid = action.payload
-      state.fn.hoveredItem = uid
     },
     focusFNNode(state, action: PayloadAction<TUid>) {
       const uid = action.payload
@@ -173,16 +164,8 @@ const slice = createSlice({
       state.fn.expandedItems = Object.keys(state.fn.expandedItemsObj)
       state.fn.selectedItems = Object.keys(state.fn.selectedItemsObj)
     },
-    updateFNTreeView(state, action: PayloadAction<TTree>) {
-      const treeData = action.payload
-      state.global.nodeTree = treeData
-    },
 
     /* ff */
-    hoverFFNode(state, action: PayloadAction<TUid>) {
-      const uid = action.payload
-      state.ff.hoveredItem = uid
-    },
     focusFFNode(state, action: PayloadAction<TUid>) {
       const uid = action.payload
       state.ff.focusedItem = uid
@@ -261,22 +244,20 @@ export const {
   setFileContent,
   updateFileContent,
   updateFileStatus,
+
   setGlobalPending,
   setGlobalMessage,
   removeGlobalMessage,
 
   /* fn */
   clearFNState,
-  hoverFNNode,
   focusFNNode,
   expandFNNode,
   collapseFNNode,
   selectFNNode,
   updateFNTreeViewState,
-  updateFNTreeView,
 
   /* ff */
-  hoverFFNode,
   focusFFNode,
   expandFFNode,
   collapseFFNode,
@@ -294,12 +275,7 @@ export const MainReducer = undoable(slice.reducer, {
       action.type === 'main/removeGlobalMessage' ||
 
       action.type === 'main/updateFFTreeView' ||
-      action.type === 'main/updateFFTreeViewState' ||
-
-      action.type === 'main/updateFNTreeView' ||
-
-      action.type === 'main/hoverFFNode' ||
-      action.type === 'main/hoverFNNode') {
+      action.type === 'main/updateFFTreeViewState') {
       return false
     }
 

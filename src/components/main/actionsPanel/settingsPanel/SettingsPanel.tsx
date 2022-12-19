@@ -2,6 +2,7 @@ import './SettingsPanel.css';
 
 import React, {
   useCallback,
+  useContext,
   useEffect,
   useRef,
   useState,
@@ -18,6 +19,7 @@ import {
 } from '@_node/apis';
 import { TTree } from '@_node/types';
 import * as Main from '@_redux/main';
+import { MainContext } from '@_redux/main';
 import { useEditor } from '@craftjs/core';
 
 import { SettingsPanelProps } from './types';
@@ -66,8 +68,10 @@ export default function SettingsPanel(props: SettingsPanelProps) {
   })
 
   const [styleLists, setStyleLists] = useState<Record<string, StyleProperty>>({})
-  const nodeTree = useSelector(Main.globalGetNodeTreeSelector)
-  const { type } = useSelector(Main.globalGetCurrentFileSelector)
+
+  // context
+  const { nodeTree, setNodeTree, validNodeTree, setValidNodeTree } = useContext(MainContext)
+  const { workspace, openedFiles, currentFile: { type }, pending, messages } = useSelector(Main.globalSelector)
 
   useEffect(() => {
     let elements: Record<string, StyleProperty> = {}
@@ -114,7 +118,7 @@ export default function SettingsPanel(props: SettingsPanelProps) {
 
   return <>
     <div className="panel">
-      <div className="border-bottom" style={{ height: "200px", overflow: "auto" }}>
+      <div className="border-bottom" style={{ height: "100px", overflow: "auto" }}>
         {/* Nav Bar */}
         <div className="sticky direction-column padding-s box-l justify-stretch border-bottom background-primary">
           <div className="gap-s box justify-start">
@@ -138,8 +142,6 @@ export default function SettingsPanel(props: SettingsPanelProps) {
                 type="text"
                 value={styleItem.value}
                 onChange={(e) => {
-                  console.log(e)
-
                   // display chages of style properties
                   const newStyleList = JSON.parse(JSON.stringify(styleLists))
                   newStyleList[key].value = e.target.value

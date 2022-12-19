@@ -7,7 +7,9 @@
 
   /* Box Sizing and Transition */
   box-sizing: border-box;
-  /* transition: 0.2s all; */
+  /* transition: 0.1s all; */
+
+  /* scroll-behavior: smooth; */
 }
 
 /* Works on Chrome, Edge, and Safari */

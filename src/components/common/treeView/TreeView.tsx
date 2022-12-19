@@ -52,7 +52,7 @@ export default function TreeView(props: TreeViewProps) {
         // Load Data
         items={data}
       >
-        <Tree treeId={info.id} rootItem="root" treeLabel={info.label} />
+        <Tree treeId={info.id} rootItem="ROOT" treeLabel={info.label} />
       </ControlledTreeEnvironment>
     </div>
   </>)

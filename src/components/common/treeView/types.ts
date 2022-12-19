@@ -28,16 +28,16 @@ export type TreeViewProps = {
   },
 
   callbacks: {
-    onRenameItem?: ((item: TreeItem<any>, name: string, treeId: string) => void) | undefined,
+    onRenameItem?: ((item: TreeItem, name: string, treeId: string) => void) | undefined,
 
     onSelectItems?: ((items: TreeItemIndex[], treeId: string) => void) | undefined,
-    onFocusItem?: ((item: TreeItem<any>, treeId: string) => void) | undefined,
-    onExpandItem?: ((item: TreeItem<any>, treeId: string) => void) | undefined,
-    onCollapseItem?: ((item: TreeItem<any>, treeId: string) => void) | undefined,
+    onFocusItem?: ((item: TreeItem, treeId: string) => void) | undefined,
+    onExpandItem?: ((item: TreeItem, treeId: string) => void) | undefined,
+    onCollapseItem?: ((item: TreeItem, treeId: string) => void) | undefined,
 
-    onDrop?: ((items: TreeItem<any>[], target: DraggingPosition) => void) | undefined,
+    onDrop?: ((items: TreeItem[], target: DraggingPosition) => void) | undefined,
 
-    onPrimaryAction?: ((items: TreeItem<any>, treeId: string) => void) | undefined,
+    onPrimaryAction?: ((items: TreeItem, treeId: string) => void) | undefined,
   },
 }
 

@@ -21,12 +21,12 @@ import {
   CodeView,
   StageView,
 } from '@_components/main';
+import NodeRenderer from '@_components/main/stageView/nodeRenderer';
 import {
   Button,
   Container,
   Text,
-} from '@_components/main/stageView/components/selectors';
-import NodeRenderer from '@_components/main/stageView/nodeRenderer';
+} from '@_components/main/stageView/nodeRenderer/customRenderers';
 import {
   moveNode,
   serializeFile,
@@ -70,7 +70,11 @@ export default function MainPage(props: MainPageProps) {
     }
   }
 
-  // file system handlers - context
+  // ---------------- main context ----------------
+  // file tree view
+  const [ffHoveredItem, setFFHoveredItem] = useState<TUid>('')
+  const _setFFHoveredItem = (uid: TUid) => setFFHoveredItem(uid)
+
   const [ffHandlers, setFFHandlers] = useState<Main.FFHandlers>({})
   const _setFFHandlers = useCallback((deletedUids: TUid[], handlers: { [uid: TUid]: FileSystemHandle }) => {
     const uidObj: { [uid: TUid]: boolean } = {}
@@ -85,16 +89,25 @@ export default function MainPage(props: MainPageProps) {
     setFFHandlers({ ...newHandlers, ...handlers })
   }, [ffHandlers])
 
-  // cmdk - context
+  // node tree view
+  const [fnHoveredItem, setFNHoveredItem] = useState<TUid>('')
+  const _setFNHoveredItem = (uid: TUid) => setFNHoveredItem(uid)
+
+  const [nodeTree, setNodeTree] = useState<TTree>({})
+  const _setNodeTree = (tree: TTree) => setNodeTree(tree)
+
+  const [validNodeTree, setValidNodeTree] = useState<TTree>({})
+  const _setValidNodeTree = (tree: TTree) => setValidNodeTree(tree)
+
+  // cmdk
   const [command, setCommand] = useState<Main.Command>({ action: '', changed: false })
+  // ---------------- main context ----------------
 
-  // fetch necessary state
-  const pending = useSelector(Main.globalGetPendingSelector)
-  const messages = useSelector(Main.globalGetMessagesSelector)
-  const { uid, content, type } = useSelector(Main.globalGetCurrentFileSelector)
-  const nodeTree = useSelector(Main.globalGetNodeTreeSelector)
+  // redux state
+  const { workspace, openedFiles, currentFile: { uid, content, type }, pending, messages } = useSelector(Main.globalSelector)
 
-  // cmdk handle
+  // ---------------- cmdk ----------------
+  // cmdk modal
   const [cmdkOpen, setCmdkOpen] = useState(false)
   const makeCmkItems = useCallback(() => {
     const items: CmdKItemGeneralProps[] = []
@@ -113,9 +126,10 @@ export default function MainPage(props: MainPageProps) {
     })
     return items
   }, [command.changed])
+
+  // key event listener
   const cb_onKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === '\\' && e.metaKey) {
-      e.preventDefault()
+    if (e.key === 'k' && e.ctrlKey) {
       setCmdkOpen(!cmdkOpen)
     }
     if (e.key === 'o' && e.ctrlKey) {
@@ -129,6 +143,8 @@ export default function MainPage(props: MainPageProps) {
       setCommand({ action: "cmdy", changed: !command.changed })
     }
   }, [cmdkOpen, command.changed])
+
+  // do actions
   useEffect(() => {
     // cmdk actions handle
     switch (command.action) {
@@ -146,15 +162,16 @@ export default function MainPage(props: MainPageProps) {
     setCmdkOpen(false)
   }, [command.changed])
 
-  /* hms methods */
+  // hms methods
   const cmdz = () => {
     dispatch(ActionCreators.undo())
   }
   const cmdy = () => {
     dispatch(ActionCreators.redo())
   }
+  // ---------------- cmdk ----------------
 
-  // toogle code  view
+  // toogle code view
   const [showCodeView, setShowCodeView] = useState(false)
   const toogleCodeView = async () => {
     setShowCodeView(!showCodeView)
@@ -170,7 +187,7 @@ export default function MainPage(props: MainPageProps) {
 
     dispatch(Main.setGlobalPending(true))
 
-    /* for the remote rainbow */
+    // for the remote rainbow
     if (await verifyPermission(handler) === false) {
       console.log('show save file picker')
       handler = await showSaveFilePicker({ suggestedName: handler.name })
@@ -189,21 +206,29 @@ export default function MainPage(props: MainPageProps) {
     dispatch(updateFileContent(content))
   }
 
+  // ---------------- stage view ----------------
   const onBeforeMoveEnd = (targetNode: Node, newParentNode: Node, existingParentNode: Node) => {
+    console.log('onBeforeMoveEnd', targetNode, newParentNode, existingParentNode)
   }
 
   // StageView DnD
   const onNodesChange = useCallback((query: QueryCallbacksFor<typeof QueryMethods>) => {
-    const state: EditorState = query.getState()
-    if (state.events.selected.size === 0) return
+    console.log('onNodesChange')
 
-    // get selected node uids
+    // get editor state
+    const state: EditorState = query.getState()
     let selectedNodeUids: TUid[] = []
     state.events.selected.forEach((uid) => {
       selectedNodeUids.push(uid)
     })
+    let draggedNodeUids: TUid[] = []
+    state.events.dragged.forEach((uid) => {
+      draggedNodeUids.push(uid)
+    })
 
-    if (state.events.dragged.size !== 0) {
+    if (selectedNodeUids.length === 0) return
+
+    if (draggedNodeUids.length !== 0) {
       const tree = JSON.parse(JSON.stringify(nodeTree))
 
       // dragged and drop event
@@ -215,11 +240,11 @@ export default function MainPage(props: MainPageProps) {
       const movePayload = {
         tree: tree,
         isBetween: true,
-        parentUid: parentId === 'ROOT' ? 'root' : parentId,
+        parentUid: parentId,
         position,
         uids: selectedNodeUids
       }
-      console.log(movePayload)
+
       const res = moveNode(movePayload)
       updateFFContent(res.tree)
       dispatch(Main.updateFNTreeViewState(res))
@@ -227,22 +252,47 @@ export default function MainPage(props: MainPageProps) {
       removeRunningAction(['moveFNNode'])
     }
   }, [nodeTree])
-
+  // ---------------- stage view ----------------
 
   return (<>
     {/* toast */}
     <Toast messages={messages} />
 
     {/* cmdk */}
-    <CommandK onKeyDownCallback={cb_onKeyDown} open={cmdkOpen} setOpen={setCmdkOpen} items={makeCmkItems()} />
+    <CommandK
+      open={cmdkOpen}
+      setOpen={setCmdkOpen}
+      items={makeCmkItems()}
+      onKeyDownCallback={cb_onKeyDown}
+    />
 
-    <div className="page">
-      <div className="direction-row">
-        <h1 className="center text-s"><span className="text-s opacity-m">Rainbow v1.0 /</span> Main Page</h1>
-      </div>
+    <div className="page" style={{ maxWidth: '100vw' }}>
       <div className="direction-column background-primary border shadow">
         {/* wrap with the context */}
-        <Main.MainContext.Provider value={{ ffHandlers: ffHandlers, setFFHandlers: _setFFHandlers, command: command, setCommand: setCommand }}>
+        <Main.MainContext.Provider
+          value={{
+            // file tree view
+            ffHoveredItem,
+            setFFHoveredItem: _setFFHoveredItem,
+
+            ffHandlers,
+            setFFHandlers: _setFFHandlers,
+
+            // node tree view
+            fnHoveredItem,
+            setFNHoveredItem: _setFNHoveredItem,
+
+            nodeTree,
+            setNodeTree: _setNodeTree,
+
+            validNodeTree,
+            setValidNodeTree: _setValidNodeTree,
+
+            // cmdk
+            command,
+            setCommand: setCommand,
+          }}
+        >
           {/* top bar */}
           <div className="direction-column padding-s box-l justify-stretch border-bottom">
             <div className="gap-s box justify-start">
@@ -260,7 +310,10 @@ export default function MainPage(props: MainPageProps) {
 
           {/* spinner */}
           {pending &&
-            <div className='justify-center align-center background-secondary opacity-m' style={{ zIndex: "9999", position: "fixed", top: "0", right: "0", bottom: "0", left: "0" }}>
+            <div
+              className='justify-center align-center background-secondary opacity-m'
+              style={{ zIndex: "9999", position: "fixed", top: "0", right: "0", bottom: "0", left: "0" }}
+            >
               <span className='text-s'>Pending...</span>
             </div>}
 
@@ -271,12 +324,12 @@ export default function MainPage(props: MainPageProps) {
               Text,
               Button,
             }}
+            onRender={NodeRenderer}
             onBeforeMoveEnd={onBeforeMoveEnd}
             onNodesChange={onNodesChange}
-            onRender={NodeRenderer}
           >
             <ActionsPanel />
-            <StageView />
+            {true && <StageView />}
             {showCodeView && <CodeView />}
           </Editor>
         </Main.MainContext.Provider >

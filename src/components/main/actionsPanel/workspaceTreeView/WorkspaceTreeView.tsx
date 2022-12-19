@@ -33,6 +33,7 @@ import {
   generateNodeUid,
   validateUids,
 } from '@_node/apis';
+import { parseHtml } from '@_node/html';
 import {
   TFileType,
   TNode,
@@ -41,6 +42,7 @@ import {
 } from '@_node/types';
 import * as Main from '@_redux/main';
 import {
+  MainContext,
   OpenedFile,
   setGlobalPending,
 } from '@_redux/main';
@@ -78,28 +80,21 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
   }
 
+  // main context
+  const { ffHoveredItem, setFFHoveredItem, ffHandlers, setFFHandlers, fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree, command } = useContext(MainContext)
+
+  // redux state
+  const { workspace, openedFiles, currentFile, pending, messages } = useSelector(Main.globalSelector)
+  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(Main.ffSelector)
+
   // project source location - localhost, git, dropbox, etc..
   const [projectLocation, setProjectLocation] = useState<ProjectLocation>()
 
-  // fetch necessary state
-  const pending = useSelector(Main.globalGetPendingSelector)
-  const workspace = useSelector(Main.globalGetWorkspaceSelector)
-
-  // file-tree-view view state
-  const hoveredItem = useSelector(Main.ffGetHoveredItemSelector)
-  const focusedItem = useSelector(Main.ffGetFocusedItemSelector)
-  const expandedItems = useSelector(Main.ffGetExpandedItemsSelector)
-  const expandedItemsObj = useSelector(Main.ffGetExpandedItemsObjSelector)
-  const selectedItems = useSelector(Main.ffGetSelectedItemsSelector)
-  const selectedItemsObj = useSelector(Main.ffGetSelectedItemsObjSelector)
-
-  // file handlers from context
-  const { ffHandlers, setFFHandlers, command } = useContext(Main.MainContext)
-
+  // command detect & do actions
   useEffect(() => {
     if (command.action === '') return
-    
-    switch(command.action) {
+
+    switch (command.action) {
       case 'OpenProject':
         onImportProject()
         break
@@ -115,9 +110,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         index: uid,
         data: node,
         children: node.children,
-        hasChildren: !node.isEntity,
-        canMove: uid !== 'root',
-        canRename: uid !== 'root',
+        isFolder: !node.isEntity,
+        canMove: uid !== 'ROOT',
+        canRename: uid !== 'ROOT',
       }
     }
     return data
@@ -134,16 +129,16 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       throw 'error'
     }
 
-    let handlers: { [uid: TUid]: FileSystemHandle } = { 'root': projectHandle }
+    let handlers: { [uid: TUid]: FileSystemHandle } = { 'ROOT': projectHandle }
     let dirHandlers: { node: FFNode, handler: FileSystemDirectoryHandle }[] = [{
       node: {
-        uid: 'root',
+        uid: 'ROOT',
         p_uid: null,
         name: projectHandle.name,
         isEntity: false,
-        children: workspace['root'] ? workspace['root'].children : [],
+        children: workspace['ROOT'] ? workspace['ROOT'].children : [],
         data: {
-          new: workspace['root'] === undefined,
+          new: workspace['ROOT'] === undefined,
         },
       },
       handler: projectHandle,
@@ -237,11 +232,11 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   const watchFileSystem = useCallback(async () => {
     // if the project is from localhost
     if (projectLocation === 'localhost') {
-      if (ffHandlers['root'] === undefined || workspace['root'] === undefined) {
+      if (ffHandlers['ROOT'] === undefined || workspace['ROOT'] === undefined) {
         // do nothing
       } else {
         try {
-          await importLocalhostProject(ffHandlers['root'] as FileSystemDirectoryHandle)
+          await importLocalhostProject(ffHandlers['ROOT'] as FileSystemDirectoryHandle)
         } catch (err) {
           dispatch(Main.clearMainState())
         }
@@ -568,6 +563,12 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     try {
       const fileEntry = await handler.getFile()
       let content = await fileEntry.text()
+
+      // initial format code
+      if (fileType === 'html') {
+        content = parseHtml(content).content
+      }
+
       const file: OpenedFile = {
         uid,
         name: handler.name,
@@ -779,7 +780,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   // duplicate directory/file api
   const duplicateFFNode = useCallback(async () => {
     // validate
-    if (focusedItem === 'root') return
+    if (focusedItem === 'ROOT') return
     const node = workspace[focusedItem]
     if (node === undefined) return
     const parentNode = workspace[node.p_uid as TUid]
@@ -941,27 +942,29 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                     props.context.isDraggingOverParent && '',
                     props.context.isFocused && '',
                   )}
-                  {...(props.context.itemContainerWithChildrenProps) as any}
+                  {...props.context.itemContainerWithChildrenProps}
                 >
                   {/* self */}
                   <div
                     className={cx(
                       'justify-stretch',
                       'padding-xs',
-                      props.item.index === hoveredItem && 'background-secondary',
+                      props.item.index === ffHoveredItem && 'background-secondary',
                       props.context.isSelected && 'background-secondary',
-                      props.context.isDraggingOver && 'color-primary',
-                      props.context.isDraggingOverParent && 'draggingOverParent',
-                      props.context.isFocused && 'border',
+                      props.context.isDraggingOver && 'foreground-primary',
+                      props.context.isDraggingOverParent && '',
+                      props.context.isFocused && '',
                     )}
                     style={{
                       flexWrap: "nowrap",
                       paddingLeft: `${props.depth * 10}px`,
-                      ...(!props.context.isFocused ? { border: "1px solid transparent" } : {}),
+                      outline: props.context.isFocused ? "1px solid black" :
+                        props.item.index === ffHoveredItem ? "1px dotted black" : "none",
+                      outlineOffset: "-1px",
                     }}
 
-                    {...(props.context.itemContainerWithoutChildrenProps as any)}
-                    {...(props.context.interactiveElementProps as any)}
+                    {...props.context.itemContainerWithoutChildrenProps}
+                    {...props.context.interactiveElementProps}
                     onClick={(e) => {
                       e.stopPropagation()
 
@@ -978,7 +981,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                         addRunningAction(['selectFFNode'])
                       } else {
                         addRunningAction(['selectFFNode'])
-                        if (props.item.hasChildren) {
+                        if (props.item.isFolder) {
                           addRunningAction([props.context.isExpanded ? 'collapseFFNode' : 'expandFFNode'])
                         } else {
                           addRunningAction(['readFFNode'])
@@ -993,13 +996,12 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                         props.context.isSelected ? props.context.unselectItem() : props.context.addToSelectedItems()
                       } else {
                         props.context.selectItem()
-                        props.item.hasChildren ? props.context.toggleExpandedState() : props.context.primaryAction()
+                        props.item.isFolder ? props.context.toggleExpandedState() : props.context.primaryAction()
                       }
                     }}
                     onFocus={() => { }}
-                    onMouseMove={() => {
-                      dispatch(Main.hoverFFNode(props.item.index as TUid))
-                    }}
+                    onMouseEnter={() => setFFHoveredItem(props.item.index as TUid)}
+                    onMouseLeave={() => setFFHoveredItem('')}
                   >
                     <div className="gap-xs padding-xs" style={{ width: "100%" }}>
                       {/* render arrow */}
@@ -1009,7 +1011,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                       <div
                         className={cx(
                           'icon-xs',
-                          props.item.hasChildren ? (props.context.isExpanded ? 'icon-folder' : 'icon-folder') :
+                          props.item.isFolder ? (props.context.isExpanded ? 'icon-folder' : 'icon-folder') :
                             'icon-pages'
                         )}
                       >
@@ -1034,7 +1036,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                 <div
                   className={cx(
                     'icon-xs',
-                    props.item.hasChildren ? (props.context.isExpanded ? 'icon-down' : 'icon-right') : '',
+                    props.item.isFolder ? (props.context.isExpanded ? 'icon-down' : 'icon-right') : '',
                   )}
                 >
                 </div>
@@ -1052,8 +1054,8 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           /* possibilities */
           props={{
             canDragAndDrop: true,
-            canDropOnItemWithChildren: true,
-            canDropOnItemWithoutChildren: false,
+            canDropOnFolder: true,
+            canDropOnNonFolder: false,
           }}
 
           /* cb */

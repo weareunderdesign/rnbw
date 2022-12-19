@@ -15,7 +15,6 @@ export type MainState = {
     workspace: FFTree,
     currentFile: OpenedFile,
     openedFiles: OpenedFile[],
-    nodeTree: TTree,
     pending: boolean,
     messages: Message[],
   },
@@ -50,7 +49,6 @@ export type FFTreeViewState = {
   selectedItemsObj: {
     [uid: TUid]: boolean,
   },
-  hoveredItem: TUid,
 }
 
 // update ff tree view payload type - delete / add nodes to workspace
@@ -76,7 +74,6 @@ export type FNTreeViewState = {
   selectedItemsObj: {
     [uid: TUid]: boolean,
   },
-  hoveredItem: TUid,
 }
 
 /* update fn node - delete / convert from $a to $b */
@@ -90,8 +87,24 @@ export type UpdateFNTreeViewStatePayload = {
  * context type for main page
  */
 export type MainContextType = {
+  // file tree view
+  ffHoveredItem: TUid,
+  setFFHoveredItem: (uid: TUid) => void,
+
   ffHandlers: FFHandlers,
   setFFHandlers: (deletedUids: TUid[], handlers: { [uid: TUid]: FileSystemHandle }) => void,
+
+  // node tree view
+  fnHoveredItem: TUid,
+  setFNHoveredItem: (uid: TUid) => void,
+
+  nodeTree: TTree,
+  setNodeTree: (tree: TTree) => void,
+
+  validNodeTree: TTree,
+  setValidNodeTree: (tree: TTree) => void,
+
+  // cmdk
   command: Command,
   setCommand: (command: Command) => void,
 }

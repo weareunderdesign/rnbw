@@ -7,19 +7,21 @@ import {
   Frame,
 } from '@craftjs/core';
 
-import Viewport from './components/editor/Viewport';
-import { Container } from './components/selectors';
+import { Container } from './nodeRenderer';
 import { StageViewProps } from './types';
+import Viewport from './viewport';
 
 const styles = `
   :host {
     display: inline-flex;
   }
-  .component-selected {
-    border: 1px solid blue;
+  .rnbwdev-rainbow-component-selected {
+    outline: 1px solid blue;
+    outline-offset: -1px;
   }
-  .component-hovered {
-    border: 1px dashed blue;
+  .rnbwdev-rainbow-component-hovered {
+    outline: 1px dashed blue;
+    outline-offset: -1px;
   }
 `
 
@@ -30,23 +32,25 @@ export default function StageView(props: StageViewProps) {
 
   return (
     <div className="panel box padding-xs shadow border-left">
-      <div className='box border-top border-right border-bottom border-left'>
+      <div className='box border-top border-right border-bottom border-left' style={{ maxHeight: "calc(100vh - 41px - 80px - 12px)", overflow: "auto" }}>
         <ReactShadowRoot stylesheets={styleSheets}>
           <Viewport>
             <Frame>
               <Element
                 canvas
                 is={Container}
-                width="100%"
-                height="100%"
-                background={{ r: 255, g: 255, b: 255, a: 1 }}
-                custom={{ displayName: 'App' }}
+
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  background: "rgba(255, 255, 255, 1)",
+                }}
               >
               </Element>
             </Frame>
           </Viewport>
         </ReactShadowRoot>
       </div>
-    </div>
+    </div >
   )
 }

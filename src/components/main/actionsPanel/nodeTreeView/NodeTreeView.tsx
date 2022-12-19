@@ -1,5 +1,6 @@
 import React, {
   useCallback,
+  useContext,
   useEffect,
   useRef,
   useState,
@@ -13,9 +14,12 @@ import {
 
 import { TreeView } from '@_components/common';
 import { TreeViewData } from '@_components/common/treeView/types';
+import { THtmlParserResponse } from '@_node/html';
 import {
   addNode,
   duplicateNode,
+  getBfsUids,
+  getDfsUids,
   moveNode,
   parseFile,
   removeNode,
@@ -29,6 +33,7 @@ import {
   TUid,
 } from '@_node/types';
 import * as Main from '@_redux/main';
+import { MainContext } from '@_redux/main';
 
 import { NodeTreeViewProps } from './types';
 
@@ -54,41 +59,113 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     }
   }
 
-  // fetch necessary state
-  const { type, content }: Main.OpenedFile = useSelector(Main.globalGetCurrentFileSelector)
-  const treeData: TTree = useSelector(Main.globalGetNodeTreeSelector)
+  // main context
+  const { ffHoveredItem, setFFHoveredItem, ffHandlers, setFFHandlers, fnHoveredItem, setFNHoveredItem, nodeTree: treeData, setNodeTree, validNodeTree: validTreeData, setValidNodeTree, command } = useContext(MainContext)
 
-  // node-tree-view view state
-  const hoveredItem = useSelector(Main.fnGetHoveredItemSelector)
-  const focusedItem = useSelector(Main.fnGetFocusedItemSelector)
-  const expandedItems = useSelector(Main.fnGetExpandedItemsSelector)
-  const expandedItemsObj = useSelector(Main.fnGetExpandedItemsObjSelector)
-  const selectedItems = useSelector(Main.fnGetSelectedItemsSelector)
-  const selectedItemsObj = useSelector(Main.fnGetSelectedItemsObjSelector)
+  // redux state
+  const { workspace, openedFiles, currentFile: { uid, type, content }, pending, messages } = useSelector(Main.globalSelector)
+  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(Main.fnSelector)
+
+  // sync tree view state with StageView & CodeView
+  const focusedItemRef = useRef<TUid>(focusedItem)
+  useEffect(() => {
+    if (focusedItem === focusedItemRef.current) return
+
+    let node = validTreeData[focusedItem]
+    if (node === undefined) return
+
+    focusedItemRef.current = focusedItem
+
+    // expanded the branch of the focused item
+    const _expandedItems: TUid[] = []
+    while (node.uid !== 'ROOT') {
+      const parentNode = validTreeData[node.p_uid as TUid]
+      _expandedItems.push(parentNode.uid)
+      node = parentNode
+    }
+    dispatch(Main.expandFNNode(_expandedItems))
+  }, [focusedItem])
+  useEffect(() => {
+    // validate
+    const node = validTreeData[focusedItem]
+    if (node === undefined) return
+
+    // scroll to focused item
+    const { data: { index } } = validTreeData[focusedItem]
+    document.getElementById('NodeTreeView')?.scroll({
+      top: (index - 5) * (document.getElementById(`${focusedItem}`)?.clientHeight || 0),
+      left: 0,
+      behavior: 'smooth'
+    })
+  }, [expandedItems])
 
   // generate TTree and TreeViewData from file content
+  const uidRef = useRef<TUid>(uid)
   const [nodeTreeViewData, setNodeTreeViewData] = useState<TreeViewData>({})
   useEffect(() => {
-    const _treeData: TTree = parseFile({ type, content })
+    let _treeData: TTree = {}, _validTreeData: TTree = {}
+    const _expandedItems: TUid[] = []
 
-    // update global state
-    dispatch(Main.updateFNTreeView(_treeData))
+    // parse the file content
+    const parserResult = parseFile({ type, content })
+
+    if (type === 'html') {
+      const { tree, info } = parserResult as THtmlParserResponse
+      _treeData = JSON.parse(JSON.stringify(tree))
+
+      let uids: TUid[] = Object.keys(tree)
+      uids = getBfsUids(uids)
+      uids.reverse()
+      uids.map((uid) => {
+        const node = tree[uid]
+
+        // validate
+        if (node.children.length !== 0) {
+          node.children = node.children.filter((c_uid) => {
+            const child = tree[c_uid]
+            return child.data.valid
+          })
+          node.isEntity = (node.children.length === 0)
+          node.data.valid = node.data.valid || (node.children.length !== 0)
+        }
+        if (node.data.valid) {
+          !node.isEntity && _expandedItems.push(uid)
+          _validTreeData[uid] = node
+        }
+      })
+
+      // set node index
+      uids = Object.keys(_validTreeData)
+      uids = getDfsUids(uids)
+      let nodeIndex: number = 0
+      uids.map((uid) => {
+        _validTreeData[uid].data.index = ++nodeIndex
+      })
+    }
+
+    // update main context
+    setNodeTree(_treeData)
+    setValidNodeTree(_validTreeData)
+
+    // update redux
+    uidRef.current !== uid && dispatch(Main.expandFNNode(_expandedItems))
+    uidRef.current = uid
 
     // generate data for node-tree-view
     let data: TreeViewData = {}
-    for (const uid in _treeData) {
-      const node: TNode = _treeData[uid]
+    for (const uid in _validTreeData) {
+      const node = _validTreeData[uid]
       data[uid] = {
         index: node.uid,
         data: node,
         children: node.children,
-        hasChildren: !node.isEntity,
-        canMove: uid !== 'root',
-        canRename: uid !== 'root',
+        isFolder: !node.isEntity,
+        canMove: uid !== 'ROOT',
+        canRename: uid !== 'ROOT',
       }
     }
     setNodeTreeViewData(data)
-  }, [type, content])
+  }, [uid, type, content])
 
   // update the file content
   const updateFFContent = useCallback(async (tree: TTree) => {
@@ -99,7 +176,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   // add/remove/duplicate node apis
   const handleAddFNNode = useCallback((nodeType: string) => {
     // validate
-    const focusedNode = treeData[focusedItem]
+    const focusedNode = validTreeData[focusedItem]
     if (focusedNode === undefined) return
 
     addRunningAction(['addFNNode'])
@@ -108,17 +185,40 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     const tree = JSON.parse(JSON.stringify(treeData))
     let newNode: TNode = {
       uid: '',
-      p_uid: null,
+      p_uid: focusedItem,
       name: nodeType,
       isEntity: true,
       children: [],
       data: {},
     }
-    addNode({ tree, targetUid: focusedItem, node: newNode })
-    updateFFContent(tree)
+
+    if (nodeType === 'div') {
+      newNode.data = {
+        valid: true,
+        isFormatText: false,
+
+        type: 'tag',
+        name: 'div',
+        data: undefined,
+        attribs: {},
+
+        // startLineNumber: '',
+        // startColumn: '',
+        // endLineNumber: '',
+        // endColumn: '',
+
+        // html: '',
+      }
+    } else {
+      // do nothing
+    }
+
+    const res = addNode({ tree, targetUid: focusedItem, node: newNode })
+    updateFFContent(res.tree)
+    dispatch(Main.updateFNTreeViewState(res))
 
     removeRunningAction(['addFNNode'])
-  }, [treeData, focusedItem])
+  }, [validTreeData, treeData, focusedItem])
   const handleRemoveFNNode = useCallback(() => {
     // validate
     if (selectedItems.length === 0) return
@@ -134,7 +234,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   }, [selectedItems, treeData])
   const handleDuplicateFNNode = useCallback(() => {
     // validate
-    if (focusedItem === 'root') return
+    if (focusedItem === 'ROOT') return
     const focusedNode = treeData[focusedItem]
     if (focusedNode === undefined || focusedNode === null) return
 
@@ -154,14 +254,16 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     addRunningAction(['focusFNNode'])
 
     // validate
-    if (focusedItem === uid || treeData[uid] === undefined) {
+    if (focusedItem === uid || validTreeData[uid] === undefined) {
       removeRunningAction(['focusFNNode'], false)
       return
     }
 
+    focusedItemRef.current = uid
     dispatch(Main.focusFNNode(uid))
+
     removeRunningAction(['focusFNNode'])
-  }, [focusedItem, treeData])
+  }, [focusedItem, validTreeData])
   const cb_selectNode = useCallback((uids: TUid[]) => {
     // for key-nav
     addRunningAction(['selectFNNode'])
@@ -170,7 +272,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     let _uids = [...uids]
     _uids = validateUids(_uids)
     _uids = _uids.filter((_uid) => {
-      return !(treeData[_uid] === undefined)
+      return validTreeData[_uid] !== undefined
     })
 
     // check if it's new state
@@ -189,55 +291,66 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     }
 
     dispatch(Main.selectFNNode(_uids))
+
     removeRunningAction(['selectFNNode'])
-  }, [treeData, selectedItems, selectedItemsObj])
+  }, [validTreeData, selectedItems, selectedItemsObj])
   const cb_expandNode = useCallback((uid: TUid) => {
     // for key-nav
     addRunningAction(['expandFNNode'])
 
     // validate
-    const node = treeData[uid]
+    const node = validTreeData[uid]
     if (node === undefined || node.isEntity || expandedItemsObj[uid] === true) {
       removeRunningAction(['expandFNNode'], false)
       return
     }
 
     dispatch(Main.expandFNNode([uid]))
+
     removeRunningAction(['expandFNNode'])
-  }, [treeData, expandedItemsObj])
+  }, [validTreeData, expandedItemsObj])
   const cb_collapseNode = useCallback((uid: TUid) => {
     // for key-nav
     addRunningAction(['collapseFNNode'])
 
     // validate
-    const node = treeData[uid]
+    const node = validTreeData[uid]
     if (node === undefined || node.isEntity || expandedItemsObj[uid] === undefined) {
       removeRunningAction(['collapseFNNode'], false)
       return
     }
 
     dispatch(Main.collapseFNNode([uid]))
+
     removeRunningAction(['collapseFNNode'])
-  }, [treeData, expandedItemsObj])
+  }, [validTreeData, expandedItemsObj])
   const cb_renameNode = useCallback((uid: TUid, newName: string) => {
     // validate
-    const focusedNode = treeData[uid]
+    const focusedNode = validTreeData[uid]
     if (focusedNode === undefined || focusedNode.name === newName) return
 
     addRunningAction(['renameFNNode'])
 
     const tree = JSON.parse(JSON.stringify(treeData))
-    const node = { ...tree[uid], name: newName }
+    const node = { ...JSON.parse(JSON.stringify(tree[uid])), name: newName }
     replaceNode({ tree, node })
     updateFFContent(tree)
 
     removeRunningAction(['renameFNNode'])
-  }, [treeData])
-  const cb_dropNode = useCallback((payload: { [key: string]: any }) => {
+  }, [validTreeData, treeData])
+  const cb_dropNode = useCallback((payload: {
+    parentUid: TUid,
+    isBetween: boolean,
+    position: number,
+    uids: TUid[],
+  }) => {
     // validate
     let uids: TUid[] = []
     uids = validateUids(payload.uids, payload.parentUid)
-    if (uids.length == 0 || treeData[payload.parentUid] === undefined) return
+    uids = uids.filter((uid) => {
+      return validTreeData[uid] !== undefined
+    })
+    if (uids.length === 0 || validTreeData[payload.parentUid] === undefined) return
 
     addRunningAction(['dropFNNode'])
 
@@ -253,11 +366,11 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     dispatch(Main.updateFNTreeViewState(res))
 
     removeRunningAction(['dropFNNode'])
-  }, [treeData])
+  }, [validTreeData, treeData])
 
   return (<>
     <div className="panel">
-      <div className="border-bottom" style={{ height: "300px", overflow: "auto" }}>
+      <div id={'NodeTreeView'} className="border-bottom" style={{ height: "300px", overflow: "auto" }}>
         {/* Nav Bar */}
         <div className="sticky direction-column padding-s box-l justify-stretch border-bottom background-primary">
           <div className="gap-s box justify-start">
@@ -309,34 +422,37 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
             },
             renderItem: (props) => {
               return <>
-                <li
+                {props.item.data.data.valid && <li
                   className={cx(
                     props.context.isSelected && '',
                     props.context.isDraggingOver && 'background-secondary',
                     props.context.isDraggingOverParent && '',
                     props.context.isFocused && '',
                   )}
-                  {...(props.context.itemContainerWithChildrenProps) as any}
+                  {...props.context.itemContainerWithChildrenProps}
                 >
                   {/* self */}
                   <div
+                    id={props.item.index as TUid}
                     className={cx(
                       'justify-stretch',
                       'padding-xs',
-                      props.item.index === hoveredItem && 'background-secondary',
+                      props.item.index === fnHoveredItem && 'background-secondary',
                       props.context.isSelected && 'background-secondary',
-                      props.context.isDraggingOver && 'color-primary',
-                      props.context.isDraggingOverParent && 'draggingOverParent',
-                      props.context.isFocused && 'border',
+                      props.context.isDraggingOver && 'foreground-primary',
+                      props.context.isDraggingOverParent && '',
+                      props.context.isFocused && '',
                     )}
                     style={{
                       flexWrap: "nowrap",
                       paddingLeft: `${props.depth * 10}px`,
-                      ...(!props.context.isFocused ? { border: "1px solid transparent" } : {}),
+                      outline: props.context.isFocused ? "1px solid black" :
+                        props.item.index === fnHoveredItem ? "1px dotted black" : "none",
+                      outlineOffset: "-1px",
                     }}
 
-                    {...(props.context.itemContainerWithoutChildrenProps as any)}
-                    {...(props.context.interactiveElementProps as any)}
+                    {...props.context.itemContainerWithoutChildrenProps}
+                    {...props.context.interactiveElementProps}
                     onClick={(e) => {
                       e.stopPropagation()
 
@@ -364,9 +480,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                       }
                     }}
                     onFocus={() => { }}
-                    onMouseMove={() => {
-                      dispatch(Main.hoverFNNode(props.item.index as TUid))
-                    }}
+                    onMouseEnter={() => setFNHoveredItem(props.item.index as TUid)}
+                    onMouseLeave={() => setFNHoveredItem('')}
                   >
                     <div className="gap-xs padding-xs" style={{ width: "100%" }}>
                       {/* render arrow */}
@@ -376,7 +491,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                       <div
                         className={cx(
                           'icon-xs',
-                          props.item.hasChildren ? (props.context.isExpanded ? 'icon-div' : 'icon-div') :
+                          props.item.isFolder ? (props.context.isExpanded ? 'icon-div' : 'icon-div') :
                             'icon-component'
                         )}
                       >
@@ -393,7 +508,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                       {props.children} {/* this calls the renderItemsContainer again */}
                     </div>
                   </> : null}
-                </li>
+                </li>}
               </>
             },
             renderItemArrow: (props) => {
@@ -401,11 +516,11 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                 <div
                   className={cx(
                     'icon-xs',
-                    props.item.hasChildren ? (props.context.isExpanded ? 'icon-down' : 'icon-right') : '',
+                    props.item.isFolder ? (props.context.isExpanded ? 'icon-down' : 'icon-right') : '',
                   )}
                   onClick={(e) => {
                     // check running action
-                    if (props.item.hasChildren) {
+                    if (props.item.isFolder) {
                       addRunningAction([props.context.isExpanded ? 'collapseFNNode' : 'expandFNNode'])
                     } else {
                       // do nothing
@@ -415,7 +530,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                     addRunningAction(['clickEvent'])
 
                     // call back
-                    props.item.hasChildren ? props.context.toggleExpandedState() : null
+                    props.item.isFolder ? props.context.toggleExpandedState() : null
                   }}
                 >
                 </div>
@@ -453,8 +568,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
           /* possibilities */
           props={{
             canDragAndDrop: true,
-            canDropOnItemWithChildren: true,
-            canDropOnItemWithoutChildren: true,
+            canDropOnFolder: true,
+            canDropOnNonFolder: true,
             canReorderItems: true,
           }}
 
@@ -484,7 +599,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
               // building drop-node-payload
               const uids: TUid[] = items.map(item => item.index as TUid)
               const isBetween = target.targetType === 'between-items'
-              const parentUid = isBetween ? target.parentItem : target.targetItem
+              const parentUid = (isBetween ? target.parentItem : target.targetItem) as TUid
               const position = isBetween ? target.childIndex : 0
 
               cb_dropNode({ uids: uids, isBetween, parentUid, position })
