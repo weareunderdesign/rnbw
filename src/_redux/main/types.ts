@@ -4,32 +4,35 @@ import {
   TUid,
 } from '@_node/types';
 import {
-  FFNode,
   FFTree,
+  ProjectLocation,
 } from '@_types/main';
 
-// Main State
+// ---------------- main redux ----------------
+/**
+ * main page redux state
+ */
 export type MainState = {
   actionGroupIndex: number,
   global: {
-    workspace: FFTree,
+    project: Project,
     currentFile: OpenedFile,
-    openedFiles: OpenedFile[],
-    pending: boolean,
-    messages: Message[],
   },
   ff: FFTreeViewState,
   fn: FNTreeViewState,
 }
 
-/* Error Type */
-export type MessageType = 'warning' | 'error' | 'info' | 'success'
-export type Message = {
-  type: MessageType,
-  message: string,
+/**
+ * project
+ */
+export type Project = {
+  location: ProjectLocation,
+  path: string,
 }
 
-// open file type
+/**
+ * opened file
+ */
 export type OpenedFile = {
   uid: TUid,
   name: string,
@@ -38,7 +41,9 @@ export type OpenedFile = {
   saved: boolean,
 }
 
-// ff tree view state type
+/**
+ * ff tree view state
+ */
 export type FFTreeViewState = {
   focusedItem: TUid,
   expandedItems: TUid[],
@@ -51,19 +56,9 @@ export type FFTreeViewState = {
   },
 }
 
-// update ff tree view payload type - delete / add nodes to workspace
-export type UpdateFFTreeViewPayload = {
-  deletedUids?: TUid[],
-  nodes?: FFNode[],
-}
-
-// update ff tree view state payload type - delete / convert from $a to $b
-export type UpdateFFTreeViewStatePayload = {
-  deletedUids?: TUid[],
-  convertedUids?: [TUid, TUid][],
-}
-
-// fn
+/**
+ * fn tree view state
+ */
 export type FNTreeViewState = {
   focusedItem: TUid,
   expandedItems: TUid[],
@@ -82,17 +77,30 @@ export type UpdateFNTreeViewStatePayload = {
   convertedUids?: [TUid, TUid][],
 }
 
-/* Context */
+// update ff tree view state payload type - delete / convert from $a to $b
+export type UpdateFFTreeViewStatePayload = {
+  deletedUids?: TUid[],
+  convertedUids?: [TUid, TUid][],
+}
+// ---------------- main redux ----------------
+
+// ---------------- main context ----------------
 /**
  * context type for main page
  */
 export type MainContextType = {
+  // groupping action
+  addRunningActions: (actionNames: string[]) => void,
+  removeRunningActions: (actionNames: string[], effect?: boolean) => void,
+
   // file tree view
   ffHoveredItem: TUid,
   setFFHoveredItem: (uid: TUid) => void,
 
   ffHandlers: FFHandlers,
-  setFFHandlers: (deletedUids: TUid[], handlers: { [uid: TUid]: FileSystemHandle }) => void,
+  ffTree: FFTree,
+  setFFTree: (tree: FFTree) => void,
+  updateFF: (deletedUids: { [uid: TUid]: boolean }, nodes: FFTree, handlers: { [uid: TUid]: FileSystemHandle }) => void,
 
   // node tree view
   fnHoveredItem: TUid,
@@ -104,20 +112,54 @@ export type MainContextType = {
   validNodeTree: TTree,
   setValidNodeTree: (tree: TTree) => void,
 
+  // update opt
+  updateOpt: UpdateOptions,
+  setUpdateOpt: (opt: UpdateOptions) => void,
+
   // cmdk
   command: Command,
   setCommand: (command: Command) => void,
+
+  // global
+  pending: boolean,
+  setPending: (pending: boolean) => void,
+
+  messages: Message[],
+  addMessage: (message: Message) => void,
+  removeMessage: (index: number) => void,
 }
 
 /**
- * Cmdk
+ * ff handler collection
+ */
+export type FFHandlers = { [key: TUid]: FileSystemHandle }
+
+/**
+ * update opts
+ */
+export type UpdateOptions = {
+  parse: boolean | null, // true if should parse, false if serialize
+  from: 'fs' | 'code' | 'node' | 'stage' | 'settings' | 'styles' | 'processor' | 'hms' | null,
+}
+
+/**
+ * command
  */
 export type Command = {
   action: string,
   changed: boolean,
 }
 
-/**,
- * ff handler collection
+/**
+ * message-type
  */
-export type FFHandlers = { [key: TUid]: FileSystemHandle }
+export type MessageType = 'warning' | 'error' | 'info' | 'success'
+
+/**
+ * message
+ */
+export type Message = {
+  type: MessageType,
+  message: string,
+}
+// ---------------- main context ----------------

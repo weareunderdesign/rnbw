@@ -15,8 +15,10 @@ const initialState: Types.MainState = {
   actionGroupIndex: 0,
 
   global: {
-    workspace: {},
-    openedFiles: [],
+    project: {
+      location: 'localhost',
+      path: '',
+    },
     currentFile: {
       uid: '',
       name: '',
@@ -24,8 +26,6 @@ const initialState: Types.MainState = {
       content: '',
       saved: false,
     },
-    pending: false,
-    messages: [],
   },
   ff: {
     focusedItem: 'ROOT',
@@ -53,13 +53,14 @@ const slice = createSlice({
       state.actionGroupIndex++
     },
     clearMainState(state, action: PayloadAction) {
+      state.actionGroupIndex = initialState.actionGroupIndex
       state.global = initialState.global
       state.ff = initialState.ff
       state.fn = initialState.fn
     },
 
     /* global */
-    setFileContent(state, action: PayloadAction<Types.OpenedFile>) {
+    setCurrentFile(state, action: PayloadAction<Types.OpenedFile>) {
       const payload = action.payload
       state.global.currentFile = payload
     },
@@ -67,27 +68,9 @@ const slice = createSlice({
       const data = action.payload
       state.global.currentFile.content = data
     },
-    updateFileStatus(state, action: PayloadAction<boolean>) {
-      const saved = action.payload
-      state.global.currentFile.saved = saved
-    },
-
-    setGlobalPending(state, action: PayloadAction<boolean>) {
-      const pending = action.payload
-      state.global.pending = pending
-    },
-    setGlobalMessage(state, action: PayloadAction<Types.Message>) {
-      const message = action.payload
-      state.global.messages.push(message)
-    },
-    removeGlobalMessage(state, action: PayloadAction<number>) {
-      const index = action.payload
-      state.global.messages.splice(index)
-    },
 
     /* fn */
     clearFNState(state, action: PayloadAction) {
-      state.global.currentFile = initialState.global.currentFile
       state.fn = initialState.fn
     },
     focusFNNode(state, action: PayloadAction<TUid>) {
@@ -218,19 +201,6 @@ const slice = createSlice({
       state.ff.expandedItems = Object.keys(state.ff.expandedItemsObj)
       state.ff.selectedItems = Object.keys(state.ff.selectedItemsObj)
     },
-    updateFFTreeView(state, action: PayloadAction<Types.UpdateFFTreeViewPayload>) {
-      const { deletedUids, nodes } = action.payload
-      if (deletedUids) {
-        for (const uid of deletedUids) {
-          delete state.global.workspace[uid]
-        }
-      }
-      if (nodes) {
-        for (const node of nodes) {
-          state.global.workspace[node.uid] = node
-        }
-      }
-    },
   },
 })
 
@@ -241,13 +211,8 @@ export const {
   clearMainState,
 
   /* global */
-  setFileContent,
+  setCurrentFile,
   updateFileContent,
-  updateFileStatus,
-
-  setGlobalPending,
-  setGlobalMessage,
-  removeGlobalMessage,
 
   /* fn */
   clearFNState,
@@ -263,29 +228,27 @@ export const {
   collapseFFNode,
   selectFFNode,
   updateFFTreeViewState,
-  updateFFTreeView,
 } = slice.actions
 
 export const MainReducer = undoable(slice.reducer, {
   filter: function filterActions(action, currentState, previousHistory) {
-    // file the actions
-    if (action.type === 'main/setGlobalPending' ||
-
-      action.type === 'main/setGlobalMessage' ||
-      action.type === 'main/removeGlobalMessage' ||
-
-      action.type === 'main/updateFFTreeView' ||
-      action.type === 'main/updateFFTreeViewState') {
+    if (action.type === 'main/updateFFTreeViewState') {
       return false
     }
+
+    console.log(action)
 
     return true
   },
   groupBy: (action, currentState, previousHistory) => {
-    if (action.type === 'main/increaseActionGroupIndex') {
-      return currentState.actionGroupIndex - 1
-    }
+    if (action.type === 'main/increaseActionGroupIndex') return currentState.actionGroupIndex - 1
+
     return currentState.actionGroupIndex
   },
-  limit: HistoryStoreLimit,/* limit the history stack size to HistoryStoreLimit */
+
+  limit: HistoryStoreLimit/* limit the history stack size to HistoryStoreLimit */,
+
+  undoType: 'main/undo',
+  redoType: 'main/redo',
+  clearHistoryType: 'main/clearHistory',
 })

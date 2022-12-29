@@ -19,8 +19,10 @@ import {
 } from '@_node/apis';
 import { TTree } from '@_node/types';
 import * as Main from '@_redux/main';
-import { MainContext } from '@_redux/main';
-import { useEditor } from '@craftjs/core';
+import {
+  globalSelector,
+  MainContext,
+} from '@_redux/main';
 
 import { SettingsPanelProps } from './types';
 
@@ -51,27 +53,18 @@ export default function SettingsPanel(props: SettingsPanelProps) {
     }
   }
 
-  // get the current selected node
-  const { selected } = useEditor((state, query) => {
-    const currentNodeId = query.getEvent('selected').last()
-    let selected
-    if (currentNodeId !== undefined && currentNodeId !== 'ROOT') {
-      selected = {
-        id: currentNodeId,
-        name: state.nodes[currentNodeId].data.name,
-        style: state.nodes[currentNodeId].data.props.style,
-        props: state.nodes[currentNodeId].data.props,
-        isDeletable: query.node(currentNodeId).isDeletable(),
-      }
-    }
-    return { selected }
-  })
-
   const [styleLists, setStyleLists] = useState<Record<string, StyleProperty>>({})
 
-  // context
-  const { nodeTree, setNodeTree, validNodeTree, setValidNodeTree } = useContext(MainContext)
-  const { workspace, openedFiles, currentFile: { type }, pending, messages } = useSelector(Main.globalSelector)
+  // main context
+  const {
+    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, updateFF,
+    fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree,
+    command, setCommand,
+    pending, setPending, messages, addMessage, removeMessage,
+  } = useContext(MainContext)
+
+
+  const { currentFile } = useSelector(globalSelector)
 
   useEffect(() => {
     let elements: Record<string, StyleProperty> = {}
@@ -84,17 +77,8 @@ export default function SettingsPanel(props: SettingsPanelProps) {
         value: "",
       }
     })
-
-    if (selected !== undefined && selected.style !== undefined) {
-      Object.keys(selected.style).map((name) => {
-        elements[name] = {
-          name: name,
-          value: selected.style[name],
-        }
-      })
-    }
     setStyleLists(elements)
-  }, [selected])
+  }, [])
 
   /**
    * It's for saving styles
@@ -112,9 +96,9 @@ export default function SettingsPanel(props: SettingsPanelProps) {
 
   // update the file content
   const updateFFContent = useCallback(async (tree: TTree) => {
-    const newContent = serializeFile({ type, tree })
+    const newContent = serializeFile({ type: currentFile.type, tree })
     dispatch(Main.updateFileContent(newContent))
-  }, [type])
+  }, [currentFile.type])
 
   return <>
     <div className="panel">
@@ -133,7 +117,7 @@ export default function SettingsPanel(props: SettingsPanelProps) {
 
         {/* panel body */}
         <div className="direction-row">
-          {selected !== undefined && Object.keys(styleLists).map((key) => {
+          {false && Object.keys(styleLists).map((key) => {
             const styleItem = styleLists[key]
             return <div key={'attr_' + styleItem.name}>
               <label className='text-s'>{styleItem.name}:</label>
@@ -153,10 +137,9 @@ export default function SettingsPanel(props: SettingsPanelProps) {
                   updateNode({
                     tree: tree,
                     data: {
-                      ...selected.props,
                       style: convertStyle(newStyleList),
                     },
-                    uid: selected.id
+                    uid: '',
                   })
                   updateFFContent(tree)
                   removeRunningAction(['updateNode'])

@@ -3,7 +3,6 @@ import React, {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react';
 
@@ -31,20 +30,28 @@ import { TreeViewData } from '@_components/common/treeView/types';
 import { FileSystemWatchInterval } from '@_config/main';
 import {
   generateNodeUid,
+  sortNodesByAsc,
   validateUids,
 } from '@_node/apis';
 import { parseHtml } from '@_node/html';
 import {
   TFileType,
-  TNode,
   TUid,
   validFileType,
 } from '@_node/types';
-import * as Main from '@_redux/main';
 import {
+  clearFNState,
+  clearMainState,
+  collapseFFNode,
+  expandFFNode,
+  ffSelector,
+  focusFFNode,
+  globalSelector,
   MainContext,
   OpenedFile,
-  setGlobalPending,
+  selectFFNode,
+  setCurrentFile,
+  updateFFTreeViewState,
 } from '@_redux/main';
 import {
   getFileExtension,
@@ -53,6 +60,7 @@ import {
 import {
   FFNode,
   FFNodeType,
+  FFTree,
   ProjectLocation,
 } from '@_types/main';
 
@@ -61,188 +69,155 @@ import { WorkspaceTreeViewProps } from './types';
 export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   const dispatch = useDispatch()
 
-  // for groupping action - it contains the actionNames as keys which should be in the same group
-  const runningActions = useRef<{ [actionName: string]: boolean }>({})
-  const noRunningAction = () => {
-    return Object.keys(runningActions.current).length === 0 ? true : false
-  }
-  const addRunningAction = (actionNames: string[]) => {
-    for (const actionName of actionNames) {
-      runningActions.current[actionName] = true
-    }
-  }
-  const removeRunningAction = (actionNames: string[], effect: boolean = true) => {
-    for (const actionName of actionNames) {
-      delete runningActions.current[actionName]
-    }
-    if (effect && noRunningAction()) {
-      dispatch(Main.increaseActionGroupIndex())
-    }
-  }
-
   // main context
-  const { ffHoveredItem, setFFHoveredItem, ffHandlers, setFFHandlers, fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree, command } = useContext(MainContext)
+  const {
+    addRunningActions, removeRunningActions,
+    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree, updateFF,
+    fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree,
+    updateOpt, setUpdateOpt,
+    command, setCommand,
+    pending, setPending, messages, addMessage, removeMessage,
+  } = useContext(MainContext)
 
   // redux state
-  const { workspace, openedFiles, currentFile, pending, messages } = useSelector(Main.globalSelector)
-  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(Main.ffSelector)
-
-  // project source location - localhost, git, dropbox, etc..
-  const [projectLocation, setProjectLocation] = useState<ProjectLocation>()
-
-  // command detect & do actions
-  useEffect(() => {
-    if (command.action === '') return
-
-    switch (command.action) {
-      case 'OpenProject':
-        onImportProject()
-        break
-    }
-  }, [command.changed])
-
-  // generate TreeViewData from workspace
-  const workspaceTreeViewData = useMemo(() => {
-    let data: TreeViewData = {}
-    for (const uid in workspace) {
-      const node: FFNode = workspace[uid]
-      data[uid] = {
-        index: uid,
-        data: node,
-        children: node.children,
-        isFolder: !node.isEntity,
-        canMove: uid !== 'ROOT',
-        canRename: uid !== 'ROOT',
-      }
-    }
-    return data
-  }, [workspace])
+  const { project, currentFile } = useSelector(globalSelector)
+  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
 
   // import project from localhost using filesystemdirectoryhandle
   const importLocalhostProject = useCallback(async (projectHandle: FileSystemDirectoryHandle) => {
     // verify handler permission
     if (!(await verifyPermission(projectHandle))) {
-      dispatch(Main.setGlobalMessage({
+      addMessage({
         type: 'error',
         message: 'Project folder is not valid. Please import valid project.',
-      }))
+      })
       throw 'error'
     }
 
-    let handlers: { [uid: TUid]: FileSystemHandle } = { 'ROOT': projectHandle }
-    let dirHandlers: { node: FFNode, handler: FileSystemDirectoryHandle }[] = [{
+    const deletedUids: { [uid: TUid]: boolean } = {}
+    const nodes: FFTree = {}
+    const handlers: { [uid: TUid]: FileSystemHandle } = { 'ROOT': projectHandle }
+
+    // import all of the sub nodes
+    const dirHandlers: { node: FFNode, handler: FileSystemDirectoryHandle }[] = [{
       node: {
         uid: 'ROOT',
         p_uid: null,
         name: projectHandle.name,
         isEntity: false,
-        children: workspace['ROOT'] ? workspace['ROOT'].children : [],
-        data: {
-          new: workspace['ROOT'] === undefined,
-        },
+        children: ffTree['ROOT'] ? ffTree['ROOT'].children : [],
+        data: {},
       },
       handler: projectHandle,
     }]
-
-    // import all sub nodes
-    let nodes: FFNode[] = []
-    const deletedUids: TUid[] = []
     while (dirHandlers.length) {
       const { node: dirNode, handler: dirHandler } = dirHandlers.shift() as { node: FFNode, handler: FileSystemDirectoryHandle }
 
-      // get the max child index
-      let maxChildIndex = dirNode.children.reduce((prev: number, cur: TUid): number => {
-        const childIndex = Number(cur.split("_").pop())
-        return prev < childIndex ? childIndex : prev
-      }, 0)
+      const childrenObj: { [uid: TUid]: boolean } = {}
+      dirNode.children.map((c_uid) => {
+        childrenObj[c_uid] = true
+      })
 
-      // access file system handle and load the sub folder/file
-      let subNodes: FFNode[] = []
-      let hasChange = { create: false, delete: false }
-      const children: { [uid: TUid]: boolean } = {}
+      const _subNodes: FFNode[] = []
+      const childrenExists: { [uid: TUid]: boolean } = {}
       try {
         for await (const entry of dirHandler.values()) {
-          // check if the entry already exists
-          let entryExists = false
-          let childNodeUid: TUid = ''
-          let childNodeChildren: TUid[] = []
-          dirNode.children.map((c_uid) => {
-            if (workspace[c_uid] && workspace[c_uid].name === entry.name) {
-              entryExists = true
-              childNodeUid = c_uid
-              childNodeChildren = workspace[c_uid].children
-              children[c_uid] = true
-            }
-          })
-          if (!entryExists) {
-            hasChange.create = true
-            childNodeUid = generateNodeUid(dirNode.uid, ++maxChildIndex)
-          }
-
+          const childNodeUid = generateNodeUid(dirNode.uid, entry.name)
+          childrenExists[childNodeUid] = true
+          const entryExists = (childrenObj[childNodeUid] === true)
+          const childNodeChildren = entryExists ? ffTree[childNodeUid].children : []
           handlers[childNodeUid] = entry
-          const subNode: FFNode = {
+
+          const _subNode: FFNode = {
             uid: childNodeUid,
             p_uid: dirNode.uid,
             name: entry.name,
             isEntity: entry.kind !== "directory",
-            children: entryExists ? childNodeChildren : [],
-            data: {
-              new: !entryExists,
-            },
+            children: childNodeChildren,
+            data: {},
           }
-          subNodes.push(subNode)
-          expandedItemsObj[childNodeUid] && dirHandlers.push({ node: subNode, handler: entry as FileSystemDirectoryHandle })
+          _subNodes.push(_subNode)
+          expandedItemsObj[childNodeUid] === true && dirHandlers.push({ node: _subNode, handler: entry as FileSystemDirectoryHandle })
         }
       } catch (err) {
-        dispatch(Main.setGlobalMessage({
+        addMessage({
           type: 'error',
           message: 'Error occurred during importing project.',
-        }))
+        })
         throw 'error'
       }
 
       // sort the sub nodes by folder/file asc
-      subNodes = subNodes.sort((a: TNode, b: TNode) => {
-        return a.isEntity && !b.isEntity ? 1 :
-          !a.isEntity && b.isEntity ? -1 :
-            a.name.toLowerCase() > b.name.toLowerCase() ? 1 : 0
-      })
+      const subNodes = sortNodesByAsc(_subNodes)
 
       // update dirNode and push to total nodes
       dirNode.children.map((c_uid) => {
-        if (children[c_uid] === undefined) {
-          hasChange.delete = true
-          deletedUids.push(c_uid)
+        if (childrenExists[c_uid] === undefined) {
+          deletedUids[c_uid] = true
         }
       })
-      dirNode.data.modified = hasChange.create || hasChange.delete
       dirNode.children = []
-      subNodes.map(subNode => dirNode.children.push(subNode.uid))
-      nodes.push(dirNode)
-      nodes.push(...subNodes)
+      subNodes.map((subNode) => {
+        nodes[subNode.uid] = subNode
+        dirNode.children.push(subNode.uid)
+      })
+      nodes[dirNode.uid] = dirNode
     }
 
     // update the state
-    setFFHandlers(deletedUids, handlers)
-    dispatch(Main.updateFFTreeView({ deletedUids, nodes }))
-    dispatch(Main.updateFFTreeViewState({ deletedUids }))
-  }, [workspace, expandedItemsObj])
+    updateFF(deletedUids, nodes, handlers)
+    dispatch(updateFFTreeViewState({ deletedUids: Object.keys(deletedUids) }))
+  }, [ffTree, expandedItemsObj])
+
+  // open project button handler
+  const onImportProject = useCallback(async (location: ProjectLocation = 'localhost') => {
+    if (location === 'localhost') {
+      setPending(true)
+
+      // open directory picker and get the project folde handle
+      let projectHandle: FileSystemHandle
+      try {
+        projectHandle = await showDirectoryPicker({ _preferPolyfill: false, mode: 'readwrite' } as CustomDirectoryPickerOptions)
+      } catch (err) {
+        addMessage({
+          type: 'info',
+          message: 'You canceled importing project.',
+        })
+
+        setPending(false)
+        return
+      }
+
+      dispatch(clearMainState())
+      dispatch({ type: 'main/clearHistory' })
+
+      /* import localhost porject */
+      try {
+        await importLocalhostProject(projectHandle as FileSystemDirectoryHandle)
+      } catch (err) {
+        // err occurred
+      }
+
+      setPending(false)
+    }
+  }, [importLocalhostProject])
 
   // watch file system
   const watchFileSystem = useCallback(async () => {
-    // if the project is from localhost
-    if (projectLocation === 'localhost') {
-      if (ffHandlers['ROOT'] === undefined || workspace['ROOT'] === undefined) {
+    if (project.location === 'localhost') {
+      if (ffHandlers['ROOT'] === undefined || ffTree['ROOT'] === undefined) {
         // do nothing
       } else {
         try {
           await importLocalhostProject(ffHandlers['ROOT'] as FileSystemDirectoryHandle)
         } catch (err) {
-          dispatch(Main.clearMainState())
+          setPending(true)
         }
       }
+    } else {
+
     }
-  }, [projectLocation, ffHandlers, importLocalhostProject])
+  }, [project, ffHandlers, importLocalhostProject])
 
   // set file system watch timer
   useEffect(() => {
@@ -258,65 +233,47 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     return () => clearInterval(fsWatchInterval)
   }, [pending, watchFileSystem])
 
-  // open project button handler
-  const onImportProject = useCallback(async (location: ProjectLocation = 'localhost') => {
-    setProjectLocation(location)
-
-    if (location === 'localhost') {
-      addRunningAction(['importProject'])
-      dispatch(setGlobalPending(true))
-
-      // open directory picker and get the project folde handle
-      let projectHandle: FileSystemHandle
-      try {
-        projectHandle = await showDirectoryPicker({ _preferPolyfill: false, mode: 'readwrite' } as CustomDirectoryPickerOptions)
-      } catch (err) {
-        dispatch(Main.setGlobalMessage({
-          type: 'info',
-          message: 'You canceled importing project.',
-        }))
-
-        dispatch(setGlobalPending(false))
-        removeRunningAction(['importProject'], false)
-        return
+  // generate TreeViewData from workspace
+  const fileTreeViewData = useMemo(() => {
+    let data: TreeViewData = {}
+    for (const uid in ffTree) {
+      const node: FFNode = ffTree[uid]
+      data[uid] = {
+        index: uid,
+        data: node,
+        children: node.children,
+        isFolder: !node.isEntity,
+        canMove: uid !== 'ROOT',
+        canRename: uid !== 'ROOT',
       }
-
-
-      /* import localhost porject */
-      try {
-        await importLocalhostProject(projectHandle as FileSystemDirectoryHandle)
-      } catch (err) {
-        // error occurred
-      }
-
-      dispatch(Main.setGlobalPending(false))
-      removeRunningAction(['importProject'])
     }
-  }, [])
+    return data
+  }, [ffTree])
 
   // cb
   const cb_focusFFNode = useCallback((uid: TUid) => {
     // for key-nav
-    addRunningAction(['focusFFNode'])
+    addRunningActions(['fileTreeView-focus'])
 
     // validate
-    if (focusedItem === uid || workspace[uid] === undefined) {
-      removeRunningAction(['focusFFNode'], false)
+    if (focusedItem === uid || ffTree[uid] === undefined) {
+      removeRunningActions(['fileTreeView-focus'], false)
       return
     }
 
-    dispatch(Main.focusFFNode(uid))
-    removeRunningAction(['focusFFNode'])
-  }, [focusedItem, workspace])
+    dispatch(focusFFNode(uid))
+
+    removeRunningActions(['fileTreeView-focus'])
+  }, [focusedItem, ffTree])
   const cb_selectFFNode = useCallback((uids: TUid[]) => {
     // for key-nav
-    addRunningAction(['selectFFNode'])
+    addRunningActions(['fileTreeView-select'])
 
     // validate
     let _uids = [...uids]
     _uids = validateUids(_uids)
     _uids = _uids.filter((_uid) => {
-      return !(workspace[_uid] === undefined)
+      return !(ffTree[_uid] === undefined)
     })
 
     // check if it's new state
@@ -329,42 +286,44 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         }
       }
       if (same) {
-        removeRunningAction(['selectFFNode'], false)
+        removeRunningActions(['fileTreeView-select'], false)
         return
       }
     }
 
-    dispatch(Main.selectFFNode(_uids))
-    removeRunningAction(['selectFFNode'])
-  }, [workspace, selectedItems, selectedItemsObj])
+    dispatch(selectFFNode(_uids))
+
+    removeRunningActions(['fileTreeView-select'])
+  }, [ffTree, selectedItems, selectedItemsObj])
   const cb_expandFFNode = useCallback(async (uid: TUid) => {
     // for key-nav
-    addRunningAction(['expandFFNode'])
+    addRunningActions(['fileTreeView-expand'])
 
     // validate
-    const node = workspace[uid]
+    const node = ffTree[uid]
     if (node === undefined || node.isEntity || expandedItemsObj[uid] === true) {
-      removeRunningAction(['expandFFNode'], false)
+      removeRunningActions(['fileTreeView-expand'], false)
       return
     }
 
-    dispatch(Main.expandFFNode([uid]))
-    removeRunningAction(['expandFFNode'])
-  }, [workspace, expandedItemsObj])
+    dispatch(expandFFNode([uid]))
+
+    removeRunningActions(['fileTreeView-expand'])
+  }, [ffTree, expandedItemsObj])
   const cb_collapseFFNode = useCallback((uid: TUid) => {
     // for key-nav
-    addRunningAction(['collapseFFNode'])
+    addRunningActions(['fileTreeView-collapse'])
 
     // validate
-    const node = workspace[uid]
+    const node = ffTree[uid]
     if (node === undefined || node.isEntity || expandedItemsObj[uid] === undefined) {
-      removeRunningAction(['collapseFFNode'], false)
+      removeRunningActions(['fileTreeView-collapse'], false)
       return
     }
 
-    dispatch(Main.collapseFFNode([uid]))
-    removeRunningAction(['collapseFFNode'])
-  }, [workspace, expandedItemsObj])
+    dispatch(collapseFFNode([uid]))
+    removeRunningActions(['fileTreeView-collapse'])
+  }, [ffTree, expandedItemsObj])
 
   // create directory/file dialog handle
   const [createFFModalOpen, setCreateFFModalOpen] = useState<boolean>(false)
@@ -372,32 +331,30 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   const [newFFName, setNewFFName] = useState<string>('')
   const openCreateFFNodeModal = useCallback((ffNodeType: FFNodeType) => {
     // validate
-    const node = workspace[focusedItem]
+    const node = ffTree[focusedItem]
     if (node === undefined || node.isEntity) return
 
     setCreatingFFType(ffNodeType)
     setNewFFName('')
     setCreateFFModalOpen(true)
-  }, [workspace, focusedItem])
+  }, [ffTree, focusedItem])
 
   // create folder/file api
   const createFFNode = useCallback(async () => {
     // close name input modal
     setCreateFFModalOpen(false)
 
-    // addRunningAction(['createFFNode'])
-    dispatch(Main.setGlobalPending(true))
+    setPending(true)
 
     // verify handler permission
     const focusedItemHandler = ffHandlers[focusedItem] as FileSystemDirectoryHandle
     if (!(await verifyPermission(focusedItemHandler))) {
-      dispatch(Main.setGlobalMessage({
+      addMessage({
         type: 'error',
         message: `Invalid target directory. Check if you have "write" permission for the directory.`,
-      }))
+      })
 
-      dispatch(Main.setGlobalPending(false))
-      // removeRunningAction(['createFFNode'], false)
+      setPending(false)
       return
     }
 
@@ -430,10 +387,10 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       try {
         await focusedItemHandler.getDirectoryHandle(folderName, { create: true })
       } catch (err) {
-        dispatch(Main.setGlobalMessage({
+        addMessage({
           type: 'error',
           message: 'Error occurred while creating a new folder.',
-        }))
+        })
       }
     } else if (creatingFFType === 'file') {
       // generate new file name - ex: {aaa - copy}...
@@ -467,16 +424,15 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       try {
         await focusedItemHandler.getFileHandle(fileName, { create: true })
       } catch (err) {
-        dispatch(Main.setGlobalMessage({
+        addMessage({
           type: 'error',
           message: 'Error occurred while creating a new file.',
-        }))
+        })
       }
     }
 
-    dispatch(Main.setGlobalPending(false))
-    // removeRunningAction(['createFFNode'])
-  }, [ffHandlers, focusedItem, creatingFFType])
+    setPending(false)
+  }, [ffHandlers, focusedItem, creatingFFType, newFFName])
 
   // delete folder/file api
   const deleteFFNode = useCallback(async () => {
@@ -484,18 +440,17 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     const uids = selectedItems
     if (uids.length === 0) return
 
-    // addRunningAction(['deleteFFNode'])
-    dispatch(Main.setGlobalPending(true))
+    setPending(true)
 
     let allDone = true
     for (const uid of uids) {
       // validate node and parentNode
-      const node: FFNode = workspace[uid]
+      const node: FFNode = ffTree[uid]
       if (node === undefined) {
         allDone = false
         continue
       }
-      const parentNode: FFNode = workspace[node.p_uid as TUid]
+      const parentNode: FFNode = ffTree[node.p_uid as TUid]
       if (parentNode === undefined) {
         allDone = false
         continue
@@ -517,40 +472,35 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
 
     if (!allDone) {
-      dispatch(Main.setGlobalMessage({
+      addMessage({
         type: 'warning',
         message: 'Some directory/file couldn\'t be deleted.',
-      }))
+      })
     }
 
-    dispatch(Main.setGlobalPending(false))
-    // removeRunningAction(['deleteFFNode'])
-  }, [selectedItems, workspace, ffHandlers])
+    setPending(false)
+  }, [selectedItems, ffTree, ffHandlers])
 
   // read file content call back
   const cb_readFFNode = useCallback(async (uid: TUid) => {
     // for key-nav
-    addRunningAction(['readFFNode'])
+    addRunningActions(['fileTreeView-read'])
 
     // validate
-    const node = workspace[uid]
+    const node = ffTree[uid]
     if (node === undefined || !node.isEntity) {
-      removeRunningAction(['readFFNode'], false)
+      removeRunningActions(['fileTreeView-read'], false)
       return
     }
-
-    dispatch(Main.setGlobalPending(true))
 
     // verify handler permission
     const handler = ffHandlers[uid] as FileSystemFileHandle
     if (!(await verifyPermission(handler))) {
-      dispatch(Main.setGlobalMessage({
+      addMessage({
         type: 'error',
         message: 'Invalid file. Check if you have "read" permission for the file.',
-      }))
-
-      dispatch(Main.setGlobalPending(false))
-      removeRunningAction(['readFFNode'], false)
+      })
+      removeRunningActions(['fileTreeView-read'], false)
       return
     }
 
@@ -562,31 +512,40 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     // read the file content and set to global state
     try {
       const fileEntry = await handler.getFile()
-      let content = await fileEntry.text()
-
-      // initial format code
-      if (fileType === 'html') {
-        content = parseHtml(content).content
-      }
-
+      const content = await fileEntry.text()
       const file: OpenedFile = {
         uid,
         name: handler.name,
         type: fileType as TFileType,
-        content,
-        saved: true
+        content: content,
+        saved: true,
       }
-      dispatch(Main.setFileContent(file))
+
+      // initial format code
+      if (fileType === 'html') {
+        const { content: formattedContent, tree } = parseHtml(content)
+        if (content !== formattedContent) {
+          file.content = formattedContent
+          file.saved = false
+        }
+        setUpdateOpt({ parse: null, from: 'fs' })
+
+        addRunningActions(['processor-validNodeTree'])
+        setNodeTree(tree)
+      }
+
+      dispatch(clearFNState())
+
+      setTimeout(() => dispatch(setCurrentFile(file)), 0)
     } catch (err) {
-      dispatch(Main.setGlobalMessage({
+      addMessage({
         type: 'error',
         message: 'Error occurred while reading the file content.',
-      }))
+      })
     }
 
-    dispatch(Main.setGlobalPending(false))
-    removeRunningAction(['readFFNode'])
-  }, [workspace, ffHandlers])
+    removeRunningActions(['fileTreeView-read'])
+  }, [ffTree, ffHandlers])
 
   /**
    * general move api - for rename, copy/paste(duplicate), cut/paste(move)
@@ -609,10 +568,10 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         exists = false
       }
       if (exists) {
-        showWarning && dispatch(Main.setGlobalMessage({
+        showWarning && addMessage({
           type: 'error',
           message: 'Folder with the same name already exists.',
-        }))
+        })
         return
       }
 
@@ -654,10 +613,10 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         exists = false
       }
       if (exists) {
-        showWarning && dispatch(Main.setGlobalMessage({
+        showWarning && addMessage({
           type: 'error',
           message: 'File with the same name already exists.',
-        }))
+        })
         return
       }
 
@@ -680,25 +639,22 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   // rename folder/file call back
   const cb_renameFFNode = useCallback(async (uid: TUid, newName: string) => {
     // validate
-    const node = workspace[uid]
+    const node = ffTree[uid]
     if (node === undefined || node.name === newName) return
-    const parentNode = workspace[node.p_uid as TUid]
+    const parentNode = ffTree[node.p_uid as TUid]
     if (parentNode === undefined) return
 
-    // addRunningAction(['renameFFNode'])
-    dispatch(Main.setGlobalPending(true))
+    setPending(true)
 
     /* verify handler permission */
     const handler = ffHandlers[uid] as FileSystemHandle
     const parentHandler = ffHandlers[parentNode.uid] as FileSystemDirectoryHandle
     if (!(await verifyPermission(handler)) || !(await verifyPermission(parentHandler))) {
-      dispatch(Main.setGlobalMessage({
+      addMessage({
         type: 'error',
         message: `Invalid directory/file. Check if you have "write" permission for the directory/file.`,
-      }))
-
-      dispatch(Main.setGlobalPending(false))
-      // removeRunningAction(['renameFFNode'], false)
+      })
+      setPending(false)
       return
     }
 
@@ -706,47 +662,44 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     try {
       await moveFF(handler, parentHandler, parentHandler, newName, false, true)
     } catch (err) {
-      dispatch(Main.setGlobalMessage({
+      addMessage({
         type: 'error',
         message: 'Error occurred while renaming ...',
-      }))
+      })
     }
 
-    dispatch(Main.setGlobalPending(false))
-    // removeRunningAction(['renameFFNode'])
-  }, [workspace, ffHandlers])
+    setPending(false)
+  }, [ffTree, ffHandlers])
 
   // dnd fole/file call back - multiple
   const cb_dropFFNode = useCallback(async (uids: TUid[], targetUid: TUid) => {
     // validate
+    if (ffTree[targetUid] === undefined) return
     let validatedUids: TUid[] = validateUids(uids, targetUid)
-    if (validatedUids.length == 0 || workspace[targetUid] === undefined) return
+    if (validatedUids.length == 0) return
 
-    // addRunningAction(['dropFFNode'])
-    dispatch(Main.setGlobalPending(true))
+    setPending(true)
 
     /* verify target handler permission */
     const targetHandler = ffHandlers[targetUid] as FileSystemDirectoryHandle
     if (!verifyPermission(targetHandler)) {
-      dispatch(Main.setGlobalMessage({
+      addMessage({
         type: 'error',
         message: `Invalid target directory. Check if you have "write" permission for the directory.`,
-      }))
-
-      dispatch(Main.setGlobalPending(false))
-      // removeRunningAction(['dropFFNode'], false)
+      })
+      setPending(false)
       return
     }
 
     let allDone = true
     for (const uid of validatedUids) {
       // validate
-      const node = workspace[uid]
+      const node = ffTree[uid]
       if (node === undefined) {
         allDone = false
         continue
       }
-      const parentNode = workspace[node.p_uid as TUid]
+      const parentNode = ffTree[node.p_uid as TUid]
       if (parentNode === undefined) {
         allDone = false
         continue
@@ -767,39 +720,36 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       }
     }
     if (!allDone) {/* toast error message */
-      dispatch(Main.setGlobalMessage({
+      addMessage({
         type: 'warning',
         message: 'Some directory/file couldn\'t be moved.',
-      }))
+      })
     }
 
-    dispatch(Main.setGlobalPending(false))
-    // removeRunningAction(['dropFFNode'])
-  }, [workspace, ffHandlers])
+    setPending(false)
+  }, [ffTree, ffHandlers])
 
   // duplicate directory/file api
   const duplicateFFNode = useCallback(async () => {
     // validate
     if (focusedItem === 'ROOT') return
-    const node = workspace[focusedItem]
+    const node = ffTree[focusedItem]
     if (node === undefined) return
-    const parentNode = workspace[node.p_uid as TUid]
+    const parentNode = ffTree[node.p_uid as TUid]
     if (parentNode === undefined) return
 
-    // addRunningAction(['duplicateFFNode'])
-    dispatch(Main.setGlobalPending(true))
+    setPending(true)
 
     // verify handler permission
     const handler = ffHandlers[node.uid] as FileSystemHandle
     const parentHandler = ffHandlers[parentNode.uid] as FileSystemDirectoryHandle
     if (!(await verifyPermission(handler)) || !(await verifyPermission(parentHandler))) {
-      dispatch(Main.setGlobalMessage({
+      addMessage({
         type: 'error',
         message: `Invalid directory/file. Check if you have "write" permission for the directory/file.`,
-      }))
+      })
 
-      dispatch(Main.setGlobalPending(false))
-      // removeRunningAction(['duplicateFFNode'], false)
+      setPending(false)
       return
     }
 
@@ -865,19 +815,29 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     try {
       await moveFF(handler, parentHandler, parentHandler, newName, true)
     } catch (err) {
-      dispatch(Main.setGlobalMessage({
+      addMessage({
         type: 'error',
         message: 'Error occurred while duplicating ...',
-      }))
+      })
     }
 
-    dispatch(Main.setGlobalPending(false))
-    // removeRunningAction(['duplicateFFNode'])
-  }, [focusedItem, workspace, ffHandlers])
+    setPending(false)
+  }, [focusedItem, ffTree, ffHandlers])
 
-  return (<>
+  // command detect & do actions
+  useEffect(() => {
+    if (command.action === '') return
+
+    switch (command.action) {
+      case 'OpenProject':
+        onImportProject()
+        break
+    }
+  }, [command.changed])
+
+  return <>
     <div className="panel">
-      <div className="border-bottom" style={{ height: "300px", overflow: "auto" }}>
+      <div className="border-bottom" style={{ height: "calc(50vh - 22px)", overflow: "auto" }}>
         {/* Nav Bar */}
         <div className="sticky direction-column padding-s box-l justify-stretch border-bottom background-primary">
           <div className="gap-s box justify-start">
@@ -912,7 +872,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           info={{ id: 'file-tree-view' }}
 
           /* data */
-          data={workspaceTreeViewData}
+          data={fileTreeViewData}
           focusedItem={focusedItem}
           expandedItems={expandedItems}
           selectedItems={selectedItems}
@@ -969,35 +929,19 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                       e.stopPropagation()
 
                       // check running action
-                      if (!noRunningAction()) {
-                        return
-                      }
-                      if (!props.context.isFocused) {
-                        addRunningAction(['focusFFNode'])
-                      }
-                      if (e.shiftKey) {
-                        addRunningAction(['selectFFNode'])
-                      } else if (e.ctrlKey) {
-                        addRunningAction(['selectFFNode'])
-                      } else {
-                        addRunningAction(['selectFFNode'])
-                        if (props.item.isFolder) {
-                          addRunningAction([props.context.isExpanded ? 'collapseFFNode' : 'expandFFNode'])
-                        } else {
-                          addRunningAction(['readFFNode'])
-                        }
-                      }
+                      // if (!noRunningAction()) return
+
+                      addRunningActions(['fileTreeView-select'])
+                      !props.context.isFocused && addRunningActions(['fileTreeView-focus'])
+                      !e.shiftKey && !e.ctrlKey && addRunningActions(props.item.isFolder ? [props.context.isExpanded ? 'fileTreeView-collapse' : 'fileTreeView-expand'] : ['fileTreeView-read'])
 
                       // call back
-                      props.context.isFocused ? null : props.context.focusItem()
-                      if (e.shiftKey) {
-                        props.context.selectUpTo()
-                      } else if (e.ctrlKey) {
-                        props.context.isSelected ? props.context.unselectItem() : props.context.addToSelectedItems()
-                      } else {
-                        props.context.selectItem()
-                        props.item.isFolder ? props.context.toggleExpandedState() : props.context.primaryAction()
-                      }
+                      !props.context.isFocused && props.context.focusItem()
+                      e.shiftKey ? props.context.selectUpTo() :
+                        e.ctrlKey ? (props.context.isSelected ? props.context.unselectItem() : props.context.addToSelectedItems()) : [
+                          props.context.selectItem(),
+                          props.item.isFolder ? props.context.toggleExpandedState() : props.context.primaryAction(),
+                        ]
                     }}
                     onFocus={() => { }}
                     onMouseEnter={() => setFFHoveredItem(props.item.index as TUid)}
@@ -1113,5 +1057,5 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         <button className='background-secondary text-m' onClick={createFFNode}>Ok</button>
       </div>
     </Dialog>
-  </>)
+  </>
 }

@@ -3,15 +3,13 @@ import ReactHtmlParser from 'react-html-parser';
 import {
   generateNodeUid,
   getBfsUids,
-  getDfsUids,
   TNode,
   TTree,
   TUid,
 } from '../';
 import {
-  Attributes,
-  THtmlInfo,
   THtmlParserResponse,
+  THtmlTagAttributes,
 } from './types';
 
 /**
@@ -24,16 +22,13 @@ export const parseHtml = (content: string): THtmlParserResponse => {
   const tmpTree: TTree = {}
 
   // parse html using react-html-parser
-  interface ProcessableNode extends HTMLElement {
-    uid: TUid,
-  }
-  type ProcessableNodes = ProcessableNode[]
+  interface ProcessableNode extends HTMLElement { uid: TUid }
   ReactHtmlParser(content, {
     decodeEntities: true,
     transform: (node, index, transform) => {
       node.valid = true
     },
-    preprocessNodes: (_nodes: ProcessableNodes) => {
+    preprocessNodes: (_nodes: ProcessableNode[]) => {
       tmpTree['ROOT'] = {
         uid: 'ROOT',
         p_uid: null,
@@ -87,13 +82,6 @@ export const parseHtml = (content: string): THtmlParserResponse => {
 
   // validate the nodes
   let uids: TUid[] = Object.keys(tmpTree)
-  uids = getDfsUids(uids)
-
-  let info: THtmlInfo = {
-    titles: [],
-    links: [],
-  }
-
   uids.map((uid) => {
     const node = tmpTree[uid]
     const { data } = node
@@ -107,7 +95,7 @@ export const parseHtml = (content: string): THtmlParserResponse => {
       valid = false
       isFormatText = true
     } else {
-      if (data.type === 'directive') {
+      /* if (data.type === 'directive') {
         valid = false
       } else if (data.type === 'comment') {
         valid = false
@@ -121,14 +109,8 @@ export const parseHtml = (content: string): THtmlParserResponse => {
         if (data.name === 'meta') {
           valid = false
         } else if (data.name === 'link') {
-          info.links.push(data.attribs)
           valid = false
         } else if (data.name === 'title') {
-          let title: string = ''
-          if (data.children.length !== 0) {
-            title = data.children[0].data
-          }
-          info.titles.push(title)
           valid = false
         } else if (data.name === 'html') {
           valid = false
@@ -139,9 +121,18 @@ export const parseHtml = (content: string): THtmlParserResponse => {
         }
       } else {
         // do nothing
-      }
+      } */
 
       valid = (data.type !== 'text')
+    }
+
+    if (data.attribs === undefined) {
+      data.attribs = {}
+    }
+    if (data.attribs.class === undefined) {
+      data.attribs.class = `rnbwdev-rainbow-component-${uid}`
+    } else {
+      data.attribs.class += ` rnbwdev-rainbow-component-${uid}`
     }
 
     tree[uid] = {
@@ -160,7 +151,6 @@ export const parseHtml = (content: string): THtmlParserResponse => {
 
   // set html and its range on codeview
   let newContent = serializeHtml(tree)
-  let tmpContent = newContent
   let detected: Map<string, number> = new Map<string, number>()
 
   uids.map((uid) => {
@@ -168,7 +158,7 @@ export const parseHtml = (content: string): THtmlParserResponse => {
 
     // set the html range
     const { html } = node.data
-    const htmlArr = tmpContent.split(html)
+    const htmlArr = newContent.split(html)
     const detectedCount = detected.get(html) || 0
     const beforeHtml = htmlArr.slice(0, detectedCount + 1).join(html)
     detected.set(html, detectedCount + 1)
@@ -188,7 +178,7 @@ export const parseHtml = (content: string): THtmlParserResponse => {
     }
   })
 
-  return { content: newContent, tree, info }
+  return { content: newContent, tree }
 }
 
 /**
@@ -197,8 +187,6 @@ export const parseHtml = (content: string): THtmlParserResponse => {
  * @returns 
  */
 export const serializeHtml = (tree: TTree): string => {
-  let html: string = ``
-
   let uids: TUid[] = Object.keys(tree)
   uids = getBfsUids(uids)
   uids.reverse()
@@ -217,7 +205,16 @@ export const serializeHtml = (tree: TTree): string => {
     const { data } = node
     let nodeHtml = ``
 
-    const attribsHtml = data.attribs === undefined ? '' : Object.keys(data.attribs).map(attr => ` ${attr}="${data.attribs[attr]}"`).join('')
+    const attribsHtml = data.attribs === undefined ? '' : Object.keys(data.attribs).map(attr => {
+      if (attr === 'class') {
+        const classHtml = data.attribs['class'].split(' ').filter((className: string) => !!className && className !== `rnbwdev-rainbow-component-${uid}`).join(' ')
+        return classHtml.length === 0 ? '' : ` class="${classHtml}"`
+      }
+      if (attr === 'style') {
+        // do nothing
+      }
+      return ` ${attr}="${data.attribs[attr]}"`
+    }).join('')
 
     if (data.type === 'directive') {
       nodeHtml = `<${data.data}>`
@@ -252,14 +249,14 @@ export const serializeHtml = (tree: TTree): string => {
  * get shortHand of attrs obj
  * @param attrs 
  */
-export const getShortHand = (attrs: Attributes): Attributes => {
-  const newAttr: Attributes = {}
+export const getShortHand = (attrs: THtmlTagAttributes): THtmlTagAttributes => {
+  const newAttr: THtmlTagAttributes = {}
 
   for (const attrName in attrs) {
     if (attrName === 'style') {
       newAttr['style'] = {}
 
-      const style = attrs[attrName]
+      const style = attrs['style']
       for (const styleName in style) {
         const newStyleName = styleName.replace(/-./g, c => c.substr(1).toUpperCase())
         newAttr['style'][newStyleName] = style[styleName]
@@ -281,6 +278,6 @@ export const getShortHand = (attrs: Attributes): Attributes => {
  * get long-hand of attrs obj
  * @param attrs 
  */
-export const getLongHand = (attrs: Attributes) => {
-
+export const getLongHand = (attrs: THtmlTagAttributes): THtmlTagAttributes => {
+  return {}
 }

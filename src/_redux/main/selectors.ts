@@ -1,12 +1,11 @@
 import { AppState } from '@_redux/_root';
 import { createSelector } from '@reduxjs/toolkit';
 
-/* *********************** main *********************** */
-// action group index selector
-const mainGetActionGroupIndex = (state: AppState) => state.main.present.actionGroupIndex
-export const mainGetActionGroupIndexSelector = createSelector(mainGetActionGroupIndex, (actionGroupIndex) => actionGroupIndex)
-
 /* *********************** global *********************** */
+// action group index selector
+const getActionGroupIndex = (state: AppState) => state.main.present.actionGroupIndex
+export const getActionGroupIndexSelector = createSelector(getActionGroupIndex, (actionGroupIndex) => actionGroupIndex)
+
 // global selector
 const getGlobal = (state: AppState) => state.main.present.global
 export const globalSelector = createSelector(getGlobal, (global) => global)

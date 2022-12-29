@@ -3,27 +3,56 @@ import {
   createContext,
 } from 'react';
 
-import { MainContextType } from './types';
+import {
+  TTree,
+  TUid,
+} from '@_node/types';
+import { FFTree } from '@_types/main';
+
+import {
+  Command,
+  MainContextType,
+  Message,
+  UpdateOptions,
+} from './types';
 
 export const MainContext: Context<MainContextType> = createContext<MainContextType>({
+  // groupping action
+  addRunningActions: (actionNames: string[]) => { },
+  removeRunningActions: (actionNames: string[], effect?: boolean) => { },
+
   // file tree view
   ffHoveredItem: '',
-  setFFHoveredItem: () => { },
+  setFFHoveredItem: (uid: TUid) => { },
 
   ffHandlers: {},
-  setFFHandlers: () => { },
+  ffTree: {},
+  setFFTree: (tree: FFTree) => { },
+  updateFF: (deletedUids: { [uid: TUid]: boolean }, nodes: FFTree, handlers: { [uid: TUid]: FileSystemHandle }) => { },
 
   // node tree view
   fnHoveredItem: '',
-  setFNHoveredItem: () => { },
+  setFNHoveredItem: (uid: TUid) => { },
 
   nodeTree: {},
-  setNodeTree: () => { },
+  setNodeTree: (tree: TTree) => { },
 
   validNodeTree: {},
-  setValidNodeTree: () => { },
+  setValidNodeTree: (tree: TTree) => { },
+
+  // update opt
+  updateOpt: { parse: null, from: null },
+  setUpdateOpt: (opt: UpdateOptions) => { },
 
   // cmdk
-  command: { action: '', changed: true },
-  setCommand: () => { },
+  command: { action: '', changed: false },
+  setCommand: (command: Command) => { },
+
+  // global
+  pending: false,
+  setPending: (pending: boolean) => { },
+
+  messages: [],
+  addMessage: (message: Message) => { },
+  removeMessage: (index: number) => { },
 })

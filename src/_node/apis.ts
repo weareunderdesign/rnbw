@@ -24,17 +24,31 @@ import {
  * @param nodeIndex 
  * @returns 
  */
-export const generateNodeUid = (p_uid: TUid, nodeIndex: number): TUid => {
+export const generateNodeUid = (p_uid: TUid, nodeIndex: number | string): TUid => {
   return p_uid + "_" + nodeIndex
 }
 
 /**
+ * sort the nodes by name-asc
+ * @param _nodes 
+ */
+export const sortNodesByAsc = (_nodes: TNode[]): TNode[] => {
+  let nodes = [..._nodes]
+
+  return nodes.sort((a: TNode, b: TNode) => {
+    return a.isEntity && !b.isEntity ? 1 :
+      !a.isEntity && b.isEntity ? -1 :
+        a.name.toLowerCase() > b.name.toLowerCase() ? 1 : 0
+  })
+}
+
+/**
  * it sorts the uids by dfs and return it
- * @param uids 
+ * @param _uids 
  */
 export const getDfsUids = (_uids: TUid[]): TUid[] => {
   let uids = [..._uids]
-  uids = uids.sort((a, b) => {
+  return uids.sort((a, b) => {
     if (a === 'ROOT') return -1
     if (b === 'ROOT') return 1
 
@@ -49,7 +63,6 @@ export const getDfsUids = (_uids: TUid[]): TUid[] => {
 
     return -1
   })
-  return uids
 }
 
 /**
@@ -58,7 +71,7 @@ export const getDfsUids = (_uids: TUid[]): TUid[] => {
  */
 export const getBfsUids = (_uids: TUid[]): TUid[] => {
   let uids = [..._uids]
-  uids = uids.sort((a, b) => {
+  return uids.sort((a, b) => {
     if (a === 'ROOT') return -1
     if (b === 'ROOT') return 1
 
@@ -76,7 +89,6 @@ export const getBfsUids = (_uids: TUid[]): TUid[] => {
 
     return 0
   })
-  return uids
 }
 
 /**
@@ -173,7 +185,10 @@ export const resetTreeUids = (tree: TTree): { newTree: TTree, convertedUids: Map
   const newTree: TTree = {}
   Object.keys(tree).map((uid) => {
     const node = tree[uid]
-    newTree[node.uid] = node
+    // replace the className in the node
+    const { data } = node
+    data.attribs !== undefined && data.attribs.class !== undefined ? data.attribs.class = data.attribs.class.replace(`rnbwdev-rainbow-component-${uid}`, `rnbwdev-rainbow-component-${node.uid}`) : null
+    newTree[node.uid] = JSON.parse(JSON.stringify(node))
   })
 
   return { newTree, convertedUids }
@@ -210,7 +225,7 @@ export const addFormatTextBeforeNode = (tree: TTree, node: TNode, uidOffset: num
   }
 
   // format text node
-  const tabSize = 4
+  const tabSize = 2
   const nodeDepth = parentNode.uid.split('_').length - 1
   let formatTextNode: TNode = {
     uid: generateNodeUid(parentNode.uid, parentNode.children.length + 1 + uidOffset),
@@ -271,7 +286,7 @@ export const addFormatTextAfterNode = (tree: TTree, node: TNode, uidOffset: numb
   }
 
   // format text node
-  const tabSize = 4
+  const tabSize = 2
   const nodeDepth = parentNode.uid.split('_').length - 1
   let formatTextNode: TNode = {
     uid: generateNodeUid(parentNode.uid, parentNode.children.length + 1 + uidOffset),
@@ -416,7 +431,7 @@ export const removeNode = ({ tree, nodeUids }: TRemoveNodePayload): TNodeApiRes 
 export const moveNode = ({ tree, isBetween, parentUid, position, uids }: TMoveNodePayload): TNodeApiRes => {
   const parentNode = tree[parentUid]
   const parentNodeDepth = parentNode.uid.split('_').length - 1
-  const tabSize = 4
+  const tabSize = 2
 
   let uidOffset: number = 0
   uids.map((uid) => {
@@ -457,7 +472,6 @@ export const moveNode = ({ tree, isBetween, parentUid, position, uids }: TMoveNo
       }
       let index = -1
 
-      console.log(JSON.parse(JSON.stringify(parentNode.children)), childIndex, uid)
       parentNode.children = parentNode.children.reduce((prev, cur) => {
         if (tree[cur].data.valid === true) {
           index++

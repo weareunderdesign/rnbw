@@ -2,8 +2,8 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
-  useState,
 } from 'react';
 
 import cx from 'classnames';
@@ -14,17 +14,13 @@ import {
 
 import { TreeView } from '@_components/common';
 import { TreeViewData } from '@_components/common/treeView/types';
-import { THtmlParserResponse } from '@_node/html';
 import {
   addNode,
   duplicateNode,
   getBfsUids,
-  getDfsUids,
   moveNode,
-  parseFile,
   removeNode,
   replaceNode,
-  serializeFile,
   validateUids,
 } from '@_node/index';
 import {
@@ -33,130 +29,58 @@ import {
   TUid,
 } from '@_node/types';
 import * as Main from '@_redux/main';
-import { MainContext } from '@_redux/main';
 
 import { NodeTreeViewProps } from './types';
 
 export default function NodeTreeView(props: NodeTreeViewProps) {
   const dispatch = useDispatch()
 
-  // for groupping action - it contains the actionNames as keys which should be in the same group
-  const runningActions = useRef<{ [actionName: string]: boolean }>({})
-  const noRunningAction = () => {
-    return Object.keys(runningActions.current).length === 0 ? true : false
-  }
-  const addRunningAction = (actionNames: string[]) => {
-    for (const actionName of actionNames) {
-      runningActions.current[actionName] = true
-    }
-  }
-  const removeRunningAction = (actionNames: string[], effect: boolean = true) => {
-    for (const actionName of actionNames) {
-      delete runningActions.current[actionName]
-    }
-    if (effect && noRunningAction()) {
-      dispatch(Main.increaseActionGroupIndex())
-    }
-  }
-
   // main context
-  const { fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree, command } = useContext(MainContext)
+  const {
+    addRunningActions, removeRunningActions,
+    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree, updateFF,
+    fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree,
+    updateOpt, setUpdateOpt,
+    command, setCommand,
+    pending, setPending, messages, addMessage, removeMessage,
+  } = useContext(Main.MainContext)
 
   // redux state
-  const { currentFile } = useSelector(Main.globalSelector)
+  const { project, currentFile } = useSelector(Main.globalSelector)
   const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(Main.fnSelector)
 
-  // --------- sync tree view state with StageView & CodeView ---------
-  const focusedItemRef = useRef<TUid>(focusedItem)
+  // -------------------------------------------------------------- Sync --------------------------------------------------------------
+  // nodeTree -> validNodeTree
   useEffect(() => {
-    if (focusedItem === focusedItemRef.current) return
+    const _nodeTree: TTree = JSON.parse(JSON.stringify(nodeTree))
+    const _validNodeTree: TTree = {}
 
-    let node = validNodeTree[focusedItem]
-    if (node === undefined) return
+    let uids: TUid[] = Object.keys(_nodeTree)
+    uids = getBfsUids(uids)
+    uids.reverse()
+    uids.map((uid) => {
+      const node = _nodeTree[uid]
 
-    focusedItemRef.current = focusedItem
+      // validate
+      if (node.children.length !== 0) {
+        node.children = node.children.filter((c_uid) => {
+          return _nodeTree[c_uid].data.valid
+        })
+        node.isEntity = (node.children.length === 0)
+      }
 
-    // expand the path of the focused item
-    const _expandedItems: TUid[] = []
-    while (node.uid !== 'ROOT') {
-      const parentNode = validNodeTree[node.p_uid as TUid]
-      _expandedItems.push(parentNode.uid)
-      node = parentNode
-    }
-    dispatch(Main.expandFNNode(_expandedItems))
-  }, [focusedItem])
-  // scroll to focused item after "expandItem" is done
-  useEffect(() => {
-    // validate
-    const node = validNodeTree[focusedItem]
-    if (node === undefined) return
-
-    // scroll to focused item
-    const { data: { index } } = node
-    document.getElementById('NodeTreeView')?.scroll({
-      top: (index - 5) * (document.getElementById(`${focusedItem}`)?.clientHeight || 0),
-      left: 0,
-      behavior: 'smooth'
+      // add only validated node
+      node.data.valid ? _validNodeTree[uid] = node : null
     })
-  }, [expandedItems])
-  // --------- sync tree view state with StageView & CodeView ---------
 
-  // --------- generate TTree and TreeViewData from file content ---------
-  const currentFileUidRef = useRef<TUid>(currentFile.uid)
-  const [nodeTreeViewData, setNodeTreeViewData] = useState<TreeViewData>({})
-  useEffect(() => {
-    let _nodeTree: TTree = {}, _validNodeTree: TTree = {}
-    const _expandedItems: TUid[] = []
-
-    // parse the file content
-    const parserResult = parseFile({ type: currentFile.type, content: currentFile.content })
-
-    if (currentFile.type === 'html') {
-      const { tree, info } = parserResult as THtmlParserResponse
-      _nodeTree = JSON.parse(JSON.stringify(tree))
-
-      let uids: TUid[] = Object.keys(tree)
-      uids = getBfsUids(uids)
-      uids.reverse()
-      uids.map((uid) => {
-        const node = tree[uid]
-
-        // validate
-        if (node.children.length !== 0) {
-          node.children = node.children.filter((c_uid) => {
-            const child = tree[c_uid]
-            return child.data.valid
-          })
-          node.isEntity = (node.children.length === 0)
-          node.data.valid = node.data.valid || (node.children.length !== 0)
-        }
-        if (node.data.valid) {
-          !node.isEntity && _expandedItems.push(uid)
-          _validNodeTree[uid] = node
-        }
-      })
-
-      // set node index
-      uids = Object.keys(_validNodeTree)
-      uids = getDfsUids(uids)
-      let nodeIndex: number = 0
-      uids.map((uid) => {
-        _validNodeTree[uid].data.index = ++nodeIndex
-      })
-    }
-
-    // update main context
-    setNodeTree(_nodeTree)
     setValidNodeTree(_validNodeTree)
+  }, [nodeTree])
 
-    // update redux
-    currentFileUidRef.current !== currentFile.uid && dispatch(Main.expandFNNode(_expandedItems))
-    currentFileUidRef.current = currentFile.uid
-
-    // generate data for node-tree-view
+  // validNodeTree -> nodeTreeViewData
+  const nodeTreeViewData = useMemo(() => {
     let data: TreeViewData = {}
-    for (const uid in _validNodeTree) {
-      const node = _validNodeTree[uid]
+    for (const uid in validNodeTree) {
+      const node = validNodeTree[uid]
       data[uid] = {
         index: node.uid,
         data: node,
@@ -166,25 +90,33 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
         canRename: uid !== 'ROOT',
       }
     }
-    setNodeTreeViewData(data)
-  }, [currentFile])
-  // --------- generate TTree and TreeViewData from file content ---------
+    return data
+  }, [validNodeTree])
 
-  // update the file content
-  const updateFFContent = useCallback(async (tree: TTree) => {
-    const newContent = serializeFile({ type: currentFile.type, tree })
-    dispatch(Main.updateFileContent(newContent))
-  }, [currentFile.type])
+  // focusedItem -> scrollTo
+  const focusedItemRef = useRef<TUid>(focusedItem)
+  useEffect(() => {
+    // validate
+    const node = validNodeTree[focusedItem]
+    if (node === undefined) return
 
-  // add/remove/duplicate node apis
+    // skip own state change
+    if (focusedItemRef.current === focusedItem) {
+      focusedItemRef.current = ''
+      return
+    }
+
+    // scroll to focused item
+    setTimeout(() => document.getElementById(focusedItem)?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' }), 0)
+  }, [focusedItem])
+
+  // node actions -> nodeTree
   const handleAddFNNode = useCallback((nodeType: string) => {
     // validate
     const focusedNode = validNodeTree[focusedItem]
     if (focusedNode === undefined) return
 
-    addRunningAction(['addFNNode'])
-
-    // add node using addNode api
+    // build the new node to add
     const tree = JSON.parse(JSON.stringify(nodeTree))
     let newNode: TNode = {
       uid: '',
@@ -195,6 +127,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       data: {},
     }
 
+    // fill in data prop for the node
     if (nodeType === 'div') {
       newNode.data = {
         valid: true,
@@ -216,60 +149,105 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       // do nothing
     }
 
-    const res = addNode({ tree, targetUid: focusedItem, node: newNode })
-    updateFFContent(res.tree)
-    dispatch(Main.updateFNTreeViewState(res))
+    addRunningActions(['processor-nodeTree', 'processor-validNodeTree'])
 
-    removeRunningAction(['addFNNode'])
-  }, [validNodeTree, nodeTree, focusedItem])
+    // add node
+    const res = addNode({ tree, targetUid: focusedItem, node: newNode })
+    setUpdateOpt({ parse: false, from: 'node' })
+    setNodeTree(res.tree)
+    dispatch(Main.updateFNTreeViewState(res))
+  }, [focusedItem, validNodeTree, nodeTree])
   const handleRemoveFNNode = useCallback(() => {
     // validate
     if (selectedItems.length === 0) return
 
-    addRunningAction(['removeFNNode'])
+    addRunningActions(['processor-nodeTree', 'processor-validNodeTree'])
 
+    // remove the nodes
     const tree = JSON.parse(JSON.stringify(nodeTree))
     const res = removeNode({ tree, nodeUids: selectedItems })
-    updateFFContent(res.tree)
+    setUpdateOpt({ parse: false, from: 'node' })
+    setNodeTree(res.tree)
     dispatch(Main.updateFNTreeViewState(res))
-
-    removeRunningAction(['removeFNNode'])
   }, [selectedItems, nodeTree])
   const handleDuplicateFNNode = useCallback(() => {
     // validate
     if (focusedItem === 'ROOT') return
-    const focusedNode = nodeTree[focusedItem]
+    const focusedNode = validNodeTree[focusedItem]
     if (focusedNode === undefined) return
 
-    addRunningAction(['duplicateFNNode'])
+    addRunningActions(['processor-nodeTree', 'processor-validNodeTree'])
 
+    // duplicate the node
     const tree = JSON.parse(JSON.stringify(nodeTree))
     const res = duplicateNode({ tree, node: focusedNode })
-    updateFFContent(res.tree)
+    setUpdateOpt({ parse: false, from: 'node' })
+    setNodeTree(res.tree)
     dispatch(Main.updateFNTreeViewState(res))
+  }, [focusedItem, validNodeTree, nodeTree])
+  const cb_renameNode = useCallback((uid: TUid, newName: string) => {
+    // validate
+    const focusedNode = validNodeTree[uid]
+    if (focusedNode === undefined || focusedNode.name === newName) return
 
-    removeRunningAction(['duplicateFNNode'])
-  }, [focusedItem, nodeTree])
+    addRunningActions(['processor-nodeTree', 'processor-validNodeTree'])
 
-  // cb
+    // rename the node
+    const tree = JSON.parse(JSON.stringify(nodeTree))
+    const node = { ...JSON.parse(JSON.stringify(tree[uid])), name: newName }
+    replaceNode({ tree, node })
+    setUpdateOpt({ parse: false, from: 'node' })
+    setNodeTree(tree)
+  }, [validNodeTree, nodeTree])
+  const cb_dropNode = useCallback((payload: {
+    parentUid: TUid,
+    isBetween: boolean,
+    position: number,
+    uids: TUid[],
+  }) => {
+    // validate
+    let uids: TUid[] = []
+    uids = validateUids(payload.uids, payload.parentUid)
+    uids = uids.filter((uid) => {
+      return validNodeTree[uid] !== undefined
+    })
+    if (uids.length === 0 || validNodeTree[payload.parentUid] === undefined) return
+
+    addRunningActions(['processor-nodeTree', 'processor-validNodeTree'])
+
+    // drop the nodes
+    const tree = JSON.parse(JSON.stringify(nodeTree))
+    const res = moveNode({
+      tree,
+      isBetween: payload.isBetween,
+      parentUid: payload.parentUid,
+      position: payload.position,
+      uids: uids
+    })
+    setUpdateOpt({ parse: false, from: 'node' })
+    setNodeTree(res.tree)
+    dispatch(Main.updateFNTreeViewState(res))
+  }, [validNodeTree, nodeTree])
+
+  // fn view state
   const cb_focusNode = useCallback((uid: TUid) => {
     // for key-nav
-    addRunningAction(['focusFNNode'])
+    addRunningActions(['nodeTreeView-focus'])
 
     // validate
-    if (focusedItemRef.current === uid || validNodeTree[uid] === undefined) {
-      removeRunningAction(['focusFNNode'], false)
+    if (focusedItem === uid || validNodeTree[uid] === undefined) {
+      removeRunningActions(['nodeTreeView-focus'], false)
       return
     }
 
     focusedItemRef.current = uid
     dispatch(Main.focusFNNode(uid))
 
-    removeRunningAction(['focusFNNode'])
-  }, [validNodeTree])
+    removeRunningActions(['nodeTreeView-focus'])
+  }, [focusedItem, validNodeTree])
   const cb_selectNode = useCallback((uids: TUid[]) => {
     // for key-nav
-    addRunningAction(['selectFNNode'])
+    addRunningActions(['nodeTreeView-select'])
 
     // validate
     let _uids = [...uids]
@@ -288,92 +266,50 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
         }
       }
       if (same) {
-        removeRunningAction(['selectFNNode'], false)
+        removeRunningActions(['nodeTreeView-select'], false)
         return
       }
     }
 
     dispatch(Main.selectFNNode(_uids))
 
-    removeRunningAction(['selectFNNode'])
+    removeRunningActions(['nodeTreeView-select'])
   }, [validNodeTree, selectedItems, selectedItemsObj])
   const cb_expandNode = useCallback((uid: TUid) => {
     // for key-nav
-    addRunningAction(['expandFNNode'])
+    addRunningActions(['nodeTreeView-expand'])
 
     // validate
     const node = validNodeTree[uid]
     if (node === undefined || node.isEntity || expandedItemsObj[uid] === true) {
-      removeRunningAction(['expandFNNode'], false)
+      removeRunningActions(['nodeTreeView-expand'], false)
       return
     }
 
     dispatch(Main.expandFNNode([uid]))
 
-    removeRunningAction(['expandFNNode'])
+    removeRunningActions(['nodeTreeView-expand'])
   }, [validNodeTree, expandedItemsObj])
   const cb_collapseNode = useCallback((uid: TUid) => {
     // for key-nav
-    addRunningAction(['collapseFNNode'])
+    addRunningActions(['nodeTreeView-collapse'])
 
     // validate
     const node = validNodeTree[uid]
     if (node === undefined || node.isEntity || expandedItemsObj[uid] === undefined) {
-      removeRunningAction(['collapseFNNode'], false)
+      removeRunningActions(['nodeTreeView-collapse'], false)
       return
     }
 
     dispatch(Main.collapseFNNode([uid]))
 
-    removeRunningAction(['collapseFNNode'])
+    removeRunningActions(['nodeTreeView-collapse'])
   }, [validNodeTree, expandedItemsObj])
-  const cb_renameNode = useCallback((uid: TUid, newName: string) => {
-    // validate
-    const focusedNode = validNodeTree[uid]
-    if (focusedNode === undefined || focusedNode.name === newName) return
+  // -------------------------------------------------------------- Sync --------------------------------------------------------------
 
-    addRunningAction(['renameFNNode'])
-
-    const tree = JSON.parse(JSON.stringify(nodeTree))
-    const node = { ...JSON.parse(JSON.stringify(tree[uid])), name: newName }
-    replaceNode({ tree, node })
-    updateFFContent(tree)
-
-    removeRunningAction(['renameFNNode'])
-  }, [validNodeTree, nodeTree])
-  const cb_dropNode = useCallback((payload: {
-    parentUid: TUid,
-    isBetween: boolean,
-    position: number,
-    uids: TUid[],
-  }) => {
-    // validate
-    let uids: TUid[] = []
-    uids = validateUids(payload.uids, payload.parentUid)
-    uids = uids.filter((uid) => {
-      return validNodeTree[uid] !== undefined
-    })
-    if (uids.length === 0 || validNodeTree[payload.parentUid] === undefined) return
-
-    addRunningAction(['dropFNNode'])
-
-    const tree = JSON.parse(JSON.stringify(nodeTree))
-    const res = moveNode({
-      tree,
-      isBetween: payload.isBetween,
-      parentUid: payload.parentUid,
-      position: payload.position,
-      uids: uids
-    })
-    updateFFContent(res.tree)
-    dispatch(Main.updateFNTreeViewState(res))
-
-    removeRunningAction(['dropFNNode'])
-  }, [validNodeTree, nodeTree])
-
-  return (<>
+  return <>
     <div className="panel">
-      <div id={'NodeTreeView'} className="border-bottom" style={{ height: "300px", overflow: "auto" }}>
+      <div id={'NodeTreeView'} className="border-bottom" style={{ height: "calc(50vh - 22px)", overflow: "auto" }}>
         {/* Nav Bar */}
         <div className="sticky direction-column padding-s box-l justify-stretch border-bottom background-primary">
           <div className="gap-s box justify-start">
@@ -403,7 +339,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
           /* data */
           data={nodeTreeViewData}
-          focusedItem={focusedItemRef.current}
+          focusedItem={focusedItem}
           expandedItems={expandedItems}
           selectedItems={selectedItems}
 
@@ -460,10 +396,10 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                       e.stopPropagation()
 
                       // group action
-                      !props.context.isFocused && addRunningAction(['focusFNNode'])
-                      addRunningAction(['selectFNNode'])
+                      !props.context.isFocused && addRunningActions(['nodeTreeView-focus'])
+                      addRunningActions(['nodeTreeView-select'])
 
-                      removeRunningAction(['clickEvent'])
+                      removeRunningActions(['nodeTreeView-arrowClick'])
 
                       // call back
                       props.context.isFocused ? null : props.context.focusItem()
@@ -473,14 +409,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                           props.context.selectItem()
                     }}
                     onFocus={() => { }}
-                    onMouseEnter={(e) => {
-                      e.stopPropagation()
-                      setFNHoveredItem(props.item.index as TUid)
-                    }}
-                    onMouseLeave={(e) => {
-                      e.stopPropagation()
-                      setFNHoveredItem('')
-                    }}
+                    onMouseEnter={() => setFNHoveredItem(props.item.index as TUid)}
+                    onMouseLeave={() => setFNHoveredItem('')}
                   >
                     <div className="gap-xs padding-xs" style={{ width: "100%" }}>
                       {/* render arrow */}
@@ -518,18 +448,15 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                     props.item.isFolder ? (props.context.isExpanded ? 'icon-down' : 'icon-right') : '',
                   )}
                   onClick={(e) => {
-                    // check running action
-                    if (props.item.isFolder) {
-                      addRunningAction([props.context.isExpanded ? 'collapseFNNode' : 'expandFNNode'])
-                    } else {
-                      // do nothing
-                    }
-
                     // to merge with the click event
-                    addRunningAction(['clickEvent'])
+                    addRunningActions(['nodeTreeView-arrowClick'])
 
-                    // call back
-                    props.item.isFolder ? props.context.toggleExpandedState() : null
+                    if (props.item.isFolder) {
+                      addRunningActions([props.context.isExpanded ? 'nodeTreeView-collapse' : 'nodeTreeView-expand'])
+
+                      // callback
+                      props.item.isFolder ? props.context.toggleExpandedState() : null
+                    }
                   }}
                 >
                 </div>
@@ -549,12 +476,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                   position: 'absolute',
                   right: '0',
                   top:
-                    draggingPosition.targetType === 'between-items' &&
-                      draggingPosition.linePosition === 'top'
-                      ? '0px'
-                      : draggingPosition.targetType === 'between-items' &&
-                        draggingPosition.linePosition === 'bottom'
-                        ? '-4px'
+                    draggingPosition.targetType === 'between-items' && draggingPosition.linePosition === 'top' ? '0px'
+                      : draggingPosition.targetType === 'between-items' && draggingPosition.linePosition === 'bottom' ? '-4px'
                         : '-2px',
                   left: `${draggingPosition.depth * 10}px`,
                   height: '2px',
@@ -575,21 +498,21 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
           /* cb */
           callbacks={{
             /* RENAME CALLBACK */
-            onRenameItem: (item, name, treeId) => {
+            onRenameItem: (item, name) => {
               cb_renameNode(item.index as TUid, name)
             },
 
             /* SELECT, FOCUS, EXPAND, COLLAPSE CALLBACK */
-            onSelectItems: (items, treeId) => {
+            onSelectItems: (items) => {
               cb_selectNode(items as TUid[])
             },
-            onFocusItem: (item, treeId) => {
+            onFocusItem: (item) => {
               cb_focusNode(item.index as TUid)
             },
-            onExpandItem: (item, treeId) => {
+            onExpandItem: (item) => {
               cb_expandNode(item.index as TUid)
             },
-            onCollapseItem: (item, treeId) => {
+            onCollapseItem: (item) => {
               cb_collapseNode(item.index as TUid)
             },
 
@@ -607,5 +530,5 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
         />
       </div>
     </div>
-  </>)
+  </>
 }
