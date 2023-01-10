@@ -19,6 +19,27 @@ import {
 } from './types';
 
 /**
+ * return its parent node uid
+ * @param uid 
+ */
+export const getParentUid = (uid: TUid): TUid => {
+  const arr = uid.split('_')
+  arr.pop()
+  return arr.join('_')
+}
+
+/**
+ * return entry name from the "uid"
+ * @param uid 
+ * @returns 
+ */
+export const getEntryName = (uid: TUid): string => {
+  const arr = uid.split('_')
+  const entryName: string = arr.pop() as string
+  return entryName
+}
+
+/**
  * generate the new uid inside p_uid
  * @param p_uid 
  * @param nodeIndex 
@@ -389,6 +410,8 @@ export const addNode = ({ tree, targetUid, node }: TAddNodePayload): TNodeApiRes
 /**
  * remove node api
  * this api removes the nodes from the tree based on the node uids
+ * @param param0 
+ * @returns 
  */
 export const removeNode = ({ tree, nodeUids }: TRemoveNodePayload): TNodeApiRes => {
   const deletedUids: TUid[] = []
@@ -427,6 +450,8 @@ export const removeNode = ({ tree, nodeUids }: TRemoveNodePayload): TNodeApiRes 
 /**
  * move(cut & paste) node api
  * this api moves the nodes inside the parent node
+ * @param param0 
+ * @returns 
  */
 export const moveNode = ({ tree, isBetween, parentUid, position, uids }: TMoveNodePayload): TNodeApiRes => {
   const parentNode = tree[parentUid]
@@ -520,6 +545,8 @@ export const moveNode = ({ tree, isBetween, parentUid, position, uids }: TMoveNo
 /**
  * duplicate(copy & paste) node api
  * this api duplicates the nodes inside the parent node
+ * @param param0 
+ * @returns 
  */
 export const duplicateNode = ({ tree, node }: TDuplicateNodePayload): TNodeApiRes => {
   /* insert the duplicated node uid to the parent.children */
@@ -563,6 +590,7 @@ export const duplicateNode = ({ tree, node }: TDuplicateNodePayload): TNodeApiRe
 
 /**
  * update the data of the node in the tree based on the uid
+ * @param param0 
  */
 export const updateNode = ({ tree, uid, data }: TUpdateNodePayload) => {
   tree[uid].data = data
@@ -571,6 +599,7 @@ export const updateNode = ({ tree, uid, data }: TUpdateNodePayload) => {
 /**
  * replace node api
  * this api replaces the node in the tree - it can also use for rename
+ * @param param0 
  */
 export const replaceNode = ({ tree, node }: TReplaceNodePayload) => {
   // replace node in the tree
@@ -580,6 +609,8 @@ export const replaceNode = ({ tree, node }: TReplaceNodePayload) => {
 /**
  * parse file api
  * this api parses the file content based on the type and return the tree data
+ * @param param0 
+ * @returns 
  */
 export const parseFile = ({ type, content }: TParseFilePayload): THtmlParserResponse | TTree => {
   if (type === "html") {
@@ -591,6 +622,8 @@ export const parseFile = ({ type, content }: TParseFilePayload): THtmlParserResp
 /**
  * searialize file api
  * this api searializes the file content based on the type and tree data
+ * @param param0 
+ * @returns 
  */
 export const serializeFile = ({ type, tree }: TSearializeFilePayload): string => {
   if (type === "html") {

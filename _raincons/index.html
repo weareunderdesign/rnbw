@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- meta info -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- rene.css -->
+    <link rel="stylesheet" href="https://unpkg.com/renecss/dist/rene.min.css" />
+
+    <!-- SVGIcon module js -->
+    <script
+      type="module"
+      src="https://unpkg.com/@rainbowapp/svg-icon.js/dist/svg-icon.min.js"
+    ></script>
+
+    <!-- main js file -->
+    <script type="module" src="./icons.js"></script>
+    
+    <!-- page title -->
+    <title>Icons</title>
+  </head>
+
+  <body>
+    <!-- ******************** container begin ******************** -->
+    <div class="view align-center">
+      <div class="page">
+        <!-- Logo -->
+        <div>
+          <svg-icon class="post-icon" size="140">logos/logo</svg-icon>
+        </div>
+
+        <!-- Header -->
+        <div class="box-l  gap-m">
+          <!-- Left Panel -->
+          <div class="box-m direction-row">
+            <h1>Raincons</h1>
+            <h4>
+              12x12 icons designed for clean, minimal, and info-rich interfaces.
+              Powered by &lt;svg-icon&gt;.</br>
+              By the Rainbow team.
+            </h4>
+          </div>
+          <!-- Right Panel -->
+          <div class="box direction-row gap-s foreground-secondary radius-m padding-l">
+            <div class="gap-m">
+              <svg-icon size="24" class="post-icon">logos/github</svg-icon>
+              <a href="https://github.com/rnbwdev/raincons">View on GitHub</a>
+            </div>
+            <div class="gap-m">
+              <svg-icon size="24" class="post-icon">logos/figma</svg-icon>
+              <a href="https://www.figma.com/file/KxYi9haRZ5GsdqCn9HzZlt/Raincons?node-id=0%3A1">Open in Figma</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search Input -->
+        <div>
+          <input class="border-bottom" style="border-top: none; border-right: none; border-left: none; padding:0;"  id="searchInput" type="text" placeholder="Search" />
+        </div>
+
+        <!-- Content -->
+        <div id="content" class="gap-xl direction-row">
+          <!-- Here, icons.js fetch all of the svg icons from /icons directory -->
+        </div>
+      </div>
+    </div>
+    <!-- ******************** container end ******************** -->
+  </body>
+</html>

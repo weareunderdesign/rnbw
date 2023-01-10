@@ -11,6 +11,7 @@ import { FFTree } from '@_types/main';
 
 import {
   Command,
+  FFAction,
   MainContextType,
   Message,
   UpdateOptions,
@@ -43,6 +44,12 @@ export const MainContext: Context<MainContextType> = createContext<MainContextTy
   // update opt
   updateOpt: { parse: null, from: null },
   setUpdateOpt: (opt: UpdateOptions) => { },
+
+  // ff hms
+  isHms: null,
+  setIsHms: (is: boolean | null) => { },
+  ffAction: { name: null },
+  setFFAction: (action: FFAction) => { },
 
   // cmdk
   command: { action: '', changed: false },

@@ -19,3 +19,8 @@ export const fnSelector = createSelector(getFN, (fn) => fn)
 // ff selector
 const getFF = (state: AppState) => state.main.present.ff
 export const ffSelector = createSelector(getFF, (ff) => ff)
+
+/* *********************** hms *********************** */
+// info - future & past length
+const getHmsInfo = (state: AppState) => ({ futureLength: state.main.future.length, pastLength: state.main.past.length })
+export const hmsInfoSelector = createSelector(getHmsInfo, (hmsInfo) => hmsInfo)

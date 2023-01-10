@@ -17,6 +17,7 @@ export type MainState = {
   global: {
     project: Project,
     currentFile: OpenedFile,
+    action: FFAction,
   },
   ff: FFTreeViewState,
   fn: FNTreeViewState,
@@ -39,6 +40,15 @@ export type OpenedFile = {
   type: TFileType,
   content: string,
   saved: boolean,
+}
+
+/**
+ * ff action (create, delete, move, rename, duplicate)
+ */
+export type FFAction = {
+  name: 'create' | 'delete' | 'move' | 'rename' | 'duplicate' | null,
+  param1?: any,
+  param2?: any,
 }
 
 /**
@@ -116,6 +126,13 @@ export type MainContextType = {
   updateOpt: UpdateOptions,
   setUpdateOpt: (opt: UpdateOptions) => void,
 
+  // ff hms
+  isHms: boolean | null,
+  setIsHms: (is: boolean | null) => void,
+
+  ffAction: FFAction,
+  setFFAction: (action: FFAction) => void,
+
   // cmdk
   command: Command,
   setCommand: (command: Command) => void,
@@ -140,6 +157,7 @@ export type FFHandlers = { [key: TUid]: FileSystemHandle }
 export type UpdateOptions = {
   parse: boolean | null, // true if should parse, false if serialize
   from: 'fs' | 'code' | 'node' | 'stage' | 'settings' | 'styles' | 'processor' | 'hms' | null,
+  isHms?: boolean,
 }
 
 /**

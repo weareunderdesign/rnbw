@@ -23,6 +23,7 @@ export const parseHtml = (content: string): THtmlParserResponse => {
 
   // parse html using react-html-parser
   interface ProcessableNode extends HTMLElement { uid: TUid }
+
   ReactHtmlParser(content, {
     decodeEntities: true,
     transform: (node, index, transform) => {
@@ -265,7 +266,10 @@ export const getShortHand = (attrs: THtmlTagAttributes): THtmlTagAttributes => {
       const newAttrName = attrName === 'class' ? 'className' :
         attrName === 'charset' ? 'charSet' :
           attrName === 'contenteditable' ? 'contentEditable' :
-            attrName.replace(/-./g, c => c.substr(1).toUpperCase())
+            attrName === 'onsubmit' ? 'onSubmit' :
+              attrName === 'for' ? 'htmlFor' :
+                attrName === 'datetime' ? 'dateTime' :
+                  attrName.replace(/-./g, c => c.substr(1).toUpperCase())
 
       newAttr[newAttrName] = attrs[attrName]
     }

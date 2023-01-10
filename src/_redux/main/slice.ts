@@ -26,6 +26,11 @@ const initialState: Types.MainState = {
       content: '',
       saved: false,
     },
+    action: {
+      name: null,
+      param1: '',
+      param2: '',
+    }
   },
   ff: {
     focusedItem: 'ROOT',
@@ -67,6 +72,10 @@ const slice = createSlice({
     updateFileContent(state, action: PayloadAction<string>) {
       const data = action.payload
       state.global.currentFile.content = data
+    },
+    setFFAction(state, action: PayloadAction<Types.FFAction>) {
+      const payload = action.payload
+      state.global.action = payload
     },
 
     /* fn */
@@ -213,6 +222,7 @@ export const {
   /* global */
   setCurrentFile,
   updateFileContent,
+  setFFAction,
 
   /* fn */
   clearFNState,

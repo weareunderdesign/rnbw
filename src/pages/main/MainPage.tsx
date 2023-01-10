@@ -5,7 +5,10 @@ import React, {
   useState,
 } from 'react';
 
-import { useDispatch } from 'react-redux';
+import {
+  useDispatch,
+  useSelector,
+} from 'react-redux';
 
 import {
   CommandK,
@@ -24,7 +27,10 @@ import {
 } from '@_node/types';
 import {
   Command,
+  FFAction,
   FFHandlers,
+  globalSelector,
+  hmsInfoSelector,
   increaseActionGroupIndex,
   MainContext,
   Message,
@@ -102,6 +108,10 @@ export default function MainPage(props: MainPageProps) {
     from: null,
   })
 
+  // ff hms
+  const [isHms, setIsHms] = useState<boolean | null>(null)
+  const [ffAction, setFFAction] = useState<FFAction>({ name: null })
+
   // cmdk
   const [command, setCommand] = useState<Command>({ action: '', changed: false })
 
@@ -121,6 +131,8 @@ export default function MainPage(props: MainPageProps) {
   // ---------------- cmdk ----------------
   // key event listener
   const cb_onKeyDown = useCallback((e: KeyboardEvent) => {
+    if (pending) return
+
     if (e.code === 'KeyK' && e.ctrlKey) {
       e.preventDefault()
       setCmdkOpen(true)
@@ -148,7 +160,7 @@ export default function MainPage(props: MainPageProps) {
 
       setCommand({ action: "toogleCodeView", changed: !command.changed })
     }
-  }, [command.changed])
+  }, [command.changed, pending])
 
   // cmdk modal
   const [cmdkOpen, setCmdkOpen] = useState(false)
@@ -192,16 +204,29 @@ export default function MainPage(props: MainPageProps) {
   }, [command.changed])
   // ---------------- cmdk ----------------
 
+  // redux state
+  const { project, currentFile, action } = useSelector(globalSelector)
+  const { futureLength, pastLength } = useSelector(hmsInfoSelector)
+
   // ---------------- handlers ----------------
   // hms methods
-  const undo = () => {
+  const undo = useCallback(() => {
+    if (pastLength === 0) return
+
+    setFFAction(action)
+    setIsHms(true)
+
     setUpdateOpt({ parse: true, from: 'hms' })
     setTimeout(() => dispatch({ type: 'main/undo' }), 0)
-  }
-  const redo = () => {
+  }, [action, pastLength])
+  const redo = useCallback(() => {
+    if (futureLength === 0) return
+
+    setIsHms(false)
+
     setUpdateOpt({ parse: true, from: 'hms' })
     setTimeout(() => dispatch({ type: 'main/redo' }), 0)
-  }
+  }, [futureLength])
 
   // toogle code view
   const [showCodeView, setShowCodeView] = useState(true)
@@ -209,6 +234,11 @@ export default function MainPage(props: MainPageProps) {
     setShowCodeView(!showCodeView)
   }
   // ---------------- handlers ----------------
+
+  // svg-icon
+  /* const SVGIcon = useMemo<keyof JSX.IntrinsicElements>(() => {
+    return 'svg-icon' as keyof JSX.IntrinsicElements
+  }, []) */
 
   return <>
     {/* wrap with the context */}
@@ -240,6 +270,12 @@ export default function MainPage(props: MainPageProps) {
         // update opt
         updateOpt,
         setUpdateOpt,
+
+        // ff hms
+        isHms,
+        setIsHms,
+        ffAction,
+        setFFAction,
 
         // cmdk
         command,
@@ -278,6 +314,7 @@ export default function MainPage(props: MainPageProps) {
             </div>
             <div className="gap-m justify-end box">
               {/* action bar */}
+              {/* <SVGIcon size={80}></SVGIcon> */}
             </div>
           </div>
 

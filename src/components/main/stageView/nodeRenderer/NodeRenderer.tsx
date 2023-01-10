@@ -113,43 +113,60 @@ export default function NodeRenderer({ id }: NodeRendererProp) {
           node.name === 'meta' ? <Tag {...attribs} /> :
             node.name === 'link' ? <Tag {...attribs} /> :
               node.name === 'br' ? <Tag {...attribs} /> :
-                node.name === 'img' ? <Tag
-                  {...attribs}
-                  className={attribs.className === undefined ? className : `${attribs.className} ${className}`}
+                node.name === 'hr' ? <Tag {...attribs} /> :
+                  node.name === 'img' ? <Tag
+                    {...attribs}
+                    className={attribs.className === undefined ? className : `${attribs.className} ${className}`}
 
-                  onMouseMove={onMouseMove}
-                  onClick={onClick}
-                  onDoubleClick={onDoubleClick}
+                    onMouseMove={onMouseMove}
+                    onClick={onClick}
+                    onDoubleClick={onDoubleClick}
 
-                  suppressContentEditableWarning={true}
-                  contentEditable={contentEditable}
-                  onInput={onInput}
-                /> :
-                  node.name === 'comment' ? null :
-                    node.name === 'text' ? (node.data.data) :
-                      node.name === 'div' ? <>
-                        <Resizable
-                          width={width}
-                          height={height}
-                          onResizeStart={(e: React.SyntheticEvent, data: ResizeCallbackData) => {
-                            console.log('onResizeStart', e, data)
-                            setWidth(data.size.width)
-                            setHeight(data.size.height)
-                          }}
-                          onResizeStop={(e: React.SyntheticEvent, data: ResizeCallbackData) => {
-                            console.log('onResizeStop', e, data)
-                            setWidth(data.size.width)
-                            setHeight(data.size.height)
-                          }}
-                          onResize={(e: React.SyntheticEvent, data: ResizeCallbackData) => {
-                            console.log('onResize', e, data)
-                            setWidth(data.size.width)
-                            setHeight(data.size.height)
-                          }}
-                          draggableOpts={{}}
-                          minConstraints={[100, 100]}
-                          maxConstraints={[300, 300]}
-                        >
+                    suppressContentEditableWarning={true}
+                    contentEditable={contentEditable}
+                    onInput={onInput}
+                  /> :
+                    node.name === 'comment' ? null :
+                      node.name === 'text' ? (node.data.data) :
+                        node.name === 'div' ? <>
+                          <Resizable
+                            width={width}
+                            height={height}
+                            onResizeStart={(e: React.SyntheticEvent, data: ResizeCallbackData) => {
+                              console.log('onResizeStart', e, data)
+                              setWidth(data.size.width)
+                              setHeight(data.size.height)
+                            }}
+                            onResizeStop={(e: React.SyntheticEvent, data: ResizeCallbackData) => {
+                              console.log('onResizeStop', e, data)
+                              setWidth(data.size.width)
+                              setHeight(data.size.height)
+                            }}
+                            onResize={(e: React.SyntheticEvent, data: ResizeCallbackData) => {
+                              console.log('onResize', e, data)
+                              setWidth(data.size.width)
+                              setHeight(data.size.height)
+                            }}
+                            draggableOpts={{}}
+                            minConstraints={[100, 100]}
+                            maxConstraints={[300, 300]}
+                          >
+                            <Tag
+                              {...attribs}
+                              className={attribs.className === undefined ? className : `${attribs.className} ${className}`}
+
+                              onMouseMove={onMouseMove}
+                              onClick={onClick}
+                              onDoubleClick={onDoubleClick}
+
+                              suppressContentEditableWarning={true}
+                              contentEditable={contentEditable}
+                              onInput={onInput}
+                            >
+                              {node.children.map(c_uid => <NodeRenderer key={c_uid} id={c_uid}></NodeRenderer>)}
+                            </Tag>
+                          </Resizable>
+                        </> : <>
                           <Tag
                             {...attribs}
                             className={attribs.className === undefined ? className : `${attribs.className} ${className}`}
@@ -164,23 +181,7 @@ export default function NodeRenderer({ id }: NodeRendererProp) {
                           >
                             {node.children.map(c_uid => <NodeRenderer key={c_uid} id={c_uid}></NodeRenderer>)}
                           </Tag>
-                        </Resizable>
-                      </> : <>
-                        <Tag
-                          {...attribs}
-                          className={attribs.className === undefined ? className : `${attribs.className} ${className}`}
-
-                          onMouseMove={onMouseMove}
-                          onClick={onClick}
-                          onDoubleClick={onDoubleClick}
-
-                          suppressContentEditableWarning={true}
-                          contentEditable={contentEditable}
-                          onInput={onInput}
-                        >
-                          {node.children.map(c_uid => <NodeRenderer key={c_uid} id={c_uid}></NodeRenderer>)}
-                        </Tag>
-                      </>
+                        </>
     )}
   </>
 }

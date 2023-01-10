@@ -48,7 +48,7 @@ export default function Process(props: ProcessProps) {
   } = useContext(MainContext)
 
   // redux state
-  const { project, currentFile } = useSelector(globalSelector)
+  const { project, currentFile, action } = useSelector(globalSelector)
   const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
 
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
