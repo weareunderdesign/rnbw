@@ -67,6 +67,12 @@ export type TMoveNodePayload = {
   uids: TUid[],/* nodes to move - array for multiple feature */
 }
 
+export type TCopyNodePayload = {
+  tree: TTree,
+  targetUid: TUid,
+  uids: TUid[],
+}
+
 /**
  * duplicate(copy & paste) node api payload type
  */

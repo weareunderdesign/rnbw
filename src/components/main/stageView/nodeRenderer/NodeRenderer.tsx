@@ -40,6 +40,7 @@ export default function NodeRenderer({ id }: NodeRendererProp) {
     fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree,
     command, setCommand,
     pending, setPending, messages, addMessage, removeMessage,
+    htmlReferenceData, cmdkReferenceData,
   } = useContext(MainContext)
 
   // redux state
@@ -52,11 +53,26 @@ export default function NodeRenderer({ id }: NodeRendererProp) {
   // build node info
   const node = useMemo<TNode>(() => nodeTree[id], [nodeTree, id])
   const Tag = useMemo<keyof JSX.IntrinsicElements>(() => {
-    return (node === undefined ? '' :
-      node.name === 'html' ? 'div' :
-        node.name === 'head' ? 'div' :
-          node.name === 'body' ? 'div' :
-            node.name) as keyof JSX.IntrinsicElements
+    if (node === undefined) return '' as keyof JSX.IntrinsicElements
+
+    const referenceData = htmlReferenceData[node.name]
+    console.log(node.name, referenceData)
+
+    return (node.name === 'html' ? 'div' :
+      node.name === 'head' ? 'div' :
+        node.name === 'body' ? 'div' :
+          node.name) as keyof JSX.IntrinsicElements
+
+  }, [node, htmlReferenceData])
+  const abbr = useMemo<boolean>(() => {
+    if (node === undefined) return false
+
+    if (node.name === 'meta' || node.name === 'link'
+      || node.name === 'br' || node.name === 'hr'
+      || node.name === 'source' || node.name === 'input'
+      || node.name === 'area' || node.name === 'col' || node.name === 'wbr') return true
+
+    return false
   }, [node])
   const attribs = useMemo<THtmlTagAttributes>(() => {
     return node === undefined ? {} : getShortHand(node.data.attribs)
@@ -110,78 +126,75 @@ export default function NodeRenderer({ id }: NodeRendererProp) {
     {node !== undefined && !node.data.isFormatText && (
       node.name === 'ROOT' ? node.children.map(c_uid => <NodeRenderer key={c_uid} id={c_uid}></NodeRenderer>) :
         node.name === '!doctype' ? null :
-          node.name === 'meta' ? <Tag {...attribs} /> :
-            node.name === 'link' ? <Tag {...attribs} /> :
-              node.name === 'br' ? <Tag {...attribs} /> :
-                node.name === 'hr' ? <Tag {...attribs} /> :
-                  node.name === 'img' ? <Tag
-                    {...attribs}
-                    className={attribs.className === undefined ? className : `${attribs.className} ${className}`}
+          abbr ? <Tag {...attribs} /> :
+            node.name === 'img' ? <Tag
+              {...attribs}
+              className={attribs.className === undefined ? className : `${attribs.className} ${className}`}
 
-                    onMouseMove={onMouseMove}
-                    onClick={onClick}
-                    onDoubleClick={onDoubleClick}
+              onMouseMove={onMouseMove}
+              onClick={onClick}
+              onDoubleClick={onDoubleClick}
 
-                    suppressContentEditableWarning={true}
-                    contentEditable={contentEditable}
-                    onInput={onInput}
-                  /> :
-                    node.name === 'comment' ? null :
-                      node.name === 'text' ? (node.data.data) :
-                        node.name === 'div' ? <>
-                          <Resizable
-                            width={width}
-                            height={height}
-                            onResizeStart={(e: React.SyntheticEvent, data: ResizeCallbackData) => {
-                              console.log('onResizeStart', e, data)
-                              setWidth(data.size.width)
-                              setHeight(data.size.height)
-                            }}
-                            onResizeStop={(e: React.SyntheticEvent, data: ResizeCallbackData) => {
-                              console.log('onResizeStop', e, data)
-                              setWidth(data.size.width)
-                              setHeight(data.size.height)
-                            }}
-                            onResize={(e: React.SyntheticEvent, data: ResizeCallbackData) => {
-                              console.log('onResize', e, data)
-                              setWidth(data.size.width)
-                              setHeight(data.size.height)
-                            }}
-                            draggableOpts={{}}
-                            minConstraints={[100, 100]}
-                            maxConstraints={[300, 300]}
-                          >
-                            <Tag
-                              {...attribs}
-                              className={attribs.className === undefined ? className : `${attribs.className} ${className}`}
+              suppressContentEditableWarning={true}
+              contentEditable={contentEditable}
+              onInput={onInput}
+            /> :
+              node.name === 'comment' ? null :
+                node.name === 'text' ? (node.data.data) :
+                  node.name === 'div' ? <>
+                    <Resizable
+                      width={width}
+                      height={height}
+                      onResizeStart={(e: React.SyntheticEvent, data: ResizeCallbackData) => {
+                        console.log('onResizeStart', e, data)
+                        setWidth(data.size.width)
+                        setHeight(data.size.height)
+                      }}
+                      onResizeStop={(e: React.SyntheticEvent, data: ResizeCallbackData) => {
+                        console.log('onResizeStop', e, data)
+                        setWidth(data.size.width)
+                        setHeight(data.size.height)
+                      }}
+                      onResize={(e: React.SyntheticEvent, data: ResizeCallbackData) => {
+                        console.log('onResize', e, data)
+                        setWidth(data.size.width)
+                        setHeight(data.size.height)
+                      }}
+                      draggableOpts={{}}
+                      minConstraints={[100, 100]}
+                      maxConstraints={[300, 300]}
+                    >
+                      <Tag
+                        {...attribs}
+                        className={attribs.className === undefined ? className : `${attribs.className} ${className}`}
 
-                              onMouseMove={onMouseMove}
-                              onClick={onClick}
-                              onDoubleClick={onDoubleClick}
+                        onMouseMove={onMouseMove}
+                        onClick={onClick}
+                        onDoubleClick={onDoubleClick}
 
-                              suppressContentEditableWarning={true}
-                              contentEditable={contentEditable}
-                              onInput={onInput}
-                            >
-                              {node.children.map(c_uid => <NodeRenderer key={c_uid} id={c_uid}></NodeRenderer>)}
-                            </Tag>
-                          </Resizable>
-                        </> : <>
-                          <Tag
-                            {...attribs}
-                            className={attribs.className === undefined ? className : `${attribs.className} ${className}`}
+                        suppressContentEditableWarning={true}
+                        contentEditable={contentEditable}
+                        onInput={onInput}
+                      >
+                        {node.children.map(c_uid => <NodeRenderer key={c_uid} id={c_uid}></NodeRenderer>)}
+                      </Tag>
+                    </Resizable>
+                  </> : <>
+                    <Tag
+                      {...attribs}
+                      className={attribs.className === undefined ? className : `${attribs.className} ${className}`}
 
-                            onMouseMove={onMouseMove}
-                            onClick={onClick}
-                            onDoubleClick={onDoubleClick}
+                      onMouseMove={onMouseMove}
+                      onClick={onClick}
+                      onDoubleClick={onDoubleClick}
 
-                            suppressContentEditableWarning={true}
-                            contentEditable={contentEditable}
-                            onInput={onInput}
-                          >
-                            {node.children.map(c_uid => <NodeRenderer key={c_uid} id={c_uid}></NodeRenderer>)}
-                          </Tag>
-                        </>
+                      suppressContentEditableWarning={true}
+                      contentEditable={contentEditable}
+                      onInput={onInput}
+                    >
+                      {node.children.map(c_uid => <NodeRenderer key={c_uid} id={c_uid}></NodeRenderer>)}
+                    </Tag>
+                  </>
     )}
   </>
 }

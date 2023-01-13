@@ -131,9 +131,9 @@ export const parseHtml = (content: string): THtmlParserResponse => {
       data.attribs = {}
     }
     if (data.attribs.class === undefined) {
-      data.attribs.class = `rnbwdev-rainbow-component-${uid}`
+      data.attribs.class = `rnbwdev-rainbow-component-${uid.replace(/\?/g, '-')}`
     } else {
-      data.attribs.class += ` rnbwdev-rainbow-component-${uid}`
+      data.attribs.class += ` rnbwdev-rainbow-component-${uid.replace(/\?/g, '-')}`
     }
 
     tree[uid] = {
@@ -208,7 +208,7 @@ export const serializeHtml = (tree: TTree): string => {
 
     const attribsHtml = data.attribs === undefined ? '' : Object.keys(data.attribs).map(attr => {
       if (attr === 'class') {
-        const classHtml = data.attribs['class'].split(' ').filter((className: string) => !!className && className !== `rnbwdev-rainbow-component-${uid}`).join(' ')
+        const classHtml = data.attribs['class'].split(' ').filter((className: string) => !!className && className !== `rnbwdev-rainbow-component-${uid.replace(/\?/g, '-')}`).join(' ')
         return classHtml.length === 0 ? '' : ` class="${classHtml}"`
       }
       if (attr === 'style') {
@@ -269,7 +269,8 @@ export const getShortHand = (attrs: THtmlTagAttributes): THtmlTagAttributes => {
             attrName === 'onsubmit' ? 'onSubmit' :
               attrName === 'for' ? 'htmlFor' :
                 attrName === 'datetime' ? 'dateTime' :
-                  attrName.replace(/-./g, c => c.substr(1).toUpperCase())
+                  attrName === 'srcset' ? 'srcSet' :
+                    attrName.replace(/-./g, c => c.substr(1).toUpperCase())
 
       newAttr[newAttrName] = attrs[attrName]
     }

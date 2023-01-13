@@ -246,7 +246,7 @@ export const MainReducer = undoable(slice.reducer, {
       return false
     }
 
-    console.log(action)
+    // console.log(action)
 
     return true
   },

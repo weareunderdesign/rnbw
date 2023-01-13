@@ -16,6 +16,7 @@ import { TreeView } from '@_components/common';
 import { TreeViewData } from '@_components/common/treeView/types';
 import {
   addNode,
+  copyNode,
   duplicateNode,
   getBfsUids,
   moveNode,
@@ -43,6 +44,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     updateOpt, setUpdateOpt,
     command, setCommand,
     pending, setPending, messages, addMessage, removeMessage,
+    activePanel, setActivePanel, clipboardData, setClipboardData,
   } = useContext(Main.MainContext)
 
   // redux state
@@ -107,7 +109,10 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     }
 
     // scroll to focused item
-    setTimeout(() => document.getElementById(focusedItem)?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' }), 0)
+    const focusedComponent = document.getElementById(`NodeTreeView-${focusedItem}`)
+    setTimeout(() => focusedComponent?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' }), 0)
+
+    focusedComponent?.focus()
   }, [focusedItem])
 
   // node actions -> nodeTree
@@ -185,6 +190,23 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     setNodeTree(res.tree)
     dispatch(Main.updateFNTreeViewState(res))
   }, [focusedItem, validNodeTree, nodeTree])
+  const _copy = useCallback((targetUid: TUid, _uids: TUid[]) => {
+    // validate
+    let uids: TUid[] = [..._uids]
+    uids = uids.filter((uid) => {
+      return validNodeTree[uid] !== undefined
+    })
+    if (uids.length === 0 || validNodeTree[targetUid] === undefined) return
+
+    addRunningActions(['processor-nodeTree', 'processor-validNodeTree'])
+
+    // drop the nodes
+    const tree = JSON.parse(JSON.stringify(nodeTree))
+    const res = copyNode({ tree, targetUid, uids })
+    setUpdateOpt({ parse: false, from: 'node' })
+    setNodeTree(res.tree)
+    dispatch(Main.updateFNTreeViewState(res))
+  }, [validNodeTree, nodeTree])
   const cb_renameNode = useCallback((uid: TUid, newName: string) => {
     // validate
     const focusedNode = validNodeTree[uid]
@@ -307,9 +329,113 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   }, [validNodeTree, expandedItemsObj])
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
 
+  // panel focus handler
+  const onPanelClick = useCallback(() => {
+    addRunningActions(['nodeTreeView-focus'])
+
+    setActivePanel('node')
+
+    const uid = 'ROOT'
+
+    // validate
+    if (focusedItem === uid || validNodeTree[uid] === undefined) {
+      removeRunningActions(['nodeTreeView-focus'], false)
+      return
+    }
+
+    focusedItemRef.current = uid
+    dispatch(Main.selectFNNode([]))
+    dispatch(Main.focusFNNode(uid))
+
+    setActivePanel('node')
+
+    removeRunningActions(['nodeTreeView-focus'])
+  }, [focusedItem, validNodeTree])
+
+  // command detect & do actions
+  useEffect(() => {
+    if (activePanel !== 'node') return
+
+    if (command.action === '') return
+
+    switch (command.action) {
+      case 'Add':
+        onAdd()
+        break
+      case 'Cut':
+        onCut()
+        break
+      case 'Copy':
+        onCopy()
+        break
+      case 'Paste':
+        onPaste()
+        break
+      case 'Delete':
+        onDelete()
+        break
+      case 'Duplicate':
+        onDuplicate()
+        break
+      case 'Turn into':
+        onTurnInto()
+        break
+      case 'Group':
+        onGroup()
+        break
+      case 'Ungroup':
+        onUngroup()
+        break
+      default:
+        break
+    }
+  }, [command.changed])
+
+  // handlers
+  const onAdd = useCallback(() => {
+    handleAddFNNode('div')
+  }, [handleAddFNNode])
+  const onCut = useCallback(() => {
+    setClipboardData({ panel: 'node', type: 'cut', uids: selectedItems })
+  }, [selectedItems])
+  const onCopy = useCallback(() => {
+    setClipboardData({ panel: 'node', type: 'copy', uids: selectedItems })
+  }, [selectedItems])
+  const onPaste = useCallback(() => {
+    if (activePanel !== 'node') return
+    if (clipboardData.panel !== 'node') return
+
+    if (clipboardData.type === 'cut') {
+      setClipboardData({ panel: 'node', type: 'cut', uids: [] })
+      cb_dropNode({ parentUid: focusedItem, isBetween: false, position: 0, uids: clipboardData.uids })
+    } else if (clipboardData.type === 'copy') {
+      _copy(focusedItem, clipboardData.uids)
+    }
+  }, [activePanel, clipboardData, cb_dropNode, _copy, focusedItem])
+  const onDelete = useCallback(() => {
+    handleRemoveFNNode()
+  }, [handleRemoveFNNode])
+  const onDuplicate = useCallback(() => {
+    handleDuplicateFNNode()
+  }, [handleDuplicateFNNode])
+  const onTurnInto = useCallback(() => {
+  }, [])
+  const onGroup = useCallback(() => {
+  }, [])
+  const onUngroup = useCallback(() => {
+  }, [])
+
   return <>
     <div className="panel">
-      <div id={'NodeTreeView'} className="border-bottom" style={{ height: "calc(50vh - 22px)", overflow: "auto" }}>
+      <div
+        id={'NodeTreeView'}
+        onClick={onPanelClick}
+        className="border-bottom"
+        style={{
+          height: "calc(50vh - 22px)",
+          overflow: "auto",
+          background: (focusedItem === 'ROOT' && validNodeTree['ROOT'] !== undefined) ? "rgba(0, 0, 0, 0.02)" : "none",
+        }}>
         {/* Nav Bar */}
         <div className="sticky direction-column padding-s box-l justify-stretch border-bottom background-primary">
           <div className="gap-s box justify-start">
@@ -317,14 +443,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
             <span className="text-s">Nodes</span>
           </div>
           <div className="gap-s justify-end box">
-            {/* Create Folder Button */}
-            <div className="icon-addelement opacity-m icon-xs" onClick={() => handleAddFNNode('div')}></div>
-
-            {/* Duplicate Button */}
-            <div className="icon-copy opacity-m icon-xs" onClick={handleDuplicateFNNode}></div>
-
-            {/* Delete Node Button */}
-            <div className="icon-delete opacity-m icon-xs" onClick={handleRemoveFNNode}></div>
           </div>
         </div>
 
@@ -372,7 +490,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                 >
                   {/* self */}
                   <div
-                    id={props.item.index as TUid}
+                    id={`NodeTreeView-${props.item.index}`}
                     className={cx(
                       'justify-stretch',
                       'padding-xs',

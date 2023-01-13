@@ -1,3 +1,4 @@
+import { THtmlReferenceData } from '@_node/html';
 import {
   TFileType,
   TTree,
@@ -6,6 +7,7 @@ import {
 import {
   FFTree,
   ProjectLocation,
+  TCmdkReferenceData,
 } from '@_types/main';
 
 // ---------------- main redux ----------------
@@ -46,7 +48,7 @@ export type OpenedFile = {
  * ff action (create, delete, move, rename, duplicate)
  */
 export type FFAction = {
-  name: 'create' | 'delete' | 'move' | 'rename' | 'duplicate' | null,
+  name: 'create' | 'delete' | 'move' | 'rename' | 'duplicate' | 'cut' | 'copy' | null,
   param1?: any,
   param2?: any,
 }
@@ -144,6 +146,17 @@ export type MainContextType = {
   messages: Message[],
   addMessage: (message: Message) => void,
   removeMessage: (index: number) => void,
+
+  // reference
+  htmlReferenceData: THtmlReferenceData,
+  cmdkReferenceData: TCmdkReferenceData,
+
+  // active panel/clipboard
+  activePanel: TPanel,
+  setActivePanel: (panel: TPanel) => void,
+
+  clipboardData: TClipboardData,
+  setClipboardData: (data: TClipboardData) => void,
 }
 
 /**
@@ -179,5 +192,19 @@ export type MessageType = 'warning' | 'error' | 'info' | 'success'
 export type Message = {
   type: MessageType,
   message: string,
+}
+
+/**
+ * panel
+ */
+export type TPanel = 'file' | 'node' | 'stage' | 'code' | 'other'
+
+/**
+ * clipboard data type
+ */
+export type TClipboardData = {
+  panel: TPanel,
+  type: 'cut' | 'copy' | null,
+  uids: TUid[],
 }
 // ---------------- main context ----------------

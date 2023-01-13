@@ -5,6 +5,7 @@ import {
 } from './html';
 import {
   TAddNodePayload,
+  TCopyNodePayload,
   TDuplicateNodePayload,
   TMoveNodePayload,
   TNode,
@@ -23,9 +24,9 @@ import {
  * @param uid 
  */
 export const getParentUid = (uid: TUid): TUid => {
-  const arr = uid.split('_')
+  const arr = uid.split('?')
   arr.pop()
-  return arr.join('_')
+  return arr.join('?')
 }
 
 /**
@@ -34,7 +35,7 @@ export const getParentUid = (uid: TUid): TUid => {
  * @returns 
  */
 export const getEntryName = (uid: TUid): string => {
-  const arr = uid.split('_')
+  const arr = uid.split('?')
   const entryName: string = arr.pop() as string
   return entryName
 }
@@ -46,7 +47,7 @@ export const getEntryName = (uid: TUid): string => {
  * @returns 
  */
 export const generateNodeUid = (p_uid: TUid, nodeIndex: number | string): TUid => {
-  return p_uid + "_" + nodeIndex
+  return p_uid + "?" + nodeIndex
 }
 
 /**
@@ -73,8 +74,8 @@ export const getDfsUids = (_uids: TUid[]): TUid[] => {
     if (a === 'ROOT') return -1
     if (b === 'ROOT') return 1
 
-    const arr_a: string[] = a.split('_')
-    const arr_b: string[] = b.split('_')
+    const arr_a: string[] = a.split('?')
+    const arr_b: string[] = b.split('?')
     for (let index = 1; index < arr_a.length; ++index) {
       const aa = parseInt(arr_a[index])
       const ab = parseInt(arr_b[index] !== undefined ? arr_b[index] : '0')
@@ -96,8 +97,8 @@ export const getBfsUids = (_uids: TUid[]): TUid[] => {
     if (a === 'ROOT') return -1
     if (b === 'ROOT') return 1
 
-    const arr_a: string[] = a.split('_')
-    const arr_b: string[] = b.split('_')
+    const arr_a: string[] = a.split('?')
+    const arr_b: string[] = b.split('?')
 
     if (arr_a.length !== arr_b.length) return arr_a.length > arr_b.length ? 1 : -1
 
@@ -146,10 +147,10 @@ export const validateUids = (uids: TUid[], targetUid?: TUid): TUid[] => {
 
   // validate the uids generally
   _uids.map((uid) => {
-    const arr = uid.split('_')
+    const arr = uid.split('?')
     let _uid = ''
     arr.map((_arr) => {
-      _uid += `${_uid === '' ? '' : '_'}${_arr}`
+      _uid += `${_uid === '' ? '' : '?'}${_arr}`
       if (validatedUids[_uid] === true) {
         delete validatedUids[_uid]
       }
@@ -208,7 +209,7 @@ export const resetTreeUids = (tree: TTree): { newTree: TTree, convertedUids: Map
     const node = tree[uid]
     // replace the className in the node
     const { data } = node
-    data.attribs !== undefined && data.attribs.class !== undefined ? data.attribs.class = data.attribs.class.replace(`rnbwdev-rainbow-component-${uid}`, `rnbwdev-rainbow-component-${node.uid}`) : null
+    data.attribs !== undefined && data.attribs.class !== undefined ? data.attribs.class = data.attribs.class.replace(`rnbwdev-rainbow-component-${uid.replace(/\?/g, '-')}`, `rnbwdev-rainbow-component-${node.uid.replace(/\?/g, '-')}`) : null
     newTree[node.uid] = JSON.parse(JSON.stringify(node))
   })
 
@@ -247,7 +248,7 @@ export const addFormatTextBeforeNode = (tree: TTree, node: TNode, uidOffset: num
 
   // format text node
   const tabSize = 2
-  const nodeDepth = parentNode.uid.split('_').length - 1
+  const nodeDepth = parentNode.uid.split('?').length - 1
   let formatTextNode: TNode = {
     uid: generateNodeUid(parentNode.uid, parentNode.children.length + 1 + uidOffset),
     p_uid: parentNode.uid,
@@ -308,7 +309,7 @@ export const addFormatTextAfterNode = (tree: TTree, node: TNode, uidOffset: numb
 
   // format text node
   const tabSize = 2
-  const nodeDepth = parentNode.uid.split('_').length - 1
+  const nodeDepth = parentNode.uid.split('?').length - 1
   let formatTextNode: TNode = {
     uid: generateNodeUid(parentNode.uid, parentNode.children.length + 1 + uidOffset),
     p_uid: parentNode.uid,
@@ -455,7 +456,7 @@ export const removeNode = ({ tree, nodeUids }: TRemoveNodePayload): TNodeApiRes 
  */
 export const moveNode = ({ tree, isBetween, parentUid, position, uids }: TMoveNodePayload): TNodeApiRes => {
   const parentNode = tree[parentUid]
-  const parentNodeDepth = parentNode.uid.split('_').length - 1
+  const parentNodeDepth = parentNode.uid.split('?').length - 1
   const tabSize = 2
 
   let uidOffset: number = 0
@@ -463,7 +464,7 @@ export const moveNode = ({ tree, isBetween, parentUid, position, uids }: TMoveNo
     const node = tree[uid]
 
     const p_node = tree[node.p_uid as TUid]
-    const p_nodeDepth = p_node.uid.split('_').length - 1
+    const p_nodeDepth = p_node.uid.split('?').length - 1
 
     let _childIndex: number = 0
     if (p_node.uid === parentNode.uid) {
@@ -530,6 +531,61 @@ export const moveNode = ({ tree, isBetween, parentUid, position, uids }: TMoveNo
     // indent the nodes
     if (parentNodeDepth !== p_nodeDepth) {
       indentNode(tree, node, tabSize * (parentNodeDepth - p_nodeDepth))
+    }
+  })
+
+  /* reset the uids */
+  const { newTree, convertedUids: _convertedUids } = resetTreeUids(tree)
+  const convertedUids: [TUid, TUid][] = []
+  for (const [prev, cur] of _convertedUids) {
+    convertedUids.push([prev, cur])
+  }
+  return { tree: newTree, convertedUids }
+}
+
+/**
+ * copy(duplicate) the uids under the tragetUid in the tree
+ * @param param0 
+ */
+export const copyNode = ({ tree, targetUid, uids }: TCopyNodePayload): TNodeApiRes => {
+  const targetNode = tree[targetUid]
+  const targetNodeDepth = targetNode.uid.split('?').length - 1
+  const tabSize = 2
+
+  let uidOffset = 0
+  uids.map((uid) => {
+    const newNode: TNode = JSON.parse(JSON.stringify(tree[uid]))
+    const parentNodeDepth = (newNode.p_uid as TUid).split('?').length - 1
+    const newUid = generateNodeUid(targetUid, targetNode.children.length + 1 + uidOffset)
+
+    newNode.uid = newUid
+    newNode.p_uid = targetUid
+    targetNode.children.push(newUid)
+
+    const nodes: TNode[] = [newNode]
+    while (nodes.length > 0) {
+      const node = nodes.shift() as TNode
+      node.children = node.children.map((childUid, childIndex) => {
+        const childNode = JSON.parse(JSON.stringify(tree[childUid]))
+        const newChildUid = generateNodeUid(node.uid, childIndex + 1)
+        childNode.uid = newChildUid
+        childNode.p_uid = node.uid
+        nodes.push(childNode)
+        return newChildUid
+      })
+      tree[node.uid] = node
+    }
+
+    // add format text nodes before and after the "uid-node"
+    let hasOffset: boolean = false
+    hasOffset = addFormatTextBeforeNode(tree, newNode, uidOffset)
+    hasOffset && uidOffset++
+    hasOffset = addFormatTextAfterNode(tree, newNode, uidOffset)
+    hasOffset && uidOffset++
+
+    // indent the nodes
+    if (targetNodeDepth !== parentNodeDepth) {
+      indentNode(tree, newNode, tabSize * (targetNodeDepth - parentNodeDepth))
     }
   })
 

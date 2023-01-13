@@ -57,7 +57,7 @@ export default function Process(props: ProcessProps) {
 
   // content -> nodeTree
   useEffect(() => {
-    console.log('processor-content', updateOpt)
+    // console.log('processor-content', updateOpt)
 
     if (updateOpt.parse !== true) return
 
@@ -81,7 +81,7 @@ export default function Process(props: ProcessProps) {
 
   // nodeTree -> content
   useEffect(() => {
-    console.log('processor-nodeTree', updateOpt)
+    // console.log('processor-nodeTree', updateOpt)
 
     if (updateOpt.parse !== false) return
 

@@ -59,12 +59,16 @@ export default function StageView(props: StageViewProps) {
     if (focusedNode === undefined) return
 
     // scrollTo
-    const focusedComponent = stageViewRef.current.shadowRoot?.querySelector(`.rnbwdev-rainbow-component-${focusedItem}`)
+    const focusedComponent = stageViewRef.current.shadowRoot?.querySelector(`.rnbwdev-rainbow-component-${focusedItem.replace(/\?/g, '-')}`)
     setTimeout(() => focusedComponent?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' }), 0)
   }, [focusedItem])
 
   // select -> focusedItem
   const setFocusedItem = useCallback((uid: TUid) => {
+    // focus NodeTreeView - item
+    const focusedComponent = document.getElementById(`NodeTreeView-${uid}`)
+    focusedComponent?.focus()
+
     // validate
     if (focusedItem === uid || validNodeTree[uid] === undefined) return
 

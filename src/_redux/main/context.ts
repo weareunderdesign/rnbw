@@ -14,6 +14,8 @@ import {
   FFAction,
   MainContextType,
   Message,
+  TClipboardData,
+  TPanel,
   UpdateOptions,
 } from './types';
 
@@ -62,4 +64,15 @@ export const MainContext: Context<MainContextType> = createContext<MainContextTy
   messages: [],
   addMessage: (message: Message) => { },
   removeMessage: (index: number) => { },
+
+  // reference
+  htmlReferenceData: {},
+  cmdkReferenceData: {},
+
+  // active panel/clipboard
+  activePanel: 'other',
+  setActivePanel: (panel: TPanel) => { },
+
+  clipboardData: { panel: 'other', type: null, uids: [] },
+  setClipboardData: (data: TClipboardData) => { },
 })
