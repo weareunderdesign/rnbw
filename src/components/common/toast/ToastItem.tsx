@@ -19,7 +19,7 @@ export default function ToastItem(props: ToastItemProps) {
   const {
     ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, updateFF,
     fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree,
-    command, setCommand,
+    currentCommand, setCurrentCommand,
     pending, setPending, messages, addMessage, removeMessage,
   } = useContext(MainContext)
 

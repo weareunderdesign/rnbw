@@ -42,22 +42,7 @@ import {
   TUid,
   validFileType,
 } from '@_node/types';
-import {
-  clearFNState,
-  clearMainState,
-  collapseFFNode,
-  expandFFNode,
-  FFAction,
-  ffSelector,
-  focusFFNode,
-  globalSelector,
-  MainContext,
-  OpenedFile,
-  selectFFNode,
-  setCurrentFile,
-  setFFAction,
-  updateFFTreeViewState,
-} from '@_redux/main';
+import * as Main from '@_redux/main';
 import {
   getFileExtension,
   verifyPermission,
@@ -76,21 +61,39 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
   // main context
   const {
+    // groupping action
     addRunningActions, removeRunningActions,
+
+    // file tree view
     ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree, updateFF,
+
+    // ndoe tree view
     fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree,
+
+    // update opt
     updateOpt, setUpdateOpt,
-    isHms, setIsHms, ffAction,
-    command, setCommand,
+
+    // ff hms
+    isHms, setIsHms, ffAction, setFFAction,
+
+    // cmdk
+    currentCommand, setCurrentCommand, cmdkOpen, setCmdkOpen, cmdkPages, setCmdkPages, cmdkPage,
+
+    // global
     pending, setPending, messages, addMessage, removeMessage,
+
+    // reference
+    htmlReferenceData, cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions,
+
+    // active panel/clipboard
     activePanel, setActivePanel, clipboardData, setClipboardData,
-  } = useContext(MainContext)
+  } = useContext(Main.MainContext)
 
   // redux state
-  const { project, currentFile, action } = useSelector(globalSelector)
-  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
+  const { project, currentFile, action } = useSelector(Main.globalSelector)
+  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(Main.ffSelector)
 
-  // ---------------- folder/file hms ----------------
+  // -------------------------------------------------------------- folder/file hms --------------------------------------------------------------
   // handler
   const isRedo = useRef<boolean>(false)
   useEffect(() => {
@@ -303,8 +306,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
     removeRunningActions(['fileTreeView-duplicate'], false)
   }, [ffTree, ffHandlers])
-  // ---------------- folder/file hms ----------------
+  // -------------------------------------------------------------- folder/file hms --------------------------------------------------------------
 
+  // -------------------------------------------------------------- Sync --------------------------------------------------------------
   // import project from localhost using filesystemdirectoryhandle
   const importLocalhostProject = useCallback(async (projectHandle: FileSystemDirectoryHandle) => {
     // verify handler permission
@@ -388,7 +392,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
     // update the state
     updateFF(deletedUids, nodes, handlers)
-    dispatch(updateFFTreeViewState({ deletedUids: Object.keys(deletedUids) }))
+    dispatch(Main.updateFFTreeViewState({ deletedUids: Object.keys(deletedUids) }))
   }, [ffTree, expandedItemsObj])
 
   // open project button handler
@@ -410,7 +414,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         return
       }
 
-      dispatch(clearMainState())
+      dispatch(Main.clearMainState())
       dispatch({ type: 'main/clearHistory' })
 
       /* import localhost porject */
@@ -483,7 +487,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       return
     }
 
-    dispatch(focusFFNode(uid))
+    dispatch(Main.focusFFNode(uid))
 
     removeRunningActions(['fileTreeView-focus'])
   }, [focusedItem, ffTree])
@@ -513,7 +517,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       }
     }
 
-    dispatch(selectFFNode(_uids))
+    dispatch(Main.selectFFNode(_uids))
 
     removeRunningActions(['fileTreeView-select'])
   }, [ffTree, selectedItems, selectedItemsObj])
@@ -528,7 +532,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       return
     }
 
-    dispatch(expandFFNode([uid]))
+    dispatch(Main.expandFFNode([uid]))
 
     removeRunningActions(['fileTreeView-expand'])
   }, [ffTree, expandedItemsObj])
@@ -543,7 +547,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       return
     }
 
-    dispatch(collapseFFNode([uid]))
+    dispatch(Main.collapseFFNode([uid]))
     removeRunningActions(['fileTreeView-collapse'])
   }, [ffTree, expandedItemsObj])
 
@@ -663,12 +667,12 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       }
     }
 
-    const action: FFAction = {
+    const action: Main.FFAction = {
       name: 'create',
       param1: `${focusedItem}?${newName}`,
       param2: creatingFFType,
     }
-    dispatch(setFFAction(action))
+    dispatch(Main.setFFAction(action))
 
     removeRunningActions(['fileTreeView-create'])
   }, [ffHandlers, focusedItem, creatingFFType, newFFName])
@@ -705,7 +709,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     try {
       const fileEntry = await handler.getFile()
       const content = await fileEntry.text()
-      const file: OpenedFile = {
+      const file: Main.OpenedFile = {
         uid,
         name: handler.name,
         type: fileType as TFileType,
@@ -726,9 +730,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         setNodeTree(tree)
       }
 
-      dispatch(clearFNState())
+      dispatch(Main.clearFNState())
 
-      setTimeout(() => dispatch(setCurrentFile(file)), 0)
+      setTimeout(() => dispatch(Main.setCurrentFile(file)), 0)
     } catch (err) {
       addMessage({
         type: 'error',
@@ -862,12 +866,12 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       return
     }
 
-    const action: FFAction = {
+    const action: Main.FFAction = {
       name: 'rename',
       param1: { uid, p_uid: parentNode.uid },
       param2: { orgName: node.name, newName },
     }
-    dispatch(setFFAction(action))
+    dispatch(Main.setFFAction(action))
 
     removeRunningActions(['fileTreeView-rename'])
   }, [ffTree, ffHandlers])
@@ -1010,19 +1014,21 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       })
     }
 
-    const action: FFAction = {
+    const action: Main.FFAction = {
       name: copy ? 'copy' : 'cut',
       param1: _uids,
       param2: _uids.map(() => targetUid),
     }
-    dispatch(setFFAction(action))
+    dispatch(Main.setFFAction(action))
 
     removeRunningActions(['fileTreeView-move'])
   }, [ffTree, ffHandlers])
+  // -------------------------------------------------------------- Sync --------------------------------------------------------------
 
+  // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
   // panel focus handler
   const onPanelClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation()
+    // e.preventDefault()
 
     addRunningActions(['fileTreeView-focus'])
 
@@ -1036,49 +1042,56 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       return
     }
 
-    dispatch(selectFFNode([]))
-    dispatch(focusFFNode(uid))
+    dispatch(Main.selectFFNode([]))
+    dispatch(Main.focusFFNode(uid))
 
     removeRunningActions(['fileTreeView-focus'])
   }, [focusedItem, ffTree])
 
   // command detect & do actions
   useEffect(() => {
-    if (command.action === '') return
+    if (currentCommand.action === '') return
 
-    if (command.action === 'Open') {
+    if (currentCommand.action === 'Search') {
       onImportProject()
-      return
-    }
+    } else {
+      if (activePanel !== 'file') return
 
-    if (activePanel !== 'file') return
-
-    switch (command.action) {
-      case 'Add':
-        onAdd()
-        break
-      case 'Cut':
-        onCut()
-        break
-      case 'Copy':
-        onCopy()
-        break
-      case 'Paste':
-        onPaste()
-        break
-      case 'Delete':
-        onDelete()
-        break
-      case 'Duplicate':
-        onDuplicate()
-        break
-      case 'Rename':
-        onRename()
-        break
+      switch (currentCommand.action) {
+        case 'Actions':
+          onActions()
+          break
+        case 'Add':
+          onAdd()
+          break
+        case 'Cut':
+          onCut()
+          break
+        case 'Copy':
+          onCopy()
+          break
+        case 'Paste':
+          onPaste()
+          break
+        case 'Delete':
+          onDelete()
+          break
+        case 'Duplicate':
+          onDuplicate()
+          break
+        case 'Rename':
+          onRename()
+          break
+      }
     }
-  }, [command.changed])
+  }, [currentCommand.changed])
 
   // handlers
+  const onActions = useCallback(() => {
+    if (cmdkOpen) return
+    setCmdkPages(['Actions'])
+    setCmdkOpen(true)
+  }, [cmdkOpen])
   const onAdd = useCallback(() => {
     true ? openCreateFFNodeModal('folder') : openCreateFFNodeModal('file')
   }, [openCreateFFNodeModal])
@@ -1238,30 +1251,37 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       return
     }
 
-    const action: FFAction = {
+    const action: Main.FFAction = {
       name: 'copy',
       param1: [{ uid: focusedItem, name: newName }],
       param2: [parentNode.uid],
     }
-    dispatch(setFFAction(action))
+    dispatch(Main.setFFAction(action))
 
     removeRunningActions(['fileTreeView-duplicate'])
   }, [focusedItem, ffTree, ffHandlers])
   const onRename = useCallback(() => {
-
   }, [])
+  // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
+
+  // -------------------------------------------------------------- other --------------------------------------------------------------
+  // Web Component - svg-icon
+  const SVGIcon = useMemo<keyof JSX.IntrinsicElements>(() => {
+    return 'svg-icon' as keyof JSX.IntrinsicElements
+  }, [])
+  // -------------------------------------------------------------- other --------------------------------------------------------------
 
   return <>
     <div className="panel">
       <div
-        id={'FileTreeView'}
-        onClick={onPanelClick}
         className="border-bottom"
         style={{
-          height: "calc(50vh - 22px)",
+          height: 'calc(50vh)',
           overflow: "auto",
           background: (focusedItem === 'ROOT' && ffTree['ROOT'] !== undefined) ? "rgba(0, 0, 0, 0.02)" : "none",
-        }}>
+        }}
+        onClick={onPanelClick}
+      >
         {/* Nav Bar */}
         <div className="sticky direction-column padding-s box-l justify-stretch border-bottom background-primary">
           <div className="gap-s box justify-start">
@@ -1363,14 +1383,10 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                       {props.arrow}
 
                       {/* render icon */}
-                      <div
-                        className={cx(
-                          'icon-xs',
-                          props.item.isFolder ? (props.context.isExpanded ? 'icon-folder' : 'icon-folder') :
-                            'icon-pages'
-                        )}
-                      >
-                      </div>
+                      <SVGIcon>
+                        {props.item.isFolder ? (props.context.isExpanded ? 'objects/folder' : 'objects/folder') :
+                          'objects/Pages'}
+                      </SVGIcon>
 
                       {/* render title */}
                       {props.title}
@@ -1388,18 +1404,15 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
             },
             renderItemArrow: (props) => {
               return <>
-                <div
-                  className={cx(
-                    'icon-xs',
-                    props.item.isFolder ? (props.context.isExpanded ? 'icon-down' : 'icon-right') : '',
-                  )}
-                >
-                </div>
+                <SVGIcon>
+                  {props.item.isFolder ? (props.context.isExpanded ? 'arrows/down' : 'arrows/right') :
+                    'empty'}
+                </SVGIcon>
               </>
             },
             renderItemTitle: (props) => {
               return <>
-                <span className='text-s' style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "calc(100% - 32px)" }}>
+                <span className='text-s justify-stretch' style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "calc(100% - 32px)" }}>
                   {props.title}
                 </span>
               </>
@@ -1411,6 +1424,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
             canDragAndDrop: true,
             canDropOnFolder: true,
             canDropOnNonFolder: false,
+
+            canSearch: false,
+            canSearchByStartingTyping: false,
           }}
 
           /* cb */

@@ -35,11 +35,12 @@ export type FFTree = {
  * cmdk reference types
  */
 export type TCmdkReference = {
-  name: string,
-  icon: string,
-  description: string,
-  keyboardShortcut: TCmdk,
-  type: string,
+  "Name": string,
+  "Icon": string,
+  "Description": string,
+  "Keyboard Shortcut": string | TCmdk,
+  "Group": string,
+  "Context": string | TCmdkContext,
 }
 
 export type TCmdk = {
@@ -50,6 +51,16 @@ export type TCmdk = {
   click: boolean,
 }
 
+export type TCmdkContextScope = "all" | "local-file" | "html-node"
+
+export type TCmdkContext = {
+  [scope in TCmdkContextScope]: boolean
+}
+
 export type TCmdkReferenceData = {
   [cmdk: string]: TCmdkReference,
+}
+
+export type CmdkData = {
+  [groupName: string]: TCmdkReference[],
 }

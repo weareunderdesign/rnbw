@@ -1,0 +1,14 @@
+﻿Name,Icon,Description,Keyboard Shortcut,Group,Context
+Add,plus,,a,Basic,"html-node, local-file"
+Cut,cut,,cmd+x,Basic,"html-node, local-file"
+Copy,copy,,cmd+c,Basic,"html-node, local-file"
+Paste,paste,,cmd+v,Basic,"html-node, local-file"
+Delete,delete,,backspace,Other,"html-node, local-file"
+Duplicate,duplicate,,,Other,"html-node, local-file"
+Turn into,replace,,,Other,html-node
+Group,group,,,Other,html-node
+Ungroup,ungroup,,,Other,html-node
+Style,style,Add Style,s,Other,html-node
+Text,text,Edit Text,t,Other,html-node
+Undo,undo,,cmd+z,Other,"all"
+Redo,redo,,cmd+shift+z,Other,"all"

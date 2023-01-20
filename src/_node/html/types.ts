@@ -19,15 +19,15 @@ export type THtmlTagAttributes = {
  * html reference csv format
  */
 export type THtmlReference = {
-  tag: string,
-  name: string,
-  type: string,
-  contain: string,
-  description: string,
-  icon: string,
-  content: string,
-  placeholder: string,
-  coverImage: string,
+  "Tag": string,
+  "Name": string,
+  "Type": string,
+  "Contain": string,
+  "Description": string,
+  "Icon": string,
+  "Content": string,
+  "Placeholder": string,
+  "Cover Image": string,
 }
 
 export type THtmlReferenceData = {

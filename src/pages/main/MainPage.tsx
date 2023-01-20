@@ -1,30 +1,30 @@
+import './styles.css';
+
 import React, {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
 
-import axios from 'axios';
-import { ParseResult } from 'papaparse';
-import { readString } from 'react-papaparse';
+import cx from 'classnames';
+import {
+  Command,
+  useCommandState,
+} from 'cmdk';
 import {
   useDispatch,
   useSelector,
 } from 'react-redux';
 
-import {
-  CommandK,
-  Toast,
-} from '@_components/common';
-import { CmdKItemGeneralProps } from '@_components/common/cmdk';
+import { Toast } from '@_components/common';
 import {
   ActionsPanel,
   CodeView,
   Process,
   StageView,
 } from '@_components/main';
-import { CmdkReference } from '@_config/main';
 import {
   THtmlReference,
   THtmlReferenceData,
@@ -34,7 +34,6 @@ import {
   TUid,
 } from '@_node/types';
 import {
-  Command,
   FFAction,
   FFHandlers,
   getActionGroupIndexSelector,
@@ -45,11 +44,22 @@ import {
   Message,
   setFFAction as _setFFAction,
   TClipboardData,
+  TCommand,
+  TPanel,
   UpdateOptions,
 } from '@_redux/main';
+// @ts-ignore
+import cmdkRefActions from '@_ref/cmdk.ref/Actions.csv';
+// @ts-ignore
+import cmdkRefJumpstart from '@_ref/cmdk.ref/Jumpstart.csv';
+// @ts-ignore
+import htmlRefElements from '@_ref/rfrncs.design/HTML Elements.csv';
 import {
+  CmdkData,
   FFTree,
   TCmdk,
+  TCmdkContext,
+  TCmdkContextScope,
   TCmdkReference,
   TCmdkReferenceData,
 } from '@_types/main';
@@ -59,7 +69,7 @@ import { MainPageProps } from './types';
 export default function MainPage(props: MainPageProps) {
   const dispatch = useDispatch()
 
-  // ---------------- main context ----------------
+  // -------------------------------------------------------------- main context --------------------------------------------------------------
   // groupping action
   const runningActions = useRef<{ [actionName: string]: boolean }>({})
   const noRunningAction = () => {
@@ -125,7 +135,12 @@ export default function MainPage(props: MainPageProps) {
   const [ffAction, setFFAction] = useState<FFAction>({ name: null })
 
   // cmdk
-  const [command, setCommand] = useState<Command>({ action: '', changed: false })
+  const [currentCommand, setCurrentCommand] = useState<TCommand>({ action: '', changed: false })
+  const [cmdkOpen, setCmdkOpen] = useState<boolean>(false)
+  const [cmdkPages, setCmdkPages] = useState<string[]>([])
+  const cmdkPage = useMemo(() => {
+    return cmdkPages.length == 0 ? '' : cmdkPages[cmdkPages.length - 1]
+  }, [cmdkPages])
 
   // global
   const [pending, setPending] = useState<boolean>(false)
@@ -142,66 +157,64 @@ export default function MainPage(props: MainPageProps) {
   // references
   const [htmlReferenceData, setHtmlReferenceData] = useState<THtmlReferenceData>({})
   const [cmdkReferenceData, setCmdkReferenceData] = useState<TCmdkReferenceData>({})
+  const [cmdkReferenceJumpstart, setCmdkReferenceJumpstart] = useState<CmdkData>({})
+  const [cmdkReferenceActions, setCmdkReferenceActions] = useState<CmdkData>({})
 
   // active panel/clipboard
-  const [activePanel, setActivePanel] = useState<'file' | 'node' | 'stage' | 'code' | 'other'>('other')
+  const [activePanel, setActivePanel] = useState<TPanel>('other')
   const [clipboardData, setClipboardData] = useState<TClipboardData>({ panel: 'other', type: null, uids: [] })
-  // ---------------- main context ----------------
+  // -------------------------------------------------------------- main context --------------------------------------------------------------
 
-  // reference
+  // fetch reference - html. Jumpstart.csv, Actions.csv
   useEffect(() => {
-    addRunningActions(['html-reference', 'cmdk-reference'])
+    addRunningActions(['reference-html-elements', 'reference-cmdk-jumpstart', 'reference-cmdk-actions'])
 
-    // html reference data
-    axios.get(
-      'https://api.github.com/repos/rnbwdev/rfrncs.design/contents/HTML.csv'
-    )
-      .then((res) => {
-        // decode from base64-encoding
-        const content = atob(res.data.content)
-        const _htmlReferenceData: THtmlReferenceData = {}
-        readString(content, {
-          worker: true,
-          complete: (results: ParseResult<string[]>) => {
-            const { data, errors, meta } = results
-            for (let index = 1; index < data.length; ++index) {
-              const _htmlRef = data[index]
-              const htmlRef: THtmlReference = {
-                tag: _htmlRef[0],
-                name: _htmlRef[1],
-                type: _htmlRef[2],
-                contain: _htmlRef[3],
-                description: _htmlRef[4],
-                icon: _htmlRef[5],
-                content: _htmlRef[6],
-                placeholder: _htmlRef[7],
-                coverImage: _htmlRef[8],
-              }
+    // reference-html-elements
+    const _htmlReferenceData: THtmlReferenceData = {}
+    htmlRefElements.map((htmlRefElement: THtmlReference) => {
+      const pureTag = htmlRefElement['Name'] === 'Comment' ? 'comment' : htmlRefElement['Tag'].slice(1, htmlRefElement['Tag'].length - 1)
+      _htmlReferenceData[pureTag] = htmlRefElement
+    })
+    setHtmlReferenceData(_htmlReferenceData)
+    console.log('HTML REFERENCE DATA', _htmlReferenceData)
 
-              const pureTag = htmlRef.name === 'Comment' ? 'comment' : htmlRef.tag.slice(1, htmlRef.tag.length - 1)
-              _htmlReferenceData[pureTag] = htmlRef
-            }
-            console.log('HTML REFERENCE DATA', _htmlReferenceData)
-            setHtmlReferenceData(_htmlReferenceData)
+    // add default cmdk actions
+    const _cmdkReferenceData: TCmdkReferenceData = {} // cmdk map
+    // Jumpstart
+    _cmdkReferenceData['Jumpstart'] = {
+      "Name": 'Jumpstart',
+      "Icon": '',
+      "Description": '',
+      "Keyboard Shortcut": {
+        cmd: false,
+        shift: false,
+        alt: false,
+        key: 'KeyJ',
+        click: false,
+      },
+      "Group": 'default',
+      "Context": 'all',
+    }
+    // Actions
+    _cmdkReferenceData['Actions'] = {
+      "Name": 'Actions',
+      "Icon": '',
+      "Description": '',
+      "Keyboard Shortcut": {
+        cmd: false,
+        shift: false,
+        alt: false,
+        key: 'KeyA',
+        click: false,
+      },
+      "Group": 'default',
+      "Context": 'all',
+    }
 
-            removeRunningActions(['html-reference'], false)
-          }
-        })
-      })
-      .catch((err) => {
-        console.log(err)
-        addMessage({
-          type: 'error',
-          message: 'failed to load html reference',
-        })
-        removeRunningActions(['html-reference'], false)
-      })
-
-    // cmdk reference data
-    const cmdkReference = CmdkReference
-    const _cmdkReferenceData: TCmdkReferenceData = {}
-    cmdkReference.map((_cmdkRef) => {
-      const keys: string[] = _cmdkRef[3].replace(/ /g, "").split('+')
+    // reference-cmdk-jumpstart
+    const _cmdkRefJumpstartData: CmdkData = {}
+    cmdkRefJumpstart.map((command: TCmdkReference) => {
+      const keys: string[] = (command["Keyboard Shortcut"] as string)?.replace(/ /g, "").split('+')
       const keyObj: TCmdk = {
         cmd: false,
         shift: false,
@@ -209,7 +222,7 @@ export default function MainPage(props: MainPageProps) {
         key: '',
         click: false,
       }
-      keys.map((key) => {
+      keys?.map((key) => {
         if (key === 'cmd' || key === 'shift' || key === 'alt' || key === 'click') {
           keyObj[key] = true
         } else {
@@ -217,26 +230,88 @@ export default function MainPage(props: MainPageProps) {
         }
       })
 
-      const data: TCmdkReference = {
-        name: _cmdkRef[0],
-        icon: _cmdkRef[1],
-        description: _cmdkRef[2],
-        keyboardShortcut: keyObj,
-        type: _cmdkRef[4],
+      const _command: TCmdkReference = JSON.parse(JSON.stringify(command))
+      _command['Keyboard Shortcut'] = keyObj
+
+      const groupName = _command['Group']
+      if (_cmdkRefJumpstartData[groupName] !== undefined) {
+        _cmdkRefJumpstartData[groupName].push(_command)
+      } else {
+        _cmdkRefJumpstartData[groupName] = [_command]
       }
-      _cmdkReferenceData[data.name] = data
+
+      _cmdkReferenceData[_command['Name']] = _command
     })
-    console.log('CMDK REFERENCE DATA', _cmdkReferenceData)
+    setCmdkReferenceJumpstart(_cmdkRefJumpstartData)
+
+    // reference-cmdk-actions
+    const _cmdkRefActionsData: CmdkData = {}
+    cmdkRefActions.map((command: TCmdkReference) => {
+      const contexts: TCmdkContextScope[] = (command['Context'] as string).replace(/ /g, "").split(',').map((scope: string) => scope as TCmdkContextScope)
+      const contextObj: TCmdkContext = {
+        "all": false,
+        "local-file": false,
+        "html-node": false,
+      }
+      contexts.map((context: TCmdkContextScope) => {
+        contextObj[context] = true
+      })
+
+      const keys: string[] = (command["Keyboard Shortcut"] as string)?.replace(/ /g, "").split('+')
+      const keyObj: TCmdk = {
+        cmd: false,
+        shift: false,
+        alt: false,
+        key: '',
+        click: false,
+      }
+      keys?.map((key: string) => {
+        if (key === 'cmd' || key === 'shift' || key === 'alt' || key === 'click') {
+          keyObj[key] = true
+        } else {
+          keyObj.key = key
+        }
+      })
+
+      const _command: TCmdkReference = JSON.parse(JSON.stringify(command))
+      _command['Context'] = contextObj
+      _command['Keyboard Shortcut'] = keyObj
+
+      const groupName = _command['Group']
+      if (_cmdkRefActionsData[groupName] !== undefined) {
+        _cmdkRefActionsData[groupName].push(_command)
+      } else {
+        _cmdkRefActionsData[groupName] = [_command]
+      }
+
+      _cmdkReferenceData[_command['Name']] = _command
+    })
+    setCmdkReferenceActions(_cmdkRefActionsData)
+
+    // cmdk map
     setCmdkReferenceData(_cmdkReferenceData)
 
-    removeRunningActions(['cmdk-reference'], false)
+    console.log('CMDK REFERENCE DATA', _cmdkReferenceData, _cmdkRefJumpstartData, _cmdkRefActionsData)
+
+    removeRunningActions(['reference-html-elements', 'reference-cmdk-jumpstart', 'reference-cmdk-actions'], false)
   }, [])
 
-  // ---------------- cmdk ----------------
+  // -------------------------------------------------------------- cmdk --------------------------------------------------------------
+  // cmdk modal handle variables
+  const [cmdkSearch, setCmdkSearch] = useState<string>('')
+
+  // cmdk subItem component
+  const CmdkSubItem = (props: any) => {
+    const search = useCommandState((state) => state.search)
+    if (!search) return null
+    return <Command.Item {...props} />
+  }
+
   // key event listener
   const cb_onKeyDown = useCallback((e: KeyboardEvent) => {
     if (pending) return
 
+    // cmdk obj for the current command
     const cmdk: TCmdk = {
       cmd: e.ctrlKey,
       shift: e.shiftKey,
@@ -266,9 +341,16 @@ export default function MainPage(props: MainPageProps) {
       }
     }
 
+    // skip if its from cmdk-input
+    const cmdkInputAttr = (e.target as HTMLElement).getAttribute('cmdk-input')
+    if (cmdkInputAttr !== null) {
+      return
+    }
+
+    // detect action
     let action: string | null = null
     for (const actionName in cmdkReferenceData) {
-      const _cmdk = cmdkReferenceData[actionName].keyboardShortcut
+      const _cmdk = cmdkReferenceData[actionName]['Keyboard Shortcut'] as TCmdk
 
       const key = _cmdk.key.length === 0 ? '' : (_cmdk.key.length === 1 ? 'Key' : '') + _cmdk.key[0].toUpperCase() + _cmdk.key.slice(1)
       if (cmdk.cmd === _cmdk.cmd && cmdk.shift === _cmdk.shift && cmdk.alt === _cmdk.alt && cmdk.key === key) {
@@ -276,97 +358,71 @@ export default function MainPage(props: MainPageProps) {
         break
       }
     }
-
     if (action === null) return
 
+    console.log('RUN ACTION', action)
     e.preventDefault()
-    console.log('ACTION', action)
 
-    // cmdk modal
-    if (action === 'cmdk') {
-      setCmdkOpen(true)
-      return
+    setCurrentCommand({ action, changed: !currentCommand.changed })
+  }, [currentCommand.changed, pending, cmdkReferenceData])
+
+  // bind onKeyDownCallback (cb_onKeyDown)
+  useEffect(() => {
+    document.addEventListener('keydown', cb_onKeyDown)
+    return () => document.removeEventListener('keydown', cb_onKeyDown)
+  }, [cb_onKeyDown])
+
+  // command detect & do actions
+  useEffect(() => {
+    // cmdk actions handle
+    switch (currentCommand.action) {
+      case 'Jumpstart':
+        onJumpstart()
+        break
+      case 'Dark Mode':
+        onDarkMode()
+        break
+      case 'Light Mode':
+        onLightMode()
+        break
+      case 'Undo':
+        onUndo()
+        break
+      case 'Redo':
+        onRedo()
+        break
+      case 'Code':
+        toogleCodeView()
+        break
+      default:
+        return
     }
-
-    setCommand({ action, changed: !command.changed })
-
-    // node actions
-    if (action === 'Add') {
-
-    } else if (action === 'Cut') {
-
-    } else if (action === 'Copy') {
-
-    } else if (action === 'Paste') {
-
-    } else if (action === 'Delete') {
-
-    } else if (action === 'Duplicate') {
-
-    } else if (action === 'Group') {
-
-    } else if (action === 'UnGroup') {
-
-    } else if (action === 'Text') {
-
-    } else if (action === 'Select') {
-      // check mouse-clicking
-    }
-
-    // open project / save
-    else if (action === 'Open') {
-    }
-    else if (action === 'Save') {
-    }
-
-    // hms
-    else if (action === 'Undo') {
-
-    } else if (action === 'Redo') {
-
-    }
-
-    // panels
-    else if (action === 'Design') {
-
-    } else if (action === 'Code') {
-
-    } else if (action === 'Play') {
-
-    } else if (action === 'Style') {
-
-    }
-  }, [command.changed, pending, cmdkReferenceData])
-
-  // cmdk modal
-  const [cmdkOpen, setCmdkOpen] = useState(false)
-  const makeCmkItems = useCallback(() => {
-    const items: CmdKItemGeneralProps[] = []
-    items.push({
-      heading: 'Start',
-      items: [
-        { title: 'Open', shortcut: '⌘ 🄾', onSelect: () => { setCommand({ action: "OpenProject", changed: !command.changed }) } },
-        { title: 'New File', shortcut: '⌘ 🄽', onSelect: () => { } },
-      ]
-    }, {
-      heading: 'Action',
-      items: [
-        { title: 'Undo', shortcut: 'Ctrl Z', onSelect: () => { setCommand({ action: "undo", changed: !command.changed }) } },
-        { title: 'Redo', shortcut: 'Ctrl Y', onSelect: () => { setCommand({ action: "redo", changed: !command.changed }) } }
-      ]
-    })
-    return items
-  }, [command.changed])
-  // ---------------- cmdk ----------------
+  }, [currentCommand.changed])
+  // -------------------------------------------------------------- cmdk --------------------------------------------------------------
 
   // redux state
   const actionGroupIndex = useSelector(getActionGroupIndexSelector)
   const { project, currentFile, action } = useSelector(globalSelector)
   const { futureLength, pastLength } = useSelector(hmsInfoSelector)
 
-  // ---------------- handlers ----------------
+  // -------------------------------------------------------------- handlers --------------------------------------------------------------
+  // cmdk jumpstart
+  const onJumpstart = useCallback(() => {
+    if (cmdkOpen) return
+    setCmdkPages(['Jumpstart'])
+    setCmdkOpen(true)
+  }, [cmdkOpen])
+
+  // theme
+  const onDarkMode = useCallback(() => {
+    setTheme('Dark Mode')
+  }, [])
+  const onLightMode = useCallback(() => {
+    setTheme('Light Mode')
+  }, [])
+
   // hms methods
-  const undo = useCallback(() => {
+  const onUndo = useCallback(() => {
     if (pastLength === 0) return
 
     setFFAction(action)
@@ -375,7 +431,7 @@ export default function MainPage(props: MainPageProps) {
     setUpdateOpt({ parse: true, from: 'hms' })
     setTimeout(() => dispatch({ type: 'main/undo' }), 0)
   }, [action, pastLength])
-  const redo = useCallback(() => {
+  const onRedo = useCallback(() => {
     if (futureLength === 0) return
 
     setIsHms(false)
@@ -384,19 +440,23 @@ export default function MainPage(props: MainPageProps) {
     setTimeout(() => dispatch({ type: 'main/redo' }), 0)
   }, [futureLength])
 
-  // toogle code view
-  const [showCodeView, setShowCodeView] = useState(true)
-  const toogleCodeView = async () => {
-    setShowCodeView(!showCodeView)
-  }
-  // ---------------- handlers ----------------
-
   // reset ffAction in the new history
   useEffect(() => {
     futureLength === 0 && action.name !== null && dispatch(_setFFAction({ name: null }))
   }, [actionGroupIndex])
 
-  // detect active panel
+  // toogle code view
+  const [showCodeView, setShowCodeView] = useState(false)
+  const toogleCodeView = async () => {
+    setShowCodeView(!showCodeView)
+  }
+  // -------------------------------------------------------------- handlers --------------------------------------------------------------
+
+  // -------------------------------------------------------------- other --------------------------------------------------------------
+  // theme
+  const [theme, setTheme] = useState<'Light Mode' | 'Dark Mode' | 'System'>('Light Mode')
+
+  // active panel/element
   const activeElement = document.activeElement
   useEffect(() => {
     if (activeElement === null) return
@@ -407,40 +467,18 @@ export default function MainPage(props: MainPageProps) {
     } else if (id.startsWith('NodeTreeView') === true) {
       setActivePanel('node')
     } else {
-      setActivePanel('other')
+      // do nothing
     }
-
-    console.log('ACTIVE ELEMENT', activeElement)
   }, [activeElement])
   useEffect(() => {
     console.log('ACTIVE PANEL', activePanel)
   }, [activePanel])
 
-  // svg-icon
-  /* const SVGIcon = useMemo<keyof JSX.IntrinsicElements>(() => {
+  // Web Component - svg-icon
+  const SVGIcon = useMemo<keyof JSX.IntrinsicElements>(() => {
     return 'svg-icon' as keyof JSX.IntrinsicElements
-  }, []) */
-
-  // command detect & do actions
-  useEffect(() => {
-    // cmdk actions handle
-    switch (command.action) {
-      case 'Undo':
-        undo()
-        break
-      case 'Redo':
-        redo()
-        break
-      case 'Code':
-        toogleCodeView()
-        break
-      default:
-        break
-    }
-
-    // close modal
-    setCmdkOpen(false)
-  }, [command.changed])
+  }, [])
+  // -------------------------------------------------------------- other --------------------------------------------------------------
 
   return <>
     {/* wrap with the context */}
@@ -480,8 +518,8 @@ export default function MainPage(props: MainPageProps) {
         setFFAction,
 
         // cmdk
-        command,
-        setCommand,
+        currentCommand,
+        setCurrentCommand,
 
         // global
         pending,
@@ -493,7 +531,18 @@ export default function MainPage(props: MainPageProps) {
 
         // reference
         htmlReferenceData,
+
         cmdkReferenceData,
+        cmdkReferenceJumpstart,
+        cmdkReferenceActions,
+
+        // cmdk
+        cmdkOpen,
+        setCmdkOpen,
+
+        cmdkPages,
+        setCmdkPages,
+        cmdkPage,
 
         // active panel/clipboard
         activePanel,
@@ -506,31 +555,9 @@ export default function MainPage(props: MainPageProps) {
       {/* process */}
       <Process />
 
-      {/* toast */}
-      <Toast messages={messages} />
-
-      {/* cmdk */}
-      <CommandK
-        open={cmdkOpen}
-        setOpen={setCmdkOpen}
-        items={makeCmkItems()}
-        onKeyDownCallback={cb_onKeyDown}
-      />
-
       {/* view */}
       <div className="view">
-        <div className="direction-column background-primary border shadow">
-          {/* top bar */}
-          <div className="direction-column padding-s box-l justify-stretch border-bottom">
-            <div className="gap-s box justify-start">
-              <span className="text-s opacity-m">Actions Panel / Stage View / Code View</span>
-            </div>
-            <div className="gap-m justify-end box">
-              {/* action bar */}
-              {/* <SVGIcon size={80}></SVGIcon> */}
-            </div>
-          </div>
-
+        <div className="direction-column background-primary">
           {/* spinner */}
           {pending &&
             <div
@@ -546,6 +573,140 @@ export default function MainPage(props: MainPageProps) {
           {showCodeView && <CodeView />}
         </div>
       </div>
+
+
+      {/* cmdk modal */}
+      <Command.Dialog
+        open={cmdkOpen}
+        onOpenChange={setCmdkOpen}
+        onKeyDown={(e: React.KeyboardEvent) => {
+          // Escape goes to previous page
+          // Backspace goes to previous page when search is empty
+          if (e.code === 'Escape' || (e.code === 'Backspace' && !cmdkSearch)) {
+            e.code === 'Escape' && cmdkPages.length <= 1 && setCmdkOpen(false)
+
+            e.preventDefault()
+
+            setCmdkPages((cmdkPages) => cmdkPages.slice(0, -1))
+          }
+        }}
+        filter={(value: string, search: string) => {
+          if (value.includes(search)) return 1
+          return 0
+        }}
+        loop={true}
+        className='hidden-on-mobile box-m direction-row align-center justify-stretch radius-s border shadow background-primary'
+        label={cmdkPage}
+      >
+        {/* search input */}
+        <div className='gap-m box-l border-bottom padding-m justify-start'>
+          <Command.Input
+            value={cmdkSearch}
+            onValueChange={setCmdkSearch}
+            className={'justify-start gap-s padding-s text-l'}
+            placeholder={cmdkPage === 'Jumpstart' ? 'Jumpstart...' :
+              cmdkPage === 'Actions' ? 'Do something...' :
+                cmdkPage === 'Add' ? 'Add...' : ''} />
+        </div>
+
+        {/* modal content */}
+        <div
+          className={cmdkPage === 'Actions' ? "" : "box-l direction-column align-stretch box"}
+          style={cmdkPage === 'Actions' ? { width: "100%" } : {}}
+        >
+          {/* menu list - left panel */}
+          <div className="padding-m">
+            <div className="direction-row align-stretch">
+              <Command.List style={{ overflow: "auto" }}>
+                {/* <Command.Loading>Fetching commands reference data...</Command.Loading> */}
+
+                {/* <Command.Empty>No results found for "{cmdkSearch}".</Command.Empty> */}
+
+                {Object.keys(cmdkPage === 'Actions' ? cmdkReferenceActions :
+                  cmdkPage === 'Jumpstart' ? cmdkReferenceJumpstart : {}
+                ).map((groupName: string) =>
+                  <Command.Group
+                    key={groupName}
+                    // heading={groupName}
+                    value={groupName}
+                  >
+                    {/* group heading label */}
+                    <div className="padding-m gap-s">
+                      <span className="text-s opacity-m">{groupName}</span>
+                    </div>
+                    {(cmdkPage === 'Actions' ? cmdkReferenceActions[groupName] :
+                      cmdkPage === 'Jumpstart' ? cmdkReferenceJumpstart[groupName] : []
+                    ).map((command: TCmdkReference) => {
+                      const context: TCmdkContext = (command.Context as TCmdkContext)
+                      const show: boolean = (
+                        (cmdkPage === 'Jumpstart') ||
+                        (cmdkPage === 'Actions' && (
+                          (context.all === true) ||
+                          (activePanel === 'file' && (
+                            (project.location === 'localhost' && context['local-file'] === true) ||
+                            (false)
+                          )) ||
+                          (activePanel === 'node' && (
+                            (currentFile.type === 'html' && context['html-node'] === true) ||
+                            (false)
+                          ))
+                        ))
+                      )
+                      return show ?
+                        <Command.Item
+                          key={command.Name}
+                          value={command.Name}
+                          // disabled={false}
+                          onSelect={() => {
+                            setCmdkOpen(false)
+                            setCurrentCommand({ action: command.Name, changed: !currentCommand.changed })
+                          }}
+                        >
+                          <div
+                            className={cx(
+                              'justify-stretch padding-s',
+                              // false && 'opacity-m', // disabled
+                              // command['Name'] === currentCommand.action && 'background-secondary radius-xs', // hover
+                            )}
+                          >
+                            <div className="gap-s align-center">
+                              {/* detect Theme Group and render check boxes */}
+                              {cmdkPage === 'Jumpstart' && groupName === 'Theme' ? <div className='padding-xs'>
+                                <div data-theme={theme === command.Name ? (theme === 'Dark Mode' ? 'light' : 'dark') : (theme === 'Dark Mode' ? 'dark' : 'light')} className='radius-m icon-xs align-center background-secondary'></div>
+                              </div> : <div className="padding-xs">
+                                {typeof command.Icon === 'string' && command['Icon'] !== '' && <SVGIcon style={{ display: "flex" }}>actions/{command['Icon']}</SVGIcon>}
+                              </div>}
+
+                              <span className="text-m">{command['Name']}</span>
+                            </div>
+                            <div className="gap-s">
+                              {(command['Keyboard Shortcut'] as TCmdk).cmd && <span className="text-m">⌘</span>}
+                              {(command['Keyboard Shortcut'] as TCmdk).shift && <span className="text-m">⇧</span>}
+                              {(command['Keyboard Shortcut'] as TCmdk).alt && <span className="text-m">Alt</span>}
+                              {command['Keyboard Shortcut'] !== undefined && (command['Keyboard Shortcut'] as TCmdk).key !== '' && <span className="text-m">
+                                {(command['Keyboard Shortcut'] as TCmdk).key[0].toUpperCase() + (command['Keyboard Shortcut'] as TCmdk).key.slice(1)}
+                              </span>}
+                              {(command['Keyboard Shortcut'] as TCmdk).click && <span className="text-m">Click</span>}
+                            </div>
+                          </div>
+                        </Command.Item> : null
+                    }
+                    )}
+                  </Command.Group>
+                )}
+              </Command.List>
+            </div>
+          </div>
+
+          {/* description - right panel */}
+          {cmdkPage !== 'Actions' && <div className="box align-center border-left direction-row">
+            Description
+          </div>}
+        </div>
+      </Command.Dialog>
+
+      {/* toast */}
+      <Toast messages={messages} />
     </MainContext.Provider>
   </>
 }

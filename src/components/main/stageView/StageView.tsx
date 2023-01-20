@@ -12,14 +12,7 @@ import {
 import ReactShadowRoot from 'react-shadow-root';
 
 import { TUid } from '@_node/types';
-import {
-  expandFNNode,
-  fnSelector,
-  focusFNNode,
-  globalSelector,
-  MainContext,
-  selectFNNode,
-} from '@_redux/main';
+import * as Main from '@_redux/main';
 
 import { StageViewContext } from './context';
 import NodeRenderer from './nodeRenderer';
@@ -31,16 +24,37 @@ export default function StageView(props: StageViewProps) {
 
   // main context
   const {
+    // groupping action
     addRunningActions, removeRunningActions,
-    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, updateFF,
+
+    // file tree view
+    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree, updateFF,
+
+    // ndoe tree view
     fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree,
-    command, setCommand,
+
+    // update opt
+    updateOpt, setUpdateOpt,
+
+    // ff hms
+    isHms, setIsHms, ffAction, setFFAction,
+
+    // cmdk
+    currentCommand, setCurrentCommand, cmdkOpen, setCmdkOpen, cmdkPages, setCmdkPages, cmdkPage,
+
+    // global
     pending, setPending, messages, addMessage, removeMessage,
-  } = useContext(MainContext)
+
+    // reference
+    htmlReferenceData, cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions,
+
+    // active panel/clipboard
+    activePanel, setActivePanel, clipboardData, setClipboardData,
+  } = useContext(Main.MainContext)
 
   // redux state
-  const { project, currentFile } = useSelector(globalSelector)
-  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
+  const { project, currentFile } = useSelector(Main.globalSelector)
+  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(Main.fnSelector)
 
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
   // focusedItem -> scrollTo
@@ -82,18 +96,27 @@ export default function StageView(props: StageViewProps) {
       node = validNodeTree[node.p_uid as TUid]
     }
     _expandedItems.shift()
-    dispatch(expandFNNode(_expandedItems))
+    dispatch(Main.expandFNNode(_expandedItems))
 
     // focus
     focusedItemRef.current = uid
-    dispatch(focusFNNode(uid))
+    dispatch(Main.focusFNNode(uid))
 
     // select
-    dispatch(selectFNNode([uid]))
+    dispatch(Main.selectFNNode([uid]))
 
     removeRunningActions(['stageView-click'])
   }, [focusedItem, validNodeTree])
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
+
+  // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
+  // panel focus handler
+  const onPanelClick = useCallback((e: React.MouseEvent) => {
+    // e.preventDefault()
+
+    setActivePanel('node')
+  }, [])
+  // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
 
   // shadow root css
   const sheet: CSSStyleSheet = new CSSStyleSheet()
@@ -102,8 +125,15 @@ export default function StageView(props: StageViewProps) {
 
   return <>
     <StageViewContext.Provider value={{ setFocusedItem }}>
-      <div className="panel box padding-xs shadow border-left">
-        <div ref={stageViewRef} className='box border-top border-right border-bottom border-left' style={{ maxHeight: "calc(100vh - 41px - 12px)", overflow: "auto" }}>
+      <div
+        className="panel box padding-xs shadow border-left"
+        onClick={onPanelClick}
+      >
+        <div
+          ref={stageViewRef}
+          className='box border-top border-right border-bottom border-left'
+          style={{ maxHeight: "calc(100vh - 8px)", overflow: "auto" }}
+        >
           <ReactShadowRoot stylesheets={styleSheets}>
             {<NodeRenderer id={'ROOT'}></NodeRenderer>}
           </ReactShadowRoot>

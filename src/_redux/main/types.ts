@@ -5,6 +5,7 @@ import {
   TUid,
 } from '@_node/types';
 import {
+  CmdkData,
   FFTree,
   ProjectLocation,
   TCmdkReferenceData,
@@ -136,8 +137,15 @@ export type MainContextType = {
   setFFAction: (action: FFAction) => void,
 
   // cmdk
-  command: Command,
-  setCommand: (command: Command) => void,
+  currentCommand: TCommand,
+  setCurrentCommand: (command: TCommand) => void,
+
+  cmdkOpen: boolean,
+  setCmdkOpen: (open: boolean) => void,
+
+  cmdkPages: string[],
+  setCmdkPages: (pages: string[]) => void,
+  cmdkPage: string,
 
   // global
   pending: boolean,
@@ -150,6 +158,8 @@ export type MainContextType = {
   // reference
   htmlReferenceData: THtmlReferenceData,
   cmdkReferenceData: TCmdkReferenceData,
+  cmdkReferenceJumpstart: CmdkData,
+  cmdkReferenceActions: CmdkData,
 
   // active panel/clipboard
   activePanel: TPanel,
@@ -176,7 +186,7 @@ export type UpdateOptions = {
 /**
  * command
  */
-export type Command = {
+export type TCommand = {
   action: string,
   changed: boolean,
 }
@@ -197,7 +207,7 @@ export type Message = {
 /**
  * panel
  */
-export type TPanel = 'file' | 'node' | 'stage' | 'code' | 'other'
+export type TPanel = 'file' | 'node' | 'stage' | 'code' | 'cmdk' | 'other'
 
 /**
  * clipboard data type

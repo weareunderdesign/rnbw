@@ -1,0 +1,14 @@
+﻿Name,Icon,Description,Keyboard Shortcut,Group
+Search,search,,o,Project
+New,plus,,cmd+n,Project
+Code,code-html,Open Code,c,Project
+Preview,play,"""Run"" (Preview)",r,Project
+Design,edit,"""Design"" On/Off (hide panels)",\,Project
+Publish,cloud-upload,,p,Project
+Share,share,,s,Project
+Support,help,,,Help
+Guide,,,g,Help
+Community,,,,Help
+Dark Mode,,,,Theme
+Light Mode,,,,Theme
+System,,,,Theme

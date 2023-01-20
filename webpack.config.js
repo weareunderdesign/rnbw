@@ -30,6 +30,9 @@ module.exports = {
       "@_config": path.resolve(__dirname, 'src/_config/'),
       "@_node": path.resolve(__dirname, 'src/_node/'),
       "@_redux": path.resolve(__dirname, 'src/_redux/'),
+
+      // ref
+      "@_ref": path.resolve(__dirname, 'src/_ref/'),
     },
   },
   module: {
@@ -67,6 +70,14 @@ module.exports = {
         issuer: /\.[jt]sx?$/,
         resourceQuery: { not: [/url/] }, // exclude react component if *.svg?url
         use: ['@svgr/webpack'],
+      },
+      {
+        test: /\.csv$/,
+        loader: 'csv-loader',
+        options: {
+          dynamicTyping: true,
+          header: true,
+        },
       },
     ],
   },

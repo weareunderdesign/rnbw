@@ -37,7 +37,7 @@ export default function CodeView(props: CodeViewProps) {
     ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, updateFF,
     fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree,
     updateOpt, setUpdateOpt,
-    command, setCommand,
+    currentCommand, setCurrentCommand,
     pending, setPending, messages, addMessage, removeMessage,
   } = useContext(MainContext)
 

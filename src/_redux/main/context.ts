@@ -10,11 +10,11 @@ import {
 import { FFTree } from '@_types/main';
 
 import {
-  Command,
   FFAction,
   MainContextType,
   Message,
   TClipboardData,
+  TCommand,
   TPanel,
   UpdateOptions,
 } from './types';
@@ -54,8 +54,15 @@ export const MainContext: Context<MainContextType> = createContext<MainContextTy
   setFFAction: (action: FFAction) => { },
 
   // cmdk
-  command: { action: '', changed: false },
-  setCommand: (command: Command) => { },
+  currentCommand: { action: '', changed: false },
+  setCurrentCommand: (command: TCommand) => { },
+
+  cmdkOpen: false,
+  setCmdkOpen: (open: boolean) => { },
+
+  cmdkPages: [],
+  setCmdkPages: (pages: string[]) => { },
+  cmdkPage: '',
 
   // global
   pending: false,
@@ -67,7 +74,10 @@ export const MainContext: Context<MainContextType> = createContext<MainContextTy
 
   // reference
   htmlReferenceData: {},
+
   cmdkReferenceData: {},
+  cmdkReferenceJumpstart: {},
+  cmdkReferenceActions: {},
 
   // active panel/clipboard
   activePanel: 'other',

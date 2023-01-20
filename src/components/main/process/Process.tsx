@@ -43,7 +43,7 @@ export default function Process(props: ProcessProps) {
     ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree, updateFF,
     fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree,
     updateOpt, setUpdateOpt,
-    command, setCommand,
+    currentCommand, setCurrentCommand,
     pending, setPending, messages, addMessage, removeMessage,
   } = useContext(MainContext)
 
@@ -190,14 +190,14 @@ export default function Process(props: ProcessProps) {
   // do actions
   useEffect(() => {
     // cmdk actions handle
-    switch (command.action) {
+    switch (currentCommand.action) {
       case 'save':
         saveFileContentToFs()
         break
       default:
         break
     }
-  }, [command.changed])
+  }, [currentCommand.changed])
 
   return <></>
 }

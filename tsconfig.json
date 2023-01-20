@@ -43,6 +43,9 @@
       "@_redux/*": [
         "src/_redux/*",
       ],
+      "@_ref/*": [
+        "src/_ref/*",
+      ]
     },
   },
   "include": [

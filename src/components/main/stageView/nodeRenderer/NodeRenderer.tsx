@@ -22,11 +22,7 @@ import {
   THtmlTagAttributes,
 } from '@_node/html';
 import { TNode } from '@_node/types';
-import {
-  fnSelector,
-  globalSelector,
-  MainContext,
-} from '@_redux/main';
+import * as Main from '@_redux/main';
 
 import { StageViewContext } from '../context';
 import { NodeRendererProp } from './types';
@@ -36,16 +32,37 @@ export default function NodeRenderer({ id }: NodeRendererProp) {
 
   // main context
   const {
-    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, updateFF,
+    // groupping action
+    addRunningActions, removeRunningActions,
+
+    // file tree view
+    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree, updateFF,
+
+    // ndoe tree view
     fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree,
-    command, setCommand,
+
+    // update opt
+    updateOpt, setUpdateOpt,
+
+    // ff hms
+    isHms, setIsHms, ffAction, setFFAction,
+
+    // cmdk
+    currentCommand, setCurrentCommand, cmdkOpen, setCmdkOpen, cmdkPages, setCmdkPages, cmdkPage,
+
+    // global
     pending, setPending, messages, addMessage, removeMessage,
-    htmlReferenceData, cmdkReferenceData,
-  } = useContext(MainContext)
+
+    // reference
+    htmlReferenceData, cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions,
+
+    // active panel/clipboard
+    activePanel, setActivePanel, clipboardData, setClipboardData,
+  } = useContext(Main.MainContext)
 
   // redux state
-  const { project, currentFile } = useSelector(globalSelector)
-  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
+  const { project, currentFile } = useSelector(Main.globalSelector)
+  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(Main.fnSelector)
 
   // stageView context
   const { setFocusedItem } = useContext(StageViewContext)

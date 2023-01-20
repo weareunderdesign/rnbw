@@ -38,12 +38,31 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
   // main context
   const {
+    // groupping action
     addRunningActions, removeRunningActions,
+
+    // file tree view
     ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree, updateFF,
+
+    // ndoe tree view
     fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree,
+
+    // update opt
     updateOpt, setUpdateOpt,
-    command, setCommand,
+
+    // ff hms
+    isHms, setIsHms, ffAction, setFFAction,
+
+    // cmdk
+    currentCommand, setCurrentCommand, cmdkOpen, setCmdkOpen, cmdkPages, setCmdkPages, cmdkPage,
+
+    // global
     pending, setPending, messages, addMessage, removeMessage,
+
+    // reference
+    htmlReferenceData, cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions,
+
+    // active panel/clipboard
     activePanel, setActivePanel, clipboardData, setClipboardData,
   } = useContext(Main.MainContext)
 
@@ -329,8 +348,11 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   }, [validNodeTree, expandedItemsObj])
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
 
+  // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
   // panel focus handler
-  const onPanelClick = useCallback(() => {
+  const onPanelClick = useCallback((e: React.MouseEvent) => {
+    // e.preventDefault()
+
     addRunningActions(['nodeTreeView-focus'])
 
     setActivePanel('node')
@@ -347,8 +369,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     dispatch(Main.selectFNNode([]))
     dispatch(Main.focusFNNode(uid))
 
-    setActivePanel('node')
-
     removeRunningActions(['nodeTreeView-focus'])
   }, [focusedItem, validNodeTree])
 
@@ -356,9 +376,12 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   useEffect(() => {
     if (activePanel !== 'node') return
 
-    if (command.action === '') return
+    if (currentCommand.action === '') return
 
-    switch (command.action) {
+    switch (currentCommand.action) {
+      case 'Actions':
+        onActions()
+        break
       case 'Add':
         onAdd()
         break
@@ -387,11 +410,16 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
         onUngroup()
         break
       default:
-        break
+        return
     }
-  }, [command.changed])
+  }, [currentCommand.changed])
 
-  // handlers
+  // command handlers
+  const onActions = useCallback(() => {
+    if (cmdkOpen) return
+    setCmdkPages(['Actions'])
+    setCmdkOpen(true)
+  }, [cmdkOpen])
   const onAdd = useCallback(() => {
     handleAddFNNode('div')
   }, [handleAddFNNode])
@@ -424,18 +452,26 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   }, [])
   const onUngroup = useCallback(() => {
   }, [])
+  // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
+
+  // -------------------------------------------------------------- other --------------------------------------------------------------
+  // Web Component - svg-icon
+  const SVGIcon = useMemo<keyof JSX.IntrinsicElements>(() => {
+    return 'svg-icon' as keyof JSX.IntrinsicElements
+  }, [])
+  // -------------------------------------------------------------- other --------------------------------------------------------------
 
   return <>
     <div className="panel">
       <div
-        id={'NodeTreeView'}
-        onClick={onPanelClick}
         className="border-bottom"
         style={{
-          height: "calc(50vh - 22px)",
+          height: "calc(50vh)",
           overflow: "auto",
           background: (focusedItem === 'ROOT' && validNodeTree['ROOT'] !== undefined) ? "rgba(0, 0, 0, 0.02)" : "none",
-        }}>
+        }}
+        onClick={onPanelClick}
+      >
         {/* Nav Bar */}
         <div className="sticky direction-column padding-s box-l justify-stretch border-bottom background-primary">
           <div className="gap-s box justify-start">
@@ -535,14 +571,10 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                       {props.arrow}
 
                       {/* render icon */}
-                      <div
-                        className={cx(
-                          'icon-xs',
-                          props.item.isFolder ? (props.context.isExpanded ? 'icon-div' : 'icon-div') :
-                            'icon-component'
-                        )}
-                      >
-                      </div>
+                      <SVGIcon>
+                        {props.item.isFolder ? (props.context.isExpanded ? 'objects/div' : 'objects/div') :
+                          'objects/component'}
+                      </SVGIcon>
 
                       {/* render title */}
                       {props.title}
@@ -560,11 +592,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
             },
             renderItemArrow: (props) => {
               return <>
-                <div
-                  className={cx(
-                    'icon-xs',
-                    props.item.isFolder ? (props.context.isExpanded ? 'icon-down' : 'icon-right') : '',
-                  )}
+                <SVGIcon
                   onClick={(e) => {
                     // to merge with the click event
                     addRunningActions(['nodeTreeView-arrowClick'])
@@ -577,12 +605,14 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                     }
                   }}
                 >
-                </div>
+                  {props.item.isFolder ? (props.context.isExpanded ? 'arrows/down' : 'arrows/right') :
+                    'empty'}
+                </SVGIcon>
               </>
             },
             renderItemTitle: (props) => {
               return <>
-                <span className='text-s' style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "calc(100% - 32px)" }}>
+                <span className='text-s justify-stretch' style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "calc(100% - 32px)" }}>
                   {props.title}
                 </span>
               </>
@@ -611,6 +641,9 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
             canDropOnFolder: true,
             canDropOnNonFolder: true,
             canReorderItems: true,
+
+            canSearch: false,
+            canSearchByStartingTyping: false,
           }}
 
           /* cb */
