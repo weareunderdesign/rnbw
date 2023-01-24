@@ -187,17 +187,17 @@ export default function NodeRenderer({ id }: NodeRendererProp) {
                         width={width}
                         height={height}
                         onResizeStart={(e: React.SyntheticEvent, data: ResizeCallbackData) => {
-                          console.log('onResizeStart', e, data)
+                          // console.log('onResizeStart', e, data)
                           setWidth(data.size.width)
                           setHeight(data.size.height)
                         }}
                         onResizeStop={(e: React.SyntheticEvent, data: ResizeCallbackData) => {
-                          console.log('onResizeStop', e, data)
+                          // console.log('onResizeStop', e, data)
                           setWidth(data.size.width)
                           setHeight(data.size.height)
                         }}
                         onResize={(e: React.SyntheticEvent, data: ResizeCallbackData) => {
-                          console.log('onResize', e, data)
+                          // console.log('onResize', e, data)
                           setWidth(data.size.width)
                           setHeight(data.size.height)
                         }}

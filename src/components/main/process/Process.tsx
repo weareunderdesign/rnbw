@@ -160,7 +160,7 @@ export default function Process(props: ProcessProps) {
       return
     }
 
-    console.log('processor-save')
+    // console.log('processor-save')
 
     // update file content
     try {

@@ -54,8 +54,12 @@ export default function CodeView(props: CodeViewProps) {
     let node = validNodeTree[focusedItem]
     if (node === undefined) return
 
+    console.log('Now the focusedItem is', node)
+
     // select and reveal the node's code sector
     const { startLineNumber, startColumn, endLineNumber, endColumn } = node.data
+    console.log(`Its code range is from Ln${startLineNumber}, Col${startColumn} to Ln${endLineNumber}, Col${endColumn}`)
+
     const editor = monacoRef.current as monaco.editor.IEditor
     editor.setSelection({
       startLineNumber,
@@ -69,7 +73,61 @@ export default function CodeView(props: CodeViewProps) {
       endLineNumber,
       endColumn,
     }, 1/* scrollType - smooth */)
+
+    console.log('Highlighting is done')
   }, [focusedItem])
+
+  /* 
+  // sync nodeTreeView&StageView based on editor's cursor pos
+  const cursorPos = monacoRef.current === null ? null : monacoRef.current.getPosition()
+  const cursorPosRef = useRef<monaco.Position>(cursorPos)
+  useEffect(() => {
+    // validate
+    if (cursorPos === null || (cursorPosRef.current?.lineNumber === cursorPos.lineNumber && cursorPosRef.current.column === cursorPos.column)) return
+    if (currentFile.uid === '') return
+    if (reduxTimeout.current !== null) return
+
+    let _uid: TUid = ''
+
+    let uids: TUid[] = Object.keys(validNodeTree)
+    uids = getBfsUids(uids)
+    uids.reverse()
+    for (const uid of uids) {
+      const node = validNodeTree[uid]
+      const { startLineNumber, startColumn, endLineNumber, endColumn } = node.data
+      if (startLineNumber === endLineNumber) {
+        if (cursorPos.lineNumber === startLineNumber && (startColumn < cursorPos.column && cursorPos.column <= endColumn)) {
+          _uid = uid
+          break
+        }
+      } else {
+        if ((startLineNumber < cursorPos.lineNumber && cursorPos.lineNumber < endLineNumber) ||
+          (startLineNumber === cursorPos.lineNumber && startColumn < cursorPos.column) ||
+          (cursorPos.lineNumber === endLineNumber && cursorPos.column <= endColumn)) {
+          _uid = uid
+          break
+        }
+      }
+    }
+
+    if (_uid === '') return
+
+    let node = validNodeTree[_uid]
+    while (!node.data.valid) {
+      node = validNodeTree[node.p_uid as TUid]
+    }
+
+    _uid = node.uid
+    if (focusedItemRef.current === _uid) return
+    focusedItemRef.current = _uid
+
+    // update redux
+    addRunningAction(['cursorChange'])
+    dispatch(Main.focusFNNode(_uid))
+    dispatch(Main.selectFNNode([_uid]))
+    removeRunningAction(['cursorChange'])
+  }, [cursorPos])
+  */
 
   // content - code
   useEffect(() => {

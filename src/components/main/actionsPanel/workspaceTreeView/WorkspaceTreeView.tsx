@@ -104,7 +104,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
      * redo if isHms = false
      */
     if (isHms === true) {
-      console.log('UNDO', ffAction)
+      // console.log('UNDO', ffAction)
 
       const { name, param1, param2 } = ffAction
       if (name === 'create') {
@@ -143,7 +143,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       isRedo.current = !isRedo.current
       if (isRedo.current === true) return
 
-      console.log('REDO', action)
+      // console.log('REDO', action)
 
       const { name, param1, param2 } = action
       if (name === 'create') {
@@ -1268,10 +1268,10 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   const onRename = useCallback(() => {
   }, [])
   const onAddNode = useCallback((actionName: string) => {
-    console.log(actionName)
+    // console.log(actionName)
     if (actionName.startsWith('AddNode-') === false) return
     const nodeType = actionName.slice(8)
-    console.log('Add Node', nodeType)
+    // console.log('Add Node', nodeType)
     openCreateFFNodeModal(nodeType as FFNodeType)
   }, [openCreateFFNodeModal])
   // -------------------------------------------------------------- Cmdk --------------------------------------------------------------

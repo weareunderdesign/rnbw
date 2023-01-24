@@ -223,7 +223,7 @@ export default function MainPage(props: MainPageProps) {
       })
     }
 
-    console.log('Add Cmdk Reference Data', data)
+    // console.log('Add Cmdk Reference Data', data)
     return data
   }, [nodeTree, fnFocusedItem, htmlReferenceData])
   const cmdkReferenceFile: CmdkData = {
@@ -275,7 +275,7 @@ export default function MainPage(props: MainPageProps) {
       _htmlReferenceData[pureTag] = htmlRefElement
     })
     setHtmlReferenceData(_htmlReferenceData)
-    console.log('HTML REFERENCE DATA', _htmlReferenceData)
+    // console.log('HTML REFERENCE DATA', _htmlReferenceData)
 
     // add default cmdk actions
     const _cmdkReferenceData: TCmdkReferenceData = {} // cmdk map
@@ -405,7 +405,7 @@ export default function MainPage(props: MainPageProps) {
     // cmdk map
     setCmdkReferenceData(_cmdkReferenceData)
 
-    console.log('CMDK REFERENCE DATA', _cmdkReferenceData, _cmdkRefJumpstartData, _cmdkRefActionsData)
+    // console.log('CMDK REFERENCE DATA', _cmdkReferenceData, _cmdkRefJumpstartData, _cmdkRefActionsData)
 
     removeRunningActions(['reference-html-elements', 'reference-cmdk-jumpstart', 'reference-cmdk-actions'], false)
   }, [])
@@ -474,7 +474,7 @@ export default function MainPage(props: MainPageProps) {
     }
     if (action === null) return
 
-    console.log('RUN ACTION', action)
+    // console.log('RUN ACTION', action)
     e.preventDefault()
 
     setCurrentCommand({ action, changed: !currentCommand.changed })
@@ -579,9 +579,9 @@ export default function MainPage(props: MainPageProps) {
       // do nothing
     }
   }, [activeElement])
-  useEffect(() => {
+  /* useEffect(() => {
     console.log('ACTIVE PANEL', activePanel)
-  }, [activePanel])
+  }, [activePanel]) */
 
   // Web Component - svg-icon
   const SVGIcon = useMemo<keyof JSX.IntrinsicElements>(() => {

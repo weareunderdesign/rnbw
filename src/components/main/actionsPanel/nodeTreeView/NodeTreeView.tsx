@@ -485,10 +485,10 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   const onUngroup = useCallback(() => {
   }, [])
   const onAddNode = useCallback((actionName: string) => {
-    console.log(actionName)
+    // console.log(actionName)
     if (actionName.startsWith('AddNode-') === false) return
     const tagName = actionName.slice(9, actionName.length - 1)
-    console.log('Add Tag', tagName)
+    // console.log('Add Tag', tagName)
     handleAddFNNode(tagName)
   }, [handleAddFNNode])
   // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
