@@ -258,7 +258,7 @@ export const getShortHand = (attrs: THtmlTagAttributes): THtmlTagAttributes => {
       newAttr['style'] = {}
 
       const styleStr = attrs['style']
-      const styles: string[] = styleStr.replace(/ /g, '').split(';')
+      const styles: string[] = styleStr.replace(/ |\r|\n/g, '').split(';')
       styles.map((style: string) => {
         const _style = style.split(':')
         if (_style.length === 2) {
@@ -268,6 +268,7 @@ export const getShortHand = (attrs: THtmlTagAttributes): THtmlTagAttributes => {
           newAttr['style'][newStyleName] = styleValue
         }
       })
+      console.log(newAttr['style'])
     } else {
       const newAttrName = attrName === 'class' ? 'className' :
         attrName === 'data-theme' ? 'datatheme' :
