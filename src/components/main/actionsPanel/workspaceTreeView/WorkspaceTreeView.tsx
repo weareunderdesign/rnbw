@@ -562,13 +562,16 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
     setCreatingFFType(ffNodeType)
     setNewFFName('')
+
     setCreateFFModalOpen(true)
+    addRunningActions(['fileTreeView-createModalOpen'])
   }, [ffTree, focusedItem])
 
   // create folder/file api
   const createFFNode = useCallback(async () => {
     // close name input modal
     setCreateFFModalOpen(false)
+    removeRunningActions(['fileTreeView-createModalOpen'], false)
 
     addRunningActions(['fileTreeView-create'])
 
@@ -1028,8 +1031,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
   // panel focus handler
   const onPanelClick = useCallback((e: React.MouseEvent) => {
-    // e.preventDefault()
-
     addRunningActions(['fileTreeView-focus'])
 
     setActivePanel('file')
@@ -1082,6 +1083,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         case 'Rename':
           onRename()
           break
+        default:
+          onAddNode(currentCommand.action)
+          break
       }
     }
   }, [currentCommand.changed])
@@ -1093,8 +1097,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     setCmdkOpen(true)
   }, [cmdkOpen])
   const onAdd = useCallback(() => {
-    true ? openCreateFFNodeModal('folder') : openCreateFFNodeModal('file')
-  }, [openCreateFFNodeModal])
+    setCmdkPages([...cmdkPages, 'Add'])
+    setCmdkOpen(true)
+  }, [cmdkOpen, cmdkPages])
   const onCut = useCallback(() => {
     setClipboardData({ panel: 'file', type: 'cut', uids: selectedItems })
   }, [selectedItems])
@@ -1262,6 +1267,13 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   }, [focusedItem, ffTree, ffHandlers])
   const onRename = useCallback(() => {
   }, [])
+  const onAddNode = useCallback((actionName: string) => {
+    console.log(actionName)
+    if (actionName.startsWith('AddNode-') === false) return
+    const nodeType = actionName.slice(8)
+    console.log('Add Node', nodeType)
+    openCreateFFNodeModal(nodeType as FFNodeType)
+  }, [openCreateFFNodeModal])
   // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
 
   // -------------------------------------------------------------- other --------------------------------------------------------------
@@ -1385,7 +1397,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                       {/* render icon */}
                       <SVGIcon>
                         {props.item.isFolder ? (props.context.isExpanded ? 'objects/folder' : 'objects/folder') :
-                          'objects/Pages'}
+                          'objects/page'}
                       </SVGIcon>
 
                       {/* render title */}
@@ -1404,10 +1416,8 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
             },
             renderItemArrow: (props) => {
               return <>
-                <SVGIcon>
-                  {props.item.isFolder ? (props.context.isExpanded ? 'arrows/down' : 'arrows/right') :
-                    'empty'}
-                </SVGIcon>
+                {props.item.isFolder ? <SVGIcon>{props.context.isExpanded ? 'arrows/down' : 'arrows/right'}</SVGIcon> :
+                  <div className='icon-xs'></div>}
               </>
             },
             renderItemTitle: (props) => {
@@ -1469,7 +1479,10 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     {/* ff name input modal */}
     <Dialog
       open={createFFModalOpen}
-      onClose={() => { setCreateFFModalOpen(false) }}
+      onClose={() => {
+        setCreateFFModalOpen(false)
+        removeRunningActions(['fileTreeView-createModalOpen'], false)
+      }}
     >
       <div className='background-primary'>
         <h5>Create a {creatingFFType}</h5>

@@ -152,7 +152,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     }
 
     // fill in data prop for the node
-    if (nodeType === 'div') {
+    /* if (nodeType === 'div') {
       newNode.data = {
         valid: true,
         isFormatText: false,
@@ -171,6 +171,38 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       }
     } else {
       // do nothing
+      newNode.data = {
+        valid: true,
+        isFormatText: false,
+
+        type: 'tag',
+        name: nodeType,
+        data: undefined,
+        attribs: {},
+
+        // startLineNumber: '',
+        // startColumn: '',
+        // endLineNumber: '',
+        // endColumn: '',
+
+        // html: '',
+      }
+    } */
+    newNode.data = {
+      valid: true,
+      isFormatText: false,
+
+      type: 'tag',
+      name: nodeType,
+      data: undefined,
+      attribs: {},
+
+      // startLineNumber: '',
+      // startColumn: '',
+      // endLineNumber: '',
+      // endColumn: '',
+
+      // html: '',
     }
 
     addRunningActions(['processor-nodeTree', 'processor-validNodeTree'])
@@ -351,8 +383,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
   // panel focus handler
   const onPanelClick = useCallback((e: React.MouseEvent) => {
-    // e.preventDefault()
-
     addRunningActions(['nodeTreeView-focus'])
 
     setActivePanel('node')
@@ -410,7 +440,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
         onUngroup()
         break
       default:
-        return
+        onAddNode(currentCommand.action)
+        break
     }
   }, [currentCommand.changed])
 
@@ -421,8 +452,9 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     setCmdkOpen(true)
   }, [cmdkOpen])
   const onAdd = useCallback(() => {
-    handleAddFNNode('div')
-  }, [handleAddFNNode])
+    setCmdkPages([...cmdkPages, 'Add'])
+    setCmdkOpen(true)
+  }, [cmdkOpen, cmdkPages])
   const onCut = useCallback(() => {
     setClipboardData({ panel: 'node', type: 'cut', uids: selectedItems })
   }, [selectedItems])
@@ -452,6 +484,13 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   }, [])
   const onUngroup = useCallback(() => {
   }, [])
+  const onAddNode = useCallback((actionName: string) => {
+    console.log(actionName)
+    if (actionName.startsWith('AddNode-') === false) return
+    const tagName = actionName.slice(9, actionName.length - 1)
+    console.log('Add Tag', tagName)
+    handleAddFNNode(tagName)
+  }, [handleAddFNNode])
   // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
 
   // -------------------------------------------------------------- other --------------------------------------------------------------
@@ -592,22 +631,25 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
             },
             renderItemArrow: (props) => {
               return <>
-                <SVGIcon
+                {props.item.isFolder ? <SVGIcon
                   onClick={(e) => {
                     // to merge with the click event
                     addRunningActions(['nodeTreeView-arrowClick'])
 
-                    if (props.item.isFolder) {
-                      addRunningActions([props.context.isExpanded ? 'nodeTreeView-collapse' : 'nodeTreeView-expand'])
+                    addRunningActions([props.context.isExpanded ? 'nodeTreeView-collapse' : 'nodeTreeView-expand'])
 
-                      // callback
-                      props.item.isFolder ? props.context.toggleExpandedState() : null
-                    }
+                    // callback
+                    props.context.toggleExpandedState()
+                  }}>
+                  {props.context.isExpanded ? 'arrows/down' : 'arrows/right'}
+                </SVGIcon> : <div
+                  className='icon-xs'
+                  onClick={(e) => {
+                    // to merge with the click event
+                    addRunningActions(['nodeTreeView-arrowClick'])
                   }}
                 >
-                  {props.item.isFolder ? (props.context.isExpanded ? 'arrows/down' : 'arrows/right') :
-                    'empty'}
-                </SVGIcon>
+                </div>}
               </>
             },
             renderItemTitle: (props) => {

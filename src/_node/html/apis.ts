@@ -257,20 +257,27 @@ export const getShortHand = (attrs: THtmlTagAttributes): THtmlTagAttributes => {
     if (attrName === 'style') {
       newAttr['style'] = {}
 
-      const style = attrs['style']
-      for (const styleName in style) {
-        const newStyleName = styleName.replace(/-./g, c => c.substr(1).toUpperCase())
-        newAttr['style'][newStyleName] = style[styleName]
-      }
+      const styleStr = attrs['style']
+      const styles: string[] = styleStr.replace(/ /g, '').split(';')
+      styles.map((style: string) => {
+        const _style = style.split(':')
+        if (_style.length === 2) {
+          const styleName = _style[0]
+          const styleValue = _style[1]
+          const newStyleName = styleName.replace(/-./g, c => c.substr(1).toUpperCase())
+          newAttr['style'][newStyleName] = styleValue
+        }
+      })
     } else {
       const newAttrName = attrName === 'class' ? 'className' :
-        attrName === 'charset' ? 'charSet' :
-          attrName === 'contenteditable' ? 'contentEditable' :
-            attrName === 'onsubmit' ? 'onSubmit' :
-              attrName === 'for' ? 'htmlFor' :
-                attrName === 'datetime' ? 'dateTime' :
-                  attrName === 'srcset' ? 'srcSet' :
-                    attrName.replace(/-./g, c => c.substr(1).toUpperCase())
+        attrName === 'data-theme' ? 'datatheme' :
+          attrName === 'charset' ? 'charSet' :
+            attrName === 'contenteditable' ? 'contentEditable' :
+              attrName === 'onsubmit' ? 'onSubmit' :
+                attrName === 'for' ? 'htmlFor' :
+                  attrName === 'datetime' ? 'dateTime' :
+                    attrName === 'srcset' ? 'srcSet' :
+                      attrName.replace(/-./g, c => c.substr(1).toUpperCase())
 
       newAttr[newAttrName] = attrs[attrName]
     }

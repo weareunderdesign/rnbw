@@ -1,14 +1,20 @@
 ﻿Name,Icon,Description,Keyboard Shortcut,Group,Context
-Add,plus,,a,Basic,"html-node, local-file"
-Cut,cut,,cmd+x,Basic,"html-node, local-file"
-Copy,copy,,cmd+c,Basic,"html-node, local-file"
-Paste,paste,,cmd+v,Basic,"html-node, local-file"
-Delete,delete,,backspace,Other,"html-node, local-file"
-Duplicate,duplicate,,,Other,"html-node, local-file"
-Turn into,replace,,,Other,html-node
-Group,group,,,Other,html-node
-Ungroup,ungroup,,,Other,html-node
-Style,style,Add Style,s,Other,html-node
-Text,text,Edit Text,t,Other,html-node
-Undo,undo,,cmd+z,Other,"all"
-Redo,redo,,cmd+shift+z,Other,"all"
+Add,plus,,a,Basic,"file, html"
+Cut,cut,,cmd+x,Basic,"file, html"
+Copy,copy,,cmd+c,Basic,"file, html"
+Paste,paste,,cmd+v,Basic,"file, html"
+Delete,delete,,backspace,Other,"file, html"
+Duplicate,duplicate,,,Other,"file, html"
+Turn into,replace,,,Other,html
+Group,group,,,Other,html
+Ungroup,ungroup,,,Other,html
+Style,style,Add Style,s,Other,html
+Text,text,Edit Text,t,Other,html
+Undo,undo,,cmd+z,Other,all
+Redo,redo,,cmd+shift+z,Other,all
+New,plus,,cmd+n,project,all
+Code,code-html,Open Code,c,project,all
+Preview,play,"""Run"" (Preview)",r,project,all
+Design,edit,"""Design"" On/Off (hide panels)",\,project,all
+Publish,cloud-upload,,p,project,all
+Share,share,,s,project,all

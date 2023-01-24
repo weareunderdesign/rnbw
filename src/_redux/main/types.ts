@@ -160,6 +160,7 @@ export type MainContextType = {
   cmdkReferenceData: TCmdkReferenceData,
   cmdkReferenceJumpstart: CmdkData,
   cmdkReferenceActions: CmdkData,
+  cmdkReferenceAdd: CmdkData,
 
   // active panel/clipboard
   activePanel: TPanel,

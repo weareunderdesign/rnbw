@@ -15,6 +15,7 @@ import { TUid } from '@_node/types';
 import * as Main from '@_redux/main';
 
 import { StageViewContext } from './context';
+import IFrame from './iFrame';
 import NodeRenderer from './nodeRenderer';
 import { styles } from './styles';
 import { StageViewProps } from './types';
@@ -112,8 +113,6 @@ export default function StageView(props: StageViewProps) {
   // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
   // panel focus handler
   const onPanelClick = useCallback((e: React.MouseEvent) => {
-    // e.preventDefault()
-
     setActivePanel('node')
   }, [])
   // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
@@ -129,15 +128,30 @@ export default function StageView(props: StageViewProps) {
         className="panel box padding-xs shadow border-left"
         onClick={onPanelClick}
       >
-        <div
-          ref={stageViewRef}
-          className='box border-top border-right border-bottom border-left'
-          style={{ maxHeight: "calc(100vh - 8px)", overflow: "auto" }}
-        >
-          <ReactShadowRoot stylesheets={styleSheets}>
-            {<NodeRenderer id={'ROOT'}></NodeRenderer>}
-          </ReactShadowRoot>
-        </div>
+        {true ? <>
+          {/* ReactShadowRoot */}
+          <div
+            ref={stageViewRef}
+            className='box border-top border-right border-bottom border-left'
+            style={{ maxHeight: "calc(100vh - 8px)", overflow: "auto" }}
+          >
+
+            <ReactShadowRoot stylesheets={styleSheets}>
+              {<NodeRenderer id={'ROOT'}></NodeRenderer>}
+            </ReactShadowRoot>
+          </div>
+        </> : <>
+          {/* IFrame */}
+          <div
+            ref={stageViewRef}
+            className='box border-top border-right border-bottom border-left'
+            style={{ height: "calc(100vh - 8px)" }}
+          >
+            <IFrame>
+              {<NodeRenderer id={'ROOT'}></NodeRenderer>}
+            </IFrame>
+          </div>
+        </>}
       </div>
     </StageViewContext.Provider>
   </>

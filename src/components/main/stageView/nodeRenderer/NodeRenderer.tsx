@@ -19,6 +19,7 @@ import {
 
 import {
   getShortHand,
+  THtmlReference,
   THtmlTagAttributes,
 } from '@_node/html';
 import { TNode } from '@_node/types';
@@ -70,20 +71,25 @@ export default function NodeRenderer({ id }: NodeRendererProp) {
   // build node info
   const node = useMemo<TNode>(() => nodeTree[id], [nodeTree, id])
   const Tag = useMemo<keyof JSX.IntrinsicElements>(() => {
-    if (node === undefined) return '' as keyof JSX.IntrinsicElements
+    if (node === undefined || node.name === 'text') return '' as keyof JSX.IntrinsicElements
 
-    const referenceData = htmlReferenceData[node.name]
-    console.log(node.name, referenceData)
-
-    return (node.name === 'html' ? 'div' :
+    return true ? (node.name === 'html' ? 'div' :
       node.name === 'head' ? 'div' :
         node.name === 'body' ? 'div' :
-          node.name) as keyof JSX.IntrinsicElements
+          node.name) as keyof JSX.IntrinsicElements :
+      node.name as keyof JSX.IntrinsicElements
 
-  }, [node, htmlReferenceData])
+  }, [node])
   const abbr = useMemo<boolean>(() => {
     if (node === undefined) return false
 
+    if (htmlReferenceData[node.name] !== undefined) {
+      const data: THtmlReference = htmlReferenceData[node.name]
+      if (data.Content === 'None') return true
+    }
+
+    // tmp - we don't need this if the reference is perfect
+    // skip img tag - it has its own renderer
     if (node.name === 'meta' || node.name === 'link'
       || node.name === 'br' || node.name === 'hr'
       || node.name === 'source' || node.name === 'input'
@@ -91,9 +97,12 @@ export default function NodeRenderer({ id }: NodeRendererProp) {
 
     return false
   }, [node])
+
+  // need to continue to improve
   const attribs = useMemo<THtmlTagAttributes>(() => {
     return node === undefined ? {} : getShortHand(node.data.attribs)
   }, [node])
+
   const className = useMemo(() => {
     return id === focusedItem ? 'rnbwdev-rainbow-component-focus' :
       id === fnHoveredItem ? 'rnbwdev-rainbow-component-hover' : ''

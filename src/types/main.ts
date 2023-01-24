@@ -40,7 +40,7 @@ export type TCmdkReference = {
   "Description": string,
   "Keyboard Shortcut": string | TCmdk,
   "Group": string,
-  "Context": string | TCmdkContext,
+  "Context"?: string | TCmdkContext,
 }
 
 export type TCmdk = {
@@ -51,7 +51,7 @@ export type TCmdk = {
   click: boolean,
 }
 
-export type TCmdkContextScope = "all" | "local-file" | "html-node"
+export type TCmdkContextScope = "all" | "file" | "html"
 
 export type TCmdkContext = {
   [scope in TCmdkContextScope]: boolean

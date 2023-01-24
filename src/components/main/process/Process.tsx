@@ -145,6 +145,7 @@ export default function Process(props: ProcessProps) {
     let handler = ffHandlers[currentFile.uid]
     if (handler === undefined) {
       fsTimeout.current = null
+      setPending(false)
       return
     }
 
@@ -155,6 +156,7 @@ export default function Process(props: ProcessProps) {
         message: 'auto save failed cause of invalid handler',
       })
       fsTimeout.current = null
+      setPending(false)
       return
     }
 
@@ -178,9 +180,9 @@ export default function Process(props: ProcessProps) {
     }
 
     fsTimeout.current = null
-
     setPending(false)
   }, [ffHandlers, currentFile.uid, currentFile.content])
+  // set Auto-Save
   useEffect(() => {
     fsTimeout.current !== null && clearTimeout(fsTimeout.current)
     return
@@ -191,7 +193,7 @@ export default function Process(props: ProcessProps) {
   useEffect(() => {
     // cmdk actions handle
     switch (currentCommand.action) {
-      case 'save':
+      case 'Save':
         saveFileContentToFs()
         break
       default:

@@ -78,6 +78,7 @@ export const MainContext: Context<MainContextType> = createContext<MainContextTy
   cmdkReferenceData: {},
   cmdkReferenceJumpstart: {},
   cmdkReferenceActions: {},
+  cmdkReferenceAdd: {},
 
   // active panel/clipboard
   activePanel: 'other',
