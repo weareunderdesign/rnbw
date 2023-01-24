@@ -54,7 +54,7 @@ import cmdkRefActions from '@_ref/cmdk.ref/Actions.csv';
 // @ts-ignore
 import cmdkRefJumpstart from '@_ref/cmdk.ref/Jumpstart.csv';
 // @ts-ignore
-import htmlRefElements from '@_ref/rfrncs.design/HTML Elements.csv';
+import htmlRefElements from '@_ref/rfrncs/HTML Elements.csv';
 import {
   CmdkData,
   FFTree,

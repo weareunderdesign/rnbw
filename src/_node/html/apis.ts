@@ -268,7 +268,6 @@ export const getShortHand = (attrs: THtmlTagAttributes): THtmlTagAttributes => {
           newAttr['style'][newStyleName] = styleValue
         }
       })
-      console.log(newAttr['style'])
     } else {
       const newAttrName = attrName === 'class' ? 'className' :
         attrName === 'data-theme' ? 'datatheme' :
