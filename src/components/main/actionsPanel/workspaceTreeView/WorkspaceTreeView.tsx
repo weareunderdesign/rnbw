@@ -1395,7 +1395,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                       {props.arrow}
 
                       {/* render icon */}
-                      <SVGIcon>
+                      <SVGIcon style={{ display: "flex" }}>
                         {props.item.isFolder ? (props.context.isExpanded ? 'objects/folder' : 'objects/folder') :
                           'objects/page'}
                       </SVGIcon>
@@ -1416,7 +1416,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
             },
             renderItemArrow: (props) => {
               return <>
-                {props.item.isFolder ? <SVGIcon>{props.context.isExpanded ? 'arrows/down' : 'arrows/right'}</SVGIcon> :
+                {props.item.isFolder ? <SVGIcon style={{ display: "flex" }}>{props.context.isExpanded ? 'arrows/down' : 'arrows/right'}</SVGIcon> :
                   <div className='icon-xs'></div>}
               </>
             },

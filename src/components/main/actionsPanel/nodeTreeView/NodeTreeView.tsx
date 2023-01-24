@@ -610,7 +610,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                       {props.arrow}
 
                       {/* render icon */}
-                      <SVGIcon>
+                      <SVGIcon style={{ display: "flex" }}>
                         {props.item.isFolder ? (props.context.isExpanded ? 'objects/div' : 'objects/div') :
                           'objects/component'}
                       </SVGIcon>
@@ -632,6 +632,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
             renderItemArrow: (props) => {
               return <>
                 {props.item.isFolder ? <SVGIcon
+                  style={{ display: "flex" }}
                   onClick={(e) => {
                     // to merge with the click event
                     addRunningActions(['nodeTreeView-arrowClick'])
