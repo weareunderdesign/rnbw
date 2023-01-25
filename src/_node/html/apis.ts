@@ -1,5 +1,7 @@
 import ReactHtmlParser from 'react-html-parser';
 
+import { TOS } from '@_types/main';
+
 import {
   generateNodeUid,
   getBfsUids,
@@ -9,6 +11,8 @@ import {
 } from '../';
 import {
   THtmlParserResponse,
+  THtmlReference,
+  THtmlReferenceData,
   THtmlTagAttributes,
 } from './types';
 
@@ -17,7 +21,7 @@ import {
  * @param content 
  * @returns 
  */
-export const parseHtml = (content: string): THtmlParserResponse => {
+export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData, os: TOS): THtmlParserResponse => {
   const tree: TTree = {}
   const tmpTree: TTree = {}
 
@@ -127,10 +131,13 @@ export const parseHtml = (content: string): THtmlParserResponse => {
       valid = (data.type !== 'text')
     }
 
+    let hasOrgClass: boolean = true
+
     if (data.attribs === undefined) {
       data.attribs = {}
     }
     if (data.attribs.class === undefined) {
+      hasOrgClass = false
       data.attribs.class = `rnbwdev-rainbow-component-${uid.replace(/\?/g, '-')}`
     } else {
       data.attribs.class += ` rnbwdev-rainbow-component-${uid.replace(/\?/g, '-')}`
@@ -146,27 +153,37 @@ export const parseHtml = (content: string): THtmlParserResponse => {
         name: data.name,
         data: data.data,
         attribs: data.attribs,
+        hasOrgClass,
       },
     }
   })
 
+  // console.log('PARSED TREE', JSON.parse(JSON.stringify(tree)))
+
   // set html and its range on codeview
-  let newContent = serializeHtml(tree)
+  let newContent = serializeHtml(tree, htmlReferenceData)
+  // console.log('PARSED TREE with HTML', JSON.parse(JSON.stringify(tree)))
   let detected: Map<string, number> = new Map<string, number>()
 
   uids.map((uid) => {
     const node = tree[uid]
+
+    if (!node.data.valid) return
 
     // set the html range
     const { html } = node.data
     const htmlArr = newContent.split(html)
     const detectedCount = detected.get(html) || 0
     const beforeHtml = htmlArr.slice(0, detectedCount + 1).join(html)
-    detected.set(html, detectedCount + 1)
-    const beforeHtmlArr = beforeHtml.split(`\r\n`)
+
+    uid !== 'ROOT' && detected.set(html, detectedCount + 1)
+
+    // console.log(beforeHtml, beforeHtml.split(os === 'Windows' ? `\r\n` : `\n`).length)
+
+    const beforeHtmlArr = beforeHtml.split(os === 'Windows' ? `\r\n` : `\n`)
     const startLineNumber = beforeHtmlArr.length
     const startColumn = (beforeHtmlArr.pop()?.length || 0) + 1
-    const contentArr = html.split(`\r\n`)
+    const contentArr = html.split(os === 'Windows' ? `\r\n` : `\n`)
     const endLineNumber = startLineNumber + contentArr.length - 1
     const endColumn = (contentArr.length === 1 ? startColumn : 1) + (contentArr.pop()?.length || 0)
 
@@ -187,7 +204,7 @@ export const parseHtml = (content: string): THtmlParserResponse => {
  * @param tree 
  * @returns 
  */
-export const serializeHtml = (tree: TTree): string => {
+export const serializeHtml = (tree: TTree, htmlReferenceData: THtmlReferenceData): string => {
   let uids: TUid[] = Object.keys(tree)
   uids = getBfsUids(uids)
   uids.reverse()
@@ -207,14 +224,16 @@ export const serializeHtml = (tree: TTree): string => {
     let nodeHtml = ``
 
     const attribsHtml = data.attribs === undefined ? '' : Object.keys(data.attribs).map(attr => {
+      let attrContent: string = data.attribs[attr]
       if (attr === 'class') {
-        const classHtml = data.attribs['class'].split(' ').filter((className: string) => !!className && className !== `rnbwdev-rainbow-component-${uid.replace(/\?/g, '-')}`).join(' ')
-        return classHtml.length === 0 ? '' : ` class="${classHtml}"`
+        const classHtml = attrContent.split(' ').filter((className: string) => !!className && className !== `rnbwdev-rainbow-component-${uid.replace(/\?/g, '-')}`).join(' ')
+        if (classHtml.length === 0 && data.hasOrgClass === false) return ''
+        attrContent = classHtml
       }
       if (attr === 'style') {
         // do nothing
       }
-      return ` ${attr}="${data.attribs[attr]}"`
+      return attrContent === '' ? ` ${attr}` : ` ${attr}="${attrContent}"`
     }).join('')
 
     if (data.type === 'directive') {
@@ -223,17 +242,33 @@ export const serializeHtml = (tree: TTree): string => {
       nodeHtml = `<!--${data.data}-->`
     } else if (data.type === 'text') {
       nodeHtml = data.data.replace(/</g, `&lt;`).replace(/>/g, `&gt;`)
-    } else if (data.type === 'script') {
-      nodeHtml = `<script${attribsHtml}>` + childrenHtml + `</script>`
-    } else if (data.type === 'style') {
-      nodeHtml = `<style${attribsHtml}>` + childrenHtml + `</style>`
+    } else if (data.type === 'script' || data.type === 'style') {
+      nodeHtml = `<${data.type}${attribsHtml}>${childrenHtml}</${data.type}>`
     } else if (data.type === 'tag') {
-      if (data.name === 'title') {
-        nodeHtml = `<title>` + childrenHtml + `</title>`
-      } else if (data.name === 'meta' || data.name === 'link' || data.name === 'img' || data.name === 'br') {
-        nodeHtml = `<${data.name}${attribsHtml} />`
-      } else {
-        nodeHtml = `<${data.name}${attribsHtml}>` + childrenHtml + `</${data.name}>`
+      let isEmptyTag: boolean = false
+
+      if (htmlReferenceData[data.name] !== undefined) {
+        const refData: THtmlReference = htmlReferenceData[data.name]
+        // console.log('SerializeHtml API', refData)
+        if (refData.Content === 'None') {
+          isEmptyTag = true
+          nodeHtml = `<${data.name}${attribsHtml}>`
+        }
+      }
+
+      if (!isEmptyTag) {
+        // need to remove this condition when the reference is perfect
+        if (data.name === 'meta' || data.name === 'link'
+          || data.name === 'br' || data.name === 'hr'
+          || data.name === 'source' || data.name === 'input'
+          || data.name === 'area' || data.name === 'col' || data.name === 'wbr') {
+          isEmptyTag = true
+          nodeHtml = `<${data.name}${attribsHtml}>`
+        }
+      }
+
+      if (!isEmptyTag) {
+        nodeHtml = `<${data.name}${attribsHtml}>${childrenHtml}</${data.name}>`
       }
     } else {
       // do nothing

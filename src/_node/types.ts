@@ -1,3 +1,7 @@
+import { TOS } from '@_types/main';
+
+import { THtmlReferenceData } from './html';
+
 /**
  * unique id for each node
  */
@@ -38,6 +42,7 @@ export type TAddNodePayload = {
   tree: TTree,/* tree data */
   targetUid: TUid,/* target node uid */
   node: TNode,/* node to add */
+  os: TOS,
 }
 
 /**
@@ -65,12 +70,14 @@ export type TMoveNodePayload = {
   parentUid: TUid,/* parent uid which will be the parent of the nodes */
   position: number,/* child-index if it's reorder */
   uids: TUid[],/* nodes to move - array for multiple feature */
+  os: TOS,
 }
 
 export type TCopyNodePayload = {
   tree: TTree,
   targetUid: TUid,
   uids: TUid[],
+  os: TOS,
 }
 
 /**
@@ -79,6 +86,7 @@ export type TCopyNodePayload = {
 export type TDuplicateNodePayload = {
   tree: TTree,/* tree data */
   node: TNode,/* node to duplicate */
+  os: TOS,
 }
 
 /**
@@ -123,6 +131,8 @@ export const parsable: ParsableType = {/* parsable file types - we need this sin
 export type TParseFilePayload = {
   type: string,
   content: string,
+  referenceData: THtmlReferenceData,
+  os: TOS,
 }
 
 /**
@@ -131,4 +141,5 @@ export type TParseFilePayload = {
 export type TSearializeFilePayload = {
   type: string,
   tree: TTree,
+  referenceData: THtmlReferenceData,
 }

@@ -8,7 +8,7 @@ export const styles = `
   outline-offset: -1px;
 }
 
-/* .react-resizable {
+.react-resizable {
   position: relative;
 }
 .react-resizable-handle {
@@ -82,5 +82,5 @@ export const styles = `
 .react-resizable-handle-s {
   bottom: 0;
   transform: rotate(45deg);
-} */
+}
 `

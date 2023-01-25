@@ -64,3 +64,5 @@ export type TCmdkReferenceData = {
 export type CmdkData = {
   [groupName: string]: TCmdkReference[],
 }
+
+export type TOS = 'Windows' | 'Mac' | 'Linux' | 'Unix'

@@ -13,12 +13,7 @@ import {
 } from 'react-redux';
 
 import * as config from '@_config/main';
-import {
-  fnSelector,
-  globalSelector,
-  MainContext,
-  updateFileContent,
-} from '@_redux/main';
+import * as Main from '@_redux/main';
 import Editor, {
   loader,
   Monaco,
@@ -33,28 +28,48 @@ export default function CodeView(props: CodeViewProps) {
 
   // main context
   const {
+    // groupping action
     addRunningActions, removeRunningActions,
-    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, updateFF,
+
+    // file tree view
+    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree, updateFF,
+
+    // ndoe tree view
     fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree,
+
+    // update opt
     updateOpt, setUpdateOpt,
-    currentCommand, setCurrentCommand,
+
+    // ff hms
+    isHms, setIsHms, ffAction, setFFAction,
+
+    // cmdk
+    currentCommand, setCurrentCommand, cmdkOpen, setCmdkOpen, cmdkPages, setCmdkPages, cmdkPage,
+
+    // global
     pending, setPending, messages, addMessage, removeMessage,
-  } = useContext(MainContext)
+
+    // reference
+    htmlReferenceData, cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions,
+
+    // active panel/clipboard
+    activePanel, setActivePanel, clipboardData, setClipboardData,
+  } = useContext(Main.MainContext)
 
   // redux state
-  const { project, currentFile } = useSelector(globalSelector)
-  const { focusedItem } = useSelector(fnSelector)
+  const { project, currentFile } = useSelector(Main.globalSelector)
+  const { focusedItem } = useSelector(Main.fnSelector)
 
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
   // focusedItem - code select
   useEffect(() => {
     // validate
-    if (monacoRef.current === null || focusedItem === 'ROOT') return
+    if (monacoRef.current === null) return
 
     let node = validNodeTree[focusedItem]
     if (node === undefined) return
 
-    console.log('Now the focusedItem is', node)
+    console.log('Now the focusedItem is', node.uid)
 
     // select and reveal the node's code sector
     const { startLineNumber, startColumn, endLineNumber, endColumn } = node.data
@@ -144,13 +159,13 @@ export default function CodeView(props: CodeViewProps) {
     // skip the same content
     if (currentFile.content === codeContent.current) return
 
-    console.log('codeView-content')
+    // console.log('codeView-content')
 
     setUpdateOpt({ parse: true, from: 'code' })
 
     addRunningActions(['processor-content', 'processor-validNodeTree'])
 
-    setTimeout(() => dispatch(updateFileContent(codeContent.current)), 0)
+    setTimeout(() => dispatch(Main.updateFileContent(codeContent.current)), 0)
 
     reduxTimeout.current = null
   }, [currentFile.content, updateOpt])
@@ -181,8 +196,18 @@ export default function CodeView(props: CodeViewProps) {
 
   const [language, setLanguage] = useState('html')
 
+  // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
+  // panel focus handler
+  const onPanelClick = useCallback((e: React.MouseEvent) => {
+    setActivePanel('code')
+  }, [])
+  // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
+
   return <>
-    <div className='box'>
+    <div
+      className='box'
+      onClick={onPanelClick}
+    >
       <Editor
         height="100%"
         width="100%"
