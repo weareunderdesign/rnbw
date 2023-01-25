@@ -9,6 +9,7 @@ import {
   FFTree,
   ProjectLocation,
   TCmdkReferenceData,
+  TOS,
 } from '@_types/main';
 
 // ---------------- main redux ----------------
@@ -168,6 +169,9 @@ export type MainContextType = {
 
   clipboardData: TClipboardData,
   setClipboardData: (data: TClipboardData) => void,
+
+  // os
+  os: TOS,
 }
 
 /**

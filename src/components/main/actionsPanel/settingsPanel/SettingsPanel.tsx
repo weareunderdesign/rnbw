@@ -4,7 +4,6 @@ import React, {
   useCallback,
   useContext,
   useEffect,
-  useRef,
   useState,
 } from 'react';
 
@@ -19,10 +18,7 @@ import {
 } from '@_node/apis';
 import { TTree } from '@_node/types';
 import * as Main from '@_redux/main';
-import {
-  globalSelector,
-  MainContext,
-} from '@_redux/main';
+import { globalSelector } from '@_redux/main';
 
 import { SettingsPanelProps } from './types';
 
@@ -34,34 +30,37 @@ type StyleProperty = {
 export default function SettingsPanel(props: SettingsPanelProps) {
   const dispatch = useDispatch()
 
-  // for groupping action - it contains the actionNames as keys which should be in the same group
-  const runningActions = useRef<{ [actionName: string]: boolean }>({})
-  const noRunningAction = () => {
-    return Object.keys(runningActions.current).length === 0 ? true : false
-  }
-  const addRunningAction = (actionNames: string[]) => {
-    for (const actionName of actionNames) {
-      runningActions.current[actionName] = true
-    }
-  }
-  const removeRunningAction = (actionNames: string[], effect: boolean = true) => {
-    for (const actionName of actionNames) {
-      delete runningActions.current[actionName]
-    }
-    if (effect && noRunningAction()) {
-      dispatch(Main.increaseActionGroupIndex())
-    }
-  }
-
   const [styleLists, setStyleLists] = useState<Record<string, StyleProperty>>({})
 
   // main context
   const {
-    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, updateFF,
+    // groupping action
+    addRunningActions, removeRunningActions,
+
+    // file tree view
+    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree, updateFF,
+
+    // ndoe tree view
     fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree,
-    currentCommand, setCurrentCommand,
+
+    // update opt
+    updateOpt, setUpdateOpt,
+
+    // ff hms
+    isHms, setIsHms, ffAction, setFFAction,
+
+    // cmdk
+    currentCommand, setCurrentCommand, cmdkOpen, setCmdkOpen, cmdkPages, setCmdkPages, cmdkPage,
+
+    // global
     pending, setPending, messages, addMessage, removeMessage,
-  } = useContext(MainContext)
+
+    // reference
+    htmlReferenceData, cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions,
+
+    // active panel/clipboard
+    activePanel, setActivePanel, clipboardData, setClipboardData,
+  } = useContext(Main.MainContext)
 
 
   const { currentFile } = useSelector(globalSelector)
@@ -96,7 +95,7 @@ export default function SettingsPanel(props: SettingsPanelProps) {
 
   // update the file content
   const updateFFContent = useCallback(async (tree: TTree) => {
-    const newContent = serializeFile({ type: currentFile.type, tree })
+    const newContent = serializeFile({ type: currentFile.type, tree, referenceData: htmlReferenceData })
     dispatch(Main.updateFileContent(newContent))
   }, [currentFile.type])
 
@@ -132,7 +131,7 @@ export default function SettingsPanel(props: SettingsPanelProps) {
                   setStyleLists(newStyleList)
 
                   // props changed
-                  addRunningAction(['updateNode'])
+                  addRunningActions(['updateNode'])
                   const tree = JSON.parse(JSON.stringify(nodeTree))
                   updateNode({
                     tree: tree,
@@ -142,7 +141,7 @@ export default function SettingsPanel(props: SettingsPanelProps) {
                     uid: '',
                   })
                   updateFFContent(tree)
-                  removeRunningAction(['updateNode'])
+                  removeRunningActions(['updateNode'])
                 }}
               />
             </div>

@@ -64,6 +64,9 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     // active panel/clipboard
     activePanel, setActivePanel, clipboardData, setClipboardData,
+
+    // os
+    os,
   } = useContext(Main.MainContext)
 
   // redux state
@@ -208,7 +211,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     addRunningActions(['processor-nodeTree', 'processor-validNodeTree'])
 
     // add node
-    const res = addNode({ tree, targetUid: focusedItem, node: newNode })
+    const res = addNode({ tree, targetUid: focusedItem, node: newNode, os })
     setUpdateOpt({ parse: false, from: 'node' })
     setNodeTree(res.tree)
     dispatch(Main.updateFNTreeViewState(res))
@@ -236,7 +239,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     // duplicate the node
     const tree = JSON.parse(JSON.stringify(nodeTree))
-    const res = duplicateNode({ tree, node: focusedNode })
+    const res = duplicateNode({ tree, node: focusedNode, os })
     setUpdateOpt({ parse: false, from: 'node' })
     setNodeTree(res.tree)
     dispatch(Main.updateFNTreeViewState(res))
@@ -253,7 +256,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     // drop the nodes
     const tree = JSON.parse(JSON.stringify(nodeTree))
-    const res = copyNode({ tree, targetUid, uids })
+    const res = copyNode({ tree, targetUid, uids, os })
     setUpdateOpt({ parse: false, from: 'node' })
     setNodeTree(res.tree)
     dispatch(Main.updateFNTreeViewState(res))
@@ -295,7 +298,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       isBetween: payload.isBetween,
       parentUid: payload.parentUid,
       position: payload.position,
-      uids: uids
+      uids: uids,
+      os,
     })
     setUpdateOpt({ parse: false, from: 'node' })
     setNodeTree(res.tree)

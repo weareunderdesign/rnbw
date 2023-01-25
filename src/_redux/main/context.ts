@@ -86,4 +86,7 @@ export const MainContext: Context<MainContextType> = createContext<MainContextTy
 
   clipboardData: { panel: 'other', type: null, uids: [] },
   setClipboardData: (data: TClipboardData) => { },
+
+  // os
+  os: 'Windows',
 })

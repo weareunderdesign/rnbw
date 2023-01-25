@@ -1,7 +1,10 @@
+import { TOS } from '@_types/main';
+
 import {
   parseHtml,
   serializeHtml,
   THtmlParserResponse,
+  THtmlReferenceData,
 } from './html';
 import {
   TAddNodePayload,
@@ -237,7 +240,7 @@ export const getBeforeUid = (tree: TTree, node: TNode): TUid => {
  * @param tree 
  * @param node 
  */
-export const addFormatTextBeforeNode = (tree: TTree, node: TNode, uidOffset: number = 0): boolean => {
+export const addFormatTextBeforeNode = (tree: TTree, node: TNode, os: TOS, uidOffset: number = 0): boolean => {
   // get node index inside the parentNode
   const parentNode = tree[node.p_uid as TUid]
   let childIndex: number = 0
@@ -261,7 +264,7 @@ export const addFormatTextBeforeNode = (tree: TTree, node: TNode, uidOffset: num
 
       type: 'text',
       name: undefined,
-      data: `\r\n` + ' '.repeat((nodeDepth) * tabSize),
+      data: (os === 'Windows' ? `\r\n` : `\n`) + ' '.repeat((nodeDepth) * tabSize),
       attribs: undefined,
 
       // startLineNumber: '',
@@ -298,7 +301,7 @@ export const addFormatTextBeforeNode = (tree: TTree, node: TNode, uidOffset: num
  * @param tree 
  * @param node 
  */
-export const addFormatTextAfterNode = (tree: TTree, node: TNode, uidOffset: number = 0): boolean => {
+export const addFormatTextAfterNode = (tree: TTree, node: TNode, os: TOS, uidOffset: number = 0): boolean => {
   // get node index inside the parentNode
   const parentNode = tree[node.p_uid as TUid]
   let childIndex: number = 0
@@ -322,7 +325,7 @@ export const addFormatTextAfterNode = (tree: TTree, node: TNode, uidOffset: numb
 
       type: 'text',
       name: undefined,
-      data: `\r\n` + ' '.repeat((nodeDepth) * tabSize),
+      data: (os === 'Windows' ? `\r\n` : `\n`) + ' '.repeat((nodeDepth) * tabSize),
       attribs: undefined,
 
       // startLineNumber: '',
@@ -337,7 +340,7 @@ export const addFormatTextAfterNode = (tree: TTree, node: TNode, uidOffset: numb
   // add after format text node
   let hasOffset: boolean = false
   if (childIndex === parentNode.children.length - 1) {
-    formatTextNode.data.data = `\r\n` + ' '.repeat((nodeDepth - 1) * tabSize)
+    formatTextNode.data.data = (os === 'Windows' ? `\r\n` : `\n`) + ' '.repeat((nodeDepth - 1) * tabSize)
     tree[formatTextNode.uid] = formatTextNode
     parentNode.children.push(formatTextNode.uid)
   } else {
@@ -361,17 +364,17 @@ export const addFormatTextAfterNode = (tree: TTree, node: TNode, uidOffset: numb
  * @param node 
  * @param indentSize 
  */
-export const indentNode = (tree: TTree, node: TNode, indentSize: number) => {
+export const indentNode = (tree: TTree, node: TNode, indentSize: number, os: TOS) => {
   const uids: TUid[] = getSubUids(node.uid, tree)
   uids.map((uid) => {
     const node = tree[uid]
     if (node.data.isFormatText) {
       const text = node.data.data
-      const textParts = text.split(`\r\n`)
+      const textParts = text.split(os === 'Windows' ? `\r\n` : `\n`)
       const singleLine = textParts.length === 1
       const lastPart = textParts.pop()
       const newLastPart = ' '.repeat(lastPart.length + indentSize)
-      node.data.data = textParts.join(`\r\n`) + (!singleLine ? `\r\n` : '') + newLastPart
+      node.data.data = textParts.join(os === 'Windows' ? `\r\n` : `\n`) + (!singleLine ? (os === 'Windows' ? `\r\n` : `\n`) : '') + newLastPart
     }
   })
 }
@@ -381,7 +384,7 @@ export const indentNode = (tree: TTree, node: TNode, indentSize: number) => {
  * this api adds the node just as a child of the target node in the tree
  * @param param0 
  */
-export const addNode = ({ tree, targetUid, node }: TAddNodePayload): TNodeApiRes => {
+export const addNode = ({ tree, targetUid, node, os }: TAddNodePayload): TNodeApiRes => {
   const target = tree[targetUid]
   target.isEntity = false
 
@@ -394,9 +397,9 @@ export const addNode = ({ tree, targetUid, node }: TAddNodePayload): TNodeApiRes
   // add text-format nodes before & after the "node"
   let uidOffset: number = 0
   let hasOffset: boolean = false
-  hasOffset = addFormatTextBeforeNode(tree, node, uidOffset)
+  hasOffset = addFormatTextBeforeNode(tree, node, os, uidOffset)
   hasOffset && uidOffset++
-  hasOffset = addFormatTextAfterNode(tree, node, uidOffset)
+  hasOffset = addFormatTextAfterNode(tree, node, os, uidOffset)
   hasOffset && uidOffset++
 
   /* reset the uids */
@@ -454,7 +457,7 @@ export const removeNode = ({ tree, nodeUids }: TRemoveNodePayload): TNodeApiRes 
  * @param param0 
  * @returns 
  */
-export const moveNode = ({ tree, isBetween, parentUid, position, uids }: TMoveNodePayload): TNodeApiRes => {
+export const moveNode = ({ tree, isBetween, parentUid, position, uids, os }: TMoveNodePayload): TNodeApiRes => {
   const parentNode = tree[parentUid]
   const parentNodeDepth = parentNode.uid.split('?').length - 1
   const tabSize = 2
@@ -523,14 +526,14 @@ export const moveNode = ({ tree, isBetween, parentUid, position, uids }: TMoveNo
 
     // add format text nodes before and after the "uid-node"
     let hasOffset: boolean = false
-    hasOffset = addFormatTextBeforeNode(tree, node, uidOffset)
+    hasOffset = addFormatTextBeforeNode(tree, node, os, uidOffset)
     hasOffset && uidOffset++
-    hasOffset = addFormatTextAfterNode(tree, node, uidOffset)
+    hasOffset = addFormatTextAfterNode(tree, node, os, uidOffset)
     hasOffset && uidOffset++
 
     // indent the nodes
     if (parentNodeDepth !== p_nodeDepth) {
-      indentNode(tree, node, tabSize * (parentNodeDepth - p_nodeDepth))
+      indentNode(tree, node, tabSize * (parentNodeDepth - p_nodeDepth), os)
     }
   })
 
@@ -547,7 +550,7 @@ export const moveNode = ({ tree, isBetween, parentUid, position, uids }: TMoveNo
  * copy(duplicate) the uids under the tragetUid in the tree
  * @param param0 
  */
-export const copyNode = ({ tree, targetUid, uids }: TCopyNodePayload): TNodeApiRes => {
+export const copyNode = ({ tree, targetUid, uids, os }: TCopyNodePayload): TNodeApiRes => {
   const targetNode = tree[targetUid]
   const targetNodeDepth = targetNode.uid.split('?').length - 1
   const tabSize = 2
@@ -578,14 +581,14 @@ export const copyNode = ({ tree, targetUid, uids }: TCopyNodePayload): TNodeApiR
 
     // add format text nodes before and after the "uid-node"
     let hasOffset: boolean = false
-    hasOffset = addFormatTextBeforeNode(tree, newNode, uidOffset)
+    hasOffset = addFormatTextBeforeNode(tree, newNode, os, uidOffset)
     hasOffset && uidOffset++
-    hasOffset = addFormatTextAfterNode(tree, newNode, uidOffset)
+    hasOffset = addFormatTextAfterNode(tree, newNode, os, uidOffset)
     hasOffset && uidOffset++
 
     // indent the nodes
     if (targetNodeDepth !== parentNodeDepth) {
-      indentNode(tree, newNode, tabSize * (targetNodeDepth - parentNodeDepth))
+      indentNode(tree, newNode, tabSize * (targetNodeDepth - parentNodeDepth), os)
     }
   })
 
@@ -604,7 +607,7 @@ export const copyNode = ({ tree, targetUid, uids }: TCopyNodePayload): TNodeApiR
  * @param param0 
  * @returns 
  */
-export const duplicateNode = ({ tree, node }: TDuplicateNodePayload): TNodeApiRes => {
+export const duplicateNode = ({ tree, node, os }: TDuplicateNodePayload): TNodeApiRes => {
   /* insert the duplicated node uid to the parent.children */
   const p_node = tree[node.p_uid as TUid]
   let newUid: TUid = node.uid
@@ -633,7 +636,7 @@ export const duplicateNode = ({ tree, node }: TDuplicateNodePayload): TNodeApiRe
   }
 
   /* add text format node before the "node" */
-  addFormatTextBeforeNode(tree, tree[newUid])
+  addFormatTextBeforeNode(tree, tree[newUid], os)
 
   /* reset the uids */
   const { newTree, convertedUids: _convertedUids } = resetTreeUids(tree)
@@ -668,9 +671,9 @@ export const replaceNode = ({ tree, node }: TReplaceNodePayload) => {
  * @param param0 
  * @returns 
  */
-export const parseFile = ({ type, content }: TParseFilePayload): THtmlParserResponse | TTree => {
+export const parseFile = ({ type, content, referenceData, os }: TParseFilePayload): THtmlParserResponse | TTree => {
   if (type === "html") {
-    return parseHtml(content)
+    return parseHtml(content, referenceData as THtmlReferenceData, os)
   }
   return {}
 }
@@ -681,9 +684,9 @@ export const parseFile = ({ type, content }: TParseFilePayload): THtmlParserResp
  * @param param0 
  * @returns 
  */
-export const serializeFile = ({ type, tree }: TSearializeFilePayload): string => {
+export const serializeFile = ({ type, tree, referenceData }: TSearializeFilePayload): string => {
   if (type === "html") {
-    return serializeHtml(tree)
+    return serializeHtml(tree, referenceData as THtmlReferenceData)
   }
   return ''
 }

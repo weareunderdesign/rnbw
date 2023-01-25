@@ -63,6 +63,7 @@ import {
   TCmdkContextScope,
   TCmdkReference,
   TCmdkReferenceData,
+  TOS,
 } from '@_types/main';
 
 import { MainPageProps } from './types';
@@ -142,7 +143,6 @@ export default function MainPage(props: MainPageProps) {
   const [ffAction, setFFAction] = useState<FFAction>({ name: null })
 
   // cmdk
-  const [detectCmdk, setDetectCmdk] = useState<boolean>(false)
   const [currentCommand, setCurrentCommand] = useState<TCommand>({ action: '', changed: false })
   const [cmdkOpen, setCmdkOpen] = useState<boolean>(false)
   const [cmdkPages, setCmdkPages] = useState<string[]>([])
@@ -262,11 +262,22 @@ export default function MainPage(props: MainPageProps) {
   // active panel/clipboard
   const [activePanel, setActivePanel] = useState<TPanel>('other')
   const [clipboardData, setClipboardData] = useState<TClipboardData>({ panel: 'other', type: null, uids: [] })
+
+  // os
+  const [os, setOS] = useState<TOS>('Windows')
   // -------------------------------------------------------------- main context --------------------------------------------------------------
 
-  // fetch reference - html. Jumpstart.csv, Actions.csv
+  // detect OS & fetch reference - html. Jumpstart.csv, Actions.csv
   useEffect(() => {
-    addRunningActions(['reference-html-elements', 'reference-cmdk-jumpstart', 'reference-cmdk-actions'])
+    addRunningActions(['detect-os', 'reference-html-elements', 'reference-cmdk-jumpstart', 'reference-cmdk-actions'])
+
+    // detect os
+    console.log('NAVIGATOR ', navigator.userAgent)
+    if (navigator.userAgent.indexOf('Mac OS X') !== -1) {
+      setOS('Mac')
+    } else {
+      setOS('Windows')
+    }
 
     // reference-html-elements
     const _htmlReferenceData: THtmlReferenceData = {}
@@ -407,7 +418,7 @@ export default function MainPage(props: MainPageProps) {
 
     // console.log('CMDK REFERENCE DATA', _cmdkReferenceData, _cmdkRefJumpstartData, _cmdkRefActionsData)
 
-    removeRunningActions(['reference-html-elements', 'reference-cmdk-jumpstart', 'reference-cmdk-actions'], false)
+    removeRunningActions(['detect-os', 'reference-html-elements', 'reference-cmdk-jumpstart', 'reference-cmdk-actions'], false)
   }, [])
 
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
@@ -435,8 +446,7 @@ export default function MainPage(props: MainPageProps) {
     }
 
     // skip monaco-editor shortkeys and general coding
-    const targetClassName = (e.target as HTMLElement).className
-    if (targetClassName.includes('monaco-mouse-cursor-text') !== false) {
+    if (activePanel === 'code') {
       // copy
       if (cmdk.cmd && !cmdk.shift && !cmdk.alt && cmdk.key === 'KeyC') {
         return
@@ -456,10 +466,7 @@ export default function MainPage(props: MainPageProps) {
     }
 
     // skip if its from cmdk-input
-    const cmdkInputAttr = (e.target as HTMLElement).getAttribute('cmdk-input')
-    if (cmdkInputAttr !== null) {
-      return
-    }
+    if (cmdkOpen) return
 
     // detect action
     let action: string | null = null
@@ -478,7 +485,7 @@ export default function MainPage(props: MainPageProps) {
     e.preventDefault()
 
     setCurrentCommand({ action, changed: !currentCommand.changed })
-  }, [currentCommand.changed, pending, cmdkReferenceData])
+  }, [currentCommand.changed, pending, cmdkReferenceData, activePanel, cmdkOpen])
 
   // bind onKeyDownCallback (cb_onKeyDown)
   useEffect(() => {
@@ -660,6 +667,9 @@ export default function MainPage(props: MainPageProps) {
 
         clipboardData,
         setClipboardData,
+
+        // os
+        os,
       }}
     >
       {/* process */}
@@ -704,8 +714,7 @@ export default function MainPage(props: MainPageProps) {
           }
         }}
         filter={(value: string, search: string) => {
-          if (value.includes(search)) return 1
-          return 0
+          return value.includes(search) !== false ? 1 : 0
         }}
         loop={true}
         className='hidden-on-mobile box-l direction-row align-center justify-stretch radius-s border shadow background-primary'

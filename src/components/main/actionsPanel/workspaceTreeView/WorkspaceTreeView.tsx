@@ -87,6 +87,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
     // active panel/clipboard
     activePanel, setActivePanel, clipboardData, setClipboardData,
+
+    // os
+    os,
   } = useContext(Main.MainContext)
 
   // redux state
@@ -722,7 +725,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
       // initial format code
       if (fileType === 'html') {
-        const { content: formattedContent, tree } = parseHtml(content)
+        const { content: formattedContent, tree } = parseHtml(content, htmlReferenceData, os)
         if (content !== formattedContent) {
           file.content = formattedContent
           file.saved = false

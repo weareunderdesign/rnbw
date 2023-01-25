@@ -20,16 +20,7 @@ import {
   THtmlParserResponse,
 } from '@_node/html';
 import { TUid } from '@_node/types';
-import {
-  clearFNState,
-  expandFNNode,
-  fnSelector,
-  focusFNNode,
-  globalSelector,
-  MainContext,
-  selectFNNode,
-  updateFileContent,
-} from '@_redux/main';
+import * as Main from '@_redux/main';
 import { verifyPermission } from '@_services/main';
 
 import { ProcessProps } from './types';
@@ -39,17 +30,40 @@ export default function Process(props: ProcessProps) {
 
   // main context
   const {
+    // groupping action
     addRunningActions, removeRunningActions,
+
+    // file tree view
     ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree, updateFF,
+
+    // ndoe tree view
     fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree,
+
+    // update opt
     updateOpt, setUpdateOpt,
-    currentCommand, setCurrentCommand,
+
+    // ff hms
+    isHms: _isHms, setIsHms, ffAction, setFFAction,
+
+    // cmdk
+    currentCommand, setCurrentCommand, cmdkOpen, setCmdkOpen, cmdkPages, setCmdkPages, cmdkPage,
+
+    // global
     pending, setPending, messages, addMessage, removeMessage,
-  } = useContext(MainContext)
+
+    // reference
+    htmlReferenceData, cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions,
+
+    // active panel/clipboard
+    activePanel, setActivePanel, clipboardData, setClipboardData,
+
+    // os
+    os,
+  } = useContext(Main.MainContext)
 
   // redux state
-  const { project, currentFile, action } = useSelector(globalSelector)
-  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
+  const { project, currentFile, action } = useSelector(Main.globalSelector)
+  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(Main.fnSelector)
 
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
   const isHms = useRef<boolean>(false)
@@ -65,13 +79,13 @@ export default function Process(props: ProcessProps) {
       isHms.current = true
     }
 
-    const parseResult = parseFile({ type: currentFile.type, content: currentFile.content })
+    const parseResult = parseFile({ type: currentFile.type, content: currentFile.content, referenceData: htmlReferenceData, os })
     setUpdateOpt({ parse: null, from: 'processor' })
 
     if (currentFile.type === 'html') {
       const { content: formattedContent, tree } = parseResult as THtmlParserResponse
       setNodeTree(tree)
-      setTimeout(() => dispatch(updateFileContent(formattedContent)), 0)
+      setTimeout(() => dispatch(Main.updateFileContent(formattedContent)), 0)
     } else {
       setNodeTree({})
     }
@@ -89,15 +103,15 @@ export default function Process(props: ProcessProps) {
       isDoubleValidNodeTree.current = true
     }
 
-    const newContent = serializeFile({ type: currentFile.type, tree: nodeTree })
+    const newContent = serializeFile({ type: currentFile.type, tree: nodeTree, referenceData: htmlReferenceData })
     setUpdateOpt({ parse: null, from: 'processor' })
 
     if (currentFile.type === 'html') {
-      const { content: formattedContent, tree } = parseHtml(newContent)
+      const { content: formattedContent, tree } = parseHtml(newContent, htmlReferenceData, os)
       setNodeTree(tree)
     }
 
-    setTimeout(() => dispatch(updateFileContent(newContent)), 0)
+    setTimeout(() => dispatch(Main.updateFileContent(newContent)), 0)
 
     removeRunningActions(['processor-nodeTree'])
   }, [nodeTree])
@@ -111,7 +125,7 @@ export default function Process(props: ProcessProps) {
     }
 
     if (updateOpt.parse === null && updateOpt.from === 'fs') {
-      dispatch(expandFNNode(Object.keys(validNodeTree)))
+      dispatch(Main.expandFNNode(Object.keys(validNodeTree)))
     } else {
       const _focusedItem: TUid = validNodeTree[focusedItem] === undefined ? 'ROOT' : focusedItem
       const _expandedItems = expandedItems.filter((uid) => {
@@ -121,10 +135,10 @@ export default function Process(props: ProcessProps) {
         return validNodeTree[uid] !== undefined
       })
 
-      dispatch(clearFNState())
-      dispatch(focusFNNode(_focusedItem))
-      dispatch(expandFNNode(_expandedItems))
-      dispatch(selectFNNode(_selectedItems))
+      dispatch(Main.clearFNState())
+      dispatch(Main.focusFNNode(_focusedItem))
+      dispatch(Main.expandFNNode(_expandedItems))
+      dispatch(Main.selectFNNode(_selectedItems))
     }
 
     if (isDoubleValidNodeTree.current === true) {
