@@ -15,7 +15,8 @@ Build an entire design system and use it in another project.
 - Design with the true power of the web. HTML, CSS, JS.
 - Run it locally and open your files directly in the browser.
 - Connect libraries and frameworks and integrate whatever, however, from wherever.
-- API-first - Extend Rainbow to your advantage using the API.
+- API-first - extend rnbw to your advantage.
+- prompts-driven. prompts are as the center of the experience.
 
 ### Commitment to Open Source
 
