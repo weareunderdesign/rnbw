@@ -1,141 +1,63 @@
-import { THtmlReferenceData } from '@_node/html';
 import {
-  TFileType,
-  TTree,
-  TUid,
+  TFilesReferenceData,
+  THtmlReferenceData,
+} from '@_node/index';
+import {
+  TNodeTreeData,
+  TNodeUid,
 } from '@_node/types';
 import {
-  CmdkData,
-  FFTree,
-  ProjectLocation,
+  TOsType,
+  TToast,
+} from '@_types/global';
+import {
+  TClipboardData,
+  TCmdkGroupData,
   TCmdkReferenceData,
-  TOS,
+  TFile,
+  TFileAction,
+  TPanelContext,
+  TProject,
+  TWorkspace,
 } from '@_types/main';
 
-// ---------------- main redux ----------------
 /**
- * main page redux state
+ * main context
  */
-export type MainState = {
-  actionGroupIndex: number,
-  global: {
-    project: Project,
-    currentFile: OpenedFile,
-    action: FFAction,
-  },
-  ff: FFTreeViewState,
-  fn: FNTreeViewState,
-}
-
-/**
- * project
- */
-export type Project = {
-  location: ProjectLocation,
-  path: string,
-}
-
-/**
- * opened file
- */
-export type OpenedFile = {
-  uid: TUid,
-  name: string,
-  type: TFileType,
-  content: string,
-  saved: boolean,
-}
-
-/**
- * ff action (create, delete, move, rename, duplicate)
- */
-export type FFAction = {
-  name: 'create' | 'delete' | 'move' | 'rename' | 'duplicate' | 'cut' | 'copy' | null,
-  param1?: any,
-  param2?: any,
-}
-
-/**
- * ff tree view state
- */
-export type FFTreeViewState = {
-  focusedItem: TUid,
-  expandedItems: TUid[],
-  expandedItemsObj: {
-    [uid: TUid]: boolean,
-  },
-  selectedItems: TUid[],
-  selectedItemsObj: {
-    [uid: TUid]: boolean,
-  },
-}
-
-/**
- * fn tree view state
- */
-export type FNTreeViewState = {
-  focusedItem: TUid,
-  expandedItems: TUid[],
-  expandedItemsObj: {
-    [uid: TUid]: boolean,
-  },
-  selectedItems: TUid[],
-  selectedItemsObj: {
-    [uid: TUid]: boolean,
-  },
-}
-
-/* update fn node - delete / convert from $a to $b */
-export type UpdateFNTreeViewStatePayload = {
-  deletedUids?: TUid[],
-  convertedUids?: [TUid, TUid][],
-}
-
-// update ff tree view state payload type - delete / convert from $a to $b
-export type UpdateFFTreeViewStatePayload = {
-  deletedUids?: TUid[],
-  convertedUids?: [TUid, TUid][],
-}
-// ---------------- main redux ----------------
-
-// ---------------- main context ----------------
-/**
- * context type for main page
- */
-export type MainContextType = {
+export type TMainContext = {
   // groupping action
   addRunningActions: (actionNames: string[]) => void,
   removeRunningActions: (actionNames: string[], effect?: boolean) => void,
 
   // file tree view
-  ffHoveredItem: TUid,
-  setFFHoveredItem: (uid: TUid) => void,
+  ffHoveredItem: TNodeUid,
+  setFFHoveredItem: (uid: TNodeUid) => void,
 
-  ffHandlers: FFHandlers,
-  ffTree: FFTree,
-  setFFTree: (tree: FFTree) => void,
-  updateFF: (deletedUids: { [uid: TUid]: boolean }, nodes: FFTree, handlers: { [uid: TUid]: FileSystemHandle }) => void,
+  ffHandlers: TFileHandlerCollection,
+  ffTree: TNodeTreeData,
+  setFFTree: (tree: TNodeTreeData) => void,
+  updateFF: (deletedUids: { [uid: TNodeUid]: boolean }, nodes: TNodeTreeData, handlers: { [uid: TNodeUid]: FileSystemHandle }) => void,
 
   // node tree view
-  fnHoveredItem: TUid,
-  setFNHoveredItem: (uid: TUid) => void,
+  fnHoveredItem: TNodeUid,
+  setFNHoveredItem: (uid: TNodeUid) => void,
 
-  nodeTree: TTree,
-  setNodeTree: (tree: TTree) => void,
+  nodeTree: TNodeTreeData,
+  setNodeTree: (tree: TNodeTreeData) => void,
 
-  validNodeTree: TTree,
-  setValidNodeTree: (tree: TTree) => void,
+  validNodeTree: TNodeTreeData,
+  setValidNodeTree: (tree: TNodeTreeData) => void,
 
   // update opt
-  updateOpt: UpdateOptions,
-  setUpdateOpt: (opt: UpdateOptions) => void,
+  updateOpt: TUpdateOptions,
+  setUpdateOpt: (opt: TUpdateOptions) => void,
 
   // ff hms
   isHms: boolean | null,
   setIsHms: (is: boolean | null) => void,
 
-  ffAction: FFAction,
-  setFFAction: (action: FFAction) => void,
+  ffAction: TFileAction,
+  setFFAction: (action: TFileAction) => void,
 
   // cmdk
   currentCommand: TCommand,
@@ -152,39 +74,47 @@ export type MainContextType = {
   pending: boolean,
   setPending: (pending: boolean) => void,
 
-  messages: Message[],
-  addMessage: (message: Message) => void,
+  messages: TToast[],
+  addMessage: (message: TToast) => void,
   removeMessage: (index: number) => void,
 
   // reference
+  filesReferenceData: TFilesReferenceData,
   htmlReferenceData: THtmlReferenceData,
+
   cmdkReferenceData: TCmdkReferenceData,
-  cmdkReferenceJumpstart: CmdkData,
-  cmdkReferenceActions: CmdkData,
-  cmdkReferenceAdd: CmdkData,
+  cmdkReferenceJumpstart: TCmdkGroupData,
+  cmdkReferenceActions: TCmdkGroupData,
+  cmdkReferenceAdd: TCmdkGroupData,
 
   // active panel/clipboard
-  activePanel: TPanel,
-  setActivePanel: (panel: TPanel) => void,
+  activePanel: TPanelContext,
+  setActivePanel: (panel: TPanelContext) => void,
 
   clipboardData: TClipboardData,
   setClipboardData: (data: TClipboardData) => void,
 
   // os
-  os: TOS,
+  osType: TOsType,
+
+  // code view
+  tabSize: number,
+  setTabSize: (size: number) => void,
 }
 
 /**
- * ff handler collection
+ * file handler collection
  */
-export type FFHandlers = { [key: TUid]: FileSystemHandle }
+export type TFileHandlerCollection = {
+  [uid: TNodeUid]: FileSystemHandle,
+}
 
 /**
  * update opts
  */
-export type UpdateOptions = {
-  parse: boolean | null, // true if should parse, false if serialize
-  from: 'fs' | 'code' | 'node' | 'stage' | 'settings' | 'styles' | 'processor' | 'hms' | null,
+export type TUpdateOptions = {
+  parse: boolean | null,
+  from: 'file' | 'node' | 'settings' | 'styles' | 'stage' | 'code' | 'processor' | 'hms' | null,
   isHms?: boolean,
 }
 
@@ -197,29 +127,42 @@ export type TCommand = {
 }
 
 /**
- * message-type
+ * main reducer state
  */
-export type MessageType = 'warning' | 'error' | 'info' | 'success'
-
-/**
- * message
- */
-export type Message = {
-  type: MessageType,
-  message: string,
+export type TMainReducerState = {
+  actionGroupIndex: number,
+  navigator: {
+    workspace: TWorkspace,
+    project: TProject,
+    file: TFile,
+    changedFiles: TFile[],
+  },
+  global: {
+    fileAction: TFileAction,
+  },
+  fileTreeViewState: TTreeViewState,
+  nodeTreeViewState: TTreeViewState,
 }
 
 /**
- * panel
+ * node tree view state
  */
-export type TPanel = 'file' | 'node' | 'stage' | 'code' | 'cmdk' | 'other'
+export type TTreeViewState = {
+  focusedItem: TNodeUid,
+  expandedItems: TNodeUid[],
+  expandedItemsObj: {
+    [uid: TNodeUid]: boolean,
+  },
+  selectedItems: TNodeUid[],
+  selectedItemsObj: {
+    [uid: TNodeUid]: boolean,
+  },
+}
 
 /**
- * clipboard data type
+ * updateTreeViewState redux-action payload
  */
-export type TClipboardData = {
-  panel: TPanel,
-  type: 'cut' | 'copy' | null,
-  uids: TUid[],
+export type TUpdateTreeViewStatePayload = {
+  deletedUids?: TNodeUid[],
+  convertedUids?: [TNodeUid, TNodeUid][],
 }
-// ---------------- main context ----------------

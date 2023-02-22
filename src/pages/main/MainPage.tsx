@@ -9,16 +9,16 @@ import React, {
 } from 'react';
 
 import cx from 'classnames';
-import {
-  Command,
-  useCommandState,
-} from 'cmdk';
+import { Command } from 'cmdk';
 import {
   useDispatch,
   useSelector,
 } from 'react-redux';
 
-import { Toast } from '@_components/common';
+import {
+  SVGIcon,
+  Toast,
+} from '@_components/common';
 import {
   ActionsPanel,
   CodeView,
@@ -26,44 +26,58 @@ import {
   StageView,
 } from '@_components/main';
 import {
-  THtmlReference,
+  DefaultTabSize,
+  LogAllow,
+} from '@_constants/main';
+import {
+  TFilesReference,
+  TFilesReferenceData,
+} from '@_node/file';
+import {
+  THtmlElementsReference,
+  THtmlElementsReferenceData,
   THtmlReferenceData,
 } from '@_node/html';
 import {
-  TTree,
-  TUid,
+  TNodeTreeData,
+  TNodeUid,
 } from '@_node/types';
 import {
-  FFAction,
-  FFHandlers,
+  ffSelector,
   fnSelector,
   getActionGroupIndexSelector,
   globalSelector,
   hmsInfoSelector,
   increaseActionGroupIndex,
   MainContext,
-  Message,
-  setFFAction as _setFFAction,
-  TClipboardData,
+  navigatorSelector,
+  setFileAction,
   TCommand,
-  TPanel,
-  UpdateOptions,
+  TFileHandlerCollection,
+  TUpdateOptions,
 } from '@_redux/main';
 // @ts-ignore
 import cmdkRefActions from '@_ref/cmdk.ref/Actions.csv';
 // @ts-ignore
 import cmdkRefJumpstart from '@_ref/cmdk.ref/Jumpstart.csv';
 // @ts-ignore
+import filesRef from '@_ref/rfrncs/Files.csv';
+// @ts-ignore
 import htmlRefElements from '@_ref/rfrncs/HTML Elements.csv';
 import {
-  CmdkData,
-  FFTree,
-  TCmdk,
+  TOsType,
+  TToast,
+} from '@_types/global';
+import {
+  TClipboardData,
   TCmdkContext,
   TCmdkContextScope,
+  TCmdkGroupData,
+  TCmdkKeyMap,
   TCmdkReference,
   TCmdkReferenceData,
-  TOS,
+  TFileAction,
+  TPanelContext,
 } from '@_types/main';
 
 import { MainPageProps } from './types';
@@ -73,7 +87,9 @@ export default function MainPage(props: MainPageProps) {
 
   // redux state
   const actionGroupIndex = useSelector(getActionGroupIndexSelector)
-  const { project, currentFile, action } = useSelector(globalSelector)
+  const { workspace, project, file, changedFiles } = useSelector(navigatorSelector)
+  const { fileAction } = useSelector(globalSelector)
+  const { focusedItem: ffFocusedItem } = useSelector(ffSelector)
   const { focusedItem: fnFocusedItem } = useSelector(fnSelector)
   const { futureLength, pastLength } = useSelector(hmsInfoSelector)
 
@@ -112,13 +128,13 @@ export default function MainPage(props: MainPageProps) {
   }
 
   // file tree view
-  const [ffHoveredItem, setFFHoveredItem] = useState<TUid>('')
-  const [ffHandlers, setFFHandlers] = useState<FFHandlers>({})
-  const [ffTree, setFFTree] = useState<FFTree>({})
-  const updateFF = useCallback((deletedUids: { [uid: TUid]: boolean }, nodes: FFTree, handlers: { [uid: TUid]: FileSystemHandle }) => {
+  const [ffHoveredItem, setFFHoveredItem] = useState<TNodeUid>('')
+  const [ffHandlers, setFFHandlers] = useState<TFileHandlerCollection>({})
+  const [ffTree, setFFTree] = useState<TNodeTreeData>({})
+  const updateFF = useCallback((deletedUids: { [uid: TNodeUid]: boolean }, nodes: TNodeTreeData, handlers: { [uid: TNodeUid]: FileSystemHandle }) => {
     setFFTree({ ...ffTree, ...nodes })
 
-    const newFFHandlers: FFHandlers = {}
+    const newFFHandlers: TFileHandlerCollection = {}
     for (const uid in ffHandlers) {
       if (deletedUids[uid] === undefined) {
         newFFHandlers[uid] = ffHandlers[uid]
@@ -128,19 +144,19 @@ export default function MainPage(props: MainPageProps) {
   }, [ffTree, ffHandlers])
 
   // node tree view
-  const [fnHoveredItem, setFNHoveredItem] = useState<TUid>('')
-  const [nodeTree, setNodeTree] = useState<TTree>({})
-  const [validNodeTree, setValidNodeTree] = useState<TTree>({})
+  const [fnHoveredItem, setFNHoveredItem] = useState<TNodeUid>('')
+  const [nodeTree, setNodeTree] = useState<TNodeTreeData>({})
+  const [validNodeTree, setValidNodeTree] = useState<TNodeTreeData>({})
 
   // update opt
-  const [updateOpt, setUpdateOpt] = useState<UpdateOptions>({
+  const [updateOpt, setUpdateOpt] = useState<TUpdateOptions>({
     parse: null,
     from: null,
   })
 
   // ff hms
   const [isHms, setIsHms] = useState<boolean | null>(null)
-  const [ffAction, setFFAction] = useState<FFAction>({ name: null })
+  const [ffAction, setFFAction] = useState<TFileAction>({ type: null })
 
   // cmdk
   const [currentCommand, setCurrentCommand] = useState<TCommand>({ action: '', changed: false })
@@ -152,8 +168,8 @@ export default function MainPage(props: MainPageProps) {
 
   // global
   const [pending, setPending] = useState<boolean>(false)
-  const [messages, setMessages] = useState<Message[]>([])
-  const addMessage = (message: Message) => {
+  const [messages, setMessages] = useState<TToast[]>([])
+  const addMessage = (message: TToast) => {
     setMessages([...messages, message])
   }
   const removeMessage = (index: number) => {
@@ -163,130 +179,145 @@ export default function MainPage(props: MainPageProps) {
   }
 
   // references
-  const [htmlReferenceData, setHtmlReferenceData] = useState<THtmlReferenceData>({})
+  const [filesReferenceData, setFilesReferenceData] = useState<TFilesReferenceData>({})
+  const [htmlReferenceData, setHtmlReferenceData] = useState<THtmlReferenceData>({
+    elements: {},
+  })
   const [cmdkReferenceData, setCmdkReferenceData] = useState<TCmdkReferenceData>({})
-  const [cmdkReferenceJumpstart, setCmdkReferenceJumpstart] = useState<CmdkData>({})
-  const [cmdkReferenceActions, setCmdkReferenceActions] = useState<CmdkData>({})
-  const cmdkReferenceAdd = useMemo<CmdkData>(() => {
-    const data: CmdkData = {
+  const [cmdkReferenceJumpstart, setCmdkReferenceJumpstart] = useState<TCmdkGroupData>({})
+  const [cmdkReferenceActions, setCmdkReferenceActions] = useState<TCmdkGroupData>({})
+
+  // active panel/clipboard
+  const [activePanel, setActivePanel] = useState<TPanelContext>('unknown')
+  const [clipboardData, setClipboardData] = useState<TClipboardData>({ panel: 'unknown', type: null, uids: [] })
+
+  // cmdk modal handle variables
+  const [cmdkSearch, setCmdkSearch] = useState<string>('')
+  const cmdkReferenceAdd = useMemo<TCmdkGroupData>(() => {
+    const data: TCmdkGroupData = {
+      "Files": [],
       "Elements": [],
       "Recent": [],
     }
 
-    // validate
-    const node = nodeTree[fnFocusedItem]
-    if (node === undefined) return data
-
-    const refData = htmlReferenceData[node.name]
-    if (refData === undefined) return data
-
-    if (refData.Contain === 'All') {
-      Object.keys(htmlReferenceData).map((tag: string) => {
-        const tagRef: THtmlReference = htmlReferenceData[tag]
-        data['Elements'].push({
-          "Name": tagRef.Name,
-          "Icon": tagRef.Icon,
-          "Description": tagRef.Description,
-          "Keyboard Shortcut": {
-            cmd: false,
-            shift: false,
-            alt: false,
-            key: '',
-            click: false,
-          },
-          "Group": 'Add',
-          "Context": tagRef.Tag,
+    if (activePanel === 'file') {
+      // validate
+      const node = ffTree[ffFocusedItem]
+      if (node && !node.isEntity) {
+        filesRef.map((fileRef: TFilesReference) => {
+          fileRef.Name && data['Files'].push({
+            "Featured": fileRef.Featured === 'Yes',
+            "Name": fileRef.Name,
+            "Icon": fileRef.Icon,
+            "Description": fileRef.Description,
+            "Keyboard Shortcut": {
+              cmd: false,
+              shift: false,
+              alt: false,
+              key: '',
+              click: false,
+            },
+            "Group": 'Add',
+            "Context": fileRef.Extension,
+          })
         })
-      })
-    } else if (refData.Contain === 'None') {
-      // do nothing
-    } else {
-      const tagList: string[] = refData.Contain.replace(/ /g, '').split(',')
-      tagList.map((tag: string) => {
-        const pureTag = tag.slice(1, tag.length - 1)
-        const tagRef: THtmlReference = htmlReferenceData[pureTag]
+        data['Files'] = data['Files'].filter((element) => element.Featured || !!cmdkSearch)
+      }
+    } else if (activePanel === 'node') {
+      // validate
+      const node = nodeTree[fnFocusedItem]
+      if (node) {
+        const refData = htmlReferenceData.elements[node.name]
+        if (refData) {
+          if (refData.Contain === 'All') {
+            Object.keys(htmlReferenceData.elements).map((tag: string) => {
+              const tagRef = htmlReferenceData.elements[tag]
+              data['Elements'].push({
+                "Featured": tagRef.Featured === 'Yes',
+                "Name": tagRef.Name,
+                "Icon": tagRef.Icon,
+                "Description": tagRef.Description,
+                "Keyboard Shortcut": {
+                  cmd: false,
+                  shift: false,
+                  alt: false,
+                  key: '',
+                  click: false,
+                },
+                "Group": 'Add',
+                "Context": tagRef.Tag,
+              })
+            })
+          } else if (refData.Contain === 'None') {
+            // do nothing
+          } else {
+            const tagList = refData.Contain.replace(/ /g, '').split(',')
+            tagList.map((tag: string) => {
+              const pureTag = tag.slice(1, tag.length - 1)
+              const tagRef = htmlReferenceData.elements[pureTag]
 
-        data['Elements'].push({
-          "Name": tagRef.Name,
-          "Icon": tagRef.Icon,
-          "Description": tagRef.Description,
-          "Keyboard Shortcut": {
-            cmd: false,
-            shift: false,
-            alt: false,
-            key: '',
-            click: false,
-          },
-          "Group": 'Add',
-          "Context": tagRef.Tag,
-        })
-      })
+              data['Elements'].push({
+                "Featured": tagRef.Featured === 'Yes',
+                "Name": tagRef.Name,
+                "Icon": tagRef.Icon,
+                "Description": tagRef.Description,
+                "Keyboard Shortcut": {
+                  cmd: false,
+                  shift: false,
+                  alt: false,
+                  key: '',
+                  click: false,
+                },
+                "Group": 'Add',
+                "Context": tagRef.Tag,
+              })
+            })
+          }
+          data['Elements'] = data['Elements'].filter((element) => element.Featured || !!cmdkSearch)
+        }
+      }
     }
 
-    // console.log('Add Cmdk Reference Data', data)
     return data
-  }, [nodeTree, fnFocusedItem, htmlReferenceData])
-  const cmdkReferenceFile: CmdkData = {
-    'Type': [
-      {
-        "Name": 'Folder',
-        "Icon": '',
-        "Description": '',
-        "Keyboard Shortcut": {
-          cmd: false,
-          shift: false,
-          alt: false,
-          key: '',
-          click: false,
-        },
-        "Group": 'Add',
-        "Context": 'folder',
-      },
-      {
-        "Name": 'File',
-        "Icon": '',
-        "Description": '',
-        "Keyboard Shortcut": {
-          cmd: false,
-          shift: false,
-          alt: false,
-          key: '',
-          click: false,
-        },
-        "Group": 'Add',
-        "Context": 'file',
-      }
-    ]
-  }
-
-  // active panel/clipboard
-  const [activePanel, setActivePanel] = useState<TPanel>('other')
-  const [clipboardData, setClipboardData] = useState<TClipboardData>({ panel: 'other', type: null, uids: [] })
+  }, [activePanel, ffTree, ffFocusedItem, filesReferenceData, nodeTree, fnFocusedItem, htmlReferenceData, cmdkSearch])
 
   // os
-  const [os, setOS] = useState<TOS>('Windows')
+  const [osType, setOsType] = useState<TOsType>('Windows')
+
+  // code view
+  const [tabSize, setTabSize] = useState<number>(DefaultTabSize)
   // -------------------------------------------------------------- main context --------------------------------------------------------------
 
   // detect OS & fetch reference - html. Jumpstart.csv, Actions.csv
   useEffect(() => {
-    addRunningActions(['detect-os', 'reference-html-elements', 'reference-cmdk-jumpstart', 'reference-cmdk-actions'])
+    addRunningActions(['detect-os', 'reference-files', 'reference-html-elements', 'reference-cmdk-jumpstart', 'reference-cmdk-actions'])
 
     // detect os
-    console.log('NAVIGATOR ', navigator.userAgent)
+    LogAllow && console.log('navigator: ', navigator.userAgent)
     if (navigator.userAgent.indexOf('Mac OS X') !== -1) {
-      setOS('Mac')
+      setOsType('Mac')
     } else {
-      setOS('Windows')
+      setOsType('Windows')
     }
 
-    // reference-html-elements
-    const _htmlReferenceData: THtmlReferenceData = {}
-    htmlRefElements.map((htmlRefElement: THtmlReference) => {
-      const pureTag = htmlRefElement['Name'] === 'Comment' ? 'comment' : htmlRefElement['Tag'].slice(1, htmlRefElement['Tag'].length - 1)
-      _htmlReferenceData[pureTag] = htmlRefElement
+    // reference-files
+    const _filesReferenceData: TFilesReferenceData = {}
+    filesRef.map((fileRef: TFilesReference) => {
+      _filesReferenceData[fileRef.Extension] = fileRef
     })
-    setHtmlReferenceData(_htmlReferenceData)
-    // console.log('HTML REFERENCE DATA', _htmlReferenceData)
+    setFilesReferenceData(_filesReferenceData)
+    LogAllow && console.log('files reference data: ', _filesReferenceData)
+
+    // reference-html-elements
+    const htmlElementsReferenceData: THtmlElementsReferenceData = {}
+    htmlRefElements.map((htmlRefElement: THtmlElementsReference) => {
+      const pureTag = htmlRefElement['Name'] === 'Comment' ? 'comment' : htmlRefElement['Tag'].slice(1, htmlRefElement['Tag'].length - 1)
+      htmlElementsReferenceData[pureTag] = htmlRefElement
+    })
+    LogAllow && console.log('html elements reference data: ', htmlElementsReferenceData)
+
+    // set html reference
+    setHtmlReferenceData({ elements: htmlElementsReferenceData })
 
     // add default cmdk actions
     const _cmdkReferenceData: TCmdkReferenceData = {} // cmdk map
@@ -337,10 +368,10 @@ export default function MainPage(props: MainPageProps) {
     }
 
     // reference-cmdk-jumpstart
-    const _cmdkRefJumpstartData: CmdkData = {}
+    const _cmdkRefJumpstartData: TCmdkGroupData = {}
     cmdkRefJumpstart.map((command: TCmdkReference) => {
       const keys: string[] = (command["Keyboard Shortcut"] as string)?.replace(/ /g, "").split('+')
-      const keyObj: TCmdk = {
+      const keyObj: TCmdkKeyMap = {
         cmd: false,
         shift: false,
         alt: false,
@@ -368,9 +399,10 @@ export default function MainPage(props: MainPageProps) {
       _cmdkReferenceData[_command['Name']] = _command
     })
     setCmdkReferenceJumpstart(_cmdkRefJumpstartData)
+    LogAllow && console.log('cmdk jumpstart reference data: ', _cmdkRefJumpstartData)
 
     // reference-cmdk-actions
-    const _cmdkRefActionsData: CmdkData = {}
+    const _cmdkRefActionsData: TCmdkGroupData = {}
     cmdkRefActions.map((command: TCmdkReference) => {
       const contexts: TCmdkContextScope[] = (command['Context'] as string)?.replace(/ /g, "").split(',').map((scope: string) => scope as TCmdkContextScope)
       const contextObj: TCmdkContext = {
@@ -383,7 +415,7 @@ export default function MainPage(props: MainPageProps) {
       })
 
       const keys: string[] = (command["Keyboard Shortcut"] as string)?.replace(/ /g, "").split('+')
-      const keyObj: TCmdk = {
+      const keyObj: TCmdkKeyMap = {
         cmd: false,
         shift: false,
         alt: false,
@@ -412,32 +444,30 @@ export default function MainPage(props: MainPageProps) {
       _cmdkReferenceData[_command['Name']] = _command
     })
     setCmdkReferenceActions(_cmdkRefActionsData)
+    LogAllow && console.log('cmdk actions reference data: ', _cmdkRefActionsData)
 
-    // cmdk map
+    // set cmdk map
     setCmdkReferenceData(_cmdkReferenceData)
 
-    // console.log('CMDK REFERENCE DATA', _cmdkReferenceData, _cmdkRefJumpstartData, _cmdkRefActionsData)
-
-    removeRunningActions(['detect-os', 'reference-html-elements', 'reference-cmdk-jumpstart', 'reference-cmdk-actions'], false)
+    removeRunningActions(['detect-os', 'reference-files', 'reference-html-elements', 'reference-cmdk-jumpstart', 'reference-cmdk-actions'], false)
   }, [])
 
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
-  // cmdk modal handle variables
-  const [cmdkSearch, setCmdkSearch] = useState<string>('')
-
-  // cmdk subItem component
-  const CmdkSubItem = (props: any) => {
-    const search = useCommandState((state) => state.search)
-    if (!search) return null
-    return <Command.Item {...props} />
-  }
-
   // key event listener
   const cb_onKeyDown = useCallback((e: KeyboardEvent) => {
     if (pending) return
 
+    // skip if its from cmdk-input
+    if (cmdkOpen) return
+
+    // skip inline rename input in file-tree-view
+    const targetId = e.target && (e.target as HTMLElement).id
+    if (targetId === 'FileTreeView-RenameInput') {
+      return
+    }
+
     // cmdk obj for the current command
-    const cmdk: TCmdk = {
+    const cmdk: TCmdkKeyMap = {
       cmd: e.ctrlKey,
       shift: e.shiftKey,
       alt: e.altKey,
@@ -447,7 +477,11 @@ export default function MainPage(props: MainPageProps) {
 
     // skip monaco-editor shortkeys and general coding
     if (activePanel === 'code') {
-      // copy
+      if (!(cmdk.cmd && !cmdk.shift && !cmdk.alt && cmdk.key === 'KeyS')) {
+        return
+      }
+
+      /* // copy
       if (cmdk.cmd && !cmdk.shift && !cmdk.alt && cmdk.key === 'KeyC') {
         return
       }
@@ -462,16 +496,13 @@ export default function MainPage(props: MainPageProps) {
       // general coding
       if (!cmdk.cmd && !cmdk.shift && !cmdk.alt) {
         return
-      }
+      } */
     }
-
-    // skip if its from cmdk-input
-    if (cmdkOpen) return
 
     // detect action
     let action: string | null = null
     for (const actionName in cmdkReferenceData) {
-      const _cmdk = cmdkReferenceData[actionName]['Keyboard Shortcut'] as TCmdk
+      const _cmdk = cmdkReferenceData[actionName]['Keyboard Shortcut'] as TCmdkKeyMap
 
       const key = _cmdk.key.length === 0 ? '' : (_cmdk.key.length === 1 ? 'Key' : '') + _cmdk.key[0].toUpperCase() + _cmdk.key.slice(1)
       if (cmdk.cmd === _cmdk.cmd && cmdk.shift === _cmdk.shift && cmdk.alt === _cmdk.alt && cmdk.key === key) {
@@ -481,7 +512,7 @@ export default function MainPage(props: MainPageProps) {
     }
     if (action === null) return
 
-    // console.log('RUN ACTION', action)
+    LogAllow && console.log('action to be run by cmdk: ', action)
     e.preventDefault()
 
     setCurrentCommand({ action, changed: !currentCommand.changed })
@@ -500,11 +531,8 @@ export default function MainPage(props: MainPageProps) {
       case 'Jumpstart':
         onJumpstart()
         break
-      case 'Dark Mode':
-        onDarkMode()
-        break
-      case 'Light Mode':
-        onLightMode()
+      case 'Theme':
+        onToggleTheme()
         break
       case 'Undo':
         onUndo()
@@ -529,24 +557,16 @@ export default function MainPage(props: MainPageProps) {
     setCmdkOpen(true)
   }, [cmdkOpen])
 
-  // theme
-  const onDarkMode = useCallback(() => {
-    setTheme('Dark Mode')
-  }, [])
-  const onLightMode = useCallback(() => {
-    setTheme('Light Mode')
-  }, [])
-
   // hms methods
   const onUndo = useCallback(() => {
     if (pastLength === 0) return
 
-    setFFAction(action)
+    setFFAction(fileAction)
     setIsHms(true)
 
     setUpdateOpt({ parse: true, from: 'hms' })
     setTimeout(() => dispatch({ type: 'main/undo' }), 0)
-  }, [action, pastLength])
+  }, [fileAction, pastLength])
   const onRedo = useCallback(() => {
     if (futureLength === 0) return
 
@@ -556,9 +576,9 @@ export default function MainPage(props: MainPageProps) {
     setTimeout(() => dispatch({ type: 'main/redo' }), 0)
   }, [futureLength])
 
-  // reset ffAction in the new history
+  // reset fileAction in the new history
   useEffect(() => {
-    futureLength === 0 && action.name !== null && dispatch(_setFFAction({ name: null }))
+    futureLength === 0 && fileAction.type !== null && dispatch(setFileAction({ type: null }))
   }, [actionGroupIndex])
 
   // toogle code view
@@ -570,7 +590,52 @@ export default function MainPage(props: MainPageProps) {
 
   // -------------------------------------------------------------- other --------------------------------------------------------------
   // theme
-  const [theme, setTheme] = useState<'Light Mode' | 'Dark Mode' | 'System'>('Light Mode')
+  const [theme, setTheme] = useState<'Light' | 'Dark' | 'System'>('System')
+  const setSystemTheme = useCallback(() => {
+    setTheme('System')
+    if (
+      window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches
+    ) {
+      document.documentElement.setAttribute("data-theme", "dark")
+    } else {
+      document.documentElement.setAttribute("data-theme", "light")
+    }
+  }, [])
+  const onToggleTheme = useCallback(() => {
+    switch (theme) {
+      case "System":
+        document.documentElement.setAttribute("data-theme", "light")
+        localStorage.setItem("theme", "light")
+        setTheme('Light')
+        break
+      case "Light":
+        document.documentElement.setAttribute("data-theme", "dark")
+        localStorage.setItem("theme", "dark")
+        setTheme('Dark')
+        break
+      case "Dark":
+        document.documentElement.removeAttribute("data-theme")
+        localStorage.removeItem("theme")
+        setSystemTheme()
+        break
+      default:
+        break
+    }
+  }, [theme, setSystemTheme])
+  useEffect(() => {
+    const storedTheme = localStorage.getItem("theme")
+    LogAllow && console.log('storedTheme: ', storedTheme)
+    if (storedTheme) {
+      document.documentElement.setAttribute("data-theme", storedTheme)
+      setTheme(storedTheme === 'dark' ? 'Dark' : 'Light')
+    } else {
+      setSystemTheme()
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", setSystemTheme)
+    }
+
+    return () => { window.matchMedia("(prefers-color-scheme: dark)").removeEventListener('change', setSystemTheme) }
+  }, [])
 
   // active panel/element
   const activeElement = document.activeElement
@@ -586,14 +651,6 @@ export default function MainPage(props: MainPageProps) {
       // do nothing
     }
   }, [activeElement])
-  /* useEffect(() => {
-    console.log('ACTIVE PANEL', activePanel)
-  }, [activePanel]) */
-
-  // Web Component - svg-icon
-  const SVGIcon = useMemo<keyof JSX.IntrinsicElements>(() => {
-    return 'svg-icon' as keyof JSX.IntrinsicElements
-  }, [])
   // -------------------------------------------------------------- other --------------------------------------------------------------
 
   return <>
@@ -646,6 +703,7 @@ export default function MainPage(props: MainPageProps) {
         removeMessage,
 
         // reference
+        filesReferenceData,
         htmlReferenceData,
 
         cmdkReferenceData,
@@ -669,7 +727,11 @@ export default function MainPage(props: MainPageProps) {
         setClipboardData,
 
         // os
-        os,
+        osType,
+
+        // code view
+        tabSize,
+        setTabSize,
       }}
     >
       {/* process */}
@@ -693,7 +755,6 @@ export default function MainPage(props: MainPageProps) {
           {showCodeView && <CodeView />}
         </div>
       </div>
-
 
       {/* cmdk modal */}
       <Command.Dialog
@@ -725,10 +786,16 @@ export default function MainPage(props: MainPageProps) {
           <Command.Input
             value={cmdkSearch}
             onValueChange={setCmdkSearch}
-            className={'justify-start gap-s padding-s text-l'}
+            className={cx(
+              'justify-start',
+              'padding-s',
+              'gap-s',
+              'text-l',
+              'background-primary',
+            )}
             placeholder={cmdkPage === 'Jumpstart' ? 'Jumpstart...' :
               cmdkPage === 'Actions' ? 'Do something...' :
-                cmdkPage === 'Add' ? 'Add...' : ''} />
+                cmdkPage === 'Add' ? 'Add something...' : ''} />
         </div>
 
         {/* modal content */}
@@ -744,9 +811,9 @@ export default function MainPage(props: MainPageProps) {
 
                 {/* <Command.Empty>No results found for "{cmdkSearch}".</Command.Empty> */}
 
-                {Object.keys(cmdkPage === 'Actions' ? cmdkReferenceActions :
-                  cmdkPage === 'Jumpstart' ? cmdkReferenceJumpstart :
-                    cmdkPage === 'Add' ? (activePanel === 'file' ? cmdkReferenceFile : cmdkReferenceAdd) : {}
+                {Object.keys(cmdkPage === 'Jumpstart' ? cmdkReferenceJumpstart :
+                  cmdkPage === 'Actions' ? cmdkReferenceActions :
+                    cmdkPage === 'Add' ? cmdkReferenceAdd : {}
                 ).map((groupName: string) =>
                   <Command.Group
                     key={groupName}
@@ -757,9 +824,9 @@ export default function MainPage(props: MainPageProps) {
                     <div className="padding-m gap-s">
                       <span className="text-s opacity-m">{groupName}</span>
                     </div>
-                    {(cmdkPage === 'Actions' ? cmdkReferenceActions[groupName] :
-                      cmdkPage === 'Jumpstart' ? cmdkReferenceJumpstart[groupName] :
-                        cmdkPage === 'Add' ? (activePanel === 'file' ? cmdkReferenceFile[groupName] : cmdkReferenceAdd[groupName]) : []
+                    {(cmdkPage === 'Jumpstart' ? cmdkReferenceJumpstart[groupName] :
+                      cmdkPage === 'Actions' ? cmdkReferenceActions[groupName] :
+                        cmdkPage === 'Add' ? cmdkReferenceAdd[groupName] : []
                     ).map((command: TCmdkReference) => {
                       const context: TCmdkContext = (command.Context as TCmdkContext)
                       const show: boolean = (
@@ -767,15 +834,18 @@ export default function MainPage(props: MainPageProps) {
                         (cmdkPage === 'Actions' && (
                           (context.all === true) ||
                           (activePanel === 'file' && (
-                            (project.location === 'localhost' && context['file'] === true) ||
+                            (context['file'] === true) ||
                             (false)
                           )) ||
                           (activePanel === 'node' && (
-                            (currentFile.type === 'html' && context['html'] === true) ||
+                            (file.type === 'html' && context['html'] === true) ||
                             (false)
                           ))
                         )) ||
-                        (cmdkPage === 'Add')
+                        (cmdkPage === 'Add' && (
+                          (activePanel === 'file' && groupName === 'Files') ||
+                          (activePanel === 'node' && groupName === 'Elements')
+                        ))
                       )
                       return show ?
                         <Command.Item
@@ -796,27 +866,33 @@ export default function MainPage(props: MainPageProps) {
                           >
                             <div className="gap-s align-center">
                               {/* detect Theme Group and render check boxes */}
-                              {cmdkPage === 'Jumpstart' && groupName === 'Theme' ?
-                                <div className='padding-xs'>
-                                  <div data-theme={theme === command.Name ? (theme === 'Dark Mode' ? 'light' : 'dark') : (theme === 'Dark Mode' ? 'dark' : 'light')} className='radius-m icon-xs align-center background-secondary'>
+                              {cmdkPage === 'Jumpstart' && command.Name === 'Theme' ?
+                                <>
+                                  <div className="padding-xs">
+                                    <div className="radius-m icon-xs align-center background-secondary"></div>
                                   </div>
-                                </div> :
-                                <div className="padding-xs">
-                                  {typeof command.Icon === 'string' && command['Icon'] !== '' ?
-                                    <SVGIcon style={{ display: "flex" }}>actions/{command['Icon']}</SVGIcon> :
-                                    <div className='icon-xs'></div>}
-                                </div>}
-
-                              <span className="text-m">{command['Name']}</span>
+                                  <div className="gap-s align-center">
+                                    <span className="text-m opacity-m">Theme</span>
+                                    <span className="text-s opacity-m">/</span>
+                                    <span className="text-m">{theme}</span>
+                                  </div>
+                                </> : <>
+                                  <div className="padding-xs">
+                                    {typeof command.Icon === 'string' && command['Icon'] !== '' ?
+                                      <SVGIcon {...{ "class": "icon-xs" }}>{command['Icon']}</SVGIcon> :
+                                      <div className='icon-xs'></div>}
+                                  </div>
+                                  <span className="text-m">{command['Name']}</span>
+                                </>}
                             </div>
                             <div className="gap-s">
-                              {(command['Keyboard Shortcut'] as TCmdk).cmd && <span className="text-m">⌘</span>}
-                              {(command['Keyboard Shortcut'] as TCmdk).shift && <span className="text-m">⇧</span>}
-                              {(command['Keyboard Shortcut'] as TCmdk).alt && <span className="text-m">Alt</span>}
-                              {command['Keyboard Shortcut'] !== undefined && (command['Keyboard Shortcut'] as TCmdk).key !== '' && <span className="text-m">
-                                {(command['Keyboard Shortcut'] as TCmdk).key[0].toUpperCase() + (command['Keyboard Shortcut'] as TCmdk).key.slice(1)}
+                              {(command['Keyboard Shortcut'] as TCmdkKeyMap).cmd && <span className="text-m">⌘</span>}
+                              {(command['Keyboard Shortcut'] as TCmdkKeyMap).shift && <span className="text-m">⇧</span>}
+                              {(command['Keyboard Shortcut'] as TCmdkKeyMap).alt && <span className="text-m">Alt</span>}
+                              {command['Keyboard Shortcut'] !== undefined && (command['Keyboard Shortcut'] as TCmdkKeyMap).key !== '' && <span className="text-m">
+                                {(command['Keyboard Shortcut'] as TCmdkKeyMap).key[0].toUpperCase() + (command['Keyboard Shortcut'] as TCmdkKeyMap).key.slice(1)}
                               </span>}
-                              {(command['Keyboard Shortcut'] as TCmdk).click && <span className="text-m">Click</span>}
+                              {(command['Keyboard Shortcut'] as TCmdkKeyMap).click && <span className="text-m">Click</span>}
                             </div>
                           </div>
                         </Command.Item> : null
