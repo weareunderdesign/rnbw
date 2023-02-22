@@ -2,7 +2,7 @@ import './styles.css';
 
 import React, { useMemo } from 'react';
 
-import { ToastDuration } from '@_config/main';
+import { ToastDuration } from '@_constants/global';
 import * as RToast from '@radix-ui/react-toast';
 
 import ToastItem from './ToastItem';
@@ -18,7 +18,7 @@ export default function Toast(props: ToastProps) {
           key={index}
           index={index}
           title={item.type}
-          description={item.message}
+          description={item.content}
         />
       )}
       <RToast.Viewport className='rtoast-viewport' />

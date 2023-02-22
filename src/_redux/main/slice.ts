@@ -1,48 +1,64 @@
 import undoable from 'redux-undo';
 
-import { HistoryStoreLimit } from '@_config/main';
-import { TUid } from '@_node/types';
+import {
+  HistoryStoreLimit,
+  HmsClearActionType,
+  HmsRedoActionType,
+  HmsUndoActionType,
+  RootNodeUid,
+} from '@_constants/main';
+import { TNodeUid } from '@_node/types';
+import {
+  TFile,
+  TFileAction,
+} from '@_types/main';
 import {
   createSlice,
   PayloadAction,
 } from '@reduxjs/toolkit';
 
-// import types
-import * as Types from './types';
+import {
+  TMainReducerState,
+  TUpdateTreeViewStatePayload,
+} from './types';
 
 // initial state of reducer
-const initialState: Types.MainState = {
+const initialState: TMainReducerState = {
   actionGroupIndex: 0,
-
-  global: {
-    project: {
-      location: 'localhost',
-      path: '',
+  navigator: {
+    workspace: {
+      name: '',
+      projects: [],
     },
-    currentFile: {
+    project: {
+      context: 'local',
+      files: {},
+    },
+    file: {
       uid: '',
       name: '',
       type: 'unknown',
       content: '',
-      saved: false,
+      changed: false,
     },
-    action: {
-      name: null,
-      param1: '',
-      param2: '',
+    changedFiles: [],
+  },
+  global: {
+    fileAction: {
+      type: null,
     }
   },
-  ff: {
-    focusedItem: 'ROOT',
-    expandedItems: ['ROOT'],
-    expandedItemsObj: { 'ROOT': true },
+  fileTreeViewState: {
+    focusedItem: RootNodeUid,
+    expandedItems: [RootNodeUid],
+    expandedItemsObj: { [RootNodeUid]: true },
     selectedItems: [],
     selectedItemsObj: {},
   },
-  fn: {
-    focusedItem: 'ROOT',
-    expandedItems: ['ROOT'],
-    expandedItemsObj: { 'ROOT': true },
+  nodeTreeViewState: {
+    focusedItem: RootNodeUid,
+    expandedItems: [RootNodeUid],
+    expandedItemsObj: { [RootNodeUid]: true },
     selectedItems: [],
     selectedItemsObj: {},
   },
@@ -53,178 +69,179 @@ const slice = createSlice({
   name: 'main',
   initialState,
   reducers: {
-    /* main */
     increaseActionGroupIndex(state, action: PayloadAction) {
       state.actionGroupIndex++
     },
     clearMainState(state, action: PayloadAction) {
       state.actionGroupIndex = initialState.actionGroupIndex
+      state.navigator = initialState.navigator
       state.global = initialState.global
-      state.ff = initialState.ff
-      state.fn = initialState.fn
+      state.fileTreeViewState = initialState.fileTreeViewState
+      state.nodeTreeViewState = initialState.nodeTreeViewState
     },
 
-    /* global */
-    setCurrentFile(state, action: PayloadAction<Types.OpenedFile>) {
+    // navigator
+    setCurrentFile(state, action: PayloadAction<TFile>) {
       const payload = action.payload
-      state.global.currentFile = payload
+      state.navigator.file = payload
     },
-    updateFileContent(state, action: PayloadAction<string>) {
+    setCurrentFileContent(state, action: PayloadAction<string>) {
       const data = action.payload
-      state.global.currentFile.content = data
+      state.navigator.file.content = data
     },
-    setFFAction(state, action: PayloadAction<Types.FFAction>) {
+    setFileAction(state, action: PayloadAction<TFileAction>) {
       const payload = action.payload
-      state.global.action = payload
+      state.global.fileAction = payload
     },
 
-    /* fn */
+    // node tree view state
     clearFNState(state, action: PayloadAction) {
-      state.fn = initialState.fn
+      state.nodeTreeViewState = initialState.nodeTreeViewState
     },
-    focusFNNode(state, action: PayloadAction<TUid>) {
+    focusFNNode(state, action: PayloadAction<TNodeUid>) {
       const uid = action.payload
-      state.fn.focusedItem = uid
+      state.nodeTreeViewState.focusedItem = uid
     },
-    expandFNNode(state, action: PayloadAction<TUid[]>) {
+    expandFNNode(state, action: PayloadAction<TNodeUid[]>) {
       const uids = action.payload
       for (const uid of uids) {
-        state.fn.expandedItemsObj[uid] = true
+        state.nodeTreeViewState.expandedItemsObj[uid] = true
       }
-      state.fn.expandedItems = Object.keys(state.fn.expandedItemsObj)
+      state.nodeTreeViewState.expandedItems = Object.keys(state.nodeTreeViewState.expandedItemsObj)
     },
-    collapseFNNode(state, action: PayloadAction<TUid[]>) {
+    collapseFNNode(state, action: PayloadAction<TNodeUid[]>) {
       const uids = action.payload
       for (const uid of uids) {
-        delete state.fn.expandedItemsObj[uid]
+        delete state.nodeTreeViewState.expandedItemsObj[uid]
       }
-      state.fn.expandedItems = Object.keys(state.fn.expandedItemsObj)
+      state.nodeTreeViewState.expandedItems = Object.keys(state.nodeTreeViewState.expandedItemsObj)
     },
-    selectFNNode(state, action: PayloadAction<TUid[]>) {
+    selectFNNode(state, action: PayloadAction<TNodeUid[]>) {
       const uids = action.payload
-      state.fn.selectedItems = uids
-      state.fn.selectedItemsObj = {}
+      state.nodeTreeViewState.selectedItems = uids
+      state.nodeTreeViewState.selectedItemsObj = {}
       for (const uid of uids) {
-        state.fn.selectedItemsObj[uid] = true
+        state.nodeTreeViewState.selectedItemsObj[uid] = true
       }
     },
-    updateFNTreeViewState(state, action: PayloadAction<Types.UpdateFNTreeViewStatePayload>) {
+    updateFNTreeViewState(state, action: PayloadAction<TUpdateTreeViewStatePayload>) {
       const { deletedUids, convertedUids } = action.payload
       if (deletedUids) {
         deletedUids.map((uid) => {
-          if (state.fn.focusedItem === uid) {
-            state.fn.focusedItem = ''
+          if (state.nodeTreeViewState.focusedItem === uid) {
+            state.nodeTreeViewState.focusedItem = ''
           }
-          delete state.fn.expandedItemsObj[uid]
-          delete state.fn.selectedItemsObj[uid]
+          delete state.nodeTreeViewState.expandedItemsObj[uid]
+          delete state.nodeTreeViewState.selectedItemsObj[uid]
         })
       }
       if (convertedUids) {
-        let f_uid: TUid = ''
-        const e_deletedUids: TUid[] = [], e_addedUids: TUid[] = []
-        const s_deletedUids: TUid[] = [], s_addedUids: TUid[] = []
+        let f_uid: TNodeUid = ''
+        const e_deletedUids: TNodeUid[] = [], e_addedUids: TNodeUid[] = []
+        const s_deletedUids: TNodeUid[] = [], s_addedUids: TNodeUid[] = []
 
         for (const [prev, cur] of convertedUids) {
-          if (state.fn.focusedItem === prev) {
+          if (state.nodeTreeViewState.focusedItem === prev) {
             f_uid = cur
           }
-          if (state.fn.expandedItemsObj[prev]) {
+          if (state.nodeTreeViewState.expandedItemsObj[prev]) {
             e_deletedUids.push(prev)
             e_addedUids.push(cur)
           }
-          if (state.fn.selectedItemsObj[prev]) {
+          if (state.nodeTreeViewState.selectedItemsObj[prev]) {
             s_deletedUids.push(prev)
             s_addedUids.push(cur)
           }
         }
 
-        state.fn.focusedItem = f_uid !== '' ? f_uid : state.fn.focusedItem
+        state.nodeTreeViewState.focusedItem = f_uid !== '' ? f_uid : state.nodeTreeViewState.focusedItem
         e_deletedUids.map((_deletedUid) => {
-          delete state.fn.expandedItemsObj[_deletedUid]
+          delete state.nodeTreeViewState.expandedItemsObj[_deletedUid]
         })
         e_addedUids.map((_addedUid) => {
-          state.fn.expandedItemsObj[_addedUid] = true
+          state.nodeTreeViewState.expandedItemsObj[_addedUid] = true
         })
         s_deletedUids.map((_deletedUid) => {
-          delete state.fn.selectedItemsObj[_deletedUid]
+          delete state.nodeTreeViewState.selectedItemsObj[_deletedUid]
         })
         s_addedUids.map((_addedUid) => {
-          state.fn.selectedItemsObj[_addedUid] = true
+          state.nodeTreeViewState.selectedItemsObj[_addedUid] = true
         })
       }
 
-      state.fn.expandedItems = Object.keys(state.fn.expandedItemsObj)
-      state.fn.selectedItems = Object.keys(state.fn.selectedItemsObj)
+      state.nodeTreeViewState.expandedItems = Object.keys(state.nodeTreeViewState.expandedItemsObj)
+      state.nodeTreeViewState.selectedItems = Object.keys(state.nodeTreeViewState.selectedItemsObj)
     },
 
-    /* ff */
-    focusFFNode(state, action: PayloadAction<TUid>) {
+    // file tree view state
+    focusFFNode(state, action: PayloadAction<TNodeUid>) {
       const uid = action.payload
-      state.ff.focusedItem = uid
+      state.fileTreeViewState.focusedItem = uid
     },
-    expandFFNode(state, action: PayloadAction<TUid[]>) {
+    expandFFNode(state, action: PayloadAction<TNodeUid[]>) {
       const uids = action.payload
       for (const uid of uids) {
-        state.ff.expandedItemsObj[uid] = true
+        state.fileTreeViewState.expandedItemsObj[uid] = true
       }
-      state.ff.expandedItems = Object.keys(state.ff.expandedItemsObj)
+      state.fileTreeViewState.expandedItems = Object.keys(state.fileTreeViewState.expandedItemsObj)
     },
-    collapseFFNode(state, action: PayloadAction<TUid[]>) {
+    collapseFFNode(state, action: PayloadAction<TNodeUid[]>) {
       const uids = action.payload
       for (const uid of uids) {
-        delete state.ff.expandedItemsObj[uid]
+        delete state.fileTreeViewState.expandedItemsObj[uid]
       }
-      state.ff.expandedItems = Object.keys(state.ff.expandedItemsObj)
+      state.fileTreeViewState.expandedItems = Object.keys(state.fileTreeViewState.expandedItemsObj)
     },
-    selectFFNode(state, action: PayloadAction<TUid[]>) {
+    selectFFNode(state, action: PayloadAction<TNodeUid[]>) {
       const uids = action.payload
-      state.ff.selectedItems = uids
-      state.ff.selectedItemsObj = {}
+      state.fileTreeViewState.selectedItems = uids
+      state.fileTreeViewState.selectedItemsObj = {}
       for (const uid of uids) {
-        state.ff.selectedItemsObj[uid] = true
+        state.fileTreeViewState.selectedItemsObj[uid] = true
       }
     },
-    updateFFTreeViewState(state, action: PayloadAction<Types.UpdateFFTreeViewStatePayload>) {
+    updateFFTreeViewState(state, action: PayloadAction<TUpdateTreeViewStatePayload>) {
       const { deletedUids, convertedUids } = action.payload
       if (deletedUids) {
         for (const uid of deletedUids) {
-          if (state.ff.focusedItem === uid) {
-            state.ff.focusedItem = ''
+          if (state.fileTreeViewState.focusedItem === uid) {
+            state.fileTreeViewState.focusedItem = ''
           }
-          delete state.ff.expandedItemsObj[uid]
-          delete state.ff.selectedItemsObj[uid]
+          delete state.fileTreeViewState.expandedItemsObj[uid]
+          delete state.fileTreeViewState.selectedItemsObj[uid]
         }
       }
       if (convertedUids) {
         for (const [prev, cur] of convertedUids) {
-          if (state.ff.expandedItemsObj[prev]) {
-            delete state.ff.expandedItemsObj[prev]
-            state.ff.expandedItemsObj[cur] = true
+          if (state.fileTreeViewState.expandedItemsObj[prev]) {
+            delete state.fileTreeViewState.expandedItemsObj[prev]
+            state.fileTreeViewState.expandedItemsObj[cur] = true
           }
-          if (state.ff.selectedItemsObj[prev]) {
-            delete state.ff.selectedItemsObj[prev]
-            state.ff.selectedItemsObj[cur] = true
+          if (state.fileTreeViewState.selectedItemsObj[prev]) {
+            delete state.fileTreeViewState.selectedItemsObj[prev]
+            state.fileTreeViewState.selectedItemsObj[cur] = true
           }
         }
       }
-      state.ff.expandedItems = Object.keys(state.ff.expandedItemsObj)
-      state.ff.selectedItems = Object.keys(state.ff.selectedItemsObj)
+      state.fileTreeViewState.expandedItems = Object.keys(state.fileTreeViewState.expandedItemsObj)
+      state.fileTreeViewState.selectedItems = Object.keys(state.fileTreeViewState.selectedItemsObj)
     },
   },
 })
 
 // export the actions and reducer
 export const {
-  /* main */
   increaseActionGroupIndex,
   clearMainState,
 
-  /* global */
+  // navigator
   setCurrentFile,
-  updateFileContent,
-  setFFAction,
+  setCurrentFileContent,
 
-  /* fn */
+  // global
+  setFileAction,
+
+  // node tree view state
   clearFNState,
   focusFNNode,
   expandFNNode,
@@ -232,7 +249,7 @@ export const {
   selectFNNode,
   updateFNTreeViewState,
 
-  /* ff */
+  // file tree  view state
   focusFFNode,
   expandFFNode,
   collapseFFNode,
@@ -242,23 +259,15 @@ export const {
 
 export const MainReducer = undoable(slice.reducer, {
   filter: function filterActions(action, currentState, previousHistory) {
-    if (action.type === 'main/updateFFTreeViewState') {
-      return false
-    }
-
-    // console.log(action)
-
-    return true
+    return action.type === 'main/updateFFTreeViewState' ? false : true
   },
   groupBy: (action, currentState, previousHistory) => {
-    if (action.type === 'main/increaseActionGroupIndex') return currentState.actionGroupIndex - 1
-
-    return currentState.actionGroupIndex
+    return action.type === 'main/increaseActionGroupIndex' ? currentState.actionGroupIndex - 1 : currentState.actionGroupIndex
   },
 
-  limit: HistoryStoreLimit/* limit the history stack size to HistoryStoreLimit */,
+  limit: HistoryStoreLimit,
 
-  undoType: 'main/undo',
-  redoType: 'main/redo',
-  clearHistoryType: 'main/clearHistory',
+  undoType: HmsUndoActionType,
+  redoType: HmsRedoActionType,
+  clearHistoryType: HmsClearActionType,
 })

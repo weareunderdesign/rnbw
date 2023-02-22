@@ -1,49 +1,102 @@
-/*
-------------------------------------------------------------------------------------------
----------------------------------Types for File Tree View---------------------------------
-------------------------------------------------------------------------------------------
-*/
-
 import {
-  TNode,
-  TUid,
-} from '@_node/types';
+  TNodeTreeData,
+  TNodeUid,
+} from '@_node/index';
 
 /**
- * project location the users import
+ * file-system type
  */
-export type ProjectLocation = 'localhost' | 'git'
+export type TFileSystemType = 'local'
 
 /**
- * node data object type in file-tree-view
+ * file type
  */
-export type FFNode = TNode
+export type TFileType = 'html' | 'unknown'
 
 /**
- * ff node type - folder/file
+ * workspace
  */
-export type FFNodeType = 'folder' | 'file'
-
-/**
- * tree type in file-tree-view
- */
-export type FFTree = {
-  [uid: TUid]: FFNode,
+export type TWorkspace = {
+  name: string,
+  projects: TProject[],
 }
 
 /**
- * cmdk reference types
+ * project
+ */
+export type TProject = {
+  context: TFileSystemType,
+  files: TNodeTreeData,
+}
+
+/**
+ * file
+ */
+export type TFile = {
+  uid: TNodeUid,
+  name: string,
+  type: TFileType,
+  content: string,
+  changed: boolean,
+}
+
+/**
+ * file tree view node type
+ */
+export type TFileNodeType = 'folder' | 'html'
+
+/**
+ * file tree view - node action
+ */
+export type TFileAction = {
+  type: TFileActionType,
+  param1?: any,
+  param2?: any,
+}
+
+/**
+ * file tree view - node action type
+ */
+export type TFileActionType = 'create' | 'delete' | 'move' | 'rename' | 'duplicate' | 'cut' | 'copy' | null
+
+/**
+ * panel context
+ */
+export type TPanelContext = 'file' | 'node' | 'stage' | 'code' | 'cmdk' | 'unknown'
+
+/**
+ * clipboard data type
+ */
+export type TClipboardData = {
+  panel: TPanelContext,
+  type: 'cut' | 'copy' | null,
+  uids: TNodeUid[],
+}
+
+/**
+ * cmdk reference
  */
 export type TCmdkReference = {
+  "Featured"?: boolean,
   "Name": string,
   "Icon": string,
   "Description": string,
-  "Keyboard Shortcut": string | TCmdk,
+  "Keyboard Shortcut": string | TCmdkKeyMap,
   "Group": string,
   "Context"?: string | TCmdkContext,
 }
 
-export type TCmdk = {
+/**
+ * cmdk reference data
+ */
+export type TCmdkReferenceData = {
+  [cmdk: string]: TCmdkReference,
+}
+
+/**
+ * command key map
+ */
+export type TCmdkKeyMap = {
   cmd: boolean,
   shift: boolean,
   alt: boolean,
@@ -51,18 +104,21 @@ export type TCmdk = {
   click: boolean,
 }
 
+/**
+ * cmdk context scope
+ */
 export type TCmdkContextScope = "all" | "file" | "html"
 
+/**
+ * cmdk context
+ */
 export type TCmdkContext = {
   [scope in TCmdkContextScope]: boolean
 }
 
-export type TCmdkReferenceData = {
-  [cmdk: string]: TCmdkReference,
-}
-
-export type CmdkData = {
+/**
+ * groupped cmdk data
+ */
+export type TCmdkGroupData = {
   [groupName: string]: TCmdkReference[],
 }
-
-export type TOS = 'Windows' | 'Mac' | 'Linux' | 'Unix'

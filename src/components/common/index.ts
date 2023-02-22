@@ -3,3 +3,5 @@ import Toast from './toast';
 import TreeView from './treeView';
 
 export { Dialog, Toast, TreeView };
+
+export * from './svgIcon'

@@ -5,7 +5,7 @@ import {
   TreeRenderProps,
 } from 'react-complex-tree';
 
-import { TUid } from '@_node/types';
+import { TNodeUid } from '@_node/types';
 
 export type TreeViewProps = {
   width: string,
@@ -17,9 +17,9 @@ export type TreeViewProps = {
   }
 
   data: TreeViewData,
-  focusedItem: TUid,
-  expandedItems: TUid[],
-  selectedItems: TUid[],
+  focusedItem: TNodeUid,
+  expandedItems: TNodeUid[],
+  selectedItems: TNodeUid[],
 
   renderers?: TreeRenderProps,
 

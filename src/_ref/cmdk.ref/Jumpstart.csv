@@ -1,8 +1,7 @@
 ﻿Name,Icon,Description,Keyboard Shortcut,Group
-Search,search,,o,Projects
-Support,help,,,Help
-Guide,,,g,Help
-Community,,,,Help
-Theme / Dark Mode,,,,Settings
-Theme / Light Mode,,,,Settings
-Theme / System,,,,Settings
+New,plus,Start a new project,n,Projects
+Open,plus,Open a folder,o,Projects
+Guide,help,Learn something,g,Help
+Support,person,Get some help,,Help
+Community,people,Talk with people,,Help
+Theme,,Switch themes,m,Settings

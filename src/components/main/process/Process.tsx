@@ -10,7 +10,11 @@ import {
   useSelector,
 } from 'react-redux';
 
-import * as config from '@_config/main';
+import {
+  AutoSave,
+  FileAutoSaveInterval,
+  RootNodeUid,
+} from '@_constants/main';
 import {
   parseFile,
   serializeFile,
@@ -19,9 +23,21 @@ import {
   parseHtml,
   THtmlParserResponse,
 } from '@_node/html';
-import { TUid } from '@_node/types';
-import * as Main from '@_redux/main';
-import { verifyPermission } from '@_services/main';
+import { TNodeUid } from '@_node/types';
+import {
+  clearFNState,
+  expandFNNode,
+  fnSelector,
+  focusFNNode,
+  getActionGroupIndexSelector,
+  globalSelector,
+  hmsInfoSelector,
+  MainContext,
+  navigatorSelector,
+  selectFNNode,
+  setCurrentFileContent,
+} from '@_redux/main';
+import { verifyFileHandlerPermission } from '@_services/main';
 
 import { ProcessProps } from './types';
 
@@ -52,18 +68,25 @@ export default function Process(props: ProcessProps) {
     pending, setPending, messages, addMessage, removeMessage,
 
     // reference
-    htmlReferenceData, cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions,
+    htmlReferenceData, cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions, cmdkReferenceAdd,
 
     // active panel/clipboard
     activePanel, setActivePanel, clipboardData, setClipboardData,
 
     // os
-    os,
-  } = useContext(Main.MainContext)
+    osType,
+
+    // code view
+    tabSize, setTabSize,
+  } = useContext(MainContext)
 
   // redux state
-  const { project, currentFile, action } = useSelector(Main.globalSelector)
-  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(Main.fnSelector)
+  const actionGroupIndex = useSelector(getActionGroupIndexSelector)
+  const { workspace, project, file, changedFiles } = useSelector(navigatorSelector)
+  const { fileAction } = useSelector(globalSelector)
+  const { futureLength, pastLength } = useSelector(hmsInfoSelector)
+  // const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
+  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
 
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
   const isHms = useRef<boolean>(false)
@@ -71,47 +94,43 @@ export default function Process(props: ProcessProps) {
 
   // content -> nodeTree
   useEffect(() => {
-    // console.log('processor-content', updateOpt)
-
     if (updateOpt.parse !== true) return
 
     if (updateOpt.parse === true && updateOpt.from === 'hms') {
       isHms.current = true
     }
 
-    const parseResult = parseFile({ type: currentFile.type, content: currentFile.content, referenceData: htmlReferenceData, os })
+    const parseResult = parseFile(file.type, file.content, htmlReferenceData, osType)
     setUpdateOpt({ parse: null, from: 'processor' })
 
-    if (currentFile.type === 'html') {
-      const { content: formattedContent, tree } = parseResult as THtmlParserResponse
+    if (file.type === 'html') {
+      const { formattedContent, tree } = parseResult as THtmlParserResponse
       setNodeTree(tree)
-      setTimeout(() => dispatch(Main.updateFileContent(formattedContent)), 0)
+      setTimeout(() => dispatch(setCurrentFileContent(formattedContent)), 0)
     } else {
       setNodeTree({})
     }
 
     removeRunningActions(['processor-content'])
-  }, [currentFile.uid, currentFile.content])
+  }, [file.uid, file.content])
 
   // nodeTree -> content
   useEffect(() => {
-    // console.log('processor-nodeTree', updateOpt)
-
     if (updateOpt.parse !== false) return
 
     if (updateOpt.parse === false && updateOpt.from === 'node') {
       isDoubleValidNodeTree.current = true
     }
 
-    const newContent = serializeFile({ type: currentFile.type, tree: nodeTree, referenceData: htmlReferenceData })
+    const newContent = serializeFile(file.type, nodeTree, htmlReferenceData)
     setUpdateOpt({ parse: null, from: 'processor' })
 
-    if (currentFile.type === 'html') {
-      const { content: formattedContent, tree } = parseHtml(newContent, htmlReferenceData, os)
+    if (file.type === 'html') {
+      const { formattedContent, tree } = parseHtml(newContent, htmlReferenceData, osType)
       setNodeTree(tree)
     }
 
-    setTimeout(() => dispatch(Main.updateFileContent(newContent)), 0)
+    setTimeout(() => dispatch(setCurrentFileContent(newContent)), 0)
 
     removeRunningActions(['processor-nodeTree'])
   }, [nodeTree])
@@ -124,10 +143,10 @@ export default function Process(props: ProcessProps) {
       return
     }
 
-    if (updateOpt.parse === null && updateOpt.from === 'fs') {
-      dispatch(Main.expandFNNode(Object.keys(validNodeTree)))
+    if (updateOpt.parse === null && updateOpt.from === 'file') {
+      dispatch(expandFNNode(Object.keys(validNodeTree)))
     } else {
-      const _focusedItem: TUid = validNodeTree[focusedItem] === undefined ? 'ROOT' : focusedItem
+      const _focusedItem: TNodeUid = validNodeTree[focusedItem] === undefined ? RootNodeUid : focusedItem
       const _expandedItems = expandedItems.filter((uid) => {
         return validNodeTree[uid] !== undefined && validNodeTree[uid].isEntity === false
       })
@@ -135,10 +154,10 @@ export default function Process(props: ProcessProps) {
         return validNodeTree[uid] !== undefined
       })
 
-      dispatch(Main.clearFNState())
-      dispatch(Main.focusFNNode(_focusedItem))
-      dispatch(Main.expandFNNode(_expandedItems))
-      dispatch(Main.selectFNNode(_selectedItems))
+      dispatch(clearFNState())
+      dispatch(focusFNNode(_focusedItem))
+      dispatch(expandFNNode(_expandedItems))
+      dispatch(selectFNNode(_selectedItems))
     }
 
     if (isDoubleValidNodeTree.current === true) {
@@ -156,7 +175,7 @@ export default function Process(props: ProcessProps) {
     setPending(true)
 
     // get the current file handler
-    let handler = ffHandlers[currentFile.uid]
+    let handler = ffHandlers[file.uid]
     if (handler === undefined) {
       fsTimeout.current = null
       setPending(false)
@@ -164,10 +183,10 @@ export default function Process(props: ProcessProps) {
     }
 
     // verify permission
-    if (await verifyPermission(handler) === false) {
+    if (await verifyFileHandlerPermission(handler) === false) {
       addMessage({
         type: 'error',
-        message: 'auto save failed cause of invalid handler',
+        content: 'auto save failed cause of invalid handler',
       })
       fsTimeout.current = null
       setPending(false)
@@ -179,29 +198,31 @@ export default function Process(props: ProcessProps) {
     // update file content
     try {
       const writableStream = await (handler as FileSystemFileHandle).createWritable()
-      await writableStream.write(currentFile.content)
+      await writableStream.write(file.content)
       await writableStream.close()
 
       addMessage({
         type: 'success',
-        message: 'Saved successfully',
+        content: 'Saved successfully',
       })
     } catch (err) {
       addMessage({
         type: 'error',
-        message: 'error occurred while auto-saving',
+        content: 'error occurred while auto-saving',
       })
     }
 
     fsTimeout.current = null
     setPending(false)
-  }, [ffHandlers, currentFile.uid, currentFile.content])
+  }, [ffHandlers, file.uid, file.content])
+
   // set Auto-Save
   useEffect(() => {
+    if (!AutoSave) return
+
     fsTimeout.current !== null && clearTimeout(fsTimeout.current)
-    return
-    fsTimeout.current = setTimeout(saveFileContentToFs, config.FileAutoSaveInterval)
-  }, [currentFile.content])
+    fsTimeout.current = setTimeout(saveFileContentToFs, FileAutoSaveInterval)
+  }, [file.content])
 
   // do actions
   useEffect(() => {

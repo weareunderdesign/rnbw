@@ -16,9 +16,16 @@ import {
   serializeFile,
   updateNode,
 } from '@_node/apis';
-import { TTree } from '@_node/types';
-import * as Main from '@_redux/main';
-import { globalSelector } from '@_redux/main';
+import { TNodeTreeData } from '@_node/types';
+import {
+  fnSelector,
+  getActionGroupIndexSelector,
+  globalSelector,
+  hmsInfoSelector,
+  MainContext,
+  navigatorSelector,
+  setCurrentFileContent,
+} from '@_redux/main';
 
 import { SettingsPanelProps } from './types';
 
@@ -29,8 +36,6 @@ type StyleProperty = {
 
 export default function SettingsPanel(props: SettingsPanelProps) {
   const dispatch = useDispatch()
-
-  const [styleLists, setStyleLists] = useState<Record<string, StyleProperty>>({})
 
   // main context
   const {
@@ -56,14 +61,28 @@ export default function SettingsPanel(props: SettingsPanelProps) {
     pending, setPending, messages, addMessage, removeMessage,
 
     // reference
-    htmlReferenceData, cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions,
+    htmlReferenceData, cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions, cmdkReferenceAdd,
 
     // active panel/clipboard
     activePanel, setActivePanel, clipboardData, setClipboardData,
-  } = useContext(Main.MainContext)
+
+    // os
+    osType,
+
+    // code view
+    tabSize, setTabSize,
+  } = useContext(MainContext)
+
+  // redux state
+  const actionGroupIndex = useSelector(getActionGroupIndexSelector)
+  const { workspace, project, file, changedFiles } = useSelector(navigatorSelector)
+  const { fileAction } = useSelector(globalSelector)
+  const { futureLength, pastLength } = useSelector(hmsInfoSelector)
+  // const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
+  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
 
 
-  const { currentFile } = useSelector(globalSelector)
+  const [styleLists, setStyleLists] = useState<Record<string, StyleProperty>>({})
 
   useEffect(() => {
     let elements: Record<string, StyleProperty> = {}
@@ -94,10 +113,10 @@ export default function SettingsPanel(props: SettingsPanelProps) {
   }
 
   // update the file content
-  const updateFFContent = useCallback(async (tree: TTree) => {
-    const newContent = serializeFile({ type: currentFile.type, tree, referenceData: htmlReferenceData })
-    dispatch(Main.updateFileContent(newContent))
-  }, [currentFile.type])
+  const updateFFContent = useCallback(async (tree: TNodeTreeData) => {
+    const newContent = serializeFile(file.type, tree, htmlReferenceData)
+    dispatch(setCurrentFileContent(newContent))
+  }, [file.type])
 
   return <>
     <div className="panel">
@@ -133,13 +152,13 @@ export default function SettingsPanel(props: SettingsPanelProps) {
                   // props changed
                   addRunningActions(['updateNode'])
                   const tree = JSON.parse(JSON.stringify(nodeTree))
-                  updateNode({
-                    tree: tree,
-                    data: {
+                  updateNode(
+                    tree,
+                    '',
+                    {
                       style: convertStyle(newStyleList),
                     },
-                    uid: '',
-                  })
+                  )
                   updateFFContent(tree)
                   removeRunningActions(['updateNode'])
                 }}

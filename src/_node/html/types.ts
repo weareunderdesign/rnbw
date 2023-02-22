@@ -1,11 +1,28 @@
-import { TTree } from '../';
+import {
+  TNodeTreeData,
+  TNodeUid,
+} from '../';
 
 /**
- * the response type for parseHTML api
+ * html node-data type
  */
-export type THtmlParserResponse = {
-  content: string, //newContent in rainbow style
-  tree: TTree,
+export type THtmlNodeData = {
+  valid: boolean,
+  isFormatText: boolean,
+
+  type: string,
+  name: string,
+  data: string,
+  attribs: THtmlTagAttributes,
+
+  startLineNumber: number,
+  startColumn: number,
+  endLineNumber: number,
+  endColumn: number,
+
+  html: string,
+
+  hasOrgClass: boolean,
 }
 
 /**
@@ -16,9 +33,40 @@ export type THtmlTagAttributes = {
 }
 
 /**
- * html reference csv format
+ * parseHtml api response type
  */
-export type THtmlReference = {
+export type THtmlParserResponse = {
+  formattedContent: string,
+  tree: TNodeTreeData,
+}
+
+/**
+ * html processable node type - dom element
+ */
+export interface THtmlProcessableNode extends HTMLElement {
+  valid: boolean,
+  uid: TNodeUid,
+}
+
+/**
+ * html reference data
+ */
+export type THtmlReferenceData = {
+  elements: THtmlElementsReferenceData,
+}
+
+/**
+ * html elements reference data
+ */
+export type THtmlElementsReferenceData = {
+  [tag: string]: THtmlElementsReference,
+}
+
+/**
+ * html element reference
+ */
+export type THtmlElementsReference = {
+  "Featured": string,
   "Tag": string,
   "Name": string,
   "Type": string,
@@ -28,8 +76,4 @@ export type THtmlReference = {
   "Content": string,
   "Placeholder": string,
   "Cover Image": string,
-}
-
-export type THtmlReferenceData = {
-  [tag: string]: THtmlReference,
 }

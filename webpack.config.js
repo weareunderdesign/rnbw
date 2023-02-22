@@ -17,22 +17,15 @@ module.exports = {
   {
     extensions: ['.ts', '.tsx', '.js', '.jsx'],
     alias: {
-      // global
-      "@_types": path.resolve(__dirname, 'src/types/'),
-      "@_services": path.resolve(__dirname, 'src/services/'),
-
-      // main components 
-      "@_app": path.resolve(__dirname, 'src/app/'),
-      "@_pages": path.resolve(__dirname, 'src/pages/'),
-      "@_components": path.resolve(__dirname, 'src/components/'),
-
-      // back
-      "@_config": path.resolve(__dirname, 'src/_config/'),
       "@_node": path.resolve(__dirname, 'src/_node/'),
       "@_redux": path.resolve(__dirname, 'src/_redux/'),
-
-      // ref
       "@_ref": path.resolve(__dirname, 'src/_ref/'),
+      "@_app": path.resolve(__dirname, 'src/app/'),
+      "@_components": path.resolve(__dirname, 'src/components/'),
+      "@_constants": path.resolve(__dirname, 'src/constants/'),
+      "@_pages": path.resolve(__dirname, 'src/pages/'),
+      "@_services": path.resolve(__dirname, 'src/services/'),
+      "@_types": path.resolve(__dirname, 'src/types/'),
     },
   },
   module: {
@@ -85,6 +78,6 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: path.join(__dirname, 'src/index.html'), // index html file
     }),
-    new MonacoEditorWebpackPlugin(), // CodeView - monaco-editor
+    new MonacoEditorWebpackPlugin(), // code-view - monaco-editor
   ],
 }

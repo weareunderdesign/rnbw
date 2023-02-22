@@ -1,3 +1,5 @@
-// Main State
-export type MainState = {
+/**
+ * global reducer state
+ */
+export type TGlobalReducerState = {
 }

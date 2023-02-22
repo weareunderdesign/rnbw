@@ -1,10 +1,9 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-// import types
-import * as Types from './types';
+import { TGlobalReducerState } from './types';
 
 // initial state of reducer
-const initialState: Types.MainState = {
+const initialState: TGlobalReducerState = {
 }
 
 // create the slice

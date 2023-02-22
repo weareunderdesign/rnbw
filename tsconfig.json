@@ -19,24 +19,6 @@
     "moduleResolution": "Node",
     "baseUrl": ".",
     "paths": {
-      "@_types/*": [
-        "src/types/*",
-      ],
-      "@_services/*": [
-        "src/services/*",
-      ],
-      "@_app/*": [
-        "src/app/*",
-      ],
-      "@_pages/*": [
-        "src/pages/*",
-      ],
-      "@_components/*": [
-        "src/components/*",
-      ],
-      "@_config/*": [
-        "src/_config/*",
-      ],
       "@_node/*": [
         "src/_node/*",
       ],
@@ -45,7 +27,25 @@
       ],
       "@_ref/*": [
         "src/_ref/*",
-      ]
+      ],
+      "@_app/*": [
+        "src/app/*",
+      ],
+      "@_components/*": [
+        "src/components/*",
+      ],
+      "@_constants/*": [
+        "src/constants/*",
+      ],
+      "@_pages/*": [
+        "src/pages/*",
+      ],
+      "@_services/*": [
+        "src/services/*",
+      ],
+      "@_types/*": [
+        "src/types/*",
+      ],
     },
   },
   "include": [
