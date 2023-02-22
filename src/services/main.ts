@@ -1,9 +1,21 @@
+import { LocalFileSystemWatchInterval } from '@_constants/main';
+import { TFileSystemType } from '@_types/main';
+
+/**
+ * get file system watch interval from its type
+ * @param fsType 
+ * @returns 
+ */
+export const getFileSystemWatchInterval = (fsType: TFileSystemType): number => {
+  return fsType === 'local' ? LocalFileSystemWatchInterval : 0
+}
+
 /**
  * check the permission of file handle, return true/false
  * @param fileHandle 
  * @returns 
  */
-export const verifyPermission = async (fileHandle: FileSystemHandle): Promise<boolean> => {
+export const verifyFileHandlerPermission = async (fileHandle: FileSystemHandle): Promise<boolean> => {
   // If the file handle is undefined, return false
   if (fileHandle === undefined) return false
 
@@ -20,14 +32,4 @@ export const verifyPermission = async (fileHandle: FileSystemHandle): Promise<bo
   } catch (err) {
     return false
   }
-}
-
-/**
- * get the file extension from the file name
- * @param fileName 
- * @returns 
- */
-export const getFileExtension = (fileName: string) => {
-  const arr: string[] = fileName.split('.')
-  return arr.length === 1 ? '' : `.${arr.pop()}`
 }

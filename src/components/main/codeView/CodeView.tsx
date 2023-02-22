@@ -12,8 +12,21 @@ import {
   useSelector,
 } from 'react-redux';
 
-import * as config from '@_config/main';
-import * as Main from '@_redux/main';
+import {
+  CodeViewSyncDelay,
+  DefaultTabSize,
+  LogAllow,
+} from '@_constants/main';
+import { THtmlNodeData } from '@_node/index';
+import {
+  fnSelector,
+  getActionGroupIndexSelector,
+  globalSelector,
+  hmsInfoSelector,
+  MainContext,
+  navigatorSelector,
+  setCurrentFileContent,
+} from '@_redux/main';
 import Editor, {
   loader,
   Monaco,
@@ -50,15 +63,25 @@ export default function CodeView(props: CodeViewProps) {
     pending, setPending, messages, addMessage, removeMessage,
 
     // reference
-    htmlReferenceData, cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions,
+    htmlReferenceData, cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions, cmdkReferenceAdd,
 
     // active panel/clipboard
     activePanel, setActivePanel, clipboardData, setClipboardData,
-  } = useContext(Main.MainContext)
+
+    // os
+    osType,
+
+    // code view
+    tabSize, setTabSize,
+  } = useContext(MainContext)
 
   // redux state
-  const { project, currentFile } = useSelector(Main.globalSelector)
-  const { focusedItem } = useSelector(Main.fnSelector)
+  const actionGroupIndex = useSelector(getActionGroupIndexSelector)
+  const { workspace, project, file, changedFiles } = useSelector(navigatorSelector)
+  const { fileAction } = useSelector(globalSelector)
+  const { futureLength, pastLength } = useSelector(hmsInfoSelector)
+  // const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
+  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
 
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
   // focusedItem - code select
@@ -69,11 +92,8 @@ export default function CodeView(props: CodeViewProps) {
     let node = validNodeTree[focusedItem]
     if (node === undefined) return
 
-    console.log('Now the focusedItem is', node.uid)
-
     // select and reveal the node's code sector
-    const { startLineNumber, startColumn, endLineNumber, endColumn } = node.data
-    console.log(`Its code range is from Ln${startLineNumber}, Col${startColumn} to Ln${endLineNumber}, Col${endColumn}`)
+    const { startLineNumber, startColumn, endLineNumber, endColumn } = node.data as THtmlNodeData
 
     const editor = monacoRef.current as monaco.editor.IEditor
     editor.setSelection({
@@ -88,8 +108,6 @@ export default function CodeView(props: CodeViewProps) {
       endLineNumber,
       endColumn,
     }, 1/* scrollType - smooth */)
-
-    console.log('Highlighting is done')
   }, [focusedItem])
 
   /* 
@@ -102,10 +120,10 @@ export default function CodeView(props: CodeViewProps) {
     if (currentFile.uid === '') return
     if (reduxTimeout.current !== null) return
 
-    let _uid: TUid = ''
+    let _uid: TNodeUid = ''
 
-    let uids: TUid[] = Object.keys(validNodeTree)
-    uids = getBfsUids(uids)
+    let uids: TNodeUid[] = Object.keys(validNodeTree)
+    uids = sortNodeUidsByBfs(uids)
     uids.reverse()
     for (const uid of uids) {
       const node = validNodeTree[uid]
@@ -129,7 +147,7 @@ export default function CodeView(props: CodeViewProps) {
 
     let node = validNodeTree[_uid]
     while (!node.data.valid) {
-      node = validNodeTree[node.p_uid as TUid]
+      node = validNodeTree[node.parentUid as TNodeUid]
     }
 
     _uid = node.uid
@@ -149,35 +167,35 @@ export default function CodeView(props: CodeViewProps) {
     // skil its own state change
     if (updateOpt.from === 'code') return
 
-    codeContent.current = currentFile.content
-  }, [currentFile.content])
+    codeContent.current = file.content
+  }, [file.content])
 
   // code -> content
-  const codeContent = useRef<string>(currentFile.content)
+  const codeContent = useRef<string>(file.content)
   const reduxTimeout = useRef<NodeJS.Timeout | null>(null)
   const saveFileContentToRedux = useCallback(() => {
     // skip the same content
-    if (currentFile.content === codeContent.current) return
+    if (file.content === codeContent.current) return
 
-    // console.log('codeView-content')
+    LogAllow && console.log('codeView-content')
 
     setUpdateOpt({ parse: true, from: 'code' })
 
     addRunningActions(['processor-content', 'processor-validNodeTree'])
 
-    setTimeout(() => dispatch(Main.updateFileContent(codeContent.current)), 0)
+    setTimeout(() => dispatch(setCurrentFileContent(codeContent.current)), 0)
 
     reduxTimeout.current = null
-  }, [currentFile.content, updateOpt])
+  }, [file.content])
   const handleEditorChange = useCallback((value: string | undefined, ev: monaco.editor.IModelContentChangedEvent) => {
-    if (currentFile.uid === '') return
+    if (file.uid === '') return
 
     codeContent.current = value || ''
 
     // update redux with debounce
     reduxTimeout.current !== null && clearTimeout(reduxTimeout.current)
-    reduxTimeout.current = setTimeout(saveFileContentToRedux, config.CodeViewSyncDelay)
-  }, [currentFile.uid, saveFileContentToRedux])
+    reduxTimeout.current = setTimeout(saveFileContentToRedux, CodeViewSyncDelay)
+  }, [file.uid, saveFileContentToRedux])
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
 
   // monaco-editor instance
@@ -189,7 +207,10 @@ export default function CodeView(props: CodeViewProps) {
   }
 
   // monaco-editor options
-  const [tabSize, setTabSize] = useState<number>(2)
+  const [_tabSize, _setTabSize] = useState<number>(DefaultTabSize)
+  useEffect(() => {
+    setTabSize(_tabSize)
+  }, [_tabSize])
 
   const [wordWrap, setWordWrap] = useState<'on' | 'off'>('on')
   const toogleWrap = () => setWordWrap(wordWrap === 'on' ? 'off' : 'on')

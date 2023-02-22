@@ -3,55 +3,58 @@ import {
   createContext,
 } from 'react';
 
+import { DefaultTabSize } from '@_constants/main';
 import {
-  TTree,
-  TUid,
+  TNodeTreeData,
+  TNodeUid,
 } from '@_node/types';
-import { FFTree } from '@_types/main';
+import { TToast } from '@_types/global';
+import {
+  TClipboardData,
+  TFileAction,
+  TPanelContext,
+} from '@_types/main';
 
 import {
-  FFAction,
-  MainContextType,
-  Message,
-  TClipboardData,
   TCommand,
-  TPanel,
-  UpdateOptions,
+  TMainContext,
+  TUpdateOptions,
 } from './types';
 
-export const MainContext: Context<MainContextType> = createContext<MainContextType>({
+export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   // groupping action
   addRunningActions: (actionNames: string[]) => { },
   removeRunningActions: (actionNames: string[], effect?: boolean) => { },
 
   // file tree view
   ffHoveredItem: '',
-  setFFHoveredItem: (uid: TUid) => { },
+  setFFHoveredItem: (uid: TNodeUid) => { },
 
   ffHandlers: {},
   ffTree: {},
-  setFFTree: (tree: FFTree) => { },
-  updateFF: (deletedUids: { [uid: TUid]: boolean }, nodes: FFTree, handlers: { [uid: TUid]: FileSystemHandle }) => { },
+  setFFTree: (tree: TNodeTreeData) => { },
+  updateFF: (deletedUids: { [uid: TNodeUid]: boolean }, nodes: TNodeTreeData, handlers: { [uid: TNodeUid]: FileSystemHandle }) => { },
 
   // node tree view
   fnHoveredItem: '',
-  setFNHoveredItem: (uid: TUid) => { },
+  setFNHoveredItem: (uid: TNodeUid) => { },
 
   nodeTree: {},
-  setNodeTree: (tree: TTree) => { },
+  setNodeTree: (tree: TNodeTreeData) => { },
 
   validNodeTree: {},
-  setValidNodeTree: (tree: TTree) => { },
+  setValidNodeTree: (tree: TNodeTreeData) => { },
 
   // update opt
   updateOpt: { parse: null, from: null },
-  setUpdateOpt: (opt: UpdateOptions) => { },
+  setUpdateOpt: (opt: TUpdateOptions) => { },
 
   // ff hms
   isHms: null,
   setIsHms: (is: boolean | null) => { },
-  ffAction: { name: null },
-  setFFAction: (action: FFAction) => { },
+
+  ffAction: { type: null },
+  setFFAction: (action: TFileAction) => { },
 
   // cmdk
   currentCommand: { action: '', changed: false },
@@ -69,11 +72,14 @@ export const MainContext: Context<MainContextType> = createContext<MainContextTy
   setPending: (pending: boolean) => { },
 
   messages: [],
-  addMessage: (message: Message) => { },
+  addMessage: (message: TToast) => { },
   removeMessage: (index: number) => { },
 
   // reference
-  htmlReferenceData: {},
+  filesReferenceData: {},
+  htmlReferenceData: {
+    elements: {},
+  },
 
   cmdkReferenceData: {},
   cmdkReferenceJumpstart: {},
@@ -81,12 +87,16 @@ export const MainContext: Context<MainContextType> = createContext<MainContextTy
   cmdkReferenceAdd: {},
 
   // active panel/clipboard
-  activePanel: 'other',
-  setActivePanel: (panel: TPanel) => { },
+  activePanel: 'unknown',
+  setActivePanel: (panel: TPanelContext) => { },
 
-  clipboardData: { panel: 'other', type: null, uids: [] },
+  clipboardData: { panel: 'unknown', type: null, uids: [] },
   setClipboardData: (data: TClipboardData) => { },
 
   // os
-  os: 'Windows',
+  osType: 'Windows',
+
+  // code view
+  tabSize: DefaultTabSize,
+  setTabSize: (size: number) => { },
 })

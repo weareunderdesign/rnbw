@@ -1,5 +1,5 @@
-import { TUid } from '@_node/types';
+import { TNodeUid } from '@_node/types';
 
 export type NodeRendererProp = {
-  id: TUid,
+  id: TNodeUid,
 }

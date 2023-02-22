@@ -11,8 +11,23 @@ import {
 } from 'react-redux';
 import ReactShadowRoot from 'react-shadow-root';
 
-import { TUid } from '@_node/types';
-import * as Main from '@_redux/main';
+import {
+  NodeInAppClassName,
+  NodeUidSplitterRegExp,
+  RootNodeUid,
+} from '@_constants/main';
+import { TNodeUid } from '@_node/types';
+import {
+  expandFNNode,
+  fnSelector,
+  focusFNNode,
+  getActionGroupIndexSelector,
+  globalSelector,
+  hmsInfoSelector,
+  MainContext,
+  navigatorSelector,
+  selectFNNode,
+} from '@_redux/main';
 
 import { StageViewContext } from './context';
 import IFrame from './iFrame';
@@ -47,19 +62,29 @@ export default function StageView(props: StageViewProps) {
     pending, setPending, messages, addMessage, removeMessage,
 
     // reference
-    htmlReferenceData, cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions,
+    htmlReferenceData, cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions, cmdkReferenceAdd,
 
     // active panel/clipboard
     activePanel, setActivePanel, clipboardData, setClipboardData,
-  } = useContext(Main.MainContext)
+
+    // os
+    osType,
+
+    // code view
+    tabSize, setTabSize,
+  } = useContext(MainContext)
 
   // redux state
-  const { project, currentFile } = useSelector(Main.globalSelector)
-  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(Main.fnSelector)
+  const actionGroupIndex = useSelector(getActionGroupIndexSelector)
+  const { workspace, project, file, changedFiles } = useSelector(navigatorSelector)
+  const { fileAction } = useSelector(globalSelector)
+  const { futureLength, pastLength } = useSelector(hmsInfoSelector)
+  // const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
+  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
 
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
   // focusedItem -> scrollTo
-  const focusedItemRef = useRef<TUid>(focusedItem)
+  const focusedItemRef = useRef<TNodeUid>(focusedItem)
   const stageViewRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     // skip its own state change
@@ -74,12 +99,12 @@ export default function StageView(props: StageViewProps) {
     if (focusedNode === undefined) return
 
     // scrollTo
-    const focusedComponent = stageViewRef.current.shadowRoot?.querySelector(`.rnbwdev-rainbow-component-${focusedItem.replace(/\?/g, '-')}`)
+    const focusedComponent = stageViewRef.current.shadowRoot?.querySelector(`.${NodeInAppClassName}-${focusedItem.replace(NodeUidSplitterRegExp, '-')}`)
     setTimeout(() => focusedComponent?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' }), 0)
   }, [focusedItem])
 
   // select -> focusedItem
-  const setFocusedItem = useCallback((uid: TUid) => {
+  const setFocusedItem = useCallback((uid: TNodeUid) => {
     // focus NodeTreeView - item
     const focusedComponent = document.getElementById(`NodeTreeView-${uid}`)
     focusedComponent?.focus()
@@ -90,21 +115,21 @@ export default function StageView(props: StageViewProps) {
     addRunningActions(['stageView-click'])
 
     // expand the path to the uid
-    const _expandedItems: TUid[] = []
+    const _expandedItems: TNodeUid[] = []
     let node = validNodeTree[uid]
-    while (node.uid !== 'ROOT') {
+    while (node.uid !== RootNodeUid) {
       _expandedItems.push(node.uid)
-      node = validNodeTree[node.p_uid as TUid]
+      node = validNodeTree[node.parentUid as TNodeUid]
     }
     _expandedItems.shift()
-    dispatch(Main.expandFNNode(_expandedItems))
+    dispatch(expandFNNode(_expandedItems))
 
     // focus
     focusedItemRef.current = uid
-    dispatch(Main.focusFNNode(uid))
+    dispatch(focusFNNode(uid))
 
     // select
-    dispatch(Main.selectFNNode([uid]))
+    dispatch(selectFNNode([uid]))
 
     removeRunningActions(['stageView-click'])
   }, [focusedItem, validNodeTree])
@@ -137,7 +162,7 @@ export default function StageView(props: StageViewProps) {
           >
 
             <ReactShadowRoot stylesheets={styleSheets}>
-              {<NodeRenderer id={'ROOT'}></NodeRenderer>}
+              {<NodeRenderer id={RootNodeUid}></NodeRenderer>}
             </ReactShadowRoot>
           </div>
         </> : <>
@@ -148,7 +173,7 @@ export default function StageView(props: StageViewProps) {
             style={{ height: "calc(100vh - 8px)" }}
           >
             <IFrame>
-              {<NodeRenderer id={'ROOT'}></NodeRenderer>}
+              {<NodeRenderer id={RootNodeUid}></NodeRenderer>}
             </IFrame>
           </div>
         </>}

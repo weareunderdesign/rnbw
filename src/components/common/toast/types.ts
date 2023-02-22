@@ -1,7 +1,7 @@
-import { Message } from '@_redux/main';
+import { TToast } from '@_types/global';
 
 export type ToastProps = {
-  messages: Message[],
+  messages: TToast[],
 }
 
 export type ToastItemProps = {

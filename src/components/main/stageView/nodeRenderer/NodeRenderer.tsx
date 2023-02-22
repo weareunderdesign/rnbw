@@ -17,13 +17,21 @@ import {
   ResizeCallbackData,
 } from 'react-resizable';
 
+import { RootNodeUid } from '@_constants/main';
 import {
   getShortHand,
-  THtmlReference,
+  THtmlNodeData,
   THtmlTagAttributes,
 } from '@_node/html';
 import { TNode } from '@_node/types';
-import * as Main from '@_redux/main';
+import {
+  fnSelector,
+  getActionGroupIndexSelector,
+  globalSelector,
+  hmsInfoSelector,
+  MainContext,
+  navigatorSelector,
+} from '@_redux/main';
 
 import { StageViewContext } from '../context';
 import { NodeRendererProp } from './types';
@@ -55,15 +63,25 @@ export default function NodeRenderer({ id }: NodeRendererProp) {
     pending, setPending, messages, addMessage, removeMessage,
 
     // reference
-    htmlReferenceData, cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions,
+    htmlReferenceData, cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions, cmdkReferenceAdd,
 
     // active panel/clipboard
     activePanel, setActivePanel, clipboardData, setClipboardData,
-  } = useContext(Main.MainContext)
+
+    // os
+    osType,
+
+    // code view
+    tabSize, setTabSize,
+  } = useContext(MainContext)
 
   // redux state
-  const { project, currentFile } = useSelector(Main.globalSelector)
-  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(Main.fnSelector)
+  const actionGroupIndex = useSelector(getActionGroupIndexSelector)
+  const { workspace, project, file, changedFiles } = useSelector(navigatorSelector)
+  const { fileAction } = useSelector(globalSelector)
+  const { futureLength, pastLength } = useSelector(hmsInfoSelector)
+  // const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
+  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
 
   // stageView context
   const { setFocusedItem } = useContext(StageViewContext)
@@ -83,10 +101,8 @@ export default function NodeRenderer({ id }: NodeRendererProp) {
   const abbr = useMemo<boolean>(() => {
     if (node === undefined) return false
 
-    if (htmlReferenceData[node.name] !== undefined) {
-      const data: THtmlReference = htmlReferenceData[node.name]
-      if (data.Content === 'None') return true
-    }
+    const data = htmlReferenceData.elements[node.name]
+    if (data && data.Content === 'None') return true
 
     // tmp - we don't need this if the reference is perfect
     // skip img tag - it has its own renderer
@@ -100,7 +116,7 @@ export default function NodeRenderer({ id }: NodeRendererProp) {
 
   // need to continue to improve
   const attribs = useMemo<THtmlTagAttributes>(() => {
-    return node === undefined ? {} : getShortHand(node.data.attribs)
+    return node === undefined ? {} : getShortHand((node.data as THtmlNodeData).attribs)
   }, [node])
 
   const className = useMemo(() => {
@@ -149,8 +165,8 @@ export default function NodeRenderer({ id }: NodeRendererProp) {
   }, [focusedItem])
 
   return <>
-    {node !== undefined && !node.data.isFormatText && (
-      node.name === 'ROOT' ? node.children.map(c_uid => <NodeRenderer key={c_uid} id={c_uid}></NodeRenderer>) :
+    {node !== undefined && !(node.data as THtmlNodeData).isFormatText && (
+      node.name === RootNodeUid ? node.children.map(c_uid => <NodeRenderer key={c_uid} id={c_uid}></NodeRenderer>) :
         node.name === '!doctype' ? null :
           abbr ? <Tag {...attribs} /> :
             node.name === 'img' ? <Tag
@@ -166,7 +182,7 @@ export default function NodeRenderer({ id }: NodeRendererProp) {
               onInput={onInput}
             /> :
               node.name === 'comment' ? null :
-                node.name === 'text' ? (node.data.data) :
+                node.name === 'text' ? ((node.data as THtmlNodeData).data) :
                   node.name === 'div' ? <>
                     {true ?
                       <Tag
