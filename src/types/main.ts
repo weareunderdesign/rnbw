@@ -3,6 +3,8 @@ import {
   TNodeUid,
 } from '@_node/index';
 
+import { TTreeViewState } from '../_redux/main/types';
+
 /**
  * file-system type
  */
@@ -38,6 +40,18 @@ export type TFile = {
   type: TFileType,
   content: string,
   changed: boolean,
+}
+
+/**
+ * session
+ */
+export type TSession = {
+  'project-context': TFileSystemType,
+  'project-root-folder-handler': FileSystemHandle,
+  'file-tree-view-state': TTreeViewState,
+  'opened-file-uid': TNodeUid | null,
+  'node-tree-view-state': TTreeViewState | null,
+  'opened-file-content': string | null,
 }
 
 /**

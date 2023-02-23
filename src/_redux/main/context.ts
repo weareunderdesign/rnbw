@@ -102,4 +102,8 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
 
   // theme
   theme: 'System',
+
+  // session
+  hasSession: false,
+  session: null,
 })

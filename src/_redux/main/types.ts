@@ -22,6 +22,8 @@ import {
   TWorkspace,
 } from '@_types/main';
 
+import { TSession } from '../../types/main';
+
 /**
  * main context
  */
@@ -104,6 +106,10 @@ export type TMainContext = {
 
   // theme
   theme: TTheme,
+
+  // session
+  hasSession: boolean,
+  session: TSession | null,
 }
 
 /**

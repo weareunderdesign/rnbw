@@ -11,6 +11,12 @@ import React, {
 import cx from 'classnames';
 import { Command } from 'cmdk';
 import {
+  delMany,
+  getMany,
+  set,
+  setMany,
+} from 'idb-keyval';
+import {
   useDispatch,
   useSelector,
 } from 'react-redux';
@@ -80,8 +86,11 @@ import {
   TCmdkReferenceData,
   TFileAction,
   TPanelContext,
+  TSession,
 } from '@_types/main';
 
+import { TTreeViewState } from '../../_redux/main/types';
+import { RootNodeUid } from '../../constants/main';
 import { getCommandKey } from '../../services/global';
 import { MainPageProps } from './types';
 
@@ -92,8 +101,8 @@ export default function MainPage(props: MainPageProps) {
   const actionGroupIndex = useSelector(getActionGroupIndexSelector)
   const { workspace, project, file, changedFiles } = useSelector(navigatorSelector)
   const { fileAction } = useSelector(globalSelector)
-  const { focusedItem: ffFocusedItem } = useSelector(ffSelector)
-  const { focusedItem: fnFocusedItem } = useSelector(fnSelector)
+  const { focusedItem: ffFocusedItem, expandedItems: ffExpandedItems, selectedItems: ffSelectedItems, expandedItemsObj: ffExpandedItemsObj, selectedItemsObj: ffSelectedItemsObj } = useSelector(ffSelector)
+  const { focusedItem: fnFocusedItem, expandedItems: fnExpandedItems, selectedItems: fnSelectedItems, expandedItemsObj: fnExpandedItemsObj, selectedItemsObj: fnSelectedItemsObj } = useSelector(fnSelector)
   const { futureLength, pastLength } = useSelector(hmsInfoSelector)
 
   // -------------------------------------------------------------- main context --------------------------------------------------------------
@@ -292,8 +301,140 @@ export default function MainPage(props: MainPageProps) {
 
   // theme
   const [theme, setTheme] = useState<TTheme>('System')
+
+  // session
+  const [hasSession, setHasSession] = useState<boolean>(false)
+  const [session, setSession] = useState<TSession | null>(null)
   // -------------------------------------------------------------- main context --------------------------------------------------------------
 
+  // -------------------------------------------------------------- cmdk --------------------------------------------------------------
+  // key event listener
+  const cb_onKeyDown = useCallback((e: KeyboardEvent) => {
+    // skip inline rename input in file-tree-view
+    const targetId = e.target && (e.target as HTMLElement).id
+    if (targetId === 'FileTreeView-RenameInput') {
+      return
+    }
+
+    // cmdk obj for the current command
+    const cmdk: TCmdkKeyMap = {
+      cmd: getCommandKey(e, osType),
+      shift: e.shiftKey,
+      alt: e.altKey,
+      key: e.code,
+      click: false,
+    }
+
+    // skip monaco-editor shortkeys and general coding
+    if (activePanel === 'code') {
+      if (!(cmdk.cmd && !cmdk.shift && !cmdk.alt && cmdk.key === 'KeyS')) {
+        return
+      }
+    }
+
+    // detect action
+    let action: string | null = null
+    for (const actionName in cmdkReferenceData) {
+      const _cmdk = cmdkReferenceData[actionName]['Keyboard Shortcut'] as TCmdkKeyMap
+
+      const key = _cmdk.key.length === 0 ? '' : (_cmdk.key.length === 1 ? 'Key' : '') + _cmdk.key[0].toUpperCase() + _cmdk.key.slice(1)
+      if (cmdk.cmd === _cmdk.cmd && cmdk.shift === _cmdk.shift && cmdk.alt === _cmdk.alt && cmdk.key === key) {
+        action = actionName
+        break
+      }
+    }
+    if (action === null) return
+
+    LogAllow && console.log('action to be run by cmdk: ', action)
+
+    // skip if its from cmdk-input
+    if (action !== 'Clear' && cmdkOpen) return
+    action !== 'Clear' && e.preventDefault()
+
+    setCurrentCommand({ action, changed: !currentCommand.changed })
+  }, [currentCommand.changed, pending, cmdkReferenceData, activePanel, cmdkOpen, osType])
+
+  // bind onKeyDownCallback (cb_onKeyDown)
+  useEffect(() => {
+    document.addEventListener('keydown', cb_onKeyDown)
+    return () => document.removeEventListener('keydown', cb_onKeyDown)
+  }, [cb_onKeyDown])
+
+  // command detect & do actions
+  useEffect(() => {
+    // cmdk actions handle
+    switch (currentCommand.action) {
+      case 'Clear':
+        onClear()
+      case 'Jumpstart':
+        onJumpstart()
+        break
+      case 'Theme':
+        onToggleTheme()
+        break
+      case 'Undo':
+        onUndo()
+        break
+      case 'Redo':
+        onRedo()
+        break
+      case 'Code':
+        toogleCodeView()
+        break
+      default:
+        return
+    }
+  }, [currentCommand.changed])
+  // -------------------------------------------------------------- cmdk --------------------------------------------------------------
+
+  // -------------------------------------------------------------- handlers --------------------------------------------------------------
+  // clean rnbw'data
+  const onClear = useCallback(() => {
+    (async () => {
+      localStorage.clear()
+      await delMany(['project-context', 'project-root-folder-handler', 'file-tree-view-state', 'opened-file-uid', 'node-tree-view-state', 'opened-file-content'])
+    })()
+  }, [])
+
+  // cmdk jumpstart
+  const onJumpstart = useCallback(() => {
+    if (cmdkOpen) return
+    setCmdkPages(['Jumpstart'])
+    setCmdkOpen(true)
+  }, [cmdkOpen])
+
+  // hms methods
+  const onUndo = useCallback(() => {
+    if (pastLength === 0) return
+
+    setFFAction(fileAction)
+    setIsHms(true)
+
+    setUpdateOpt({ parse: true, from: 'hms' })
+    setTimeout(() => dispatch({ type: 'main/undo' }), 0)
+  }, [fileAction, pastLength])
+  const onRedo = useCallback(() => {
+    if (futureLength === 0) return
+
+    setIsHms(false)
+
+    setUpdateOpt({ parse: true, from: 'hms' })
+    setTimeout(() => dispatch({ type: 'main/redo' }), 0)
+  }, [futureLength])
+
+  // reset fileAction in the new history
+  useEffect(() => {
+    futureLength === 0 && fileAction.type !== null && dispatch(setFileAction({ type: null }))
+  }, [actionGroupIndex])
+
+  // toogle code view
+  const [showCodeView, setShowCodeView] = useState(false)
+  const toogleCodeView = async () => {
+    setShowCodeView(!showCodeView)
+  }
+  // -------------------------------------------------------------- handlers --------------------------------------------------------------
+
+  // -------------------------------------------------------------- other --------------------------------------------------------------
   // detect OS & fetch reference - html. Jumpstart.csv, Actions.csv
   useEffect(() => {
     addRunningActions(['detect-os', 'reference-files', 'reference-html-elements', 'reference-cmdk-jumpstart', 'reference-cmdk-actions'])
@@ -327,6 +468,21 @@ export default function MainPage(props: MainPageProps) {
 
     // add default cmdk actions
     const _cmdkReferenceData: TCmdkReferenceData = {} // cmdk map
+    // Jumpstart
+    _cmdkReferenceData['Clear'] = {
+      "Name": 'Clear',
+      "Icon": '',
+      "Description": '',
+      "Keyboard Shortcut": {
+        cmd: true,
+        shift: false,
+        alt: false,
+        key: 'KeyR',
+        click: false,
+      },
+      "Group": 'default',
+      "Context": 'all',
+    }
     // Jumpstart
     _cmdkReferenceData['Jumpstart'] = {
       "Name": 'Jumpstart',
@@ -458,143 +614,89 @@ export default function MainPage(props: MainPageProps) {
     removeRunningActions(['detect-os', 'reference-files', 'reference-html-elements', 'reference-cmdk-jumpstart', 'reference-cmdk-actions'], false)
   }, [])
 
-  // -------------------------------------------------------------- cmdk --------------------------------------------------------------
-  // key event listener
-  const cb_onKeyDown = useCallback((e: KeyboardEvent) => {
-    if (pending) return
-
-    // skip if its from cmdk-input
-    if (cmdkOpen) return
-
-    // skip inline rename input in file-tree-view
-    const targetId = e.target && (e.target as HTMLElement).id
-    if (targetId === 'FileTreeView-RenameInput') {
-      return
-    }
-
-    // cmdk obj for the current command
-    const cmdk: TCmdkKeyMap = {
-      cmd: getCommandKey(e, osType),
-      shift: e.shiftKey,
-      alt: e.altKey,
-      key: e.code,
-      click: false,
-    }
-
-    // skip monaco-editor shortkeys and general coding
-    if (activePanel === 'code') {
-      if (!(cmdk.cmd && !cmdk.shift && !cmdk.alt && cmdk.key === 'KeyS')) {
-        return
-      }
-
-      /* // copy
-      if (cmdk.cmd && !cmdk.shift && !cmdk.alt && cmdk.key === 'KeyC') {
-        return
-      }
-      // paste
-      if (cmdk.cmd && !cmdk.shift && !cmdk.alt && cmdk.key === 'KeyV') {
-        return
-      }
-      // cut
-      if (cmdk.cmd && !cmdk.shift && !cmdk.alt && cmdk.key === 'KeyX') {
-        return
-      }
-      // general coding
-      if (!cmdk.cmd && !cmdk.shift && !cmdk.alt) {
-        return
-      } */
-    }
-
-    // detect action
-    let action: string | null = null
-    for (const actionName in cmdkReferenceData) {
-      const _cmdk = cmdkReferenceData[actionName]['Keyboard Shortcut'] as TCmdkKeyMap
-
-      const key = _cmdk.key.length === 0 ? '' : (_cmdk.key.length === 1 ? 'Key' : '') + _cmdk.key[0].toUpperCase() + _cmdk.key.slice(1)
-      if (cmdk.cmd === _cmdk.cmd && cmdk.shift === _cmdk.shift && cmdk.alt === _cmdk.alt && cmdk.key === key) {
-        action = actionName
-        break
-      }
-    }
-    if (action === null) return
-
-    LogAllow && console.log('action to be run by cmdk: ', action)
-    e.preventDefault()
-
-    setCurrentCommand({ action, changed: !currentCommand.changed })
-  }, [currentCommand.changed, pending, cmdkReferenceData, activePanel, cmdkOpen, osType])
-
-  // bind onKeyDownCallback (cb_onKeyDown)
+  // newbie flag
   useEffect(() => {
-    document.addEventListener('keydown', cb_onKeyDown)
-    return () => document.removeEventListener('keydown', cb_onKeyDown)
-  }, [cb_onKeyDown])
-
-  // command detect & do actions
-  useEffect(() => {
-    // cmdk actions handle
-    switch (currentCommand.action) {
-      case 'Jumpstart':
-        onJumpstart()
-        break
-      case 'Theme':
-        onToggleTheme()
-        break
-      case 'Undo':
-        onUndo()
-        break
-      case 'Redo':
-        onRedo()
-        break
-      case 'Code':
-        toogleCodeView()
-        break
-      default:
-        return
+    const isNewbie = localStorage.getItem("newbie")
+    LogAllow && console.log('isNewbie: ', isNewbie === null ? true : false)
+    if (!isNewbie) {
+      // open Jumpstart for newbie
+      onJumpstart()
+      localStorage.setItem("newbie", 'false')
     }
-  }, [currentCommand.changed])
-  // -------------------------------------------------------------- cmdk --------------------------------------------------------------
+  }, [])
 
-  // -------------------------------------------------------------- handlers --------------------------------------------------------------
-  // cmdk jumpstart
-  const onJumpstart = useCallback(() => {
-    if (cmdkOpen) return
-    setCmdkPages(['Jumpstart'])
-    setCmdkOpen(true)
-  }, [cmdkOpen])
-
-  // hms methods
-  const onUndo = useCallback(() => {
-    if (pastLength === 0) return
-
-    setFFAction(fileAction)
-    setIsHms(true)
-
-    setUpdateOpt({ parse: true, from: 'hms' })
-    setTimeout(() => dispatch({ type: 'main/undo' }), 0)
-  }, [fileAction, pastLength])
-  const onRedo = useCallback(() => {
-    if (futureLength === 0) return
-
-    setIsHms(false)
-
-    setUpdateOpt({ parse: true, from: 'hms' })
-    setTimeout(() => dispatch({ type: 'main/redo' }), 0)
-  }, [futureLength])
-
-  // reset fileAction in the new history
+  // store last edit session
   useEffect(() => {
-    futureLength === 0 && fileAction.type !== null && dispatch(setFileAction({ type: null }))
-  }, [actionGroupIndex])
+    (async () => {
+      const _hasSession = localStorage.getItem('last-edit-session') !== null
+      setHasSession(_hasSession)
+      let _session: TSession | null = null
+      if (_hasSession) {
+        const sessionInfo = await getMany(['project-context', 'project-root-folder-handler', 'file-tree-view-state', 'opened-file-uid', 'node-tree-view-state', 'opened-file-content'])
+        _session = {
+          'project-context': sessionInfo[0],
+          'project-root-folder-handler': sessionInfo[1],
+          'file-tree-view-state': sessionInfo[2],
+          'opened-file-uid': sessionInfo[3],
+          'node-tree-view-state': sessionInfo[4],
+          'opened-file-content': sessionInfo[5],
+        }
+        setSession(_session)
+      }
+      LogAllow && console.log('last-edit-session', _session)
+    })()
+  }, [])
+  useEffect(() => {
+    (async () => {
+      if (ffTree[RootNodeUid]) {
+        try {
+          await setMany([['project-context', project.context], ['project-root-folder-handler', ffHandlers[RootNodeUid]]])
+          localStorage.setItem('last-edit-session', 'yes')
+        } catch (err) {
+          localStorage.removeItem('last-edit-session')
+        }
+      }
+    })()
+  }, [ffTree[RootNodeUid]])
+  useEffect(() => {
+    (async () => {
+      const viewState: TTreeViewState = {
+        focusedItem: ffFocusedItem,
+        selectedItems: ffSelectedItems,
+        expandedItems: ffExpandedItems,
+        selectedItemsObj: ffSelectedItemsObj,
+        expandedItemsObj: ffExpandedItemsObj,
+      }
+      await set('file-tree-view-state', viewState)
+    })()
+  }, [ffFocusedItem, ffSelectedItems, ffExpandedItems, ffSelectedItemsObj, ffExpandedItemsObj])
+  useEffect(() => {
+    (async () => {
+      if (ffTree[file.uid] !== undefined) {
+        await set('opened-file-uid', file.uid)
+      }
+    })()
+  }, [file.uid])
+  useEffect(() => {
+    (async () => {
+      const viewState: TTreeViewState = {
+        focusedItem: fnFocusedItem,
+        selectedItems: fnSelectedItems,
+        expandedItems: fnExpandedItems,
+        selectedItemsObj: fnSelectedItemsObj,
+        expandedItemsObj: fnExpandedItemsObj,
+      }
+      await set('node-tree-view-state', viewState)
+    })()
+  }, [fnFocusedItem, fnSelectedItems, fnExpandedItems, fnSelectedItemsObj, fnExpandedItemsObj])
+  useEffect(() => {
+    (async () => {
+      if (ffTree[file.uid] !== undefined) {
+        await set('opened-file-content', file.content)
+      }
+    })()
+  }, [file.content])
 
-  // toogle code view
-  const [showCodeView, setShowCodeView] = useState(false)
-  const toogleCodeView = async () => {
-    setShowCodeView(!showCodeView)
-  }
-  // -------------------------------------------------------------- handlers --------------------------------------------------------------
-
-  // -------------------------------------------------------------- other --------------------------------------------------------------
   // theme
   const setSystemTheme = useCallback(() => {
     setTheme('System')
@@ -740,6 +842,10 @@ export default function MainPage(props: MainPageProps) {
 
         // theme
         theme,
+
+        // session
+        hasSession,
+        session,
       }}
     >
       {/* process */}

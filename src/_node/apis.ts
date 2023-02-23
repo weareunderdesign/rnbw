@@ -73,7 +73,7 @@ export const sortNodesByContext = (_nodes: TNode[], fsType: TFileSystemType): TN
   return fsType === 'local' ? nodes.sort((a, b) => {
     return a.isEntity && !b.isEntity ? 1 :
       !a.isEntity && b.isEntity ? -1 :
-        a.name.toLowerCase() > b.name.toLowerCase() ? 1 : 0
+        a.name.localeCompare(b.name) ? 1 : 0
   }) : nodes
 }
 

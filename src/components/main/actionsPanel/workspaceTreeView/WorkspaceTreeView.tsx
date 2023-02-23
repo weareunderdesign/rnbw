@@ -12,7 +12,6 @@ import {
   FileSystemDirectoryHandle,
   FileSystemFileHandle,
   FileSystemHandle,
-  showDirectoryPicker,
 } from 'file-system-access';
 import {
   CustomDirectoryPickerOptions,
@@ -348,176 +347,10 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   // -------------------------------------------------------------- folder/file hms --------------------------------------------------------------
 
   const [temporary, setTemporary] = useState<boolean>(false)
+  const [invalidNodes, setInvalidNodes] = useState<{ [uid: TNodeUid]: boolean }>({})
+  const [temporaryNodes, setTemporaryNodes] = useState<{ [uid: TNodeUid]: boolean }>({})
 
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
-  // import project from localhost using filesystemdirectoryhandle
-  const importLocalhostProject = useCallback(async (projectHandle: FileSystemDirectoryHandle) => {
-    // skip if pending or temporary is true
-    if (pending || temporary) return
-
-    // verify handler permission
-    if (!(await verifyFileHandlerPermission(projectHandle))) {
-      addMessage({
-        type: 'error',
-        content: 'Project folder is not valid. Please import valid project.',
-      })
-      throw 'error'
-    }
-
-    const deletedUids: { [uid: TNodeUid]: boolean } = {}
-    const nodes: TNodeTreeData = {}
-    const handlers: { [uid: TNodeUid]: FileSystemHandle } = { [RootNodeUid]: projectHandle }
-
-    // import all of the sub nodes
-    const dirHandlers: { node: TNode, handler: FileSystemDirectoryHandle }[] = [{
-      node: {
-        uid: RootNodeUid,
-        parentUid: null,
-        name: projectHandle.name,
-        isEntity: false,
-        children: ffTree[RootNodeUid] ? ffTree[RootNodeUid].children : [],
-        data: {
-          valid: true,
-          type: 'folder',
-        },
-      },
-      handler: projectHandle,
-    }]
-    while (dirHandlers.length) {
-      const { node: dirNode, handler: dirHandler } = dirHandlers.shift() as { node: TNode, handler: FileSystemDirectoryHandle }
-
-      const childrenObj: { [uid: TNodeUid]: boolean } = {}
-      dirNode.children.map((c_uid) => {
-        childrenObj[c_uid] = true
-      })
-
-      const _subNodes: TNode[] = []
-      const childrenExists: { [uid: TNodeUid]: boolean } = {}
-      try {
-        for await (const entry of dirHandler.values()) {
-          const childNodeUid = generateNodeUid(dirNode.uid, entry.name)
-          childrenExists[childNodeUid] = true
-          const entryExists = (childrenObj[childNodeUid] === true)
-          const childNodeChildren = entryExists ? ffTree[childNodeUid].children : []
-          handlers[childNodeUid] = entry
-
-          let name = entry.name
-          let type = 'folder'
-          if (entry.kind !== 'directory') {
-            const ext = getFileExtension(name)
-            type = ext.slice(1)
-            name = name.slice(0, name.length - ext.length)
-          }
-
-          const _subNode: TNode = {
-            uid: childNodeUid,
-            parentUid: dirNode.uid,
-            name,
-            isEntity: entry.kind !== "directory",
-            children: childNodeChildren,
-            data: {
-              valid: true,
-              type,
-            },
-          }
-          _subNodes.push(_subNode)
-          expandedItemsObj[childNodeUid] === true && dirHandlers.push({ node: _subNode, handler: entry as FileSystemDirectoryHandle })
-        }
-      } catch (err) {
-        LogAllow && console.log(err)
-        addMessage({
-          type: 'error',
-          content: 'Error occurred during importing project.',
-        })
-        throw 'error'
-      }
-
-      // sort the sub nodes by folder/file asc
-      const subNodes = sortNodesByContext(_subNodes, project.context)
-
-      // update dirNode and push to total nodes
-      dirNode.children.map((c_uid) => {
-        if (childrenExists[c_uid] === undefined) {
-          deletedUids[c_uid] = true
-        }
-      })
-      dirNode.children = []
-      subNodes.map((subNode) => {
-        nodes[subNode.uid] = subNode
-        dirNode.children.push(subNode.uid)
-      })
-      nodes[dirNode.uid] = dirNode
-    }
-
-    // update the state
-    updateFF(deletedUids, nodes, handlers)
-    dispatch(updateFFTreeViewState({ deletedUids: Object.keys(deletedUids) }))
-  }, [pending, temporary, ffTree, expandedItemsObj])
-
-  // open project button handler
-  const onImportProject = useCallback(async (fsType: TFileSystemType = 'local') => {
-    if (fsType === 'local') {
-      setPending(true)
-
-      // open directory picker and get the project folde handle
-      let projectHandle: FileSystemHandle
-      try {
-        projectHandle = await showDirectoryPicker({ _preferPolyfill: false, mode: 'readwrite' } as CustomDirectoryPickerOptions)
-      } catch (err) {
-        addMessage({
-          type: 'info',
-          content: 'You canceled importing project.',
-        })
-
-        setPending(false)
-        return
-      }
-
-      dispatch(clearMainState())
-      dispatch({ type: HmsClearActionType })
-
-      // import localhost porject
-      try {
-        await importLocalhostProject(projectHandle as FileSystemDirectoryHandle)
-      } catch (err) {
-        // err occurred
-      }
-
-      setPending(false)
-    }
-  }, [importLocalhostProject])
-
-  // watch file system
-  const watchFileSystem = useCallback(async () => {
-    if (project.context === 'local') {
-      if (ffHandlers[RootNodeUid] === undefined || ffTree[RootNodeUid] === undefined) {
-        // do nothing
-      } else {
-        try {
-          await importLocalhostProject(ffHandlers[RootNodeUid] as FileSystemDirectoryHandle)
-        } catch (err) {
-          LogAllow && console.log(err)
-          // setPending(true)
-        }
-      }
-    } else {
-      // tmp
-    }
-  }, [project.context, ffHandlers, importLocalhostProject])
-
-  // set file system watch timer
-  useEffect(() => {
-    let fsWatchInterval: NodeJS.Timer
-
-    // stop if pending or temporary is true
-    if (!pending && !temporary) {
-      // create a fs watch interval and get the id
-      fsWatchInterval = setInterval(watchFileSystem, getFileSystemWatchInterval(project.context))
-    }
-
-    // clear out the fs watch interval using the id when unmounting the component
-    return () => clearInterval(fsWatchInterval)
-  }, [pending, temporary, watchFileSystem])
 
   // generate TreeViewData from workspace
   const fileTreeViewData = useMemo(() => {
@@ -1114,6 +947,206 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
     removeRunningActions(['fileTreeView-move'])
   }, [ffTree, ffHandlers])
+
+  // open default file when opening a new project
+  const [initialFileToOpen, setInitialFileToOpen] = useState<TNodeUid>()
+  useEffect(() => {
+    // validate
+    if (initialFileToOpen && ffTree[initialFileToOpen] !== undefined) {
+      setInitialFileToOpen(undefined)
+
+      // focus and read the initial file
+      cb_focusFFNode(initialFileToOpen)
+      cb_readFFNode(initialFileToOpen)
+    }
+  }, [initialFileToOpen])
+
+  // import project from localhost using filesystemdirectoryhandle
+  const importLocalhostProject = useCallback(async (projectHandle: FileSystemDirectoryHandle, newOpen: boolean = false): Promise<void | null | TNodeUid> => {
+    // verify handler permission
+    if (!(await verifyFileHandlerPermission(projectHandle))) {
+      addMessage({
+        type: 'error',
+        content: 'Project folder is not valid. Please import valid project.',
+      })
+      throw 'error'
+    }
+
+    const deletedUids: { [uid: TNodeUid]: boolean } = {}
+    const nodes: TNodeTreeData = {}
+    const handlers: { [uid: TNodeUid]: FileSystemHandle } = { [RootNodeUid]: projectHandle }
+
+    // store index and first met html file
+    let indexHtmlUid: TNodeUid | null = null, firstHtmlUid: TNodeUid | null = null
+
+    // import all of the sub nodes
+    const dirHandlers: { node: TNode, handler: FileSystemDirectoryHandle }[] = [{
+      node: {
+        uid: RootNodeUid,
+        parentUid: null,
+        name: projectHandle.name,
+        isEntity: false,
+        children: ffTree[RootNodeUid] ? ffTree[RootNodeUid].children : [],
+        data: {
+          valid: true,
+          type: 'folder',
+        },
+      },
+      handler: projectHandle,
+    }]
+    while (dirHandlers.length) {
+      const { node: dirNode, handler: dirHandler } = dirHandlers.shift() as { node: TNode, handler: FileSystemDirectoryHandle }
+
+      const childrenObj: { [uid: TNodeUid]: boolean } = {}
+      dirNode.children.map((c_uid) => {
+        childrenObj[c_uid] = true
+      })
+
+      const _subNodes: TNode[] = []
+      const childrenExists: { [uid: TNodeUid]: boolean } = {}
+
+      try {
+        for await (const entry of dirHandler.values()) {
+          const childNodeUid = generateNodeUid(dirNode.uid, entry.name)
+          childrenExists[childNodeUid] = true
+          const entryExists = (childrenObj[childNodeUid] === true)
+          const childNodeChildren = entryExists ? ffTree[childNodeUid].children : []
+          handlers[childNodeUid] = entry
+
+          let name = entry.name
+          let type = '*folder'
+          if (entry.kind !== 'directory') {
+            const ext = getFileExtension(name)
+            type = ext.slice(1)
+            name = name.slice(0, name.length - ext.length)
+          }
+
+          const _subNode: TNode = {
+            uid: childNodeUid,
+            parentUid: dirNode.uid,
+            name,
+            isEntity: entry.kind !== "directory",
+            children: childNodeChildren,
+            data: {
+              valid: true,
+              type,
+            },
+          }
+
+          dirNode.uid === RootNodeUid && newOpen && firstHtmlUid === null && type === 'html' ? firstHtmlUid = childNodeUid : null
+          dirNode.uid === RootNodeUid && newOpen && name === 'index' && type === 'html' ? indexHtmlUid = childNodeUid : null
+
+          // don't display temporary editing nodes (creating)
+          temporaryNodes[childNodeUid] === undefined && _subNodes.push(_subNode)
+
+          // don't add invalid nodes which has operations in progress
+          expandedItemsObj[childNodeUid] === true && invalidNodes[childNodeUid] === undefined && dirHandlers.push({ node: _subNode, handler: entry as FileSystemDirectoryHandle })
+        }
+      } catch (err) {
+        LogAllow && console.log(err)
+        addMessage({
+          type: 'error',
+          content: 'Error occurred during importing project.',
+        })
+        throw 'error'
+      }
+
+      // sort the sub nodes by folder/file asc
+      const subNodes = sortNodesByContext(_subNodes, project.context)
+
+      // update dirNode and push to total nodes
+      dirNode.children.map((c_uid) => {
+        if (childrenExists[c_uid] === undefined) {
+          deletedUids[c_uid] = true
+        }
+      })
+      dirNode.children = []
+      subNodes.map((subNode) => {
+        nodes[subNode.uid] = subNode
+        dirNode.children.push(subNode.uid)
+      })
+      nodes[dirNode.uid] = dirNode
+    }
+
+    // update the state
+    updateFF(deletedUids, nodes, handlers)
+    dispatch(updateFFTreeViewState({ deletedUids: Object.keys(deletedUids) }))
+
+    if (newOpen) {
+      const nodeUidToOpen: TNodeUid | null = indexHtmlUid || firstHtmlUid
+      return nodeUidToOpen
+    }
+  }, [pending, temporary, ffTree, expandedItemsObj])
+
+  // open project button handler
+  const onImportProject = useCallback(async (fsType: TFileSystemType = 'local'): Promise<void> => {
+    if (fsType === 'local') {
+      setPending(true)
+
+      // open directory picker and get the project folde handle
+      let projectHandle: FileSystemHandle
+      try {
+        projectHandle = await showDirectoryPicker({ _preferPolyfill: false, mode: 'readwrite' } as CustomDirectoryPickerOptions)
+      } catch (err) {
+        addMessage({
+          type: 'info',
+          content: 'You canceled importing project.',
+        })
+
+        setPending(false)
+        return
+      }
+
+      dispatch(clearMainState())
+      dispatch({ type: HmsClearActionType })
+
+      // import localhost project
+      try {
+        const nodeUidToOpen = await importLocalhostProject(projectHandle as FileSystemDirectoryHandle, true)
+        if (nodeUidToOpen === null) {
+          addMessage({
+            type: 'info',
+            content: 'There\'s no html file in the root directory.',
+          })
+        } else {
+          setInitialFileToOpen(nodeUidToOpen as TNodeUid)
+        }
+      } catch (err) {
+        // err occurred
+      }
+
+      setPending(false)
+    } else if (fsType === '') {
+
+    }
+  }, [importLocalhostProject])
+
+  // watch file system
+  const watchFileSystem = useCallback(async () => {
+    if (project.context === 'local') {
+      if (ffHandlers[RootNodeUid] === undefined || ffTree[RootNodeUid] === undefined) {
+        // do nothing
+      } else {
+        try {
+          await importLocalhostProject(ffHandlers[RootNodeUid] as FileSystemDirectoryHandle)
+        } catch (err) {
+          LogAllow && console.log(err)
+          // setPending(true)
+        }
+      }
+    } else {
+      // tmp
+    }
+  }, [project.context, ffHandlers, importLocalhostProject])
+
+  // set file system watch timer
+  useEffect(() => {
+    // create a fs watch interval and get the id
+    const fsWatchInterval = setInterval(watchFileSystem, getFileSystemWatchInterval(project.context))
+
+    // clear out the fs watch interval using the id when unmounting the component
+    return () => clearInterval(fsWatchInterval)
+  }, [watchFileSystem])
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
 
   // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
