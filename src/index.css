@@ -1,18 +1,39 @@
-/* Works on Firefox */
-* {
-  /* Default Scroll Bar Style Improvement */
-  scrollbar-width: thin;
-  scrollbar-color: rgba(150, 100, 50, 0.5) rgba(0, 0, 0, 0);
-  /* scrollbar-gutter: stable both-edges; */
-
-  /* Box Sizing and Transition */
-  box-sizing: border-box;
-  /* transition: 0.1s all; */
-
-  /* scroll-behavior: smooth; */
+/* for react-complex-tree */
+#root #NodeTreeView ul,
+#root #FileTreeView ul {
+  padding: 0px;
 }
 
-/* Works on Chrome, Edge, and Safari */
+#root #NodeTreeView ul>li,
+#root #FileTreeView ul>li {
+  line-height: 100%;
+  padding: 0px;
+}
+
+#root #NodeTreeView ul>li::marker,
+#root #FileTreeView ul>li::marker {
+  display: none;
+}
+
+/* color extends rene.css */
+[data-theme=light],
+html {
+  --color-tertiary-background: #ddd;
+  --color-tertiary-foreground: #333;
+}
+
+[data-theme=dark] {
+  --color-tertiary-background: #333;
+  --color-tertiary-foreground: #ddd;
+}
+
+/* for scroll-bar */
+* {
+  /* for firefox */
+  scrollbar-width: calc(5px);
+  scrollbar-color: var(--color-primary-background) var(--color-tertiary-background);
+}
+
 *::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -20,34 +41,75 @@
 
 *::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.1);
+  background-color: var(--color-primary-background);
 }
 
 *::-webkit-scrollbar-thumb {
   background-color: rgba(0, 0, 0, 0.2);
   border-radius: 3px;
+  background-color: var(--color-tertiary-background);
 }
 
-body {
+/* other */
+.background-tertiary {
+  background-color: var(--color-tertiary-background);
+  color: var(--color-tertiary-foreground)
+}
+
+.foreground-tertiary {
+  background-color: var(--color-tertiary-foreground);
+  color: var(--color-tertiary-background)
+}
+
+.outline {
+  outline-width: 1px;
+  outline-style: solid;
+  outline-offset: -1px;
+}
+
+.outline-none {
+  outline: none;
+}
+
+.outline-default {
+  outline-color: var(--color-tertiary-background);
+}
+
+.outline-primary {
+  outline-color: var(--color-primary);
+}
+
+.outline-positive {
+  outline-color: var(--color-positive);
+}
+
+.outline-negative {
+  outline-color: var(--color-negative);
+}
+
+.outline-solid {
+  outline-style: solid;
+}
+
+.outline-dotted {
+  outline-style: dotted;
+}
+
+.scrollable {
+  max-height: 100vh;
+  overflow: auto;
+}
+
+.no-frame {
+  outline: none;
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans",
-    "Droid Sans", "Helvetica Neue", sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  border: none;
+  padding: 0;
+  background: transparent;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
-}
-
-#root ul {
-  padding: 0px;
-}
-
-#root ul>li {
-  line-height: 100%;
-  padding: 0px;
-}
-
-#root ul>li::marker {
-  display: none;
+.inline-label {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }

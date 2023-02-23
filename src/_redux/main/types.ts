@@ -8,6 +8,7 @@ import {
 } from '@_node/types';
 import {
   TOsType,
+  TTheme,
   TToast,
 } from '@_types/global';
 import {
@@ -100,6 +101,9 @@ export type TMainContext = {
   // code view
   tabSize: number,
   setTabSize: (size: number) => void,
+
+  // theme
+  theme: TTheme,
 }
 
 /**

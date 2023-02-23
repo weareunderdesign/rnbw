@@ -4,6 +4,11 @@
 export type TOsType = 'Windows' | 'Mac'
 
 /**
+ * rinbow app theme
+ */
+export type TTheme = 'Light' | 'Dark' | 'System'
+
+/**
  * toast type
  */
 export type TToastType = 'success' | 'warning' | 'info' | 'error'

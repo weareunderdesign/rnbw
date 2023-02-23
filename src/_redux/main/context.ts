@@ -99,4 +99,7 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   // code view
   tabSize: DefaultTabSize,
   setTabSize: (size: number) => { },
+
+  // theme
+  theme: 'System',
 })

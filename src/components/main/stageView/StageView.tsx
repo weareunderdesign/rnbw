@@ -138,7 +138,7 @@ export default function StageView(props: StageViewProps) {
   // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
   // panel focus handler
   const onPanelClick = useCallback((e: React.MouseEvent) => {
-    setActivePanel('node')
+    setActivePanel('stage')
   }, [])
   // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
 
@@ -150,32 +150,18 @@ export default function StageView(props: StageViewProps) {
   return <>
     <StageViewContext.Provider value={{ setFocusedItem }}>
       <div
-        className="panel box padding-xs shadow border-left"
+        className="panel box background-secondary scrollable"
         onClick={onPanelClick}
+        ref={stageViewRef}
       >
         {true ? <>
-          {/* ReactShadowRoot */}
-          <div
-            ref={stageViewRef}
-            className='box border-top border-right border-bottom border-left'
-            style={{ maxHeight: "calc(100vh - 8px)", overflow: "auto" }}
-          >
-
-            <ReactShadowRoot stylesheets={styleSheets}>
-              {<NodeRenderer id={RootNodeUid}></NodeRenderer>}
-            </ReactShadowRoot>
-          </div>
+          <ReactShadowRoot stylesheets={styleSheets}>
+            <NodeRenderer id={RootNodeUid}></NodeRenderer>
+          </ReactShadowRoot>
         </> : <>
-          {/* IFrame */}
-          <div
-            ref={stageViewRef}
-            className='box border-top border-right border-bottom border-left'
-            style={{ height: "calc(100vh - 8px)" }}
-          >
-            <IFrame>
-              {<NodeRenderer id={RootNodeUid}></NodeRenderer>}
-            </IFrame>
-          </div>
+          <IFrame>
+            {<NodeRenderer id={RootNodeUid}></NodeRenderer>}
+          </IFrame>
         </>}
       </div>
     </StageViewContext.Provider>

@@ -16,6 +16,7 @@ import {
 } from 'react-redux';
 
 import {
+  Loader,
   SVGIcon,
   Toast,
 } from '@_components/common';
@@ -66,6 +67,7 @@ import filesRef from '@_ref/rfrncs/Files.csv';
 import htmlRefElements from '@_ref/rfrncs/HTML Elements.csv';
 import {
   TOsType,
+  TTheme,
   TToast,
 } from '@_types/global';
 import {
@@ -80,6 +82,7 @@ import {
   TPanelContext,
 } from '@_types/main';
 
+import { getCommandKey } from '../../services/global';
 import { MainPageProps } from './types';
 
 export default function MainPage(props: MainPageProps) {
@@ -223,7 +226,7 @@ export default function MainPage(props: MainPageProps) {
         })
         data['Files'] = data['Files'].filter((element) => element.Featured || !!cmdkSearch)
       }
-    } else if (activePanel === 'node') {
+    } else if (activePanel === 'node' || activePanel === 'stage') {
       // validate
       const node = nodeTree[fnFocusedItem]
       if (node) {
@@ -286,6 +289,9 @@ export default function MainPage(props: MainPageProps) {
 
   // code view
   const [tabSize, setTabSize] = useState<number>(DefaultTabSize)
+
+  // theme
+  const [theme, setTheme] = useState<TTheme>('System')
   // -------------------------------------------------------------- main context --------------------------------------------------------------
 
   // detect OS & fetch reference - html. Jumpstart.csv, Actions.csv
@@ -468,7 +474,7 @@ export default function MainPage(props: MainPageProps) {
 
     // cmdk obj for the current command
     const cmdk: TCmdkKeyMap = {
-      cmd: e.ctrlKey,
+      cmd: getCommandKey(e, osType),
       shift: e.shiftKey,
       alt: e.altKey,
       key: e.code,
@@ -516,7 +522,7 @@ export default function MainPage(props: MainPageProps) {
     e.preventDefault()
 
     setCurrentCommand({ action, changed: !currentCommand.changed })
-  }, [currentCommand.changed, pending, cmdkReferenceData, activePanel, cmdkOpen])
+  }, [currentCommand.changed, pending, cmdkReferenceData, activePanel, cmdkOpen, osType])
 
   // bind onKeyDownCallback (cb_onKeyDown)
   useEffect(() => {
@@ -590,7 +596,6 @@ export default function MainPage(props: MainPageProps) {
 
   // -------------------------------------------------------------- other --------------------------------------------------------------
   // theme
-  const [theme, setTheme] = useState<'Light' | 'Dark' | 'System'>('System')
   const setSystemTheme = useCallback(() => {
     setTheme('System')
     if (
@@ -732,6 +737,9 @@ export default function MainPage(props: MainPageProps) {
         // code view
         tabSize,
         setTabSize,
+
+        // theme
+        theme,
       }}
     >
       {/* process */}
@@ -741,13 +749,7 @@ export default function MainPage(props: MainPageProps) {
       <div className="view">
         <div className="direction-column background-primary">
           {/* spinner */}
-          {pending &&
-            <div
-              className='justify-center align-center background-secondary opacity-m'
-              style={{ zIndex: "9999", position: "fixed", top: "0", right: "0", bottom: "0", left: "0" }}
-            >
-              <span className='text-s'>Pending...</span>
-            </div>}
+          {pending && <Loader></Loader>}
 
           {/* panels */}
           <ActionsPanel />
@@ -837,14 +839,14 @@ export default function MainPage(props: MainPageProps) {
                             (context['file'] === true) ||
                             (false)
                           )) ||
-                          (activePanel === 'node' && (
+                          ((activePanel === 'node' || activePanel === 'stage') && (
                             (file.type === 'html' && context['html'] === true) ||
                             (false)
                           ))
                         )) ||
                         (cmdkPage === 'Add' && (
                           (activePanel === 'file' && groupName === 'Files') ||
-                          (activePanel === 'node' && groupName === 'Elements')
+                          ((activePanel === 'node' || activePanel === 'stage') && groupName === 'Elements')
                         ))
                       )
                       return show ?

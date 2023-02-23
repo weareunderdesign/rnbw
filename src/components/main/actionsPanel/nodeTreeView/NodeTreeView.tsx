@@ -391,7 +391,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
   // command detect & do actions
   useEffect(() => {
-    if (activePanel !== 'node') return
+    if (activePanel !== 'node' && activePanel !== 'stage') return
 
     if (currentCommand.action === '') return
 
@@ -449,7 +449,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     setClipboardData({ panel: 'node', type: 'copy', uids: selectedItems })
   }, [selectedItems])
   const onPaste = useCallback(() => {
-    if (activePanel !== 'node') return
+    if (activePanel !== 'node' && activePanel !== 'stage') return
     if (clipboardData.panel !== 'node') return
 
     const focusedNode = validNodeTree[focusedItem]
@@ -490,26 +490,18 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   // -------------------------------------------------------------- other --------------------------------------------------------------
 
   return <>
-    <div className="panel">
+    <div id="NodeTreeView" className="panel">
       <div
-        className="border-bottom"
+        className={cx(
+          'scrollable',
+          (activePanel === 'node' && focusedItem === RootNodeUid) ? "outline outline-primary" : "",
+        )}
         style={{
-          height: "calc(50vh)",
-          overflow: "auto",
-          background: (focusedItem === RootNodeUid && validNodeTree[RootNodeUid] !== undefined) ? "rgba(0, 0, 0, 0.02)" : "none",
+          height: 'calc(50vh)',
+          padding: '1px 1px 1rem',
         }}
         onClick={onPanelClick}
       >
-        {/* Nav Bar */}
-        <div className="sticky direction-column padding-s box-l justify-stretch border-bottom background-primary">
-          <div className="gap-s box justify-start">
-            {/* label */}
-            <span className="text-s">Nodes</span>
-          </div>
-          <div className="gap-s justify-end box">
-          </div>
-        </div>
-
         {/* Main TreeView */}
         <TreeView
           /* style */
@@ -544,6 +536,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
             renderItem: (props) => {
               return <>
                 <li
+                  key={props.item.data.uid}
                   className={cx(
                     props.context.isSelected && '',
                     props.context.isDraggingOver && 'background-secondary',
@@ -558,18 +551,16 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                     className={cx(
                       'justify-stretch',
                       'padding-xs',
-                      props.item.index === fnHoveredItem && 'background-secondary',
-                      props.context.isSelected && 'background-secondary',
-                      props.context.isDraggingOver && 'foreground-primary',
+                      'outline-default',
+                      props.item.index === fnHoveredItem ? 'outline' : '',
+                      props.context.isSelected && 'background-secondary outline-none',
+                      props.context.isDraggingOver && '',
                       props.context.isDraggingOverParent && '',
-                      props.context.isFocused && '',
+                      !props.context.isSelected && props.context.isFocused && 'outline',
                     )}
                     style={{
                       flexWrap: "nowrap",
                       paddingLeft: `${props.depth * 10}px`,
-                      outline: props.context.isFocused ? "1px solid black" :
-                        props.item.index === fnHoveredItem ? "1px dotted black" : "none",
-                      outlineOffset: "-1px",
                     }}
 
                     {...props.context.itemContainerWithoutChildrenProps}
@@ -654,7 +645,12 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
             },
             renderItemTitle: (props) => {
               return <>
-                <span className='text-s justify-stretch' style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "calc(100% - 32px)" }}>
+                <span
+                  className='text-s justify-stretch inline-label'
+                  style={{
+                    width: "calc(100% - 32px)"
+                  }}
+                >
                   {props.title}
                 </span>
               </>
@@ -662,6 +658,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
             renderDragBetweenLine: ({ draggingPosition, lineProps }) => (
               <div
                 {...lineProps}
+                className={'foreground-tertiary'}
                 style={{
                   position: 'absolute',
                   right: '0',
@@ -671,7 +668,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                         : '-2px',
                   left: `${draggingPosition.depth * 10}px`,
                   height: '2px',
-                  backgroundColor: 'red',
                 }}
               />
             ),
@@ -686,6 +682,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
             canSearch: false,
             canSearchByStartingTyping: false,
+            canRename: false,
           }}
 
           /* cb */

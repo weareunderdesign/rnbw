@@ -73,6 +73,9 @@ export default function CodeView(props: CodeViewProps) {
 
     // code view
     tabSize, setTabSize,
+
+    // theme
+    theme: _theme,
   } = useContext(MainContext)
 
   // redux state
@@ -109,58 +112,6 @@ export default function CodeView(props: CodeViewProps) {
       endColumn,
     }, 1/* scrollType - smooth */)
   }, [focusedItem])
-
-  /* 
-  // sync nodeTreeView&StageView based on editor's cursor pos
-  const cursorPos = monacoRef.current === null ? null : monacoRef.current.getPosition()
-  const cursorPosRef = useRef<monaco.Position>(cursorPos)
-  useEffect(() => {
-    // validate
-    if (cursorPos === null || (cursorPosRef.current?.lineNumber === cursorPos.lineNumber && cursorPosRef.current.column === cursorPos.column)) return
-    if (currentFile.uid === '') return
-    if (reduxTimeout.current !== null) return
-
-    let _uid: TNodeUid = ''
-
-    let uids: TNodeUid[] = Object.keys(validNodeTree)
-    uids = sortNodeUidsByBfs(uids)
-    uids.reverse()
-    for (const uid of uids) {
-      const node = validNodeTree[uid]
-      const { startLineNumber, startColumn, endLineNumber, endColumn } = node.data
-      if (startLineNumber === endLineNumber) {
-        if (cursorPos.lineNumber === startLineNumber && (startColumn < cursorPos.column && cursorPos.column <= endColumn)) {
-          _uid = uid
-          break
-        }
-      } else {
-        if ((startLineNumber < cursorPos.lineNumber && cursorPos.lineNumber < endLineNumber) ||
-          (startLineNumber === cursorPos.lineNumber && startColumn < cursorPos.column) ||
-          (cursorPos.lineNumber === endLineNumber && cursorPos.column <= endColumn)) {
-          _uid = uid
-          break
-        }
-      }
-    }
-
-    if (_uid === '') return
-
-    let node = validNodeTree[_uid]
-    while (!node.data.valid) {
-      node = validNodeTree[node.parentUid as TNodeUid]
-    }
-
-    _uid = node.uid
-    if (focusedItemRef.current === _uid) return
-    focusedItemRef.current = _uid
-
-    // update redux
-    addRunningAction(['cursorChange'])
-    dispatch(Main.focusFNNode(_uid))
-    dispatch(Main.selectFNNode([_uid]))
-    removeRunningAction(['cursorChange'])
-  }, [cursorPos])
-  */
 
   // content - code
   useEffect(() => {
@@ -217,27 +168,43 @@ export default function CodeView(props: CodeViewProps) {
 
   const [language, setLanguage] = useState('html')
 
+  const [theme, setTheme] = useState<'vs-dark' | 'light'>()
+  const setSystemTheme = useCallback(() => {
+    if (
+      window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches
+    ) {
+      setTheme('vs-dark')
+    } else {
+      setTheme('light')
+    }
+  }, [])
+  useEffect(() => {
+    _theme === 'Dark' ? setTheme('vs-dark') :
+      _theme === 'Light' ? setTheme('light') :
+        setSystemTheme()
+  }, [_theme])
+
   // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
   // panel focus handler
-  const onPanelClick = useCallback((e: React.MouseEvent) => {
-    setActivePanel('code')
-  }, [])
+  const hasFocus = monacoRef.current?.hasTextFocus()
+  useEffect(() => {
+    hasFocus && setActivePanel('code')
+  }, [hasFocus])
   // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
 
   return <>
-    <div
-      className='box'
-      onClick={onPanelClick}
-    >
+    <div className='box'>
       <Editor
-        height="100%"
         width="100%"
+        height="100%"
         defaultLanguage={"html"}
         language={language}
         defaultValue={""}
         value={codeContent.current}
-        theme="vs-dark"
+        theme={theme}
         // line={line}
+        // beforeMount={() => {}}
         onMount={handleEditorDidMount}
         onChange={handleEditorChange}
         options={{
@@ -245,8 +212,10 @@ export default function CodeView(props: CodeViewProps) {
           // enableLiveAutocompletion: true,
           // enableSnippets: true,
           // showLineNumbers: true,
+          // contextmenu: false,
           tabSize: tabSize,
           wordWrap: wordWrap,
+          minimap: { enabled: false },
         }}
       />
     </div>

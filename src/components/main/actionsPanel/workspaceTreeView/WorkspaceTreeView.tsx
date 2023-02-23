@@ -352,6 +352,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
   // import project from localhost using filesystemdirectoryhandle
   const importLocalhostProject = useCallback(async (projectHandle: FileSystemDirectoryHandle) => {
+    // skip if pending or temporary is true
+    if (pending || temporary) return
+
     // verify handler permission
     if (!(await verifyFileHandlerPermission(projectHandle))) {
       addMessage({
@@ -449,7 +452,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     // update the state
     updateFF(deletedUids, nodes, handlers)
     dispatch(updateFFTreeViewState({ deletedUids: Object.keys(deletedUids) }))
-  }, [ffTree, expandedItemsObj])
+  }, [pending, temporary, ffTree, expandedItemsObj])
 
   // open project button handler
   const onImportProject = useCallback(async (fsType: TFileSystemType = 'local') => {
@@ -473,7 +476,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       dispatch(clearMainState())
       dispatch({ type: HmsClearActionType })
 
-      /* import localhost porject */
+      // import localhost porject
       try {
         await importLocalhostProject(projectHandle as FileSystemDirectoryHandle)
       } catch (err) {
@@ -493,11 +496,12 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         try {
           await importLocalhostProject(ffHandlers[RootNodeUid] as FileSystemDirectoryHandle)
         } catch (err) {
-          setPending(true)
+          LogAllow && console.log(err)
+          // setPending(true)
         }
       }
     } else {
-
+      // tmp
     }
   }, [project.context, ffHandlers, importLocalhostProject])
 
@@ -505,7 +509,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   useEffect(() => {
     let fsWatchInterval: NodeJS.Timer
 
-    // stop if pending is true
+    // stop if pending or temporary is true
     if (!pending && !temporary) {
       // create a fs watch interval and get the id
       fsWatchInterval = setInterval(watchFileSystem, getFileSystemWatchInterval(project.context))
@@ -513,7 +517,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
     // clear out the fs watch interval using the id when unmounting the component
     return () => clearInterval(fsWatchInterval)
-  }, [pending, watchFileSystem, temporary])
+  }, [pending, temporary, watchFileSystem])
 
   // generate TreeViewData from workspace
   const fileTreeViewData = useMemo(() => {
@@ -836,7 +840,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
    * @param copy 
    * @returns 
    */
-  const moveFF = async (handler: FileSystemHandle, parentHandler: FileSystemDirectoryHandle, targetHandler: FileSystemDirectoryHandle, newName: string, copy: boolean = false, showWarning: boolean = false) => {
+  const moveFF = async (handler: FileSystemHandle, parentHandler: FileSystemDirectoryHandle, targetHandler: FileSystemDirectoryHandle, newName: string, copy: boolean = false, showWarning: boolean = false, cb?: () => void) => {
     if (handler.kind === 'directory') {
       // validate if the new name exists
       let exists: boolean = true
@@ -913,6 +917,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         throw 'error'
       }
     }
+    cb && cb()
   }
 
   // rename folder/file call back
@@ -923,9 +928,12 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     const parentNode = ffTree[node.parentUid as TNodeUid]
     if (parentNode === undefined) return
 
+    // visually update first
+    setFFTree({ ...ffTree, [uid]: { ...node, name: newName } })
+
     addRunningActions(['fileTreeView-rename'])
 
-    /* verify handler permission */
+    // verify handler permission
     const handler = ffHandlers[uid] as FileSystemHandle
     const parentHandler = ffHandlers[parentNode.uid] as FileSystemDirectoryHandle
     if (!(await verifyFileHandlerPermission(handler)) || !(await verifyFileHandlerPermission(parentHandler))) {
@@ -939,7 +947,16 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
     // rename using moveFF api
     try {
-      await moveFF(handler, parentHandler, parentHandler, `${newName}.${ffNodeType}`, false, true)
+      await moveFF(handler, parentHandler, parentHandler, `${newName}.${ffNodeType}`, false, true, () => {
+        const action: TFileAction = {
+          type: 'rename',
+          param1: { uid, parentUid: parentNode.uid },
+          param2: { orgName: `${node.name}.${ffNodeType}`, newName: `${newName}.${ffNodeType}` },
+        }
+        dispatch(setFileAction(action))
+
+        removeRunningActions(['fileTreeView-rename'])
+      })
     } catch (err) {
       addMessage({
         type: 'error',
@@ -948,15 +965,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       removeRunningActions(['fileTreeView-rename'], false)
       return
     }
-
-    const action: TFileAction = {
-      type: 'rename',
-      param1: { uid, parentUid: parentNode.uid },
-      param2: { orgName: `${node.name}.${ffNodeType}`, newName: `${newName}.${ffNodeType}` },
-    }
-    dispatch(setFileAction(action))
-
-    removeRunningActions(['fileTreeView-rename'])
   }, [ffTree, ffHandlers])
 
   // dnd fole/file call back - multiple
@@ -1364,26 +1372,19 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   // -------------------------------------------------------------- other --------------------------------------------------------------
 
   return <>
-    <div className="panel">
+    <div id="FileTreeView" className="panel">
       <div
-        className="border-bottom"
+        className={cx(
+          "border-bottom",
+          'scrollable',
+          (activePanel === 'file' && focusedItem === RootNodeUid) ? "outline outline-primary" : "",
+        )}
         style={{
           height: 'calc(50vh)',
-          overflow: "auto",
-          background: (focusedItem === RootNodeUid && ffTree[RootNodeUid] !== undefined) ? "rgba(0, 0, 0, 0.02)" : "none",
+          padding: '1px 1px 1rem',
         }}
         onClick={onPanelClick}
       >
-        {/* Nav Bar */}
-        <div className="sticky direction-column padding-s box-l justify-stretch border-bottom background-primary">
-          <div className="gap-s box justify-start">
-            {/* label */}
-            <span className="text-s">Workspace</span>
-          </div>
-          <div className="gap-s justify-end box">
-          </div>
-        </div>
-
         {/* Main TreeView */}
         <TreeView
           /* style */
@@ -1438,18 +1439,16 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                     className={cx(
                       'justify-stretch',
                       'padding-xs',
-                      props.item.index === ffHoveredItem && 'background-secondary',
-                      props.context.isSelected && 'background-secondary',
-                      props.context.isDraggingOver && 'foreground-primary',
+                      'outline-default',
+                      props.item.index === ffHoveredItem ? 'outline' : '',
+                      props.context.isSelected && 'background-secondary outline-none',
+                      props.context.isDraggingOver && '',
                       props.context.isDraggingOverParent && '',
-                      props.context.isFocused && '',
+                      !props.context.isSelected && props.context.isFocused && 'outline',
                     )}
                     style={{
                       flexWrap: "nowrap",
                       paddingLeft: `${props.depth * 10}px`,
-                      outline: props.context.isFocused ? "1px solid black" :
-                        props.item.index === ffHoveredItem ? "1px dotted black" : "none",
-                      outlineOffset: "-1px",
                     }}
 
                     {...props.context.itemContainerWithoutChildrenProps}
@@ -1479,7 +1478,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                     onMouseEnter={() => setFFHoveredItem(props.item.index as TNodeUid)}
                     onMouseLeave={() => setFFHoveredItem('')}
                   >
-                    <div className="gap-xs padding-xs" style={{ width: "100%" }}>
+                    <div className="gap-xs padding-xs" style={{ width: 'fit-content' }}>
                       {/* render arrow */}
                       {props.arrow}
 
@@ -1487,10 +1486,10 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                       {props.item.isFolder ?
                         props.context.isExpanded ? <SVGIconI {...{ "class": "icon-xs" }}>folder</SVGIconI> : <SVGIconII {...{ "class": "icon-xs" }}>folder</SVGIconII> :
                         <SVGIconIII {...{ "class": "icon-xs" }}>page</SVGIconIII>}
-
-                      {/* render title */}
-                      {props.title}
                     </div>
+
+                    {/* render title */}
+                    {props.title}
                   </div>
 
                   {/* render children */}
@@ -1511,28 +1510,36 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
             },
             renderItemTitle: (props) => {
               return <>
-                <span className='text-s justify-stretch' style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "calc(100% - 32px)" }}>
+                <span
+                  className='text-s justify-stretch inline-label'
+                  style={{
+                    width: "calc(100% - 32px)"
+                  }}
+                >
                   {props.title}
                 </span>
               </>
             },
             renderRenameInput: (props) => {
-              const node: TNode = props.item.data
+              const node: TNode = useMemo(() => {
+                return props.item.data
+              }, [])
+
               return <>
-                <form {...props.formProps}>
+                <form
+                  {...props.formProps}
+                  className={'box'}
+                >
                   <input
                     id={'FileTreeView-RenameInput'}
                     {...props.inputProps}
                     ref={props.inputRef}
                     className={cx(
-                      'justify-start',
-                      'padding-s',
-                      'gap-s',
                       'text-s',
                       'background-primary',
+                      'no-frame',
                     )}
                     onKeyUp={(e) => {
-                      props.inputProps.onKeyUp && props.inputProps.onKeyUp(e)
                       e.code === 'Escape' && !node.data.valid && setTemporary(false)
                     }}
                     onChange={(e) => {
@@ -1540,9 +1547,11 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                     }}
                     onBlur={(e) => {
                       props.inputProps.onBlur && props.inputProps.onBlur(e)
+                      props.formProps.onSubmit && props.formProps.onSubmit(new Event('') as unknown as React.FormEvent<HTMLFormElement>)
                       !node.data.valid && setTemporary(false)
                     }}
                   />
+                  <button ref={props.submitButtonRef} className={'hidden'}></button>
                 </form>
               </>
             },
@@ -1556,6 +1565,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
             canSearch: false,
             canSearchByStartingTyping: false,
+            canRename: true,
           }}
 
           /* cb */

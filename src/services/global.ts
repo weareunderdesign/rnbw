@@ -7,7 +7,18 @@ import { TOsType } from '@_types/global';
  */
 export const getLineBreakCharacter = (osType: TOsType): string => {
   return osType === 'Windows' ? '\r\n' :
-    'Mac' ? '\n' : ''
+    osType === 'Mac' ? '\n' : ''
+}
+
+/**
+ * get the cmd key for various os type
+ * @param e 
+ * @param osType 
+ * @returns 
+ */
+export const getCommandKey = (e: KeyboardEvent, osType: TOsType): boolean => {
+  return osType === 'Windows' ? e.ctrlKey :
+    osType === 'Mac' ? e.metaKey : false
 }
 
 /**

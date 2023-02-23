@@ -2,35 +2,35 @@ import React, { useMemo } from 'react';
 
 import { SvgIconProps } from './types';
 
-export const SVGIcon = (p: SvgIconProps) => {
+export const SVGIcon = (props: SvgIconProps) => {
   const SVGIcon = useMemo<keyof JSX.IntrinsicElements>(() => {
     return 'svg-icon' as keyof JSX.IntrinsicElements
   }, [])
   return <>
-    <SVGIcon {...p}></SVGIcon>
+    <SVGIcon {...props}></SVGIcon>
   </>
 }
-export const SVGIconI = (p: SvgIconProps) => {
+export const SVGIconI = (props: SvgIconProps) => {
   const SVGIcon = useMemo<keyof JSX.IntrinsicElements>(() => {
     return 'svg-icon' as keyof JSX.IntrinsicElements
   }, [])
   return <>
-    <SVGIcon {...p}></SVGIcon>
+    <SVGIcon {...props}></SVGIcon>
   </>
 }
-export const SVGIconII = (p: SvgIconProps) => {
+export const SVGIconII = (props: SvgIconProps) => {
   const SVGIcon = useMemo<keyof JSX.IntrinsicElements>(() => {
     return 'svg-icon' as keyof JSX.IntrinsicElements
   }, [])
   return <>
-    <SVGIcon {...p}></SVGIcon>
+    <SVGIcon {...props}></SVGIcon>
   </>
 }
-export const SVGIconIII = (p: SvgIconProps) => {
+export const SVGIconIII = (props: SvgIconProps) => {
   const SVGIcon = useMemo<keyof JSX.IntrinsicElements>(() => {
     return 'svg-icon' as keyof JSX.IntrinsicElements
   }, [])
   return <>
-    <SVGIcon {...p}></SVGIcon>
+    <SVGIcon {...props}></SVGIcon>
   </>
 }
