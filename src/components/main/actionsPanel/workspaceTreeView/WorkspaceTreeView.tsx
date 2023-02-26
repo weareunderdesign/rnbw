@@ -415,7 +415,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
     removeRunningActions(['fileTreeView-select'])
   }, [ffTree, selectedItems, selectedItemsObj])
-  const cb_expandFFNode = useCallback(async (uid: TNodeUid) => {
+  const cb_expandFFNode = useCallback((uid: TNodeUid) => {
     // for key-nav
     addRunningActions(['fileTreeView-expand'])
 
@@ -453,14 +453,8 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
     setTemporary(true)
 
-    // expand the path to the focusedItem
-    const _expandedItems: TNodeUid[] = []
-    let _node = ffTree[focusedItem]
-    while (_node.uid !== RootNodeUid) {
-      _expandedItems.push(_node.uid)
-      _node = ffTree[_node.parentUid as TNodeUid]
-    }
-    dispatch(expandFFNode(_expandedItems))
+    // expand the focusedItem
+    node.uid !== RootNodeUid && expandedItemsObj[node.uid] === undefined && dispatch(expandFFNode([node.uid]))
 
     // add tmp node
     const tmpNodeUid = 'tmpNodeUid'

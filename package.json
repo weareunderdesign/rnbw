@@ -4,7 +4,8 @@
   "description": "",
   "scripts": {
     "build": "cpx public/svg-icon.config.json dist -C && webpack --mode production",
-    "start": "webpack serve --mode development",
+    "start": "npm i -f && webpack serve --mode development",
+    "dev": "webpack serve --mode development",
     "deploy": "gh-pages -d dist"
   },
   "keywords": [],
