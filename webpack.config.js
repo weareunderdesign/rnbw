@@ -15,7 +15,7 @@ module.exports = {
   },
   resolve:
   {
-    extensions: ['.ts', '.tsx', '.js', '.jsx'],
+    extensions: ['.csv', '.ts', '.tsx', '.js', '.jsx'],
     alias: {
       "@_node": path.resolve(__dirname, 'src/_node/'),
       "@_redux": path.resolve(__dirname, 'src/_redux/'),
