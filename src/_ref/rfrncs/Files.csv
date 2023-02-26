@@ -1,0 +1,12 @@
+﻿Name,Extension,Type,Icon,Description,Featured
+Folder,folder,Nodes,folder,The virtual location for files or other sub-folders. Folders help in storing and organizing files and data in the computer.,Yes
+Web Page,html,Nodes,page,,Yes
+,css,Nodes,css,,No
+,md,Nodes,md,,No
+,tsx,Logic,script,,No
+,jsx,Logic,script,,No
+JavaScript,js,Logic,script,,Yes
+,png,Images,image,,No
+,jpg,Images,image,,No
+,txt,Text,text,,No
+,svg,Vector,image,,No
