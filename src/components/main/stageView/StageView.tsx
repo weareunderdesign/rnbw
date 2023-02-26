@@ -166,7 +166,7 @@ export default function StageView(props: StageViewProps) {
           onClick={onPanelClick}
           ref={stageViewRef}
         >
-          {false ? <>
+          {true ? <>
             <ReactShadowRoot stylesheets={styleSheets}>
               <NodeRenderer id={RootNodeUid}></NodeRenderer>
             </ReactShadowRoot>

@@ -13,7 +13,7 @@ import WorkspaceTreeView from './workspaceTreeView';
 
 export default function ActionsPanel(props: ActionsPanelProps) {
   return <>
-    <Panel className='panel' defaultSize={10}>
+    <Panel defaultSize={20}>
       <PanelGroup direction="vertical">
         <WorkspaceTreeView />
 

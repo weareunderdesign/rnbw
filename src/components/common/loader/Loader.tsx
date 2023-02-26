@@ -6,8 +6,8 @@ import { LoaderProps } from './types';
 
 export const Loader = (props: LoaderProps) => {
   return <>
-    <div className="height-xs sticky">
-      <div className="loaderBar"></div>
+    <div className="position-absolute width-full height-xs z-index-1">
+      <div className="loading-bar"></div>
     </div>
   </>
 }
