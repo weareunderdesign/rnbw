@@ -21,6 +21,7 @@ import {
   useDispatch,
   useSelector,
 } from 'react-redux';
+import { Panel } from 'react-resizable-panels';
 
 import {
   SVGIconI,
@@ -1081,8 +1082,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   // open project button handler
   const onImportProject = useCallback(async (fsType: TFileSystemType = 'local'): Promise<void> => {
     if (fsType === 'local') {
-      setPending(true)
-
       // open directory picker and get the project folde handle
       let projectHandle: FileSystemHandle
       try {
@@ -1092,8 +1091,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           type: 'info',
           content: 'You canceled importing project.',
         })
-
-        setPending(false)
         return
       }
 
@@ -1114,8 +1111,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       } catch (err) {
         // err occurred
       }
-
-      setPending(false)
     } else if (fsType === '') {
 
     }
@@ -1150,26 +1145,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
 
   // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
-  // panel focus handler
-  const onPanelClick = useCallback((e: React.MouseEvent) => {
-    addRunningActions(['fileTreeView-focus'])
-
-    setActivePanel('file')
-
-    const uid = RootNodeUid
-
-    // validate
-    if (focusedItem === uid || ffTree[uid] === undefined) {
-      removeRunningActions(['fileTreeView-focus'], false)
-      return
-    }
-
-    dispatch(selectFFNode([]))
-    dispatch(focusFFNode(uid))
-
-    removeRunningActions(['fileTreeView-focus'])
-  }, [focusedItem, ffTree])
-
   // command detect & do actions
   useEffect(() => {
     if (currentCommand.action === '') return
@@ -1402,20 +1377,36 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
 
   // -------------------------------------------------------------- other --------------------------------------------------------------
+  // panel focus handler
+  const onPanelClick = useCallback((e: React.MouseEvent) => {
+    addRunningActions(['fileTreeView-focus'])
+
+    setActivePanel('file')
+
+    const uid = RootNodeUid
+
+    // validate
+    if (focusedItem === uid || ffTree[uid] === undefined) {
+      removeRunningActions(['fileTreeView-focus'], false)
+      return
+    }
+
+    dispatch(selectFFNode([]))
+    dispatch(focusFFNode(uid))
+
+    removeRunningActions(['fileTreeView-focus'])
+  }, [focusedItem, ffTree])
   // -------------------------------------------------------------- other --------------------------------------------------------------
 
   return <>
-    <div id="FileTreeView" className="panel">
+    <Panel collapsible={true}>
       <div
+        id="FileTreeView"
         className={cx(
-          "border-bottom",
           'scrollable',
           (activePanel === 'file' && focusedItem === RootNodeUid) ? "outline outline-primary" : "",
         )}
-        style={{
-          height: 'calc(50vh)',
-          padding: '1px 1px 1rem',
-        }}
+        style={{ padding: '1px 1px 1rem' }}
         onClick={onPanelClick}
       >
         {/* Main TreeView */}
@@ -1640,6 +1631,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           }}
         />
       </div>
-    </div>
+    </Panel>
   </>
 }

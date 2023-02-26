@@ -30,13 +30,13 @@ html {
 /* for scroll-bar */
 * {
   /* for firefox */
-  scrollbar-width: calc(5px);
+  scrollbar-width: calc(3px);
   scrollbar-color: var(--color-primary-background) var(--color-tertiary-background);
 }
 
 *::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 3px;
+  height: 3px;
 }
 
 *::-webkit-scrollbar-track {
@@ -97,6 +97,7 @@ html {
 
 .scrollable {
   max-height: 100vh;
+  height: 100%;
   overflow: auto;
 }
 
@@ -112,4 +113,37 @@ html {
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
+}
+
+.width-xs {
+  width: 5px;
+}
+
+.height-xs {
+  height: 5px;
+}
+
+.width-s {
+  width: 3px;
+}
+
+.height-s {
+  height: 3px;
+}
+
+.panel {
+  min-width: 240px;
+}
+
+.panel-resize-handler {
+  background-color: var(--color-tertiary-background);
+  transition: background-color .25s linear;
+}
+
+.panel-resize-handler:hover {
+  background-color: var(--color-primary);
+}
+
+.panel-view {
+  padding: '1px 1px 1rem 1px';
 }

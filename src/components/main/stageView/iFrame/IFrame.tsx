@@ -5,15 +5,18 @@ import { IFrameProps } from './types';
 
 export const IFrame = (props: IFrameProps) => {
   const [contentRef, setContentRef] = useState<HTMLIFrameElement | null>(null)
-  const mountNode = contentRef?.contentWindow?.document.body
+  const htmlNode = contentRef?.contentWindow?.document.documentElement
+  const bodyNode = contentRef?.contentWindow?.document.body
 
   return (
     <iframe
       {...props}
       ref={setContentRef}
-      style={{ position: "absolute", width: "-webkit-fill-available", height: "-webkit-fill-available" }}
+      style={{ position: "absolute", width: "100%", height: "100%" }}
     >
-      {mountNode && createPortal(props.children, mountNode)}
+      {/* {docNode && createPortal(props.children, dom.createDocumentFragment(), 'stage')} */}
+      {/* {htmlNode && createPortal(props.children, htmlNode)} */}
+      {bodyNode && createPortal(props.children, bodyNode)}
     </iframe>
   )
 }

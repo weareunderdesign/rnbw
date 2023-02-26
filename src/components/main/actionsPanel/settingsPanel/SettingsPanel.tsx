@@ -7,10 +7,12 @@ import React, {
   useState,
 } from 'react';
 
+import cx from 'classnames';
 import {
   useDispatch,
   useSelector,
 } from 'react-redux';
+import { Panel } from 'react-resizable-panels';
 
 import {
   serializeFile,
@@ -118,55 +120,54 @@ export default function SettingsPanel(props: SettingsPanelProps) {
     dispatch(setCurrentFileContent(newContent))
   }, [file.type])
 
+  // -------------------------------------------------------------- other --------------------------------------------------------------
+  // panel focus handler
+  const onPanelClick = useCallback((e: React.MouseEvent) => {
+    setActivePanel('settings')
+  }, [])
+  // -------------------------------------------------------------- other --------------------------------------------------------------
+
   return <>
-    <div className="panel">
-      <div className="border-bottom" style={{ height: "100px", overflow: "auto" }}>
-        {/* Nav Bar */}
-        <div className="sticky direction-column padding-s box-l justify-stretch border-bottom background-primary">
-          <div className="gap-s box justify-start">
-            {/* label */}
-            <span className="text-s">Settings</span>
-          </div>
-          <div className="gap-s justify-end box">
-            {/* action button */}
-            <div className="icon-add opacity-m icon-xs" onClick={() => { }}></div>
-          </div>
-        </div>
-
-        {/* panel body */}
-        <div className="direction-row">
-          {false && Object.keys(styleLists).map((key) => {
-            const styleItem = styleLists[key]
-            return <div key={'attr_' + styleItem.name}>
-              <label className='text-s'>{styleItem.name}:</label>
-              <input
-                className='text-s opacity-m'
-                type="text"
-                value={styleItem.value}
-                onChange={(e) => {
-                  // display chages of style properties
-                  const newStyleList = JSON.parse(JSON.stringify(styleLists))
-                  newStyleList[key].value = e.target.value
-                  setStyleLists(newStyleList)
-
-                  // props changed
-                  addRunningActions(['updateNode'])
-                  const tree = JSON.parse(JSON.stringify(nodeTree))
-                  updateNode(
-                    tree,
-                    '',
-                    {
-                      style: convertStyle(newStyleList),
-                    },
-                  )
-                  updateFFContent(tree)
-                  removeRunningActions(['updateNode'])
-                }}
-              />
-            </div>
-          })}
-        </div>
+    <Panel collapsible={true}>
+      <div
+        id="SettingsView"
+        className={cx(
+          'scrollable',
+          // activePanel === 'settings' ? "outline outline-primary" : "",
+        )}
+        onClick={onPanelClick}
+      >
       </div>
-    </div>
+      {false && Object.keys(styleLists).map((key) => {
+        const styleItem = styleLists[key]
+        return <div key={'attr_' + styleItem.name}>
+          <label className='text-s'>{styleItem.name}:</label>
+          <input
+            className='text-s opacity-m'
+            type="text"
+            value={styleItem.value}
+            onChange={(e) => {
+              // display chages of style properties
+              const newStyleList = JSON.parse(JSON.stringify(styleLists))
+              newStyleList[key].value = e.target.value
+              setStyleLists(newStyleList)
+
+              // props changed
+              addRunningActions(['updateNode'])
+              const tree = JSON.parse(JSON.stringify(nodeTree))
+              updateNode(
+                tree,
+                '',
+                {
+                  style: convertStyle(newStyleList),
+                },
+              )
+              updateFFContent(tree)
+              removeRunningActions(['updateNode'])
+            }}
+          />
+        </div>
+      })}
+    </Panel>
   </>
 }

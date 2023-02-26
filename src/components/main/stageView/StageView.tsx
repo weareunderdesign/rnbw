@@ -5,10 +5,12 @@ import React, {
   useRef,
 } from 'react';
 
+import cx from 'classnames';
 import {
   useDispatch,
   useSelector,
 } from 'react-redux';
+import { Panel } from 'react-resizable-panels';
 import ReactShadowRoot from 'react-shadow-root';
 
 import {
@@ -136,34 +138,45 @@ export default function StageView(props: StageViewProps) {
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
 
   // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
+  // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
+
+  // -------------------------------------------------------------- other --------------------------------------------------------------
   // panel focus handler
   const onPanelClick = useCallback((e: React.MouseEvent) => {
     setActivePanel('stage')
   }, [])
-  // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
 
   // shadow root css
   const sheet: CSSStyleSheet = new CSSStyleSheet()
   sheet.replaceSync(styles)
   const styleSheets = [sheet]
+  // -------------------------------------------------------------- other --------------------------------------------------------------
+
 
   return <>
     <StageViewContext.Provider value={{ setFocusedItem }}>
-      <div
-        className="panel box background-secondary scrollable"
-        onClick={onPanelClick}
-        ref={stageViewRef}
-      >
-        {true ? <>
-          <ReactShadowRoot stylesheets={styleSheets}>
-            <NodeRenderer id={RootNodeUid}></NodeRenderer>
-          </ReactShadowRoot>
-        </> : <>
-          <IFrame>
-            {<NodeRenderer id={RootNodeUid}></NodeRenderer>}
-          </IFrame>
-        </>}
-      </div>
+      <Panel>
+        <div
+          id="StageView"
+          className={cx(
+            'scrollable',
+            // activePanel === 'stage' ? "outline outline-primary" : "",
+          )}
+          style={{ position: "relative" }}
+          onClick={onPanelClick}
+          ref={stageViewRef}
+        >
+          {false ? <>
+            <ReactShadowRoot stylesheets={styleSheets}>
+              <NodeRenderer id={RootNodeUid}></NodeRenderer>
+            </ReactShadowRoot>
+          </> : <>
+            <IFrame>
+              {<NodeRenderer id={RootNodeUid}></NodeRenderer>}
+            </IFrame>
+          </>}
+        </div>
+      </Panel>
     </StageViewContext.Provider>
   </>
 }

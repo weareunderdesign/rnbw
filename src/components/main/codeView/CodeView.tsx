@@ -6,11 +6,13 @@ import React, {
   useState,
 } from 'react';
 
+import cx from 'classnames';
 import * as monaco from 'monaco-editor';
 import {
   useDispatch,
   useSelector,
 } from 'react-redux';
+import { Panel } from 'react-resizable-panels';
 
 import {
   CodeViewSyncDelay,
@@ -186,38 +188,54 @@ export default function CodeView(props: CodeViewProps) {
   }, [_theme])
 
   // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
+
+  // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
+
+  // -------------------------------------------------------------- other --------------------------------------------------------------
   // panel focus handler
   const hasFocus = monacoRef.current?.hasTextFocus()
   useEffect(() => {
     hasFocus && setActivePanel('code')
   }, [hasFocus])
-  // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
+  const onPanelClick = useCallback((e: React.MouseEvent) => {
+    setActivePanel('code')
+  }, [])
+  // -------------------------------------------------------------- other --------------------------------------------------------------
 
   return <>
-    <div className='box'>
-      <Editor
-        width="100%"
-        height="100%"
-        defaultLanguage={"html"}
-        language={language}
-        defaultValue={""}
-        value={codeContent.current}
-        theme={theme}
-        // line={line}
-        // beforeMount={() => {}}
-        onMount={handleEditorDidMount}
-        onChange={handleEditorChange}
-        options={{
-          // enableBasicAutocompletion: true,
-          // enableLiveAutocompletion: true,
-          // enableSnippets: true,
-          // showLineNumbers: true,
-          // contextmenu: false,
-          tabSize: tabSize,
-          wordWrap: wordWrap,
-          minimap: { enabled: false },
-        }}
-      />
-    </div>
+    <Panel>
+      <div
+        id="CodeView"
+        className={cx(
+          'scrollable',
+          // activePanel === 'code' ? "outline outline-primary" : "",
+        )}
+        onClick={onPanelClick}
+      >
+        <Editor
+          width="100%"
+          height="100%"
+          defaultLanguage={"html"}
+          language={language}
+          defaultValue={""}
+          value={codeContent.current}
+          theme={theme}
+          // line={line}
+          // beforeMount={() => {}}
+          onMount={handleEditorDidMount}
+          onChange={handleEditorChange}
+          options={{
+            // enableBasicAutocompletion: true,
+            // enableLiveAutocompletion: true,
+            // enableSnippets: true,
+            // showLineNumbers: true,
+            // contextmenu: false,
+            tabSize: tabSize,
+            wordWrap: wordWrap,
+            minimap: { enabled: false },
+          }}
+        />
+      </div>
+    </Panel>
   </>
 }

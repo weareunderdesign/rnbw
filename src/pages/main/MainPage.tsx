@@ -20,6 +20,10 @@ import {
   useDispatch,
   useSelector,
 } from 'react-redux';
+import {
+  PanelGroup,
+  PanelResizeHandle,
+} from 'react-resizable-panels';
 
 import {
   Loader,
@@ -851,18 +855,27 @@ export default function MainPage(props: MainPageProps) {
       {/* process */}
       <Process />
 
-      {/* view */}
-      <div className="view">
-        <div className="direction-column background-primary">
-          {/* spinner */}
-          {pending && <Loader></Loader>}
+      {/* spinner */}
+      {pending && <Loader></Loader>}
 
-          {/* panels */}
-          <ActionsPanel />
-          {<StageView />}
-          {showCodeView && <CodeView />}
-        </div>
-      </div>
+      {/* panels */}
+      <PanelGroup
+        // autoSaveId="panel-layout"
+        className='view'
+        direction="horizontal"
+      >
+        <ActionsPanel />
+
+        <PanelResizeHandle className='panel-resize-handler width-xs' />
+
+        <StageView />
+
+        {showCodeView && <>
+          <PanelResizeHandle className='panel-resize-handler width-xs' />
+
+          <CodeView />
+        </>}
+      </PanelGroup>
 
       {/* cmdk modal */}
       <Command.Dialog

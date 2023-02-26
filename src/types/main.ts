@@ -76,7 +76,7 @@ export type TFileActionType = 'create' | 'delete' | 'move' | 'rename' | 'duplica
 /**
  * panel context
  */
-export type TPanelContext = 'file' | 'node' | 'stage' | 'code' | 'cmdk' | 'unknown'
+export type TPanelContext = 'file' | 'node' | 'settings' | 'stage' | 'code' | 'cmdk' | 'unknown'
 
 /**
  * clipboard data type

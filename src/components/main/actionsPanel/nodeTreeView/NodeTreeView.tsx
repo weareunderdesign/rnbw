@@ -11,6 +11,7 @@ import {
   useDispatch,
   useSelector,
 } from 'react-redux';
+import { Panel } from 'react-resizable-panels';
 
 import {
   SVGIconI,
@@ -368,27 +369,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
 
   // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
-  // panel focus handler
-  const onPanelClick = useCallback((e: React.MouseEvent) => {
-    addRunningActions(['nodeTreeView-focus'])
-
-    setActivePanel('node')
-
-    const uid = RootNodeUid
-
-    // validate
-    if (focusedItem === uid || validNodeTree[uid] === undefined) {
-      removeRunningActions(['nodeTreeView-focus'], false)
-      return
-    }
-
-    focusedItemRef.current = uid
-    dispatch(selectFNNode([]))
-    dispatch(focusFNNode(uid))
-
-    removeRunningActions(['nodeTreeView-focus'])
-  }, [focusedItem, validNodeTree])
-
   // command detect & do actions
   useEffect(() => {
     if (activePanel !== 'node' && activePanel !== 'stage') return
@@ -487,19 +467,37 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
 
   // -------------------------------------------------------------- other --------------------------------------------------------------
+  // panel focus handler
+  const onPanelClick = useCallback((e: React.MouseEvent) => {
+    addRunningActions(['nodeTreeView-focus'])
+
+    setActivePanel('node')
+
+    const uid = RootNodeUid
+
+    // validate
+    if (focusedItem === uid || validNodeTree[uid] === undefined) {
+      removeRunningActions(['nodeTreeView-focus'], false)
+      return
+    }
+
+    focusedItemRef.current = uid
+    dispatch(selectFNNode([]))
+    dispatch(focusFNNode(uid))
+
+    removeRunningActions(['nodeTreeView-focus'])
+  }, [focusedItem, validNodeTree])
   // -------------------------------------------------------------- other --------------------------------------------------------------
 
   return <>
-    <div id="NodeTreeView" className="panel">
+    <Panel collapsible={true}>
       <div
+        id="NodeTreeView"
         className={cx(
           'scrollable',
           (activePanel === 'node' && focusedItem === RootNodeUid) ? "outline outline-primary" : "",
         )}
-        style={{
-          height: 'calc(50vh)',
-          padding: '1px 1px 1rem',
-        }}
+        style={{ padding: '1px 1px 1rem' }}
         onClick={onPanelClick}
       >
         {/* Main TreeView */}
@@ -719,6 +717,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
           }}
         />
       </div>
-    </div>
+    </Panel>
   </>
 }

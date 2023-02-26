@@ -1,4 +1,4 @@
-import './index.css';
+import './rnbw.css';
 
 import React from 'react';
 
