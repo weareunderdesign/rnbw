@@ -1,5 +1,3 @@
-import './styles.css';
-
 import React from 'react';
 
 import { LoaderProps } from './types';

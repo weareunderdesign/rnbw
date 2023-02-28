@@ -28,6 +28,8 @@ export type TreeViewProps = {
   },
 
   callbacks: {
+    onStartRenamingItem?: ((item: TreeItem, treeId: string) => void) | undefined,
+    onAbortRenamingItem?: ((item: TreeItem, treeId: string) => void) | undefined,
     onRenameItem?: ((item: TreeItem, name: string, treeId: string) => void) | undefined,
 
     onSelectItems?: ((items: TreeItemIndex[], treeId: string) => void) | undefined,

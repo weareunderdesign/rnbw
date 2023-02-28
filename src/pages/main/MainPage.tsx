@@ -1033,7 +1033,7 @@ export default function MainPage(props: MainPageProps) {
       </Command.Dialog>
 
       {/* toast */}
-      <Toast messages={messages} />
+      {false && <Toast messages={messages} />}
     </MainContext.Provider>
   </>
 }

@@ -40,6 +40,7 @@ export default function TreeView(props: TreeViewProps) {
         viewState={viewState}
 
         getItemTitle={(item) => {
+          if (item === undefined) console.log(item)
           return item.data.name
         }}
 

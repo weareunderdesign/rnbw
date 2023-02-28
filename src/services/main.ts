@@ -1,5 +1,12 @@
-import { LocalFileSystemWatchInterval } from '@_constants/main';
+import {
+  LocalFileSystemWatchInterval,
+  NodeUidSplitter,
+} from '@_constants/main';
+import { TNode } from '@_node/types';
 import { TFileSystemType } from '@_types/main';
+
+import { TNormalNodeData } from '../_node/types';
+import { TOsType } from '../types/global';
 
 /**
  * get file system watch interval from its type
@@ -8,6 +15,33 @@ import { TFileSystemType } from '@_types/main';
  */
 export const getFileSystemWatchInterval = (fsType: TFileSystemType): number => {
   return fsType === 'local' ? LocalFileSystemWatchInterval : 0
+}
+
+/**
+ * get temporary file extension based on os type
+ * @param osType 
+ * @returns 
+ */
+export const getTemporaryFileExtension = (osType: TOsType) => {
+  return osType === 'Windows' ? '.crswap' :
+    osType === 'Mac' ? '.crswap' : ''
+}
+
+/**
+ * return temporary created file name
+ * @param node 
+ * @param newName 
+ * @param osType 
+ * @returns 
+ */
+export const getTemporaryFileNodeUid = (node: TNode, newName: string, osType: TOsType): string => {
+  const data = node.data as TNormalNodeData
+  const newUid = `${node.parentUid}${NodeUidSplitter}${newName}${data.type === '*folder' ? '' : `.${data.type}`}`
+
+  const ext = osType === 'Windows' ? '.crswap' :
+    osType === 'Mac' ? '.crswap' : ''
+
+  return data.type === '*folder' ? `${newUid}` : `${newUid}${ext}`
 }
 
 /**

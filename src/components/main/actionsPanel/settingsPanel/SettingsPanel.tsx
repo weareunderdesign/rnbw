@@ -128,12 +128,12 @@ export default function SettingsPanel(props: SettingsPanelProps) {
   // -------------------------------------------------------------- other --------------------------------------------------------------
 
   return <>
-    <Panel collapsible={true}>
+    <Panel defaultSize={10}>
       <div
         id="SettingsView"
         className={cx(
           'scrollable',
-          // activePanel === 'settings' ? "outline outline-primary" : "",
+          activePanel === 'settings' ? "outline outline-primary" : "",
         )}
         onClick={onPanelClick}
       >

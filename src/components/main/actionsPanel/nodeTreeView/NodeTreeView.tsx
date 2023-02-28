@@ -490,7 +490,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   // -------------------------------------------------------------- other --------------------------------------------------------------
 
   return <>
-    <Panel collapsible={true}>
+    <Panel defaultSize={45} minSize={30}>
       <div
         id="NodeTreeView"
         className={cx(

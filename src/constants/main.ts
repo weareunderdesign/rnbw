@@ -41,6 +41,11 @@ export const NodeUidSplitterRegExp: RegExp = new RegExp(/\?/g)
 export const NodeInAppClassName: string = 'rnbwdev-rnbw-node-9307667676537437466677115'
 
 /**
+ * tmp node uid when creating a new file-node
+ */
+export const TmpNodeUid = 'tmp:node:uid'
+
+/**
  * default tab size in code view
  */
 export const DefaultTabSize: number = 2
