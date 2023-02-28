@@ -35,7 +35,6 @@ import {
 import { TreeViewData } from '@_components/common/treeView/types';
 import {
   HmsClearActionType,
-  LogAllow,
   NodeUidSplitter,
   ParsableFileTypes,
   RootNodeUid,
@@ -147,8 +146,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
        * redo if isHms = false
        */
       if (isHms === true) {
-        // console.log('UNDO', ffAction)
-
         const { type, param1, param2 } = ffAction
         if (type === 'create') {
           _delete([param1])
@@ -183,14 +180,11 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           })
           _delete(uids)
         } else if (type === 'delete') {
-          // skip - do nothing
         }
       } else {
         // wait until dispatch is done
         isRedo.current = !isRedo.current
         if (isRedo.current === true) return
-
-        // console.log('REDO', action)
 
         const { type, param1, param2 } = fileAction
         if (type === 'create') {
@@ -219,7 +213,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           })
           _copy(uids, names, targetUids)
         } else if (type === 'delete') {
-          // skip - do nothing
         }
       }
 
@@ -668,7 +661,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
       setTimeout(() => dispatch(setCurrentFile(file)), 0)
     } catch (err) {
-      LogAllow && console.log(err)
       addMessage({
         type: 'error',
         content: 'Error occurred while reading the file content.',
@@ -792,7 +784,8 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
     // rename using moveFF api
     const _orgName = getNodeEntryName(uid)
-    const _newName = ffNodeType === '*folder' ? `${newName}` : `${newName}.${ffNodeType}`
+    const _newName = ffNodeType === '*folder' ? `${newName}` :
+      ffNodeType !== '' ? `${newName}.${ffNodeType}` : `${newName}`
     try {
       await moveFF(handler, parentHandler, parentHandler, _newName, false, true)
     } catch (err) {
@@ -895,7 +888,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           }
         } else {
           const nodeData = node.data as TNormalNodeData
-          const ext: string = '.' + nodeData.type
+          const ext: string = nodeData.type !== '' ? '.' + nodeData.type : nodeData.type
           let name: string = node.name
           name = `${name} copy`
           const ffName = `${name}${ext}`
@@ -1062,7 +1055,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           expandedItemsObj[childNodeUid] === true && dirHandlers.push({ node: _subNode, handler: entry as FileSystemDirectoryHandle })
         }
       } catch (err) {
-        LogAllow && console.log(err)
         addMessage({
           type: 'error',
           content: 'Error occurred during importing project.',
@@ -1143,8 +1135,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         try {
           await importLocalhostProject(ffHandlers[RootNodeUid] as FileSystemDirectoryHandle)
         } catch (err) {
-          LogAllow && console.log(err)
-          // setPending(true)
         }
       }
     } else {
@@ -1335,7 +1325,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         newName = folderName
       } else {
         const nodeData = node.data as TNormalNodeData
-        const ext: string = '.' + nodeData.type
+        const ext: string = nodeData.type !== '' ? '.' + nodeData.type : nodeData.type
         let name: string = node.name
         name = `${name} copy`
         const ffName = `${name}${ext}`
@@ -1368,11 +1358,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       // duplicate using moveFF api
       try {
         await moveFF(handler, parentHandler, parentHandler, newName, true)
-        console.log(uid, newName, parentNode.uid)
         _uids.push({ uid, name: newName })
         _targetUids.push(parentNode.uid)
       } catch (err) {
-        console.log(err)
         allDone = false
       }
     }))
@@ -1384,7 +1372,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       })
     }
 
-    console.log(_uids, _targetUids)
     const action: TFileAction = {
       type: 'copy',
       param1: _uids,

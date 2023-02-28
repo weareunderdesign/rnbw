@@ -57,7 +57,7 @@ export type TSession = {
 /**
  * file tree view node type
  */
-export type TFileNodeType = '*folder' | 'html'
+export type TFileNodeType = '*folder' | 'html' | ''
 
 /**
  * file tree view - node action
