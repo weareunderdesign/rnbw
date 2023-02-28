@@ -1,50 +1,5 @@
-/* color extends rene.css */
-[data-theme=light],
-html {
-  --color-tertiary-background: #ddd;
-  --color-tertiary-foreground: #333;
-}
+/* stage */
 
-[data-theme=dark] {
-  --color-tertiary-background: #333;
-  --color-tertiary-foreground: #ddd;
-}
-
-/* new color */
-.background-tertiary {
-  background-color: var(--color-tertiary-background);
-  color: var(--color-tertiary-foreground)
-}
-
-.foreground-tertiary {
-  background-color: var(--color-tertiary-foreground);
-  color: var(--color-tertiary-background)
-}
-
-/* for scroll-bar */
-* {
-  /* for firefox */
-  scrollbar-width: calc(3px);
-  scrollbar-color: var(--color-primary-background) var(--color-tertiary-background);
-}
-
-*::-webkit-scrollbar {
-  width: 3px;
-  height: 3px;
-}
-
-*::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
-  background-color: var(--color-primary-background);
-}
-
-*::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 3px;
-  background-color: var(--color-tertiary-background);
-}
-
-/* outline */
 .outline {
   outline-width: 1px;
   outline-style: solid;
@@ -97,11 +52,6 @@ html {
 }
 
 /* other */
-.scrollable {
-  max-height: 100vh;
-  height: 100%;
-  overflow: auto;
-}
 
 .no-frame {
   outline: none;
@@ -115,48 +65,6 @@ html {
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
-}
-
-.width-xs {
-  width: 2px;
-}
-
-.height-xs {
-  height: 2px;
-}
-
-.width-s {
-  width: 3px;
-}
-
-.height-s {
-  height: 3px;
-}
-
-.width-full {
-  width: 100%;
-}
-
-.position-absolute {
-  position: absolute;
-}
-
-.z-index-1 {
-  z-index: 1;
-}
-
-/* panel */
-.panel-resize-handler {
-  background-color: var(--color-tertiary-background);
-  transition: background-color .25s linear;
-}
-
-.panel-resize-handler:hover {
-  background-color: var(--color-primary);
-}
-
-.panel-view {
-  padding: '1px 1px 1rem 1px';
 }
 
 /* loading bar */

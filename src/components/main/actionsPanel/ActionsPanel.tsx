@@ -17,11 +17,11 @@ export default function ActionsPanel(props: ActionsPanelProps) {
       <PanelGroup direction="vertical">
         <WorkspaceTreeView />
 
-        <PanelResizeHandle className='panel-resize-handler height-xs' />
+        <PanelResizeHandle style={{ height: "1px" }} className='background-secondary transition-linear' />
 
         <NodeTreeView />
 
-        <PanelResizeHandle className='panel-resize-handler height-xs' />
+        <PanelResizeHandle style={{ width: "1px" }} className='background-secondary transition-linear' />
 
         <SettingsPanel />
       </PanelGroup>

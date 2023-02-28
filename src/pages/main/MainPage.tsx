@@ -866,12 +866,12 @@ export default function MainPage(props: MainPageProps) {
       >
         <ActionsPanel />
 
-        <PanelResizeHandle className='panel-resize-handler width-xs' />
+        <PanelResizeHandle style={{ width: "1px" }} className='background-secondary transition-linear'/>
 
         <StageView />
 
         {showCodeView && <>
-          <PanelResizeHandle className='panel-resize-handler width-xs' />
+          <PanelResizeHandle style={{ width: "1px" }} className='background-secondary transition-linear' />
 
           <CodeView />
         </>}
