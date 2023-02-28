@@ -4,7 +4,7 @@ import { LoaderProps } from './types';
 
 export const Loader = (props: LoaderProps) => {
   return <>
-    <div className="position-absolute width-full height-xs z-index-1">
+    <div style={{position: "absolute", height: "2px", zIndex: "1" }} className="box-xl">
       <div className="loading-bar"></div>
     </div>
   </>
