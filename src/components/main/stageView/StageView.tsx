@@ -74,11 +74,14 @@ export default function StageView(props: StageViewProps) {
 
     // code view
     tabSize, setTabSize,
+
+    // panel-resize
+    panelResizing,
   } = useContext(MainContext)
 
   // redux state
   const actionGroupIndex = useSelector(getActionGroupIndexSelector)
-  const { workspace, project, file, changedFiles } = useSelector(navigatorSelector)
+  const { workspace, project, file, openedFiles } = useSelector(navigatorSelector)
   const { fileAction } = useSelector(globalSelector)
   const { futureLength, pastLength } = useSelector(hmsInfoSelector)
   // const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
@@ -155,14 +158,17 @@ export default function StageView(props: StageViewProps) {
 
   return <>
     <StageViewContext.Provider value={{ setFocusedItem }}>
-      <Panel>
+      <Panel minSize={0}>
         <div
           id="StageView"
           className={cx(
             'scrollable',
             // activePanel === 'stage' ? "outline outline-primary" : "",
           )}
-          style={{ position: "relative" }}
+          style={{
+            position: "relative",
+            pointerEvents: panelResizing ? 'none' : 'auto',
+          }}
           onClick={onPanelClick}
           ref={stageViewRef}
         >

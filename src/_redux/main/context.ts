@@ -106,4 +106,8 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   // session
   hasSession: false,
   session: null,
+
+  // panel-resize
+  panelResizing: false,
+  setPanelResizing: (resizing: boolean) => { },
 })

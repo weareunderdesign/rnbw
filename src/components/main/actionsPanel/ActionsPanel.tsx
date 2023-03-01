@@ -1,10 +1,14 @@
-import React from 'react';
+import React, {
+  useEffect,
+  useState,
+} from 'react';
 
 import {
   Panel,
   PanelGroup,
-  PanelResizeHandle,
 } from 'react-resizable-panels';
+
+import { ResizeHandle } from '@_components/common';
 
 import NodeTreeView from './nodeTreeView';
 import SettingsPanel from './settingsPanel';
@@ -12,16 +16,27 @@ import { ActionsPanelProps } from './types';
 import WorkspaceTreeView from './workspaceTreeView';
 
 export default function ActionsPanel(props: ActionsPanelProps) {
+  // panel size handler
+  const [panelSize, setPanelSize] = useState(240 / window.innerWidth * 100)
+  useEffect(() => {
+    const windowResizeHandler = () => {
+      setPanelSize(200 / window.innerWidth * 100)
+    }
+    window.addEventListener('resize', windowResizeHandler)
+
+    return () => window.removeEventListener('resize', windowResizeHandler)
+  }, [])
+
   return <>
-    <Panel defaultSize={20}>
+    <Panel defaultSize={panelSize} minSize={0}>
       <PanelGroup direction="vertical">
         <WorkspaceTreeView />
 
-        <PanelResizeHandle style={{ height: "1px" }} className='background-secondary transition-linear' />
+        <ResizeHandle direction='vertical'></ResizeHandle>
 
         <NodeTreeView />
 
-        <PanelResizeHandle style={{ width: "1px" }} className='background-secondary transition-linear' />
+        <ResizeHandle direction='vertical'></ResizeHandle>
 
         <SettingsPanel />
       </PanelGroup>

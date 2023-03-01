@@ -90,11 +90,14 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     // code view
     tabSize, setTabSize,
+
+    // panel-resize
+    panelResizing,
   } = useContext(MainContext)
 
   // redux state
   const actionGroupIndex = useSelector(getActionGroupIndexSelector)
-  const { workspace, project, file, changedFiles } = useSelector(navigatorSelector)
+  const { workspace, project, file, openedFiles } = useSelector(navigatorSelector)
   const { fileAction } = useSelector(globalSelector)
   const { futureLength, pastLength } = useSelector(hmsInfoSelector)
   // const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
@@ -490,14 +493,17 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   // -------------------------------------------------------------- other --------------------------------------------------------------
 
   return <>
-    <Panel defaultSize={45} minSize={30}>
+    <Panel minSize={0}>
       <div
         id="NodeTreeView"
         className={cx(
           'scrollable',
-          (activePanel === 'node' && focusedItem === RootNodeUid) ? "outline outline-primary" : "",
+          // (activePanel === 'node' && focusedItem === RootNodeUid) ? "outline outline-primary" : "",
         )}
-        style={{ padding: '1px 1px 1rem' }}
+        style={{
+          padding: '1px 1px 1rem',
+          pointerEvents: panelResizing ? 'none' : 'auto',
+        }}
         onClick={onPanelClick}
       >
         {/* Main TreeView */}
@@ -536,9 +542,11 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                 <li
                   key={props.item.data.uid}
                   className={cx(
-                    props.context.isSelected && '',
-                    props.context.isDraggingOver && 'background-secondary',
+                    props.context.isSelected && 'background-secondary',
+
+                    props.context.isDraggingOver && '',
                     props.context.isDraggingOverParent && '',
+
                     props.context.isFocused && '',
                   )}
                   {...props.context.itemContainerWithChildrenProps}
@@ -549,12 +557,19 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                     className={cx(
                       'justify-stretch',
                       'padding-xs',
+
                       'outline-default',
-                      props.item.index === fnHoveredItem ? 'outline' : '',
-                      props.context.isSelected && 'background-secondary outline-none',
+
+                      props.item.index === ffHoveredItem ? 'outline' : '',
+
+                      props.context.isExpanded && props.context.isSelected && 'background-tertiary',
+                      !props.context.isExpanded && props.context.isSelected && 'background-secondary',
+
+                      props.context.isSelected && 'outline-none',
+                      !props.context.isSelected && props.context.isFocused && 'outline',
+
                       props.context.isDraggingOver && '',
                       props.context.isDraggingOverParent && '',
-                      !props.context.isSelected && props.context.isFocused && 'outline',
                     )}
                     style={{
                       flexWrap: "nowrap",

@@ -73,11 +73,14 @@ export default function SettingsPanel(props: SettingsPanelProps) {
 
     // code view
     tabSize, setTabSize,
+
+    // panel-resize
+    panelResizing,
   } = useContext(MainContext)
 
   // redux state
   const actionGroupIndex = useSelector(getActionGroupIndexSelector)
-  const { workspace, project, file, changedFiles } = useSelector(navigatorSelector)
+  const { workspace, project, file, openedFiles } = useSelector(navigatorSelector)
   const { fileAction } = useSelector(globalSelector)
   const { futureLength, pastLength } = useSelector(hmsInfoSelector)
   // const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
@@ -125,49 +128,63 @@ export default function SettingsPanel(props: SettingsPanelProps) {
   const onPanelClick = useCallback((e: React.MouseEvent) => {
     setActivePanel('settings')
   }, [])
+
+  // panel size handler
+  const [panelSize, setPanelSize] = useState(200 / window.innerHeight * 100)
+  useEffect(() => {
+    const windowResizeHandler = () => {
+      setPanelSize(200 / window.innerHeight * 100)
+    }
+    window.addEventListener('resize', windowResizeHandler)
+
+    return () => window.removeEventListener('resize', windowResizeHandler)
+  }, [])
   // -------------------------------------------------------------- other --------------------------------------------------------------
 
   return <>
-    <Panel defaultSize={10}>
+    <Panel defaultSize={panelSize} minSize={0}>
       <div
         id="SettingsView"
         className={cx(
           'scrollable',
-          activePanel === 'settings' ? "outline outline-primary" : "",
+          // activePanel === 'settings' ? "outline outline-primary" : "",
         )}
+        style={{
+          pointerEvents: panelResizing ? 'none' : 'auto',
+        }}
         onClick={onPanelClick}
       >
-      </div>
-      {false && Object.keys(styleLists).map((key) => {
-        const styleItem = styleLists[key]
-        return <div key={'attr_' + styleItem.name}>
-          <label className='text-s'>{styleItem.name}:</label>
-          <input
-            className='text-s opacity-m'
-            type="text"
-            value={styleItem.value}
-            onChange={(e) => {
-              // display chages of style properties
-              const newStyleList = JSON.parse(JSON.stringify(styleLists))
-              newStyleList[key].value = e.target.value
-              setStyleLists(newStyleList)
+        {false && Object.keys(styleLists).map((key) => {
+          const styleItem = styleLists[key]
+          return <div key={'attr_' + styleItem.name}>
+            <label className='text-s'>{styleItem.name}:</label>
+            <input
+              className='text-s opacity-m'
+              type="text"
+              value={styleItem.value}
+              onChange={(e) => {
+                // display chages of style properties
+                const newStyleList = JSON.parse(JSON.stringify(styleLists))
+                newStyleList[key].value = e.target.value
+                setStyleLists(newStyleList)
 
-              // props changed
-              addRunningActions(['updateNode'])
-              const tree = JSON.parse(JSON.stringify(nodeTree))
-              updateNode(
-                tree,
-                '',
-                {
-                  style: convertStyle(newStyleList),
-                },
-              )
-              updateFFContent(tree)
-              removeRunningActions(['updateNode'])
-            }}
-          />
-        </div>
-      })}
+                // props changed
+                addRunningActions(['updateNode'])
+                const tree = JSON.parse(JSON.stringify(nodeTree))
+                updateNode(
+                  tree,
+                  '',
+                  {
+                    style: convertStyle(newStyleList),
+                  },
+                )
+                updateFFContent(tree)
+                removeRunningActions(['updateNode'])
+              }}
+            />
+          </div>
+        })}
+      </div>
     </Panel>
   </>
 }

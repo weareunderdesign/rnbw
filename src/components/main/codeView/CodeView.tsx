@@ -82,7 +82,7 @@ export default function CodeView(props: CodeViewProps) {
 
   // redux state
   const actionGroupIndex = useSelector(getActionGroupIndexSelector)
-  const { workspace, project, file, changedFiles } = useSelector(navigatorSelector)
+  const { workspace, project, file, openedFiles } = useSelector(navigatorSelector)
   const { fileAction } = useSelector(globalSelector)
   const { futureLength, pastLength } = useSelector(hmsInfoSelector)
   // const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
@@ -203,7 +203,7 @@ export default function CodeView(props: CodeViewProps) {
   // -------------------------------------------------------------- other --------------------------------------------------------------
 
   return <>
-    <Panel>
+    <Panel minSize={0}>
       <div
         id="CodeView"
         className={cx(

@@ -1,5 +1,4 @@
-/* stage */
-
+/* outline */
 .outline {
   outline-width: 1px;
   outline-style: solid;
@@ -52,7 +51,6 @@
 }
 
 /* other */
-
 .no-frame {
   outline: none;
   margin: 0;

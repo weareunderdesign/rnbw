@@ -20,13 +20,11 @@ import {
   useDispatch,
   useSelector,
 } from 'react-redux';
-import {
-  PanelGroup,
-  PanelResizeHandle,
-} from 'react-resizable-panels';
+import { PanelGroup } from 'react-resizable-panels';
 
 import {
   Loader,
+  ResizeHandle,
   SVGIcon,
   Toast,
 } from '@_components/common';
@@ -103,7 +101,7 @@ export default function MainPage(props: MainPageProps) {
 
   // redux state
   const actionGroupIndex = useSelector(getActionGroupIndexSelector)
-  const { workspace, project, file, changedFiles } = useSelector(navigatorSelector)
+  const { workspace, project, file, openedFiles } = useSelector(navigatorSelector)
   const { fileAction } = useSelector(globalSelector)
   const { focusedItem: ffFocusedItem, expandedItems: ffExpandedItems, selectedItems: ffSelectedItems, expandedItemsObj: ffExpandedItemsObj, selectedItemsObj: ffSelectedItemsObj } = useSelector(ffSelector)
   const { focusedItem: fnFocusedItem, expandedItems: fnExpandedItems, selectedItems: fnSelectedItems, expandedItemsObj: fnExpandedItemsObj, selectedItemsObj: fnSelectedItemsObj } = useSelector(fnSelector)
@@ -309,6 +307,9 @@ export default function MainPage(props: MainPageProps) {
   // session
   const [hasSession, setHasSession] = useState<boolean>(false)
   const [session, setSession] = useState<TSession | null>(null)
+
+  // panel-resize
+  const [panelResizing, setPanelResizing] = useState<boolean>(false)
   // -------------------------------------------------------------- main context --------------------------------------------------------------
 
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
@@ -351,9 +352,8 @@ export default function MainPage(props: MainPageProps) {
 
     LogAllow && console.log('action to be run by cmdk: ', action)
 
-    // skip if its from cmdk-input
-    if (action !== 'Clear' && cmdkOpen) return
-    action !== 'Clear' && e.preventDefault()
+    // prevent chrome default short keys
+    e.preventDefault()
 
     setCurrentCommand({ action, changed: !currentCommand.changed })
   }, [currentCommand.changed, pending, cmdkReferenceData, activePanel, cmdkOpen, osType])
@@ -479,7 +479,7 @@ export default function MainPage(props: MainPageProps) {
       "Description": '',
       "Keyboard Shortcut": {
         cmd: true,
-        shift: false,
+        shift: true,
         alt: false,
         key: 'KeyR',
         click: false,
@@ -508,10 +508,10 @@ export default function MainPage(props: MainPageProps) {
       "Icon": '',
       "Description": '',
       "Keyboard Shortcut": {
-        cmd: true,
+        cmd: false,
         shift: false,
         alt: false,
-        key: 'KeyK',
+        key: 'KeyW',
         click: false,
       },
       "Group": 'default',
@@ -850,6 +850,10 @@ export default function MainPage(props: MainPageProps) {
         // session
         hasSession,
         session,
+
+        // panel-resize
+        panelResizing,
+        setPanelResizing,
       }}
     >
       {/* process */}
@@ -866,12 +870,12 @@ export default function MainPage(props: MainPageProps) {
       >
         <ActionsPanel />
 
-        <PanelResizeHandle style={{ width: "1px" }} className='background-secondary transition-linear'/>
+        <ResizeHandle direction='horizontal'></ResizeHandle>
 
         <StageView />
 
         {showCodeView && <>
-          <PanelResizeHandle style={{ width: "1px" }} className='background-secondary transition-linear' />
+          <ResizeHandle direction='horizontal'></ResizeHandle>
 
           <CodeView />
         </>}
@@ -890,10 +894,10 @@ export default function MainPage(props: MainPageProps) {
               setCmdkOpen(false)
             }
 
-            e.preventDefault()
-
             cmdkPages.length !== 1 && setCmdkPages((cmdkPages) => cmdkPages.slice(0, -1))
           }
+
+          e.stopPropagation()
         }}
         filter={(value: string, search: string) => {
           return value.includes(search) !== false ? 1 : 0

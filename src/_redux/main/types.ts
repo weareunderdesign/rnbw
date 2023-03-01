@@ -110,6 +110,10 @@ export type TMainContext = {
   // session
   hasSession: boolean,
   session: TSession | null,
+
+  // panel-resize
+  panelResizing: boolean,
+  setPanelResizing: (resizing: boolean) => void,
 }
 
 /**
@@ -145,7 +149,7 @@ export type TMainReducerState = {
     workspace: TWorkspace,
     project: TProject,
     file: TFile,
-    changedFiles: TFile[],
+    openedFiles: TFile[],
   },
   global: {
     fileAction: TFileAction,
