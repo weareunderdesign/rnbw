@@ -11,6 +11,7 @@ import {
 import { TToast } from '@_types/global';
 import {
   TClipboardData,
+  TFile,
   TFileAction,
   TPanelContext,
 } from '@_types/main';
@@ -27,6 +28,10 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   removeRunningActions: (actionNames: string[], effect?: boolean) => { },
 
   // file tree view
+  openedFiles: {},
+  setOpenedFiles: (...files: TFile[]) => { },
+  removeOpenedFiles: (...uids: TNodeUid[]) => { },
+
   ffHoveredItem: '',
   setFFHoveredItem: (uid: TNodeUid) => { },
 

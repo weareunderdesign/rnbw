@@ -39,6 +39,7 @@ import {
 } from '@_redux/main';
 import { verifyFileHandlerPermission } from '@_services/main';
 
+import { TFile } from '../../../types/main';
 import { ProcessProps } from './types';
 
 export default function Process(props: ProcessProps) {
@@ -50,6 +51,7 @@ export default function Process(props: ProcessProps) {
     addRunningActions, removeRunningActions,
 
     // file tree view
+    openedFiles, setOpenedFiles, removeOpenedFiles,
     ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree, updateFF,
 
     // ndoe tree view
@@ -82,7 +84,7 @@ export default function Process(props: ProcessProps) {
 
   // redux state
   const actionGroupIndex = useSelector(getActionGroupIndexSelector)
-  const { workspace, project, file, openedFiles } = useSelector(navigatorSelector)
+  const { workspace, project, file } = useSelector(navigatorSelector)
   const { fileAction } = useSelector(globalSelector)
   const { futureLength, pastLength } = useSelector(hmsInfoSelector)
   // const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
@@ -94,7 +96,14 @@ export default function Process(props: ProcessProps) {
 
   // content -> nodeTree
   useEffect(() => {
-    if (updateOpt.parse !== true) return
+    if (updateOpt.parse !== true) {
+      // update context files store
+      if (openedFiles[file.uid]) {
+        const _file: TFile = { ...openedFiles[file.uid], content: file.content, changed: openedFiles[file.uid].orgContent !== file.content }
+        setOpenedFiles(_file)
+      }
+      return
+    }
 
     if (updateOpt.parse === true && updateOpt.from === 'hms') {
       isHms.current = true
@@ -103,12 +112,21 @@ export default function Process(props: ProcessProps) {
     const parseResult = parseFile(file.type, file.content, htmlReferenceData, osType)
     setUpdateOpt({ parse: null, from: 'processor' })
 
+    let newFileContent = ''
+
     if (file.type === 'html') {
       const { formattedContent, tree } = parseResult as THtmlParserResponse
+      newFileContent = formattedContent
       setNodeTree(tree)
       setTimeout(() => dispatch(setCurrentFileContent(formattedContent)), 0)
     } else {
       setNodeTree({})
+    }
+
+    // update context files store
+    if (openedFiles[file.uid]) {
+      const _file: TFile = { ...openedFiles[file.uid], content: newFileContent, changed: openedFiles[file.uid].orgContent !== newFileContent }
+      setOpenedFiles(_file)
     }
 
     removeRunningActions(['processor-content'])
@@ -193,8 +211,6 @@ export default function Process(props: ProcessProps) {
       return
     }
 
-    // console.log('processor-save')
-
     // update file content
     try {
       const writableStream = await (handler as FileSystemFileHandle).createWritable()
@@ -205,6 +221,10 @@ export default function Process(props: ProcessProps) {
         type: 'success',
         content: 'Saved successfully',
       })
+
+      // update context files store
+      const _file: TFile = { ...openedFiles[file.uid], orgContent: file.content, content: file.content, changed: false }
+      setOpenedFiles(_file)
     } catch (err) {
       addMessage({
         type: 'error',
@@ -214,7 +234,7 @@ export default function Process(props: ProcessProps) {
 
     fsTimeout.current = null
     setPending(false)
-  }, [ffHandlers, file.uid, file.content])
+  }, [openedFiles, setOpenedFiles, ffHandlers, file.uid, file.content])
 
   // set Auto-Save
   useEffect(() => {
@@ -229,7 +249,7 @@ export default function Process(props: ProcessProps) {
     // cmdk actions handle
     switch (currentCommand.action) {
       case 'Save':
-        saveFileContentToFs()
+        // saveFileContentToFs()
         break
       default:
         break

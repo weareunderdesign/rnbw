@@ -38,6 +38,7 @@ export type TFile = {
   uid: TNodeUid,
   name: string,
   type: TFileType,
+  orgContent: string,
   content: string,
   changed: boolean,
 }

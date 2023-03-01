@@ -33,6 +33,10 @@ export type TMainContext = {
   removeRunningActions: (actionNames: string[], effect?: boolean) => void,
 
   // file tree view
+  openedFiles: { [uid: TNodeUid]: TFile },
+  setOpenedFiles: (...files: TFile[]) => void,
+  removeOpenedFiles: (...uids: TNodeUid[]) => void,
+
   ffHoveredItem: TNodeUid,
   setFFHoveredItem: (uid: TNodeUid) => void,
 
@@ -149,7 +153,6 @@ export type TMainReducerState = {
     workspace: TWorkspace,
     project: TProject,
     file: TFile,
-    openedFiles: TFile[],
   },
   global: {
     fileAction: TFileAction,

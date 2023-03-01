@@ -82,13 +82,18 @@ export default function CodeView(props: CodeViewProps) {
 
   // redux state
   const actionGroupIndex = useSelector(getActionGroupIndexSelector)
-  const { workspace, project, file, openedFiles } = useSelector(navigatorSelector)
+  const { workspace, project, file } = useSelector(navigatorSelector)
   const { fileAction } = useSelector(globalSelector)
   const { futureLength, pastLength } = useSelector(hmsInfoSelector)
   // const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
   const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
 
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
+  // file changed - clear history
+  useEffect(() => {
+    // need to clear the undo/redo history of the monaco-editor
+  }, [file.uid])
+
   // focusedItem - code select
   useEffect(() => {
     // validate
