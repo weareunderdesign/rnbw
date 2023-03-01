@@ -52,6 +52,8 @@ import {
   TNodeUid,
 } from '@_node/types';
 import {
+  clearFNState,
+  clearMainState,
   ffSelector,
   fnSelector,
   getActionGroupIndexSelector,
@@ -60,6 +62,7 @@ import {
   increaseActionGroupIndex,
   MainContext,
   navigatorSelector,
+  removeCurrentFile,
   setFileAction,
   TCommand,
   TFileHandlerCollection,
@@ -73,6 +76,7 @@ import cmdkRefJumpstart from '@_ref/cmdk.ref/Jumpstart.csv';
 import filesRef from '@_ref/rfrncs/Files.csv';
 // @ts-ignore
 import htmlRefElements from '@_ref/rfrncs/HTML Elements.csv';
+import { verifyFileHandlerPermission } from '@_services/main';
 import {
   TOsType,
   TTheme,
@@ -94,6 +98,7 @@ import {
 import { TTreeViewState } from '../../_redux/main/types';
 import { RootNodeUid } from '../../constants/main';
 import { getCommandKey } from '../../services/global';
+import { TFile } from '../../types/main';
 import { MainPageProps } from './types';
 
 export default function MainPage(props: MainPageProps) {
@@ -101,7 +106,7 @@ export default function MainPage(props: MainPageProps) {
 
   // redux state
   const actionGroupIndex = useSelector(getActionGroupIndexSelector)
-  const { workspace, project, file, openedFiles } = useSelector(navigatorSelector)
+  const { workspace, project, file } = useSelector(navigatorSelector)
   const { fileAction } = useSelector(globalSelector)
   const { focusedItem: ffFocusedItem, expandedItems: ffExpandedItems, selectedItems: ffSelectedItems, expandedItemsObj: ffExpandedItemsObj, selectedItemsObj: ffSelectedItemsObj } = useSelector(ffSelector)
   const { focusedItem: fnFocusedItem, expandedItems: fnExpandedItems, selectedItems: fnSelectedItems, expandedItemsObj: fnExpandedItemsObj, selectedItemsObj: fnSelectedItemsObj } = useSelector(fnSelector)
@@ -142,10 +147,36 @@ export default function MainPage(props: MainPageProps) {
   }
 
   // file tree view
+  const [openedFiles, setOpenedFiles] = useState<{ [uid: TNodeUid]: TFile }>({})
+  const _setOpenedFiles = useCallback((...files: TFile[]) => {
+    const _openedFiles = JSON.parse(JSON.stringify(openedFiles))
+    files.map(newFile => {
+      _openedFiles[newFile.uid] = newFile
+    })
+    setOpenedFiles(_openedFiles)
+  }, [openedFiles])
+  const removeOpenedFiles = useCallback((...uids: TNodeUid[]) => {
+    const _openedFiles = JSON.parse(JSON.stringify(openedFiles))
+    uids.map(uid => {
+      delete _openedFiles[uid]
+    })
+    setOpenedFiles(_openedFiles)
+  }, [openedFiles])
+
   const [ffHoveredItem, setFFHoveredItem] = useState<TNodeUid>('')
   const [ffHandlers, setFFHandlers] = useState<TFileHandlerCollection>({})
   const [ffTree, setFFTree] = useState<TNodeTreeData>({})
   const updateFF = useCallback((deletedUids: { [uid: TNodeUid]: boolean }, nodes: TNodeTreeData, handlers: { [uid: TNodeUid]: FileSystemHandle }) => {
+    // handle deleted uids
+    const _deletedUids = Object.keys(deletedUids)
+    _deletedUids.length && removeOpenedFiles(...Object.keys(deletedUids))
+    if (deletedUids[file.uid]) {
+      dispatch(removeCurrentFile())
+      dispatch(clearFNState())
+      setNodeTree({})
+    }
+
+    // update handlers
     setFFTree({ ...ffTree, ...nodes })
 
     const newFFHandlers: TFileHandlerCollection = {}
@@ -155,7 +186,7 @@ export default function MainPage(props: MainPageProps) {
       }
     }
     setFFHandlers({ ...newFFHandlers, ...handlers })
-  }, [ffTree, ffHandlers])
+  }, [removeOpenedFiles, file.uid, ffTree, ffHandlers])
 
   // node tree view
   const [fnHoveredItem, setFNHoveredItem] = useState<TNodeUid>('')
@@ -370,6 +401,9 @@ export default function MainPage(props: MainPageProps) {
     switch (currentCommand.action) {
       case 'Clear':
         onClear()
+      case 'Save':
+        onSaveAll()
+        break
       case 'Jumpstart':
         onJumpstart()
         break
@@ -392,13 +426,89 @@ export default function MainPage(props: MainPageProps) {
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
 
   // -------------------------------------------------------------- handlers --------------------------------------------------------------
+
+  // save all of the changed files
+  const onSaveAll = useCallback(async () => {
+    const _openedFiles: { [uid: TNodeUid]: TFile } = {}
+    const uids = Object.keys(openedFiles)
+    const changedFiles: TFile[] = []
+    uids.map(uid => {
+      const _file = openedFiles[uid]
+      _openedFiles[uid] = { ..._file }
+      _file.changed && changedFiles.push(_file)
+    })
+
+    setPending(true)
+
+    let saveDone = false
+    changedFiles.length && await Promise.all(changedFiles.map(async (_file) => {
+      // get the current file handler
+      const handler = ffHandlers[_file.uid]
+      if (handler === undefined) return
+
+      // verify permission
+      if (await verifyFileHandlerPermission(handler) === false) {
+        addMessage({
+          type: 'error',
+          content: 'save failed cause of invalid handler',
+        })
+        return
+      }
+
+      // update file content
+      try {
+        const writableStream = await (handler as FileSystemFileHandle).createWritable()
+        await writableStream.write(_file.content)
+        await writableStream.close()
+
+        addMessage({
+          type: 'success',
+          content: 'Saved successfully',
+        })
+
+        saveDone = true
+        _openedFiles[_file.uid] = { ..._file, orgContent: _file.content, content: _file.content, changed: false }
+      } catch (err) {
+        addMessage({
+          type: 'error',
+          content: 'error occurred while saving',
+        })
+      }
+    }))
+
+    saveDone && setOpenedFiles(_openedFiles)
+    setPending(false)
+  }, [openedFiles, ffHandlers])
+
   // clean rnbw'data
-  const onClear = useCallback(() => {
-    (async () => {
-      localStorage.clear()
-      await delMany(['project-context', 'project-root-folder-handler', 'file-tree-view-state', 'opened-file-uid', 'node-tree-view-state', 'opened-file-content'])
-    })()
-  }, [])
+  const onClear = useCallback(async () => {
+    const uids = Object.keys(openedFiles)
+    const changedFiles: TFile[] = []
+    uids.map(uid => {
+      const _file = openedFiles[uid]
+      _file.changed && changedFiles.push(_file)
+    })
+
+    if (changedFiles.length) {
+      const message = `Do you want to save changes you made to ${changedFiles.length} files?
+Your changes will be lost if you don't save them.`
+      if (window.confirm(message)) {
+        await onSaveAll()
+      }
+    }
+
+    // remove localstorage and session
+    localStorage.clear()
+    await delMany(['project-context', 'project-root-folder-handler', 'file-tree-view-state', 'opened-file-uid', 'node-tree-view-state', 'opened-file-content'])
+    setFFTree({})
+    setNodeTree({})
+    setOpenedFiles({})
+    dispatch(clearMainState())
+
+    // start from newbie
+    onJumpstart()
+    localStorage.setItem("newbie", 'false')
+  }, [openedFiles, onSaveAll])
 
   // cmdk jumpstart
   const onJumpstart = useCallback(() => {
@@ -409,6 +519,8 @@ export default function MainPage(props: MainPageProps) {
 
   // hms methods
   const onUndo = useCallback(() => {
+    if (pending) return
+
     if (pastLength === 0) return
 
     setFFAction(fileAction)
@@ -416,15 +528,17 @@ export default function MainPage(props: MainPageProps) {
 
     setUpdateOpt({ parse: true, from: 'hms' })
     setTimeout(() => dispatch({ type: 'main/undo' }), 0)
-  }, [fileAction, pastLength])
+  }, [pending, fileAction, pastLength])
   const onRedo = useCallback(() => {
+    if (pending) return
+
     if (futureLength === 0) return
 
     setIsHms(false)
 
     setUpdateOpt({ parse: true, from: 'hms' })
     setTimeout(() => dispatch({ type: 'main/redo' }), 0)
-  }, [futureLength])
+  }, [pending, futureLength])
 
   // reset fileAction in the new history
   useEffect(() => {
@@ -762,6 +876,29 @@ export default function MainPage(props: MainPageProps) {
       // do nothing
     }
   }, [activeElement])
+
+  // editor-close event handler
+  useEffect(() => {
+    const uids = Object.keys(openedFiles)
+
+    let changed = false
+
+    for (const uid of uids) {
+      const _file = openedFiles[uid]
+      if (_file.changed) {
+        changed = true
+        break
+      }
+    }
+
+    window.onbeforeunload = changed ? () => {
+      return 'changed'
+    } : null
+
+    return () => {
+      window.onbeforeunload = null
+    }
+  }, [openedFiles])
   // -------------------------------------------------------------- other --------------------------------------------------------------
 
   return <>
@@ -773,6 +910,10 @@ export default function MainPage(props: MainPageProps) {
         removeRunningActions,
 
         // file tree view
+        openedFiles,
+        setOpenedFiles: _setOpenedFiles,
+        removeOpenedFiles,
+
         ffHoveredItem,
         setFFHoveredItem,
 

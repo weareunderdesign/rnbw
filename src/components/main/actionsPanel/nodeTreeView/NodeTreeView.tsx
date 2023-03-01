@@ -97,7 +97,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
   // redux state
   const actionGroupIndex = useSelector(getActionGroupIndexSelector)
-  const { workspace, project, file, openedFiles } = useSelector(navigatorSelector)
+  const { workspace, project, file } = useSelector(navigatorSelector)
   const { fileAction } = useSelector(globalSelector)
   const { futureLength, pastLength } = useSelector(hmsInfoSelector)
   // const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
@@ -472,9 +472,10 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   // -------------------------------------------------------------- other --------------------------------------------------------------
   // panel focus handler
   const onPanelClick = useCallback((e: React.MouseEvent) => {
-    addRunningActions(['nodeTreeView-focus'])
-
     setActivePanel('node')
+    return
+
+    addRunningActions(['nodeTreeView-focus'])
 
     const uid = RootNodeUid
 
@@ -501,7 +502,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
           // (activePanel === 'node' && focusedItem === RootNodeUid) ? "outline outline-primary" : "",
         )}
         style={{
-          padding: '1px 1px 1rem',
+          // padding: '1px 1px 1rem',
           pointerEvents: panelResizing ? 'none' : 'auto',
         }}
         onClick={onPanelClick}

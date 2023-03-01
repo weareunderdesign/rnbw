@@ -38,10 +38,10 @@ const initialState: TMainReducerState = {
       uid: '',
       name: '',
       type: 'unknown',
+      orgContent: '',
       content: '',
       changed: false,
     },
-    openedFiles: [],
   },
   global: {
     fileAction: {
@@ -84,6 +84,9 @@ const slice = createSlice({
     setCurrentFile(state, action: PayloadAction<TFile>) {
       const payload = action.payload
       state.navigator.file = payload
+    },
+    removeCurrentFile(state, action: PayloadAction) {
+      state.navigator.file = initialState.navigator.file
     },
     setCurrentFileContent(state, action: PayloadAction<string>) {
       const data = action.payload
@@ -238,6 +241,7 @@ export const {
 
   // navigator
   setCurrentFile,
+  removeCurrentFile,
   setCurrentFileContent,
 
   // global

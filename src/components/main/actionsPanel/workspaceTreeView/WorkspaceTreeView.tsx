@@ -99,6 +99,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     addRunningActions, removeRunningActions,
 
     // file tree view
+    openedFiles, setOpenedFiles, removeOpenedFiles,
     ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree, updateFF,
 
     // ndoe tree view
@@ -134,7 +135,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
   // redux state
   const actionGroupIndex = useSelector(getActionGroupIndexSelector)
-  const { workspace, project, file, openedFiles } = useSelector(navigatorSelector)
+  const { workspace, project, file } = useSelector(navigatorSelector)
   const { fileAction } = useSelector(globalSelector)
   const { futureLength, pastLength } = useSelector(hmsInfoSelector)
   const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
@@ -142,10 +143,8 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
   /*
     - invalid - can't do any actions on the nodes
-    false - update it's children
-    true - don't update it's children
     - temporary - don't display the nodes
-    */
+  */
   const [invalidNodes, _setInvalidNodes] = useState<{ [uid: TNodeUid]: boolean }>({})
   const [temporaryNodes, _setTemporaryNodes] = useState<{ [uid: TNodeUid]: boolean }>({})
   const setInvalidNodes = useCallback((...uids: TNodeUid[]) => {
@@ -522,26 +521,28 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     // expand the focusedItem
     node.uid !== RootNodeUid && expandedItemsObj[node.uid] === undefined && dispatch(expandFFNode([node.uid]))
 
-    // add tmp node
-    const tmpNode: TNode = {
-      uid: `${node.uid}${NodeUidSplitter}${TmpNodeUid}`,
-      parentUid: node.uid,
-      name: '',
-      isEntity: ffNodeType !== '*folder',
-      children: [],
-      data: {
-        valid: false,
-        type: ffNodeType,
-      },
-    }
+    setTimeout(() => {
+      // add tmp node
+      const tmpNode: TNode = {
+        uid: `${node.uid}${NodeUidSplitter}${TmpNodeUid}`,
+        parentUid: node.uid,
+        name: '',
+        isEntity: ffNodeType !== '*folder',
+        children: [],
+        data: {
+          valid: false,
+          type: ffNodeType,
+        },
+      }
 
-    node.children.unshift(tmpNode.uid)
+      node.children.unshift(tmpNode.uid)
 
-    const tmpTree = JSON.parse(JSON.stringify(ffTree))
-    tmpTree[tmpNode.uid] = tmpNode
+      const tmpTree = JSON.parse(JSON.stringify(ffTree))
+      tmpTree[tmpNode.uid] = tmpNode
 
-    setFFTree(tmpTree)
-  }, [ffTree, focusedItem])
+      setFFTree(tmpTree)
+    }, 0)
+  }, [ffTree, focusedItem, expandedItemsObj])
 
   // create folder/file api
   const createFFNode = useCallback(async (parentUid: TNodeUid, ffType: TFileNodeType, ffName: string) => {
@@ -666,6 +667,24 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       return
     }
 
+    // load last sesison when it's already opened once
+    if (openedFiles[uid]) {
+      const _file = openedFiles[uid]
+      const { formattedContent, tree } = parseHtml(_file.content, htmlReferenceData, osType)
+
+      setUpdateOpt({ parse: null, from: 'file' })
+
+      addRunningActions(['processor-validNodeTree'])
+      setNodeTree(tree)
+
+      dispatch(clearFNState())
+
+      setTimeout(() => dispatch(setCurrentFile(_file)), 0)
+
+      removeRunningActions(['fileTreeView-read'])
+      return
+    }
+
     // verify handler permission
     const handler = ffHandlers[uid] as FileSystemFileHandle
     if (!(await verifyFileHandlerPermission(handler))) {
@@ -686,10 +705,11 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     try {
       const fileEntry = await handler.getFile()
       const content = await fileEntry.text()
-      const file: TFile = {
+      const _file: TFile = {
         uid,
         name: handler.name,
         type: fileType as TFileType,
+        orgContent: content,
         content: content,
         changed: false,
       }
@@ -698,8 +718,8 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       if (fileType === 'html') {
         const { formattedContent, tree } = parseHtml(content, htmlReferenceData, osType)
         if (content !== formattedContent) {
-          file.content = formattedContent
-          file.changed = true
+          _file.content = formattedContent
+          _file.changed = true
         }
         setUpdateOpt({ parse: null, from: 'file' })
 
@@ -709,7 +729,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
       dispatch(clearFNState())
 
-      setTimeout(() => dispatch(setCurrentFile(file)), 0)
+      // add to opened file list and current redux file
+      setOpenedFiles(_file)
+      setTimeout(() => dispatch(setCurrentFile(_file)), 0)
     } catch (err) {
       addMessage({
         type: 'error',
@@ -718,7 +740,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
 
     removeRunningActions(['fileTreeView-read'])
-  }, [invalidNodes, ffTree, ffHandlers, osType, file.uid])
+  }, [invalidNodes, ffTree, ffHandlers, osType, file.uid, setOpenedFiles])
 
   /**
    * general move api - for rename, copy/paste(duplicate), cut/paste(move)
@@ -1304,7 +1326,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     if (uids.length === 0) return
 
     // confirm
-    if (!window.confirm("Are you sure you want to delete them? This action cannot be undone!")) return
+    const message = `Are you sure you want to delete them?
+This action cannot be undone!`
+    if (!window.confirm(message)) return
 
     addRunningActions(['fileTreeView-delete'])
     setInvalidNodes(...uids)
@@ -1485,9 +1509,10 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   // -------------------------------------------------------------- other --------------------------------------------------------------
   // panel focus handler
   const onPanelClick = useCallback((e: React.MouseEvent) => {
-    addRunningActions(['fileTreeView-focus'])
-
     setActivePanel('file')
+    return
+
+    addRunningActions(['fileTreeView-focus'])
 
     const uid = RootNodeUid
 
@@ -1524,7 +1549,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           // (activePanel === 'file' && focusedItem === RootNodeUid) ? "outline outline-primary" : "",
         )}
         style={{
-          padding: '1px 1px 1rem',
+          // padding: '1px 1px 1rem',
           pointerEvents: panelResizing ? 'none' : 'auto',
         }}
         onClick={onPanelClick}
@@ -1564,7 +1589,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
               useEffect(() => {
                 const node: TNode = props.item.data
                 if (!node.data.valid) {
-                  setInvalidNodes(node.uid, node.parentUid as TNodeUid)
+                  setInvalidNodes(node.uid)
                   props.context.selectItem()
                   props.context.startRenamingItem()
                 }
@@ -1673,7 +1698,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                   {openedFiles[props.item.data.uid] && openedFiles[props.item.data.uid].changed &&
                     <div className="radius-s foreground-primary" style={{ width: "6px", height: "6px" }}></div>}
                 </span>
-
               </>
             },
             renderRenameInput: (props) => {
@@ -1724,56 +1748,8 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                 removeInvalidNodes(item.data.uid)
                 return
               }
-
               setInvalidNodes(item.data.uid)
-
-              const file = openedFiles[item.data.uid]
-              if (file && file.changed) {
-                // confirm
-                if (!window.confirm(`Do you want to save the changes you made to ${file.name} before renaming?
-                Your changes will be lost if you don't save them.`)) return
-
-                await (async () => {
-                  setPending(true)
-
-                  // get the current file handler
-                  const handler = ffHandlers[file.uid]
-                  if (handler === undefined) {
-                    setPending(false)
-                    return
-                  }
-
-                  // verify permission
-                  if (await verifyFileHandlerPermission(handler) === false) {
-                    addMessage({
-                      type: 'error',
-                      content: 'save failed cause of invalid handler',
-                    })
-                    setPending(false)
-                    return
-                  }
-
-                  // update file content
-                  try {
-                    const writableStream = await (handler as FileSystemFileHandle).createWritable()
-                    await writableStream.write(file.content)
-                    await writableStream.close()
-
-                    addMessage({
-                      type: 'success',
-                      content: 'Saved successfully',
-                    })
-                  } catch (err) {
-                    addMessage({
-                      type: 'error',
-                      content: 'error occurred while auto-saving',
-                    })
-                  }
-
-                  setPending(false)
-                })()
-              }
-            }, [invalidNodes, setInvalidNodes, removeInvalidNodes, ffHandlers, openedFiles]),
+            }, [invalidNodes, setInvalidNodes, removeInvalidNodes]),
             onAbortRenamingItem: useCallback((item: TreeItem, treeId: string) => {
               if (!item.data.data.valid) {
                 const tmpTree = JSON.parse(JSON.stringify(ffTree))
@@ -1788,6 +1764,58 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
               if (!invalidNodes[item.data.uid]) return
 
               if (item.data.data.valid) {
+                // confirm changed file before renaming
+                const _file = openedFiles[item.data.uid]
+                if (_file && _file.changed) {
+                  // confirm
+                  const message = `Do you want to save the changes you made to ${_file.name} before renaming?
+Your changes will be lost if you don't save them.`
+                  if (window.confirm(message)) {
+                    await (async () => {
+                      setPending(true)
+
+                      // get the current file handler
+                      const handler = ffHandlers[_file.uid]
+                      if (handler === undefined) {
+                        setPending(false)
+                        return
+                      }
+
+                      // verify permission
+                      if (await verifyFileHandlerPermission(handler) === false) {
+                        addMessage({
+                          type: 'error',
+                          content: 'save failed cause of invalid handler',
+                        })
+                        setPending(false)
+                        return
+                      }
+
+                      // update file content
+                      try {
+                        const writableStream = await (handler as FileSystemFileHandle).createWritable()
+                        await writableStream.write(_file.content)
+                        await writableStream.close()
+
+                        addMessage({
+                          type: 'success',
+                          content: 'Saved successfully',
+                        })
+
+                        // update context files store
+                        setOpenedFiles({ ..._file, orgContent: _file.content, changed: false })
+                      } catch (err) {
+                        addMessage({
+                          type: 'error',
+                          content: 'error occurred while saving',
+                        })
+                      }
+
+                      setPending(false)
+                    })()
+                  }
+                }
+
                 setTemporaryNodes(item.data.uid)
                 await cb_renameFFNode(item.index as TNodeUid, name, item.data.data.type)
                 removeTemporaryNodes(item.data.uid)
@@ -1800,7 +1828,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                 setFFTree(tmpTree)
               }
               removeInvalidNodes(item.data.uid)
-            }, [invalidNodes, cb_renameFFNode, createFFNode, setTemporaryNodes, removeTemporaryNodes, removeInvalidNodes, ffTree, osType]),
+            }, [invalidNodes, cb_renameFFNode, createFFNode, setTemporaryNodes, removeTemporaryNodes, removeInvalidNodes, ffTree, osType, ffHandlers, openedFiles]),
 
             /* SELECT, FOCUS, EXPAND, COLLAPSE CALLBACK */
             onSelectItems: useCallback((items: TreeItemIndex[], treeId: string) => {
@@ -1808,18 +1836,18 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
             }, [cb_selectFFNode]),
             onFocusItem: useCallback((item: TreeItem, treeId: string) => {
               cb_focusFFNode(item.index as TNodeUid)
-            }, [invalidNodes, cb_focusFFNode]),
+            }, [cb_focusFFNode]),
             onExpandItem: useCallback((item: TreeItem, treeId: string) => {
               cb_expandFFNode(item.index as TNodeUid)
-            }, [invalidNodes, cb_expandFFNode]),
+            }, [cb_expandFFNode]),
             onCollapseItem: useCallback((item: TreeItem, treeId: string) => {
               cb_collapseFFNode(item.index as TNodeUid)
-            }, [invalidNodes, cb_collapseFFNode]),
+            }, [cb_collapseFFNode]),
 
             /* READ CALLBACK */
             onPrimaryAction: useCallback((item: TreeItem, treeId: string) => {
               item.data.data.valid ? cb_readFFNode(item.index as TNodeUid) : removeRunningActions(['fileTreeView-read'], false)
-            }, [invalidNodes, cb_readFFNode]),
+            }, [cb_readFFNode]),
 
             // DnD CALLBACK
             onDrop: useCallback((items: TreeItem[], target: DraggingPosition) => {
