@@ -36,6 +36,7 @@ import {
   navigatorSelector,
   selectFNNode,
   setCurrentFileContent,
+  setCurrentFileInfo,
 } from '@_redux/main';
 import { verifyFileHandlerPermission } from '@_services/main';
 
@@ -112,20 +113,25 @@ export default function Process(props: ProcessProps) {
     const parseResult = parseFile(file.type, file.content, htmlReferenceData, osType)
     setUpdateOpt({ parse: null, from: 'processor' })
 
-    let newFileContent = ''
+    let newFileContent = '', newFileInfo: any = null
 
     if (file.type === 'html') {
-      const { formattedContent, tree } = parseResult as THtmlParserResponse
+      const { formattedContent, tree, info } = parseResult as THtmlParserResponse
       newFileContent = formattedContent
+      newFileInfo = info
       setNodeTree(tree)
-      setTimeout(() => dispatch(setCurrentFileContent(formattedContent)), 0)
     } else {
       setNodeTree({})
     }
 
+    setTimeout(() => {
+      dispatch(setCurrentFileContent(newFileContent))
+      dispatch(setCurrentFileInfo(newFileInfo))
+    }, 0)
+
     // update context files store
     if (openedFiles[file.uid]) {
-      const _file: TFile = { ...openedFiles[file.uid], content: newFileContent, changed: openedFiles[file.uid].orgContent !== newFileContent }
+      const _file: TFile = { ...openedFiles[file.uid], content: newFileContent, info: newFileInfo, changed: openedFiles[file.uid].orgContent !== newFileContent }
       setOpenedFiles(_file)
     }
 
@@ -142,13 +148,20 @@ export default function Process(props: ProcessProps) {
 
     const newContent = serializeFile(file.type, nodeTree, htmlReferenceData)
     setUpdateOpt({ parse: null, from: 'processor' })
+    let newInfo: any = null
 
     if (file.type === 'html') {
-      const { formattedContent, tree } = parseHtml(newContent, htmlReferenceData, osType)
+      const { formattedContent, tree, info } = parseHtml(newContent, htmlReferenceData, osType)
+      newInfo = info
       setNodeTree(tree)
+    } else {
+      setNodeTree({})
     }
 
-    setTimeout(() => dispatch(setCurrentFileContent(newContent)), 0)
+    setTimeout(() => {
+      dispatch(setCurrentFileContent(newContent))
+      dispatch(setCurrentFileInfo(newInfo))
+    }, 0)
 
     removeRunningActions(['processor-nodeTree'])
   }, [nodeTree])

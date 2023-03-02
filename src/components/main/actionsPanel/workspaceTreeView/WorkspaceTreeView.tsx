@@ -670,7 +670,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     // load last sesison when it's already opened once
     if (openedFiles[uid]) {
       const _file = openedFiles[uid]
-      const { formattedContent, tree } = parseHtml(_file.content, htmlReferenceData, osType)
+      const { formattedContent, tree, info } = parseHtml(_file.content, htmlReferenceData, osType)
 
       setUpdateOpt({ parse: null, from: 'file' })
 
@@ -711,16 +711,18 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         type: fileType as TFileType,
         orgContent: content,
         content: content,
+        info: null,
         changed: false,
       }
 
       // initial format code
       if (fileType === 'html') {
-        const { formattedContent, tree } = parseHtml(content, htmlReferenceData, osType)
+        const { formattedContent, tree, info } = parseHtml(content, htmlReferenceData, osType)
         if (content !== formattedContent) {
           _file.content = formattedContent
           _file.changed = true
         }
+        _file.info = info
         setUpdateOpt({ parse: null, from: 'file' })
 
         addRunningActions(['processor-validNodeTree'])
