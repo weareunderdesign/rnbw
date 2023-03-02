@@ -201,7 +201,7 @@ export default function Process(props: ProcessProps) {
     }
 
     if (updateOpt.parse === null && updateOpt.from === 'file') {
-      // dispatch(expandFNNode(Object.keys(validNodeTree)))
+      dispatch(expandFNNode(Object.keys(validNodeTree)))
     } else {
       const _focusedItem: TNodeUid = validNodeTree[focusedItem] === undefined ? RootNodeUid : focusedItem
       const _expandedItems = expandedItems.filter((uid) => {
