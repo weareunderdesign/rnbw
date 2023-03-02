@@ -1,5 +1,3 @@
-import './styles.css';
-
 import React, {
   useCallback,
   useEffect,
@@ -26,7 +24,6 @@ import {
   Loader,
   ResizeHandle,
   SVGIcon,
-  Toast,
 } from '@_components/common';
 import {
   ActionsPanel,
@@ -1001,7 +998,7 @@ Your changes will be lost if you don't save them.`
       <Process />
 
       {/* spinner */}
-      {pending && <Loader></Loader>}
+      <Loader show={pending}></Loader>
 
       {/* panels */}
       <PanelGroup
@@ -1176,9 +1173,6 @@ Your changes will be lost if you don't save them.`
           </div>}
         </div>
       </Command.Dialog>
-
-      {/* toast */}
-      {false && <Toast messages={messages} />}
     </MainContext.Provider>
   </>
 }

@@ -1693,7 +1693,14 @@ This action cannot be undone!`
             },
             renderItemTitle: (props) => {
               return <>
-                <span className='text-s justify-start inline-label gap-s' style={{ width: "100%" }}>
+                <span
+                  className='text-s justify-start gap-s'
+                  style={{
+                    width: "100%",
+                    textOverflow: 'ellipsis',
+                    overflow: 'hidden',
+                    whiteSpace: 'nowrap',
+                  }}>
                   {props.title}
                   {openedFiles[props.item.data.uid] && openedFiles[props.item.data.uid].changed &&
                     <div className="radius-s foreground-primary" style={{ width: "6px", height: "6px" }}></div>}
@@ -1712,9 +1719,14 @@ This action cannot be undone!`
                     ref={props.inputRef}
                     className={cx(
                       'text-s',
-                      'background-primary',
-                      'no-frame',
                     )}
+                    style={{
+                      outline: 'none',
+                      margin: '0',
+                      border: 'none',
+                      padding: '0',
+                      background: 'transparent',
+                    }}
                     onChange={(e) => {
                       props.inputProps.onChange && props.inputProps.onChange(e)
                     }}
