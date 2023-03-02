@@ -660,9 +660,12 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
             renderItemTitle: (props) => {
               return <>
                 <span
-                  className='text-s justify-stretch inline-label'
+                  className='text-s justify-stretch'
                   style={{
-                    width: "calc(100% - 32px)"
+                    width: "calc(100% - 32px)",
+                    textOverflow: 'ellipsis',
+                    overflow: 'hidden',
+                    whiteSpace: 'nowrap',
                   }}
                 >
                   {props.title}
