@@ -150,6 +150,10 @@ export default function StageView(props: StageViewProps) {
   const sheet: CSSStyleSheet = new CSSStyleSheet()
   sheet.replaceSync(styles)
   const styleSheets = [sheet]
+
+  const getIframeProps = useCallback(() => {
+    return file.info || {}
+  }, [file.info])
   // -------------------------------------------------------------- other --------------------------------------------------------------
 
 
@@ -163,18 +167,19 @@ export default function StageView(props: StageViewProps) {
             // activePanel === 'stage' ? "outline outline-primary" : "",
           )}
           style={{
+            background: file.uid !== '' ? "white" : "",
             position: "relative",
             pointerEvents: panelResizing ? 'none' : 'auto',
           }}
           onClick={onPanelClick}
           ref={stageViewRef}
         >
-          {true ? <>
+          {false ? <>
             <ReactShadowRoot stylesheets={styleSheets}>
               <NodeRenderer id={RootNodeUid}></NodeRenderer>
             </ReactShadowRoot>
           </> : <>
-            <IFrame>
+            <IFrame info={getIframeProps()}>
               {<NodeRenderer id={RootNodeUid}></NodeRenderer>}
             </IFrame>
           </>}

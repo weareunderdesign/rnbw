@@ -91,7 +91,7 @@ export default function NodeRenderer({ id }: NodeRendererProp) {
   const Tag = useMemo<keyof JSX.IntrinsicElements>(() => {
     if (node === undefined || node.name === 'text') return '' as keyof JSX.IntrinsicElements
 
-    return true ? (node.name === 'html' ? 'div' :
+    return false ? (node.name === 'html' ? 'div' :
       node.name === 'head' ? 'div' :
         node.name === 'body' ? 'div' :
           node.name) as keyof JSX.IntrinsicElements :
