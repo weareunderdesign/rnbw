@@ -1196,6 +1196,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           type: 'info',
           content: 'You canceled importing project.',
         })
+        setWatch(true)
         return
       }
 
