@@ -2,6 +2,7 @@ import {
   THtmlNodeData,
   THtmlProcessableNode,
   THtmlReferenceData,
+  THtmlSettings,
 } from './html';
 
 /**
@@ -69,4 +70,5 @@ export type TNodeReferenceData = THtmlReferenceData
 export type TFileParserResponse = {
   formattedContent: string,
   tree: TNodeTreeData,
+  info?: THtmlSettings,
 }

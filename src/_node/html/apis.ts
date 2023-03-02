@@ -24,6 +24,7 @@ import {
   THtmlParserResponse,
   THtmlProcessableNode,
   THtmlReferenceData,
+  THtmlSettings,
   THtmlTagAttributes,
 } from './types';
 
@@ -199,6 +200,9 @@ export const indentNode = (tree: TNodeTreeData, node: TNode, indentSize: number,
 export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData, osType: TOsType): THtmlParserResponse => {
   const tree: TNodeTreeData = {}
   const tmpTree: TNodeTreeData = {}
+  const settings: THtmlSettings = {
+    favicon: [],
+  }
 
   // parse html using react-html-parser
   ReactHtmlParser(content, {
@@ -263,6 +267,8 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
     },
   })
 
+  console.log(tmpTree)
+
   // validate the nodes
   let uids: TNodeUid[] = Object.keys(tmpTree)
   uids.map((uid) => {
@@ -293,6 +299,20 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
       data.attribs.class += ` ${NodeInAppClassName}-${uid.replace(NodeUidSplitterRegExp, '-')}`
     }
 
+    if (data.type === 'tag') {
+      if (data.name === 'html') {
+        settings.html = node.uid
+      } else if (data.name === 'head') {
+        settings.head = node.uid
+      } else if (data.name === 'body') {
+        settings.body = node.uid
+      } else if (data.name === 'title') {
+        settings.title = node.uid
+      } else if (data.name === 'link' && data.attribs.rel === 'icon' && data.attribs.href) {
+        settings.favicon.push(data.attribs.href)
+      }
+    }
+
     tree[uid] = {
       ...node,
       name: uid === RootNodeUid ? RootNodeUid : (data.name || data.type),
@@ -309,6 +329,8 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
       },
     }
   })
+
+  console.log('html settings', settings)
 
   // set html for the nodes
   let formattedContent = serializeHtml(tree, htmlReferenceData)
@@ -343,7 +365,7 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
     }
   })
 
-  return { formattedContent, tree }
+  return { formattedContent, tree, info: settings }
 }
 
 /**
@@ -427,6 +449,7 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
     }
 
     data.html = nodeHtml
+    data.innerHtml = childrenHtml
   })
 
   return (tree[RootNodeUid].data as THtmlNodeData).html

@@ -21,6 +21,7 @@ export type THtmlNodeData = {
   endColumn: number,
 
   html: string,
+  innerHtml: string,
 
   hasOrgClass: boolean,
 }
@@ -38,6 +39,7 @@ export type THtmlTagAttributes = {
 export type THtmlParserResponse = {
   formattedContent: string,
   tree: TNodeTreeData,
+  info: THtmlSettings,
 }
 
 /**
@@ -76,4 +78,16 @@ export type THtmlElementsReference = {
   "Content": string,
   "Placeholder": string,
   "Cover Image": string,
+}
+
+/**
+ * html settings info
+ */
+export type THtmlSettings = {
+  html?: string,
+  head?: string,
+  body?: string,
+
+  title?: string,
+  favicon: string[],
 }
