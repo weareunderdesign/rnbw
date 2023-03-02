@@ -36,6 +36,11 @@ export const NodeUidSplitter: string = '?'
 export const NodeUidSplitterRegExp: RegExp = new RegExp(/\?/g)
 
 /**
+ * rainbow app name
+ */
+export const RainbowAppName = 'rnbw'
+
+/**
  * in-app node class name
  */
 export const NodeInAppClassName: string = 'rnbwdev-rnbw-node-9307667676537437466677115'

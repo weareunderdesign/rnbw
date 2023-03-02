@@ -13,6 +13,7 @@ import {
 import {
   AutoSave,
   FileAutoSaveInterval,
+  RainbowAppName,
   RootNodeUid,
 } from '@_constants/main';
 import {
@@ -21,6 +22,7 @@ import {
 } from '@_node/apis';
 import {
   parseHtml,
+  THtmlNodeData,
   THtmlParserResponse,
 } from '@_node/html';
 import { TNodeUid } from '@_node/types';
@@ -94,6 +96,30 @@ export default function Process(props: ProcessProps) {
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
   const isHms = useRef<boolean>(false)
   const isDoubleValidNodeTree = useRef<boolean>(false)
+
+  // set rnbw app title and favicon from the current opened file
+  useEffect(() => {
+    if (file.info) {
+      if (file.type === 'html') {
+        // set title
+        if (file.info.title) {
+          const titleNode = nodeTree[file.info.title]
+          const data = titleNode.data as THtmlNodeData
+          const title = data.innerHtml
+          window.document.title = title
+        } else {
+          window.document.title = RainbowAppName
+        }
+
+        // set favicon
+        if (file.info.favicon.length) {
+          console.log('favicon', file.info.favicon[0])
+        } else {
+
+        }
+      }
+    }
+  }, [file.info])
 
   // content -> nodeTree
   useEffect(() => {

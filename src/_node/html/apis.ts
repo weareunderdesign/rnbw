@@ -267,8 +267,6 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
     },
   })
 
-  console.log(tmpTree)
-
   // validate the nodes
   let uids: TNodeUid[] = Object.keys(tmpTree)
   uids.map((uid) => {
@@ -329,8 +327,6 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
       },
     }
   })
-
-  console.log('html settings', settings)
 
   // set html for the nodes
   let formattedContent = serializeHtml(tree, htmlReferenceData)
