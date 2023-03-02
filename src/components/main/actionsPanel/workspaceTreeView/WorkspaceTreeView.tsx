@@ -1248,7 +1248,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
     // clear out the fs watch interval using the id when unmounting the component
     return () => clearInterval(fsWatchInterval)
-  }, [watch])
+  }, [watchFileSystem, watch])
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
 
   // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
