@@ -640,6 +640,7 @@ export const parseFile = (type: TFileType, content: string, referenceData: TNode
   } else {
     return {
       formattedContent: '',
+      inAppContent: '',
       tree: {},
     }
   }

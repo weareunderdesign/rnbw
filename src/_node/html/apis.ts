@@ -29,9 +29,8 @@ import {
 } from './types';
 
 /**
- * replace in-app class name from old uid to new uid
+ * replace in-app attrib name with new uid
  * @param node 
- * @param orgUid 
  * @param newUid 
  */
 export const replaceHtmlNodeInAppAttribName = (node: TNode, newUid: TNodeUid) => {

@@ -106,7 +106,7 @@ export const IFrame = (props: IFrameProps) => {
     let loadListener: () => void
     contentRef?.addEventListener('load', loadListener = () => {
       const htmlNode = contentRef.contentWindow?.document.documentElement
-      const fullContent = console.log(htmlNode?.outerHTML)
+      const fullContent = htmlNode?.outerHTML
       const bodyNode = contentRef.contentWindow?.document.body
       const elements = bodyNode?.querySelectorAll('*')
       LogAllow && console.log('loaded html elements except web componenets')
