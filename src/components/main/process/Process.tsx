@@ -13,6 +13,7 @@ import {
 import {
   AutoSave,
   FileAutoSaveInterval,
+  LogAllow,
   RainbowAppName,
   RootNodeUid,
 } from '@_constants/main';
@@ -113,7 +114,7 @@ export default function Process(props: ProcessProps) {
 
         // set favicon
         if (file.info.favicon.length) {
-          console.log('favicon', file.info.favicon[0])
+          LogAllow && console.log('favicon', file.info.favicon[0])
         } else {
 
         }
@@ -139,11 +140,11 @@ export default function Process(props: ProcessProps) {
     const parseResult = parseFile(file.type, file.content, htmlReferenceData, osType)
     setUpdateOpt({ parse: null, from: 'processor' })
 
-    let newFileContent = '', newFileInfo: any = null
-
+    let newFileContent = '', newFileInfo: any = null, newFileInAppContent = ''
     if (file.type === 'html') {
-      const { formattedContent, tree, info } = parseResult as THtmlParserResponse
+      const { formattedContent, inAppContent, tree, info } = parseResult as THtmlParserResponse
       newFileContent = formattedContent
+      newFileInAppContent = inAppContent
       newFileInfo = info
       setNodeTree(tree)
     } else {
@@ -151,7 +152,7 @@ export default function Process(props: ProcessProps) {
     }
 
     setTimeout(() => {
-      dispatch(setCurrentFileContent(newFileContent))
+      dispatch(setCurrentFileContent([newFileContent, newFileInAppContent]))
       dispatch(setCurrentFileInfo(newFileInfo))
     }, 0)
 
@@ -172,12 +173,12 @@ export default function Process(props: ProcessProps) {
       isDoubleValidNodeTree.current = true
     }
 
-    const newContent = serializeFile(file.type, nodeTree, htmlReferenceData)
+    const { content: newContent, inAppContent } = serializeFile(file.type, nodeTree, htmlReferenceData)
     setUpdateOpt({ parse: null, from: 'processor' })
     let newInfo: any = null
 
     if (file.type === 'html') {
-      const { formattedContent, tree, info } = parseHtml(newContent, htmlReferenceData, osType)
+      const { formattedContent, inAppContent, tree, info } = parseHtml(newContent, htmlReferenceData, osType)
       newInfo = info
       setNodeTree(tree)
     } else {
@@ -185,7 +186,7 @@ export default function Process(props: ProcessProps) {
     }
 
     setTimeout(() => {
-      dispatch(setCurrentFileContent(newContent))
+      dispatch(setCurrentFileContent([newContent, inAppContent]))
       dispatch(setCurrentFileInfo(newInfo))
     }, 0)
 

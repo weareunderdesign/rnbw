@@ -13,7 +13,7 @@ import {
   addFormatTextBeforeNode,
   indentNode,
   parseHtml,
-  replaceHtmlNodeInAppClassName,
+  replaceHtmlNodeInAppAttribName,
   serializeHtml,
   THtmlNodeData,
   THtmlReferenceData,
@@ -228,7 +228,7 @@ export const resetNodeTreeUids = (tree: TNodeTreeData, type: TNodeTreeContext): 
     const node = tree[uid]
 
     if (type === 'html') {
-      replaceHtmlNodeInAppClassName(node, uid, node.uid)
+      replaceHtmlNodeInAppAttribName(node, node.uid)
     }
 
     newTree[node.uid] = node
@@ -479,7 +479,7 @@ export const copyNode = (tree: TNodeTreeData, targetUid: TNodeUid, isBetween: bo
     const parentNodeDepth = getNodeDepth(newNode.parentUid as TNodeUid)
     const newUid = generateNodeUid(targetUid, targetNode.children.length + 1 + uidOffset)
     if (treeType === 'html') {
-      replaceHtmlNodeInAppClassName(newNode, newNode.uid, newUid)
+      replaceHtmlNodeInAppAttribName(newNode, newUid)
     }
     newNode.uid = newUid
     newNode.parentUid = targetUid
@@ -514,7 +514,7 @@ export const copyNode = (tree: TNodeTreeData, targetUid: TNodeUid, isBetween: bo
         const childNode = JSON.parse(JSON.stringify(tree[childUid]))
         const newChildUid = generateNodeUid(node.uid, childIndex + 1)
         if (treeType === 'html') {
-          replaceHtmlNodeInAppClassName(childNode, childNode.uid, newChildUid)
+          replaceHtmlNodeInAppAttribName(childNode, newChildUid)
         }
         childNode.uid = newChildUid
         childNode.parentUid = node.uid
@@ -640,6 +640,7 @@ export const parseFile = (type: TFileType, content: string, referenceData: TNode
   } else {
     return {
       formattedContent: '',
+      inAppContent: '',
       tree: {},
     }
   }
@@ -652,9 +653,13 @@ export const parseFile = (type: TFileType, content: string, referenceData: TNode
  * @param referenceData 
  * @returns 
  */
-export const serializeFile = (type: TFileType, tree: TNodeTreeData, referenceData: TNodeReferenceData): string => {
+export const serializeFile = (type: TFileType, tree: TNodeTreeData, referenceData: TNodeReferenceData): {
+  content: string,
+  inAppContent: string,
+} => {
   if (type === "html") {
-    return serializeHtml(tree, referenceData as THtmlReferenceData)
+    const { html, inAppHtml } = serializeHtml(tree, referenceData as THtmlReferenceData)
+    return { content: html, inAppContent: inAppHtml }
   }
-  return ''
+  return { content: '', inAppContent: '' }
 }

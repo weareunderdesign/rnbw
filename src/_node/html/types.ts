@@ -21,6 +21,7 @@ export type THtmlNodeData = {
   endColumn: number,
 
   html: string,
+  inAppHtml: string,
   innerHtml: string,
 
   hasOrgClass: boolean,
@@ -38,6 +39,7 @@ export type THtmlTagAttributes = {
  */
 export type THtmlParserResponse = {
   formattedContent: string,
+  inAppContent: string,
   tree: TNodeTreeData,
   info: THtmlSettings,
 }
