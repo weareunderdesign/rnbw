@@ -2,12 +2,15 @@ import React, {
   useCallback,
   useContext,
   useEffect,
-  useMemo,
   useState,
 } from 'react';
 
 import { useSelector } from 'react-redux';
 
+import {
+  LogAllow,
+  NodeInAppAttribName,
+} from '@_constants/main';
 import {
   MainContext,
   navigatorSelector,
@@ -59,90 +62,71 @@ export const IFrame = (props: IFrameProps) => {
   const { workspace, project, file } = useSelector(navigatorSelector)
 
   const [contentRef, setContentRef] = useState<HTMLIFrameElement | null>(null)
-  const _document = useMemo(() => contentRef?.contentWindow?.document, [contentRef])
-  const htmlNode = useMemo(() => _document?.documentElement, [_document])
-  const headNode = useMemo(() => _document?.head, [_document])
-  const bodyNode = useMemo(() => _document?.body, [_document])
 
   const onMouseEnter = useCallback((e: MouseEvent) => {
     interface _EventTarget extends EventTarget { className?: string }
     const target: _EventTarget | null = e.target
     const className = target?.className
 
-    console.log('mouse enter', className)
+    LogAllow && console.log('mouse enter', className)
   }, [])
   const onMouseLeave = useCallback((e: MouseEvent) => {
     interface _EventTarget extends EventTarget { className?: string }
     const target: _EventTarget | null = e.target
     const className = target?.className
 
-    console.log('mouse leave', className)
+    LogAllow && console.log('mouse leave', className)
   }, [])
-  const onMouseDown = useCallback((e: MouseEvent) => {
-    interface _EventTarget extends EventTarget { className?: string }
-    const target: _EventTarget | null = e.target
-    const className = target?.className
-
-    console.log('mouse down', className)
+  const onMouseDown = useCallback((ele: HTMLElement) => {
+    const uid = ele.getAttribute(NodeInAppAttribName)
+    LogAllow && console.log('mouse down', uid)
   }, [])
   const onMouseUp = useCallback((e: MouseEvent) => {
     interface _EventTarget extends EventTarget { className?: string }
     const target: _EventTarget | null = e.target
     const className = target?.className
 
-    console.log('mouse up', className)
+    LogAllow && console.log('mouse up', className)
   }, [])
   const onDblClick = useCallback((e: MouseEvent) => {
     interface _EventTarget extends EventTarget { className?: string }
     const target: _EventTarget | null = e.target
     const className = target?.className
 
-    console.log('dbl click', className)
+    LogAllow && console.log('dbl click', className)
   }, [])
 
   useEffect(() => {
-    const onMouseEnterListener = (e: MouseEvent) => {
-      onMouseEnter(e)
+    if (file.uid !== '' && file.inAppContent !== '') {
+      LogAllow && console.log('page content changed')
+    } else {
+      return
     }
-    _document?.addEventListener('mouseenter', onMouseEnterListener)
 
-    const onMouseLeaveListener = (e: MouseEvent) => {
-      onMouseLeave(e)
-    }
-    htmlNode?.addEventListener('mouseleave', onMouseLeaveListener)
-
-    const onMouseDownListener = (e: MouseEvent) => {
-      onMouseDown(e)
-    }
-    htmlNode?.addEventListener('mousedown', onMouseDownListener)
-
-    const onMouseUpListener = (e: MouseEvent) => {
-      onMouseUp(e)
-    }
-    htmlNode?.addEventListener('mouseup', onMouseUpListener)
-
-    const onDblClickListener = (e: MouseEvent) => {
-      onDblClick(e)
-    }
-    htmlNode?.addEventListener('dblclick', onDblClickListener)
+    let loadListener: () => void
+    contentRef?.addEventListener('load', loadListener = () => {
+      const htmlNode = contentRef.contentWindow?.document.documentElement
+      const fullContent = console.log(htmlNode?.outerHTML)
+      const bodyNode = contentRef.contentWindow?.document.body
+      const elements = bodyNode?.querySelectorAll('*')
+      LogAllow && console.log('loaded html elements except web componenets')
+      elements?.forEach((ele) => {
+        (ele as HTMLElement).addEventListener('mousedown', (e: MouseEvent) => {
+          e.stopPropagation()
+          onMouseDown(ele as HTMLElement)
+        })
+      })
+    })
 
     return () => {
-      htmlNode?.removeEventListener('mouseenter', onMouseEnterListener)
-      htmlNode?.removeEventListener('mouseleave', onMouseLeaveListener)
-      htmlNode?.removeEventListener('mousedown', onMouseDownListener)
-      htmlNode?.removeEventListener('mouseup', onMouseUpListener)
-      htmlNode?.removeEventListener('dblclick', onDblClickListener)
+      contentRef?.removeEventListener('load', loadListener)
     }
-  }, [htmlNode, _document])
-
-  useEffect(() => {
-    console.log('file info', props.info)
-  }, [props.info])
+  }, [file.inAppContent])
 
   return (
     <iframe
       ref={setContentRef}
-      srcDoc={file.content}
+      srcDoc={file.inAppContent}
       style={{ position: "absolute", width: "100%", height: "100%" }}
     />
   )

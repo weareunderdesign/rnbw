@@ -40,6 +40,7 @@ const initialState: TMainReducerState = {
       type: 'unknown',
       orgContent: '',
       content: '',
+      inAppContent: '',
       info: null,
       changed: false,
     },
@@ -89,9 +90,10 @@ const slice = createSlice({
     removeCurrentFile(state, action: PayloadAction) {
       state.navigator.file = initialState.navigator.file
     },
-    setCurrentFileContent(state, action: PayloadAction<string>) {
+    setCurrentFileContent(state, action: PayloadAction<string[]>) {
       const data = action.payload
-      state.navigator.file.content = data
+      state.navigator.file.content = data[0]
+      data[1] ? state.navigator.file.inAppContent = data[1] : null
     },
     setCurrentFileInfo(state, action: PayloadAction<any>) {
       const data = action.payload

@@ -3,6 +3,7 @@ import React, {
   useContext,
   useEffect,
   useRef,
+  useState,
 } from 'react';
 
 import cx from 'classnames';
@@ -14,7 +15,6 @@ import { Panel } from 'react-resizable-panels';
 import ReactShadowRoot from 'react-shadow-root';
 
 import {
-  NodeInAppClassName,
   NodeUidSplitterRegExp,
   RootNodeUid,
 } from '@_constants/main';
@@ -34,7 +34,6 @@ import {
 import { StageViewContext } from './context';
 import IFrame from './iFrame';
 import NodeRenderer from './nodeRenderer';
-import { styles } from './styles';
 import { StageViewProps } from './types';
 
 export default function StageView(props: StageViewProps) {
@@ -104,7 +103,7 @@ export default function StageView(props: StageViewProps) {
     if (focusedNode === undefined) return
 
     // scrollTo
-    const focusedComponent = stageViewRef.current.shadowRoot?.querySelector(`.${NodeInAppClassName}-${focusedItem.replace(NodeUidSplitterRegExp, '-')}`)
+    const focusedComponent = stageViewRef.current.shadowRoot?.querySelector(`${focusedItem.replace(NodeUidSplitterRegExp, '-')}`)
     setTimeout(() => focusedComponent?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' }), 0)
   }, [focusedItem])
 
@@ -146,14 +145,8 @@ export default function StageView(props: StageViewProps) {
     setActivePanel('stage')
   }, [])
 
-  // shadow root css
-  const sheet: CSSStyleSheet = new CSSStyleSheet()
-  sheet.replaceSync(styles)
-  const styleSheets = [sheet]
-
-  const getIframeProps = useCallback(() => {
-    return file.info || {}
-  }, [file.info])
+  // loading flag
+  const [loading, setLoading] = useState<boolean>(false)
   // -------------------------------------------------------------- other --------------------------------------------------------------
 
 
@@ -175,13 +168,11 @@ export default function StageView(props: StageViewProps) {
           ref={stageViewRef}
         >
           {false ? <>
-            <ReactShadowRoot stylesheets={styleSheets}>
+            <ReactShadowRoot>
               <NodeRenderer id={RootNodeUid}></NodeRenderer>
             </ReactShadowRoot>
           </> : <>
-            <IFrame info={getIframeProps()}>
-              {<NodeRenderer id={RootNodeUid}></NodeRenderer>}
-            </IFrame>
+            <IFrame />
           </>}
         </div>
       </Panel>

@@ -40,6 +40,7 @@ export type TFile = {
   type: TFileType,
   orgContent: string,
   content: string,
+  inAppContent: string,
   info: any,
   changed: boolean,
 }

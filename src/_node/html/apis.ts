@@ -1,7 +1,7 @@
 import ReactHtmlParser from 'react-html-parser';
 
 import {
-  NodeInAppClassName,
+  NodeInAppAttribName,
   NodeUidSplitterRegExp,
   RootNodeUid,
 } from '@_constants/main';
@@ -34,10 +34,10 @@ import {
  * @param orgUid 
  * @param newUid 
  */
-export const replaceHtmlNodeInAppClassName = (node: TNode, orgUid: TNodeUid, newUid: TNodeUid) => {
+export const replaceHtmlNodeInAppAttribName = (node: TNode, newUid: TNodeUid) => {
   const nodeData = node.data as THtmlNodeData
-  nodeData.attribs && nodeData.attribs.class ?
-    nodeData.attribs.class = nodeData.attribs.class.replace(`${NodeInAppClassName}-${orgUid.replace(NodeUidSplitterRegExp, '-')}`, `${NodeInAppClassName}-${newUid.replace(NodeUidSplitterRegExp, '-')}`)
+  nodeData.attribs ?
+    nodeData.attribs[NodeInAppAttribName] = `${newUid.replace(NodeUidSplitterRegExp, '-')}`
     : null
 }
 
@@ -290,12 +290,7 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
     // set in-app class name to nodes
     let hasOrgClass: boolean = true
     if (!data.attribs) data.attribs = {}
-    if (data.attribs.class === undefined) {
-      hasOrgClass = false
-      data.attribs.class = `${NodeInAppClassName}-${uid.replace(NodeUidSplitterRegExp, '-')}`
-    } else {
-      data.attribs.class += ` ${NodeInAppClassName}-${uid.replace(NodeUidSplitterRegExp, '-')}`
-    }
+    data.attribs[NodeInAppAttribName] = `${uid.replace(NodeUidSplitterRegExp, '-')}`
 
     if (data.type === 'tag') {
       if (data.name === 'html') {
@@ -329,7 +324,7 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
   })
 
   // set html for the nodes
-  let formattedContent = serializeHtml(tree, htmlReferenceData)
+  let { html: formattedContent, inAppHtml: inAppContent } = serializeHtml(tree, htmlReferenceData)
 
   // set html range for code view
   let detected: Map<string, number> = new Map<string, number>()
@@ -361,7 +356,7 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
     }
   })
 
-  return { formattedContent, tree, info: settings }
+  return { formattedContent, inAppContent, tree, info: settings }
 }
 
 /**
@@ -370,7 +365,7 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
  * @param htmlReferenceData 
  * @returns 
  */
-export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlReferenceData): string => {
+export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlReferenceData): THtmlNodeData => {
   const uids = sortNodeUidsByBfs(Object.keys(tree))
   uids.reverse()
 
@@ -378,26 +373,39 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
     const node = tree[uid]
 
     // collect children html
-    let childrenHtml = ``
+    let childrenHtml = ``, inAppChildrenHtml = ``
     node.children.map((childUid) => {
       const child = tree[childUid]
       const childData = child.data as THtmlNodeData
       childrenHtml += childData.html
+      inAppChildrenHtml += childData.inAppHtml
     })
 
     // wrap with the current node
     const data = node.data as THtmlNodeData
     let nodeHtml = ``
+    let inAppNodeHtml = ``
 
     // validate attribs html
     const attribsHtml = data.attribs === undefined ? '' : Object.keys(data.attribs).map(attr => {
       let attrContent: string = data.attribs[attr]
-      if (attr === 'class') {
-        const classHtml = attrContent.split(' ').filter((className: string) => !!className && className !== `${NodeInAppClassName}-${uid.replace(NodeUidSplitterRegExp, '-')}`).join(' ')
-
-        if (classHtml.length === 0 && data.hasOrgClass === false) return ''
-
-        attrContent = classHtml
+      if (attr === NodeInAppAttribName) {
+        return
+      } else if (attr === 'class') {
+        // do nothing
+      } else if (attr === 'style') {
+        // do nothing
+      } else {
+        // do nothing
+      }
+      return attrContent === '' ? ` ${attr}` : ` ${attr}="${attrContent}"`
+    }).join('')
+    const inAppAttribsHtml = data.attribs === undefined ? '' : Object.keys(data.attribs).map(attr => {
+      let attrContent: string = data.attribs[attr]
+      if (attr === NodeInAppAttribName) {
+        // do nothing
+      } else if (attr === 'class') {
+        // do nothing
       } else if (attr === 'style') {
         // do nothing
       } else {
@@ -408,13 +416,17 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
 
     if (data.type === 'directive') {
       nodeHtml = `<${data.data}>`
+      inAppNodeHtml = `<${data.data}>`
     } else if (data.type === 'comment') {
       nodeHtml = `<!--${data.data}-->`
+      inAppNodeHtml = `<!--${data.data}-->`
     } else if (data.type === 'text') {
       // replace < or > character to &lt; and &gt;
       nodeHtml = data.data.replace(/</g, `&lt;`).replace(/>/g, `&gt;`)
+      inAppNodeHtml = data.data.replace(/</g, `&lt;`).replace(/>/g, `&gt;`)
     } else if (data.type === 'script' || data.type === 'style') {
       nodeHtml = `<${data.type}${attribsHtml}>${childrenHtml}</${data.type}>`
+      inAppNodeHtml = `<${data.type}${inAppAttribsHtml}>${inAppChildrenHtml}</${data.type}>`
     } else if (data.type === 'tag') {
       const htmlElementsReferenceData = htmlReferenceData.elements
       const tagName = data.name
@@ -424,6 +436,7 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
       if (refData && refData.Content === 'None') {
         isEmptyTag = true
         nodeHtml = `<${tagName}${attribsHtml}>`
+        inAppNodeHtml = `<${tagName}${inAppAttribsHtml}>`
       }
 
       // need to remove this condition when the reference is perfect
@@ -434,21 +447,25 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
           || tagName === 'area' || tagName === 'col' || tagName === 'wbr') {
           isEmptyTag = true
           nodeHtml = `<${tagName}${attribsHtml}>`
+          inAppNodeHtml = `<${tagName}${inAppAttribsHtml}>`
         }
       }
 
       if (!isEmptyTag) {
         nodeHtml = `<${tagName}${attribsHtml}>${childrenHtml}</${tagName}>`
+        inAppNodeHtml = `<${tagName}${inAppAttribsHtml}>${inAppChildrenHtml}</${tagName}>`
       }
     } else {
       nodeHtml = childrenHtml
+      inAppNodeHtml = inAppChildrenHtml
     }
 
     data.html = nodeHtml
+    data.inAppHtml = inAppNodeHtml
     data.innerHtml = childrenHtml
   })
 
-  return (tree[RootNodeUid].data as THtmlNodeData).html
+  return tree[RootNodeUid].data as THtmlNodeData
 }
 
 /**

@@ -141,7 +141,7 @@ export default function CodeView(props: CodeViewProps) {
 
     addRunningActions(['processor-content', 'processor-validNodeTree'])
 
-    setTimeout(() => dispatch(setCurrentFileContent(codeContent.current)), 0)
+    setTimeout(() => dispatch(setCurrentFileContent([codeContent.current])), 0)
 
     reduxTimeout.current = null
   }, [file.content])

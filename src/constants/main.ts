@@ -43,7 +43,7 @@ export const RainbowAppName = 'rnbw'
 /**
  * in-app node class name
  */
-export const NodeInAppClassName: string = 'rnbwdev-rnbw-node-9307667676537437466677115'
+export const NodeInAppAttribName: string = 'data-rnbwdev-rnbw-node'
 
 /**
  * tmp node uid when creating a new file-node
