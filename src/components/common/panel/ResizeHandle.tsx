@@ -5,6 +5,7 @@ import React, {
   useState,
 } from 'react';
 
+import cx from 'classnames';
 import { PanelResizeHandle } from 'react-resizable-panels';
 
 import { MainContext } from '@_redux/main';
@@ -29,19 +30,12 @@ export const ResizeHandle = (props: ResizeHandleProps) => {
   }, [])
 
   const containerStyle = useMemo(() => ({
-    boxShadow: props.direction === 'horizontal' ?
-      !hover ? 'var(--color-secondary-background) 1px 0px 0px 0px inset' : 'var(--color-tertiary-background) 2px 0px 0px 0px inset' :
-      !hover ? 'var(--color-secondary-background) 0px 1px 0px 0px inset' : 'var(--color-tertiary-background) 0px 2px 0px 0px inset',
-
-    width: props.direction === 'horizontal' ?
-      !hover ? '1px' : '2px' :
-      '',
-    height: props.direction === 'vertical' ?
-      !hover ? '1px' : '2px' :
-      '',
+    width: props.direction === 'horizontal' ? '1px' : '',
+    height: props.direction === 'vertical' ? '1px' : '',
 
     zIndex: '1',
   }), [hover, props.direction])
+
   const handlerStyle = useMemo(() => ({
     width: props.direction === 'vertical' ? '100%' : '10px',
     height: props.direction === 'horizontal' ? '100%' : '10px',
@@ -61,7 +55,10 @@ export const ResizeHandle = (props: ResizeHandleProps) => {
       onMouseLeave={onMouseLeave}
 
       style={containerStyle}
-      className={'transition-linear'}
+      className={cx(
+        'transition-linear',
+        hover ? 'background-tertiary' : 'background-secondary',
+      )}
     >
       <PanelResizeHandle style={handlerStyle} />
     </div>
