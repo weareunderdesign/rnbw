@@ -141,7 +141,6 @@ export type TUpdateOptions = {
  */
 export type TCommand = {
   action: string,
-  changed: boolean,
 }
 
 /**

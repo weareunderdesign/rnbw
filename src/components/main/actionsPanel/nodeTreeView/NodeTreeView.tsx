@@ -413,7 +413,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
         onAddNode(currentCommand.action)
         break
     }
-  }, [currentCommand.changed])
+  }, [currentCommand])
 
   // command handlers
   const onActions = useCallback(() => {

@@ -201,7 +201,7 @@ export default function MainPage(props: MainPageProps) {
   const [ffAction, setFFAction] = useState<TFileAction>({ type: null })
 
   // cmdk
-  const [currentCommand, setCurrentCommand] = useState<TCommand>({ action: '', changed: false })
+  const [currentCommand, setCurrentCommand] = useState<TCommand>({ action: '' })
   const [cmdkOpen, setCmdkOpen] = useState<boolean>(false)
   const [cmdkPages, setCmdkPages] = useState<string[]>([])
   const cmdkPage = useMemo(() => {
@@ -383,8 +383,8 @@ export default function MainPage(props: MainPageProps) {
     // prevent chrome default short keys
     e.preventDefault()
 
-    setCurrentCommand({ action, changed: !currentCommand.changed })
-  }, [currentCommand.changed, pending, cmdkReferenceData, activePanel, cmdkOpen, osType])
+    setCurrentCommand({ action })
+  }, [cmdkReferenceData, activePanel, osType])
 
   // bind onKeyDownCallback (cb_onKeyDown)
   useEffect(() => {
@@ -419,7 +419,7 @@ export default function MainPage(props: MainPageProps) {
       default:
         return
     }
-  }, [currentCommand.changed])
+  }, [currentCommand])
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
 
   // -------------------------------------------------------------- handlers --------------------------------------------------------------
@@ -1117,7 +1117,7 @@ Your changes will be lost if you don't save them.`
                           // disabled={false}
                           onSelect={() => {
                             setCmdkOpen(false)
-                            setCurrentCommand({ action: command.Group === 'Add' ? `AddNode-${command.Context}` : command.Name, changed: !currentCommand.changed })
+                            setCurrentCommand({ action: command.Group === 'Add' ? `AddNode-${command.Context}` : command.Name })
                           }}
                         >
                           <div

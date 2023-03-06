@@ -294,7 +294,7 @@ export default function Process(props: ProcessProps) {
       default:
         break
     }
-  }, [currentCommand.changed])
+  }, [currentCommand])
 
   return <></>
 }

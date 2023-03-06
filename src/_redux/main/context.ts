@@ -62,7 +62,7 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   setFFAction: (action: TFileAction) => { },
 
   // cmdk
-  currentCommand: { action: '', changed: false },
+  currentCommand: { action: '' },
   setCurrentCommand: (command: TCommand) => { },
 
   cmdkOpen: false,

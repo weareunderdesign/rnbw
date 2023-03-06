@@ -5,6 +5,7 @@ import React, {
   useState,
 } from 'react';
 
+import cx from 'classnames';
 import { useSelector } from 'react-redux';
 
 import {
@@ -15,6 +16,8 @@ import {
   MainContext,
   navigatorSelector,
 } from '@_redux/main';
+import { getCommandKey } from '@_services/global';
+import { TCmdkKeyMap } from '@_types/main';
 
 import { IFrameProps } from './types';
 
@@ -96,38 +99,86 @@ export const IFrame = (props: IFrameProps) => {
     LogAllow && console.log('dbl click', className)
   }, [])
 
-  useEffect(() => {
-    if (file.uid !== '' && file.inAppContent !== '') {
-      LogAllow && console.log('page content changed')
-    } else {
-      return
-    }
+  const [loading, setLoading] = useState<boolean>(false)
 
+  useEffect(() => {
     let loadListener: () => void
     contentRef?.addEventListener('load', loadListener = () => {
-      const htmlNode = contentRef.contentWindow?.document.documentElement
-      const fullContent = htmlNode?.outerHTML
+      LogAllow && console.log('iframe loaded..')
+
       const bodyNode = contentRef.contentWindow?.document.body
       const elements = bodyNode?.querySelectorAll('*')
-      LogAllow && console.log('loaded html elements except web componenets')
       elements?.forEach((ele) => {
         (ele as HTMLElement).addEventListener('mousedown', (e: MouseEvent) => {
           e.stopPropagation()
           onMouseDown(ele as HTMLElement)
         })
       })
+
+      const htmlNode = contentRef.contentWindow?.document.documentElement
+      const fullContent = htmlNode?.outerHTML
+      htmlNode?.addEventListener('keydown', (e: KeyboardEvent) => {
+        // cmdk obj for the current command
+        const cmdk: TCmdkKeyMap = {
+          cmd: getCommandKey(e, osType),
+          shift: e.shiftKey,
+          alt: e.altKey,
+          key: e.code,
+          click: false,
+        }
+
+        // detect action
+        let action: string | null = null
+        for (const actionName in cmdkReferenceData) {
+          const _cmdk = cmdkReferenceData[actionName]['Keyboard Shortcut'] as TCmdkKeyMap
+
+          const key = _cmdk.key.length === 0 ? '' : (_cmdk.key.length === 1 ? 'Key' : '') + _cmdk.key[0].toUpperCase() + _cmdk.key.slice(1)
+          if (cmdk.cmd === _cmdk.cmd && cmdk.shift === _cmdk.shift && cmdk.alt === _cmdk.alt && cmdk.key === key) {
+            action = actionName
+            break
+          }
+        }
+        if (action === null) return
+
+        LogAllow && console.log('action to be run by cmdk: ', action)
+        setCurrentCommand({ action })
+      })
+
+      setLoading(false)
     })
 
     return () => {
       contentRef?.removeEventListener('load', loadListener)
     }
+  }, [contentRef, cmdkReferenceData])
+
+  useEffect(() => {
+    LogAllow && console.log('iframe load started..')
+    setLoading(true)
   }, [file.inAppContent])
 
-  return (
+  return <>
+    {
+      loading &&
+      <div
+        className={cx(
+          'text-s',
+          'align-center',
+        )}
+        style={{
+          position: "absolute",
+          width: "100%",
+          height: "100%",
+          zIndex: 1,
+        }}
+      >
+        loading..
+      </div>
+    }
     <iframe
       ref={setContentRef}
       srcDoc={file.inAppContent}
       style={{ position: "absolute", width: "100%", height: "100%" }}
     />
-  )
+  </>
 }

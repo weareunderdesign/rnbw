@@ -1292,7 +1292,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           break
       }
     }
-  }, [currentCommand.changed])
+  }, [currentCommand])
 
   // handlers
   const onActions = useCallback(() => {
