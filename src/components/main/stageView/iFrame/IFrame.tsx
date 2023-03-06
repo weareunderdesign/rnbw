@@ -2,6 +2,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from 'react';
 
@@ -58,10 +59,10 @@ export const IFrame = (props: IFrameProps) => {
   const { workspace, project, file } = useSelector(navigatorSelector)
 
   const [contentRef, setContentRef] = useState<HTMLIFrameElement | null>(null)
-  const _document = contentRef?.contentWindow?.document
-  const htmlNode = _document?.documentElement
-  const headNode = _document?.head
-  const bodyNode = _document?.body
+  const _document = useMemo(() => contentRef?.contentWindow?.document, [contentRef])
+  const htmlNode = useMemo(() => _document?.documentElement, [_document])
+  const headNode = useMemo(() => _document?.head, [_document])
+  const bodyNode = useMemo(() => _document?.body, [_document])
 
   const onMouseEnter = useCallback((e: MouseEvent) => {
     interface _EventTarget extends EventTarget { className?: string }
@@ -104,7 +105,6 @@ export const IFrame = (props: IFrameProps) => {
       onMouseEnter(e)
     }
     _document?.addEventListener('mouseenter', onMouseEnterListener)
-    // htmlNode?.addEventListener('mouseenter', onMouseEnterListener)
 
     const onMouseLeaveListener = (e: MouseEvent) => {
       onMouseLeave(e)
@@ -136,48 +136,13 @@ export const IFrame = (props: IFrameProps) => {
   }, [htmlNode, _document])
 
   useEffect(() => {
-    /* if (file.type === 'html') {
-      const settings = props.info as THtmlSettings
-      let pageHtml = ''
-      if (settings.html) {
-        const node = nodeTree[settings.html]
-        const data = node.data as THtmlNodeData
-        pageHtml = data.innerHtml
-        for (const attrName in data.attribs) {
-          const attrValue = data.attribs[attrName]
-          htmlNode?.setAttribute(attrName, attrValue)
-        }
-      }
-      if (settings.head) {
-        const node = nodeTree[settings.head]
-        const data = node.data as THtmlNodeData
-        for (const attrName in data.attribs) {
-          const attrValue = data.attribs[attrName]
-          headNode?.setAttribute(attrName, attrValue)
-        }
-      }
-      if (settings.body) {
-        const node = nodeTree[settings.body]
-        const data = node.data as THtmlNodeData
-        for (const attrName in data.attribs) {
-          const attrValue = data.attribs[attrName]
-          bodyNode?.setAttribute(attrName, attrValue)
-        }
-      }
-    } */
+    console.log('file info', props.info)
   }, [props.info])
-
-  useEffect(() => {
-    // htmlNode?.remove()
-    // headNode?.remove()
-    // bodyNode?.remove()
-    console.log('file content changed - need to reset document', file.content)
-    _document?.write(file.content)
-  }, [file.content])
 
   return (
     <iframe
       ref={setContentRef}
+      srcDoc={file.content}
       style={{ position: "absolute", width: "100%", height: "100%" }}
     />
   )
