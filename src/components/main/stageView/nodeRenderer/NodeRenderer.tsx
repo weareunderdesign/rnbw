@@ -91,14 +91,9 @@ export default function NodeRenderer({ id }: NodeRendererProp) {
   const Tag = useMemo<keyof JSX.IntrinsicElements>(() => {
     if (node === undefined || node.name === 'text') return '' as keyof JSX.IntrinsicElements
 
-    return false ? (node.name === 'html' ? 'div' :
-      node.name === 'head' ? 'div' :
-        node.name === 'body' ? 'div' :
-          node.name) as keyof JSX.IntrinsicElements :
-      node.name as keyof JSX.IntrinsicElements
-
+    return node.name as keyof JSX.IntrinsicElements
   }, [node])
-  const abbr = useMemo<boolean>(() => {
+  const isEmptyTag = useMemo<boolean>(() => {
     if (node === undefined) return false
 
     const data = htmlReferenceData.elements[node.name]
@@ -153,11 +148,12 @@ export default function NodeRenderer({ id }: NodeRendererProp) {
 
     setInnerHtml((e.target as HTMLElement).innerHTML)
   }, [])
-  const onTextEdit = (innerHtml: string) => {
+  const onTextEdit = () => {
+    console.log(innerHtml)
   }
   useEffect(() => {
     if (id !== focusedItem) {
-      contentEditable === true && onTextEdit(innerHtml)
+      contentEditable === true && onTextEdit()
       setContentEditable(false)
     } else {
       // do nothing
@@ -165,24 +161,43 @@ export default function NodeRenderer({ id }: NodeRendererProp) {
   }, [focusedItem])
 
   return <>
-    {node !== undefined && !(node.data as THtmlNodeData).isFormatText && (
-      node.name === RootNodeUid ? node.children.map(c_uid => <NodeRenderer key={c_uid} id={c_uid}></NodeRenderer>) :
-        node.name === '!doctype' ? null :
-          abbr ? <Tag {...attribs} /> :
-            node.name === 'img' ? <Tag
-              {...attribs}
-              className={attribs.className === undefined ? className : `${attribs.className} ${className}`}
+    {node !== undefined && !(node.data as THtmlNodeData).isFormatText && node.data.type !== 'script' && (
 
-              onMouseMove={onMouseMove}
-              onClick={onClick}
-              onDoubleClick={onDoubleClick}
+      (node.name === RootNodeUid || node.uid === file.info?.head || node.uid === file.info?.body) ?
+        node.children.map(c_uid => <NodeRenderer key={c_uid} id={c_uid}></NodeRenderer>) :
 
-              suppressContentEditableWarning={true}
-              contentEditable={contentEditable}
-              onInput={onInput}
-            /> :
-              node.name === 'comment' ? null :
-                node.name === 'text' ? ((node.data as THtmlNodeData).data) :
+        node.name === '!doctype' || node.name === 'comment' ? null :
+          node.name === 'text' ? ((node.data as THtmlNodeData).data) :
+
+            isEmptyTag ? <Tag {...attribs} /> :
+
+              node.data.isWebComponent ? <Tag
+                {...{
+                  ...attribs,
+                  class: attribs.className === undefined ? className : `${attribs.className} ${className}`
+                }}
+
+                onMouseMove={onMouseMove}
+                onClick={onClick}
+                onDoubleClick={onDoubleClick}
+
+                suppressContentEditableWarning={true}
+                contentEditable={contentEditable}
+                onInput={onInput}
+              /> :
+
+                node.name === 'img' ? <Tag
+                  {...attribs}
+                  className={attribs.className === undefined ? className : `${attribs.className} ${className}`}
+
+                  onMouseMove={onMouseMove}
+                  onClick={onClick}
+                  onDoubleClick={onDoubleClick}
+
+                  suppressContentEditableWarning={true}
+                  contentEditable={contentEditable}
+                  onInput={onInput}
+                /> :
                   node.name === 'div' ? <>
                     {true ?
                       <Tag

@@ -3,7 +3,6 @@ import React, {
   useContext,
   useEffect,
   useRef,
-  useState,
 } from 'react';
 
 import cx from 'classnames';
@@ -12,9 +11,9 @@ import {
   useSelector,
 } from 'react-redux';
 import { Panel } from 'react-resizable-panels';
-import ReactShadowRoot from 'react-shadow-root';
 
 import {
+  NodeInAppAttribName,
   NodeUidSplitterRegExp,
   RootNodeUid,
 } from '@_constants/main';
@@ -33,7 +32,6 @@ import {
 
 import { StageViewContext } from './context';
 import IFrame from './iFrame';
-import NodeRenderer from './nodeRenderer';
 import { StageViewProps } from './types';
 
 export default function StageView(props: StageViewProps) {
@@ -92,10 +90,7 @@ export default function StageView(props: StageViewProps) {
   const stageViewRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     // skip its own state change
-    if (focusedItemRef.current === focusedItem) {
-      focusedItemRef.current = ''
-      return
-    }
+    if (focusedItemRef.current === focusedItem) return
 
     // validate
     if (stageViewRef.current === null) return
@@ -103,16 +98,14 @@ export default function StageView(props: StageViewProps) {
     if (focusedNode === undefined) return
 
     // scrollTo
-    const focusedComponent = stageViewRef.current.shadowRoot?.querySelector(`${focusedItem.replace(NodeUidSplitterRegExp, '-')}`)
-    setTimeout(() => focusedComponent?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' }), 0)
+    const stageViewDoc = stageViewRef.current.querySelector('iframe')?.contentWindow?.document
+    const selector = `[${NodeInAppAttribName}="${focusedItem.replace(NodeUidSplitterRegExp, '-')}"]`
+    const focusedComponent = stageViewDoc?.querySelector(selector)
+    focusedComponent?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' })
   }, [focusedItem])
 
   // select -> focusedItem
   const setFocusedItem = useCallback((uid: TNodeUid) => {
-    // focus NodeTreeView - item
-    const focusedComponent = document.getElementById(`NodeTreeView-${uid}`)
-    focusedComponent?.focus()
-
     // validate
     if (focusedItem === uid || validNodeTree[uid] === undefined) return
 
@@ -144,9 +137,6 @@ export default function StageView(props: StageViewProps) {
   const onPanelClick = useCallback((e: React.MouseEvent) => {
     setActivePanel('stage')
   }, [])
-
-  // loading flag
-  const [loading, setLoading] = useState<boolean>(false)
   // -------------------------------------------------------------- other --------------------------------------------------------------
 
 
@@ -167,13 +157,7 @@ export default function StageView(props: StageViewProps) {
           onClick={onPanelClick}
           ref={stageViewRef}
         >
-          {false ? <>
-            <ReactShadowRoot>
-              <NodeRenderer id={RootNodeUid}></NodeRenderer>
-            </ReactShadowRoot>
-          </> : <>
-            <IFrame />
-          </>}
+          <IFrame />
         </div>
       </Panel>
     </StageViewContext.Provider>

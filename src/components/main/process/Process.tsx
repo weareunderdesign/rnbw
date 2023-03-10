@@ -2,7 +2,6 @@ import React, {
   useCallback,
   useContext,
   useEffect,
-  useRef,
 } from 'react';
 
 import {
@@ -11,22 +10,22 @@ import {
 } from 'react-redux';
 
 import {
-  AutoSave,
-  FileAutoSaveInterval,
-  LogAllow,
+  NodeInAppAttribName,
+  NodeUidSplitter,
   RainbowAppName,
   RootNodeUid,
 } from '@_constants/main';
 import {
+  getNodeEntryName,
   parseFile,
   serializeFile,
+  sortNodeUidsByBfs,
 } from '@_node/apis';
+import { THtmlParserResponse } from '@_node/html';
 import {
-  parseHtml,
-  THtmlNodeData,
-  THtmlParserResponse,
-} from '@_node/html';
-import { TNodeUid } from '@_node/types';
+  TNodeTreeData,
+  TNodeUid,
+} from '@_node/types';
 import {
   clearFNState,
   expandFNNode,
@@ -38,12 +37,13 @@ import {
   MainContext,
   navigatorSelector,
   selectFNNode,
-  setCurrentFileContent,
-  setCurrentFileInfo,
+  setCurrentFile,
 } from '@_redux/main';
-import { verifyFileHandlerPermission } from '@_services/main';
 
-import { TFile } from '../../../types/main';
+import {
+  TFileInfo,
+  TFileType,
+} from '../../../types/main';
 import { ProcessProps } from './types';
 
 export default function Process(props: ProcessProps) {
@@ -84,6 +84,10 @@ export default function Process(props: ProcessProps) {
 
     // code view
     tabSize, setTabSize,
+
+    // stage-view
+    fileInfo, setFileInfo,
+    hasSameScript, setHasSameScript,
   } = useContext(MainContext)
 
   // redux state
@@ -95,115 +99,218 @@ export default function Process(props: ProcessProps) {
   const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
 
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
-  const isHms = useRef<boolean>(false)
-  const isDoubleValidNodeTree = useRef<boolean>(false)
-
-  // set rnbw app title and favicon from the current opened file
+  // set app title and favicon
   useEffect(() => {
-    if (file.info) {
-      if (file.type === 'html') {
-        // set title
-        if (file.info.title) {
-          const titleNode = nodeTree[file.info.title]
-          const data = titleNode.data as THtmlNodeData
-          const title = data.innerHtml
-          window.document.title = title
-        } else {
-          window.document.title = RainbowAppName
-        }
+    if (file.type === 'html') {
+      // set title
+      window.document.title = getNodeEntryName(file.uid)
 
-        // set favicon
-        if (file.info.favicon.length) {
-          LogAllow && console.log('favicon', file.info.favicon[0])
-        } else {
-
-        }
+      // set favicon
+      if (file.info && file.info.favicon.length) {
+        // const favicon = file.info.favicon[0]
+      } else {
+        // no favion
       }
+    } else {
+      window.document.title = RainbowAppName
     }
   }, [file.info])
 
-  // content -> nodeTree
+  const getReferenceData = useCallback((fileType: TFileType) => {
+    return fileType === 'html' ? htmlReferenceData : htmlReferenceData
+  }, [htmlReferenceData])
+
+  // processor-file
   useEffect(() => {
-    if (updateOpt.parse !== true) {
-      // update context files store
-      if (openedFiles[file.uid]) {
-        const _file: TFile = { ...openedFiles[file.uid], content: file.content, changed: openedFiles[file.uid].orgContent !== file.content }
-        setOpenedFiles(_file)
+    if (file.uid === '') return
+
+    let _fileInfo: TFileInfo = null
+
+    if (updateOpt.parse === true && updateOpt.from === 'file') {
+      const _file = JSON.parse(JSON.stringify(file))
+      let _tree: TNodeTreeData = {}
+
+      const parsedRes = parseFile(_file.type, _file.content, getReferenceData(_file.type), osType)
+      if (_file.type === 'html') {
+        const { formattedContent, tree, info } = parsedRes as THtmlParserResponse
+        _fileInfo = info
+        _file.content = formattedContent
+        _file.changed = formattedContent !== _file.orgContent
+        _tree = tree
+        _file.info = info
+      } else {
+        // do nothing
       }
-      return
-    }
 
-    if (updateOpt.parse === true && updateOpt.from === 'hms') {
-      isHms.current = true
-    }
+      addRunningActions(['processor-nodeTree'])
+      setNodeTree(_tree)
 
-    const parseResult = parseFile(file.type, file.content, htmlReferenceData, osType)
-    setUpdateOpt({ parse: null, from: 'processor' })
+      setUpdateOpt({ parse: null, from: 'file' })
+      setTimeout(() => dispatch(setCurrentFile(_file)), 0)
 
-    let newFileContent = '', newFileInfo: any = null, newFileInAppContent = ''
-    if (file.type === 'html') {
-      const { formattedContent, inAppContent, tree, info } = parseResult as THtmlParserResponse
-      newFileContent = formattedContent
-      newFileInAppContent = inAppContent
-      newFileInfo = info
-      setNodeTree(tree)
-    } else {
-      setNodeTree({})
-    }
-
-    setTimeout(() => {
-      dispatch(setCurrentFileContent([newFileContent, newFileInAppContent]))
-      dispatch(setCurrentFileInfo(newFileInfo))
-    }, 0)
-
-    // update context files store
-    if (openedFiles[file.uid]) {
-      const _file: TFile = { ...openedFiles[file.uid], content: newFileContent, info: newFileInfo, changed: openedFiles[file.uid].orgContent !== newFileContent }
       setOpenedFiles(_file)
+    } else if (updateOpt.parse === true && updateOpt.from === 'hms') {
+      const _file = JSON.parse(JSON.stringify(file))
+      _fileInfo = _file.info
+      let _tree: TNodeTreeData = {}
+
+      const parsedRes = parseFile(_file.type, _file.content, getReferenceData(_file.type), osType)
+      if (_file.type === 'html') {
+        const { tree } = parsedRes as THtmlParserResponse
+        _tree = tree
+      } else {
+        // do nothing
+      }
+
+      addRunningActions(['processor-nodeTree'])
+      setNodeTree(_tree)
+
+      setOpenedFiles(_file)
+    } else if (updateOpt.parse === true && updateOpt.from === 'code') {
+      const _file = JSON.parse(JSON.stringify(file))
+      let _tree: TNodeTreeData = {}
+
+      const parsedRes = parseFile(_file.type, _file.content, getReferenceData(_file.type), osType)
+      if (_file.type === 'html') {
+        const { formattedContent, tree, info } = parsedRes as THtmlParserResponse
+        _fileInfo = info
+        _file.content = formattedContent
+        _file.changed = formattedContent !== _file.orgContent
+        _tree = tree
+        _file.info = info
+      } else {
+        // do nothing
+      }
+
+      addRunningActions(['processor-nodeTree'])
+      setNodeTree(_tree)
+
+      setUpdateOpt({ parse: null, from: 'code' })
+      setTimeout(() => dispatch(setCurrentFile(_file)), 0)
+
+      setOpenedFiles(_file)
+    } else {
+      // do nothing
     }
 
-    removeRunningActions(['processor-content'])
+    if (updateOpt.parse === true) {
+      // check if the script list changed
+      let _hasSameScript = true
+      if (fileInfo === null) {
+        _hasSameScript = false
+      } else {
+        const _curScripts = !_fileInfo ? [] : _fileInfo.scripts
+        const _orgScripts = fileInfo.scripts
+
+        const curScripts: string[] = []
+        const curScriptObj: { [uid: string]: boolean } = {}
+        _curScripts.map(script => {
+          const attribs = script.data.attribs
+          const uniqueStr = Object.keys(attribs)
+            .filter(attrName => attrName !== NodeInAppAttribName)
+            .sort((a, b) => a > b ? 1 : -1)
+            .map(attrName => {
+              return `${attrName}${NodeUidSplitter}${attribs[attrName]}`
+            })
+            .join(NodeUidSplitter)
+          curScripts.push(uniqueStr)
+          curScriptObj[uniqueStr] = true
+        })
+
+        const orgScripts: string[] = []
+        const orgScriptObj: { [uid: string]: boolean } = {}
+        _orgScripts.map(script => {
+          const attribs = script.data.attribs
+          const uniqueStr = Object.keys(attribs)
+            .filter(attrName => attrName !== NodeInAppAttribName)
+            .sort((a, b) => a > b ? 1 : -1)
+            .map(attrName => {
+              return `${attrName}${NodeUidSplitter}${attribs[attrName]}`
+            })
+            .join(NodeUidSplitter)
+          orgScripts.push(uniqueStr)
+          orgScriptObj[uniqueStr] = true
+        })
+
+        if (curScripts.length !== orgScripts.length) {
+          _hasSameScript = false
+        } else {
+          for (const script of curScripts) {
+            if (!orgScriptObj[script]) {
+              _hasSameScript = false
+              break
+            }
+          }
+        }
+      }
+      setHasSameScript(_hasSameScript)
+      setFileInfo(_fileInfo)
+    }
+
+    removeRunningActions(['processor-file'])
   }, [file.uid, file.content])
 
-  // nodeTree -> content
+  // processor-nodeTree
   useEffect(() => {
-    if (updateOpt.parse !== false) return
+    const _nodeTree: TNodeTreeData = JSON.parse(JSON.stringify(nodeTree))
+    const _validNodeTree: TNodeTreeData = {}
+
+    let uids: TNodeUid[] = Object.keys(_nodeTree)
+    uids = sortNodeUidsByBfs(uids)
+    uids.reverse()
+    uids.map((uid) => {
+      const node = _nodeTree[uid]
+
+      // validate
+      if (node.children.length !== 0) {
+        node.children = node.children.filter((c_uid) => {
+          return _nodeTree[c_uid].data.valid
+        })
+        node.isEntity = (node.children.length === 0)
+      }
+
+      // add only validated node
+      node.data.valid ? _validNodeTree[uid] = node : null
+    })
+
+    addRunningActions(['processor-validNodeTree'])
+    setValidNodeTree(_validNodeTree)
 
     if (updateOpt.parse === false && updateOpt.from === 'node') {
-      isDoubleValidNodeTree.current = true
-    }
+      const _file = JSON.parse(JSON.stringify(file))
 
-    const { content: newContent, inAppContent } = serializeFile(file.type, nodeTree, htmlReferenceData)
-    setUpdateOpt({ parse: null, from: 'processor' })
-    let newInfo: any = null
+      const newFileContent = serializeFile(file.type, nodeTree, getReferenceData(file.type))
+      _file.content = newFileContent
+      if (newFileContent !== _file.orgContent) {
+        _file.changed = true
+      }
 
-    if (file.type === 'html') {
-      const { formattedContent, inAppContent, tree, info } = parseHtml(newContent, htmlReferenceData, osType)
-      newInfo = info
-      setNodeTree(tree)
+      const parsedRes = parseFile(_file.type, newFileContent, getReferenceData(_file.type), osType)
+      if (_file.type === 'html') {
+        const { info } = parsedRes as THtmlParserResponse
+        _file.info = info
+      } else {
+        // do nothing
+      }
+
+      setUpdateOpt({ parse: null, from: 'node' })
+      setTimeout(() => dispatch(setCurrentFile(_file)), 0)
+
+      setOpenedFiles(_file)
     } else {
-      setNodeTree({})
+      // do nothing
     }
-
-    setTimeout(() => {
-      dispatch(setCurrentFileContent([newContent, inAppContent]))
-      dispatch(setCurrentFileInfo(newInfo))
-    }, 0)
 
     removeRunningActions(['processor-nodeTree'])
   }, [nodeTree])
 
-  // validNodeTree -> validate fn tree view state
+  // processor-validNodeTree
   useEffect(() => {
-    // skip if it's hms
-    if (isHms.current === true) {
-      isHms.current = false
-      return
-    }
-
     if (updateOpt.parse === null && updateOpt.from === 'file') {
-      dispatch(expandFNNode(Object.keys(validNodeTree)))
-    } else {
+      dispatch(clearFNState())
+      // dispatch(expandFNNode(Object.keys(validNodeTree)))
+      removeRunningActions(['processor-validNodeTree'])
+    } else if (updateOpt.parse === null && updateOpt.from === 'code') {
       const _focusedItem: TNodeUid = validNodeTree[focusedItem] === undefined ? RootNodeUid : focusedItem
       const _expandedItems = expandedItems.filter((uid) => {
         return validNodeTree[uid] !== undefined && validNodeTree[uid].isEntity === false
@@ -211,90 +318,17 @@ export default function Process(props: ProcessProps) {
       const _selectedItems = selectedItems.filter((uid) => {
         return validNodeTree[uid] !== undefined
       })
-
       dispatch(clearFNState())
       dispatch(focusFNNode(_focusedItem))
       dispatch(expandFNNode(_expandedItems))
       dispatch(selectFNNode(_selectedItems))
-    }
 
-    if (isDoubleValidNodeTree.current === true) {
-      isDoubleValidNodeTree.current = false
-      return
+      setTimeout(() => removeRunningActions(['processor-validNodeTree']), 0)
+    } else {
+      removeRunningActions(['processor-validNodeTree'], false)
     }
-
-    setTimeout(() => removeRunningActions(['processor-validNodeTree']), 0)
   }, [validNodeTree])
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
-
-  // auto-save with debounce
-  const fsTimeout = useRef<NodeJS.Timeout | null>(null)
-  const saveFileContentToFs = useCallback(async () => {
-    setPending(true)
-
-    // get the current file handler
-    let handler = ffHandlers[file.uid]
-    if (handler === undefined) {
-      fsTimeout.current = null
-      setPending(false)
-      return
-    }
-
-    // verify permission
-    if (await verifyFileHandlerPermission(handler) === false) {
-      addMessage({
-        type: 'error',
-        content: 'auto save failed cause of invalid handler',
-      })
-      fsTimeout.current = null
-      setPending(false)
-      return
-    }
-
-    // update file content
-    try {
-      const writableStream = await (handler as FileSystemFileHandle).createWritable()
-      await writableStream.write(file.content)
-      await writableStream.close()
-
-      addMessage({
-        type: 'success',
-        content: 'Saved successfully',
-      })
-
-      // update context files store
-      const _file: TFile = { ...openedFiles[file.uid], orgContent: file.content, content: file.content, changed: false }
-      setOpenedFiles(_file)
-    } catch (err) {
-      addMessage({
-        type: 'error',
-        content: 'error occurred while auto-saving',
-      })
-    }
-
-    fsTimeout.current = null
-    setPending(false)
-  }, [openedFiles, setOpenedFiles, ffHandlers, file.uid, file.content])
-
-  // set Auto-Save
-  useEffect(() => {
-    if (!AutoSave) return
-
-    fsTimeout.current !== null && clearTimeout(fsTimeout.current)
-    fsTimeout.current = setTimeout(saveFileContentToFs, FileAutoSaveInterval)
-  }, [file.content])
-
-  // do actions
-  useEffect(() => {
-    // cmdk actions handle
-    switch (currentCommand.action) {
-      case 'Save':
-        // saveFileContentToFs()
-        break
-      default:
-        break
-    }
-  }, [currentCommand])
 
   return <></>
 }

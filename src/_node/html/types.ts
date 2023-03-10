@@ -1,4 +1,7 @@
+import { DOMElement } from 'react';
+
 import {
+  TNode,
   TNodeTreeData,
   TNodeUid,
 } from '../';
@@ -10,19 +13,18 @@ export type THtmlNodeData = {
   valid: boolean,
   isFormatText: boolean,
 
+  isWebComponent: boolean,
+
   type: string,
   name: string,
   data: string,
   attribs: THtmlTagAttributes,
 
+  html: string,
   startLineNumber: number,
   startColumn: number,
   endLineNumber: number,
   endColumn: number,
-
-  html: string,
-  inAppHtml: string,
-  innerHtml: string,
 
   hasOrgClass: boolean,
 }
@@ -39,7 +41,6 @@ export type THtmlTagAttributes = {
  */
 export type THtmlParserResponse = {
   formattedContent: string,
-  inAppContent: string,
   tree: TNodeTreeData,
   info: THtmlSettings,
 }
@@ -47,9 +48,11 @@ export type THtmlParserResponse = {
 /**
  * html processable node type - dom element
  */
-export interface THtmlProcessableNode extends HTMLElement {
+export interface THtmlProcessableNode extends DOMElement<any, HTMLElement> {
   valid: boolean,
   uid: TNodeUid,
+
+  [attrName: string]: any,
 }
 
 /**
@@ -89,6 +92,8 @@ export type THtmlSettings = {
   html?: string,
   head?: string,
   body?: string,
+
+  scripts: TNode[],
 
   title?: string,
   favicon: string[],

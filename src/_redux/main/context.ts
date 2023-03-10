@@ -13,6 +13,7 @@ import {
   TClipboardData,
   TFile,
   TFileAction,
+  TFileInfo,
   TPanelContext,
 } from '@_types/main';
 
@@ -115,4 +116,11 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   // panel-resize
   panelResizing: false,
   setPanelResizing: (resizing: boolean) => { },
+
+  // stage-view
+  fileInfo: null,
+  setFileInfo: (_fileInfo: TFileInfo) => { },
+
+  hasSameScript: false,
+  setHasSameScript: (_hasSameScript: boolean) => { },
 })

@@ -17,6 +17,7 @@ import {
   TCmdkReferenceData,
   TFile,
   TFileAction,
+  TFileInfo,
   TPanelContext,
   TProject,
   TWorkspace,
@@ -118,6 +119,13 @@ export type TMainContext = {
   // panel-resize
   panelResizing: boolean,
   setPanelResizing: (resizing: boolean) => void,
+
+  // stage-view
+  fileInfo: TFileInfo,
+  setFileInfo: (_fileInfo: TFileInfo) => void,
+
+  hasSameScript: boolean,
+  setHasSameScript: (_hasSameScript: boolean) => void,
 }
 
 /**

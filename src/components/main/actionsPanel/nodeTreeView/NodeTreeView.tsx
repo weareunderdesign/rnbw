@@ -29,12 +29,10 @@ import {
   moveNode,
   removeNode,
   replaceNode,
-  sortNodeUidsByBfs,
   validateNodeUidCollection,
 } from '@_node/index';
 import {
   TNode,
-  TNodeTreeData,
   TNodeUid,
 } from '@_node/types';
 import {
@@ -104,32 +102,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
 
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
-  // nodeTree -> validNodeTree
-  useEffect(() => {
-    const _nodeTree: TNodeTreeData = JSON.parse(JSON.stringify(nodeTree))
-    const _validNodeTree: TNodeTreeData = {}
-
-    let uids: TNodeUid[] = Object.keys(_nodeTree)
-    uids = sortNodeUidsByBfs(uids)
-    uids.reverse()
-    uids.map((uid) => {
-      const node = _nodeTree[uid]
-
-      // validate
-      if (node.children.length !== 0) {
-        node.children = node.children.filter((c_uid) => {
-          return _nodeTree[c_uid].data.valid
-        })
-        node.isEntity = (node.children.length === 0)
-      }
-
-      // add only validated node
-      node.data.valid ? _validNodeTree[uid] = node : null
-    })
-
-    setValidNodeTree(_validNodeTree)
-  }, [nodeTree])
-
   // validNodeTree -> nodeTreeViewData
   const nodeTreeViewData = useMemo(() => {
     let data: TreeViewData = {}
@@ -225,13 +197,15 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     const uids = selectedItems.filter((uid) => uid !== RootNodeUid && validNodeTree[uid] !== undefined)
     if (uids.length === 0) return
 
-    addRunningActions(['processor-nodeTree', 'processor-validNodeTree'])
+    addRunningActions(['processor-nodeTree'])
 
     // duplicate the node
     const tree = JSON.parse(JSON.stringify(nodeTree))
     const res = duplicateNode(tree, uids, osType, 'html', tabSize)
+
     setUpdateOpt({ parse: false, from: 'node' })
     setNodeTree(res.tree)
+
     dispatch(updateFNTreeViewState(res))
   }, [selectedItems, validNodeTree, nodeTree, osType, tabSize])
   const _copy = useCallback((_uids: TNodeUid[], targetUid: TNodeUid, isBetween: boolean, position: number) => {
@@ -473,24 +447,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   // panel focus handler
   const onPanelClick = useCallback((e: React.MouseEvent) => {
     setActivePanel('node')
-    return
-
-    addRunningActions(['nodeTreeView-focus'])
-
-    const uid = RootNodeUid
-
-    // validate
-    if (focusedItem === uid || validNodeTree[uid] === undefined) {
-      removeRunningActions(['nodeTreeView-focus'], false)
-      return
-    }
-
-    focusedItemRef.current = uid
-    dispatch(selectFNNode([]))
-    dispatch(focusFNNode(uid))
-
-    removeRunningActions(['nodeTreeView-focus'])
-  }, [focusedItem, validNodeTree])
+  }, [])
   // -------------------------------------------------------------- other --------------------------------------------------------------
 
   return <>
@@ -499,10 +456,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
         id="NodeTreeView"
         className={cx(
           'scrollable',
-          // (activePanel === 'node' && focusedItem === RootNodeUid) ? "outline outline-primary" : "",
         )}
         style={{
-          // padding: '1px 1px 1rem',
           pointerEvents: panelResizing ? 'none' : 'auto',
         }}
         onClick={onPanelClick}

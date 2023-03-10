@@ -4,14 +4,15 @@ import React, {
   useEffect,
   useState,
 } from 'react';
+import { createPortal } from 'react-dom';
 
-import cx from 'classnames';
 import { useSelector } from 'react-redux';
 
+import { LogAllow } from '@_constants/main';
 import {
-  LogAllow,
-  NodeInAppAttribName,
-} from '@_constants/main';
+  THtmlNodeData,
+  THtmlSettings,
+} from '@_node/html';
 import {
   MainContext,
   navigatorSelector,
@@ -19,6 +20,8 @@ import {
 import { getCommandKey } from '@_services/global';
 import { TCmdkKeyMap } from '@_types/main';
 
+import NodeRenderer from '../nodeRenderer';
+import { styles } from './styles';
 import { IFrameProps } from './types';
 
 export const IFrame = (props: IFrameProps) => {
@@ -59,6 +62,10 @@ export const IFrame = (props: IFrameProps) => {
 
     // panel-resize
     panelResizing,
+
+    // stage-view
+    fileInfo, setFileInfo,
+    hasSameScript, setHasSameScript,
   } = useContext(MainContext)
 
   // redux state
@@ -66,119 +73,128 @@ export const IFrame = (props: IFrameProps) => {
 
   const [contentRef, setContentRef] = useState<HTMLIFrameElement | null>(null)
 
-  const onMouseEnter = useCallback((e: MouseEvent) => {
-    interface _EventTarget extends EventTarget { className?: string }
-    const target: _EventTarget | null = e.target
-    const className = target?.className
+  const _document = contentRef?.contentWindow?.document
+  const htmlNode = _document?.documentElement
+  const headNode = _document?.head
+  const bodyNode = _document?.body
 
-    LogAllow && console.log('mouse enter', className)
-  }, [])
-  const onMouseLeave = useCallback((e: MouseEvent) => {
-    interface _EventTarget extends EventTarget { className?: string }
-    const target: _EventTarget | null = e.target
-    const className = target?.className
+  // enable cmdk on stage view
+  const keyDownListener = useCallback((e: KeyboardEvent) => {
+    // cmdk obj for the current command
+    const cmdk: TCmdkKeyMap = {
+      cmd: getCommandKey(e, osType),
+      shift: e.shiftKey,
+      alt: e.altKey,
+      key: e.code,
+      click: false,
+    }
 
-    LogAllow && console.log('mouse leave', className)
-  }, [])
-  const onMouseDown = useCallback((ele: HTMLElement) => {
-    const uid = ele.getAttribute(NodeInAppAttribName)
-    LogAllow && console.log('mouse down', uid)
-  }, [])
-  const onMouseUp = useCallback((e: MouseEvent) => {
-    interface _EventTarget extends EventTarget { className?: string }
-    const target: _EventTarget | null = e.target
-    const className = target?.className
+    // detect action
+    let action: string | null = null
+    for (const actionName in cmdkReferenceData) {
+      const _cmdk = cmdkReferenceData[actionName]['Keyboard Shortcut'] as TCmdkKeyMap
 
-    LogAllow && console.log('mouse up', className)
-  }, [])
-  const onDblClick = useCallback((e: MouseEvent) => {
-    interface _EventTarget extends EventTarget { className?: string }
-    const target: _EventTarget | null = e.target
-    const className = target?.className
+      const key = _cmdk.key.length === 0 ? '' : (_cmdk.key.length === 1 ? 'Key' : '') + _cmdk.key[0].toUpperCase() + _cmdk.key.slice(1)
+      if (cmdk.cmd === _cmdk.cmd && cmdk.shift === _cmdk.shift && cmdk.alt === _cmdk.alt && cmdk.key === key) {
+        action = actionName
+        break
+      }
+    }
+    if (action === null) return
 
-    LogAllow && console.log('dbl click', className)
-  }, [])
-
-  const [loading, setLoading] = useState<boolean>(false)
-
+    LogAllow && console.log('action to be run by cmdk: ', action)
+    setCurrentCommand({ action })
+  }, [cmdkReferenceData])
   useEffect(() => {
-    let loadListener: () => void
-    contentRef?.addEventListener('load', loadListener = () => {
-      LogAllow && console.log('iframe loaded..')
+    htmlNode?.addEventListener('keydown', keyDownListener)
 
-      const bodyNode = contentRef.contentWindow?.document.body
-      const elements = bodyNode?.querySelectorAll('*')
-      elements?.forEach((ele) => {
-        (ele as HTMLElement).addEventListener('mousedown', (e: MouseEvent) => {
-          e.stopPropagation()
-          onMouseDown(ele as HTMLElement)
+    return () => htmlNode?.removeEventListener('keydown', keyDownListener)
+  }, [htmlNode, cmdkReferenceData])
+
+  // iframe render flag
+  useEffect(() => {
+    if (!fileInfo) return
+
+    !hasSameScript && setHasSameScript(true)
+  }, [hasSameScript])
+
+  // config html, head, body structure
+  useEffect(() => {
+    if (contentRef) {
+      contentRef.onload = () => {
+        setPending(false)
+      }
+
+      if (fileInfo && _document && htmlNode && headNode && bodyNode) {
+        const settings = fileInfo as THtmlSettings
+
+        // add css & js to iframe
+        const style = _document.createElement('style')
+        style.textContent = styles
+        headNode.appendChild(style)
+
+        settings.scripts.map(script => {
+          const scriptTag = _document.createElement('script')
+          const attribs = script.data.attribs
+          Object.keys(attribs).map(attrName => {
+            scriptTag.setAttribute(attrName, attribs[attrName])
+          })
+          if (settings.head && script.uid.startsWith(settings.head)) {
+            headNode.appendChild(scriptTag)
+          } else {
+            bodyNode.appendChild(scriptTag)
+          }
         })
-      })
 
-      const htmlNode = contentRef.contentWindow?.document.documentElement
-      const fullContent = htmlNode?.outerHTML
-      htmlNode?.addEventListener('keydown', (e: KeyboardEvent) => {
-        // cmdk obj for the current command
-        const cmdk: TCmdkKeyMap = {
-          cmd: getCommandKey(e, osType),
-          shift: e.shiftKey,
-          alt: e.altKey,
-          key: e.code,
-          click: false,
-        }
-
-        // detect action
-        let action: string | null = null
-        for (const actionName in cmdkReferenceData) {
-          const _cmdk = cmdkReferenceData[actionName]['Keyboard Shortcut'] as TCmdkKeyMap
-
-          const key = _cmdk.key.length === 0 ? '' : (_cmdk.key.length === 1 ? 'Key' : '') + _cmdk.key[0].toUpperCase() + _cmdk.key.slice(1)
-          if (cmdk.cmd === _cmdk.cmd && cmdk.shift === _cmdk.shift && cmdk.alt === _cmdk.alt && cmdk.key === key) {
-            action = actionName
-            break
+        // html
+        htmlNode.getAttributeNames().map(attrName => {
+          htmlNode.removeAttribute(attrName)
+        })
+        if (settings.html) {
+          const node = nodeTree[settings.html]
+          const data = node.data as THtmlNodeData
+          for (const attrName in data.attribs) {
+            const attrValue = data.attribs[attrName]
+            htmlNode.setAttribute(attrName, attrValue)
           }
         }
-        if (action === null) return
 
-        LogAllow && console.log('action to be run by cmdk: ', action)
-        setCurrentCommand({ action })
-      })
+        // head
+        headNode.getAttributeNames().map(attrName => {
+          headNode.removeAttribute(attrName)
+        })
+        if (settings.head) {
+          const { attribs } = nodeTree[settings.head].data as THtmlNodeData
+          Object.keys(attribs).map(attrName => {
+            headNode.setAttribute(attrName, attribs[attrName])
+          })
+        }
 
-      setLoading(false)
-    })
+        // body
+        bodyNode.getAttributeNames().map(attrName => {
+          bodyNode.removeAttribute(attrName)
+        })
+        if (settings.body) {
+          const { attribs } = nodeTree[settings.body].data as THtmlNodeData
+          Object.keys(attribs).map(attrName => {
+            bodyNode.setAttribute(attrName, attribs[attrName])
+          })
+        }
 
-    return () => {
-      contentRef?.removeEventListener('load', loadListener)
+        setPending(true)
+      }
     }
-  }, [contentRef, cmdkReferenceData])
-
-  useEffect(() => {
-    LogAllow && console.log('iframe load started..')
-    setLoading(true)
-  }, [file.inAppContent])
+  }, [contentRef])
 
   return <>
-    {
-      loading &&
-      <div
-        className={cx(
-          'text-s',
-          'align-center',
-        )}
-        style={{
-          position: "absolute",
-          width: "100%",
-          height: "100%",
-          zIndex: 1,
-        }}
+    {hasSameScript && <>
+      <iframe
+        ref={setContentRef}
+        style={{ position: "absolute", width: "100%", height: "100%" }}
       >
-        loading..
-      </div>
-    }
-    <iframe
-      ref={setContentRef}
-      srcDoc={file.inAppContent}
-      style={{ position: "absolute", width: "100%", height: "100%" }}
-    />
+        {file.info && headNode && createPortal(<NodeRenderer id={file.info.head || ''} />, headNode)}
+        {file.info && bodyNode && createPortal(<NodeRenderer id={file.info.body || ''} />, bodyNode)}
+      </iframe>
+    </>}
   </>
 }

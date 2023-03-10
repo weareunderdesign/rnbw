@@ -1,3 +1,1 @@
-export type IFrameProps = {
-  [propName: string]: any,
-}
+export type IFrameProps = {}

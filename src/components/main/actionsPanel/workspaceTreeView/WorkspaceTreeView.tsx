@@ -49,7 +49,6 @@ import {
   sortNodesByContext,
   validateNodeUidCollection,
 } from '@_node/apis';
-import { parseHtml } from '@_node/html';
 import {
   TNode,
   TNodeTreeData,
@@ -57,7 +56,6 @@ import {
   TNormalNodeData,
 } from '@_node/types';
 import {
-  clearFNState,
   clearMainState,
   collapseFFNode,
   expandFFNode,
@@ -131,6 +129,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
     // panel-resize
     panelResizing,
+
+    // stage-view
+    fileInfo, setFileInfo,
   } = useContext(MainContext)
 
   // redux state
@@ -669,82 +670,64 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
     // load last sesison when it's already opened once
     if (openedFiles[uid]) {
-      const _file = openedFiles[uid]
-      const { formattedContent, inAppContent, tree, info } = parseHtml(_file.content, htmlReferenceData, osType)
-
-      setUpdateOpt({ parse: null, from: 'file' })
-
-      addRunningActions(['processor-validNodeTree'])
-      setNodeTree(tree)
-
-      dispatch(clearFNState())
-
-      setTimeout(() => dispatch(setCurrentFile(_file)), 0)
-
-      removeRunningActions(['fileTreeView-read'])
-      return
-    }
-
-    // verify handler permission
-    const handler = ffHandlers[uid] as FileSystemFileHandle
-    if (!(await verifyFileHandlerPermission(handler))) {
-      addMessage({
-        type: 'error',
-        content: 'Invalid file. Check if you have "read" permission for the file.',
-      })
-      removeRunningActions(['fileTreeView-read'], false)
-      return
-    }
-
-    // get file type (extension)
-    let fileType = getFileExtension(handler.name)
-    if (fileType !== '') fileType = fileType.slice(1)
-    fileType = ParsableFileTypes[fileType] ? fileType : 'unknown'
-
-    // read the file content and set to global state
-    try {
-      const fileEntry = await handler.getFile()
-      const content = await fileEntry.text()
       const _file: TFile = {
-        uid,
-        name: handler.name,
-        type: fileType as TFileType,
-        orgContent: content,
-        content: content,
-        inAppContent: content,
+        ...openedFiles[uid],
         info: null,
-        changed: false,
       }
 
-      // initial format code
-      if (fileType === 'html') {
-        const { formattedContent, inAppContent, tree, info } = parseHtml(content, htmlReferenceData, osType)
-        _file.inAppContent = inAppContent
-        if (content !== formattedContent) {
-          _file.content = formattedContent
-          _file.changed = true
-        }
-        _file.info = info
-        setUpdateOpt({ parse: null, from: 'file' })
+      addRunningActions(['processor-file'])
 
-        addRunningActions(['processor-validNodeTree'])
-        setNodeTree(tree)
-      }
-
-      dispatch(clearFNState())
-
-      // add to opened file list and current redux file
-      setOpenedFiles(_file)
+      setFileInfo(file.info)
+      setUpdateOpt({ parse: true, from: 'file' })
       setTimeout(() => dispatch(setCurrentFile(_file)), 0)
-    } catch (err) {
-      addMessage({
-        type: 'error',
-        content: 'Error occurred while reading the file content.',
-      })
+    } else {
+      // verify handler permission
+      const handler = ffHandlers[uid] as FileSystemFileHandle
+      if (!(await verifyFileHandlerPermission(handler))) {
+        addMessage({
+          type: 'error',
+          content: 'Invalid file. Check if you have "read" permission for the file.',
+        })
+        removeRunningActions(['fileTreeView-read'], false)
+        return
+      }
+
+      // get file type (extension)
+      let fileType = getFileExtension(handler.name)
+      if (fileType !== '') fileType = fileType.slice(1)
+      fileType = ParsableFileTypes[fileType] ? fileType : 'unknown'
+
+      // read the file content and set to global state
+      try {
+        const fileEntry = await handler.getFile()
+        const content = await fileEntry.text()
+        const _file: TFile = {
+          uid,
+          name: handler.name,
+          type: fileType as TFileType,
+          orgContent: content,
+          content: content,
+          info: null,
+          changed: false,
+        }
+
+        addRunningActions(['processor-file'])
+
+        setFileInfo(file.info)
+        setUpdateOpt({ parse: true, from: 'file' })
+        setTimeout(() => dispatch(setCurrentFile(_file)), 0)
+      } catch (err) {
+        addMessage({
+          type: 'error',
+          content: 'Error occurred while reading the file content.',
+        })
+        removeRunningActions(['fileTreeView-read'], false)
+        return
+      }
     }
 
     removeRunningActions(['fileTreeView-read'])
-  }, [invalidNodes, ffTree, ffHandlers, osType, file.uid, setOpenedFiles])
+  }, [invalidNodes, ffTree, ffHandlers, file.uid, openedFiles])
 
   /**
    * general move api - for rename, copy/paste(duplicate), cut/paste(move)
@@ -1515,23 +1498,7 @@ This action cannot be undone!`
   // panel focus handler
   const onPanelClick = useCallback((e: React.MouseEvent) => {
     setActivePanel('file')
-    return
-
-    addRunningActions(['fileTreeView-focus'])
-
-    const uid = RootNodeUid
-
-    // validate
-    if (focusedItem === uid || ffTree[uid] === undefined) {
-      removeRunningActions(['fileTreeView-focus'], false)
-      return
-    }
-
-    dispatch(selectFFNode([]))
-    dispatch(focusFFNode(uid))
-
-    removeRunningActions(['fileTreeView-focus'])
-  }, [focusedItem, ffTree])
+  }, [])
 
   // panel size handler
   const [panelSize, setPanelSize] = useState(200 / window.innerHeight * 100)
@@ -1551,10 +1518,8 @@ This action cannot be undone!`
         id="FileTreeView"
         className={cx(
           'scrollable',
-          // (activePanel === 'file' && focusedItem === RootNodeUid) ? "outline outline-primary" : "",
         )}
         style={{
-          // padding: '1px 1px 1rem',
           pointerEvents: panelResizing ? 'none' : 'auto',
         }}
         onClick={onPanelClick}

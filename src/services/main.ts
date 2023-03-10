@@ -24,7 +24,8 @@ export const getFileSystemWatchInterval = (fsType: TFileSystemType): number => {
  */
 export const getTemporaryFileExtension = (osType: TOsType) => {
   return osType === 'Windows' ? '.crswap' :
-    osType === 'Mac' ? '.crswap' : ''
+    osType === 'Mac' ? '.crswap' :
+      osType === 'Linux' ? '.crswap' : ''
 }
 
 /**
@@ -39,7 +40,8 @@ export const getTemporaryFileNodeUid = (node: TNode, newName: string, osType: TO
   const newUid = `${node.parentUid}${NodeUidSplitter}${newName}${data.type === '*folder' ? '' : `.${data.type}`}`
 
   const ext = osType === 'Windows' ? '.crswap' :
-    osType === 'Mac' ? '.crswap' : ''
+    osType === 'Mac' ? '.crswap' :
+      osType === 'Linux' ? '.crswap' : ''
 
   return data.type === '*folder' ? `${newUid}` : `${newUid}${ext}`
 }

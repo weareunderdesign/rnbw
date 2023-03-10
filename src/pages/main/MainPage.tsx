@@ -88,6 +88,7 @@ import {
   TCmdkReference,
   TCmdkReferenceData,
   TFileAction,
+  TFileInfo,
   TPanelContext,
   TSession,
 } from '@_types/main';
@@ -338,6 +339,10 @@ export default function MainPage(props: MainPageProps) {
 
   // panel-resize
   const [panelResizing, setPanelResizing] = useState<boolean>(false)
+
+  // stage-view
+  const [fileInfo, setFileInfo] = useState<TFileInfo>(null)
+  const [hasSameScript, setHasSameScript] = useState<boolean>(true)
   // -------------------------------------------------------------- main context --------------------------------------------------------------
 
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
@@ -523,9 +528,10 @@ Your changes will be lost if you don't save them.`
     setFFAction(fileAction)
     setIsHms(true)
 
+    setFileInfo(file.info)
     setUpdateOpt({ parse: true, from: 'hms' })
     setTimeout(() => dispatch({ type: 'main/undo' }), 0)
-  }, [pending, fileAction, pastLength])
+  }, [pending, fileAction, pastLength, file.info])
   const onRedo = useCallback(() => {
     if (pending) return
 
@@ -533,9 +539,10 @@ Your changes will be lost if you don't save them.`
 
     setIsHms(false)
 
+    setFileInfo(file.info)
     setUpdateOpt({ parse: true, from: 'hms' })
     setTimeout(() => dispatch({ type: 'main/redo' }), 0)
-  }, [pending, futureLength])
+  }, [pending, futureLength, file.info])
 
   // reset fileAction in the new history
   useEffect(() => {
@@ -558,6 +565,8 @@ Your changes will be lost if you don't save them.`
     LogAllow && console.log('navigator: ', navigator.userAgent)
     if (navigator.userAgent.indexOf('Mac OS X') !== -1) {
       setOsType('Mac')
+    } else if (navigator.userAgent.indexOf('Linux') !== -1) {
+      setOsType('Linux')
     } else {
       setOsType('Windows')
     }
@@ -725,6 +734,7 @@ Your changes will be lost if you don't save them.`
 
     // set cmdk map
     setCmdkReferenceData(_cmdkReferenceData)
+    LogAllow && console.log('cmdk map: ', _cmdkReferenceData)
 
     removeRunningActions(['detect-os', 'reference-files', 'reference-html-elements', 'reference-cmdk-jumpstart', 'reference-cmdk-actions'], false)
   }, [])
@@ -856,7 +866,7 @@ Your changes will be lost if you don't save them.`
       window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", setSystemTheme)
     }
 
-    return () => { window.matchMedia("(prefers-color-scheme: dark)").removeEventListener('change', setSystemTheme) }
+    return () => window.matchMedia("(prefers-color-scheme: dark)").removeEventListener('change', setSystemTheme)
   }, [])
 
   // active panel/element
@@ -992,6 +1002,13 @@ Your changes will be lost if you don't save them.`
         // panel-resize
         panelResizing,
         setPanelResizing,
+
+        // stage-view
+        fileInfo,
+        setFileInfo,
+
+        hasSameScript,
+        setHasSameScript,
       }}
     >
       {/* process */}

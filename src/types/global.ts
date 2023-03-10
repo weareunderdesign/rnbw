@@ -1,7 +1,7 @@
 /**
  * operating system type
  */
-export type TOsType = 'Windows' | 'Mac'
+export type TOsType = 'Windows' | 'Mac' | 'Linux'
 
 /**
  * rinbow app theme

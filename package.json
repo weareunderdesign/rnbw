@@ -34,7 +34,6 @@
     "react-redux": "^8.0.5",
     "react-resizable": "^3.0.4",
     "react-resizable-panels": "^0.0.36",
-    "react-shadow-root": "^6.2.0",
     "redux-injectors": "^2.1.0",
     "redux-saga": "^1.2.1",
     "redux-undo": "^1.0.1"

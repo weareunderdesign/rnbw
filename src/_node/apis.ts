@@ -640,7 +640,6 @@ export const parseFile = (type: TFileType, content: string, referenceData: TNode
   } else {
     return {
       formattedContent: '',
-      inAppContent: '',
       tree: {},
     }
   }
@@ -653,13 +652,10 @@ export const parseFile = (type: TFileType, content: string, referenceData: TNode
  * @param referenceData 
  * @returns 
  */
-export const serializeFile = (type: TFileType, tree: TNodeTreeData, referenceData: TNodeReferenceData): {
-  content: string,
-  inAppContent: string,
-} => {
+export const serializeFile = (type: TFileType, tree: TNodeTreeData, referenceData: TNodeReferenceData): string => {
   if (type === "html") {
-    const { html, inAppHtml } = serializeHtml(tree, referenceData as THtmlReferenceData)
-    return { content: html, inAppContent: inAppHtml }
+    const { html } = serializeHtml(tree, referenceData as THtmlReferenceData)
+    return html
   }
-  return { content: '', inAppContent: '' }
+  return ''
 }

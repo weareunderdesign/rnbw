@@ -9,4 +9,5 @@ export const SystemFiles: {
     '.git': true,
   },
   'Mac': {},
+  'Linux': {},
 }

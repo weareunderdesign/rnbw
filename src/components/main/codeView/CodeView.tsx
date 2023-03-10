@@ -17,7 +17,6 @@ import { Panel } from 'react-resizable-panels';
 import {
   CodeViewSyncDelay,
   DefaultTabSize,
-  LogAllow,
 } from '@_constants/main';
 import { THtmlNodeData } from '@_node/index';
 import {
@@ -99,7 +98,7 @@ export default function CodeView(props: CodeViewProps) {
     // validate
     if (monacoRef.current === null) return
 
-    let node = validNodeTree[focusedItem]
+    const node = validNodeTree[focusedItem]
     if (node === undefined) return
 
     // select and reveal the node's code sector
@@ -135,13 +134,10 @@ export default function CodeView(props: CodeViewProps) {
     // skip the same content
     if (file.content === codeContent.current) return
 
-    LogAllow && console.log('codeView-content')
+    addRunningActions(['processor-file'])
 
     setUpdateOpt({ parse: true, from: 'code' })
-
-    addRunningActions(['processor-content', 'processor-validNodeTree'])
-
-    setTimeout(() => dispatch(setCurrentFileContent([codeContent.current])), 0)
+    setTimeout(() => dispatch(setCurrentFileContent(codeContent.current)), 0)
 
     reduxTimeout.current = null
   }, [file.content])
@@ -209,7 +205,6 @@ export default function CodeView(props: CodeViewProps) {
         id="CodeView"
         className={cx(
           'scrollable',
-          // activePanel === 'code' ? "outline outline-primary" : "",
         )}
         onClick={onPanelClick}
       >
