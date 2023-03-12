@@ -1164,15 +1164,18 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     dispatch(updateFFTreeViewState({ deletedUids: Object.keys(deletedUids) }))
 
     if (newOpen) {
+      removeOpenedFiles(...Object.keys(openedFiles))
+
       const nodeUidToOpen: TNodeUid | null = indexHtmlUid || firstHtmlUid
       return nodeUidToOpen
     }
-  }, [ffTree, temporaryNodes, expandedItemsObj, osType])
+  }, [ffTree, temporaryNodes, expandedItemsObj, osType, updateFF, openedFiles, removeOpenedFiles])
 
   // open project button handler
   const [watch, setWatch] = useState(true)
   const onImportProject = useCallback(async (fsType: TFileSystemType = 'local'): Promise<void> => {
     setWatch(false)
+
     if (fsType === 'local') {
       // open directory picker and get the project folde handle
       let projectHandle: FileSystemHandle
@@ -1206,6 +1209,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       }
     } else if (fsType === '') {
     }
+
     setWatch(true)
   }, [importLocalhostProject])
 
@@ -1810,7 +1814,7 @@ Your changes will be lost if you don't save them.`
                 setFFTree(tmpTree)
               }
               removeInvalidNodes(item.data.uid)
-            }, [invalidNodes, cb_renameFFNode, createFFNode, setTemporaryNodes, removeTemporaryNodes, removeInvalidNodes, ffTree, osType, ffHandlers, openedFiles]),
+            }, [invalidNodes, cb_renameFFNode, createFFNode, setTemporaryNodes, removeTemporaryNodes, removeInvalidNodes, ffTree, osType, ffHandlers, openedFiles, setOpenedFiles]),
 
             /* SELECT, FOCUS, EXPAND, COLLAPSE CALLBACK */
             onSelectItems: useCallback((items: TreeItemIndex[], treeId: string) => {

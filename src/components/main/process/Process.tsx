@@ -2,6 +2,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useRef,
 } from 'react';
 
 import {
@@ -121,6 +122,7 @@ export default function Process(props: ProcessProps) {
   }, [htmlReferenceData])
 
   // processor-file
+  const orgFileUid = useRef<TNodeUid>('')
   useEffect(() => {
     if (file.uid === '') return
 
@@ -196,7 +198,7 @@ export default function Process(props: ProcessProps) {
     if (updateOpt.parse === true) {
       // check if the script list changed
       let _hasSameScript = true
-      if (fileInfo === null) {
+      if (fileInfo === null || file.uid !== orgFileUid.current) {
         _hasSameScript = false
       } else {
         const _curScripts = !_fileInfo ? [] : _fileInfo.scripts
@@ -246,6 +248,8 @@ export default function Process(props: ProcessProps) {
       setHasSameScript(_hasSameScript)
       setFileInfo(_fileInfo)
     }
+
+    orgFileUid.current = file.uid
 
     removeRunningActions(['processor-file'])
   }, [file.uid, file.content])

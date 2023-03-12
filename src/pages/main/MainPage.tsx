@@ -167,7 +167,7 @@ export default function MainPage(props: MainPageProps) {
   const updateFF = useCallback((deletedUids: { [uid: TNodeUid]: boolean }, nodes: TNodeTreeData, handlers: { [uid: TNodeUid]: FileSystemHandle }) => {
     // handle deleted uids
     const _deletedUids = Object.keys(deletedUids)
-    _deletedUids.length && removeOpenedFiles(...Object.keys(deletedUids))
+    _deletedUids.length && removeOpenedFiles(..._deletedUids)
     if (deletedUids[file.uid]) {
       dispatch(removeCurrentFile())
       dispatch(clearFNState())
