@@ -49,7 +49,10 @@ import {
   sortNodesByContext,
   validateNodeUidCollection,
 } from '@_node/apis';
-import { configProject } from '@_node/file';
+import {
+  _path,
+  configProject,
+} from '@_node/file';
 import {
   TNode,
   TNodeTreeData,
@@ -1172,7 +1175,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   }, [ffTree, temporaryNodes, expandedItemsObj, osType])
 
   // open project button handler
-  const [watch, setWatch] = useState(true)
+  const [watch, setWatch] = useState(false)
   const onImportProject = useCallback(async (fsType: TFileSystemType = 'local'): Promise<void> => {
     setWatch(false)
     if (fsType === 'local') {
@@ -1185,7 +1188,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           type: 'info',
           content: 'You canceled importing project.',
         })
-        setWatch(true)
+        // setWatch(true)
         return
       }
 
@@ -1193,30 +1196,70 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       dispatch({ type: HmsClearActionType })
 
       try {
-        await configProject(projectHandle as FileSystemDirectoryHandle, osType)
-        console.log('configProject done')
+        const { handlerObj, maxUid } = await configProject(projectHandle as FileSystemDirectoryHandle, osType)
+
+        let firstHtmlUid: number = 0, indexHtmlUid: number = 0
+
+        Object.keys(handlerObj).map(uid => {
+          const handler = handlerObj[Number(uid)]
+          handler.children = handler.children.sort((a, b) => {
+            return handlerObj[a].kind === 'file' && handlerObj[b].kind === 'directory' ? 1 :
+              handlerObj[a].kind === 'directory' && handlerObj[b].kind === 'file' ? -1 :
+                handlerObj[a].name > handlerObj[b].name ? 1 : -1
+          })
+        })
+
+        handlerObj[1].children.map(uid => {
+          const handler = handlerObj[uid]
+          if (handler.kind === 'file' && handler.ext === '.html') {
+            firstHtmlUid === 0 ? firstHtmlUid = uid : null
+            handler.name === 'index.html' ? indexHtmlUid = uid : null
+          }
+        })
+
+        const treeViewData: TNodeTreeData = {}
+        Object.keys(handlerObj).map(uid => {
+          const handler = handlerObj[Number(uid)]
+          const _uid = Number(uid) === 1 ? RootNodeUid : uid
+
+          treeViewData[_uid] = {
+            uid: _uid,
+            parentUid: handler.parentUid === 0 ? null : handler.parentUid,
+            name: handler.name,
+            isEntity: handler.kind === 'file',
+            children: handler.children.map(c_uid => String(c_uid)),
+            data: {
+              valid: true,
+            },
+          } as TNode
+        })
+
+        setFFTree(treeViewData)
+        // setFFHandlers()
+
+        setInitialFileToOpen(indexHtmlUid !== 0 ? String(indexHtmlUid) : firstHtmlUid !== 0 ? String(firstHtmlUid) : undefined)
       } catch (err) {
         console.log('configProject err', err)
       }
 
 
       // import localhost project
-      try {
-        const nodeUidToOpen = await importLocalhostProject(projectHandle as FileSystemDirectoryHandle, true)
-        if (nodeUidToOpen === null) {
-          addMessage({
-            type: 'info',
-            content: 'There\'s no html file in the root directory.',
-          })
-        } else {
-          setInitialFileToOpen(nodeUidToOpen as TNodeUid)
-        }
-      } catch (err) {
-        // err occurred
-      }
+      // try {
+      //   const nodeUidToOpen = await importLocalhostProject(projectHandle as FileSystemDirectoryHandle, true)
+      //   if (nodeUidToOpen === null) {
+      //     addMessage({
+      //       type: 'info',
+      //       content: 'There\'s no html file in the root directory.',
+      //     })
+      //   } else {
+      //     setInitialFileToOpen(nodeUidToOpen as TNodeUid)
+      //   }
+      // } catch (err) {
+      //   // err occurred
+      // }
     } else if (fsType === '') {
     }
-    setWatch(true)
+    // setWatch(true)
   }, [importLocalhostProject, osType])
 
   // watch file system
