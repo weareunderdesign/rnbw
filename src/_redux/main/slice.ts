@@ -40,6 +40,7 @@ const initialState: TMainReducerState = {
       type: 'unknown',
       orgContent: '',
       content: '',
+      contentInApp: '',
       info: null,
       changed: false,
     },

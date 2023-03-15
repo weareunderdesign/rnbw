@@ -4,24 +4,24 @@ import React, {
   useEffect,
   useState,
 } from 'react';
-import { createPortal } from 'react-dom';
 
 import { useSelector } from 'react-redux';
 
-import { LogAllow } from '@_constants/main';
 import {
-  THtmlNodeData,
-  THtmlSettings,
-} from '@_node/html';
+  LogAllow,
+  NodeInAppAttribName,
+  NodeUidSplitterRegExp,
+  RootNodeUid,
+} from '@_constants/main';
 import {
+  fnSelector,
   MainContext,
   navigatorSelector,
 } from '@_redux/main';
 import { getCommandKey } from '@_services/global';
 import { TCmdkKeyMap } from '@_types/main';
 
-import NodeRenderer from '../nodeRenderer';
-import { styles } from './styles';
+import { StageViewContext } from '../context';
 import { IFrameProps } from './types';
 
 export const IFrame = (props: IFrameProps) => {
@@ -70,6 +70,10 @@ export const IFrame = (props: IFrameProps) => {
 
   // redux state
   const { workspace, project, file } = useSelector(navigatorSelector)
+  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
+
+  // stage view context
+  const { setFocusedItem } = useContext(StageViewContext)
 
   const [contentRef, setContentRef] = useState<HTMLIFrameElement | null>(null)
 
@@ -118,14 +122,115 @@ export const IFrame = (props: IFrameProps) => {
     !hasSameScript && setHasSameScript(true)
   }, [hasSameScript])
 
-  // config html, head, body structure
+  // event handlers
+  const onMouseEnter = useCallback((ele: HTMLElement) => {
+    const uid = ele.getAttribute(NodeInAppAttribName)
+    LogAllow && console.log('onMouseEnter', uid)
+  }, [])
+  const onMouseMove = useCallback((ele: HTMLElement) => {
+    const uid = ele.getAttribute(NodeInAppAttribName)
+
+    const _document = contentRef?.contentWindow?.document
+    const htmlNode = _document?.documentElement
+
+    if (uid && fnHoveredItem !== uid) {
+      LogAllow && console.log('onMouseMove', uid, fnHoveredItem)
+      if (fnHoveredItem !== RootNodeUid) {
+        const hoveredComponent = htmlNode?.querySelector(`[${NodeInAppAttribName}="${fnHoveredItem}"]`)
+        hoveredComponent?.removeAttribute('rnbwdev-rnbw-component-hover')
+      }
+      const newComponent = htmlNode?.querySelector(`[${NodeInAppAttribName}="${uid}"]`)
+      newComponent?.setAttribute('rnbwdev-rnbw-component-hover', '')
+      setFNHoveredItem(uid)
+    }
+  }, [fnHoveredItem, contentRef])
+  const onMouseLeave = useCallback((ele: HTMLElement) => {
+    const uid = ele.getAttribute(NodeInAppAttribName)
+    LogAllow && console.log('onMouseLeave', uid)
+  }, [])
+
+  const onMouseDown = useCallback((ele: HTMLElement) => {
+    const uid = ele.getAttribute(NodeInAppAttribName)
+
+    const _document = contentRef?.contentWindow?.document
+    const htmlNode = _document?.documentElement
+
+    if (uid && focusedItem !== uid) {
+      LogAllow && console.log('onMouseDown', uid, focusedItem)
+      if (focusedItem !== RootNodeUid) {
+        const focusedComponent = htmlNode?.querySelector(`[${NodeInAppAttribName}="${focusedItem}"]`)
+        console.log(focusedComponent)
+        focusedComponent?.removeAttribute('rnbwdev-rnbw-component-focus')
+      }
+      const newComponent = htmlNode?.querySelector(`[${NodeInAppAttribName}="${uid}"]`)
+      newComponent?.setAttribute('rnbwdev-rnbw-component-focus', '')
+      setFocusedItem(uid)
+    }
+  }, [focusedItem, contentRef])
+  const onMouseUp = useCallback((ele: HTMLElement) => {
+    const uid = ele.getAttribute(NodeInAppAttribName)
+    LogAllow && console.log('onMouseUp', uid)
+  }, [])
+
+  const onDblClick = useCallback((ele: HTMLElement) => {
+    const uid = ele.getAttribute(NodeInAppAttribName)
+    LogAllow && console.log('onDblClick', uid)
+  }, [])
+
+  useEffect(() => {
+    let onMouseEnterListener: (e: MouseEvent) => void,
+      onMouseMoveListener: (e: MouseEvent) => void,
+      onMouseLeaveListener: (e: MouseEvent) => void,
+      onMouseDownListener: (e: MouseEvent) => void,
+      onMouseUpListener: (e: MouseEvent) => void,
+      onDblClickListener: (e: MouseEvent) => void
+
+    htmlNode?.addEventListener('mouseenter', onMouseEnterListener = (e: MouseEvent) => {
+      e.stopPropagation()
+      onMouseEnter(e.target as HTMLElement)
+    })
+    htmlNode?.addEventListener('mousemove', onMouseMoveListener = (e: MouseEvent) => {
+      e.stopPropagation()
+      onMouseMove(e.target as HTMLElement)
+    })
+    htmlNode?.addEventListener('mouseleave', onMouseLeaveListener = (e: MouseEvent) => {
+      e.stopPropagation()
+      onMouseLeave(e.target as HTMLElement)
+    })
+
+    htmlNode?.addEventListener('mousedown', onMouseDownListener = (e: MouseEvent) => {
+      e.stopPropagation()
+      onMouseDown(e.target as HTMLElement)
+    })
+    htmlNode?.addEventListener('mouseup', onMouseUpListener = (e: MouseEvent) => {
+      e.stopPropagation()
+      onMouseUp(e.target as HTMLElement)
+    })
+
+    htmlNode?.addEventListener('dblclick', onDblClickListener = (e: MouseEvent) => {
+      e.stopPropagation()
+      onDblClick(e.target as HTMLElement)
+    })
+
+    return () => {
+      htmlNode?.removeEventListener('mouseenter', onMouseEnterListener)
+      htmlNode?.removeEventListener('mousemove', onMouseMoveListener)
+      htmlNode?.removeEventListener('mouseleave', onMouseLeaveListener)
+
+      htmlNode?.removeEventListener('mousedown', onMouseDownListener)
+      htmlNode?.removeEventListener('mouseup', onMouseUpListener)
+
+      htmlNode?.removeEventListener('dblclick', onDblClickListener)
+    }
+  }, [htmlNode, onMouseEnter, onMouseMove, onMouseLeave, onMouseDown, onMouseUp, onDblClick])
+
   useEffect(() => {
     if (contentRef) {
       contentRef.onload = () => {
         setPending(false)
       }
 
-      if (fileInfo && _document && htmlNode && headNode && bodyNode) {
+      /* if (fileInfo && _document && htmlNode && headNode && bodyNode) {
         const settings = fileInfo as THtmlSettings
 
         // add css & js to iframe
@@ -182,18 +287,19 @@ export const IFrame = (props: IFrameProps) => {
         }
 
         setPending(true)
-      }
+      } */
     }
   }, [contentRef])
 
   return <>
-    {hasSameScript && <>
+    {hasSameScript && file.uid !== '' && <>
       <iframe
         ref={setContentRef}
+        src={`./fs/${file.uid.replace(NodeUidSplitterRegExp, '-')}`}
         style={{ position: "absolute", width: "100%", height: "100%" }}
       >
-        {file.info && headNode && createPortal(<NodeRenderer id={file.info.head || ''} />, headNode)}
-        {file.info && bodyNode && createPortal(<NodeRenderer id={file.info.body || ''} />, bodyNode)}
+        {/* {file.info && headNode && createPortal(<NodeRenderer id={file.info.head || ''} />, headNode)}
+        {file.info && bodyNode && createPortal(<NodeRenderer id={file.info.body || ''} />, bodyNode)} */}
       </iframe>
     </>}
   </>

@@ -41,6 +41,7 @@ export type TFile = {
   type: TFileType,
   orgContent: string,
   content: string,
+  contentInApp: string,
   info: TFileInfo,
   changed: boolean,
 }

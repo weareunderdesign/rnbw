@@ -99,7 +99,7 @@ export default function StageView(props: StageViewProps) {
 
     // scrollTo
     const stageViewDoc = stageViewRef.current.querySelector('iframe')?.contentWindow?.document
-    const selector = `[${NodeInAppAttribName}="${focusedItem.replace(NodeUidSplitterRegExp, '-')}"]`
+    const selector = `[${NodeInAppAttribName}="${focusedItem}"]`
     const focusedComponent = stageViewDoc?.querySelector(selector)
     focusedComponent?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' })
   }, [focusedItem])
@@ -157,7 +157,7 @@ export default function StageView(props: StageViewProps) {
           onClick={onPanelClick}
           ref={stageViewRef}
         >
-          <IFrame />
+          {false ? file.uid !== '' && <iframe src={`./fs/${file.uid.replace(NodeUidSplitterRegExp, '-')}`} style={{ width: '100%', height: '100%', position: 'absolute' }} /> : <IFrame />}
         </div>
       </Panel>
     </StageViewContext.Provider>

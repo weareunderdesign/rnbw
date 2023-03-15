@@ -12,10 +12,6 @@ import {
   useDispatch,
   useSelector,
 } from 'react-redux';
-import {
-  Resizable,
-  ResizeCallbackData,
-} from 'react-resizable';
 
 import { RootNodeUid } from '@_constants/main';
 import {
@@ -214,7 +210,7 @@ export default function NodeRenderer({ id }: NodeRendererProp) {
                       >
                         {node.children.map(c_uid => <NodeRenderer key={c_uid} id={c_uid}></NodeRenderer>)}
                       </Tag>
-                      : <Resizable
+                      : {/* <><Resizable
                         width={width}
                         height={height}
                         onResizeStart={(e: React.SyntheticEvent, data: ResizeCallbackData) => {
@@ -250,7 +246,8 @@ export default function NodeRenderer({ id }: NodeRendererProp) {
                         >
                           {node.children.map(c_uid => <NodeRenderer key={c_uid} id={c_uid}></NodeRenderer>)}
                         </Tag>
-                      </Resizable>}
+                      </Resizable>
+                      </> */}}
                   </> : <>
                     <Tag
                       {...attribs}

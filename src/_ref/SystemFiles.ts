@@ -8,6 +8,10 @@ export const SystemFiles: {
     'System Volume Information': true,
     '.git': true,
   },
-  'Mac': {},
-  'Linux': {},
+  'Mac': {
+    '.git': true,
+  },
+  'Linux': {
+    '.git': true,
+  },
 }

@@ -292,7 +292,7 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
     let hasOrgClass: boolean = false
     if (!data.attribs) data.attribs = {}
     data.attribs['class'] ? hasOrgClass = true : null
-    data.attribs[NodeInAppAttribName] = `${uid.replace(NodeUidSplitterRegExp, '-')}`
+    data.attribs[NodeInAppAttribName] = true ? uid : `${uid.replace(NodeUidSplitterRegExp, '-')}`
 
     const nodeData = {
       valid,
@@ -329,7 +329,7 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
   })
 
   // set html for the nodes
-  const { html: formattedContent } = serializeHtml(tree, htmlReferenceData)
+  const { html: formattedContent, htmlInApp: contentInApp } = serializeHtml(tree, htmlReferenceData)
 
   // set html range for code view
   const detected: Map<string, number> = new Map<string, number>()
@@ -362,7 +362,7 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
     }
   })
 
-  return { formattedContent, tree, info: settings }
+  return { formattedContent, contentInApp, tree, info: settings }
 }
 
 /**
@@ -379,16 +379,17 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
     const node = tree[uid]
 
     // collect children html
-    let childrenHtml = ``
+    let childrenHtml = ``, childrenHtmlInApp = ``
     node.children.map((childUid) => {
       const child = tree[childUid]
       const childData = child.data as THtmlNodeData
       childrenHtml += childData.html
+      childrenHtmlInApp += childData.htmlInApp
     })
 
     // wrap with the current node
     const data = node.data as THtmlNodeData
-    let nodeHtml = ``
+    let nodeHtml = ``, nodeHtmlInApp = ``
 
     // validate attribs html
     const attribsHtml = data.attribs === undefined ? '' : Object.keys(data.attribs).map(attr => {
@@ -404,16 +405,33 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
       }
       return attrContent === '' ? ` ${attr}` : ` ${attr}="${attrContent}"`
     }).join('')
+    const attribsHtmlInApp = data.attribs === undefined ? '' : Object.keys(data.attribs).map(attr => {
+      const attrContent = data.attribs[attr]
+      if (attr === NodeInAppAttribName) {
+        // do nothing
+      } else if (attr === 'class') {
+        // do nothing
+      } else if (attr === 'style') {
+        // do nothing
+      } else {
+        // do nothing
+      }
+      return attrContent === '' ? ` ${attr}` : ` ${attr}="${attrContent}"`
+    }).join('')
 
     if (data.type === 'directive') {
       nodeHtml = `<${data.data}>`
+      nodeHtmlInApp = `<${data.data}>`
     } else if (data.type === 'comment') {
       nodeHtml = `<!--${data.data}-->`
+      nodeHtmlInApp = `<!--${data.data}-->`
     } else if (data.type === 'text') {
       // replace "<" or ">" to "&lt;" and "&gt;"
       nodeHtml = data.data.replace(/</g, `&lt;`).replace(/>/g, `&gt;`)
+      nodeHtmlInApp = data.data.replace(/</g, `&lt;`).replace(/>/g, `&gt;`)
     } else if (data.type === 'script' || data.type === 'style') {
       nodeHtml = `<${data.type}${attribsHtml}>${childrenHtml}</${data.type}>`
+      nodeHtmlInApp = `<${data.type}${attribsHtmlInApp}>${childrenHtmlInApp}</${data.type}>`
     } else if (data.type === 'tag') {
       const htmlElementsReferenceData = htmlReferenceData.elements
       const tagName = data.name
@@ -440,14 +458,18 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
 
       if (isEmptyTag) {
         nodeHtml = `<${tagName}${attribsHtml}>`
+        nodeHtmlInApp = `<${tagName}${attribsHtmlInApp}>`
       } else {
         nodeHtml = `<${tagName}${attribsHtml}>${childrenHtml}</${tagName}>`
+        nodeHtmlInApp = `<${tagName}${attribsHtmlInApp}>${childrenHtmlInApp}</${tagName}>`
       }
     } else {
       nodeHtml = childrenHtml
+      nodeHtmlInApp = childrenHtmlInApp
     }
 
     data.html = nodeHtml
+    data.htmlInApp = nodeHtmlInApp
   })
 
   return tree[RootNodeUid].data as THtmlNodeData

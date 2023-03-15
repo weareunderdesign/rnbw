@@ -10,11 +10,11 @@ html {
   --color-rnbwdev-rainbow-component-foreground: #ddd;
 }
 
-.rnbwdev-rainbow-component-hover {
+[rnbwdev-rnbw-component-hover] {
   outline: 1px dotted var(--color-rnbwdev-rainbow-component-background);
   outline-offset: -1px;
 }
-.rnbwdev-rainbow-component-focus {
+[rnbwdev-rnbw-component-focus] {
   outline: 1px solid var(--color-rnbwdev-rainbow-component-foreground);
   outline-offset: -1px;
 }

@@ -39,11 +39,12 @@ import {
   selectFNNode,
   setCurrentFile,
 } from '@_redux/main';
-
 import {
+  TFile,
   TFileInfo,
   TFileType,
-} from '../../../types/main';
+} from '@_types/main';
+
 import { ProcessProps } from './types';
 
 export default function Process(props: ProcessProps) {
@@ -127,14 +128,15 @@ export default function Process(props: ProcessProps) {
     let _fileInfo: TFileInfo = null
 
     if (updateOpt.parse === true && updateOpt.from === 'file') {
-      const _file = JSON.parse(JSON.stringify(file))
+      const _file = JSON.parse(JSON.stringify(file)) as TFile
       let _tree: TNodeTreeData = {}
 
       const parsedRes = parseFile(_file.type, _file.content, getReferenceData(_file.type), osType)
       if (_file.type === 'html') {
-        const { formattedContent, tree, info } = parsedRes as THtmlParserResponse
+        const { formattedContent, contentInApp, tree, info } = parsedRes as THtmlParserResponse
         _fileInfo = info
         _file.content = formattedContent
+        _file.contentInApp = contentInApp
         _file.changed = formattedContent !== _file.orgContent
         _tree = tree
         _file.info = info
@@ -172,9 +174,10 @@ export default function Process(props: ProcessProps) {
 
       const parsedRes = parseFile(_file.type, _file.content, getReferenceData(_file.type), osType)
       if (_file.type === 'html') {
-        const { formattedContent, tree, info } = parsedRes as THtmlParserResponse
+        const { formattedContent, contentInApp, tree, info } = parsedRes as THtmlParserResponse
         _fileInfo = info
         _file.content = formattedContent
+        _file.contentInApp = contentInApp
         _file.changed = formattedContent !== _file.orgContent
         _tree = tree
         _file.info = info
@@ -277,7 +280,7 @@ export default function Process(props: ProcessProps) {
     setValidNodeTree(_validNodeTree)
 
     if (updateOpt.parse === false && updateOpt.from === 'node') {
-      const _file = JSON.parse(JSON.stringify(file))
+      const _file = JSON.parse(JSON.stringify(file)) as TFile
 
       const newFileContent = serializeFile(file.type, nodeTree, getReferenceData(file.type))
       _file.content = newFileContent

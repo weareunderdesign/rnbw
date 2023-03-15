@@ -19,6 +19,10 @@ import {
   useSelector,
 } from 'react-redux';
 import { PanelGroup } from 'react-resizable-panels';
+import {
+  useLocation,
+  useParams,
+} from 'react-router-dom';
 
 import {
   Loader,
@@ -34,6 +38,7 @@ import {
 import {
   DefaultTabSize,
   LogAllow,
+  RootNodeUid,
 } from '@_constants/main';
 import {
   TFilesReference,
@@ -63,6 +68,7 @@ import {
   setFileAction,
   TCommand,
   TFileHandlerCollection,
+  TTreeViewState,
   TUpdateOptions,
 } from '@_redux/main';
 // @ts-ignore
@@ -93,8 +99,6 @@ import {
   TSession,
 } from '@_types/main';
 
-import { TTreeViewState } from '../../_redux/main/types';
-import { RootNodeUid } from '../../constants/main';
 import { getCommandKey } from '../../services/global';
 import { TFile } from '../../types/main';
 import { MainPageProps } from './types';
@@ -345,6 +349,84 @@ export default function MainPage(props: MainPageProps) {
   const [hasSameScript, setHasSameScript] = useState<boolean>(true)
   // -------------------------------------------------------------- main context --------------------------------------------------------------
 
+  // -------------------------------------------------------------- routing --------------------------------------------------------------
+  // navigating
+  const params = useParams()
+  const location = useLocation()
+
+  // store last edit session
+  useEffect(() => {
+    (async () => {
+      const _hasSession = localStorage.getItem('last-edit-session') !== null
+      setHasSession(_hasSession)
+      let _session: TSession | null = null
+      if (_hasSession) {
+        const sessionInfo = await getMany(['project-context', 'project-root-folder-handler', 'file-tree-view-state', 'opened-file-uid', 'node-tree-view-state', 'opened-file-content'])
+        _session = {
+          'project-context': sessionInfo[0],
+          'project-root-folder-handler': sessionInfo[1],
+          'file-tree-view-state': sessionInfo[2],
+          'opened-file-uid': sessionInfo[3],
+          'node-tree-view-state': sessionInfo[4],
+          'opened-file-content': sessionInfo[5],
+        }
+        setSession(_session)
+      }
+      LogAllow && console.log('last-edit-session', _session)
+    })()
+  }, [])
+  useEffect(() => {
+    (async () => {
+      if (ffTree[RootNodeUid]) {
+        try {
+          await setMany([['project-context', project.context], ['project-root-folder-handler', ffHandlers[RootNodeUid]]])
+          localStorage.setItem('last-edit-session', 'yes')
+        } catch (err) {
+          localStorage.removeItem('last-edit-session')
+        }
+      }
+    })()
+  }, [ffTree[RootNodeUid]])
+  useEffect(() => {
+    (async () => {
+      const viewState: TTreeViewState = {
+        focusedItem: ffFocusedItem,
+        selectedItems: ffSelectedItems,
+        expandedItems: ffExpandedItems,
+        selectedItemsObj: ffSelectedItemsObj,
+        expandedItemsObj: ffExpandedItemsObj,
+      }
+      await set('file-tree-view-state', viewState)
+    })()
+  }, [ffFocusedItem, ffSelectedItems, ffExpandedItems, ffSelectedItemsObj, ffExpandedItemsObj])
+  useEffect(() => {
+    (async () => {
+      if (ffTree[file.uid] !== undefined) {
+        await set('opened-file-uid', file.uid)
+      }
+    })()
+  }, [file.uid])
+  useEffect(() => {
+    (async () => {
+      const viewState: TTreeViewState = {
+        focusedItem: fnFocusedItem,
+        selectedItems: fnSelectedItems,
+        expandedItems: fnExpandedItems,
+        selectedItemsObj: fnSelectedItemsObj,
+        expandedItemsObj: fnExpandedItemsObj,
+      }
+      await set('node-tree-view-state', viewState)
+    })()
+  }, [fnFocusedItem, fnSelectedItems, fnExpandedItems, fnSelectedItemsObj, fnExpandedItemsObj])
+  useEffect(() => {
+    (async () => {
+      if (ffTree[file.uid] !== undefined) {
+        await set('opened-file-content', file.content)
+      }
+    })()
+  }, [file.content])
+  // -------------------------------------------------------------- routing --------------------------------------------------------------
+
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
   // key event listener
   const cb_onKeyDown = useCallback((e: KeyboardEvent) => {
@@ -428,7 +510,6 @@ export default function MainPage(props: MainPageProps) {
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
 
   // -------------------------------------------------------------- handlers --------------------------------------------------------------
-
   // save all of the changed files
   const onSaveAll = useCallback(async () => {
     const _openedFiles: { [uid: TNodeUid]: TFile } = {}
@@ -749,78 +830,6 @@ Your changes will be lost if you don't save them.`
       localStorage.setItem("newbie", 'false')
     }
   }, [])
-
-  // store last edit session
-  useEffect(() => {
-    (async () => {
-      const _hasSession = localStorage.getItem('last-edit-session') !== null
-      setHasSession(_hasSession)
-      let _session: TSession | null = null
-      if (_hasSession) {
-        const sessionInfo = await getMany(['project-context', 'project-root-folder-handler', 'file-tree-view-state', 'opened-file-uid', 'node-tree-view-state', 'opened-file-content'])
-        _session = {
-          'project-context': sessionInfo[0],
-          'project-root-folder-handler': sessionInfo[1],
-          'file-tree-view-state': sessionInfo[2],
-          'opened-file-uid': sessionInfo[3],
-          'node-tree-view-state': sessionInfo[4],
-          'opened-file-content': sessionInfo[5],
-        }
-        setSession(_session)
-      }
-      LogAllow && console.log('last-edit-session', _session)
-    })()
-  }, [])
-  useEffect(() => {
-    (async () => {
-      if (ffTree[RootNodeUid]) {
-        try {
-          await setMany([['project-context', project.context], ['project-root-folder-handler', ffHandlers[RootNodeUid]]])
-          localStorage.setItem('last-edit-session', 'yes')
-        } catch (err) {
-          localStorage.removeItem('last-edit-session')
-        }
-      }
-    })()
-  }, [ffTree[RootNodeUid]])
-  useEffect(() => {
-    (async () => {
-      const viewState: TTreeViewState = {
-        focusedItem: ffFocusedItem,
-        selectedItems: ffSelectedItems,
-        expandedItems: ffExpandedItems,
-        selectedItemsObj: ffSelectedItemsObj,
-        expandedItemsObj: ffExpandedItemsObj,
-      }
-      await set('file-tree-view-state', viewState)
-    })()
-  }, [ffFocusedItem, ffSelectedItems, ffExpandedItems, ffSelectedItemsObj, ffExpandedItemsObj])
-  useEffect(() => {
-    (async () => {
-      if (ffTree[file.uid] !== undefined) {
-        await set('opened-file-uid', file.uid)
-      }
-    })()
-  }, [file.uid])
-  useEffect(() => {
-    (async () => {
-      const viewState: TTreeViewState = {
-        focusedItem: fnFocusedItem,
-        selectedItems: fnSelectedItems,
-        expandedItems: fnExpandedItems,
-        selectedItemsObj: fnSelectedItemsObj,
-        expandedItemsObj: fnExpandedItemsObj,
-      }
-      await set('node-tree-view-state', viewState)
-    })()
-  }, [fnFocusedItem, fnSelectedItems, fnExpandedItems, fnSelectedItemsObj, fnExpandedItemsObj])
-  useEffect(() => {
-    (async () => {
-      if (ffTree[file.uid] !== undefined) {
-        await set('opened-file-content', file.content)
-      }
-    })()
-  }, [file.content])
 
   // theme
   const setSystemTheme = useCallback(() => {

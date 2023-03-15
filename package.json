@@ -3,7 +3,7 @@
   "version": "0.0.2",
   "description": "",
   "scripts": {
-    "build": "cpx public/svg-icon.config.json dist -C && webpack --mode production",
+    "build": "cpx public/svg-icon.config.json dist -C && cpx public/nohost-sw.js dist -C && webpack --progress --mode production",
     "start": "webpack serve --mode development",
     "deploy": "gh-pages -d dist"
   },
@@ -32,11 +32,12 @@
     "react-html-parser": "^2.0.2",
     "react-papaparse": "^4.1.0",
     "react-redux": "^8.0.5",
-    "react-resizable": "^3.0.4",
     "react-resizable-panels": "^0.0.36",
+    "react-router-dom": "^6.9.0",
     "redux-injectors": "^2.1.0",
     "redux-saga": "^1.2.1",
-    "redux-undo": "^1.0.1"
+    "redux-undo": "^1.0.1",
+    "workbox-window": "^6.5.4"
   },
   "devDependencies": {
     "@babel/core": "^7.19.6",

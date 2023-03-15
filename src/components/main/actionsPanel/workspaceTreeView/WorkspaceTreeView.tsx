@@ -49,6 +49,7 @@ import {
   sortNodesByContext,
   validateNodeUidCollection,
 } from '@_node/apis';
+import { configProject } from '@_node/file';
 import {
   TNode,
   TNodeTreeData,
@@ -71,6 +72,7 @@ import {
   setFileAction,
   updateFFTreeViewState,
 } from '@_redux/main';
+import { SystemFiles } from '@_ref/SystemFiles';
 import { getFileExtension } from '@_services/global';
 import {
   getFileSystemWatchInterval,
@@ -85,7 +87,6 @@ import {
   TFileType,
 } from '@_types/main';
 
-import { SystemFiles } from '../../../../_ref/SystemFiles';
 import { WorkspaceTreeViewProps } from './types';
 
 export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
@@ -707,6 +708,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           type: fileType as TFileType,
           orgContent: content,
           content: content,
+          contentInApp: content,
           info: null,
           changed: false,
         }
@@ -1190,6 +1192,14 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       dispatch(clearMainState())
       dispatch({ type: HmsClearActionType })
 
+      try {
+        await configProject(projectHandle as FileSystemDirectoryHandle, osType)
+        console.log('configProject done')
+      } catch (err) {
+        console.log('configProject err', err)
+      }
+
+
       // import localhost project
       try {
         const nodeUidToOpen = await importLocalhostProject(projectHandle as FileSystemDirectoryHandle, true)
@@ -1207,7 +1217,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     } else if (fsType === '') {
     }
     setWatch(true)
-  }, [importLocalhostProject])
+  }, [importLocalhostProject, osType])
 
   // watch file system
   const watchFileSystem = useCallback(async () => {

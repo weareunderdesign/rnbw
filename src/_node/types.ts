@@ -69,6 +69,7 @@ export type TNodeReferenceData = THtmlReferenceData
  */
 export type TFileParserResponse = {
   formattedContent: string,
+  contentInApp: string,
   tree: TNodeTreeData,
   info?: THtmlSettings,
 }
