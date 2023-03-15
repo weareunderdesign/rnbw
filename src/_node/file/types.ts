@@ -1,3 +1,5 @@
+import { TFileType } from '@_types/main';
+
 /**
  * files reference data
  */
@@ -30,3 +32,18 @@ export type TFileHandlerInfo = {
 }
 
 export type TFileHandlerInfoObj = { [uid: number]: TFileHandlerInfo }
+
+export type TFileNodeData = {
+  valid: boolean,
+
+  path: string,
+  kind: 'file' | 'directory',
+  name: string,
+  ext: string,
+  type: TFileType,
+
+  orgContent: string,
+  content: string,
+  contentInApp?: string,
+  changed: false,
+}

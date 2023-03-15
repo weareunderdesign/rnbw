@@ -38,7 +38,6 @@ import { TreeViewData } from '@_components/common/treeView/types';
 import {
   HmsClearActionType,
   NodeUidSplitter,
-  ParsableFileTypes,
   RootNodeUid,
   TmpNodeUid,
 } from '@_constants/main';
@@ -46,12 +45,13 @@ import {
   generateNodeUid,
   getNodeEntryName,
   getParentNodeUid,
-  sortNodesByContext,
   validateNodeUidCollection,
 } from '@_node/apis';
 import {
   _path,
   configProject,
+  TFileHandlerInfo,
+  TFileNodeData,
 } from '@_node/file';
 import {
   TNode,
@@ -73,21 +73,14 @@ import {
   selectFFNode,
   setCurrentFile,
   setFileAction,
-  updateFFTreeViewState,
+  TFileHandlerCollection,
 } from '@_redux/main';
-import { SystemFiles } from '@_ref/SystemFiles';
-import { getFileExtension } from '@_services/global';
-import {
-  getFileSystemWatchInterval,
-  getTemporaryFileExtension,
-  verifyFileHandlerPermission,
-} from '@_services/main';
+import { verifyFileHandlerPermission } from '@_services/main';
 import {
   TFile,
   TFileAction,
   TFileNodeType,
   TFileSystemType,
-  TFileType,
 } from '@_types/main';
 
 import { WorkspaceTreeViewProps } from './types';
@@ -101,8 +94,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     addRunningActions, removeRunningActions,
 
     // file tree view
-    openedFiles, setOpenedFiles, removeOpenedFiles,
-    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree, updateFF,
+    ffHoveredItem, setFFHoveredItem, ffHandlers, setFFHandlers, ffTree, setFFTree,
 
     // ndoe tree view
     fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree,
@@ -672,67 +664,19 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       return
     }
 
-    // load last sesison when it's already opened once
-    if (openedFiles[uid]) {
-      const _file: TFile = {
-        ...openedFiles[uid],
-        info: null,
-      }
+    const nodeData = node.data as TNormalNodeData
 
-      addRunningActions(['processor-file'])
+    addRunningActions(['processor-file'])
 
-      setFileInfo(file.info)
-      setUpdateOpt({ parse: true, from: 'file' })
-      setTimeout(() => dispatch(setCurrentFile(_file)), 0)
-    } else {
-      // verify handler permission
-      const handler = ffHandlers[uid] as FileSystemFileHandle
-      if (!(await verifyFileHandlerPermission(handler))) {
-        addMessage({
-          type: 'error',
-          content: 'Invalid file. Check if you have "read" permission for the file.',
-        })
-        removeRunningActions(['fileTreeView-read'], false)
-        return
-      }
-
-      // get file type (extension)
-      let fileType = getFileExtension(handler.name)
-      if (fileType !== '') fileType = fileType.slice(1)
-      fileType = ParsableFileTypes[fileType] ? fileType : 'unknown'
-
-      // read the file content and set to global state
-      try {
-        const fileEntry = await handler.getFile()
-        const content = await fileEntry.text()
-        const _file: TFile = {
-          uid,
-          name: handler.name,
-          type: fileType as TFileType,
-          orgContent: content,
-          content: content,
-          contentInApp: content,
-          info: null,
-          changed: false,
-        }
-
-        addRunningActions(['processor-file'])
-
-        setFileInfo(file.info)
-        setUpdateOpt({ parse: true, from: 'file' })
-        setTimeout(() => dispatch(setCurrentFile(_file)), 0)
-      } catch (err) {
-        addMessage({
-          type: 'error',
-          content: 'Error occurred while reading the file content.',
-        })
-        removeRunningActions(['fileTreeView-read'], false)
-        return
-      }
+    setUpdateOpt({ parse: true, from: 'file' })
+    const _file: TFile = {
+      uid,
+      content: nodeData.content,
     }
+    setTimeout(() => dispatch(setCurrentFile(_file)), 0)
 
     removeRunningActions(['fileTreeView-read'])
-  }, [invalidNodes, ffTree, ffHandlers, file.uid, openedFiles])
+  }, [invalidNodes, ffTree, file.uid])
 
   /**
    * general move api - for rename, copy/paste(duplicate), cut/paste(move)
@@ -1045,13 +989,15 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       setInitialFileToOpen(undefined)
 
       // focus and read the initial file
+      addRunningActions(['fileTreeView-focus', 'fileTreeView-select', 'fileTreeView-read'])
       cb_focusFFNode(initialFileToOpen)
+      cb_selectFFNode([initialFileToOpen])
       cb_readFFNode(initialFileToOpen)
     }
   }, [initialFileToOpen])
 
   // import project from localhost using filesystemdirectoryhandle
-  const importLocalhostProject = useCallback(async (projectHandle: FileSystemDirectoryHandle, newOpen: boolean = false): Promise<void | null | TNodeUid> => {
+  /* const importLocalhostProject = useCallback(async (projectHandle: FileSystemDirectoryHandle, newOpen: boolean = false): Promise<void | null | TNodeUid> => {
     // verify handler permission
     if (!(await verifyFileHandlerPermission(projectHandle))) {
       addMessage({
@@ -1172,7 +1118,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       const nodeUidToOpen: TNodeUid | null = indexHtmlUid || firstHtmlUid
       return nodeUidToOpen
     }
-  }, [ffTree, temporaryNodes, expandedItemsObj, osType])
+  }, [ffTree, temporaryNodes, expandedItemsObj, osType]) */
 
   // open project button handler
   const [watch, setWatch] = useState(false)
@@ -1219,51 +1165,48 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
         const treeViewData: TNodeTreeData = {}
         Object.keys(handlerObj).map(uid => {
-          const handler = handlerObj[Number(uid)]
+          const handler = handlerObj[Number(uid)] as TFileHandlerInfo
           const _uid = Number(uid) === 1 ? RootNodeUid : uid
 
           treeViewData[_uid] = {
             uid: _uid,
-            parentUid: handler.parentUid === 0 ? null : handler.parentUid,
+            parentUid: handler.parentUid === 0 ? null : handler.parentUid === 1 ? RootNodeUid : handler.parentUid,
             name: handler.name,
             isEntity: handler.kind === 'file',
             children: handler.children.map(c_uid => String(c_uid)),
             data: {
               valid: true,
-            },
+              path: handler.path,
+              kind: handler.kind,
+              name: handler.name,
+              ext: handler.ext,
+              type: handler.ext?.slice(1),
+              orgContent: handler.content,
+              content: handler.content,
+              changed: false,
+            } as TFileNodeData,
           } as TNode
         })
-
         setFFTree(treeViewData)
-        // setFFHandlers()
+
+        const ffHandlerObj: TFileHandlerCollection = {}
+        Object.keys(handlerObj).map(uid => {
+          const _uid = Number(uid) === 1 ? RootNodeUid : uid
+          ffHandlerObj[_uid] = handlerObj[Number(uid)].handler
+        })
+        setFFHandlers(ffHandlerObj)
 
         setInitialFileToOpen(indexHtmlUid !== 0 ? String(indexHtmlUid) : firstHtmlUid !== 0 ? String(firstHtmlUid) : undefined)
       } catch (err) {
         console.log('configProject err', err)
       }
-
-
-      // import localhost project
-      // try {
-      //   const nodeUidToOpen = await importLocalhostProject(projectHandle as FileSystemDirectoryHandle, true)
-      //   if (nodeUidToOpen === null) {
-      //     addMessage({
-      //       type: 'info',
-      //       content: 'There\'s no html file in the root directory.',
-      //     })
-      //   } else {
-      //     setInitialFileToOpen(nodeUidToOpen as TNodeUid)
-      //   }
-      // } catch (err) {
-      //   // err occurred
-      // }
     } else if (fsType === '') {
     }
     // setWatch(true)
-  }, [importLocalhostProject, osType])
+  }, [osType])
 
   // watch file system
-  const watchFileSystem = useCallback(async () => {
+  /* const watchFileSystem = useCallback(async () => {
     if (project.context === 'local') {
       if (ffHandlers[RootNodeUid] === undefined || ffTree[RootNodeUid] === undefined) {
         // do nothing
@@ -1276,10 +1219,10 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     } else {
       // tmp
     }
-  }, [project.context, ffHandlers, importLocalhostProject])
+  }, [project.context, ffHandlers, importLocalhostProject]) */
 
   // set file system watch timer
-  useEffect(() => {
+  /* useEffect(() => {
     // create a fs watch interval and get the id
     let fsWatchInterval: NodeJS.Timer
     if (watch) {
@@ -1288,7 +1231,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
     // clear out the fs watch interval using the id when unmounting the component
     return () => clearInterval(fsWatchInterval)
-  }, [watchFileSystem, watch])
+  }, [watchFileSystem, watch]) */
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
 
   // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
@@ -1725,7 +1668,7 @@ This action cannot be undone!`
                     whiteSpace: 'nowrap',
                   }}>
                   {props.title}
-                  {openedFiles[props.item.data.uid] && openedFiles[props.item.data.uid].changed &&
+                  {ffTree[props.item.data.uid] && (ffTree[props.item.data.uid].data as TNormalNodeData).changed &&
                     <div className="radius-s foreground-primary" style={{ width: "6px", height: "6px" }}></div>}
                 </span>
               </>
@@ -1800,10 +1743,10 @@ This action cannot be undone!`
 
               if (item.data.data.valid) {
                 // confirm changed file before renaming
-                const _file = openedFiles[item.data.uid]
-                if (_file && _file.changed) {
+                const _file = ffTree[item.data.uid]
+                if (_file && (ffTree[_file.uid].data as TFileNodeData).changed) {
                   // confirm
-                  const message = `Do you want to save the changes you made to ${_file.name} before renaming?
+                  const message = `Do you want to save the changes you made to ${(ffTree[_file.uid].data as TFileNodeData).name} before renaming?
 Your changes will be lost if you don't save them.`
                   if (window.confirm(message)) {
                     await (async () => {
@@ -1829,7 +1772,7 @@ Your changes will be lost if you don't save them.`
                       // update file content
                       try {
                         const writableStream = await (handler as FileSystemFileHandle).createWritable()
-                        await writableStream.write(_file.content)
+                        await writableStream.write((ffTree[_file.uid].data as TFileNodeData).content)
                         await writableStream.close()
 
                         addMessage({
@@ -1838,7 +1781,7 @@ Your changes will be lost if you don't save them.`
                         })
 
                         // update context files store
-                        setOpenedFiles({ ..._file, orgContent: _file.content, changed: false })
+                        // setOpenedFiles({ ..._file, orgContent: _file.content, changed: false })
                       } catch (err) {
                         addMessage({
                           type: 'error',
@@ -1863,7 +1806,7 @@ Your changes will be lost if you don't save them.`
                 setFFTree(tmpTree)
               }
               removeInvalidNodes(item.data.uid)
-            }, [invalidNodes, cb_renameFFNode, createFFNode, setTemporaryNodes, removeTemporaryNodes, removeInvalidNodes, ffTree, osType, ffHandlers, openedFiles]),
+            }, [invalidNodes, cb_renameFFNode, createFFNode, setTemporaryNodes, removeTemporaryNodes, removeInvalidNodes, ffTree, osType, ffHandlers]),
 
             /* SELECT, FOCUS, EXPAND, COLLAPSE CALLBACK */
             onSelectItems: useCallback((items: TreeItemIndex[], treeId: string) => {

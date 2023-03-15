@@ -46,7 +46,7 @@ export default function CodeView(props: CodeViewProps) {
     addRunningActions, removeRunningActions,
 
     // file tree view
-    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree, updateFF,
+    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree,
 
     // ndoe tree view
     fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree,

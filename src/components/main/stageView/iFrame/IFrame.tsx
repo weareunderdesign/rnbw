@@ -10,9 +10,9 @@ import { useSelector } from 'react-redux';
 import {
   LogAllow,
   NodeInAppAttribName,
-  NodeUidSplitterRegExp,
   RootNodeUid,
 } from '@_constants/main';
+import { TFileNodeData } from '@_node/file';
 import {
   fnSelector,
   MainContext,
@@ -22,6 +22,7 @@ import { getCommandKey } from '@_services/global';
 import { TCmdkKeyMap } from '@_types/main';
 
 import { StageViewContext } from '../context';
+import { styles } from './styles';
 import { IFrameProps } from './types';
 
 export const IFrame = (props: IFrameProps) => {
@@ -31,7 +32,7 @@ export const IFrame = (props: IFrameProps) => {
     addRunningActions, removeRunningActions,
 
     // file tree view
-    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree, updateFF,
+    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree,
 
     // ndoe tree view
     fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree,
@@ -178,6 +179,9 @@ export const IFrame = (props: IFrameProps) => {
   }, [])
 
   useEffect(() => {
+    const _document = contentRef?.contentWindow?.document
+    const htmlNode = _document?.documentElement
+
     let onMouseEnterListener: (e: MouseEvent) => void,
       onMouseMoveListener: (e: MouseEvent) => void,
       onMouseLeaveListener: (e: MouseEvent) => void,
@@ -222,72 +226,61 @@ export const IFrame = (props: IFrameProps) => {
 
       htmlNode?.removeEventListener('dblclick', onDblClickListener)
     }
-  }, [htmlNode, onMouseEnter, onMouseMove, onMouseLeave, onMouseDown, onMouseUp, onDblClick])
+  }, [contentRef, htmlNode, onMouseEnter, onMouseMove, onMouseLeave, onMouseDown, onMouseUp, onDblClick])
 
   useEffect(() => {
     if (contentRef) {
+      console.log('iframe created')
+
       contentRef.onload = () => {
+        console.log('iframe loaded')
+
+        const _document = contentRef?.contentWindow?.document
+        const htmlNode = _document?.documentElement
+        const headNode = _document?.head
+
+        if (_document && headNode) {
+          const style = _document.createElement('style')
+          style.textContent = styles
+          headNode.appendChild(style)
+        }
+
+        /* let onMouseEnterListener: (e: MouseEvent) => void,
+          onMouseMoveListener: (e: MouseEvent) => void,
+          onMouseLeaveListener: (e: MouseEvent) => void,
+          onMouseDownListener: (e: MouseEvent) => void,
+          onMouseUpListener: (e: MouseEvent) => void,
+          onDblClickListener: (e: MouseEvent) => void
+
+        htmlNode?.addEventListener('mouseenter', onMouseEnterListener = (e: MouseEvent) => {
+          e.stopPropagation()
+          onMouseEnter(e.target as HTMLElement)
+        })
+        htmlNode?.addEventListener('mousemove', onMouseMoveListener = (e: MouseEvent) => {
+          e.stopPropagation()
+          onMouseMove(e.target as HTMLElement)
+        })
+        htmlNode?.addEventListener('mouseleave', onMouseLeaveListener = (e: MouseEvent) => {
+          e.stopPropagation()
+          onMouseLeave(e.target as HTMLElement)
+        })
+
+        htmlNode?.addEventListener('mousedown', onMouseDownListener = (e: MouseEvent) => {
+          e.stopPropagation()
+          onMouseDown(e.target as HTMLElement)
+        })
+        htmlNode?.addEventListener('mouseup', onMouseUpListener = (e: MouseEvent) => {
+          e.stopPropagation()
+          onMouseUp(e.target as HTMLElement)
+        })
+
+        htmlNode?.addEventListener('dblclick', onDblClickListener = (e: MouseEvent) => {
+          e.stopPropagation()
+          onDblClick(e.target as HTMLElement)
+        }) */
+
         setPending(false)
       }
-
-      /* if (fileInfo && _document && htmlNode && headNode && bodyNode) {
-        const settings = fileInfo as THtmlSettings
-
-        // add css & js to iframe
-        const style = _document.createElement('style')
-        style.textContent = styles
-        headNode.appendChild(style)
-
-        settings.scripts.map(script => {
-          const scriptTag = _document.createElement('script')
-          const attribs = script.data.attribs
-          Object.keys(attribs).map(attrName => {
-            scriptTag.setAttribute(attrName, attribs[attrName])
-          })
-          if (settings.head && script.uid.startsWith(settings.head)) {
-            headNode.appendChild(scriptTag)
-          } else {
-            bodyNode.appendChild(scriptTag)
-          }
-        })
-
-        // html
-        htmlNode.getAttributeNames().map(attrName => {
-          htmlNode.removeAttribute(attrName)
-        })
-        if (settings.html) {
-          const node = nodeTree[settings.html]
-          const data = node.data as THtmlNodeData
-          for (const attrName in data.attribs) {
-            const attrValue = data.attribs[attrName]
-            htmlNode.setAttribute(attrName, attrValue)
-          }
-        }
-
-        // head
-        headNode.getAttributeNames().map(attrName => {
-          headNode.removeAttribute(attrName)
-        })
-        if (settings.head) {
-          const { attribs } = nodeTree[settings.head].data as THtmlNodeData
-          Object.keys(attribs).map(attrName => {
-            headNode.setAttribute(attrName, attribs[attrName])
-          })
-        }
-
-        // body
-        bodyNode.getAttributeNames().map(attrName => {
-          bodyNode.removeAttribute(attrName)
-        })
-        if (settings.body) {
-          const { attribs } = nodeTree[settings.body].data as THtmlNodeData
-          Object.keys(attribs).map(attrName => {
-            bodyNode.setAttribute(attrName, attribs[attrName])
-          })
-        }
-
-        setPending(true)
-      } */
     }
   }, [contentRef])
 
@@ -295,11 +288,9 @@ export const IFrame = (props: IFrameProps) => {
     {hasSameScript && file.uid !== '' && <>
       <iframe
         ref={setContentRef}
-        src={`./fs/${file.uid.replace(NodeUidSplitterRegExp, '-')}`}
+        src={`fs${(ffTree[file.uid].data as TFileNodeData).path}`}
         style={{ position: "absolute", width: "100%", height: "100%" }}
       >
-        {/* {file.info && headNode && createPortal(<NodeRenderer id={file.info.head || ''} />, headNode)}
-        {file.info && bodyNode && createPortal(<NodeRenderer id={file.info.body || ''} />, bodyNode)} */}
       </iframe>
     </>}
   </>

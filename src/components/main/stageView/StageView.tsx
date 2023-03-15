@@ -14,7 +14,6 @@ import { Panel } from 'react-resizable-panels';
 
 import {
   NodeInAppAttribName,
-  NodeUidSplitterRegExp,
   RootNodeUid,
 } from '@_constants/main';
 import { TNodeUid } from '@_node/types';
@@ -43,7 +42,7 @@ export default function StageView(props: StageViewProps) {
     addRunningActions, removeRunningActions,
 
     // file tree view
-    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree, updateFF,
+    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree,
 
     // ndoe tree view
     fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree,
@@ -157,7 +156,7 @@ export default function StageView(props: StageViewProps) {
           onClick={onPanelClick}
           ref={stageViewRef}
         >
-          {false ? file.uid !== '' && <iframe src={`./fs/${file.uid.replace(NodeUidSplitterRegExp, '-')}`} style={{ width: '100%', height: '100%', position: 'absolute' }} /> : <IFrame />}
+          <IFrame />
         </div>
       </Panel>
     </StageViewContext.Provider>

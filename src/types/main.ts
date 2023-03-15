@@ -37,13 +37,7 @@ export type TProject = {
  */
 export type TFile = {
   uid: TNodeUid,
-  name: string,
-  type: TFileType,
-  orgContent: string,
   content: string,
-  contentInApp: string,
-  info: TFileInfo,
-  changed: boolean,
 }
 
 /**

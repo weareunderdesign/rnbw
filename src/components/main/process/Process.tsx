@@ -9,20 +9,18 @@ import {
   useSelector,
 } from 'react-redux';
 
+import { RootNodeUid } from '@_constants/main';
 import {
-  NodeInAppAttribName,
-  NodeUidSplitter,
-  RainbowAppName,
-  RootNodeUid,
-} from '@_constants/main';
-import {
-  getNodeEntryName,
   parseFile,
-  serializeFile,
   sortNodeUidsByBfs,
 } from '@_node/apis';
+import {
+  TFileNodeData,
+  writeFile,
+} from '@_node/file';
 import { THtmlParserResponse } from '@_node/html';
 import {
+  TNode,
   TNodeTreeData,
   TNodeUid,
 } from '@_node/types';
@@ -40,7 +38,6 @@ import {
   setCurrentFile,
 } from '@_redux/main';
 import {
-  TFile,
   TFileInfo,
   TFileType,
 } from '@_types/main';
@@ -56,8 +53,7 @@ export default function Process(props: ProcessProps) {
     addRunningActions, removeRunningActions,
 
     // file tree view
-    openedFiles, setOpenedFiles, removeOpenedFiles,
-    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree, updateFF,
+    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree,
 
     // ndoe tree view
     fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree,
@@ -102,7 +98,7 @@ export default function Process(props: ProcessProps) {
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
   // set app title and favicon
   useEffect(() => {
-    if (file.type === 'html') {
+    /* if (file.type === 'html') {
       // set title
       window.document.title = getNodeEntryName(file.uid)
 
@@ -114,8 +110,8 @@ export default function Process(props: ProcessProps) {
       }
     } else {
       window.document.title = RainbowAppName
-    }
-  }, [file.info])
+    } */
+  }, [fileInfo])
 
   const getReferenceData = useCallback((fileType: TFileType) => {
     return fileType === 'html' ? htmlReferenceData : htmlReferenceData
@@ -125,32 +121,31 @@ export default function Process(props: ProcessProps) {
   useEffect(() => {
     if (file.uid === '') return
 
+    console.log(updateOpt)
+
     let _fileInfo: TFileInfo = null
+    let _tree: TNodeTreeData = {}
 
     if (updateOpt.parse === true && updateOpt.from === 'file') {
-      const _file = JSON.parse(JSON.stringify(file)) as TFile
-      let _tree: TNodeTreeData = {}
+      const node = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode
+      const nodeData = node.data as TFileNodeData
+      console.log(nodeData)
 
-      const parsedRes = parseFile(_file.type, _file.content, getReferenceData(_file.type), osType)
-      if (_file.type === 'html') {
+      const parsedRes = parseFile(nodeData.type, nodeData.content, getReferenceData(nodeData.type), osType)
+      if (nodeData.type === 'html') {
         const { formattedContent, contentInApp, tree, info } = parsedRes as THtmlParserResponse
-        _fileInfo = info
-        _file.content = formattedContent
-        _file.contentInApp = contentInApp
-        _file.changed = formattedContent !== _file.orgContent
         _tree = tree
-        _file.info = info
+        _fileInfo = info
+        nodeData.content = formattedContent
+        nodeData.contentInApp = contentInApp
+        writeFile(nodeData.path, contentInApp)
+        setHasSameScript(true)
       } else {
         // do nothing
       }
 
       addRunningActions(['processor-nodeTree'])
       setNodeTree(_tree)
-
-      setUpdateOpt({ parse: null, from: 'file' })
-      setTimeout(() => dispatch(setCurrentFile(_file)), 0)
-
-      setOpenedFiles(_file)
     } else if (updateOpt.parse === true && updateOpt.from === 'hms') {
       const _file = JSON.parse(JSON.stringify(file))
       _fileInfo = _file.info
@@ -166,8 +161,6 @@ export default function Process(props: ProcessProps) {
 
       addRunningActions(['processor-nodeTree'])
       setNodeTree(_tree)
-
-      setOpenedFiles(_file)
     } else if (updateOpt.parse === true && updateOpt.from === 'code') {
       const _file = JSON.parse(JSON.stringify(file))
       let _tree: TNodeTreeData = {}
@@ -190,13 +183,11 @@ export default function Process(props: ProcessProps) {
 
       setUpdateOpt({ parse: null, from: 'code' })
       setTimeout(() => dispatch(setCurrentFile(_file)), 0)
-
-      setOpenedFiles(_file)
     } else {
       // do nothing
     }
 
-    if (updateOpt.parse === true) {
+    /* if (updateOpt.parse === true) {
       // check if the script list changed
       let _hasSameScript = true
       if (fileInfo === null) {
@@ -208,7 +199,7 @@ export default function Process(props: ProcessProps) {
         const curScripts: string[] = []
         const curScriptObj: { [uid: string]: boolean } = {}
         _curScripts.map(script => {
-          const attribs = script.data.attribs
+          const attribs = (script.data as THtmlNodeData).attribs
           const uniqueStr = Object.keys(attribs)
             .filter(attrName => attrName !== NodeInAppAttribName)
             .sort((a, b) => a > b ? 1 : -1)
@@ -223,7 +214,7 @@ export default function Process(props: ProcessProps) {
         const orgScripts: string[] = []
         const orgScriptObj: { [uid: string]: boolean } = {}
         _orgScripts.map(script => {
-          const attribs = script.data.attribs
+          const attribs = (script.data as THtmlNodeData).attribs
           const uniqueStr = Object.keys(attribs)
             .filter(attrName => attrName !== NodeInAppAttribName)
             .sort((a, b) => a > b ? 1 : -1)
@@ -248,10 +239,10 @@ export default function Process(props: ProcessProps) {
       }
       setHasSameScript(_hasSameScript)
       setFileInfo(_fileInfo)
-    }
+    } */
 
     removeRunningActions(['processor-file'])
-  }, [file.uid, file.content])
+  }, [file.uid, file.content, updateOpt])
 
   // processor-nodeTree
   useEffect(() => {
@@ -279,7 +270,7 @@ export default function Process(props: ProcessProps) {
     addRunningActions(['processor-validNodeTree'])
     setValidNodeTree(_validNodeTree)
 
-    if (updateOpt.parse === false && updateOpt.from === 'node') {
+    /* if (updateOpt.parse === false && updateOpt.from === 'node') {
       const _file = JSON.parse(JSON.stringify(file)) as TFile
 
       const newFileContent = serializeFile(file.type, nodeTree, getReferenceData(file.type))
@@ -302,7 +293,7 @@ export default function Process(props: ProcessProps) {
       setOpenedFiles(_file)
     } else {
       // do nothing
-    }
+    } */
 
     removeRunningActions(['processor-nodeTree'])
   }, [nodeTree])
