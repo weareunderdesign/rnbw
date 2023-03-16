@@ -5,6 +5,7 @@ import {
 
 import { DefaultTabSize } from '@_constants/main';
 import {
+  TNode,
   TNodeTreeData,
   TNodeUid,
 } from '@_node/types';
@@ -36,6 +37,7 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   setFFHandlers: (ffHandlerObj: TFileHandlerCollection) => { },
   ffTree: {},
   setFFTree: (tree: TNodeTreeData) => { },
+  setFFNode: (ffNode: TNode) => { },
 
   // node tree view
   fnHoveredItem: '',
