@@ -29,6 +29,35 @@ import {
   TResetNodeTreeUidsApiResponse,
 } from './types';
 
+export const getSubNodeUidsByBfs = (uid: TNodeUid, tree: TNodeTreeData): TNodeUid[] => {
+  let subUids: TNodeUid[] = []
+
+  let uids = [uid]
+  while (uids.length) {
+    const subUid = uids.shift() as TNodeUid
+    subUids.push(subUid)
+
+    const subNode = tree[subUid]
+    uids.push(...subNode.children)
+  }
+
+  return subUids
+}
+export const getSubNodeUidsByDfs = (uid: TNodeUid, tree: TNodeTreeData): TNodeUid[] => {
+  let subUids: TNodeUid[] = []
+
+  let uids = [uid]
+  while (uids.length) {
+    const subUid = uids.shift() as TNodeUid
+    subUids.push(subUid)
+
+    const subNode = tree[subUid]
+    uids.splice(0, 0, ...subNode.children)
+  }
+
+  return subUids
+}
+
 /**
  * generate node uid from parent uid and its entry name
  * @param parentUid 
@@ -137,22 +166,6 @@ export const sortNodeUidsByBfs = (_uids: TNodeUid[]): TNodeUid[] => {
  * @param tree 
  * @returns 
  */
-export const getSubNodeUids = (uid: TNodeUid, tree: TNodeTreeData): TNodeUid[] => {
-  let subUids: TNodeUid[] = []
-
-  let uids = [uid]
-  while (uids.length) {
-    const subUid = uids.shift() as TNodeUid
-    subUids.push(subUid)
-
-    const subNode = tree[subUid]
-    for (const childUid of subNode.children) {
-      uids.push(childUid)
-    }
-  }
-
-  return subUids
-}
 
 /**
  * validate the uid collection - for select, dnd actions in node-tree-view
@@ -343,7 +356,7 @@ export const removeNode = (tree: TNodeTreeData, nodeUids: TNodeUid[], treeType: 
     parentNode.isEntity = parentNode.children.length === 0
 
     // delete nested nodes
-    const uids = getSubNodeUids(nodeUid, tree)
+    const uids = getSubNodeUidsByBfs(nodeUid, tree)
     uids.map((uid) => {
       delete tree[uid]
     })
@@ -576,7 +589,7 @@ export const duplicateNode = (tree: TNodeTreeData, uids: TNodeUid[], osType: TOs
     }, [] as TNodeUid[])
 
     // duplicate sub nodes and add them to the tree
-    const subUids = getSubNodeUids(node.uid, tree)
+    const subUids = getSubNodeUidsByBfs(node.uid, tree)
     subUids.map((subUid) => {
       const newSubUid = newUid + subUid.slice(node.uid.length)
       const subNode = tree[subUid]
@@ -635,11 +648,12 @@ export const replaceNode = (tree: TNodeTreeData, node: TNode) => {
  * @returns 
  */
 export const parseFile = (type: TFileType, content: string, referenceData: TNodeReferenceData, osType: TOsType): TFileParserResponse => {
-  if (type === "html") {
+  if (type === 'html') {
     return parseHtml(content, referenceData as THtmlReferenceData, osType)
   } else {
     return {
       formattedContent: '',
+      contentInApp: '',
       tree: {},
     }
   }

@@ -9,7 +9,6 @@ import React, {
 import cx from 'classnames';
 import { Command } from 'cmdk';
 import {
-  delMany,
   getMany,
   set,
   setMany,
@@ -19,6 +18,10 @@ import {
   useSelector,
 } from 'react-redux';
 import { PanelGroup } from 'react-resizable-panels';
+import {
+  useLocation,
+  useParams,
+} from 'react-router-dom';
 
 import {
   Loader,
@@ -34,8 +37,10 @@ import {
 import {
   DefaultTabSize,
   LogAllow,
+  RootNodeUid,
 } from '@_constants/main';
 import {
+  TFileNodeData,
   TFilesReference,
   TFilesReferenceData,
 } from '@_node/file';
@@ -45,12 +50,11 @@ import {
   THtmlReferenceData,
 } from '@_node/html';
 import {
+  TNode,
   TNodeTreeData,
   TNodeUid,
 } from '@_node/types';
 import {
-  clearFNState,
-  clearMainState,
   ffSelector,
   fnSelector,
   getActionGroupIndexSelector,
@@ -59,10 +63,10 @@ import {
   increaseActionGroupIndex,
   MainContext,
   navigatorSelector,
-  removeCurrentFile,
   setFileAction,
   TCommand,
   TFileHandlerCollection,
+  TTreeViewState,
   TUpdateOptions,
 } from '@_redux/main';
 // @ts-ignore
@@ -73,7 +77,6 @@ import cmdkRefJumpstart from '@_ref/cmdk.ref/Jumpstart.csv';
 import filesRef from '@_ref/rfrncs/Files.csv';
 // @ts-ignore
 import htmlRefElements from '@_ref/rfrncs/HTML Elements.csv';
-import { verifyFileHandlerPermission } from '@_services/main';
 import {
   TOsType,
   TTheme,
@@ -93,10 +96,7 @@ import {
   TSession,
 } from '@_types/main';
 
-import { TTreeViewState } from '../../_redux/main/types';
-import { RootNodeUid } from '../../constants/main';
 import { getCommandKey } from '../../services/global';
-import { TFile } from '../../types/main';
 import { MainPageProps } from './types';
 
 export default function MainPage(props: MainPageProps) {
@@ -145,46 +145,14 @@ export default function MainPage(props: MainPageProps) {
   }
 
   // file tree view
-  const [openedFiles, setOpenedFiles] = useState<{ [uid: TNodeUid]: TFile }>({})
-  const _setOpenedFiles = useCallback((...files: TFile[]) => {
-    const _openedFiles = JSON.parse(JSON.stringify(openedFiles))
-    files.map(newFile => {
-      _openedFiles[newFile.uid] = newFile
-    })
-    setOpenedFiles(_openedFiles)
-  }, [openedFiles])
-  const removeOpenedFiles = useCallback((...uids: TNodeUid[]) => {
-    const _openedFiles = JSON.parse(JSON.stringify(openedFiles))
-    uids.map(uid => {
-      delete _openedFiles[uid]
-    })
-    setOpenedFiles(_openedFiles)
-  }, [openedFiles])
-
-  const [ffHoveredItem, setFFHoveredItem] = useState<TNodeUid>('')
-  const [ffHandlers, setFFHandlers] = useState<TFileHandlerCollection>({})
   const [ffTree, setFFTree] = useState<TNodeTreeData>({})
-  const updateFF = useCallback((deletedUids: { [uid: TNodeUid]: boolean }, nodes: TNodeTreeData, handlers: { [uid: TNodeUid]: FileSystemHandle }) => {
-    // handle deleted uids
-    const _deletedUids = Object.keys(deletedUids)
-    _deletedUids.length && removeOpenedFiles(..._deletedUids)
-    if (deletedUids[file.uid]) {
-      dispatch(removeCurrentFile())
-      dispatch(clearFNState())
-      setNodeTree({})
-    }
-
-    // update handlers
-    setFFTree({ ...ffTree, ...nodes })
-
-    const newFFHandlers: TFileHandlerCollection = {}
-    for (const uid in ffHandlers) {
-      if (deletedUids[uid] === undefined) {
-        newFFHandlers[uid] = ffHandlers[uid]
-      }
-    }
-    setFFHandlers({ ...newFFHandlers, ...handlers })
-  }, [removeOpenedFiles, file.uid, ffTree, ffHandlers])
+  const [ffHandlers, setFFHandlers] = useState<TFileHandlerCollection>({})
+  const [ffHoveredItem, setFFHoveredItem] = useState<TNodeUid>('')
+  const setFFNode = (ffNode: TNode) => {
+    const _ffTree = JSON.parse(JSON.stringify(ffTree))
+    _ffTree[ffNode.uid] = JSON.parse(JSON.stringify(ffNode))
+    setFFTree(_ffTree)
+  }
 
   // node tree view
   const [fnHoveredItem, setFNHoveredItem] = useState<TNodeUid>('')
@@ -192,10 +160,7 @@ export default function MainPage(props: MainPageProps) {
   const [validNodeTree, setValidNodeTree] = useState<TNodeTreeData>({})
 
   // update opt
-  const [updateOpt, setUpdateOpt] = useState<TUpdateOptions>({
-    parse: null,
-    from: null,
-  })
+  const [updateOpt, setUpdateOpt] = useState<TUpdateOptions>({ parse: null, from: null })
 
   // ff hms
   const [isHms, setIsHms] = useState<boolean | null>(null)
@@ -341,9 +306,88 @@ export default function MainPage(props: MainPageProps) {
   const [panelResizing, setPanelResizing] = useState<boolean>(false)
 
   // stage-view
+  const [iframeSrc, setIframeSrc] = useState<string | null>(null)
   const [fileInfo, setFileInfo] = useState<TFileInfo>(null)
   const [hasSameScript, setHasSameScript] = useState<boolean>(true)
   // -------------------------------------------------------------- main context --------------------------------------------------------------
+
+  // -------------------------------------------------------------- routing --------------------------------------------------------------
+  // navigating
+  const params = useParams()
+  const location = useLocation()
+
+  // store last edit session
+  useEffect(() => {
+    (async () => {
+      const _hasSession = localStorage.getItem('last-edit-session') !== null
+      setHasSession(_hasSession)
+      let _session: TSession | null = null
+      if (_hasSession) {
+        const sessionInfo = await getMany(['project-context', 'project-root-folder-handler', 'file-tree-view-state', 'opened-file-uid', 'node-tree-view-state', 'opened-file-content'])
+        _session = {
+          'project-context': sessionInfo[0],
+          'project-root-folder-handler': sessionInfo[1],
+          'file-tree-view-state': sessionInfo[2],
+          'opened-file-uid': sessionInfo[3],
+          'node-tree-view-state': sessionInfo[4],
+          'opened-file-content': sessionInfo[5],
+        }
+        setSession(_session)
+      }
+      LogAllow && console.log('last-edit-session', _session)
+    })()
+  }, [])
+  useEffect(() => {
+    (async () => {
+      if (ffTree[RootNodeUid]) {
+        try {
+          await setMany([['project-context', project.context], ['project-root-folder-handler', ffHandlers[RootNodeUid]]])
+          localStorage.setItem('last-edit-session', 'yes')
+        } catch (err) {
+          localStorage.removeItem('last-edit-session')
+        }
+      }
+    })()
+  }, [ffTree[RootNodeUid]])
+  useEffect(() => {
+    (async () => {
+      const viewState: TTreeViewState = {
+        focusedItem: ffFocusedItem,
+        selectedItems: ffSelectedItems,
+        expandedItems: ffExpandedItems,
+        selectedItemsObj: ffSelectedItemsObj,
+        expandedItemsObj: ffExpandedItemsObj,
+      }
+      await set('file-tree-view-state', viewState)
+    })()
+  }, [ffFocusedItem, ffSelectedItems, ffExpandedItems, ffSelectedItemsObj, ffExpandedItemsObj])
+  useEffect(() => {
+    (async () => {
+      if (ffTree[file.uid] !== undefined) {
+        await set('opened-file-uid', file.uid)
+      }
+    })()
+  }, [file.uid])
+  useEffect(() => {
+    (async () => {
+      const viewState: TTreeViewState = {
+        focusedItem: fnFocusedItem,
+        selectedItems: fnSelectedItems,
+        expandedItems: fnExpandedItems,
+        selectedItemsObj: fnSelectedItemsObj,
+        expandedItemsObj: fnExpandedItemsObj,
+      }
+      await set('node-tree-view-state', viewState)
+    })()
+  }, [fnFocusedItem, fnSelectedItems, fnExpandedItems, fnSelectedItemsObj, fnExpandedItemsObj])
+  useEffect(() => {
+    (async () => {
+      if (ffTree[file.uid] !== undefined) {
+        await set('opened-file-content', file.content)
+      }
+    })()
+  }, [file.content])
+  // -------------------------------------------------------------- routing --------------------------------------------------------------
 
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
   // key event listener
@@ -428,10 +472,9 @@ export default function MainPage(props: MainPageProps) {
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
 
   // -------------------------------------------------------------- handlers --------------------------------------------------------------
-
   // save all of the changed files
   const onSaveAll = useCallback(async () => {
-    const _openedFiles: { [uid: TNodeUid]: TFile } = {}
+    /* const _openedFiles: { [uid: TNodeUid]: TFile } = {}
     const uids = Object.keys(openedFiles)
     const changedFiles: TFile[] = []
     uids.map(uid => {
@@ -479,12 +522,12 @@ export default function MainPage(props: MainPageProps) {
     }))
 
     saveDone && setOpenedFiles(_openedFiles)
-    setPending(false)
-  }, [openedFiles, ffHandlers])
+    setPending(false) */
+  }, [ffHandlers])
 
   // clean rnbw'data
   const onClear = useCallback(async () => {
-    const uids = Object.keys(openedFiles)
+    /* const uids = Object.keys(openedFiles)
     const changedFiles: TFile[] = []
     uids.map(uid => {
       const _file = openedFiles[uid]
@@ -509,8 +552,8 @@ Your changes will be lost if you don't save them.`
 
     // start from newbie
     onJumpstart()
-    localStorage.setItem("newbie", 'false')
-  }, [openedFiles, onSaveAll])
+    localStorage.setItem("newbie", 'false') */
+  }, [onSaveAll])
 
   // cmdk jumpstart
   const onJumpstart = useCallback(() => {
@@ -528,10 +571,9 @@ Your changes will be lost if you don't save them.`
     setFFAction(fileAction)
     setIsHms(true)
 
-    setFileInfo(file.info)
     setUpdateOpt({ parse: true, from: 'hms' })
     setTimeout(() => dispatch({ type: 'main/undo' }), 0)
-  }, [pending, fileAction, pastLength, file.info])
+  }, [pending, fileAction, pastLength])
   const onRedo = useCallback(() => {
     if (pending) return
 
@@ -539,10 +581,9 @@ Your changes will be lost if you don't save them.`
 
     setIsHms(false)
 
-    setFileInfo(file.info)
     setUpdateOpt({ parse: true, from: 'hms' })
     setTimeout(() => dispatch({ type: 'main/redo' }), 0)
-  }, [pending, futureLength, file.info])
+  }, [pending, futureLength])
 
   // reset fileAction in the new history
   useEffect(() => {
@@ -750,78 +791,6 @@ Your changes will be lost if you don't save them.`
     }
   }, [])
 
-  // store last edit session
-  useEffect(() => {
-    (async () => {
-      const _hasSession = localStorage.getItem('last-edit-session') !== null
-      setHasSession(_hasSession)
-      let _session: TSession | null = null
-      if (_hasSession) {
-        const sessionInfo = await getMany(['project-context', 'project-root-folder-handler', 'file-tree-view-state', 'opened-file-uid', 'node-tree-view-state', 'opened-file-content'])
-        _session = {
-          'project-context': sessionInfo[0],
-          'project-root-folder-handler': sessionInfo[1],
-          'file-tree-view-state': sessionInfo[2],
-          'opened-file-uid': sessionInfo[3],
-          'node-tree-view-state': sessionInfo[4],
-          'opened-file-content': sessionInfo[5],
-        }
-        setSession(_session)
-      }
-      LogAllow && console.log('last-edit-session', _session)
-    })()
-  }, [])
-  useEffect(() => {
-    (async () => {
-      if (ffTree[RootNodeUid]) {
-        try {
-          await setMany([['project-context', project.context], ['project-root-folder-handler', ffHandlers[RootNodeUid]]])
-          localStorage.setItem('last-edit-session', 'yes')
-        } catch (err) {
-          localStorage.removeItem('last-edit-session')
-        }
-      }
-    })()
-  }, [ffTree[RootNodeUid]])
-  useEffect(() => {
-    (async () => {
-      const viewState: TTreeViewState = {
-        focusedItem: ffFocusedItem,
-        selectedItems: ffSelectedItems,
-        expandedItems: ffExpandedItems,
-        selectedItemsObj: ffSelectedItemsObj,
-        expandedItemsObj: ffExpandedItemsObj,
-      }
-      await set('file-tree-view-state', viewState)
-    })()
-  }, [ffFocusedItem, ffSelectedItems, ffExpandedItems, ffSelectedItemsObj, ffExpandedItemsObj])
-  useEffect(() => {
-    (async () => {
-      if (ffTree[file.uid] !== undefined) {
-        await set('opened-file-uid', file.uid)
-      }
-    })()
-  }, [file.uid])
-  useEffect(() => {
-    (async () => {
-      const viewState: TTreeViewState = {
-        focusedItem: fnFocusedItem,
-        selectedItems: fnSelectedItems,
-        expandedItems: fnExpandedItems,
-        selectedItemsObj: fnSelectedItemsObj,
-        expandedItemsObj: fnExpandedItemsObj,
-      }
-      await set('node-tree-view-state', viewState)
-    })()
-  }, [fnFocusedItem, fnSelectedItems, fnExpandedItems, fnSelectedItemsObj, fnExpandedItemsObj])
-  useEffect(() => {
-    (async () => {
-      if (ffTree[file.uid] !== undefined) {
-        await set('opened-file-content', file.content)
-      }
-    })()
-  }, [file.content])
-
   // theme
   const setSystemTheme = useCallback(() => {
     setTheme('System')
@@ -886,13 +855,15 @@ Your changes will be lost if you don't save them.`
 
   // editor-close event handler
   useEffect(() => {
-    const uids = Object.keys(openedFiles)
+    const uids = Object.keys(ffTree)
 
     let changed = false
 
     for (const uid of uids) {
-      const _file = openedFiles[uid]
-      if (_file.changed) {
+      const node = ffTree[uid]
+      const nodeData = node.data as TFileNodeData
+
+      if (nodeData.changed) {
         changed = true
         break
       }
@@ -905,7 +876,7 @@ Your changes will be lost if you don't save them.`
     return () => {
       window.onbeforeunload = null
     }
-  }, [openedFiles])
+  }, [ffTree])
   // -------------------------------------------------------------- other --------------------------------------------------------------
 
   return <>
@@ -917,17 +888,14 @@ Your changes will be lost if you don't save them.`
         removeRunningActions,
 
         // file tree view
-        openedFiles,
-        setOpenedFiles: _setOpenedFiles,
-        removeOpenedFiles,
-
         ffHoveredItem,
         setFFHoveredItem,
 
         ffHandlers,
+        setFFHandlers,
         ffTree,
         setFFTree,
-        updateFF,
+        // updateFF,
 
         // node tree view
         fnHoveredItem,
@@ -1004,6 +972,7 @@ Your changes will be lost if you don't save them.`
         setPanelResizing,
 
         // stage-view
+        iframeSrc, setIframeSrc,
         fileInfo,
         setFileInfo,
 
@@ -1118,7 +1087,7 @@ Your changes will be lost if you don't save them.`
                             (false)
                           )) ||
                           ((activePanel === 'node' || activePanel === 'stage') && (
-                            (file.type === 'html' && context['html'] === true) ||
+                            (/* file.type === 'html' &&  */context['html'] === true) ||
                             (false)
                           ))
                         )) ||

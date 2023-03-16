@@ -27,8 +27,7 @@ export default function SettingsPanel(props: SettingsPanelProps) {
     addRunningActions, removeRunningActions,
 
     // file tree view
-    openedFiles, setOpenedFiles, removeOpenedFiles,
-    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree, updateFF,
+    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree,
 
     // ndoe tree view
     fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree,

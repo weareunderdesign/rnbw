@@ -21,6 +21,7 @@ export type THtmlNodeData = {
   attribs: THtmlTagAttributes,
 
   html: string,
+  htmlInApp: string,
   startLineNumber: number,
   startColumn: number,
   endLineNumber: number,
@@ -41,6 +42,7 @@ export type THtmlTagAttributes = {
  */
 export type THtmlParserResponse = {
   formattedContent: string,
+  contentInApp: string,
   tree: TNodeTreeData,
   info: THtmlSettings,
 }

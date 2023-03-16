@@ -1,3 +1,4 @@
+import { TFileNodeData } from './file';
 import {
   THtmlNodeData,
   THtmlProcessableNode,
@@ -19,7 +20,7 @@ export type TNode = {
   name: string,
   isEntity: boolean,
   children: TNodeUid[],
-  data: TNormalNodeData | THtmlNodeData | THtmlProcessableNode,
+  data: TNormalNodeData | TFileNodeData | THtmlNodeData | THtmlProcessableNode,
 }
 
 /**
@@ -69,6 +70,8 @@ export type TNodeReferenceData = THtmlReferenceData
  */
 export type TFileParserResponse = {
   formattedContent: string,
+  contentInApp: string,
   tree: TNodeTreeData,
   info?: THtmlSettings,
+  maxUid?: TNodeUid,
 }

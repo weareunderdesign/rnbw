@@ -11,7 +11,6 @@ import {
 import { TToast } from '@_types/global';
 import {
   TClipboardData,
-  TFile,
   TFileAction,
   TFileInfo,
   TPanelContext,
@@ -19,6 +18,7 @@ import {
 
 import {
   TCommand,
+  TFileHandlerCollection,
   TMainContext,
   TUpdateOptions,
 } from './types';
@@ -29,17 +29,13 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   removeRunningActions: (actionNames: string[], effect?: boolean) => { },
 
   // file tree view
-  openedFiles: {},
-  setOpenedFiles: (...files: TFile[]) => { },
-  removeOpenedFiles: (...uids: TNodeUid[]) => { },
-
   ffHoveredItem: '',
   setFFHoveredItem: (uid: TNodeUid) => { },
 
   ffHandlers: {},
+  setFFHandlers: (ffHandlerObj: TFileHandlerCollection) => { },
   ffTree: {},
   setFFTree: (tree: TNodeTreeData) => { },
-  updateFF: (deletedUids: { [uid: TNodeUid]: boolean }, nodes: TNodeTreeData, handlers: { [uid: TNodeUid]: FileSystemHandle }) => { },
 
   // node tree view
   fnHoveredItem: '',
@@ -118,6 +114,9 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   setPanelResizing: (resizing: boolean) => { },
 
   // stage-view
+  iframeSrc: null,
+  setIframeSrc: (src: string | null) => { },
+
   fileInfo: null,
   setFileInfo: (_fileInfo: TFileInfo) => { },
 

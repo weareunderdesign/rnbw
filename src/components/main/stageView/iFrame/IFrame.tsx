@@ -2,36 +2,44 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from 'react';
-import { createPortal } from 'react-dom';
 
-import { useSelector } from 'react-redux';
+import {
+  useDispatch,
+  useSelector,
+} from 'react-redux';
 
-import { LogAllow } from '@_constants/main';
 import {
-  THtmlNodeData,
-  THtmlSettings,
-} from '@_node/html';
+  NodeInAppAttribName,
+  RootNodeUid,
+} from '@_constants/main';
+import { TNodeUid } from '@_node/types';
 import {
+  expandFNNode,
+  fnSelector,
+  focusFNNode,
   MainContext,
   navigatorSelector,
+  selectFNNode,
 } from '@_redux/main';
 import { getCommandKey } from '@_services/global';
 import { TCmdkKeyMap } from '@_types/main';
 
-import NodeRenderer from '../nodeRenderer';
 import { styles } from './styles';
 import { IFrameProps } from './types';
 
 export const IFrame = (props: IFrameProps) => {
+  const dispatch = useDispatch()
+
   // main context
   const {
     // groupping action
     addRunningActions, removeRunningActions,
 
     // file tree view
-    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree, updateFF,
+    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree,
 
     // ndoe tree view
     fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree,
@@ -64,21 +72,161 @@ export const IFrame = (props: IFrameProps) => {
     panelResizing,
 
     // stage-view
+    iframeSrc,
     fileInfo, setFileInfo,
     hasSameScript, setHasSameScript,
   } = useContext(MainContext)
 
   // redux state
   const { workspace, project, file } = useSelector(navigatorSelector)
+  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
 
+  // -------------------------------------------------------------- Sync --------------------------------------------------------------
+  const focusedItemRef = useRef<TNodeUid>(focusedItem)
+  const fnHoveredItemRef = useRef<TNodeUid>(fnHoveredItem)
+  const [focusedElement, setFocusedElement] = useState<HTMLElement | null>(null)
+  const [hoveredElement, setHoveredElement] = useState<HTMLElement | null>(null)
+
+  // sync from redux
+  useEffect(() => {
+    const _document = contentRef?.contentWindow?.document
+
+    // detect if it's new change
+    if (focusedItemRef.current !== focusedItem) {
+      focusedElement?.removeAttribute('rnbwdev-rnbw-component-focus')
+
+      let newComponent = _document?.querySelector(`[${NodeInAppAttribName}="${focusedItem}"]`)
+      const isValid: null | string = newComponent?.firstElementChild ? newComponent?.firstElementChild.getAttribute(NodeInAppAttribName) : ''
+      isValid === null ? newComponent = newComponent?.firstElementChild : null
+      newComponent?.setAttribute('rnbwdev-rnbw-component-focus', '')
+
+      setFocusedElement(!newComponent ? null : newComponent as HTMLElement)
+      focusedItemRef.current = focusedItem
+    }
+
+    // always scroll to focused item
+    const newComponent = _document?.querySelector(`[${NodeInAppAttribName}="${focusedItem}"]`)
+    newComponent?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' })
+  }, [focusedItem])
+  useEffect(() => {
+    const _document = contentRef?.contentWindow?.document
+
+    // detect if it's new change
+    if (fnHoveredItemRef.current !== fnHoveredItem) {
+      hoveredElement?.removeAttribute('rnbwdev-rnbw-component-hover')
+
+      let newComponent = _document?.querySelector(`[${NodeInAppAttribName}="${fnHoveredItem}"]`)
+      const isValid: null | string = newComponent?.firstElementChild ? newComponent?.firstElementChild.getAttribute(NodeInAppAttribName) : ''
+      isValid === null ? newComponent = newComponent?.firstElementChild : null
+      newComponent?.setAttribute('rnbwdev-rnbw-component-hover', '')
+
+      setHoveredElement(!newComponent ? null : newComponent as HTMLElement)
+      fnHoveredItemRef.current = fnHoveredItem
+    }
+  }, [fnHoveredItem])
+
+  // sync to redux
+  const setFocusedItem = useCallback((uid: TNodeUid) => {
+    // validate
+    if (focusedItem === uid || validNodeTree[uid] === undefined) return
+
+    addRunningActions(['stageView-focus'])
+
+    // expand the path to the uid
+    const _expandedItems: TNodeUid[] = []
+    let node = validNodeTree[uid]
+    while (node.uid !== RootNodeUid) {
+      _expandedItems.push(node.uid)
+      node = validNodeTree[node.parentUid as TNodeUid]
+    }
+    _expandedItems.shift()
+    dispatch(expandFNNode(_expandedItems))
+
+    // focus
+    focusedItemRef.current = uid
+    dispatch(focusFNNode(uid))
+
+    // select
+    dispatch(selectFNNode([uid]))
+
+    removeRunningActions(['stageView-focus'])
+  }, [focusedItem, validNodeTree])
+  // -------------------------------------------------------------- Sync --------------------------------------------------------------
+
+  // -------------------------------------------------------------- Handlers --------------------------------------------------------------
   const [contentRef, setContentRef] = useState<HTMLIFrameElement | null>(null)
 
-  const _document = contentRef?.contentWindow?.document
-  const htmlNode = _document?.documentElement
-  const headNode = _document?.head
-  const bodyNode = _document?.body
+  // iframe render flag
+  useEffect(() => {
+    if (!fileInfo) return
 
-  // enable cmdk on stage view
+    !hasSameScript && setHasSameScript(true)
+  }, [hasSameScript])
+
+  // event handlers
+  const onMouseEnter = useCallback((ele: HTMLElement) => {
+    const uid = ele.getAttribute(NodeInAppAttribName)
+  }, [])
+
+  const onMouseMove = useCallback((ele: HTMLElement) => {
+    let _uid: TNodeUid | null = ele.getAttribute(NodeInAppAttribName)
+
+    // validate element which is added by javascript - such as web component
+    let validElement: HTMLElement = ele
+    while (!_uid) {
+      const parentEle = validElement.parentElement
+      if (!parentEle) break
+
+      _uid = parentEle.getAttribute(NodeInAppAttribName)
+
+      !_uid ? validElement = parentEle : null
+    }
+
+    // markup hovered item
+    if (_uid && _uid !== fnHoveredItem) {
+      hoveredElement?.removeAttribute('rnbwdev-rnbw-component-hover')
+      validElement.setAttribute('rnbwdev-rnbw-component-hover', '')
+      setHoveredElement(validElement)
+
+      setFNHoveredItem(_uid)
+      fnHoveredItemRef.current = _uid
+    }
+  }, [fnHoveredItem, hoveredElement])
+  const onMouseLeave = useCallback((ele: HTMLElement) => {
+    const uid = ele.getAttribute(NodeInAppAttribName)
+  }, [])
+
+  const onMouseDown = useCallback((ele: HTMLElement) => {
+    let _uid: TNodeUid | null = ele.getAttribute(NodeInAppAttribName)
+
+    // validate element which is added by javascript - such as web component
+    let validElement: HTMLElement = ele
+    while (!_uid) {
+      const parentEle = validElement.parentElement
+      if (!parentEle) break
+
+      _uid = parentEle.getAttribute(NodeInAppAttribName)
+
+      !_uid ? validElement = parentEle : null
+    }
+
+    // markup focused item
+    if (_uid && _uid !== focusedItem) {
+      focusedElement?.removeAttribute('rnbwdev-rnbw-component-focus')
+      validElement.setAttribute('rnbwdev-rnbw-component-focus', '')
+      setFocusedElement(validElement)
+
+      setFocusedItem(_uid)
+    }
+  }, [focusedItem, focusedElement, setFocusedItem])
+  const onMouseUp = useCallback((ele: HTMLElement) => {
+    const uid = ele.getAttribute(NodeInAppAttribName)
+  }, [])
+
+  const onDblClick = useCallback((ele: HTMLElement) => {
+    const uid = ele.getAttribute(NodeInAppAttribName)
+  }, [])
+
   const keyDownListener = useCallback((e: KeyboardEvent) => {
     // cmdk obj for the current command
     const cmdk: TCmdkKeyMap = {
@@ -102,99 +250,106 @@ export const IFrame = (props: IFrameProps) => {
     }
     if (action === null) return
 
-    LogAllow && console.log('action to be run by cmdk: ', action)
+    console.log('action to be run by cmdk: ', action)
     setCurrentCommand({ action })
   }, [cmdkReferenceData])
+
+  // handle iframe events
+  const [iframeEvent, setIframeEvent] = useState<{ type: string, ele: HTMLElement }>()
   useEffect(() => {
-    htmlNode?.addEventListener('keydown', keyDownListener)
+    if (!iframeEvent) return
 
-    return () => htmlNode?.removeEventListener('keydown', keyDownListener)
-  }, [htmlNode, cmdkReferenceData])
+    const { type, ele } = iframeEvent
 
-  // iframe render flag
-  useEffect(() => {
-    if (!fileInfo) return
+    switch (type) {
+      case 'onMouseEnter':
+        onMouseEnter(ele)
+        break
+      case 'mousemove':
+        onMouseMove(ele)
+        break
+      case 'mouseleave':
+        onMouseLeave(ele)
+        break
 
-    !hasSameScript && setHasSameScript(true)
-  }, [hasSameScript])
+      case 'mousedown':
+        onMouseDown(ele)
+        break
+      case 'mouseup':
+        onMouseUp(ele)
+        break
 
-  // config html, head, body structure
+      case 'dblclick':
+        onDblClick(ele)
+        break
+      default:
+        break
+    }
+  }, [iframeEvent])
+
+  // iframe loading flag
+  const [loading, setLoading] = useState<boolean>(false)
+
   useEffect(() => {
     if (contentRef) {
+      setLoading(true)
+
       contentRef.onload = () => {
-        setPending(false)
-      }
+        const _document = contentRef?.contentWindow?.document
+        const htmlNode = _document?.documentElement
+        const headNode = _document?.head
 
-      if (fileInfo && _document && htmlNode && headNode && bodyNode) {
-        const settings = fileInfo as THtmlSettings
+        if (htmlNode && headNode) {
+          // enable cmdk
+          htmlNode.addEventListener('keydown', keyDownListener)
 
-        // add css & js to iframe
-        const style = _document.createElement('style')
-        style.textContent = styles
-        headNode.appendChild(style)
+          // add rnbw css
+          const style = _document.createElement('style')
+          style.textContent = styles
+          headNode.appendChild(style)
 
-        settings.scripts.map(script => {
-          const scriptTag = _document.createElement('script')
-          const attribs = script.data.attribs
-          Object.keys(attribs).map(attrName => {
-            scriptTag.setAttribute(attrName, attribs[attrName])
+          // define event handlers
+          htmlNode.addEventListener('mouseenter', (e: MouseEvent) => {
+            e.stopPropagation()
+            setIframeEvent({ type: e.type, ele: e.target as HTMLElement })
           })
-          if (settings.head && script.uid.startsWith(settings.head)) {
-            headNode.appendChild(scriptTag)
-          } else {
-            bodyNode.appendChild(scriptTag)
-          }
-        })
+          htmlNode.addEventListener('mousemove', (e: MouseEvent) => {
+            e.stopPropagation()
+            setIframeEvent({ type: e.type, ele: e.target as HTMLElement })
+          })
+          htmlNode.addEventListener('mouseleave', (e: MouseEvent) => {
+            e.stopPropagation()
+            setIframeEvent({ type: e.type, ele: e.target as HTMLElement })
+          })
 
-        // html
-        htmlNode.getAttributeNames().map(attrName => {
-          htmlNode.removeAttribute(attrName)
-        })
-        if (settings.html) {
-          const node = nodeTree[settings.html]
-          const data = node.data as THtmlNodeData
-          for (const attrName in data.attribs) {
-            const attrValue = data.attribs[attrName]
-            htmlNode.setAttribute(attrName, attrValue)
-          }
-        }
+          htmlNode.addEventListener('mousedown', (e: MouseEvent) => {
+            e.stopPropagation()
+            setIframeEvent({ type: e.type, ele: e.target as HTMLElement })
+          })
+          htmlNode.addEventListener('mouseup', (e: MouseEvent) => {
+            e.stopPropagation()
+            setIframeEvent({ type: e.type, ele: e.target as HTMLElement })
+          })
 
-        // head
-        headNode.getAttributeNames().map(attrName => {
-          headNode.removeAttribute(attrName)
-        })
-        if (settings.head) {
-          const { attribs } = nodeTree[settings.head].data as THtmlNodeData
-          Object.keys(attribs).map(attrName => {
-            headNode.setAttribute(attrName, attribs[attrName])
+          htmlNode.addEventListener('dblclick', (e: MouseEvent) => {
+            e.stopPropagation()
+            setIframeEvent({ type: e.type, ele: e.target as HTMLElement })
           })
         }
 
-        // body
-        bodyNode.getAttributeNames().map(attrName => {
-          bodyNode.removeAttribute(attrName)
-        })
-        if (settings.body) {
-          const { attribs } = nodeTree[settings.body].data as THtmlNodeData
-          Object.keys(attribs).map(attrName => {
-            bodyNode.setAttribute(attrName, attribs[attrName])
-          })
-        }
-
-        setPending(true)
+        setLoading(false)
       }
     }
   }, [contentRef])
+  // -------------------------------------------------------------- Handlers --------------------------------------------------------------
 
   return <>
-    {hasSameScript && <>
+    {iframeSrc && <>
       <iframe
         ref={setContentRef}
+        src={iframeSrc}
         style={{ position: "absolute", width: "100%", height: "100%" }}
-      >
-        {file.info && headNode && createPortal(<NodeRenderer id={file.info.head || ''} />, headNode)}
-        {file.info && bodyNode && createPortal(<NodeRenderer id={file.info.body || ''} />, bodyNode)}
-      </iframe>
+      />
     </>}
   </>
 }

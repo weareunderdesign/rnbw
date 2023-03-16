@@ -34,17 +34,13 @@ export type TMainContext = {
   removeRunningActions: (actionNames: string[], effect?: boolean) => void,
 
   // file tree view
-  openedFiles: { [uid: TNodeUid]: TFile },
-  setOpenedFiles: (...files: TFile[]) => void,
-  removeOpenedFiles: (...uids: TNodeUid[]) => void,
-
   ffHoveredItem: TNodeUid,
   setFFHoveredItem: (uid: TNodeUid) => void,
 
   ffHandlers: TFileHandlerCollection,
+  setFFHandlers: (ffHandlerObj: TFileHandlerCollection) => void,
   ffTree: TNodeTreeData,
   setFFTree: (tree: TNodeTreeData) => void,
-  updateFF: (deletedUids: { [uid: TNodeUid]: boolean }, nodes: TNodeTreeData, handlers: { [uid: TNodeUid]: FileSystemHandle }) => void,
 
   // node tree view
   fnHoveredItem: TNodeUid,
@@ -121,6 +117,9 @@ export type TMainContext = {
   setPanelResizing: (resizing: boolean) => void,
 
   // stage-view
+  iframeSrc: null | string,
+  setIframeSrc: (src: string | null) => void,
+
   fileInfo: TFileInfo,
   setFileInfo: (_fileInfo: TFileInfo) => void,
 
