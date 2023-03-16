@@ -57,6 +57,26 @@ export const getSubNodeUidsByDfs = (uid: TNodeUid, tree: TNodeTreeData): TNodeUi
 
   return subUids
 }
+export const parseFile = (type: TFileType, content: string, referenceData: TNodeReferenceData, osType: TOsType): TFileParserResponse => {
+  if (type === 'html') {
+    return parseHtml(content, referenceData as THtmlReferenceData, osType)
+  } else {
+    return {
+      formattedContent: '',
+      contentInApp: '',
+      tree: {},
+      treeMaxUid: '0',
+      info: null,
+    }
+  }
+}
+export const serializeFile = (type: TFileType, tree: TNodeTreeData, referenceData: TNodeReferenceData): string => {
+  if (type === 'html') {
+    const { html } = serializeHtml(tree, referenceData as THtmlReferenceData)
+    return html
+  }
+  return ''
+}
 
 /**
  * generate node uid from parent uid and its entry name
@@ -637,39 +657,4 @@ export const updateNode = (tree: TNodeTreeData, uid: TNodeUid, data: any) => {
  */
 export const replaceNode = (tree: TNodeTreeData, node: TNode) => {
   tree[node.uid] = node
-}
-
-/**
- * parse file content
- * @param type 
- * @param content 
- * @param referenceData 
- * @param osType 
- * @returns 
- */
-export const parseFile = (type: TFileType, content: string, referenceData: TNodeReferenceData, osType: TOsType): TFileParserResponse => {
-  if (type === 'html') {
-    return parseHtml(content, referenceData as THtmlReferenceData, osType)
-  } else {
-    return {
-      formattedContent: '',
-      contentInApp: '',
-      tree: {},
-    }
-  }
-}
-
-/**
- * serialize file content from the tree
- * @param type 
- * @param tree 
- * @param referenceData 
- * @returns 
- */
-export const serializeFile = (type: TFileType, tree: TNodeTreeData, referenceData: TNodeReferenceData): string => {
-  if (type === "html") {
-    const { html } = serializeHtml(tree, referenceData as THtmlReferenceData)
-    return html
-  }
-  return ''
 }

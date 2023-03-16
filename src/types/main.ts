@@ -1,5 +1,5 @@
 import {
-  THtmlSettings,
+  THtmlPageSettings,
   TNodeTreeData,
   TNodeUid,
 } from '@_node/index';
@@ -40,10 +40,7 @@ export type TFile = {
   content: string,
 }
 
-/**
- * file info
- */
-export type TFileInfo = THtmlSettings | null
+export type TFileInfo = THtmlPageSettings | null
 
 /**
  * session

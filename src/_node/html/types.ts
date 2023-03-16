@@ -6,56 +6,44 @@ import {
   TNodeUid,
 } from '../';
 
-/**
- * html node-data type
- */
 export type THtmlNodeData = {
   valid: boolean,
   isFormatText: boolean,
 
-  isWebComponent: boolean,
-
   type: string,
   name: string,
   data: string,
-  attribs: THtmlTagAttributes,
+  attribs: THtmlNodeAttributes,
 
   html: string,
   htmlInApp: string,
+
   startLineNumber: number,
   startColumn: number,
   endLineNumber: number,
   endColumn: number,
-
-  hasOrgClass: boolean,
 }
-
-/**
- * html element attribtues type
- */
-export type THtmlTagAttributes = {
+export type THtmlNodeAttributes = {
+  [attrName: string]: any,
+}
+export interface THtmlDomNodeData extends DOMElement<any, HTMLElement> {
+  valid: boolean,
   [attrName: string]: any,
 }
 
-/**
- * parseHtml api response type
- */
+
 export type THtmlParserResponse = {
   formattedContent: string,
   contentInApp: string,
   tree: TNodeTreeData,
-  info: THtmlSettings,
+  treeMaxUid: TNodeUid,
+  info: THtmlPageSettings,
 }
 
 /**
  * html processable node type - dom element
  */
-export interface THtmlProcessableNode extends DOMElement<any, HTMLElement> {
-  valid: boolean,
-  uid: TNodeUid,
 
-  [attrName: string]: any,
-}
 
 /**
  * html reference data
@@ -87,16 +75,8 @@ export type THtmlElementsReference = {
   "Cover Image": string,
 }
 
-/**
- * html settings info
- */
-export type THtmlSettings = {
-  html?: string,
-  head?: string,
-  body?: string,
-
-  scripts: TNode[],
-
+export type THtmlPageSettings = {
   title?: string,
   favicon: string[],
+  scripts: TNode[],
 }

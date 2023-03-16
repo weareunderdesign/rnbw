@@ -877,8 +877,7 @@ Your changes will be lost if you don't save them.`
     <MainContext.Provider
       value={{
         // groupping action
-        addRunningActions,
-        removeRunningActions,
+        addRunningActions, removeRunningActions,
 
         // file tree view
         ffTree, setFFTree, setFFNode,
@@ -886,86 +885,58 @@ Your changes will be lost if you don't save them.`
         ffHoveredItem, setFFHoveredItem,
 
         // node tree view
-        fnHoveredItem,
-        setFNHoveredItem,
-
-        nodeTree,
-        setNodeTree,
-
-        validNodeTree,
-        setValidNodeTree,
+        fnHoveredItem, setFNHoveredItem,
+        nodeTree, setNodeTree,
+        validNodeTree, setValidNodeTree,
 
         // update opt
-        updateOpt,
-        setUpdateOpt,
+        updateOpt, setUpdateOpt,
 
         // ff hms
-        isHms,
-        setIsHms,
-        ffAction,
-        setFFAction,
+        isHms, setIsHms,
+        ffAction, setFFAction,
 
         // cmdk
-        currentCommand,
-        setCurrentCommand,
+        currentCommand, setCurrentCommand,
 
         // global
-        pending,
-        setPending,
+        pending, setPending,
 
-        messages,
-        addMessage,
-        removeMessage,
+        messages, addMessage, removeMessage,
 
         // reference
-        filesReferenceData,
-        htmlReferenceData,
-
-        cmdkReferenceData,
-        cmdkReferenceJumpstart,
-        cmdkReferenceActions,
-        cmdkReferenceAdd,
+        filesReferenceData, htmlReferenceData,
+        cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions, cmdkReferenceAdd,
 
         // cmdk
-        cmdkOpen,
-        setCmdkOpen,
+        cmdkOpen, setCmdkOpen,
 
-        cmdkPages,
-        setCmdkPages,
-        cmdkPage,
+        cmdkPages, setCmdkPages, cmdkPage,
 
         // active panel/clipboard
-        activePanel,
-        setActivePanel,
+        activePanel, setActivePanel,
 
-        clipboardData,
-        setClipboardData,
+        clipboardData, setClipboardData,
 
         // os
         osType,
 
         // code view
-        tabSize,
-        setTabSize,
+        tabSize, setTabSize,
 
         // theme
         theme,
 
         // session
-        hasSession,
-        session,
+        hasSession, session,
 
         // panel-resize
-        panelResizing,
-        setPanelResizing,
+        panelResizing, setPanelResizing,
 
         // stage-view
         iframeSrc, setIframeSrc,
-        fileInfo,
-        setFileInfo,
-
-        hasSameScript,
-        setHasSameScript,
+        fileInfo, setFileInfo,
+        hasSameScript, setHasSameScript,
       }}
     >
       {/* process */}

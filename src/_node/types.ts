@@ -1,9 +1,10 @@
+import { TFileInfo } from '@_types/main';
+
 import { TFileNodeData } from './file';
 import {
+  THtmlDomNodeData,
   THtmlNodeData,
-  THtmlProcessableNode,
   THtmlReferenceData,
-  THtmlSettings,
 } from './html';
 
 /**
@@ -20,20 +21,14 @@ export type TNode = {
   name: string,
   isEntity: boolean,
   children: TNodeUid[],
-  data: TNormalNodeData | TFileNodeData | THtmlNodeData | THtmlProcessableNode,
+  data: TNormalNodeData | TFileNodeData | THtmlNodeData | THtmlDomNodeData,
 }
-
-/**
- * general node data
- */
 export type TNormalNodeData = {
   valid: boolean,
-  [prop: string]: any,
+  [propName: string]: any,
 }
 
-/**
- * node tree data
- */
+
 export type TNodeTreeData = {
   [uid: TNodeUid]: TNode,
 }
@@ -65,13 +60,10 @@ export type TNodeApiResponse = {
  */
 export type TNodeReferenceData = THtmlReferenceData
 
-/**
- * parseFile api response type
- */
 export type TFileParserResponse = {
   formattedContent: string,
   contentInApp: string,
   tree: TNodeTreeData,
-  info?: THtmlSettings,
-  maxUid?: TNodeUid,
+  treeMaxUid: TNodeUid,
+  info: TFileInfo,
 }

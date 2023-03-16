@@ -978,7 +978,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
 
     // set redux-file and process
-    addRunningActions(['processor-file'])
+    addRunningActions(['processor-updateOpt'])
     dispatch(setCurrentFile({ uid, content: nodeData.content }))
     setUpdateOpt({ parse: true, from: 'file' })
 

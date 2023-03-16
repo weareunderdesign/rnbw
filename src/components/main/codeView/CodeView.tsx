@@ -134,7 +134,7 @@ export default function CodeView(props: CodeViewProps) {
     // skip the same content
     if (file.content === codeContent.current) return
 
-    addRunningActions(['processor-file'])
+    addRunningActions(['processor-updateOpt'])
 
     setUpdateOpt({ parse: true, from: 'code' })
     setTimeout(() => dispatch(setCurrentFileContent(codeContent.current)), 0)

@@ -645,7 +645,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
             ),
           }}
 
-          /* possibilities */
           props={{
             canDragAndDrop: true,
             canDropOnFolder: true,
@@ -657,14 +656,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
             canRename: false,
           }}
 
-          /* cb */
           callbacks={{
-            /* RENAME CALLBACK */
-            onRenameItem: (item, name) => {
-              cb_renameNode(item.index as TNodeUid, name)
-            },
-
-            /* SELECT, FOCUS, EXPAND, COLLAPSE CALLBACK */
             onSelectItems: (items) => {
               cb_selectNode(items as TNodeUid[])
             },
@@ -677,17 +669,14 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
             onCollapseItem: (item) => {
               cb_collapseNode(item.index as TNodeUid)
             },
-
-            // DnD CALLBACK
             onDrop: (items, target) => {
-              // building drop-node-payload
               const uids: TNodeUid[] = items.map(item => item.index as TNodeUid)
               const isBetween = target.targetType === 'between-items'
               const parentUid = (isBetween ? target.parentItem : target.targetItem) as TNodeUid
               const position = isBetween ? target.childIndex : 0
 
               cb_dropNode(uids, parentUid, isBetween, position)
-            }
+            },
           }}
         />
       </div>

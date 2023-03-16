@@ -15,18 +15,17 @@ import {
   getNodeDepth,
   getSubNodeUidsByBfs,
   getSubNodeUidsByDfs,
-  sortNodeUidsByBfs,
   THtmlNodeData,
   TNode,
   TNodeTreeData,
   TNodeUid,
 } from '../';
 import {
+  THtmlDomNodeData,
+  THtmlNodeAttributes,
+  THtmlPageSettings,
   THtmlParserResponse,
-  THtmlProcessableNode,
   THtmlReferenceData,
-  THtmlSettings,
-  THtmlTagAttributes,
 } from './types';
 
 /**
@@ -190,29 +189,18 @@ export const indentNode = (tree: TNodeTreeData, node: TNode, indentSize: number,
   })
 }
 
-/**
- * parse html content
- * @param content 
- * @param htmlReferenceData 
- * @param osType 
- * @returns 
- */
-export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData, osType: TOsType): THtmlParserResponse => {
-  const tree: TNodeTreeData = {}
-  const tmpTree: TNodeTreeData = {}
-  const settings: THtmlSettings = {
-    scripts: [],
-    favicon: [],
-  }
-  let UID = 0
 
-  // parse html using react-html-parser
+export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData, osType: TOsType): THtmlParserResponse => {
+  // parse the html content
+  let UID = 0
+  const tmpTree: TNodeTreeData = {}
   ReactHtmlParser(content, {
     decodeEntities: true,
     transform: (node, index, transform) => {
       node.valid = true
     },
-    preprocessNodes: (_nodes: THtmlProcessableNode[]) => {
+    preprocessNodes: (nodes: THtmlDomNodeData[]) => {
+      // build root node
       tmpTree[RootNodeUid] = {
         uid: RootNodeUid,
         parentUid: null,
@@ -222,12 +210,10 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
         data: { valid: true },
       }
 
-      // build the depth-1 seed nodes
+      // build depth-1 seed nodes
       const seedNodes: TNode[] = []
-      _nodes.map((_node, _index) => {
+      nodes.map((node) => {
         const uid = String(++UID)
-        _node.valid = true
-        _node.uid = uid
         tmpTree[RootNodeUid].children.push(uid)
         tmpTree[uid] = {
           uid,
@@ -235,98 +221,113 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
           name: '',
           isEntity: true,
           children: [],
-          data: _node,
+          data: node,
         }
         seedNodes.push(tmpTree[uid])
       })
 
       // build the whole node tree from the seed nodes - BFS
       while (seedNodes.length) {
-        const _node = seedNodes.shift() as TNode
-        const nodeData = _node.data as THtmlProcessableNode
+        const node = seedNodes.shift() as TNode
+        const nodeData = node.data as THtmlDomNodeData
+
         if (!nodeData.children) continue
 
-        for (const _child of nodeData.children) {
-          const uid = String(++UID);
-          (_child as THtmlProcessableNode).uid = uid
-          _node.children.push(uid)
-          _node.isEntity = false
+        nodeData.children.map((child: THtmlDomNodeData) => {
+          const uid = String(++UID)
+
+          node.children.push(uid)
+          node.isEntity = false
+
           tmpTree[uid] = {
             uid,
-            parentUid: _node.uid,
+            parentUid: node.uid,
             name: '',
             isEntity: true,
             children: [],
-            data: _child as THtmlProcessableNode,
+            data: child,
           }
           seedNodes.push(tmpTree[uid])
+        })
+        for (const _child of nodeData.children) {
         }
       }
 
-      return _nodes
+      return nodes
     },
   })
+  console.log('ReactHtmlParser result:', JSON.parse(JSON.stringify(tmpTree)))
 
-  // validate the nodes
+  // build real tree data and set html page settings
+  const tree: TNodeTreeData = {}
+  const settings: THtmlPageSettings = {
+    scripts: [],
+    favicon: [],
+  }
   let uids: TNodeUid[] = Object.keys(tmpTree)
   uids.map((uid) => {
     const node = tmpTree[uid]
-    const data = node.data as THtmlProcessableNode
 
-    // set isFormatText & valid
-    let isFormatText = false, valid = true
-    if (uid === RootNodeUid) {
-      // do nothing
-    } else if (!data.valid) {
-      // its format text node
-      valid = false
-      isFormatText = true
-    } else {
-      // its just text content, not format text node
-      valid = (data.type !== 'text')
-    }
-
-    // set in-app class name to nodes
-    if (!data.attribs) data.attribs = {}
-    data.attribs[NodeInAppAttribName] = uid
-
-    const nodeData = {
-      valid,
-      isFormatText,
-
-      type: data.type,
-      name: data.name,
-      data: data.data,
-      attribs: data.attribs,
-    }
-    tree[uid] = {
-      ...node,
-      name: uid === RootNodeUid ? RootNodeUid : (data.name || data.type),
-      data: nodeData,
-    }
-
-    if (data.type === 'tag') {
-      if (data.name === 'title') {
-        settings.title = node.uid
-      } else if (data.name === 'link' && data.attribs.rel === 'icon' && data.attribs.href) {
-        settings.favicon.push(data.attribs.href)
+    // get html page settings info
+    if (uid !== RootNodeUid) {
+      const nodeData = node.data as THtmlDomNodeData
+      if (nodeData.type === 'tag') {
+        if (nodeData.name === 'title') {
+          settings.title = node.uid
+        } else if (nodeData.name === 'link' && nodeData.attribs.rel === 'icon' && nodeData.attribs.href) {
+          settings.favicon.push(nodeData.attribs.href)
+        }
+      } else if (nodeData.type === 'script') {
+        settings.scripts.push(tree[uid])
       }
-    } else if (data.type === 'script') {
-      settings.scripts.push(tree[uid])
+    }
+
+    // build valid node tree
+    if (uid === RootNodeUid) {
+      tree[uid] = { ...node }
+    } else {
+      const nodeData = node.data as THtmlDomNodeData
+
+      let isFormatText = false, valid = true
+      if (!nodeData.valid) {
+        // format text node
+        valid = false
+        isFormatText = true
+      } else {
+        // detect general text node
+        valid = (nodeData.type !== 'text')
+      }
+
+      // set in-app-attribute to nodes
+      if (!nodeData.attribs) nodeData.attribs = {}
+      nodeData.attribs[NodeInAppAttribName] = uid
+
+      tree[uid] = {
+        ...node,
+        name: nodeData.name || nodeData.type,
+        data: {
+          valid,
+          isFormatText,
+
+          type: nodeData.type,
+          name: nodeData.name,
+          data: nodeData.data,
+          attribs: nodeData.attribs,
+        },
+      }
     }
   })
 
-  // set html for the nodes
+  // set html, htmlInApp to tree nodes
   const { html: formattedContent, htmlInApp: contentInApp } = serializeHtml(tree, htmlReferenceData)
 
-  // set html range for code view
+  // set code range to nodes
   const detected: Map<string, number> = new Map<string, number>()
   uids = getSubNodeUidsByDfs(RootNodeUid, tree)
   uids.map((uid) => {
     const node = tree[uid]
     if (!node.data.valid) return
 
-    // set the html range
     const { html } = node.data as THtmlNodeData
     const htmlArr = formattedContent.split(html)
 
@@ -351,91 +352,61 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
     }
   })
 
-  return { formattedContent, contentInApp, tree, info: settings }
+  return { formattedContent, contentInApp, tree, treeMaxUid: String(UID), info: settings }
 }
-
-/**
- * set html for nodes in the tree and return the whole code
- * @param tree 
- * @param htmlReferenceData 
- * @returns 
- */
 export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlReferenceData): THtmlNodeData => {
-  const uids = sortNodeUidsByBfs(Object.keys(tree))
+  const uids = getSubNodeUidsByBfs(RootNodeUid, tree)
   uids.reverse()
 
   uids.map((uid) => {
     const node = tree[uid]
+    const nodeData = node.data as THtmlNodeData
 
-    // collect children html
-    let childrenHtml = ``, childrenHtmlInApp = ``
-    node.children.map((childUid) => {
-      const child = tree[childUid]
+    // merge children html
+    let childrenHtml = '', childrenHtmlInApp = ''
+    node.children.map((c_uid) => {
+      const child = tree[c_uid]
       const childData = child.data as THtmlNodeData
       childrenHtml += childData.html
       childrenHtmlInApp += childData.htmlInApp
     })
 
+    // generate attribs html
+    let nodeHtml = '', nodeHtmlInApp = ''
+    const attribsHtml = nodeData.attribs === undefined ? '' :
+      Object.keys(nodeData.attribs).map(attr => {
+        if (attr === NodeInAppAttribName) return
+
+        const attrContent = nodeData.attribs[attr]
+        return attrContent === '' ? ` ${attr}` : ` ${attr}="${attrContent}"`
+      }).join('')
+    const attribsHtmlInApp = nodeData.attribs === undefined ? '' :
+      Object.keys(nodeData.attribs).map(attr => {
+        const attrContent = nodeData.attribs[attr]
+        return attrContent === '' ? ` ${attr}` : ` ${attr}="${attrContent}"`
+      }).join('')
+
     // wrap with the current node
-    const data = node.data as THtmlNodeData
-    let nodeHtml = ``, nodeHtmlInApp = ``
-
-    // validate attribs html
-    const attribsHtml = data.attribs === undefined ? '' : Object.keys(data.attribs).map(attr => {
-      const attrContent = data.attribs[attr]
-      if (attr === NodeInAppAttribName) {
-        return
-      } else if (attr === 'class') {
-        // do nothing
-      } else if (attr === 'style') {
-        // do nothing
-      } else {
-        // do nothing
-      }
-      return attrContent === '' ? ` ${attr}` : ` ${attr}="${attrContent}"`
-    }).join('')
-    const attribsHtmlInApp = data.attribs === undefined ? '' : Object.keys(data.attribs).map(attr => {
-      const attrContent = data.attribs[attr]
-      if (attr === NodeInAppAttribName) {
-        // do nothing
-      } else if (attr === 'class') {
-        // do nothing
-      } else if (attr === 'style') {
-        // do nothing
-      } else {
-        // do nothing
-      }
-      return attrContent === '' ? ` ${attr}` : ` ${attr}="${attrContent}"`
-    }).join('')
-
-    if (data.type === 'directive') {
-      nodeHtml = `<${data.data}>`
-      nodeHtmlInApp = `<${data.data}>`
-    } else if (data.type === 'comment') {
-      nodeHtml = `<!--${data.data}-->`
-      nodeHtmlInApp = `<!--${data.data}-->`
-    } else if (data.type === 'text') {
+    if (nodeData.type === 'directive') {
+      nodeHtml = `<${nodeData.data}>`
+      nodeHtmlInApp = `<${nodeData.data}>`
+    } else if (nodeData.type === 'comment') {
+      nodeHtml = `<!--${nodeData.data}-->`
+      nodeHtmlInApp = `<!--${nodeData.data}-->`
+    } else if (nodeData.type === 'text') {
       // replace "<" or ">" to "&lt;" and "&gt;"
-      nodeHtml = data.data.replace(/</g, `&lt;`).replace(/>/g, `&gt;`)
-      nodeHtmlInApp = data.data.replace(/</g, `&lt;`).replace(/>/g, `&gt;`)
-    } else if (data.type === 'script' || data.type === 'style') {
-      nodeHtml = `<${data.type}${attribsHtml}>${childrenHtml}</${data.type}>`
-      nodeHtmlInApp = `<${data.type}${attribsHtmlInApp}>${childrenHtmlInApp}</${data.type}>`
-    } else if (data.type === 'tag') {
+      nodeHtml = nodeData.data.replace(/</g, `&lt;`).replace(/>/g, `&gt;`)
+      nodeHtmlInApp = nodeData.data.replace(/</g, `&lt;`).replace(/>/g, `&gt;`)
+    } else if (nodeData.type === 'script' || nodeData.type === 'style') {
+      nodeHtml = `<${nodeData.type}${attribsHtml}>${childrenHtml}</${nodeData.type}>`
+      nodeHtmlInApp = `<${nodeData.type}${attribsHtmlInApp}>${childrenHtmlInApp}</${nodeData.type}>`
+    } else if (nodeData.type === 'tag') {
+      const tagName = nodeData.name
       const htmlElementsReferenceData = htmlReferenceData.elements
-      const tagName = data.name
-      let isEmptyTag: boolean = false
       const refData = htmlElementsReferenceData[tagName]
 
-      let isWebComponent = false
-      if (refData === undefined) {
-        isWebComponent = true
-      } else if (refData.Content === 'None') {
-        isEmptyTag = true
-      }
-      data.isWebComponent = isWebComponent
-
-      // need to remove this condition when the reference is perfect
+      let isEmptyTag = refData && refData.Content === 'None'
+      // --------------------- tmp code ---------------------
       if (!isEmptyTag) {
         if (tagName === 'meta' || tagName === 'link'
           || tagName === 'br' || tagName === 'hr'
@@ -444,6 +415,7 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
           isEmptyTag = true
         }
       }
+      // --------------------- tmp code ---------------------
 
       if (isEmptyTag) {
         nodeHtml = `<${tagName}${attribsHtml}>`
@@ -457,8 +429,9 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
       nodeHtmlInApp = childrenHtmlInApp
     }
 
-    data.html = nodeHtml
-    data.htmlInApp = nodeHtmlInApp
+    // set html and htmlInApp
+    nodeData.html = nodeHtml
+    nodeData.htmlInApp = nodeHtmlInApp
   })
 
   return tree[RootNodeUid].data as THtmlNodeData
@@ -469,8 +442,8 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
  * @param attrs 
  * @returns 
  */
-export const getShortHand = (attrs: THtmlTagAttributes): THtmlTagAttributes => {
-  const newAttr: THtmlTagAttributes = {}
+export const getShortHand = (attrs: THtmlNodeAttributes): THtmlNodeAttributes => {
+  const newAttr: THtmlNodeAttributes = {}
 
   for (const attrName in attrs) {
     const attrContent = attrs[attrName]
