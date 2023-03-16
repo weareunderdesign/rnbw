@@ -30,6 +30,8 @@ import {
 } from './types';
 
 export const getSubNodeUidsByBfs = (uid: TNodeUid, tree: TNodeTreeData): TNodeUid[] => {
+  if (!tree[uid]) return []
+
   let subUids: TNodeUid[] = []
 
   let uids = [uid]
@@ -44,6 +46,8 @@ export const getSubNodeUidsByBfs = (uid: TNodeUid, tree: TNodeTreeData): TNodeUi
   return subUids
 }
 export const getSubNodeUidsByDfs = (uid: TNodeUid, tree: TNodeTreeData): TNodeUid[] => {
+  if (!tree[uid]) return []
+
   let subUids: TNodeUid[] = []
 
   let uids = [uid]

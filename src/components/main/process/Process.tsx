@@ -103,14 +103,13 @@ export default function Process(props: ProcessProps) {
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
   // set app title
   useEffect(() => {
-    const _file = ffTree[file.uid]
-    const fileData = _file.data as TFileNodeData
-
-    if (fileData.type === 'html') {
-      // set title
-      window.document.title = `${fileData.name}${fileData.ext}`
-    } else {
+    if (file.uid === '') {
       window.document.title = RainbowAppName
+    } else {
+      const _file = ffTree[file.uid]
+      const fileData = _file.data as TFileNodeData
+
+      window.document.title = `${fileData.name}${fileData.ext}`
     }
   }, [fileInfo])
 

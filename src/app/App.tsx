@@ -7,6 +7,7 @@ import {
 } from 'react-router-dom';
 import { Workbox } from 'workbox-window';
 
+import { LogAllow } from '@_constants/main';
 import MainPage from '@_pages/main';
 
 import { AppProps } from './types';
@@ -16,15 +17,13 @@ export default function App(props: AppProps) {
     if ('serviceWorker' in navigator) {
       const wb = new Workbox('/nohost-sw.js?route=rnbw')
 
-      // Wait on the server to be fully ready to handle routing requests
       wb.controlling.then(() => {
-        console.log('Server ready! use `window.Filer.fs if you need an fs')
+        LogAllow && console.log('nohost ready')
       })
 
-      // Deal with first-run install, if necessary
       wb.addEventListener('installed', (event) => {
         if (!event.isUpdate) {
-          console.log('Server installed for first time')
+          LogAllow && console.log('nohost first time installed')
         }
       })
 
