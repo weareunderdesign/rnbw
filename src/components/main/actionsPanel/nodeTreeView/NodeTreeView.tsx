@@ -119,24 +119,18 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     return data
   }, [validNodeTree])
 
-  // focusedItem -> scrollTo
+  // sync from redux
   const focusedItemRef = useRef<TNodeUid>(focusedItem)
   useEffect(() => {
     // validate
     const node = validNodeTree[focusedItem]
     if (node === undefined) return
 
-    // skip own state change
-    if (focusedItemRef.current === focusedItem) {
-      focusedItemRef.current = ''
-      return
-    }
+    // skip its own change
+    if (focusedItemRef.current === focusedItem) return
 
-    // scroll to focused item
     const focusedComponent = document.getElementById(`NodeTreeView-${focusedItem}`)
-    setTimeout(() => focusedComponent?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' }), 0)
-
-    focusedComponent?.focus()
+    focusedComponent?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' })
   }, [focusedItem])
 
   // node actions -> nodeTree
@@ -480,15 +474,17 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
           /* renderers */
           renderers={{
             renderTreeContainer: (props) => {
+              console.log('render tree container')
               return <>
-                <ul {...props.containerProps}>
+                <ul key={props.info.rootItem} {...props.containerProps}>
                   {props.children}
                 </ul>
               </>
             },
             renderItemsContainer: (props) => {
+              console.log('render items container')
               return <>
-                <ul {...props.containerProps}>
+                <ul key={props.info.rootItem} {...props.containerProps}>
                   {props.children}
                 </ul>
               </>

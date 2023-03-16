@@ -89,40 +89,43 @@ export const IFrame = (props: IFrameProps) => {
 
   // sync from redux
   useEffect(() => {
-    const _document = contentRef?.contentWindow?.document
+    // validate 
+    const node = validNodeTree[focusedItem]
+    if (node === undefined) return
 
-    // detect if it's new change
-    if (focusedItemRef.current !== focusedItem) {
-      focusedElement?.removeAttribute('rnbwdev-rnbw-component-focus')
+    // skip its own change
+    if (focusedItemRef.current === focusedItem) return
 
-      let newComponent = _document?.querySelector(`[${NodeInAppAttribName}="${focusedItem}"]`)
-      const isValid: null | string = newComponent?.firstElementChild ? newComponent?.firstElementChild.getAttribute(NodeInAppAttribName) : ''
-      isValid === null ? newComponent = newComponent?.firstElementChild : null
-      newComponent?.setAttribute('rnbwdev-rnbw-component-focus', '')
+    focusedElement?.removeAttribute('rnbwdev-rnbw-component-focus')
 
-      setFocusedElement(!newComponent ? null : newComponent as HTMLElement)
-      focusedItemRef.current = focusedItem
-    }
+    let newComponent = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${focusedItem}"]`)
+    const isValid: null | string = newComponent?.firstElementChild ? newComponent?.firstElementChild.getAttribute(NodeInAppAttribName) : ''
+    isValid === null ? newComponent = newComponent?.firstElementChild : null
 
-    // always scroll to focused item
-    const newComponent = _document?.querySelector(`[${NodeInAppAttribName}="${focusedItem}"]`)
+    newComponent?.setAttribute('rnbwdev-rnbw-component-focus', '')
     newComponent?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' })
+
+    setFocusedElement(!newComponent ? null : newComponent as HTMLElement)
+    focusedItemRef.current = focusedItem
   }, [focusedItem])
   useEffect(() => {
-    const _document = contentRef?.contentWindow?.document
+    // validate 
+    const node = validNodeTree[focusedItem]
+    if (node === undefined) return
 
-    // detect if it's new change
-    if (fnHoveredItemRef.current !== fnHoveredItem) {
-      hoveredElement?.removeAttribute('rnbwdev-rnbw-component-hover')
+    // skip its own change
+    if (fnHoveredItemRef.current === fnHoveredItem) return
 
-      let newComponent = _document?.querySelector(`[${NodeInAppAttribName}="${fnHoveredItem}"]`)
-      const isValid: null | string = newComponent?.firstElementChild ? newComponent?.firstElementChild.getAttribute(NodeInAppAttribName) : ''
-      isValid === null ? newComponent = newComponent?.firstElementChild : null
-      newComponent?.setAttribute('rnbwdev-rnbw-component-hover', '')
+    hoveredElement?.removeAttribute('rnbwdev-rnbw-component-hover')
 
-      setHoveredElement(!newComponent ? null : newComponent as HTMLElement)
-      fnHoveredItemRef.current = fnHoveredItem
-    }
+    let newComponent = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${fnHoveredItem}"]`)
+    const isValid: null | string = newComponent?.firstElementChild ? newComponent?.firstElementChild.getAttribute(NodeInAppAttribName) : ''
+    isValid === null ? newComponent = newComponent?.firstElementChild : null
+
+    newComponent?.setAttribute('rnbwdev-rnbw-component-hover', '')
+
+    setHoveredElement(!newComponent ? null : newComponent as HTMLElement)
+    fnHoveredItemRef.current = fnHoveredItem
   }, [fnHoveredItem])
 
   // sync to redux
