@@ -75,6 +75,7 @@ import {
   selectFFNode,
   setCurrentFile,
   setFileAction,
+  TFileHandlerCollection,
 } from '@_redux/main';
 import { verifyFileHandlerPermission } from '@_services/main';
 import {
@@ -1017,8 +1018,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       try {
         // configure idb on nohost
         const handlerObj = await configProject(projectHandle as FileSystemDirectoryHandle, osType, () => {
-          let firstHtmlUid: TNodeUid = '', indexHtmlUid: TNodeUid = ''
-
           // sort by ASC directory/file
           Object.keys(handlerObj).map(uid => {
             const handler = handlerObj[uid]
@@ -1029,16 +1028,18 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
             })
           })
 
-          // get the index/first html to be opened by default
+          // get/set the index/first html to be opened by default
+          let firstHtmlUid: TNodeUid = '', indexHtmlUid: TNodeUid = ''
           handlerObj[RootNodeUid].children.map(uid => {
             const handler = handlerObj[uid]
             if (handler.kind === 'file' && handler.ext === '.html') {
               firstHtmlUid === '' ? firstHtmlUid = uid : null
-              handler.name === 'index.html' ? indexHtmlUid = uid : null
+              handler.name === 'index' ? indexHtmlUid = uid : null
             }
           })
+          setInitialFileToOpen(indexHtmlUid !== '' ? indexHtmlUid : firstHtmlUid !== '' ? firstHtmlUid : undefined)
 
-          // set ff tree and handlers
+          // set ff tree
           const treeViewData: TNodeTreeData = {}
           Object.keys(handlerObj).map(uid => {
             const handler = handlerObj[uid] as TFileHandlerInfo
@@ -1064,13 +1065,12 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           })
           setFFTree(treeViewData)
 
-          // const ffHandlerObj: TFileHandlerCollection = {}
-          // Object.keys(handlerObj).map(uid => {
-          //   ffHandlerObj[uid] = handlerObj[uid].handler
-          // })
-          // setFFHandlers(ffHandlerObj)
-
-          setInitialFileToOpen(indexHtmlUid !== '' ? indexHtmlUid : firstHtmlUid !== '' ? firstHtmlUid : undefined)
+          // set ff handlers
+          const ffHandlerObj: TFileHandlerCollection = {}
+          Object.keys(handlerObj).map(uid => {
+            ffHandlerObj[uid] = handlerObj[uid].handler
+          })
+          setFFHandlers(ffHandlerObj)
 
           setPending(false)
         })
