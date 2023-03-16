@@ -41,8 +41,22 @@ export default function App(props: AppProps) {
   </>
 }
 
+// extend global interfaces
 declare global {
-  interface Window { Filer: any; }
+  interface Window {
+    Filer: any,
+  }
+  interface Element {
+    appendBefore: (element: Element) => void,
+    appendAfter: (element: Element) => void,
+  }
 }
 
-window.Filer = window.Filer || {};
+window.Filer = window.Filer
+
+Element.prototype.appendBefore = function (element: Element) {
+  element.parentNode?.insertBefore(this, element)
+}
+Element.prototype.appendAfter = function (element: Element) {
+  element.parentNode?.insertBefore(this, element.nextSibling)
+}
