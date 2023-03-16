@@ -980,7 +980,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     addRunningActions(['processor-file'])
     dispatch(setCurrentFile({ uid, content: nodeData.content }))
     setUpdateOpt({ parse: true, from: 'file' })
-
+    
     removeRunningActions(['fileTreeView-read'])
   }, [/* invalidNodes, */ffTree, file.uid])
   const [initialFileToOpen, setInitialFileToOpen] = useState<TNodeUid>()
@@ -1082,8 +1082,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       // do nothing
     }
   }, [clearSession, osType])
-
-
 
 
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
@@ -1659,7 +1657,7 @@ Your changes will be lost if you don't save them.`
                 delete tmpTree[item.data.uid]
                 setFFTree(tmpTree)
               }
-              removeInvalidNodes(item.data.uid)
+              removeInvalidNodes(item.data.uid
             }, [invalidNodes, cb_renameFFNode, createFFNode, setTemporaryNodes, removeTemporaryNodes, removeInvalidNodes, ffTree, osType, ffHandlers]),
 
             /* SELECT, FOCUS, EXPAND, COLLAPSE CALLBACK */
