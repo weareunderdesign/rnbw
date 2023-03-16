@@ -10,16 +10,19 @@ import {
   useSelector,
 } from 'react-redux';
 
-import { RootNodeUid } from '@_constants/main';
 import {
+  RainbowAppName,
+  RootNodeUid,
+} from '@_constants/main';
+import {
+  getSubNodeUidsByBfs,
   parseFile,
-  sortNodeUidsByBfs,
+  serializeFile,
 } from '@_node/apis';
 import {
   TFileNodeData,
   writeFile,
 } from '@_node/file';
-import { THtmlParserResponse } from '@_node/html';
 import {
   TNode,
   TNodeTreeData,
@@ -98,191 +101,151 @@ export default function Process(props: ProcessProps) {
   } = useContext(MainContext)
 
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
-  // set app title and favicon
+  // set app title
   useEffect(() => {
-    /* if (file.type === 'html') {
-      // set title
-      window.document.title = getNodeEntryName(file.uid)
+    const _file = ffTree[file.uid]
+    const fileData = _file.data as TFileNodeData
 
-      // set favicon
-      if (file.info && file.info.favicon.length) {
-        // const favicon = file.info.favicon[0]
-      } else {
-        // no favion
-      }
+    if (fileData.type === 'html') {
+      // set title
+      window.document.title = `${fileData.name}${fileData.ext}`
     } else {
       window.document.title = RainbowAppName
-    } */
+    }
   }, [fileInfo])
 
   const getReferenceData = useCallback((fileType: TFileType) => {
     return fileType === 'html' ? htmlReferenceData : htmlReferenceData
   }, [htmlReferenceData])
 
-  // processor-file
+  // processor-updateOpt
   const orgFileUid = useRef<TNodeUid>('')
   useEffect(() => {
-    // parse from file content
+    // parse file content
     if (updateOpt.parse === true) {
       let _fileInfo: TFileInfo = null
       let _nodeTree: TNodeTreeData = {}
+      const _file = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode
+      const fileData = _file.data as TFileNodeData
 
-      // read file
-      if (updateOpt.from === 'file') {
-        const node = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode
-        const nodeData = node.data as TFileNodeData
+      if (updateOpt.from === 'file' || updateOpt.from === 'hms' || updateOpt.from === 'code') {
+        const parserRes = parseFile(fileData.type, file.content, getReferenceData(fileData.type), osType)
+        const { formattedContent, contentInApp, tree, treeMaxUid, info } = parserRes
 
-        const parsedRes = parseFile(nodeData.type, nodeData.content, getReferenceData(nodeData.type), osType)
-        if (nodeData.type === 'html') {
-          const { formattedContent, contentInApp, tree, info } = parsedRes as THtmlParserResponse
-          _fileInfo = info
-          _nodeTree = tree
-          nodeData.content = formattedContent
-          nodeData.contentInApp = contentInApp
-          nodeData.changed = nodeData.content !== nodeData.orgContent
-          writeFile(nodeData.path, contentInApp, () => {
-            setIframeSrc(`rnbw${nodeData.path}`)
+        _fileInfo = info
+        _nodeTree = tree
+        fileData.content = formattedContent
+        fileData.contentInApp = contentInApp
+        fileData.changed = fileData.content !== fileData.orgContent
+
+        if (fileData.type === 'html') {
+          writeFile(fileData.path, contentInApp, () => {
+            setIframeSrc(`rnbw${fileData.path}`)
           })
         } else {
           // do nothing
         }
-
-        setFFNode(node)
-        dispatch(setCurrentFileContent(nodeData.content))
-        setFileInfo(_fileInfo)
-
-        addRunningActions(['processor-nodeTree'])
-        setNodeTree(_nodeTree)
-
-        setUpdateOpt({ parse: null, from: 'file' })
       }
-    }
 
-    // serialize from node tree data
-    if (updateOpt.parse === false) {
-
-    }
-
-
-
-    /* if (updateOpt.parse === true && updateOpt.from === 'file') {
-      const node = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode
-      const nodeData = node.data as TFileNodeData
-      console.log(nodeData)
-
-      const parsedRes = parseFile(nodeData.type, nodeData.content, getReferenceData(nodeData.type), osType)
-      if (nodeData.type === 'html') {
-        const { formattedContent, contentInApp, tree, info } = parsedRes as THtmlParserResponse
-        _tree = tree
-        _fileInfo = info
-        nodeData.content = formattedContent
-        nodeData.contentInApp = contentInApp
-        writeFile(nodeData.path, contentInApp)
-        setHasSameScript(true)
-      } else {
-        // do nothing
-      }
+      setFFNode(_file)
+      setFileInfo(_fileInfo)
+      dispatch(setCurrentFileContent(fileData.content))
 
       addRunningActions(['processor-nodeTree'])
-      setNodeTree(_tree)
-    } else if (updateOpt.parse === true && updateOpt.from === 'hms') {
-      const _file = JSON.parse(JSON.stringify(file))
-      _fileInfo = _file.info
-      let _tree: TNodeTreeData = {}
+      setNodeTree(_nodeTree)
 
-      const parsedRes = parseFile(_file.type, _file.content, getReferenceData(_file.type), osType)
-      if (_file.type === 'html') {
-        const { tree } = parsedRes as THtmlParserResponse
-        _tree = tree
-      } else {
-        // do nothing
-      }
+      setUpdateOpt({ parse: null, from: updateOpt.from })
 
-      addRunningActions(['processor-nodeTree'])
-      setNodeTree(_tree)
-    } else if (updateOpt.parse === true && updateOpt.from === 'code') {
-      const _file = JSON.parse(JSON.stringify(file))
-      let _tree: TNodeTreeData = {}
+      orgFileUid.current = file.uid
 
-      const parsedRes = parseFile(_file.type, _file.content, getReferenceData(_file.type), osType)
-      if (_file.type === 'html') {
-        const { formattedContent, contentInApp, tree, info } = parsedRes as THtmlParserResponse
-        _fileInfo = info
-        _file.content = formattedContent
-        _file.contentInApp = contentInApp
-        _file.changed = formattedContent !== _file.orgContent
-        _tree = tree
-        _file.info = info
-      } else {
-        // do nothing
-      }
-
-      addRunningActions(['processor-nodeTree'])
-      setNodeTree(_tree)
-
-      setUpdateOpt({ parse: null, from: 'code' })
-      setTimeout(() => dispatch(setCurrentFile(_file)), 0)
-    } else {
-      // do nothing
-    } */
-
-    /* if (updateOpt.parse === true) {
-      // check if the script list changed
-      let _hasSameScript = true
-      if (fileInfo === null || file.uid !== orgFileUid.current) {
-        _hasSameScript = false
-      } else {
-        const _curScripts = !_fileInfo ? [] : _fileInfo.scripts
-        const _orgScripts = fileInfo.scripts
-
-        const curScripts: string[] = []
-        const curScriptObj: { [uid: string]: boolean } = {}
-        _curScripts.map(script => {
-          const attribs = (script.data as THtmlNodeData).attribs
-          const uniqueStr = Object.keys(attribs)
-            .filter(attrName => attrName !== NodeInAppAttribName)
-            .sort((a, b) => a > b ? 1 : -1)
-            .map(attrName => {
-              return `${attrName}${NodeUidSplitter}${attribs[attrName]}`
-            })
-            .join(NodeUidSplitter)
-          curScripts.push(uniqueStr)
-          curScriptObj[uniqueStr] = true
-        })
-
-        const orgScripts: string[] = []
-        const orgScriptObj: { [uid: string]: boolean } = {}
-        _orgScripts.map(script => {
-          const attribs = (script.data as THtmlNodeData).attribs
-          const uniqueStr = Object.keys(attribs)
-            .filter(attrName => attrName !== NodeInAppAttribName)
-            .sort((a, b) => a > b ? 1 : -1)
-            .map(attrName => {
-              return `${attrName}${NodeUidSplitter}${attribs[attrName]}`
-            })
-            .join(NodeUidSplitter)
-          orgScripts.push(uniqueStr)
-          orgScriptObj[uniqueStr] = true
-        })
-
-        if (curScripts.length !== orgScripts.length) {
+      /* if (updateOpt.parse === true) {
+        // check if the script list changed
+        let _hasSameScript = true
+        if (fileInfo === null || file.uid !== orgFileUid.current) {
           _hasSameScript = false
         } else {
-          for (const script of curScripts) {
-            if (!orgScriptObj[script]) {
-              _hasSameScript = false
-              break
+          const _curScripts = !_fileInfo ? [] : _fileInfo.scripts
+          const _orgScripts = fileInfo.scripts
+  
+          const curScripts: string[] = []
+          const curScriptObj: { [uid: string]: boolean } = {}
+          _curScripts.map(script => {
+            const attribs = (script.data as THtmlNodeData).attribs
+            const uniqueStr = Object.keys(attribs)
+              .filter(attrName => attrName !== NodeInAppAttribName)
+              .sort((a, b) => a > b ? 1 : -1)
+              .map(attrName => {
+                return `${attrName}${NodeUidSplitter}${attribs[attrName]}`
+              })
+              .join(NodeUidSplitter)
+            curScripts.push(uniqueStr)
+            curScriptObj[uniqueStr] = true
+          })
+  
+          const orgScripts: string[] = []
+          const orgScriptObj: { [uid: string]: boolean } = {}
+          _orgScripts.map(script => {
+            const attribs = (script.data as THtmlNodeData).attribs
+            const uniqueStr = Object.keys(attribs)
+              .filter(attrName => attrName !== NodeInAppAttribName)
+              .sort((a, b) => a > b ? 1 : -1)
+              .map(attrName => {
+                return `${attrName}${NodeUidSplitter}${attribs[attrName]}`
+              })
+              .join(NodeUidSplitter)
+            orgScripts.push(uniqueStr)
+            orgScriptObj[uniqueStr] = true
+          })
+  
+          if (curScripts.length !== orgScripts.length) {
+            _hasSameScript = false
+          } else {
+            for (const script of curScripts) {
+              if (!orgScriptObj[script]) {
+                _hasSameScript = false
+                break
+              }
             }
           }
         }
+        setHasSameScript(_hasSameScript)
+        setFileInfo(_fileInfo)
+      } */
+    }
+
+    // serialize tree data
+    if (updateOpt.parse === false) {
+      let _fileInfo: TFileInfo = null
+      const _file = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode
+      const fileData = _file.data as TFileNodeData
+
+      if (updateOpt.from === 'node') {
+        const newFileContent = serializeFile(fileData.type, nodeTree, getReferenceData(fileData.type))
+        const parserRes = parseFile(fileData.type, newFileContent, getReferenceData(fileData.type), osType)
+        const { formattedContent, contentInApp, tree, treeMaxUid, info } = parserRes
+
+        _fileInfo = info
+        fileData.content = formattedContent
+        fileData.contentInApp = contentInApp
+        fileData.changed = fileData.content !== fileData.orgContent
+
+        if (fileData.type === 'html') {
+          writeFile(fileData.path, contentInApp, () => {
+            setIframeSrc(`rnbw${fileData.path}`)
+          })
+        } else {
+          // do nothing
+        }
       }
-      setHasSameScript(_hasSameScript)
+
+      setFFNode(_file)
       setFileInfo(_fileInfo)
-    } */
+      dispatch(setCurrentFileContent(fileData.content))
 
-    orgFileUid.current = file.uid
+      setUpdateOpt({ parse: null, from: updateOpt.from })
+    }
 
-    removeRunningActions(['processor-file'])
+    removeRunningActions(['processor-updateOpt'])
   }, [updateOpt])
 
   // processor-nodeTree
@@ -290,51 +253,20 @@ export default function Process(props: ProcessProps) {
     const _nodeTree: TNodeTreeData = JSON.parse(JSON.stringify(nodeTree))
     const _validNodeTree: TNodeTreeData = {}
 
-    let uids: TNodeUid[] = Object.keys(_nodeTree)
-    uids = sortNodeUidsByBfs(uids)
+    // build valid node tree
+    const uids = getSubNodeUidsByBfs(RootNodeUid, _nodeTree)
     uids.reverse()
     uids.map((uid) => {
       const node = _nodeTree[uid]
+      if (!node.data.valid) return
 
-      // validate
-      if (node.children.length !== 0) {
-        node.children = node.children.filter((c_uid) => {
-          return _nodeTree[c_uid].data.valid
-        })
-        node.isEntity = (node.children.length === 0)
-      }
-
-      // add only validated node
-      node.data.valid ? _validNodeTree[uid] = node : null
+      node.children = node.children.filter((c_uid) => _nodeTree[c_uid].data.valid)
+      node.isEntity = node.children.length === 0
+      _validNodeTree[uid] = node
     })
 
     addRunningActions(['processor-validNodeTree'])
     setValidNodeTree(_validNodeTree)
-
-    /* if (updateOpt.parse === false && updateOpt.from === 'node') {
-      const _file = JSON.parse(JSON.stringify(file)) as TFile
-
-      const newFileContent = serializeFile(file.type, nodeTree, getReferenceData(file.type))
-      _file.content = newFileContent
-      if (newFileContent !== _file.orgContent) {
-        _file.changed = true
-      }
-
-      const parsedRes = parseFile(_file.type, newFileContent, getReferenceData(_file.type), osType)
-      if (_file.type === 'html') {
-        const { info } = parsedRes as THtmlParserResponse
-        _file.info = info
-      } else {
-        // do nothing
-      }
-
-      setUpdateOpt({ parse: null, from: 'node' })
-      setTimeout(() => dispatch(setCurrentFile(_file)), 0)
-
-      setOpenedFiles(_file)
-    } else {
-      // do nothing
-    } */
 
     removeRunningActions(['processor-nodeTree'])
   }, [nodeTree])
