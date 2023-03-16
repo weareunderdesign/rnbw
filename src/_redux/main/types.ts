@@ -3,6 +3,7 @@ import {
   THtmlReferenceData,
 } from '@_node/index';
 import {
+  TNode,
   TNodeTreeData,
   TNodeUid,
 } from '@_node/types';
@@ -41,6 +42,7 @@ export type TMainContext = {
   setFFHandlers: (ffHandlerObj: TFileHandlerCollection) => void,
   ffTree: TNodeTreeData,
   setFFTree: (tree: TNodeTreeData) => void,
+  setFFNode: (ffNode: TNode) => void,
 
   // node tree view
   fnHoveredItem: TNodeUid,

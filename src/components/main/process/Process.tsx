@@ -36,6 +36,7 @@ import {
   MainContext,
   navigatorSelector,
   selectFNNode,
+  setCurrentFileContent,
 } from '@_redux/main';
 import {
   TFileInfo,
@@ -61,7 +62,7 @@ export default function Process(props: ProcessProps) {
     addRunningActions, removeRunningActions,
 
     // file tree view
-    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree,
+    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree, setFFNode,
 
     // ndoe tree view
     fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree,
@@ -146,6 +147,8 @@ export default function Process(props: ProcessProps) {
           // do nothing
         }
 
+        setFFNode(node)
+        dispatch(setCurrentFileContent(nodeData.content))
         setFileInfo(_fileInfo)
 
         addRunningActions(['processor-nodeTree'])

@@ -9,11 +9,6 @@ import React, {
 import cx from 'classnames';
 import { Command } from 'cmdk';
 import {
-  getMany,
-  set,
-  setMany,
-} from 'idb-keyval';
-import {
   useDispatch,
   useSelector,
 } from 'react-redux';
@@ -37,7 +32,6 @@ import {
 import {
   DefaultTabSize,
   LogAllow,
-  RootNodeUid,
 } from '@_constants/main';
 import {
   TFileNodeData,
@@ -66,7 +60,6 @@ import {
   setFileAction,
   TCommand,
   TFileHandlerCollection,
-  TTreeViewState,
   TUpdateOptions,
 } from '@_redux/main';
 // @ts-ignore
@@ -146,13 +139,13 @@ export default function MainPage(props: MainPageProps) {
 
   // file tree view
   const [ffTree, setFFTree] = useState<TNodeTreeData>({})
-  const [ffHandlers, setFFHandlers] = useState<TFileHandlerCollection>({})
-  const [ffHoveredItem, setFFHoveredItem] = useState<TNodeUid>('')
-  const setFFNode = (ffNode: TNode) => {
+  const setFFNode = useCallback((ffNode: TNode) => {
     const _ffTree = JSON.parse(JSON.stringify(ffTree))
     _ffTree[ffNode.uid] = JSON.parse(JSON.stringify(ffNode))
     setFFTree(_ffTree)
-  }
+  }, [ffTree])
+  const [ffHandlers, setFFHandlers] = useState<TFileHandlerCollection>({})
+  const [ffHoveredItem, setFFHoveredItem] = useState<TNodeUid>('')
 
   // node tree view
   const [fnHoveredItem, setFNHoveredItem] = useState<TNodeUid>('')
@@ -317,7 +310,7 @@ export default function MainPage(props: MainPageProps) {
   const location = useLocation()
 
   // store last edit session
-  useEffect(() => {
+  /* useEffect(() => {
     (async () => {
       const _hasSession = localStorage.getItem('last-edit-session') !== null
       setHasSession(_hasSession)
@@ -386,7 +379,7 @@ export default function MainPage(props: MainPageProps) {
         await set('opened-file-content', file.content)
       }
     })()
-  }, [file.content])
+  }, [file.content]) */
   // -------------------------------------------------------------- routing --------------------------------------------------------------
 
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
@@ -888,14 +881,9 @@ Your changes will be lost if you don't save them.`
         removeRunningActions,
 
         // file tree view
-        ffHoveredItem,
-        setFFHoveredItem,
-
-        ffHandlers,
-        setFFHandlers,
-        ffTree,
-        setFFTree,
-        // updateFF,
+        ffTree, setFFTree, setFFNode,
+        ffHandlers, setFFHandlers,
+        ffHoveredItem, setFFHoveredItem,
 
         // node tree view
         fnHoveredItem,
