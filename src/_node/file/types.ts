@@ -1,5 +1,7 @@
 import { TFileType } from '@_types/main';
 
+import { TNodeUid } from '../';
+
 /**
  * files reference data
  */
@@ -20,18 +22,18 @@ export type TFilesReference = {
 }
 
 export type TFileHandlerInfo = {
-  uid: number,
-  parentUid: number,
+  uid: TNodeUid,
+  parentUid: TNodeUid | null,
   path: string,
   kind: 'directory' | 'file',
   name: string,
   ext?: string,
   handler: FileSystemHandle,
   content?: string,
-  children: number[],
+  children: TNodeUid[],
 }
 
-export type TFileHandlerInfoObj = { [uid: number]: TFileHandlerInfo }
+export type TFileHandlerInfoObj = { [uid: TNodeUid]: TFileHandlerInfo }
 
 export type TFileNodeData = {
   valid: boolean,
@@ -45,5 +47,5 @@ export type TFileNodeData = {
   orgContent: string,
   content: string,
   contentInApp?: string,
-  changed: false,
+  changed: boolean,
 }

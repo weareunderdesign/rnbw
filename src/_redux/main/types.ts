@@ -117,6 +117,9 @@ export type TMainContext = {
   setPanelResizing: (resizing: boolean) => void,
 
   // stage-view
+  iframeSrc: null | string,
+  setIframeSrc: (src: string | null) => void,
+
   fileInfo: TFileInfo,
   setFileInfo: (_fileInfo: TFileInfo) => void,
 

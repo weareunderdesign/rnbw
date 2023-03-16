@@ -145,9 +145,9 @@ export default function MainPage(props: MainPageProps) {
   }
 
   // file tree view
-  const [ffHoveredItem, setFFHoveredItem] = useState<TNodeUid>('')
-  const [ffHandlers, setFFHandlers] = useState<TFileHandlerCollection>({})
   const [ffTree, setFFTree] = useState<TNodeTreeData>({})
+  const [ffHandlers, setFFHandlers] = useState<TFileHandlerCollection>({})
+  const [ffHoveredItem, setFFHoveredItem] = useState<TNodeUid>('')
   const setFFNode = (ffNode: TNode) => {
     const _ffTree = JSON.parse(JSON.stringify(ffTree))
     _ffTree[ffNode.uid] = JSON.parse(JSON.stringify(ffNode))
@@ -160,10 +160,7 @@ export default function MainPage(props: MainPageProps) {
   const [validNodeTree, setValidNodeTree] = useState<TNodeTreeData>({})
 
   // update opt
-  const [updateOpt, setUpdateOpt] = useState<TUpdateOptions>({
-    parse: null,
-    from: null,
-  })
+  const [updateOpt, setUpdateOpt] = useState<TUpdateOptions>({ parse: null, from: null })
 
   // ff hms
   const [isHms, setIsHms] = useState<boolean | null>(null)
@@ -309,8 +306,9 @@ export default function MainPage(props: MainPageProps) {
   const [panelResizing, setPanelResizing] = useState<boolean>(false)
 
   // stage-view
+  const [iframeSrc, setIframeSrc] = useState<string | null>(null)
   const [fileInfo, setFileInfo] = useState<TFileInfo>(null)
-  const [hasSameScript, setHasSameScript] = useState<boolean>(false)
+  const [hasSameScript, setHasSameScript] = useState<boolean>(true)
   // -------------------------------------------------------------- main context --------------------------------------------------------------
 
   // -------------------------------------------------------------- routing --------------------------------------------------------------
@@ -974,6 +972,7 @@ Your changes will be lost if you don't save them.`
         setPanelResizing,
 
         // stage-view
+        iframeSrc, setIframeSrc,
         fileInfo,
         setFileInfo,
 

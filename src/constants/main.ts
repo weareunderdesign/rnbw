@@ -76,7 +76,7 @@ export const HmsClearActionType: string = 'main/clear'
 export const ParsableFileTypes: {
   [fileType: string]: boolean,
 } = {
-  html: true,
+  '.html': true,
 }
 
 /**

@@ -1,8 +1,6 @@
 import React, {
   useCallback,
   useContext,
-  useEffect,
-  useRef,
 } from 'react';
 
 import cx from 'classnames';
@@ -13,23 +11,14 @@ import {
 import { Panel } from 'react-resizable-panels';
 
 import {
-  NodeInAppAttribName,
-  RootNodeUid,
-} from '@_constants/main';
-import { TNodeUid } from '@_node/types';
-import {
-  expandFNNode,
   fnSelector,
-  focusFNNode,
   getActionGroupIndexSelector,
   globalSelector,
   hmsInfoSelector,
   MainContext,
   navigatorSelector,
-  selectFNNode,
 } from '@_redux/main';
 
-import { StageViewContext } from './context';
 import IFrame from './iFrame';
 import { StageViewProps } from './types';
 
@@ -73,6 +62,9 @@ export default function StageView(props: StageViewProps) {
 
     // panel-resize
     panelResizing,
+
+    // stage-view
+    iframeSrc,
   } = useContext(MainContext)
 
   // redux state
@@ -84,51 +76,6 @@ export default function StageView(props: StageViewProps) {
   const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
 
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
-  // focusedItem -> scrollTo
-  const focusedItemRef = useRef<TNodeUid>(focusedItem)
-  const stageViewRef = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    // skip its own state change
-    if (focusedItemRef.current === focusedItem) return
-
-    // validate
-    if (stageViewRef.current === null) return
-    const focusedNode = validNodeTree[focusedItem]
-    if (focusedNode === undefined) return
-
-    // scrollTo
-    const stageViewDoc = stageViewRef.current.querySelector('iframe')?.contentWindow?.document
-    const selector = `[${NodeInAppAttribName}="${focusedItem}"]`
-    const focusedComponent = stageViewDoc?.querySelector(selector)
-    focusedComponent?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' })
-  }, [focusedItem])
-
-  // select -> focusedItem
-  const setFocusedItem = useCallback((uid: TNodeUid) => {
-    // validate
-    if (focusedItem === uid || validNodeTree[uid] === undefined) return
-
-    addRunningActions(['stageView-click'])
-
-    // expand the path to the uid
-    const _expandedItems: TNodeUid[] = []
-    let node = validNodeTree[uid]
-    while (node.uid !== RootNodeUid) {
-      _expandedItems.push(node.uid)
-      node = validNodeTree[node.parentUid as TNodeUid]
-    }
-    _expandedItems.shift()
-    dispatch(expandFNNode(_expandedItems))
-
-    // focus
-    focusedItemRef.current = uid
-    dispatch(focusFNNode(uid))
-
-    // select
-    dispatch(selectFNNode([uid]))
-
-    removeRunningActions(['stageView-click'])
-  }, [focusedItem, validNodeTree])
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
 
   // -------------------------------------------------------------- other --------------------------------------------------------------
@@ -140,25 +87,21 @@ export default function StageView(props: StageViewProps) {
 
 
   return <>
-    <StageViewContext.Provider value={{ setFocusedItem }}>
-      <Panel minSize={0}>
-        <div
-          id="StageView"
-          className={cx(
-            'scrollable',
-            // activePanel === 'stage' ? "outline outline-primary" : "",
-          )}
-          style={{
-            background: file.uid !== '' ? "white" : "",
-            position: "relative",
-            pointerEvents: panelResizing ? 'none' : 'auto',
-          }}
-          onClick={onPanelClick}
-          ref={stageViewRef}
-        >
-          <IFrame />
-        </div>
-      </Panel>
-    </StageViewContext.Provider>
+    <Panel minSize={0}>
+      <div
+        id="StageView"
+        className={cx(
+          'scrollable',
+        )}
+        style={{
+          background: iframeSrc ? "white" : "",
+          position: "relative",
+          pointerEvents: panelResizing ? 'none' : 'auto',
+        }}
+        onClick={onPanelClick}
+      >
+        <IFrame />
+      </div>
+    </Panel>
   </>
 }

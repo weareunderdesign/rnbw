@@ -35,7 +35,6 @@ import {
   MainContext,
   navigatorSelector,
   selectFNNode,
-  setCurrentFile,
 } from '@_redux/main';
 import {
   TFileInfo,
@@ -46,6 +45,14 @@ import { ProcessProps } from './types';
 
 export default function Process(props: ProcessProps) {
   const dispatch = useDispatch()
+
+  // redux state
+  const actionGroupIndex = useSelector(getActionGroupIndexSelector)
+  const { workspace, project, file } = useSelector(navigatorSelector)
+  const { fileAction } = useSelector(globalSelector)
+  const { futureLength, pastLength } = useSelector(hmsInfoSelector)
+  // const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
+  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
 
   // main context
   const {
@@ -83,17 +90,10 @@ export default function Process(props: ProcessProps) {
     tabSize, setTabSize,
 
     // stage-view
+    setIframeSrc,
     fileInfo, setFileInfo,
     hasSameScript, setHasSameScript,
   } = useContext(MainContext)
-
-  // redux state
-  const actionGroupIndex = useSelector(getActionGroupIndexSelector)
-  const { workspace, project, file } = useSelector(navigatorSelector)
-  const { fileAction } = useSelector(globalSelector)
-  const { futureLength, pastLength } = useSelector(hmsInfoSelector)
-  // const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
-  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
 
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
   // set app title and favicon
@@ -119,14 +119,48 @@ export default function Process(props: ProcessProps) {
 
   // processor-file
   useEffect(() => {
-    if (file.uid === '') return
+    // parse from file content
+    if (updateOpt.parse === true) {
+      let _fileInfo: TFileInfo = null
+      let _nodeTree: TNodeTreeData = {}
 
-    console.log(updateOpt)
+      // read file
+      if (updateOpt.from === 'file') {
+        const node = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode
+        const nodeData = node.data as TFileNodeData
 
-    let _fileInfo: TFileInfo = null
-    let _tree: TNodeTreeData = {}
+        const parsedRes = parseFile(nodeData.type, nodeData.content, getReferenceData(nodeData.type), osType)
+        if (nodeData.type === 'html') {
+          const { formattedContent, contentInApp, tree, info } = parsedRes as THtmlParserResponse
+          _fileInfo = info
+          _nodeTree = tree
+          nodeData.content = formattedContent
+          nodeData.contentInApp = contentInApp
+          nodeData.changed = nodeData.content !== nodeData.orgContent
+          writeFile(nodeData.path, contentInApp, () => {
+            setIframeSrc(`rnbw${nodeData.path}`)
+          })
+        } else {
+          // do nothing
+        }
 
-    if (updateOpt.parse === true && updateOpt.from === 'file') {
+        setFileInfo(_fileInfo)
+
+        addRunningActions(['processor-nodeTree'])
+        setNodeTree(_nodeTree)
+
+        setUpdateOpt({ parse: null, from: 'file' })
+      }
+    }
+
+    // serialize from node tree data
+    if (updateOpt.parse === false) {
+
+    }
+
+
+
+    /* if (updateOpt.parse === true && updateOpt.from === 'file') {
       const node = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode
       const nodeData = node.data as TFileNodeData
       console.log(nodeData)
@@ -185,7 +219,7 @@ export default function Process(props: ProcessProps) {
       setTimeout(() => dispatch(setCurrentFile(_file)), 0)
     } else {
       // do nothing
-    }
+    } */
 
     /* if (updateOpt.parse === true) {
       // check if the script list changed
@@ -242,7 +276,7 @@ export default function Process(props: ProcessProps) {
     } */
 
     removeRunningActions(['processor-file'])
-  }, [file.uid, file.content, updateOpt])
+  }, [updateOpt])
 
   // processor-nodeTree
   useEffect(() => {
@@ -302,7 +336,7 @@ export default function Process(props: ProcessProps) {
   useEffect(() => {
     if (updateOpt.parse === null && updateOpt.from === 'file') {
       dispatch(clearFNState())
-      // dispatch(expandFNNode(Object.keys(validNodeTree)))
+      dispatch(expandFNNode(Object.keys(validNodeTree).slice(0, 50)))
       removeRunningActions(['processor-validNodeTree'])
     } else if (updateOpt.parse === null && updateOpt.from === 'code') {
       const _focusedItem: TNodeUid = validNodeTree[focusedItem] === undefined ? RootNodeUid : focusedItem

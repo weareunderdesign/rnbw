@@ -13,9 +13,9 @@ import {
   generateNodeUid,
   getNodeChildIndex,
   getNodeDepth,
-  getSubNodeUids,
+  getSubNodeUidsByBfs,
+  getSubNodeUidsByDfs,
   sortNodeUidsByBfs,
-  sortNodeUidsByDfs,
   THtmlNodeData,
   TNode,
   TNodeTreeData,
@@ -175,7 +175,7 @@ export const addFormatTextAfterNode = (tree: TNodeTreeData, node: TNode, uidOffs
  * @param osType 
  */
 export const indentNode = (tree: TNodeTreeData, node: TNode, indentSize: number, osType: TOsType) => {
-  const uids = getSubNodeUids(node.uid, tree)
+  const uids = getSubNodeUidsByBfs(node.uid, tree)
   uids.map((uid) => {
     const node = tree[uid]
     const nodeData = node.data as THtmlNodeData
@@ -204,6 +204,7 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
     scripts: [],
     favicon: [],
   }
+  let UID = 0
 
   // parse html using react-html-parser
   ReactHtmlParser(content, {
@@ -224,7 +225,7 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
       // build the depth-1 seed nodes
       const seedNodes: TNode[] = []
       _nodes.map((_node, _index) => {
-        const uid = generateNodeUid(RootNodeUid, _index + 1)
+        const uid = String(++UID)
         _node.valid = true
         _node.uid = uid
         tmpTree[RootNodeUid].children.push(uid)
@@ -245,9 +246,8 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
         const nodeData = _node.data as THtmlProcessableNode
         if (!nodeData.children) continue
 
-        let _index = 0
         for (const _child of nodeData.children) {
-          const uid = generateNodeUid(_node.uid, _index + 1);
+          const uid = String(++UID);
           (_child as THtmlProcessableNode).uid = uid
           _node.children.push(uid)
           _node.isEntity = false
@@ -260,7 +260,6 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
             data: _child as THtmlProcessableNode,
           }
           seedNodes.push(tmpTree[uid])
-          _index++
         }
       }
 
@@ -269,14 +268,13 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
   })
 
   // validate the nodes
-  let uids: TNodeUid[] = sortNodeUidsByDfs(Object.keys(tmpTree))
+  let uids: TNodeUid[] = Object.keys(tmpTree)
   uids.map((uid) => {
     const node = tmpTree[uid]
     const data = node.data as THtmlProcessableNode
 
     // set isFormatText & valid
-    let isFormatText: boolean = false
-    let valid: boolean = true
+    let isFormatText = false, valid = true
     if (uid === RootNodeUid) {
       // do nothing
     } else if (!data.valid) {
@@ -289,10 +287,8 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
     }
 
     // set in-app class name to nodes
-    let hasOrgClass: boolean = false
     if (!data.attribs) data.attribs = {}
-    data.attribs['class'] ? hasOrgClass = true : null
-    data.attribs[NodeInAppAttribName] = true ? uid : `${uid.replace(NodeUidSplitterRegExp, '-')}`
+    data.attribs[NodeInAppAttribName] = uid
 
     const nodeData = {
       valid,
@@ -302,8 +298,6 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
       name: data.name,
       data: data.data,
       attribs: data.attribs,
-
-      hasOrgClass,
     }
     tree[uid] = {
       ...node,
@@ -312,13 +306,7 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
     }
 
     if (data.type === 'tag') {
-      if (data.name === 'html') {
-        settings.html = node.uid
-      } else if (data.name === 'head') {
-        settings.head = node.uid
-      } else if (data.name === 'body') {
-        settings.body = node.uid
-      } else if (data.name === 'title') {
+      if (data.name === 'title') {
         settings.title = node.uid
       } else if (data.name === 'link' && data.attribs.rel === 'icon' && data.attribs.href) {
         settings.favicon.push(data.attribs.href)
@@ -333,6 +321,7 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
 
   // set html range for code view
   const detected: Map<string, number> = new Map<string, number>()
+  uids = getSubNodeUidsByDfs(RootNodeUid, tree)
   uids.map((uid) => {
     const node = tree[uid]
     if (!node.data.valid) return

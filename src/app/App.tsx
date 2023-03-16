@@ -14,7 +14,7 @@ import { AppProps } from './types';
 export default function App(props: AppProps) {
   useEffect(() => {
     if ('serviceWorker' in navigator) {
-      const wb = new Workbox('/nohost-sw.js')
+      const wb = new Workbox('/nohost-sw.js?route=rnbw')
 
       // Wait on the server to be fully ready to handle routing requests
       wb.controlling.then(() => {

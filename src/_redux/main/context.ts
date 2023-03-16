@@ -114,6 +114,9 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   setPanelResizing: (resizing: boolean) => { },
 
   // stage-view
+  iframeSrc: null,
+  setIframeSrc: (src: string | null) => { },
+
   fileInfo: null,
   setFileInfo: (_fileInfo: TFileInfo) => { },
 

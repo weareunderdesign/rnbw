@@ -73,4 +73,5 @@ export type TFileParserResponse = {
   contentInApp: string,
   tree: TNodeTreeData,
   info?: THtmlSettings,
+  maxUid?: TNodeUid,
 }
