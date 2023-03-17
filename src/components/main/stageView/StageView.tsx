@@ -1,6 +1,7 @@
 import React, {
   useCallback,
   useContext,
+  useMemo,
 } from 'react';
 
 import cx from 'classnames';
@@ -85,23 +86,24 @@ export default function StageView(props: StageViewProps) {
   }, [])
   // -------------------------------------------------------------- other --------------------------------------------------------------
 
-
-  return <>
-    <Panel minSize={0}>
-      <div
-        id="StageView"
-        className={cx(
-          'scrollable',
-        )}
-        style={{
-          background: iframeSrc ? "white" : "",
-          position: "relative",
-          pointerEvents: panelResizing ? 'none' : 'auto',
-        }}
-        onClick={onPanelClick}
-      >
-        <IFrame />
-      </div>
-    </Panel>
-  </>
+  return useMemo(() => {
+    return <>
+      <Panel minSize={0}>
+        <div
+          id="StageView"
+          className={cx(
+            'scrollable',
+          )}
+          style={{
+            background: iframeSrc ? "white" : "",
+            position: "relative",
+            pointerEvents: panelResizing ? 'none' : 'auto',
+          }}
+          onClick={onPanelClick}
+        >
+          <IFrame />
+        </div>
+      </Panel>
+    </>
+  }, [iframeSrc, panelResizing, onPanelClick])
 }

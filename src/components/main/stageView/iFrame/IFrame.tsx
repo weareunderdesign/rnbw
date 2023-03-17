@@ -2,6 +2,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -170,7 +171,6 @@ export const IFrame = (props: IFrameProps) => {
   const onMouseEnter = useCallback((ele: HTMLElement) => {
     const uid = ele.getAttribute(NodeInAppAttribName)
   }, [])
-
   const onMouseMove = useCallback((ele: HTMLElement) => {
     let _uid: TNodeUid | null = ele.getAttribute(NodeInAppAttribName)
 
@@ -290,12 +290,10 @@ export const IFrame = (props: IFrameProps) => {
     }
   }, [iframeEvent])
 
-  // iframe loading flag
-  const [loading, setLoading] = useState<boolean>(false)
-
+  // init
   useEffect(() => {
     if (contentRef) {
-      setLoading(true)
+      setPending(true)
 
       contentRef.onload = () => {
         const _document = contentRef?.contentWindow?.document
@@ -340,19 +338,19 @@ export const IFrame = (props: IFrameProps) => {
           })
         }
 
-        setLoading(false)
+        setPending(false)
       }
     }
   }, [contentRef])
   // -------------------------------------------------------------- Handlers --------------------------------------------------------------
 
-  return <>
-    {iframeSrc && <>
-      <iframe
+  return useMemo(() => {
+    return <>
+      {iframeSrc && <iframe
         ref={setContentRef}
         src={iframeSrc}
         style={{ position: "absolute", width: "100%", height: "100%" }}
-      />
-    </>}
-  </>
+      />}
+    </>
+  }, [iframeSrc])
 }

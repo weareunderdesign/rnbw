@@ -443,239 +443,235 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     setActivePanel('node')
   }, [])
   // -------------------------------------------------------------- other --------------------------------------------------------------
+  return useMemo(() => {
+    console.log('node tree view render')
+    return <>
+      <Panel minSize={0}>
+        <div
+          id="NodeTreeView"
+          className={cx(
+            'scrollable',
+          )}
+          style={{
+            pointerEvents: panelResizing ? 'none' : 'auto',
+          }}
+          onClick={onPanelClick}
+        >
+          {/* Main TreeView */}
+          <TreeView
+            /* style */
+            width={'100%'}
+            height={'auto'}
 
-  return <>
-    <Panel minSize={0}>
-      <div
-        id="NodeTreeView"
-        className={cx(
-          'scrollable',
-        )}
-        style={{
-          pointerEvents: panelResizing ? 'none' : 'auto',
-        }}
-        onClick={onPanelClick}
-      >
-        {/* Main TreeView */}
-        <TreeView
-          /* style */
-          width={'100%'}
-          height={'auto'}
+            /* info */
+            info={{ id: 'node-tree-view' }}
 
-          /* info */
-          info={{ id: 'node-tree-view' }}
+            /* data */
+            data={nodeTreeViewData}
+            focusedItem={focusedItem}
+            expandedItems={expandedItems}
+            selectedItems={selectedItems}
 
-          /* data */
-          data={nodeTreeViewData}
-          focusedItem={focusedItem}
-          expandedItems={expandedItems}
-          selectedItems={selectedItems}
-
-          /* renderers */
-          renderers={{
-            renderTreeContainer: (props) => {
-              console.log('render tree container')
-              return <>
-                <ul key={props.info.rootItem} {...props.containerProps}>
-                  {props.children}
-                </ul>
-              </>
-            },
-            renderItemsContainer: (props) => {
-              console.log('render items container')
-              return <>
-                <ul key={props.info.rootItem} {...props.containerProps}>
-                  {props.children}
-                </ul>
-              </>
-            },
-            renderItem: (props) => {
-              return <>
-                <li
-                  key={props.item.data.uid}
-                  className={cx(
-                    props.context.isSelected && 'background-secondary',
-
-                    props.context.isDraggingOver && '',
-                    props.context.isDraggingOverParent && '',
-
-                    props.context.isFocused && '',
-                  )}
-                  {...props.context.itemContainerWithChildrenProps}
-                >
-                  {/* self */}
-                  <div
-                    id={`NodeTreeView-${props.item.index}`}
+            /* renderers */
+            renderers={{
+              renderTreeContainer: (props) => {
+                return <>
+                  <ul {...props.containerProps}>
+                    {props.children}
+                  </ul>
+                </>
+              },
+              renderItemsContainer: (props) => {
+                return <>
+                  <ul {...props.containerProps}>
+                    {props.children}
+                  </ul>
+                </>
+              },
+              renderItem: (props) => {
+                console.log('render item')
+                return <>
+                  <li
+                    key={props.item.data.uid}
                     className={cx(
-                      'justify-stretch',
-                      'padding-xs',
-
-                      'outline-default',
-
-                      props.item.index === ffHoveredItem ? 'outline' : '',
-
-                      props.context.isExpanded && props.context.isSelected && 'background-tertiary',
-                      !props.context.isExpanded && props.context.isSelected && 'background-secondary',
-
-                      props.context.isSelected && 'outline-none',
-                      !props.context.isSelected && props.context.isFocused && 'outline',
+                      props.context.isSelected && 'background-secondary',
 
                       props.context.isDraggingOver && '',
                       props.context.isDraggingOverParent && '',
+
+                      props.context.isFocused && '',
                     )}
+                    {...props.context.itemContainerWithChildrenProps}
+                  >
+                    <div
+                      id={`NodeTreeView-${props.item.index}`}
+                      className={cx(
+                        'justify-stretch',
+                        'padding-xs',
+
+                        'outline-default',
+
+                        props.item.index === ffHoveredItem ? 'outline' : '',
+
+                        props.context.isExpanded && props.context.isSelected && 'background-tertiary',
+                        !props.context.isExpanded && props.context.isSelected && 'background-secondary',
+
+                        props.context.isSelected && 'outline-none',
+                        !props.context.isSelected && props.context.isFocused && 'outline',
+
+                        props.context.isDraggingOver && '',
+                        props.context.isDraggingOverParent && '',
+                      )}
+                      style={{
+                        flexWrap: "nowrap",
+                        paddingLeft: `${props.depth * 10}px`,
+                      }}
+
+                      {...props.context.itemContainerWithoutChildrenProps}
+                      {...props.context.interactiveElementProps}
+                      onClick={(e) => {
+                        e.stopPropagation()
+
+                        // group action
+                        !props.context.isFocused && addRunningActions(['nodeTreeView-focus'])
+                        addRunningActions(['nodeTreeView-select'])
+
+                        removeRunningActions(['nodeTreeView-arrowClick'])
+
+                        // call back
+                        props.context.isFocused ? null : props.context.focusItem()
+
+                        e.shiftKey ? props.context.selectUpTo() :
+                          e.ctrlKey ? (props.context.isSelected ? props.context.unselectItem() : props.context.addToSelectedItems()) :
+                            props.context.selectItem()
+                      }}
+                      onFocus={() => { }}
+                      onMouseEnter={() => setFNHoveredItem(props.item.index as TNodeUid)}
+                      onMouseLeave={() => setFNHoveredItem('')}
+                    >
+                      <div className="gap-xs padding-xs" style={{ width: "100%" }}>
+                        {props.arrow}
+
+                        {props.item.isFolder ?
+                          props.context.isExpanded ? <SVGIconI {...{ "class": "icon-xs" }}>div</SVGIconI> : <SVGIconII {...{ "class": "icon-xs" }}>div</SVGIconII>
+                          : <SVGIconIII {...{ "class": "icon-xs" }}>component</SVGIconIII>}
+
+
+                        {props.title}
+                      </div>
+                    </div>
+
+                    {props.context.isExpanded ? <>
+                      <div>
+                        {props.children} {/* this calls the renderItemsContainer again */}
+                      </div>
+                    </> : null}
+                  </li>
+                </>
+              },
+              renderItemArrow: (props) => {
+                return <>
+                  {props.item.isFolder ?
+                    (props.context.isExpanded ? <SVGIconI {...{
+                      "class": "icon-xs", "onClick": (e: MouseEvent) => {
+                        // to merge with the click event
+                        addRunningActions(['nodeTreeView-arrowClick'])
+
+                        addRunningActions([props.context.isExpanded ? 'nodeTreeView-collapse' : 'nodeTreeView-expand'])
+
+                        // callback
+                        props.context.toggleExpandedState()
+                      }
+                    }}>down</SVGIconI> : <SVGIconII {...{
+                      "class": "icon-xs", "onClick": (e: MouseEvent) => {
+                        // to merge with the click event
+                        addRunningActions(['nodeTreeView-arrowClick'])
+
+                        addRunningActions([props.context.isExpanded ? 'nodeTreeView-collapse' : 'nodeTreeView-expand'])
+
+                        // callback
+                        props.context.toggleExpandedState()
+                      }
+                    }}>right</SVGIconII>)
+                    : <div
+                      className='icon-xs'
+                      onClick={(e) => {
+                        // to merge with the click event
+                        addRunningActions(['nodeTreeView-arrowClick'])
+                      }}
+                    >
+                    </div>}
+                </>
+              },
+              renderItemTitle: (props) => {
+                return <>
+                  <span
+                    className='text-s justify-stretch'
                     style={{
-                      flexWrap: "nowrap",
-                      paddingLeft: `${props.depth * 10}px`,
-                    }}
-
-                    {...props.context.itemContainerWithoutChildrenProps}
-                    {...props.context.interactiveElementProps}
-                    onClick={(e) => {
-                      e.stopPropagation()
-
-                      // group action
-                      !props.context.isFocused && addRunningActions(['nodeTreeView-focus'])
-                      addRunningActions(['nodeTreeView-select'])
-
-                      removeRunningActions(['nodeTreeView-arrowClick'])
-
-                      // call back
-                      props.context.isFocused ? null : props.context.focusItem()
-
-                      e.shiftKey ? props.context.selectUpTo() :
-                        e.ctrlKey ? (props.context.isSelected ? props.context.unselectItem() : props.context.addToSelectedItems()) :
-                          props.context.selectItem()
-                    }}
-                    onFocus={() => { }}
-                    onMouseEnter={() => setFNHoveredItem(props.item.index as TNodeUid)}
-                    onMouseLeave={() => setFNHoveredItem('')}
-                  >
-                    <div className="gap-xs padding-xs" style={{ width: "100%" }}>
-                      {/* render arrow */}
-                      {props.arrow}
-
-                      {/* render icon */}
-                      {props.item.isFolder ?
-                        props.context.isExpanded ? <SVGIconI {...{ "class": "icon-xs" }}>div</SVGIconI> : <SVGIconII {...{ "class": "icon-xs" }}>div</SVGIconII> :
-                        <SVGIconIII {...{ "class": "icon-xs" }}>component</SVGIconIII>}
-
-
-                      {/* render title */}
-                      {props.title}
-                    </div>
-                  </div>
-
-                  {/* render children */}
-                  {props.context.isExpanded ? <>
-                    <div>
-                      {props.children} {/* this calls the renderItemsContainer again */}
-                    </div>
-                  </> : null}
-                </li>
-              </>
-            },
-            renderItemArrow: (props) => {
-              return <>
-                {props.item.isFolder ?
-                  (props.context.isExpanded ? <SVGIconI {...{
-                    "class": "icon-xs", "onClick": (e: MouseEvent) => {
-                      // to merge with the click event
-                      addRunningActions(['nodeTreeView-arrowClick'])
-
-                      addRunningActions([props.context.isExpanded ? 'nodeTreeView-collapse' : 'nodeTreeView-expand'])
-
-                      // callback
-                      props.context.toggleExpandedState()
-                    }
-                  }}>down</SVGIconI> : <SVGIconII {...{
-                    "class": "icon-xs", "onClick": (e: MouseEvent) => {
-                      // to merge with the click event
-                      addRunningActions(['nodeTreeView-arrowClick'])
-
-                      addRunningActions([props.context.isExpanded ? 'nodeTreeView-collapse' : 'nodeTreeView-expand'])
-
-                      // callback
-                      props.context.toggleExpandedState()
-                    }
-                  }}>right</SVGIconII>)
-                  : <div
-                    className='icon-xs'
-                    onClick={(e) => {
-                      // to merge with the click event
-                      addRunningActions(['nodeTreeView-arrowClick'])
+                      width: "calc(100% - 32px)",
+                      textOverflow: 'ellipsis',
+                      overflow: 'hidden',
+                      whiteSpace: 'nowrap',
                     }}
                   >
-                  </div>}
-              </>
-            },
-            renderItemTitle: (props) => {
-              return <>
-                <span
-                  className='text-s justify-stretch'
+                    {props.title}
+                  </span>
+                </>
+              },
+              renderDragBetweenLine: ({ draggingPosition, lineProps }) => (
+                <div
+                  {...lineProps}
+                  className={'foreground-tertiary'}
                   style={{
-                    width: "calc(100% - 32px)",
-                    textOverflow: 'ellipsis',
-                    overflow: 'hidden',
-                    whiteSpace: 'nowrap',
+                    position: 'absolute',
+                    right: '0',
+                    top:
+                      draggingPosition.targetType === 'between-items' && draggingPosition.linePosition === 'top' ? '0px'
+                        : draggingPosition.targetType === 'between-items' && draggingPosition.linePosition === 'bottom' ? '-4px'
+                          : '-2px',
+                    left: `${draggingPosition.depth * 10}px`,
+                    height: '2px',
                   }}
-                >
-                  {props.title}
-                </span>
-              </>
-            },
-            renderDragBetweenLine: ({ draggingPosition, lineProps }) => (
-              <div
-                {...lineProps}
-                className={'foreground-tertiary'}
-                style={{
-                  position: 'absolute',
-                  right: '0',
-                  top:
-                    draggingPosition.targetType === 'between-items' && draggingPosition.linePosition === 'top' ? '0px'
-                      : draggingPosition.targetType === 'between-items' && draggingPosition.linePosition === 'bottom' ? '-4px'
-                        : '-2px',
-                  left: `${draggingPosition.depth * 10}px`,
-                  height: '2px',
-                }}
-              />
-            ),
-          }}
+                />
+              ),
+            }}
 
-          props={{
-            canDragAndDrop: true,
-            canDropOnFolder: true,
-            canDropOnNonFolder: true,
-            canReorderItems: true,
+            props={{
+              canDragAndDrop: true,
+              canDropOnFolder: true,
+              canDropOnNonFolder: true,
+              canReorderItems: true,
 
-            canSearch: false,
-            canSearchByStartingTyping: false,
-            canRename: false,
-          }}
+              canSearch: false,
+              canSearchByStartingTyping: false,
+              canRename: false,
+            }}
 
-          callbacks={{
-            onSelectItems: (items) => {
-              cb_selectNode(items as TNodeUid[])
-            },
-            onFocusItem: (item) => {
-              cb_focusNode(item.index as TNodeUid)
-            },
-            onExpandItem: (item) => {
-              cb_expandNode(item.index as TNodeUid)
-            },
-            onCollapseItem: (item) => {
-              cb_collapseNode(item.index as TNodeUid)
-            },
-            onDrop: (items, target) => {
-              const uids: TNodeUid[] = items.map(item => item.index as TNodeUid)
-              const isBetween = target.targetType === 'between-items'
-              const parentUid = (isBetween ? target.parentItem : target.targetItem) as TNodeUid
-              const position = isBetween ? target.childIndex : 0
+            callbacks={{
+              onSelectItems: (items) => {
+                cb_selectNode(items as TNodeUid[])
+              },
+              onFocusItem: (item) => {
+                cb_focusNode(item.index as TNodeUid)
+              },
+              onExpandItem: (item) => {
+                cb_expandNode(item.index as TNodeUid)
+              },
+              onCollapseItem: (item) => {
+                cb_collapseNode(item.index as TNodeUid)
+              },
+              onDrop: (items, target) => {
+                const uids: TNodeUid[] = items.map(item => item.index as TNodeUid)
+                const isBetween = target.targetType === 'between-items'
+                const parentUid = (isBetween ? target.parentItem : target.targetItem) as TNodeUid
+                const position = isBetween ? target.childIndex : 0
 
-              cb_dropNode(uids, parentUid, isBetween, position)
-            },
-          }}
-        />
-      </div>
-    </Panel>
-  </>
+                cb_dropNode(uids, parentUid, isBetween, position)
+              },
+            }}
+          />
+        </div>
+      </Panel>
+    </>
+  }, [panelResizing, onPanelClick, nodeTreeViewData, focusedItem, selectedItems, expandedItems])
 }

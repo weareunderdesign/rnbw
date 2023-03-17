@@ -1349,15 +1349,7 @@ This action cannot be undone!`
   }, [])
 
   // panel size handler
-  const [panelSize, setPanelSize] = useState(200 / window.innerHeight * 100)
-  useEffect(() => {
-    const windowResizeHandler = () => {
-      setPanelSize(200 / window.innerHeight * 100)
-    }
-    window.addEventListener('resize', windowResizeHandler)
-
-    return () => window.removeEventListener('resize', windowResizeHandler)
-  }, [])
+  const panelSize = useMemo(() => 200 / window.innerHeight * 100, [])
   // -------------------------------------------------------------- other --------------------------------------------------------------
 
   return <>

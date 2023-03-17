@@ -2,6 +2,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
 } from 'react';
 
@@ -274,7 +275,7 @@ export default function Process(props: ProcessProps) {
   useEffect(() => {
     if (updateOpt.parse === null && updateOpt.from === 'file') {
       dispatch(clearFNState())
-      dispatch(expandFNNode(Object.keys(validNodeTree).slice(0, 50)))
+      dispatch(expandFNNode(Object.keys(validNodeTree)/* .slice(0, 50) */))
       removeRunningActions(['processor-validNodeTree'])
     } else if (updateOpt.parse === null && updateOpt.from === 'code') {
       const _focusedItem: TNodeUid = validNodeTree[focusedItem] === undefined ? RootNodeUid : focusedItem
@@ -296,5 +297,7 @@ export default function Process(props: ProcessProps) {
   }, [validNodeTree])
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
 
-  return <></>
+  return useMemo(() => {
+    return <></>
+  }, [])
 }

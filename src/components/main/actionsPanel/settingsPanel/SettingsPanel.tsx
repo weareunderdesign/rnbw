@@ -1,8 +1,7 @@
 import React, {
   useCallback,
   useContext,
-  useEffect,
-  useState,
+  useMemo,
 } from 'react';
 
 import cx from 'classnames';
@@ -67,31 +66,24 @@ export default function SettingsPanel(props: SettingsPanelProps) {
   }, [])
 
   // panel size handler
-  const [panelSize, setPanelSize] = useState(200 / window.innerHeight * 100)
-  useEffect(() => {
-    const windowResizeHandler = () => {
-      setPanelSize(200 / window.innerHeight * 100)
-    }
-    window.addEventListener('resize', windowResizeHandler)
-
-    return () => window.removeEventListener('resize', windowResizeHandler)
-  }, [])
+  const panelSize = useMemo(() => 200 / window.innerHeight * 100, [])
   // -------------------------------------------------------------- other --------------------------------------------------------------
 
-  return <>
-    <Panel defaultSize={panelSize} minSize={0}>
-      <div
-        id="SettingsView"
-        className={cx(
-          'scrollable',
-          // activePanel === 'settings' ? "outline outline-primary" : "",
-        )}
-        style={{
-          pointerEvents: panelResizing ? 'none' : 'auto',
-        }}
-        onClick={onPanelClick}
-      >
-      </div>
-    </Panel>
-  </>
+  return useMemo(() => {
+    return <>
+      <Panel defaultSize={panelSize} minSize={0}>
+        <div
+          id="SettingsView"
+          className={cx(
+            'scrollable',
+          )}
+          style={{
+            pointerEvents: panelResizing ? 'none' : 'auto',
+          }}
+          onClick={onPanelClick}
+        >
+        </div>
+      </Panel>
+    </>
+  }, [panelSize, onPanelClick])
 }

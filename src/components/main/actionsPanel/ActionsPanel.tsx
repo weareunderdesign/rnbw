@@ -1,7 +1,4 @@
-import React, {
-  useEffect,
-  useState,
-} from 'react';
+import React, { useMemo } from 'react';
 
 import {
   Panel,
@@ -16,30 +13,23 @@ import { ActionsPanelProps } from './types';
 import WorkspaceTreeView from './workspaceTreeView';
 
 export default function ActionsPanel(props: ActionsPanelProps) {
-  // panel size handler
-  const [panelSize, setPanelSize] = useState(240 / window.innerWidth * 100)
-  useEffect(() => {
-    const windowResizeHandler = () => {
-      setPanelSize(200 / window.innerWidth * 100)
-    }
-    window.addEventListener('resize', windowResizeHandler)
+  const panelSize = useMemo(() => 240 / window.innerWidth * 100, [])
 
-    return () => window.removeEventListener('resize', windowResizeHandler)
-  }, [])
+  return useMemo(() => {
+    return <>
+      <Panel defaultSize={panelSize} minSize={0}>
+        <PanelGroup direction="vertical">
+          <WorkspaceTreeView />
 
-  return <>
-    <Panel defaultSize={panelSize} minSize={0}>
-      <PanelGroup direction="vertical">
-        <WorkspaceTreeView />
+          <ResizeHandle direction='vertical'></ResizeHandle>
 
-        <ResizeHandle direction='vertical'></ResizeHandle>
+          <NodeTreeView />
 
-        <NodeTreeView />
+          <ResizeHandle direction='vertical'></ResizeHandle>
 
-        <ResizeHandle direction='vertical'></ResizeHandle>
-
-        <SettingsPanel />
-      </PanelGroup>
-    </Panel>
-  </>
+          <SettingsPanel />
+        </PanelGroup>
+      </Panel>
+    </>
+  }, [panelSize])
 }
