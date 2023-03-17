@@ -61,6 +61,15 @@ export const getSubNodeUidsByDfs = (uid: TNodeUid, tree: TNodeTreeData): TNodeUi
 
   return subUids
 }
+export const getPrevSiblingNodeUid = (tree: TNodeTreeData, node: TNode): TNodeUid => {
+  const parentNode = tree[node.parentUid as TNodeUid]
+  let beforeUid: TNodeUid = ''
+  for (const childUid of parentNode.children) {
+    if (childUid === node.uid) break
+    beforeUid = childUid
+  }
+  return beforeUid
+}
 export const parseFile = (type: TFileType, content: string, referenceData: TNodeReferenceData, osType: TOsType): TFileParserResponse => {
   if (type === 'html') {
     return parseHtml(content, referenceData as THtmlReferenceData, osType)
@@ -81,6 +90,84 @@ export const serializeFile = (type: TFileType, tree: TNodeTreeData, referenceDat
   }
   return ''
 }
+export const removeNode = (tree: TNodeTreeData, nodeUids: TNodeUid[], treeType: TNodeTreeContext): TNodeApiResponse => {
+  const deletedUids: TNodeUid[] = []
+
+  nodeUids.map((nodeUid) => {
+    const node = tree[nodeUid]
+    if (!node) return
+
+    const parentNode = tree[node.parentUid as TNodeUid]
+
+    if (treeType === 'html') {
+      // remove prev format-text-node
+      const prevUid = getPrevSiblingNodeUid(tree, node)
+      const prevNode = tree[prevUid]
+      if (prevNode && (prevNode.data as THtmlNodeData).isFormatText) {
+        delete tree[prevUid]
+        parentNode.children = parentNode.children.filter(childUid => childUid !== prevUid)
+      }
+    }
+
+    // remove itself from the parent
+    parentNode.children = parentNode.children.filter(c_uid => c_uid !== nodeUid)
+    parentNode.isEntity = parentNode.children.length === 0
+
+    // delete nested nodes
+    const uids = getSubNodeUidsByBfs(nodeUid, tree)
+    uids.map((uid) => {
+      delete tree[uid]
+    })
+    deletedUids.push(...uids)
+  })
+
+  return { tree, deletedUids }
+}
+export const resetNodeTreeUids = (tree: TNodeTreeData, type: TNodeTreeContext): TResetNodeTreeUidsApiResponse => {
+  const nodes = [tree[RootNodeUid]]
+  const convertedUids = new Map<TNodeUid, TNodeUid>()
+
+  // generate expected uids for nodes
+  while (nodes.length) {
+    const node = nodes.shift() as TNode
+    node.children = node.children.map((childUid, index) => {
+      const expectedUid = generateNodeUid(node.uid, index + 1)
+      childUid !== expectedUid && convertedUids.set(childUid, expectedUid)
+
+      tree[childUid].parentUid = node.uid
+      tree[childUid].uid = expectedUid
+      nodes.push(tree[childUid])
+
+      return expectedUid
+    })
+  }
+
+  // update the tree with convertedUids
+  const newTree: TNodeTreeData = {}
+  Object.keys(tree).map((uid) => {
+    const node = tree[uid]
+
+    if (type === 'html') {
+      replaceHtmlNodeInAppAttribName(node, node.uid)
+    }
+
+    newTree[node.uid] = node
+  })
+
+  return { newTree, convertedUids }
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * generate node uid from parent uid and its entry name
@@ -235,60 +322,6 @@ export const validateNodeUidCollection = (uids: TNodeUid[], targetUid?: TNodeUid
   return _uids
 }
 
-/**
- * reset all of the node uids in node-tree-view
- * @param tree 
- * @returns 
- */
-export const resetNodeTreeUids = (tree: TNodeTreeData, type: TNodeTreeContext): TResetNodeTreeUidsApiResponse => {
-  const nodes = [tree[RootNodeUid]]
-  const convertedUids = new Map<TNodeUid, TNodeUid>()
-
-  // generate expected uids for nodes
-  while (nodes.length) {
-    const node = nodes.shift() as TNode
-    node.children = node.children.map((childUid, index) => {
-      const expectedUid = generateNodeUid(node.uid, index + 1)
-      childUid !== expectedUid && convertedUids.set(childUid, expectedUid)
-
-      tree[childUid].parentUid = node.uid
-      tree[childUid].uid = expectedUid
-      nodes.push(tree[childUid])
-
-      return expectedUid
-    })
-  }
-
-  // update the tree with convertedUids
-  const newTree: TNodeTreeData = {}
-  Object.keys(tree).map((uid) => {
-    const node = tree[uid]
-
-    if (type === 'html') {
-      replaceHtmlNodeInAppAttribName(node, node.uid)
-    }
-
-    newTree[node.uid] = node
-  })
-
-  return { newTree, convertedUids }
-}
-
-/**
- * get prev sibling node uid in the node-tree
- * @param tree 
- * @param node 
- * @returns 
- */
-export const getPrevSiblingNodeUid = (tree: TNodeTreeData, node: TNode): TNodeUid => {
-  const parentNode = tree[node.parentUid as TNodeUid]
-  let beforeUid: TNodeUid = ''
-  for (const childUid of parentNode.children) {
-    if (childUid === node.uid) break
-    beforeUid = childUid
-  }
-  return beforeUid
-}
 
 /**
  * get child-index of the node inside its parent, start z-index is 0
@@ -348,53 +381,10 @@ export const addNode = (tree: TNodeTreeData, targetUid: TNodeUid, node: TNode, o
   for (const [prev, cur] of _convertedUids) {
     convertedUids.push([prev, cur])
   }
-  return { tree: newTree, convertedUids }
+  return { tree: newTree }
 }
 
-/**
- * remove nodes from the tree
- * @param tree 
- * @param nodeUids 
- * @param treeType 
- * @returns 
- */
-export const removeNode = (tree: TNodeTreeData, nodeUids: TNodeUid[], treeType: TNodeTreeContext): TNodeApiResponse => {
-  const deletedUids: TNodeUid[] = []
 
-  nodeUids.map((nodeUid) => {
-    const node = tree[nodeUid]
-    const parentNode = tree[node.parentUid as TNodeUid]
-
-    if (treeType === 'html') {
-      // delete prev format-text-node
-      const prevUid = getPrevSiblingNodeUid(tree, node)
-      const prevNode = tree[prevUid]
-      if (prevNode && (prevNode.data as THtmlNodeData).isFormatText) delete tree[prevUid]
-
-      // update parent
-      parentNode.children = parentNode.children.filter(childUid => prevUid === '' || childUid !== prevUid)
-    }
-
-    // remove itself from the parent
-    parentNode.children = parentNode.children.filter(c_uid => c_uid !== nodeUid)
-    parentNode.isEntity = parentNode.children.length === 0
-
-    // delete nested nodes
-    const uids = getSubNodeUidsByBfs(nodeUid, tree)
-    uids.map((uid) => {
-      delete tree[uid]
-    })
-    deletedUids.push(...uids)
-  })
-
-  // reset the uids
-  const { newTree, convertedUids: _convertedUids } = resetNodeTreeUids(tree, treeType)
-  const convertedUids: [TNodeUid, TNodeUid][] = []
-  for (const [prev, cur] of _convertedUids) {
-    convertedUids.push([prev, cur])
-  }
-  return { tree: newTree, deletedUids, convertedUids }
-}
 
 /**
  * mode nodes inside the target
@@ -490,7 +480,7 @@ export const moveNode = (tree: TNodeTreeData, targetUid: TNodeUid, isBetween: bo
   for (const [prev, cur] of _convertedUids) {
     convertedUids.push([prev, cur])
   }
-  return { tree: newTree, convertedUids }
+  return { tree: newTree }
 }
 
 /**
@@ -580,7 +570,7 @@ export const copyNode = (tree: TNodeTreeData, targetUid: TNodeUid, isBetween: bo
   for (const [prev, cur] of _convertedUids) {
     convertedUids.push([prev, cur])
   }
-  return { tree: newTree, convertedUids }
+  return { tree: newTree }
 }
 
 /**
@@ -641,7 +631,7 @@ export const duplicateNode = (tree: TNodeTreeData, uids: TNodeUid[], osType: TOs
   for (const [prev, cur] of _convertedUids) {
     convertedUids.push([prev, cur])
   }
-  return { tree: newTree, convertedUids }
+  return { tree: newTree }
 }
 
 /**

@@ -69,7 +69,7 @@ export default function Process(props: ProcessProps) {
     ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree, setFFNode,
 
     // ndoe tree view
-    fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree,
+    fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree, nodeMaxUid, setNodeMaxUid,
 
     // update opt
     updateOpt, setUpdateOpt,
@@ -125,6 +125,7 @@ export default function Process(props: ProcessProps) {
     if (updateOpt.parse === true) {
       let _fileInfo: TFileInfo = null
       let _nodeTree: TNodeTreeData = {}
+
       const _file = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode
       const fileData = _file.data as TFileNodeData
 
@@ -144,6 +145,10 @@ export default function Process(props: ProcessProps) {
           })
         } else {
           // do nothing
+        }
+
+        if (updateOpt.from === 'file') {
+          setNodeMaxUid(Number(treeMaxUid))
         }
       }
 

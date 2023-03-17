@@ -28,11 +28,11 @@ import {
   getNodeChildIndex,
   moveNode,
   removeNode,
-  replaceNode,
   validateNodeUidCollection,
 } from '@_node/index';
 import {
   TNode,
+  TNodeTreeData,
   TNodeUid,
 } from '@_node/types';
 import {
@@ -58,12 +58,13 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   const {
     // groupping action
     addRunningActions, removeRunningActions,
-
+    // event
+    event, setEvent,
     // file tree view
     ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree,
 
     // ndoe tree view
-    fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree,
+    fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree, nodeMaxUid, setNodeMaxUid,
 
     // update opt
     updateOpt, setUpdateOpt,
@@ -142,7 +143,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     // build the new node to add
     const tree = JSON.parse(JSON.stringify(nodeTree))
     let newNode: TNode = {
-      uid: '',
+      uid: String(nodeMaxUid + 1),
       parentUid: focusedItem,
       name: nodeType,
       isEntity: true,
@@ -172,7 +173,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     setUpdateOpt({ parse: false, from: 'node' })
     setNodeTree(res.tree)
     dispatch(updateFNTreeViewState(res))
-  }, [focusedItem, validNodeTree, nodeTree, osType, tabSize])
+  }, [focusedItem, validNodeTree, nodeTree, nodeMaxUid, osType, tabSize])
   const handleRemoveFNNode = useCallback(() => {
     // validate
     if (selectedItems.length === 0) return
@@ -180,11 +181,14 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     addRunningActions(['processor-nodeTree', 'processor-validNodeTree'])
 
     // remove the nodes
-    const tree = JSON.parse(JSON.stringify(nodeTree))
+    const tree = JSON.parse(JSON.stringify(nodeTree)) as TNodeTreeData
     const res = removeNode(tree, selectedItems, 'html')
+
     setUpdateOpt({ parse: false, from: 'node' })
     setNodeTree(res.tree)
     dispatch(updateFNTreeViewState(res))
+
+    setEvent({ type: 'remove-node', param: selectedItems })
   }, [selectedItems, nodeTree])
   const handleDuplicateFNNode = useCallback(() => {
     // validate
@@ -219,20 +223,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     setNodeTree(res.tree)
     dispatch(updateFNTreeViewState(res))
   }, [validNodeTree, nodeTree, osType, tabSize])
-  const cb_renameNode = useCallback((uid: TNodeUid, newName: string) => {
-    // validate
-    const focusedNode = validNodeTree[uid]
-    if (focusedNode === undefined || focusedNode.name === newName) return
-
-    addRunningActions(['processor-nodeTree', 'processor-validNodeTree'])
-
-    // rename the node
-    const tree = JSON.parse(JSON.stringify(nodeTree))
-    const node = { ...JSON.parse(JSON.stringify(tree[uid])), name: newName }
-    replaceNode(tree, node)
-    setUpdateOpt({ parse: false, from: 'node' })
-    setNodeTree(tree)
-  }, [validNodeTree, nodeTree])
   const cb_dropNode = useCallback((_uids: TNodeUid[], parentUid: TNodeUid, isBetween: boolean, position: number) => {
     // validate
     let uids: TNodeUid[] = []
@@ -260,7 +250,10 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     setNodeTree(res.tree)
     dispatch(updateFNTreeViewState(res))
   }, [validNodeTree, nodeTree, osType, tabSize])
-
+  useEffect(() => {
+    if (event) {
+    }
+  }, [event])
   // fn view state
   const cb_focusNode = useCallback((uid: TNodeUid) => {
     // for key-nav

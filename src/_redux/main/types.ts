@@ -16,6 +16,7 @@ import {
   TClipboardData,
   TCmdkGroupData,
   TCmdkReferenceData,
+  TEvent,
   TFile,
   TFileAction,
   TFileInfo,
@@ -33,6 +34,10 @@ export type TMainContext = {
   // groupping action
   addRunningActions: (actionNames: string[]) => void,
   removeRunningActions: (actionNames: string[], effect?: boolean) => void,
+
+  // event
+  event: TEvent,
+  setEvent: (e: TEvent) => void,
 
   // file tree view
   ffHoveredItem: TNodeUid,
@@ -53,6 +58,9 @@ export type TMainContext = {
 
   validNodeTree: TNodeTreeData,
   setValidNodeTree: (tree: TNodeTreeData) => void,
+
+  nodeMaxUid: number,
+  setNodeMaxUid: (uid: number) => void,
 
   // update opt
   updateOpt: TUpdateOptions,

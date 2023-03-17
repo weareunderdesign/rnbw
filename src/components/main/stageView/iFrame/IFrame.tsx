@@ -40,6 +40,9 @@ export const IFrame = (props: IFrameProps) => {
     // groupping action
     addRunningActions, removeRunningActions,
 
+    // event
+    event, setEvent,
+
     // file tree view
     ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree,
 
@@ -343,6 +346,20 @@ export const IFrame = (props: IFrameProps) => {
       }
     }
   }, [contentRef])
+
+  useEffect(() => {
+    if (event) {
+      console.log(event)
+      if (event.type === 'remove-node') {
+        const uids: TNodeUid[] = event.param
+        removeElements()
+      }
+    }
+  }, [event])
+
+  const removeElements = useCallback(() => {
+
+  }, [])
   // -------------------------------------------------------------- Handlers --------------------------------------------------------------
 
   return useMemo(() => {

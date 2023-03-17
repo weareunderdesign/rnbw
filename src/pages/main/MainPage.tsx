@@ -83,6 +83,7 @@ import {
   TCmdkKeyMap,
   TCmdkReference,
   TCmdkReferenceData,
+  TEvent,
   TFileAction,
   TFileInfo,
   TPanelContext,
@@ -149,6 +150,9 @@ export default function MainPage(props: MainPageProps) {
     }
   }, [noRunningAction])
 
+  // global event
+  const [event, setEvent] = useState<TEvent>(null)
+
   // file tree view
   const [ffTree, setFFTree] = useState<TNodeTreeData>({})
   const setFFNode = useCallback((ffNode: TNode) => {
@@ -163,6 +167,7 @@ export default function MainPage(props: MainPageProps) {
   const [fnHoveredItem, setFNHoveredItem] = useState<TNodeUid>('')
   const [nodeTree, setNodeTree] = useState<TNodeTreeData>({})
   const [validNodeTree, setValidNodeTree] = useState<TNodeTreeData>({})
+  const [nodeMaxUid, setNodeMaxUid] = useState<number>(0)
 
   // update opt
   const [updateOpt, setUpdateOpt] = useState<TUpdateOptions>({ parse: null, from: null })
@@ -880,6 +885,9 @@ Your changes will be lost if you don't save them.`
         // groupping action
         addRunningActions, removeRunningActions,
 
+        // event
+        event, setEvent,
+
         // file tree view
         ffTree, setFFTree, setFFNode,
         ffHandlers, setFFHandlers,
@@ -889,6 +897,7 @@ Your changes will be lost if you don't save them.`
         fnHoveredItem, setFNHoveredItem,
         nodeTree, setNodeTree,
         validNodeTree, setValidNodeTree,
+        nodeMaxUid, setNodeMaxUid,
 
         // update opt
         updateOpt, setUpdateOpt,

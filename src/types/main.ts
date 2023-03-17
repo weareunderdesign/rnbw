@@ -53,7 +53,10 @@ export type TSession = {
   'node-tree-view-state': TTreeViewState | null,
   'opened-file-content': string | null,
 }
-
+export type TEvent = {
+  type: 'remove-node',
+  param: any,
+} | null
 /**
  * file tree view node type
  */

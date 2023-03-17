@@ -52,7 +52,6 @@ export type TResetNodeTreeUidsApiResponse = {
 export type TNodeApiResponse = {
   tree: TNodeTreeData,
   deletedUids?: TNodeUid[],
-  convertedUids?: [TNodeUid, TNodeUid][],
 }
 
 /**

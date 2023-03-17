@@ -12,6 +12,7 @@ import {
 import { TToast } from '@_types/global';
 import {
   TClipboardData,
+  TEvent,
   TFileAction,
   TFileInfo,
   TPanelContext,
@@ -29,12 +30,17 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   addRunningActions: (actionNames: string[]) => { },
   removeRunningActions: (actionNames: string[], effect?: boolean) => { },
 
+  // event
+  event: null,
+  setEvent: (e: TEvent) => { },
+
   // file tree view
   ffHoveredItem: '',
   setFFHoveredItem: (uid: TNodeUid) => { },
 
   ffHandlers: {},
   setFFHandlers: (ffHandlerObj: TFileHandlerCollection) => { },
+
   ffTree: {},
   setFFTree: (tree: TNodeTreeData) => { },
   setFFNode: (ffNode: TNode) => { },
@@ -48,6 +54,9 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
 
   validNodeTree: {},
   setValidNodeTree: (tree: TNodeTreeData) => { },
+
+  nodeMaxUid: 0,
+  setNodeMaxUid: (uid: number) => { },
 
   // update opt
   updateOpt: { parse: null, from: null },
