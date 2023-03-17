@@ -351,15 +351,20 @@ export const IFrame = (props: IFrameProps) => {
     if (event) {
       console.log(event)
       if (event.type === 'remove-node') {
-        const uids: TNodeUid[] = event.param
-        removeElements()
+        removeElements(event.param)
+      } else {
+        // do nothing
       }
     }
   }, [event])
 
-  const removeElements = useCallback(() => {
-
-  }, [])
+  const removeElements = useCallback((uids: TNodeUid[]) => {
+    uids.map((uid) => {
+      const selector = `[${NodeInAppAttribName}="${uid}"]`
+      const ele = contentRef?.contentWindow?.document?.querySelector(selector)
+      ele?.remove()
+    })
+  }, [contentRef])
   // -------------------------------------------------------------- Handlers --------------------------------------------------------------
 
   return useMemo(() => {
