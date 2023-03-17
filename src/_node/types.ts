@@ -27,7 +27,18 @@ export type TNormalNodeData = {
   valid: boolean,
   [propName: string]: any,
 }
-
+export type TFileParserResponse = {
+  formattedContent: string,
+  contentInApp: string,
+  tree: TNodeTreeData,
+  nodeMaxUid: TNodeUid,
+  info: TFileInfo,
+}
+export type TNodeApiResponse = {
+  tree: TNodeTreeData,
+  nodeMaxUid?: TNodeUid,
+  deletedUids?: TNodeUid[],
+}
 
 export type TNodeTreeData = {
   [uid: TNodeUid]: TNode,
@@ -46,23 +57,8 @@ export type TResetNodeTreeUidsApiResponse = {
   convertedUids: Map<TNodeUid, TNodeUid>,
 }
 
-/**
- * general node api response type
- */
-export type TNodeApiResponse = {
-  tree: TNodeTreeData,
-  deletedUids?: TNodeUid[],
-}
 
-/**
- * node reference data
- */
+
+
 export type TNodeReferenceData = THtmlReferenceData
 
-export type TFileParserResponse = {
-  formattedContent: string,
-  contentInApp: string,
-  tree: TNodeTreeData,
-  treeMaxUid: TNodeUid,
-  info: TFileInfo,
-}

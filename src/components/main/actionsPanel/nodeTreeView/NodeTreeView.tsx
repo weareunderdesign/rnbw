@@ -20,7 +20,10 @@ import {
   TreeView,
 } from '@_components/common';
 import { TreeViewData } from '@_components/common/treeView/types';
-import { RootNodeUid } from '@_constants/main';
+import {
+  NodeInAppAttribName,
+  RootNodeUid,
+} from '@_constants/main';
 import {
   addNode,
   copyNode,
@@ -28,6 +31,7 @@ import {
   getNodeChildIndex,
   moveNode,
   removeNode,
+  THtmlNodeData,
   validateNodeUidCollection,
 } from '@_node/index';
 import {
@@ -137,14 +141,15 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   // node actions -> nodeTree
   const handleAddFNNode = useCallback((nodeType: string) => {
     // validate
+    if (focusedItem === RootNodeUid) return
+
     const focusedNode = validNodeTree[focusedItem]
     if (focusedNode === undefined) return
 
-    // build the new node to add
-    const tree = JSON.parse(JSON.stringify(nodeTree))
-    let newNode: TNode = {
-      uid: String(nodeMaxUid + 1),
-      parentUid: focusedItem,
+    // build node
+    const newNode: TNode = {
+      uid: String(nodeMaxUid + 1) as TNodeUid,
+      parentUid: focusedNode.parentUid as TNodeUid,
       name: nodeType,
       isEntity: true,
       children: [],
@@ -154,24 +159,28 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
         type: 'tag',
         name: nodeType,
-        data: undefined,
-        attribs: {},
+        data: '',
+        attribs: { [NodeInAppAttribName]: String(nodeMaxUid + 1) as TNodeUid },
 
-        // startLineNumber: '',
-        // startColumn: '',
-        // endLineNumber: '',
-        // endColumn: '',
+        html: '',
+        htmlInApp: '',
 
-        // html: '',
-      }
+        startLineNumber: 0,
+        startColumn: 0,
+        endLineNumber: 0,
+        endColumn: 0,
+      } as THtmlNodeData
     }
 
     addRunningActions(['processor-nodeTree', 'processor-validNodeTree'])
 
     // add node
-    const res = addNode(tree, focusedItem, newNode, osType, 'html', tabSize)
+    const tree = JSON.parse(JSON.stringify(nodeTree))
+    const res = addNode(tree, focusedItem, newNode, 'html', String(nodeMaxUid + 1) as TNodeUid, osType, tabSize)
+
     setUpdateOpt({ parse: false, from: 'node' })
     setNodeTree(res.tree)
+
     dispatch(updateFNTreeViewState(res))
   }, [focusedItem, validNodeTree, nodeTree, nodeMaxUid, osType, tabSize])
   const handleRemoveFNNode = useCallback(() => {
@@ -186,6 +195,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     setUpdateOpt({ parse: false, from: 'node' })
     setNodeTree(res.tree)
+
     dispatch(updateFNTreeViewState(res))
 
     setEvent({ type: 'remove-node', param: selectedItems })
@@ -199,30 +209,32 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     // duplicate the node
     const tree = JSON.parse(JSON.stringify(nodeTree))
-    const res = duplicateNode(tree, uids, osType, 'html', tabSize)
+    const res = duplicateNode(tree, uids, 'html', String(nodeMaxUid) as TNodeUid, osType, tabSize)
 
     setUpdateOpt({ parse: false, from: 'node' })
     setNodeTree(res.tree)
 
     dispatch(updateFNTreeViewState(res))
-  }, [selectedItems, validNodeTree, nodeTree, osType, tabSize])
+  }, [selectedItems, validNodeTree, nodeTree, osType, tabSize, nodeMaxUid])
   const _copy = useCallback((_uids: TNodeUid[], targetUid: TNodeUid, isBetween: boolean, position: number) => {
     // validate
     let uids: TNodeUid[] = [..._uids]
-    uids = uids.filter((uid) => {
-      return validNodeTree[uid] !== undefined
-    })
+    uids = uids.filter((uid) => validNodeTree[uid] !== undefined)
     if (uids.length === 0 || validNodeTree[targetUid] === undefined) return
 
     addRunningActions(['processor-nodeTree', 'processor-validNodeTree'])
 
-    // drop the nodes
-    const tree = JSON.parse(JSON.stringify(nodeTree))
-    const res = copyNode(tree, targetUid, isBetween, position, uids, osType, 'html', tabSize)
+    // copy the nodes
+    const tree = JSON.parse(JSON.stringify(nodeTree)) as TNodeTreeData
+    const res = copyNode(tree, targetUid, isBetween, position, uids, 'html', String(nodeMaxUid) as TNodeUid, osType, tabSize)
+
+    setNodeMaxUid(Number(res.nodeMaxUid as TNodeUid))
+
     setUpdateOpt({ parse: false, from: 'node' })
     setNodeTree(res.tree)
+
     dispatch(updateFNTreeViewState(res))
-  }, [validNodeTree, nodeTree, osType, tabSize])
+  }, [validNodeTree, nodeTree, osType, tabSize, nodeMaxUid])
   const cb_dropNode = useCallback((_uids: TNodeUid[], parentUid: TNodeUid, isBetween: boolean, position: number) => {
     // validate
     let uids: TNodeUid[] = []
@@ -236,20 +248,13 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     // drop the nodes
     const tree = JSON.parse(JSON.stringify(nodeTree))
-    const res = moveNode(
-      tree,
-      parentUid,
-      isBetween,
-      position,
-      uids,
-      osType,
-      'html',
-      tabSize,
-    )
+    const res = moveNode(tree, parentUid, isBetween, position, uids, 'html', String(nodeMaxUid) as TNodeUid, osType, tabSize)
+
     setUpdateOpt({ parse: false, from: 'node' })
     setNodeTree(res.tree)
+
     dispatch(updateFNTreeViewState(res))
-  }, [validNodeTree, nodeTree, osType, tabSize])
+  }, [validNodeTree, nodeTree, osType, tabSize, nodeMaxUid])
   useEffect(() => {
     if (event) {
     }
@@ -386,6 +391,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     setCmdkPages([...cmdkPages, 'Add'])
     setCmdkOpen(true)
   }, [cmdkPages])
+
   const onCut = useCallback(() => {
     setClipboardData({ panel: 'node', type: 'cut', uids: selectedItems })
   }, [selectedItems])
@@ -393,9 +399,11 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     setClipboardData({ panel: 'node', type: 'copy', uids: selectedItems })
   }, [selectedItems])
   const onPaste = useCallback(() => {
+    // validate cmdk
     if (activePanel !== 'node' && activePanel !== 'stage') return
     if (clipboardData.panel !== 'node') return
 
+    // valid node
     const focusedNode = validNodeTree[focusedItem]
     if (focusedNode === undefined) return
     const parentNode = validNodeTree[focusedNode.parentUid as TNodeUid]
@@ -409,7 +417,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     } else if (clipboardData.type === 'copy') {
       _copy(clipboardData.uids, parentNode.uid, true, childIndex + 1)
     }
-  }, [activePanel, clipboardData, cb_dropNode, _copy, focusedItem, validNodeTree])
+  }, [activePanel, clipboardData, focusedItem, validNodeTree, cb_dropNode, _copy])
+
   const onDelete = useCallback(() => {
     handleRemoveFNNode()
   }, [handleRemoveFNNode])

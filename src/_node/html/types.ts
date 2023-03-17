@@ -30,19 +30,13 @@ export interface THtmlDomNodeData extends DOMElement<any, HTMLElement> {
   valid: boolean,
   [attrName: string]: any,
 }
-
-
 export type THtmlParserResponse = {
   formattedContent: string,
   contentInApp: string,
   tree: TNodeTreeData,
-  treeMaxUid: TNodeUid,
+  nodeMaxUid: TNodeUid,
   info: THtmlPageSettings,
 }
-
-/**
- * html processable node type - dom element
- */
 
 
 /**

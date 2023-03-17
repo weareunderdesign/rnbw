@@ -2,7 +2,6 @@ import ReactHtmlParser from 'react-html-parser';
 
 import {
   NodeInAppAttribName,
-  NodeUidSplitterRegExp,
   RootNodeUid,
 } from '@_constants/main';
 import { AmbiguousReactShortHandMap } from '@_ref/AmbiguousReactShortHandMap';
@@ -10,7 +9,6 @@ import { getLineBreakCharacter } from '@_services/global';
 import { TOsType } from '@_types/global';
 
 import {
-  generateNodeUid,
   getNodeChildIndex,
   getNodeDepth,
   getSubNodeUidsByBfs,
@@ -189,7 +187,7 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
     }
   })
 
-  return { formattedContent, contentInApp, tree, treeMaxUid: String(UID), info: settings }
+  return { formattedContent, contentInApp, tree, nodeMaxUid: String(UID), info: settings }
 }
 export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlReferenceData): THtmlNodeData => {
   const uids = getSubNodeUidsByBfs(RootNodeUid, tree)
@@ -273,36 +271,18 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
 
   return tree[RootNodeUid].data as THtmlNodeData
 }
-
-/**
- * replace in-app attrib name with new uid
- * @param node 
- * @param newUid 
- */
-export const replaceHtmlNodeInAppAttribName = (node: TNode, newUid: TNodeUid) => {
+export const setHtmlNodeInAppAttribName = (node: TNode, newUid: TNodeUid) => {
   const nodeData = node.data as THtmlNodeData
-  nodeData.attribs ?
-    nodeData.attribs[NodeInAppAttribName] = `${newUid.replace(NodeUidSplitterRegExp, '-')}`
-    : null
+  nodeData.attribs ? nodeData.attribs[NodeInAppAttribName] = newUid : null
 }
-
-/**
- * add format-text-note before the node
- * @param tree 
- * @param node 
- * @param uidOffset 
- * @param osType 
- * @param tabSize 
- * @returns 
- */
-export const addFormatTextBeforeNode = (tree: TNodeTreeData, node: TNode, uidOffset: number, osType: TOsType, tabSize: number): boolean => {
+export const addFormatTextBeforeNode = (tree: TNodeTreeData, node: TNode, newUid: TNodeUid, osType: TOsType, tabSize: number): void => {
   const parentNode = tree[node.parentUid as TNodeUid]
   const childIndex = getNodeChildIndex(parentNode, node)
+  const parentNodeDepth = getNodeDepth(tree, parentNode.uid)
 
-  // generate format text node
-  const nodeDepth = getNodeDepth(parentNode.uid)
-  let formatTextNode: TNode = {
-    uid: generateNodeUid(parentNode.uid, parentNode.children.length + 1 + uidOffset),
+  // generate text node
+  const formatTextNode: TNode = {
+    uid: newUid,
     parentUid: parentNode.uid,
     name: 'text',
     isEntity: true,
@@ -312,59 +292,45 @@ export const addFormatTextBeforeNode = (tree: TNodeTreeData, node: TNode, uidOff
       isFormatText: true,
 
       type: 'text',
-      name: undefined,
-      data: getLineBreakCharacter(osType) + ' '.repeat((nodeDepth) * tabSize),
-      attribs: undefined,
+      name: '',
+      data: getLineBreakCharacter(osType) + ' '.repeat((parentNodeDepth) * tabSize),
+      attribs: { [NodeInAppAttribName]: newUid },
+
+      html: '',
+      htmlInApp: '',
 
       startLineNumber: 0,
       startColumn: 0,
       endLineNumber: 0,
       endColumn: 0,
-
-      html: undefined,
-
-      hasOrgClass: false,
-    },
+    } as THtmlNodeData,
   }
 
-  // add before format text node
-  let hasOffset: boolean = false
+  // add text node
+  tree[newUid] = formatTextNode
+
+  // update parent
   if (childIndex === 0) {
-    tree[formatTextNode.uid] = formatTextNode
-    parentNode.children.splice(childIndex, 0, formatTextNode.uid)
+    parentNode.children.splice(childIndex, 0, newUid)
   } else {
     const prevNode = tree[parentNode.children[childIndex - 1]]
     const prevNodeData = prevNode.data as THtmlNodeData
     if (!prevNodeData.isFormatText) {
-      tree[formatTextNode.uid] = formatTextNode
-      parentNode.children.splice(childIndex, 0, formatTextNode.uid)
+      parentNode.children.splice(childIndex, 0, newUid)
     } else {
-      hasOffset = true
       delete tree[prevNode.uid]
-      tree[formatTextNode.uid] = formatTextNode
-      parentNode.children.splice(childIndex - 1, 1, formatTextNode.uid)
+      parentNode.children.splice(childIndex - 1, 1, newUid)
     }
   }
-  return hasOffset
 }
-
-/**
- * add format-text-note after the node
- * @param tree 
- * @param node 
- * @param uidOffset 
- * @param osType 
- * @param tabSize 
- * @returns 
- */
-export const addFormatTextAfterNode = (tree: TNodeTreeData, node: TNode, uidOffset: number, osType: TOsType, tabSize: number): boolean => {
+export const addFormatTextAfterNode = (tree: TNodeTreeData, node: TNode, newUid: TNodeUid, osType: TOsType, tabSize: number): void => {
   const parentNode = tree[node.parentUid as TNodeUid]
   const childIndex = getNodeChildIndex(parentNode, node)
+  const parentNodeDepth = getNodeDepth(tree, parentNode.uid)
 
-  // format text node
-  const nodeDepth = getNodeDepth(parentNode.uid)
-  let formatTextNode: TNode = {
-    uid: generateNodeUid(parentNode.uid, parentNode.children.length + 1 + uidOffset),
+  // generate text node
+  const formatTextNode: TNode = {
+    uid: newUid,
     parentUid: parentNode.uid,
     name: 'text',
     isEntity: true,
@@ -374,51 +340,37 @@ export const addFormatTextAfterNode = (tree: TNodeTreeData, node: TNode, uidOffs
       isFormatText: true,
 
       type: 'text',
-      name: undefined,
-      data: getLineBreakCharacter(osType) + ' '.repeat((nodeDepth) * tabSize),
-      attribs: undefined,
+      name: '',
+      data: getLineBreakCharacter(osType) + ' '.repeat((childIndex === parentNode.children.length - 1 ? parentNodeDepth - 1 : parentNodeDepth) * tabSize),
+      attribs: { [NodeInAppAttribName]: newUid },
+
+      html: '',
+      htmlInApp: '',
 
       startLineNumber: 0,
       startColumn: 0,
       endLineNumber: 0,
       endColumn: 0,
-
-      html: undefined,
-
-      hasOrgClass: false,
-    },
+    } as THtmlNodeData,
   }
 
-  // add after format text node
-  let hasOffset: boolean = false
+  // add text node
+  tree[newUid] = formatTextNode
+
+  // update parent
   if (childIndex === parentNode.children.length - 1) {
-    const formatTextNodeData = formatTextNode.data as THtmlNodeData
-    formatTextNodeData.data = getLineBreakCharacter(osType) + ' '.repeat((nodeDepth - 1) * tabSize)
-    tree[formatTextNode.uid] = formatTextNode
-    parentNode.children.push(formatTextNode.uid)
+    parentNode.children.push(newUid)
   } else {
     const nextNode = tree[parentNode.children[childIndex + 1]]
     const nextNodeData = nextNode.data as THtmlNodeData
     if (!nextNodeData.isFormatText) {
-      tree[formatTextNode.uid] = formatTextNode
-      parentNode.children.splice(childIndex + 1, 0, formatTextNode.uid)
+      parentNode.children.splice(childIndex + 1, 0, newUid)
     } else {
-      hasOffset = true
       delete tree[nextNode.uid]
-      tree[formatTextNode.uid] = formatTextNode
-      parentNode.children.splice(childIndex + 1, 1, formatTextNode.uid)
+      parentNode.children.splice(childIndex + 1, 1, newUid)
     }
   }
-  return hasOffset
 }
-
-/**
- * indent all of the sub nodes of the "node" by offset "indentSize"
- * @param tree 
- * @param node 
- * @param indentSize 
- * @param osType 
- */
 export const indentNode = (tree: TNodeTreeData, node: TNode, indentSize: number, osType: TOsType) => {
   const uids = getSubNodeUidsByBfs(node.uid, tree)
   uids.map((uid) => {
@@ -437,11 +389,12 @@ export const indentNode = (tree: TNodeTreeData, node: TNode, indentSize: number,
 
 
 
-/**
- * get react short hand of attributes object
- * @param attrs 
- * @returns 
- */
+
+
+
+
+
+
 export const getShortHand = (attrs: THtmlNodeAttributes): THtmlNodeAttributes => {
   const newAttr: THtmlNodeAttributes = {}
 
