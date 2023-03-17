@@ -11,7 +11,7 @@ html {
 }
 
 [rnbwdev-rnbw-component-hover] {
-  outline: 1px dotted var(--color-rnbwdev-rainbow-component-background);
+  outline: 1px solid var(--color-rnbwdev-rainbow-component-background);
   outline-offset: -1px;
 }
 [rnbwdev-rnbw-component-focus] {

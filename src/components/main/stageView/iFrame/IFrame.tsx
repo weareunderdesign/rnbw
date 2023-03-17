@@ -13,6 +13,7 @@ import {
 } from 'react-redux';
 
 import {
+  LogAllow,
   NodeInAppAttribName,
   RootNodeUid,
 } from '@_constants/main';
@@ -253,7 +254,7 @@ export const IFrame = (props: IFrameProps) => {
     }
     if (action === null) return
 
-    console.log('action to be run by cmdk: ', action)
+    LogAllow && console.log('action to be run by cmdk: ', action)
     setCurrentCommand({ action })
   }, [cmdkReferenceData])
 

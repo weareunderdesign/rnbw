@@ -104,12 +104,24 @@ export default function MainPage(props: MainPageProps) {
   const { futureLength, pastLength } = useSelector(hmsInfoSelector)
 
   // -------------------------------------------------------------- main context --------------------------------------------------------------
+  // global
+  const [pending, setPending] = useState<boolean>(false)
+  const [messages, setMessages] = useState<TToast[]>([])
+  const addMessage = useCallback((message: TToast) => {
+    setMessages([...messages, message])
+  }, [messages])
+  const removeMessage = useCallback((index: number) => {
+    const newMessages = JSON.parse(JSON.stringify(messages))
+    newMessages.splice(index)
+    setMessages(JSON.parse(JSON.stringify(newMessages)))
+  }, [messages])
+
   // groupping action
   const runningActions = useRef<{ [actionName: string]: boolean }>({})
-  const noRunningAction = () => {
+  const noRunningAction = useCallback(() => {
     return Object.keys(runningActions.current).length === 0 ? true : false
-  }
-  const addRunningActions = (actionNames: string[]) => {
+  }, [])
+  const addRunningActions = useCallback((actionNames: string[]) => {
     let found: boolean = false
     for (const actionName of actionNames) {
       if (runningActions.current[actionName] === undefined) {
@@ -120,8 +132,8 @@ export default function MainPage(props: MainPageProps) {
     if (!found) return
 
     setPending(true)
-  }
-  const removeRunningActions = (actionNames: string[], effect: boolean = true) => {
+  }, [])
+  const removeRunningActions = useCallback((actionNames: string[], effect: boolean = true) => {
     let found: boolean = false
     for (const actionName of actionNames) {
       if (runningActions.current[actionName] !== undefined) {
@@ -135,7 +147,7 @@ export default function MainPage(props: MainPageProps) {
       setPending(false)
       effect && dispatch(increaseActionGroupIndex())
     }
-  }
+  }, [noRunningAction])
 
   // file tree view
   const [ffTree, setFFTree] = useState<TNodeTreeData>({})
@@ -167,17 +179,6 @@ export default function MainPage(props: MainPageProps) {
     return cmdkPages.length == 0 ? '' : cmdkPages[cmdkPages.length - 1]
   }, [cmdkPages])
 
-  // global
-  const [pending, setPending] = useState<boolean>(false)
-  const [messages, setMessages] = useState<TToast[]>([])
-  const addMessage = (message: TToast) => {
-    setMessages([...messages, message])
-  }
-  const removeMessage = (index: number) => {
-    const newMessages = JSON.parse(JSON.stringify(messages))
-    newMessages.splice(index)
-    setMessages(JSON.parse(JSON.stringify(newMessages)))
-  }
 
   // references
   const [filesReferenceData, setFilesReferenceData] = useState<TFilesReferenceData>({})

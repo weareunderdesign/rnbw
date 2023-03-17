@@ -444,7 +444,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   }, [])
   // -------------------------------------------------------------- other --------------------------------------------------------------
   return useMemo(() => {
-    console.log('node tree view render')
     return <>
       <Panel minSize={0}>
         <div
@@ -489,7 +488,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                 </>
               },
               renderItem: (props) => {
-                console.log('render item')
                 return <>
                   <li
                     key={props.item.data.uid}
@@ -511,7 +509,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
                         'outline-default',
 
-                        props.item.index === ffHoveredItem ? 'outline' : '',
+                        props.item.index === fnHoveredItem ? 'outline' : '',
 
                         props.context.isExpanded && props.context.isSelected && 'background-tertiary',
                         !props.context.isExpanded && props.context.isSelected && 'background-secondary',
@@ -563,7 +561,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
                     {props.context.isExpanded ? <>
                       <div>
-                        {props.children} {/* this calls the renderItemsContainer again */}
+                        {props.children}
                       </div>
                     </> : null}
                   </li>
@@ -673,5 +671,5 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
         </div>
       </Panel>
     </>
-  }, [panelResizing, onPanelClick, nodeTreeViewData, focusedItem, selectedItems, expandedItems])
+  }, [panelResizing, onPanelClick, nodeTreeViewData, focusedItem, selectedItems, expandedItems, fnHoveredItem])
 }
