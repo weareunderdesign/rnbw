@@ -131,7 +131,7 @@ export default function Process(props: ProcessProps) {
 
       if (updateOpt.from === 'file' || updateOpt.from === 'hms' || updateOpt.from === 'code') {
         const parserRes = parseFile(fileData.type, file.content, getReferenceData(fileData.type), osType)
-        const { formattedContent, contentInApp, tree, treeMaxUid, info } = parserRes
+        const { formattedContent, contentInApp, tree, nodeMaxUid, info } = parserRes
 
         _fileInfo = info
         _nodeTree = tree
@@ -148,7 +148,7 @@ export default function Process(props: ProcessProps) {
         }
 
         if (updateOpt.from === 'file') {
-          setNodeMaxUid(Number(treeMaxUid))
+          setNodeMaxUid(Number(nodeMaxUid))
         }
       }
 
@@ -227,7 +227,7 @@ export default function Process(props: ProcessProps) {
       if (updateOpt.from === 'node') {
         const newFileContent = serializeFile(fileData.type, nodeTree, getReferenceData(fileData.type))
         const parserRes = parseFile(fileData.type, newFileContent, getReferenceData(fileData.type), osType)
-        const { formattedContent, contentInApp, tree, treeMaxUid, info } = parserRes
+        const { formattedContent, contentInApp, tree, nodeMaxUid, info } = parserRes
 
         _fileInfo = info
         fileData.content = formattedContent

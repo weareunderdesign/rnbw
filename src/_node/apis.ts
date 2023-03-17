@@ -377,7 +377,19 @@ export const getNodeDepth = (tree: TNodeTreeData, uid: TNodeUid): number => {
 
 
 
-
+export const generateNodeUid = (parentUid: TNodeUid, entryName: string | number): TNodeUid => {
+  return `${parentUid}${NodeUidSplitter}${entryName}`
+}
+export const getParentNodeUid = (uid: TNodeUid): TNodeUid => {
+  const uidArr = uid.split(NodeUidSplitter)
+  uidArr.pop()
+  return uidArr.join(NodeUidSplitter)
+}
+export const getNodeEntryName = (uid: TNodeUid): string => {
+  const uidArr = uid.split(NodeUidSplitter)
+  const entryName = uidArr.pop()
+  return entryName || ''
+}
 export const validateNodeUidCollection = (uids: TNodeUid[], targetUid?: TNodeUid): TNodeUid[] => {
   let _uids = [...uids]
   const validatedUids: {
