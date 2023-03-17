@@ -26,6 +26,126 @@ import {
   THtmlReferenceData,
 } from './types';
 
+export const setHtmlNodeInAppAttribName = (node: TNode, newUid: TNodeUid) => {
+  const nodeData = node.data as THtmlNodeData
+  nodeData.attribs[NodeInAppAttribName] = newUid
+}
+export const addFormatTextBeforeNode = (tree: TNodeTreeData, node: TNode, uid: TNodeUid, osType: TOsType, tabSize: number): void => {
+  const parentNode = tree[node.parentUid as TNodeUid]
+  const position = getNodeChildIndex(parentNode, node)
+  const parentNodeDepth = getNodeDepth(tree, parentNode.uid)
+
+  // generate text node
+  const formatTextNode: TNode = {
+    uid,
+    parentUid: parentNode.uid,
+    name: 'text',
+    isEntity: true,
+    children: [],
+    data: {
+      valid: false,
+      isFormatText: true,
+
+      type: 'text',
+      name: '',
+      data: getLineBreakCharacter(osType) + ' '.repeat((parentNodeDepth) * tabSize),
+      attribs: { [NodeInAppAttribName]: uid },
+
+      html: '',
+      htmlInApp: '',
+
+      startLineNumber: 0,
+      startColumn: 0,
+      endLineNumber: 0,
+      endColumn: 0,
+    } as THtmlNodeData,
+  }
+
+  // add text node
+  tree[uid] = formatTextNode
+
+  // update parent
+  if (position === 0) {
+    parentNode.children.splice(0, 0, uid)
+  } else {
+    const prevNode = tree[parentNode.children[position - 1]]
+    const prevNodeData = prevNode.data as THtmlNodeData
+    if (!prevNodeData.isFormatText) {
+      parentNode.children.splice(position, 0, uid)
+    } else {
+      delete tree[prevNode.uid]
+      parentNode.children.splice(position - 1, 1, uid)
+    }
+  }
+}
+export const addFormatTextAfterNode = (tree: TNodeTreeData, node: TNode, uid: TNodeUid, osType: TOsType, tabSize: number): void => {
+  const parentNode = tree[node.parentUid as TNodeUid]
+  const position = getNodeChildIndex(parentNode, node)
+  const parentNodeDepth = getNodeDepth(tree, parentNode.uid)
+
+  // generate text node
+  const formatTextNode: TNode = {
+    uid,
+    parentUid: parentNode.uid,
+    name: 'text',
+    isEntity: true,
+    children: [],
+    data: {
+      valid: false,
+      isFormatText: true,
+
+      type: 'text',
+      name: '',
+      data: getLineBreakCharacter(osType) + ' '.repeat((position === parentNode.children.length - 1 ? parentNodeDepth - 1 : parentNodeDepth) * tabSize),
+      attribs: { [NodeInAppAttribName]: uid },
+
+      html: '',
+      htmlInApp: '',
+
+      startLineNumber: 0,
+      startColumn: 0,
+      endLineNumber: 0,
+      endColumn: 0,
+    } as THtmlNodeData,
+  }
+
+  // add text node
+  tree[uid] = formatTextNode
+
+  // update parent
+  if (position === parentNode.children.length - 1) {
+    parentNode.children.push(uid)
+  } else {
+    const nextNode = tree[parentNode.children[position + 1]]
+    const nextNodeData = nextNode.data as THtmlNodeData
+    if (!nextNodeData.isFormatText) {
+      parentNode.children.splice(position + 1, 0, uid)
+    } else {
+      delete tree[nextNode.uid]
+      parentNode.children.splice(position + 1, 1, uid)
+    }
+  }
+}
+export const indentNode = (tree: TNodeTreeData, node: TNode, indentSize: number, osType: TOsType) => {
+  const subNodeUids = getSubNodeUidsByBfs(node.uid, tree)
+  subNodeUids.map((subNodeUid) => {
+    const subNode = tree[subNodeUid]
+    const nodeData = subNode.data as THtmlNodeData
+    if (nodeData.isFormatText) {
+      const text = nodeData.data
+      const textParts = text.split(getLineBreakCharacter(osType))
+      const singleLine = textParts.length === 1
+      const lastPart = textParts.pop()
+      const newLastPart = ' '.repeat(lastPart?.length || 0 + indentSize)
+      nodeData.data = textParts.join(getLineBreakCharacter(osType)) + (singleLine ? '' : getLineBreakCharacter(osType)) + newLastPart
+    }
+  })
+}
+
+
+
+
+
 export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData, osType: TOsType): THtmlParserResponse => {
   // parse the html content
   let UID = 0
@@ -271,121 +391,7 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
 
   return tree[RootNodeUid].data as THtmlNodeData
 }
-export const setHtmlNodeInAppAttribName = (node: TNode, newUid: TNodeUid) => {
-  const nodeData = node.data as THtmlNodeData
-  nodeData.attribs ? nodeData.attribs[NodeInAppAttribName] = newUid : null
-}
-export const addFormatTextBeforeNode = (tree: TNodeTreeData, node: TNode, newUid: TNodeUid, osType: TOsType, tabSize: number): void => {
-  const parentNode = tree[node.parentUid as TNodeUid]
-  const childIndex = getNodeChildIndex(parentNode, node)
-  const parentNodeDepth = getNodeDepth(tree, parentNode.uid)
 
-  // generate text node
-  const formatTextNode: TNode = {
-    uid: newUid,
-    parentUid: parentNode.uid,
-    name: 'text',
-    isEntity: true,
-    children: [],
-    data: {
-      valid: false,
-      isFormatText: true,
-
-      type: 'text',
-      name: '',
-      data: getLineBreakCharacter(osType) + ' '.repeat((parentNodeDepth) * tabSize),
-      attribs: { [NodeInAppAttribName]: newUid },
-
-      html: '',
-      htmlInApp: '',
-
-      startLineNumber: 0,
-      startColumn: 0,
-      endLineNumber: 0,
-      endColumn: 0,
-    } as THtmlNodeData,
-  }
-
-  // add text node
-  tree[newUid] = formatTextNode
-
-  // update parent
-  if (childIndex === 0) {
-    parentNode.children.splice(childIndex, 0, newUid)
-  } else {
-    const prevNode = tree[parentNode.children[childIndex - 1]]
-    const prevNodeData = prevNode.data as THtmlNodeData
-    if (!prevNodeData.isFormatText) {
-      parentNode.children.splice(childIndex, 0, newUid)
-    } else {
-      delete tree[prevNode.uid]
-      parentNode.children.splice(childIndex - 1, 1, newUid)
-    }
-  }
-}
-export const addFormatTextAfterNode = (tree: TNodeTreeData, node: TNode, newUid: TNodeUid, osType: TOsType, tabSize: number): void => {
-  const parentNode = tree[node.parentUid as TNodeUid]
-  const childIndex = getNodeChildIndex(parentNode, node)
-  const parentNodeDepth = getNodeDepth(tree, parentNode.uid)
-
-  // generate text node
-  const formatTextNode: TNode = {
-    uid: newUid,
-    parentUid: parentNode.uid,
-    name: 'text',
-    isEntity: true,
-    children: [],
-    data: {
-      valid: false,
-      isFormatText: true,
-
-      type: 'text',
-      name: '',
-      data: getLineBreakCharacter(osType) + ' '.repeat((childIndex === parentNode.children.length - 1 ? parentNodeDepth - 1 : parentNodeDepth) * tabSize),
-      attribs: { [NodeInAppAttribName]: newUid },
-
-      html: '',
-      htmlInApp: '',
-
-      startLineNumber: 0,
-      startColumn: 0,
-      endLineNumber: 0,
-      endColumn: 0,
-    } as THtmlNodeData,
-  }
-
-  // add text node
-  tree[newUid] = formatTextNode
-
-  // update parent
-  if (childIndex === parentNode.children.length - 1) {
-    parentNode.children.push(newUid)
-  } else {
-    const nextNode = tree[parentNode.children[childIndex + 1]]
-    const nextNodeData = nextNode.data as THtmlNodeData
-    if (!nextNodeData.isFormatText) {
-      parentNode.children.splice(childIndex + 1, 0, newUid)
-    } else {
-      delete tree[nextNode.uid]
-      parentNode.children.splice(childIndex + 1, 1, newUid)
-    }
-  }
-}
-export const indentNode = (tree: TNodeTreeData, node: TNode, indentSize: number, osType: TOsType) => {
-  const uids = getSubNodeUidsByBfs(node.uid, tree)
-  uids.map((uid) => {
-    const node = tree[uid]
-    const nodeData = node.data as THtmlNodeData
-    if (nodeData.isFormatText) {
-      const text = nodeData.data
-      const textParts = text.split(getLineBreakCharacter(osType))
-      const singleLine = textParts.length === 1
-      const lastPart = textParts.pop()
-      const newLastPart = ' '.repeat(lastPart?.length || 0 + indentSize)
-      nodeData.data = textParts.join(getLineBreakCharacter(osType)) + (singleLine ? '' : getLineBreakCharacter(osType)) + newLastPart
-    }
-  })
-}
 
 
 

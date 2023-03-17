@@ -5,7 +5,16 @@ import {
 import { SystemFiles } from '@_ref/SystemFiles';
 import { verifyFileHandlerPermission } from '@_services/main';
 import { TOsType } from '@_types/global';
+import { TFileType } from '@_types/main';
 
+import {
+  parseHtml,
+  serializeHtml,
+  TFileParserResponse,
+  THtmlReferenceData,
+  TNodeReferenceData,
+  TNodeTreeData,
+} from '../';
 import {
   TFileHandlerInfo,
   TFileHandlerInfoObj,
@@ -144,4 +153,28 @@ export const rmnod = (path: string, cb?: () => void) => {
       cb && cb()
     }
   })
+}
+
+
+
+
+export const parseFile = (type: TFileType, content: string, referenceData: TNodeReferenceData, osType: TOsType): TFileParserResponse => {
+  if (type === 'html') {
+    return parseHtml(content, referenceData as THtmlReferenceData, osType)
+  } else {
+    return {
+      formattedContent: '',
+      contentInApp: '',
+      tree: {},
+      nodeMaxUid: '0',
+      info: null,
+    }
+  }
+}
+export const serializeFile = (type: TFileType, tree: TNodeTreeData, referenceData: TNodeReferenceData): string => {
+  if (type === 'html') {
+    const { html } = serializeHtml(tree, referenceData as THtmlReferenceData)
+    return html
+  }
+  return ''
 }

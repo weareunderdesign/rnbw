@@ -15,12 +15,10 @@ import {
   RainbowAppName,
   RootNodeUid,
 } from '@_constants/main';
+import { getSubNodeUidsByBfs } from '@_node/apis';
 import {
-  getSubNodeUidsByBfs,
   parseFile,
   serializeFile,
-} from '@_node/apis';
-import {
   TFileNodeData,
   writeFile,
 } from '@_node/file';

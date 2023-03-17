@@ -47,7 +47,7 @@ import {
   generateNodeUid,
   getNodeEntryName,
   getParentNodeUid,
-  validateNodeUidCollection,
+  getValidNodeUids,
 } from '@_node/apis';
 import {
   _path,
@@ -446,7 +446,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
     // validate
     let _uids = [...uids]
-    _uids = validateNodeUidCollection(_uids)
+    _uids = getValidNodeUids(ffTree, _uids)
     _uids = _uids.filter((_uid) => {
       return !(ffTree[_uid] === undefined || invalidNodes[_uid])
     })
@@ -798,7 +798,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   const cb_dropFFNode = useCallback(async (uids: TNodeUid[], targetUid: TNodeUid, copy: boolean = false) => {
     // validate
     if (ffTree[targetUid] === undefined) return
-    const validatedUids: TNodeUid[] = validateNodeUidCollection(uids, targetUid)
+    const validatedUids: TNodeUid[] = getValidNodeUids(ffTree, uids, targetUid)
     if (validatedUids.length == 0) return
 
     addRunningActions(['fileTreeView-move'])

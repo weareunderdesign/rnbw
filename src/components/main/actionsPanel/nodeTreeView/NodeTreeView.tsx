@@ -29,10 +29,10 @@ import {
   copyNode,
   duplicateNode,
   getNodeChildIndex,
+  getValidNodeUids,
   moveNode,
   removeNode,
   THtmlNodeData,
-  validateNodeUidCollection,
 } from '@_node/index';
 import {
   TNode,
@@ -238,7 +238,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   const cb_dropNode = useCallback((_uids: TNodeUid[], parentUid: TNodeUid, isBetween: boolean, position: number) => {
     // validate
     let uids: TNodeUid[] = []
-    uids = validateNodeUidCollection(_uids, parentUid)
+    uids = getValidNodeUids(validNodeTree, _uids, parentUid)
     uids = uids.filter((uid) => {
       return validNodeTree[uid] !== undefined
     })
@@ -281,7 +281,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     // validate
     let _uids = [...uids]
-    _uids = validateNodeUidCollection(_uids)
+    _uids = getValidNodeUids(validNodeTree, _uids)
     _uids = _uids.filter((_uid) => {
       return validNodeTree[_uid] !== undefined
     })
