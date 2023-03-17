@@ -132,6 +132,8 @@ export default function MainPage(props: MainPageProps) {
     }
     if (!found) return
 
+    console.log(runningActions.current)
+
     setPending(true)
   }, [])
   const removeRunningActions = useCallback((actionNames: string[], effect: boolean = true) => {

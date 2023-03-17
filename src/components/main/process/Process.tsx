@@ -253,6 +253,9 @@ export default function Process(props: ProcessProps) {
 
   // processor-nodeTree
   useEffect(() => {
+    // validate
+    if (!nodeTree[RootNodeUid]) return
+
     const _nodeTree: TNodeTreeData = JSON.parse(JSON.stringify(nodeTree))
     const _validNodeTree: TNodeTreeData = {}
 

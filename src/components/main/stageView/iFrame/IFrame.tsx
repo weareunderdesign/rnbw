@@ -349,7 +349,6 @@ export const IFrame = (props: IFrameProps) => {
 
   useEffect(() => {
     if (event) {
-      console.log(event)
       if (event.type === 'remove-node') {
         removeElements(event.param)
       } else {

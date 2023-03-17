@@ -54,8 +54,8 @@ export type TSession = {
   'opened-file-content': string | null,
 }
 export type TEvent = {
-  type: 'remove-node',
-  param: any,
+  type: 'focus-node' | 'select-node' | 'expand-node' | 'collapse-node' | 'add-node' | 'remove-node' | 'move-node' | 'duplicate-node' | 'copy-node',
+  param: any[],
 } | null
 /**
  * file tree view node type

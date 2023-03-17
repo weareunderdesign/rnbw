@@ -5,7 +5,6 @@ import {
   HmsClearActionType,
   HmsRedoActionType,
   HmsUndoActionType,
-  RootNodeUid,
 } from '@_constants/main';
 import { TNodeUid } from '@_node/types';
 import {
@@ -45,16 +44,16 @@ const initialState: TMainReducerState = {
     }
   },
   fileTreeViewState: {
-    focusedItem: RootNodeUid,
-    expandedItems: [RootNodeUid],
-    expandedItemsObj: { [RootNodeUid]: true },
+    focusedItem: '',
+    expandedItems: [],
+    expandedItemsObj: {},
     selectedItems: [],
     selectedItemsObj: {},
   },
   nodeTreeViewState: {
-    focusedItem: RootNodeUid,
-    expandedItems: [RootNodeUid],
-    expandedItemsObj: { [RootNodeUid]: true },
+    focusedItem: '',
+    expandedItems: [],
+    expandedItemsObj: {},
     selectedItems: [],
     selectedItemsObj: {},
   },

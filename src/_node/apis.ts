@@ -404,16 +404,6 @@ export const duplicateNode = (tree: TNodeTreeData, uids: TNodeUid[], treeType: T
   return { tree, nodeMaxUid: String(_nodeMaxUid) as TNodeUid, addedUidMap }
 }
 
-
-
-
-
-
-
-
-
-
-
 export const generateNodeUid = (parentUid: TNodeUid, entryName: string | number): TNodeUid => {
   return `${parentUid}${NodeUidSplitter}${entryName}`
 }

@@ -107,6 +107,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
 
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
+  const focusedItemRef = useRef<TNodeUid>(focusedItem)
+
   // validNodeTree -> nodeTreeViewData
   const nodeTreeViewData = useMemo(() => {
     let data: TreeViewData = {}
@@ -125,7 +127,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   }, [validNodeTree])
 
   // sync from redux
-  const focusedItemRef = useRef<TNodeUid>(focusedItem)
   useEffect(() => {
     // validate
     const node = validNodeTree[focusedItem]
@@ -138,8 +139,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     focusedComponent?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' })
   }, [focusedItem])
 
-  // node actions -> nodeTree
-  const handleAddFNNode = useCallback((nodeType: string) => {
+  const cb_addNode = useCallback((nodeType: string) => {
     // validate
     if (focusedItem === RootNodeUid) return
 
@@ -181,9 +181,11 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     setUpdateOpt({ parse: false, from: 'node' })
     setNodeTree(res.tree)
 
+    setEvent({ type: 'add-node', param: [newNode] })
+
     dispatch(updateFNTreeViewState(res))
   }, [focusedItem, validNodeTree, nodeTree, nodeMaxUid, osType, tabSize])
-  const handleRemoveFNNode = useCallback(() => {
+  const cb_removeNode = useCallback(() => {
     // validate
     if (selectedItems.length === 0) return
 
@@ -200,7 +202,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     setEvent({ type: 'remove-node', param: selectedItems })
   }, [selectedItems, nodeTree])
-  const handleDuplicateFNNode = useCallback(() => {
+  const cb_duplicateNode = useCallback(() => {
     // validate
     const uids = selectedItems.filter((uid) => uid !== RootNodeUid && validNodeTree[uid] !== undefined)
     if (uids.length === 0) return
@@ -216,7 +218,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     dispatch(updateFNTreeViewState(res))
   }, [selectedItems, validNodeTree, nodeTree, osType, tabSize, nodeMaxUid])
-  const _copy = useCallback((_uids: TNodeUid[], targetUid: TNodeUid, isBetween: boolean, position: number) => {
+  const cb_copyNode = useCallback((_uids: TNodeUid[], targetUid: TNodeUid, isBetween: boolean, position: number) => {
     // validate
     let uids: TNodeUid[] = [..._uids]
     uids = uids.filter((uid) => validNodeTree[uid] !== undefined)
@@ -235,7 +237,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     dispatch(updateFNTreeViewState(res))
   }, [validNodeTree, nodeTree, osType, tabSize, nodeMaxUid])
-  const cb_dropNode = useCallback((_uids: TNodeUid[], parentUid: TNodeUid, isBetween: boolean, position: number) => {
+  const cb_moveNode = useCallback((_uids: TNodeUid[], parentUid: TNodeUid, isBetween: boolean, position: number) => {
     // validate
     let uids: TNodeUid[] = []
     uids = getValidNodeUids(validNodeTree, _uids, parentUid)
@@ -255,42 +257,32 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     dispatch(updateFNTreeViewState(res))
   }, [validNodeTree, nodeTree, osType, tabSize, nodeMaxUid])
-  useEffect(() => {
-    if (event) {
-    }
-  }, [event])
-  // fn view state
+
   const cb_focusNode = useCallback((uid: TNodeUid) => {
     // for key-nav
     addRunningActions(['nodeTreeView-focus'])
 
     // validate
-    if (focusedItem === uid || validNodeTree[uid] === undefined) {
+    if (focusedItem === uid) {
       removeRunningActions(['nodeTreeView-focus'], false)
       return
     }
 
-    focusedItemRef.current = uid
     dispatch(focusFNNode(uid))
+    focusedItemRef.current = uid
 
     removeRunningActions(['nodeTreeView-focus'])
-  }, [focusedItem, validNodeTree])
+  }, [focusedItem])
   const cb_selectNode = useCallback((uids: TNodeUid[]) => {
     // for key-nav
     addRunningActions(['nodeTreeView-select'])
 
     // validate
-    let _uids = [...uids]
-    _uids = getValidNodeUids(validNodeTree, _uids)
-    _uids = _uids.filter((_uid) => {
-      return validNodeTree[_uid] !== undefined
-    })
-
-    // check if it's new state
+    const _uids = getValidNodeUids(validNodeTree, uids)
     if (_uids.length === selectedItems.length) {
       let same = true
-      for (const uid of uids) {
-        if (selectedItemsObj[uid] === undefined) {
+      for (const _uid of _uids) {
+        if (selectedItemsObj[_uid] === undefined) {
           same = false
           break
         }
@@ -309,32 +301,28 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     // for key-nav
     addRunningActions(['nodeTreeView-expand'])
 
-    // validate
-    const node = validNodeTree[uid]
-    if (node === undefined || node.isEntity || expandedItemsObj[uid] === true) {
-      removeRunningActions(['nodeTreeView-expand'], false)
-      return
-    }
-
     dispatch(expandFNNode([uid]))
 
     removeRunningActions(['nodeTreeView-expand'])
-  }, [validNodeTree, expandedItemsObj])
+  }, [])
   const cb_collapseNode = useCallback((uid: TNodeUid) => {
     // for key-nav
     addRunningActions(['nodeTreeView-collapse'])
 
-    // validate
-    const node = validNodeTree[uid]
-    if (node === undefined || node.isEntity || expandedItemsObj[uid] === undefined) {
-      removeRunningActions(['nodeTreeView-collapse'], false)
-      return
-    }
-
     dispatch(collapseFNNode([uid]))
 
     removeRunningActions(['nodeTreeView-collapse'])
-  }, [validNodeTree, expandedItemsObj])
+  }, [])
+
+  useEffect(() => {
+    if (event) {
+      const { type, param } = event
+      switch (type) {
+        default:
+          break
+      }
+    }
+  }, [event])
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
 
   // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
@@ -413,18 +401,18 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     if (clipboardData.type === 'cut') {
       setClipboardData({ panel: 'node', type: 'cut', uids: [] })
-      cb_dropNode(clipboardData.uids, parentNode.uid, true, childIndex + 1)
+      cb_moveNode(clipboardData.uids, parentNode.uid, true, childIndex + 1)
     } else if (clipboardData.type === 'copy') {
-      _copy(clipboardData.uids, parentNode.uid, true, childIndex + 1)
+      cb_copyNode(clipboardData.uids, parentNode.uid, true, childIndex + 1)
     }
-  }, [activePanel, clipboardData, focusedItem, validNodeTree, cb_dropNode, _copy])
+  }, [activePanel, clipboardData, focusedItem, validNodeTree, cb_moveNode, cb_copyNode])
 
   const onDelete = useCallback(() => {
-    handleRemoveFNNode()
-  }, [handleRemoveFNNode])
+    cb_removeNode()
+  }, [cb_removeNode])
   const onDuplicate = useCallback(() => {
-    handleDuplicateFNNode()
-  }, [handleDuplicateFNNode])
+    cb_duplicateNode()
+  }, [cb_duplicateNode])
   const onTurnInto = useCallback(() => {
   }, [])
   const onGroup = useCallback(() => {
@@ -435,16 +423,16 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     if (actionName.startsWith('AddNode-') === false) return
 
     const tagName = actionName.slice(9, actionName.length - 1)
-    handleAddFNNode(tagName)
-  }, [handleAddFNNode])
+    cb_addNode(tagName)
+  }, [cb_addNode])
   // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
 
   // -------------------------------------------------------------- other --------------------------------------------------------------
-  // panel focus handler
   const onPanelClick = useCallback((e: React.MouseEvent) => {
     setActivePanel('node')
   }, [])
   // -------------------------------------------------------------- other --------------------------------------------------------------
+
   return useMemo(() => {
     return <>
       <Panel minSize={0}>
@@ -470,8 +458,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
             /* data */
             data={nodeTreeViewData}
             focusedItem={focusedItem}
-            expandedItems={expandedItems}
             selectedItems={selectedItems}
+            expandedItems={expandedItems}
 
             /* renderers */
             renderers={{
@@ -532,13 +520,11 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                       onClick={(e) => {
                         e.stopPropagation()
 
-                        // group action
                         !props.context.isFocused && addRunningActions(['nodeTreeView-focus'])
                         addRunningActions(['nodeTreeView-select'])
 
                         removeRunningActions(['nodeTreeView-arrowClick'])
 
-                        // call back
                         props.context.isFocused ? null : props.context.focusItem()
 
                         e.shiftKey ? props.context.selectUpTo() :
@@ -553,7 +539,9 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                         {props.arrow}
 
                         {props.item.isFolder ?
-                          props.context.isExpanded ? <SVGIconI {...{ "class": "icon-xs" }}>div</SVGIconI> : <SVGIconII {...{ "class": "icon-xs" }}>div</SVGIconII>
+                          props.context.isExpanded ?
+                            <SVGIconI {...{ "class": "icon-xs" }}>div</SVGIconI>
+                            : <SVGIconII {...{ "class": "icon-xs" }}>div</SVGIconII>
                           : <SVGIconIII {...{ "class": "icon-xs" }}>component</SVGIconIII>}
 
 
@@ -572,31 +560,24 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
               renderItemArrow: (props) => {
                 return <>
                   {props.item.isFolder ?
-                    (props.context.isExpanded ? <SVGIconI {...{
-                      "class": "icon-xs", "onClick": (e: MouseEvent) => {
-                        // to merge with the click event
-                        addRunningActions(['nodeTreeView-arrowClick'])
-
-                        addRunningActions([props.context.isExpanded ? 'nodeTreeView-collapse' : 'nodeTreeView-expand'])
-
-                        // callback
-                        props.context.toggleExpandedState()
-                      }
-                    }}>down</SVGIconI> : <SVGIconII {...{
-                      "class": "icon-xs", "onClick": (e: MouseEvent) => {
-                        // to merge with the click event
-                        addRunningActions(['nodeTreeView-arrowClick'])
-
-                        addRunningActions([props.context.isExpanded ? 'nodeTreeView-collapse' : 'nodeTreeView-expand'])
-
-                        // callback
-                        props.context.toggleExpandedState()
-                      }
-                    }}>right</SVGIconII>)
+                    (props.context.isExpanded ?
+                      <SVGIconI {...{
+                        "class": "icon-xs",
+                        "onClick": (e: MouseEvent) => {
+                          addRunningActions(['nodeTreeView-arrowClick, nodeTreeView-collapse'])
+                          props.context.toggleExpandedState()
+                        },
+                      }}>down</SVGIconI> :
+                      <SVGIconII {...{
+                        "class": "icon-xs",
+                        "onClick": (e: MouseEvent) => {
+                          addRunningActions(['nodeTreeView-arrowClick, nodeTreeView-expand'])
+                          props.context.toggleExpandedState()
+                        },
+                      }}>right</SVGIconII>)
                     : <div
                       className='icon-xs'
                       onClick={(e) => {
-                        // to merge with the click event
                         addRunningActions(['nodeTreeView-arrowClick'])
                       }}
                     >
@@ -666,12 +647,18 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                 const parentUid = (isBetween ? target.parentItem : target.targetItem) as TNodeUid
                 const position = isBetween ? target.childIndex : 0
 
-                cb_dropNode(uids, parentUid, isBetween, position)
+                cb_moveNode(uids, parentUid, isBetween, position)
               },
             }}
           />
         </div>
       </Panel>
     </>
-  }, [panelResizing, onPanelClick, nodeTreeViewData, focusedItem, selectedItems, expandedItems, fnHoveredItem])
+  }, [
+    panelResizing, onPanelClick,
+    nodeTreeViewData,
+    focusedItem, selectedItems, expandedItems, fnHoveredItem,
+    addRunningActions, removeRunningActions,
+    cb_selectNode, cb_focusNode, cb_expandNode, cb_collapseNode, cb_moveNode,
+  ])
 }

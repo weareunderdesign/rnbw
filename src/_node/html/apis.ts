@@ -142,10 +142,6 @@ export const indentNode = (tree: TNodeTreeData, node: TNode, indentSize: number,
   })
 }
 
-
-
-
-
 export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData, osType: TOsType): THtmlParserResponse => {
   // parse the html content
   let UID = 0
@@ -391,15 +387,6 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
 
   return tree[RootNodeUid].data as THtmlNodeData
 }
-
-
-
-
-
-
-
-
-
 
 export const getShortHand = (attrs: THtmlNodeAttributes): THtmlNodeAttributes => {
   const newAttr: THtmlNodeAttributes = {}
