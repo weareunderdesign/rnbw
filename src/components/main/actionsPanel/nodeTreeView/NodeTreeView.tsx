@@ -189,18 +189,21 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     // validate
     if (selectedItems.length === 0) return
 
-    addRunningActions(['processor-nodeTree', 'processor-validNodeTree'])
+    addRunningActions(['nodeTreeView-remove'])
 
-    // remove the nodes
     const tree = JSON.parse(JSON.stringify(nodeTree)) as TNodeTreeData
     const res = removeNode(tree, selectedItems, 'html')
 
+    addRunningActions(['processor-updateOpt'])
     setUpdateOpt({ parse: false, from: 'node' })
-    setNodeTree(res.tree)
+
+     setNodeTree(res.tree)
 
     dispatch(updateFNTreeViewState(res))
 
     setEvent({ type: 'remove-node', param: selectedItems })
+
+    removeRunningActions(['nodeTreeView-remove'], false)
   }, [selectedItems, nodeTree])
   const cb_duplicateNode = useCallback(() => {
     // validate
@@ -431,6 +434,10 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   const onPanelClick = useCallback((e: React.MouseEvent) => {
     setActivePanel('node')
   }, [])
+
+  useEffect(() => {
+    console.log(focusedItem, selectedItems, expandedItems)
+  }, [focusedItem, selectedItems, expandedItems])
   // -------------------------------------------------------------- other --------------------------------------------------------------
 
   return useMemo(() => {
@@ -478,6 +485,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                 </>
               },
               renderItem: (props) => {
+                console.log('node tree item render')
                 return <>
                   <li
                     key={props.item.data.uid}
@@ -499,7 +507,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
                         'outline-default',
 
-                        props.item.index === fnHoveredItem ? 'outline' : '',
+                        // props.item.index === fnHoveredItem ? 'outline' : '',
 
                         props.context.isExpanded && props.context.isSelected && 'background-tertiary',
                         !props.context.isExpanded && props.context.isSelected && 'background-secondary',
@@ -527,9 +535,9 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
                         props.context.isFocused ? null : props.context.focusItem()
 
-                        e.shiftKey ? props.context.selectUpTo() :
-                          e.ctrlKey ? (props.context.isSelected ? props.context.unselectItem() : props.context.addToSelectedItems()) :
-                            props.context.selectItem()
+                        // e.shiftKey ? props.context.selectUpTo() :
+                        e.ctrlKey ? (props.context.isSelected ? props.context.unselectItem() : props.context.addToSelectedItems()) :
+                          props.context.selectItem()
                       }}
                       onFocus={() => { }}
                       onMouseEnter={() => setFNHoveredItem(props.item.index as TNodeUid)}
@@ -657,7 +665,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   }, [
     panelResizing, onPanelClick,
     nodeTreeViewData,
-    focusedItem, selectedItems, expandedItems, fnHoveredItem,
+    focusedItem, selectedItems, expandedItems,
     addRunningActions, removeRunningActions,
     cb_selectNode, cb_focusNode, cb_expandNode, cb_collapseNode, cb_moveNode,
   ])

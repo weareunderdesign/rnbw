@@ -101,7 +101,7 @@ export default function StageView(props: StageViewProps) {
           }}
           onClick={onPanelClick}
         >
-          {false && <IFrame />}
+          <IFrame />
         </div>
       </Panel>
     </>
