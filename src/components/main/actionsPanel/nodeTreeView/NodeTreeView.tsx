@@ -21,6 +21,7 @@ import {
 } from '@_components/common';
 import { TreeViewData } from '@_components/common/treeView/types';
 import {
+  AddNodeActionPrefix,
   NodeInAppAttribName,
   RootNodeUid,
 } from '@_constants/main';
@@ -114,7 +115,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   // outline the hovered item
   const hoveredItemRef = useRef<TNodeUid>(fnHoveredItem)
   useEffect(() => {
-    if (fnHoveredItem === '') return
+    if (hoveredItemRef.current === fnHoveredItem) return
 
     const curHoveredElement = document.querySelector(`#NodeTreeView-${hoveredItemRef.current}`)
     curHoveredElement?.setAttribute('class', removeClass(curHoveredElement.getAttribute('class') || '', 'outline'))
@@ -124,17 +125,13 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     hoveredItemRef.current = fnHoveredItem
   }, [fnHoveredItem])
 
+  // scroll to the focused item
   const focusedItemRef = useRef<TNodeUid>(focusedItem)
   useEffect(() => {
-    // validate
-    const node = validNodeTree[focusedItem]
-    if (node === undefined) return
-
-    // skip its own change
     if (focusedItemRef.current === focusedItem) return
 
-    const focusedComponent = document.getElementById(`NodeTreeView-${focusedItem}`)
-    focusedComponent?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' })
+    const focusedElement = document.querySelector(`#NodeTreeView-${focusedItem}`)
+    focusedElement?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' })
   }, [focusedItem])
 
   // validNodeTree -> nodeTreeViewData
@@ -200,14 +197,11 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     dispatch(updateFNTreeViewState(res))
   }, [focusedItem, validNodeTree, nodeTree, nodeMaxUid, osType, tabSize])
-  const cb_removeNode = useCallback(() => {
-    // validate
-    if (selectedItems.length === 0) return
-
+  const cb_removeNode = useCallback((uids: TNodeUid[]) => {
     addRunningActions(['nodeTreeView-remove'])
 
     const tree = JSON.parse(JSON.stringify(nodeTree)) as TNodeTreeData
-    const res = removeNode(tree, selectedItems, 'html')
+    const res = removeNode(tree, uids, 'html')
 
     addRunningActions(['processor-updateOpt'])
     setUpdateOpt({ parse: false, from: 'node' })
@@ -216,15 +210,11 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     dispatch(updateFNTreeViewState(res))
 
-    setEvent({ type: 'remove-node', param: selectedItems })
+    setEvent({ type: 'remove-node', param: uids })
 
     removeRunningActions(['nodeTreeView-remove'], false)
-  }, [selectedItems, nodeTree])
-  const cb_duplicateNode = useCallback(() => {
-    // validate
-    const uids = selectedItems.filter((uid) => uid !== RootNodeUid && validNodeTree[uid] !== undefined)
-    if (uids.length === 0) return
-
+  }, [nodeTree])
+  const cb_duplicateNode = useCallback((uids: TNodeUid[]) => {
     addRunningActions(['processor-nodeTree'])
 
     // duplicate the node
@@ -235,7 +225,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     setNodeTree(res.tree)
 
     dispatch(updateFNTreeViewState(res))
-  }, [selectedItems, validNodeTree, nodeTree, osType, tabSize, nodeMaxUid])
+  }, [validNodeTree, nodeTree, osType, tabSize, nodeMaxUid])
   const cb_copyNode = useCallback((_uids: TNodeUid[], targetUid: TNodeUid, isBetween: boolean, position: number) => {
     // validate
     let uids: TNodeUid[] = [..._uids]
@@ -344,11 +334,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
 
   // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
-  // command detect & do actions
   useEffect(() => {
     if (activePanel !== 'node' && activePanel !== 'stage') return
-
-    if (currentCommand.action === '') return
 
     switch (currentCommand.action) {
       case 'Actions':
@@ -357,6 +344,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       case 'Add':
         onAdd()
         break
+
       case 'Cut':
         onCut()
         break
@@ -372,6 +360,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       case 'Duplicate':
         onDuplicate()
         break
+
       case 'Turn into':
         onTurnInto()
         break
@@ -381,13 +370,13 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       case 'Ungroup':
         onUngroup()
         break
+
       default:
         onAddNode(currentCommand.action)
         break
     }
   }, [currentCommand])
 
-  // command handlers
   const onActions = useCallback(() => {
     if (cmdkOpen) return
     setCmdkPages(['Actions'])
@@ -405,42 +394,33 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     setClipboardData({ panel: 'node', type: 'copy', uids: selectedItems })
   }, [selectedItems])
   const onPaste = useCallback(() => {
-    // validate cmdk
-    if (activePanel !== 'node' && activePanel !== 'stage') return
     if (clipboardData.panel !== 'node') return
 
-    // valid node
     const focusedNode = validNodeTree[focusedItem]
-    if (focusedNode === undefined) return
     const parentNode = validNodeTree[focusedNode.parentUid as TNodeUid]
-    if (parentNode === undefined) return
 
     const childIndex = getNodeChildIndex(parentNode, focusedNode)
 
     if (clipboardData.type === 'cut') {
-      setClipboardData({ panel: 'node', type: 'cut', uids: [] })
+      setClipboardData({ panel: 'unknown', type: null, uids: [] })
       cb_moveNode(clipboardData.uids, parentNode.uid, true, childIndex + 1)
-    } else if (clipboardData.type === 'copy') {
+    } else {
       cb_copyNode(clipboardData.uids, parentNode.uid, true, childIndex + 1)
     }
-  }, [activePanel, clipboardData, focusedItem, validNodeTree, cb_moveNode, cb_copyNode])
-
+  }, [clipboardData, validNodeTree, focusedItem, cb_moveNode, cb_copyNode])
   const onDelete = useCallback(() => {
-    cb_removeNode()
-  }, [cb_removeNode])
+    cb_removeNode(selectedItems)
+  }, [cb_removeNode, selectedItems])
   const onDuplicate = useCallback(() => {
-    cb_duplicateNode()
-  }, [cb_duplicateNode])
-  const onTurnInto = useCallback(() => {
-  }, [])
-  const onGroup = useCallback(() => {
-  }, [])
-  const onUngroup = useCallback(() => {
-  }, [])
-  const onAddNode = useCallback((actionName: string) => {
-    if (actionName.startsWith('AddNode-') === false) return
+    cb_duplicateNode(selectedItems)
+  }, [cb_duplicateNode, selectedItems])
 
-    const tagName = actionName.slice(9, actionName.length - 1)
+  const onTurnInto = useCallback(() => { }, [])
+  const onGroup = useCallback(() => { }, [])
+  const onUngroup = useCallback(() => { }, [])
+
+  const onAddNode = useCallback((actionName: string) => {
+    const tagName = actionName.slice(AddNodeActionPrefix.length + 2)
     cb_addNode(tagName)
   }, [cb_addNode])
   // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
@@ -515,10 +495,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                       className={cx(
                         'justify-stretch',
                         'padding-xs',
-
                         'outline-default',
-
-                        // props.item.index === fnHoveredItem ? 'outline' : '',
 
                         props.context.isExpanded && props.context.isSelected && 'background-tertiary',
                         !props.context.isExpanded && props.context.isSelected && 'background-secondary',

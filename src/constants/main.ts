@@ -88,3 +88,5 @@ export const LogAllow: boolean = false
  * auto-save flag on code view
  */
 export const AutoSave: boolean = false
+
+export const AddNodeActionPrefix = 'AddNode'

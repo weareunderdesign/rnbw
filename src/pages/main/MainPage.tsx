@@ -30,6 +30,7 @@ import {
   StageView,
 } from '@_components/main';
 import {
+  AddNodeActionPrefix,
   DefaultTabSize,
   LogAllow,
 } from '@_constants/main';
@@ -1072,7 +1073,7 @@ Your changes will be lost if you don't save them.`
                           // disabled={false}
                           onSelect={() => {
                             setCmdkOpen(false)
-                            setCurrentCommand({ action: command.Group === 'Add' ? `AddNode-${command.Context}` : command.Name })
+                            setCurrentCommand({ action: command.Group === 'Add' ? `${AddNodeActionPrefix}-${command.Context}` : command.Name })
                           }}
                         >
                           <div
