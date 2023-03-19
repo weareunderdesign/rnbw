@@ -8,6 +8,15 @@ import { TFileSystemType } from '@_types/main';
 import { TNormalNodeData } from '../_node/types';
 import { TOsType } from '../types/global';
 
+export const addClass = (classList: string, classToAdd: string): string => {
+  const validClassList = classList.split(' ').filter(_class => !!_class && _class !== classToAdd).join(' ')
+  return `${validClassList} ${classToAdd}`
+}
+export const removeClass = (classList: string, classToRemove: string): string => {
+  const validClassList = classList.split(' ').filter(_class => !!_class && _class !== classToRemove).join(' ')
+  return validClassList
+}
+
 /**
  * get file system watch interval from its type
  * @param fsType 

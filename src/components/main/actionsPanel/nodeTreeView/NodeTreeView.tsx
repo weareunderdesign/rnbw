@@ -52,6 +52,10 @@ import {
   selectFNNode,
   updateFNTreeViewState,
 } from '@_redux/main';
+import {
+  addClass,
+  removeClass,
+} from '@_services/main';
 
 import { NodeTreeViewProps } from './types';
 
@@ -107,7 +111,31 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
 
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
+  // outline the hovered item
+  const hoveredItemRef = useRef<TNodeUid>(fnHoveredItem)
+  useEffect(() => {
+    if (fnHoveredItem === '') return
+
+    const curHoveredElement = document.querySelector(`#NodeTreeView-${hoveredItemRef.current}`)
+    curHoveredElement?.setAttribute('class', removeClass(curHoveredElement.getAttribute('class') || '', 'outline'))
+    const newHoveredElement = document.querySelector(`#NodeTreeView-${fnHoveredItem}`)
+    newHoveredElement?.setAttribute('class', addClass(newHoveredElement.getAttribute('class') || '', 'outline'))
+
+    hoveredItemRef.current = fnHoveredItem
+  }, [fnHoveredItem])
+
   const focusedItemRef = useRef<TNodeUid>(focusedItem)
+  useEffect(() => {
+    // validate
+    const node = validNodeTree[focusedItem]
+    if (node === undefined) return
+
+    // skip its own change
+    if (focusedItemRef.current === focusedItem) return
+
+    const focusedComponent = document.getElementById(`NodeTreeView-${focusedItem}`)
+    focusedComponent?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' })
+  }, [focusedItem])
 
   // validNodeTree -> nodeTreeViewData
   const nodeTreeViewData = useMemo(() => {
@@ -125,19 +153,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     }
     return data
   }, [validNodeTree])
-
-  // sync from redux
-  useEffect(() => {
-    // validate
-    const node = validNodeTree[focusedItem]
-    if (node === undefined) return
-
-    // skip its own change
-    if (focusedItemRef.current === focusedItem) return
-
-    const focusedComponent = document.getElementById(`NodeTreeView-${focusedItem}`)
-    focusedComponent?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' })
-  }, [focusedItem])
 
   const cb_addNode = useCallback((nodeType: string) => {
     // validate
@@ -197,7 +212,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     addRunningActions(['processor-updateOpt'])
     setUpdateOpt({ parse: false, from: 'node' })
 
-     setNodeTree(res.tree)
+    setNodeTree(res.tree)
 
     dispatch(updateFNTreeViewState(res))
 
@@ -434,10 +449,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   const onPanelClick = useCallback((e: React.MouseEvent) => {
     setActivePanel('node')
   }, [])
-
-  useEffect(() => {
-    console.log(focusedItem, selectedItems, expandedItems)
-  }, [focusedItem, selectedItems, expandedItems])
   // -------------------------------------------------------------- other --------------------------------------------------------------
 
   return useMemo(() => {
