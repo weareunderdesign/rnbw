@@ -142,31 +142,6 @@ export const IFrame = (props: IFrameProps) => {
 
     removeRunningActions(['stageView-focus'])
   }, [nodeTree])
-  // node actions - side effect
-  useEffect(() => {
-    if (event) {
-      const { type, param } = event
-      switch (type) {
-        case 'add-node':
-          addElement(...param as [TNodeUid, TNode])
-          break
-        case 'remove-node':
-          removeElements(...param as [TNodeUid[]])
-          break
-        case 'move-node':
-          moveElements(...param as [TNodeUid[], TNodeUid, boolean, number])
-          break
-        case 'copy-node':
-          copyElements(...param as [TNodeUid[], TNodeUid, boolean, number, Map<string, string>])
-          break
-        case 'duplicate-node':
-          duplicateElements()
-          break
-        default:
-          break
-      }
-    }
-  }, [event])
   // -------------------------------------------------------------- side effect handlers --------------------------------------------------------------
   const addElement = useCallback((targetUid: TNodeUid, node: TNode) => {
     // build new element
@@ -232,7 +207,37 @@ export const IFrame = (props: IFrameProps) => {
       targetElement?.insertBefore(_ele, refElement || null)
     })
   }, [contentRef])
-  const duplicateElements = useCallback(() => { }, [])
+  const duplicateElements = useCallback((uids: TNodeUid[], addedUidMap: Map<string, string>) => {
+    uids.map((uid) => {
+      // clone
+      const ele = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${uid}"]`)
+      const _ele = ele?.cloneNode(true) as HTMLElement
+
+      // reset nest's uid
+      const _uid = _ele.getAttribute(NodeInAppAttribName)
+      if (_uid) {
+        const _newUid = addedUidMap.get(_uid)
+        if (_newUid) {
+          _ele.setAttribute(NodeInAppAttribName, _newUid)
+        }
+      }
+
+      // reset descendant uids
+      const childElementList = _ele.querySelectorAll('*')
+      childElementList.forEach(childElement => {
+        const childUid = childElement.getAttribute(NodeInAppAttribName)
+        if (childUid) {
+          const newChildUid = addedUidMap.get(childUid)
+          if (newChildUid) {
+            childElement.setAttribute(NodeInAppAttribName, newChildUid)
+          }
+        }
+      })
+
+      // update
+      _ele.parentElement?.insertBefore(_ele, _ele.nextElementSibling)
+    })
+  }, [contentRef])
   // -------------------------------------------------------------- iframe event handlers --------------------------------------------------------------
   // mouse events
   const onMouseEnter = useCallback((ele: HTMLElement) => { }, [])
@@ -311,6 +316,8 @@ export const IFrame = (props: IFrameProps) => {
     setCurrentCommand({ action })
   }, [cmdkReferenceData])
   // -------------------------------------------------------------- own --------------------------------------------------------------
+  // iframe event listeners
+  const [iframeEvent, setIframeEvent] = useState<{ type: string, ele: HTMLElement }>()
   useEffect(() => {
     if (contentRef) {
       setPending(true)
@@ -360,7 +367,6 @@ export const IFrame = (props: IFrameProps) => {
       }
     }
   }, [contentRef])
-  const [iframeEvent, setIframeEvent] = useState<{ type: string, ele: HTMLElement }>()
   useEffect(() => {
     if (!iframeEvent) return
 
@@ -388,20 +394,44 @@ export const IFrame = (props: IFrameProps) => {
         break
     }
   }, [iframeEvent])
-  /* useEffect(() => {
-    if (!fileInfo) return
-
+  // node actions - side effect
+  useEffect(() => {
+    if (event) {
+      const { type, param } = event
+      switch (type) {
+        case 'add-node':
+          addElement(...param as [TNodeUid, TNode])
+          break
+        case 'remove-node':
+          removeElements(...param as [TNodeUid[]])
+          break
+        case 'move-node':
+          moveElements(...param as [TNodeUid[], TNodeUid, boolean, number])
+          break
+        case 'copy-node':
+          copyElements(...param as [TNodeUid[], TNodeUid, boolean, number, Map<string, string>])
+          break
+        case 'duplicate-node':
+          duplicateElements(...param as [TNodeUid[], Map<string, string>])
+          break
+        default:
+          break
+      }
+    }
+  }, [event])
+  // reload when script changes
+  useEffect(() => {
     !hasSameScript && setHasSameScript(true)
-  }, [hasSameScript]) */
+  }, [hasSameScript])
 
   return useMemo(() => {
     return <>
-      {iframeSrc &&
+      {iframeSrc && hasSameScript &&
         <iframe
           ref={setContentRef}
           src={iframeSrc}
           style={{ position: "absolute", width: "100%", height: "100%" }}
         />}
     </>
-  }, [iframeSrc])
+  }, [iframeSrc, hasSameScript])
 }
