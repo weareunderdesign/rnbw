@@ -32,13 +32,11 @@ import {
   clearFNState,
   expandFNNode,
   fnSelector,
-  focusFNNode,
   getActionGroupIndexSelector,
   globalSelector,
   hmsInfoSelector,
   MainContext,
   navigatorSelector,
-  selectFNNode,
   setCurrentFileContent,
 } from '@_redux/main';
 import {
@@ -291,9 +289,8 @@ export default function Process(props: ProcessProps) {
     if (updateOpt.parse === null && updateOpt.from === 'file') {
       dispatch(clearFNState())
       dispatch(expandFNNode(Object.keys(validNodeTree).slice(0, 50)))
-      removeRunningActions(['processor-validNodeTree'])
     } else if (updateOpt.parse === null && updateOpt.from === 'code') {
-      const _focusedItem: TNodeUid = validNodeTree[focusedItem] === undefined ? RootNodeUid : focusedItem
+      /* const _focusedItem: TNodeUid = validNodeTree[focusedItem] === undefined ? RootNodeUid : focusedItem
       const _expandedItems = expandedItems.filter((uid) => {
         return validNodeTree[uid] !== undefined && validNodeTree[uid].isEntity === false
       })
@@ -305,10 +302,12 @@ export default function Process(props: ProcessProps) {
       dispatch(expandFNNode(_expandedItems))
       dispatch(selectFNNode(_selectedItems))
 
-      setTimeout(() => removeRunningActions(['processor-validNodeTree']), 0)
+      setTimeout(() => removeRunningActions(['processor-validNodeTree']), 0) */
     } else {
-      removeRunningActions(['processor-validNodeTree'], false)
+      // do nothing
     }
+
+    removeRunningActions(['processor-validNodeTree'])
   }, [validNodeTree])
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
 

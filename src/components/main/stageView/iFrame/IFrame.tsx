@@ -30,6 +30,7 @@ import {
   MainContext,
   navigatorSelector,
   selectFNNode,
+  updateFNTreeViewState,
 } from '@_redux/main';
 import { getCommandKey } from '@_services/global';
 import { TCmdkKeyMap } from '@_types/main';
@@ -193,13 +194,22 @@ export const IFrame = (props: IFrameProps) => {
     // add after target
     const targetElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"]`)
     newElement && targetElement?.parentElement?.insertBefore(newElement, targetElement.nextElementSibling)
-  }, [contentRef])
-  const removeElements = useCallback((uids: TNodeUid[]) => {
+
+    // view state
+    dispatch(focusFNNode(node.uid))
+    dispatch(selectFNNode([node.uid]))
+    removeRunningActions(['stageView-viewState'])
+  }, [removeRunningActions, contentRef])
+  const removeElements = useCallback((uids: TNodeUid[], deletedUids: TNodeUid[]) => {
     uids.map((uid) => {
       const ele = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${uid}"]`)
       ele?.remove()
     })
-  }, [contentRef])
+
+    // view state
+    dispatch(updateFNTreeViewState({ deletedUids }))
+    removeRunningActions(['stageView-viewState'])
+  }, [removeRunningActions, contentRef])
   const moveElements = useCallback((uids: TNodeUid[], targetUid: TNodeUid, isBetween: boolean, position: number) => {
     const targetElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"]`)
     const refElement = isBetween ? contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"] > :nth-child(${position + 1})`) : null
@@ -213,8 +223,13 @@ export const IFrame = (props: IFrameProps) => {
       ele?.remove()
       _ele && targetElement?.insertBefore(_ele, refElement || null)
     })
-  }, [contentRef])
-  const copyElements = useCallback((uids: TNodeUid[], targetUid: TNodeUid, isBetween: boolean, position: number, addedUidMap: Map<string, string>) => {
+
+    // view state
+    dispatch(focusFNNode(uids[uids.length - 1]))
+    dispatch(selectFNNode(uids))
+    removeRunningActions(['stageView-viewState'])
+  }, [removeRunningActions, contentRef])
+  const copyElements = useCallback((uids: TNodeUid[], targetUid: TNodeUid, isBetween: boolean, position: number, addedUidMap: Map<TNodeUid, TNodeUid>) => {
     const targetElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"]`)
     const refElement = isBetween ? contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"] > :nth-child(${position + 1})`) : null
 
@@ -242,8 +257,14 @@ export const IFrame = (props: IFrameProps) => {
       // update
       targetElement?.insertBefore(_ele, refElement || null)
     })
-  }, [contentRef])
-  const duplicateElements = useCallback((uids: TNodeUid[], addedUidMap: Map<string, string>) => {
+
+    // view state
+    const newUids = uids.map((uid) => addedUidMap.get(uid)).filter(uid => uid) as TNodeUid[]
+    dispatch(focusFNNode(newUids[newUids.length - 1]))
+    dispatch(selectFNNode(newUids))
+    removeRunningActions(['stageView-viewState'])
+  }, [removeRunningActions, contentRef])
+  const duplicateElements = useCallback((uids: TNodeUid[], addedUidMap: Map<TNodeUid, TNodeUid>) => {
     uids.map((uid) => {
       // clone
       const ele = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${uid}"]`)
@@ -268,7 +289,13 @@ export const IFrame = (props: IFrameProps) => {
       // update
       ele?.parentElement?.insertBefore(_ele, ele.nextElementSibling)
     })
-  }, [contentRef])
+
+    // view state
+    const newUids = uids.map((uid) => addedUidMap.get(uid)).filter(uid => uid) as TNodeUid[]
+    dispatch(focusFNNode(newUids[newUids.length - 1]))
+    dispatch(selectFNNode(newUids))
+    removeRunningActions(['stageView-viewState'])
+  }, [removeRunningActions, contentRef])
   // -------------------------------------------------------------- iframe event handlers --------------------------------------------------------------
   // mouse events
   const onMouseEnter = useCallback((e: MouseEvent) => { }, [])
@@ -442,16 +469,16 @@ export const IFrame = (props: IFrameProps) => {
           addElement(...param as [TNodeUid, TNode])
           break
         case 'remove-node':
-          removeElements(...param as [TNodeUid[]])
+          removeElements(...param as [TNodeUid[], TNodeUid[]])
           break
         case 'move-node':
           moveElements(...param as [TNodeUid[], TNodeUid, boolean, number])
           break
         case 'copy-node':
-          copyElements(...param as [TNodeUid[], TNodeUid, boolean, number, Map<string, string>])
+          copyElements(...param as [TNodeUid[], TNodeUid, boolean, number, Map<TNodeUid, TNodeUid>])
           break
         case 'duplicate-node':
-          duplicateElements(...param as [TNodeUid[], Map<string, string>])
+          duplicateElements(...param as [TNodeUid[], Map<TNodeUid, TNodeUid>])
           break
         default:
           break

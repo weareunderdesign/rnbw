@@ -47,7 +47,6 @@ import {
   focusFNNode,
   MainContext,
   selectFNNode,
-  updateFNTreeViewState,
 } from '@_redux/main';
 import {
   addClass,
@@ -180,6 +179,9 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     setUpdateOpt({ parse: false, from: 'node' })
     setNodeTree(res.tree)
 
+    // view state
+    addRunningActions(['stageView-viewState'])
+
     // side effect
     setNodeMaxUid(Number(res.nodeMaxUid))
     setEvent({ type: 'add-node', param: [focusedItem, newNode] })
@@ -198,9 +200,11 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     setUpdateOpt({ parse: false, from: 'node' })
     setNodeTree(res.tree)
 
+    // view state
+    addRunningActions(['stageView-viewState'])
+
     // side effect
-    dispatch(updateFNTreeViewState(res))
-    setEvent({ type: 'remove-node', param: [uids] })
+    setEvent({ type: 'remove-node', param: [uids, res.deletedUids] })
 
     removeRunningActions(['nodeTreeView-remove'])
   }, [addRunningActions, removeRunningActions, nodeTree])
@@ -216,6 +220,9 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     setUpdateOpt({ parse: false, from: 'node' })
     setNodeTree(res.tree)
 
+    // view state
+    addRunningActions(['stageView-viewState'])
+
     // side effect
     setNodeMaxUid(Number(res.nodeMaxUid))
     setEvent({ type: 'duplicate-node', param: [uids, res.addedUidMap] })
@@ -228,11 +235,15 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     // call api
     const tree = JSON.parse(JSON.stringify(nodeTree)) as TNodeTreeData
     const res = copyNode(tree, targetUid, isBetween, position, uids, 'html', String(nodeMaxUid) as TNodeUid, osType, tabSize)
+    console.log(res)
 
     // processor
     addRunningActions(['processor-updateOpt'])
     setUpdateOpt({ parse: false, from: 'node' })
     setNodeTree(res.tree)
+
+    // view state
+    addRunningActions(['stageView-viewState'])
 
     // side effect
     setNodeMaxUid(Number(res.nodeMaxUid))
@@ -254,6 +265,9 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     addRunningActions(['processor-updateOpt'])
     setUpdateOpt({ parse: false, from: 'node' })
     setNodeTree(res.tree)
+
+    // view state
+    addRunningActions(['stageView-viewState'])
 
     // side effect
     setNodeMaxUid(Number(res.nodeMaxUid))

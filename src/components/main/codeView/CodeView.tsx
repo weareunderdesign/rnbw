@@ -87,7 +87,7 @@ export default function CodeView(props: CodeViewProps) {
   // const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
   const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
 
-  // -------------------------------------------------------------- Sync --------------------------------------------------------------
+  // -------------------------------------------------------------- sync --------------------------------------------------------------
   // file changed - clear history
   useEffect(() => {
     // need to clear the undo/redo history of the monaco-editor
