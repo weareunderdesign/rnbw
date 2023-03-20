@@ -212,15 +212,21 @@ export const IFrame = (props: IFrameProps) => {
   }, [removeRunningActions, contentRef])
   const moveElements = useCallback((uids: TNodeUid[], targetUid: TNodeUid, isBetween: boolean, position: number) => {
     const targetElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"]`)
-    const refElement = isBetween ? contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"] > :nth-child(${position + 1})`) : null
+    const _elements: (Node | undefined)[] = []
 
-    uids.map((uid) => {
+    // remove from org parents
+    const _uids = [...uids]
+    _uids.reverse()
+    _uids.map((uid) => {
       // clone
       const ele = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${uid}"]`)
-      const _ele = ele?.cloneNode(true)
-
-      // update
+      _elements.push(ele?.cloneNode(true))
       ele?.remove()
+    })
+
+    // add to new target + position
+    _elements.map((_ele) => {
+      const refElement = isBetween ? contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"] > :nth-child(${position + 1})`) : null
       _ele && targetElement?.insertBefore(_ele, refElement || null)
     })
 

@@ -274,21 +274,22 @@ export const moveNode = (tree: TNodeTreeData, targetUid: TNodeUid, isBetween: bo
   const targetNode = tree[targetUid]
   const targetNodeDepth = getNodeDepth(tree, targetUid)
 
+  // remove from org parents
+  let uidOffset = 0
   const _uids = [...uids]
   _uids.reverse()
   _uids.map((uid) => {
     const node = tree[uid]
-
     const parentNode = tree[node.parentUid as TNodeUid]
-    const parentNodeDepth = getNodeDepth(tree, parentNode.uid)
 
     // get valid position
-    let validChildIndex = 0
     if (parentNode.uid === targetUid) {
+      let validChildIndex = 0
       for (const childUid of parentNode.children) {
         if (childUid === uid) break
         tree[childUid].data.valid && ++validChildIndex
       }
+      validChildIndex < position && ++uidOffset
     }
 
     if (treeType === 'html') {
@@ -308,13 +309,19 @@ export const moveNode = (tree: TNodeTreeData, targetUid: TNodeUid, isBetween: bo
     // update parent
     parentNode.children = parentNode.children.filter(childUid => childUid !== uid)
     parentNode.isEntity = parentNode.children.length === 0
+  })
+
+  // add to new target + position
+  const _position = position - uidOffset
+  _uids.map((uid) => {
+    const node = tree[uid]
+    const parentNodeDepth = getNodeDepth(tree, node.parentUid as TNodeUid)
 
     // add to target
     node.parentUid = targetUid
     targetNode.isEntity = false
 
     if (isBetween) {
-      const _position = parentNode.uid === targetUid && validChildIndex < position ? position - 1 : position
       let inserted = false, index = -1
 
       targetNode.children = targetNode.children.reduce((prev, cur) => {
@@ -342,7 +349,7 @@ export const moveNode = (tree: TNodeTreeData, targetUid: TNodeUid, isBetween: bo
     }
   })
 
-  return { tree, nodeMaxUid: String(_nodeMaxUid) as TNodeUid }
+  return { tree, nodeMaxUid: String(_nodeMaxUid) as TNodeUid, position: _position }
 }
 export const duplicateNode = (tree: TNodeTreeData, uids: TNodeUid[], treeType: TNodeTreeContext, nodeMaxUid: TNodeUid, osType: TOsType, tabSize: number): TNodeApiResponse => {
   let _nodeMaxUid = Number(nodeMaxUid)

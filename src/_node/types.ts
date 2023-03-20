@@ -42,6 +42,7 @@ export type TNodeApiResponse = {
   nodeMaxUid?: TNodeUid,
   deletedUids?: TNodeUid[],
   addedUidMap?: Map<TNodeUid, TNodeUid>,
+  position?: number,
 }
 
 
