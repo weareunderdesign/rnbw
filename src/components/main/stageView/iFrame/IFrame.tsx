@@ -347,6 +347,10 @@ export const IFrame = (props: IFrameProps) => {
     if (action === null) return
 
     LogAllow && console.log('action to be run by cmdk: ', action)
+
+    // prevent chrome default short keys
+    e.preventDefault()
+
     setCurrentCommand({ action })
   }, [cmdkReferenceData])
   // -------------------------------------------------------------- own --------------------------------------------------------------

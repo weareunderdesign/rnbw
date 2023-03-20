@@ -388,13 +388,6 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
   return tree[RootNodeUid].data as THtmlNodeData
 }
 
-const insertBefore = (newNode: Node, existingNode: Node) => {
-  existingNode.parentNode?.insertBefore(newNode, existingNode)
-}
-const insertAfter = (newNode: Node, existingNode: Node) => {
-  existingNode.parentNode?.insertBefore(newNode, existingNode.nextSibling)
-}
-
 export const getShortHand = (attrs: THtmlNodeAttributes): THtmlNodeAttributes => {
   const newAttr: THtmlNodeAttributes = {}
 

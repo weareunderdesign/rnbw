@@ -178,80 +178,6 @@ export const removeNode = (tree: TNodeTreeData, uids: TNodeUid[], treeType: TNod
 
   return { tree, deletedUids }
 }
-export const moveNode = (tree: TNodeTreeData, targetUid: TNodeUid, isBetween: boolean, position: number, uids: TNodeUid[], treeType: TNodeTreeContext, nodeMaxUid: TNodeUid, osType: TOsType, tabSize: number): TNodeApiResponse => {
-  let _nodeMaxUid = Number(nodeMaxUid)
-
-  const targetNode = tree[targetUid]
-  const targetNodeDepth = getNodeDepth(tree, targetUid)
-
-  uids.map((uid) => {
-    const node = tree[uid]
-
-    const parentNode = tree[node.parentUid as TNodeUid]
-    const parentNodeDepth = getNodeDepth(tree, parentNode.uid)
-
-    // get valid position
-    let validChildIndex = 0
-    if (parentNode.uid === targetUid) {
-      for (const childUid of parentNode.children) {
-        if (childUid === uid) break
-        tree[childUid].data.valid && ++validChildIndex
-      }
-    }
-
-    if (treeType === 'html') {
-      // remove prev format text node
-      const prevNodeUid = getPrevNodeUid(tree, node)
-      if (prevNodeUid !== '') {
-        const prevNode = tree[prevNodeUid]
-        if ((prevNode.data as THtmlNodeData).isFormatText) {
-          delete tree[prevNodeUid]
-          parentNode.children = parentNode.children.filter(childUid => childUid !== prevNodeUid)
-        }
-      }
-    } else {
-      // do nothing
-    }
-
-    // update parent
-    parentNode.children = parentNode.children.filter(childUid => childUid !== uid)
-    parentNode.isEntity = parentNode.children.length === 0
-
-    // add to target
-    node.parentUid = targetUid
-    targetNode.isEntity = false
-
-    if (isBetween) {
-      const _position = parentNode.uid === targetUid && validChildIndex < position ? position - 1 : position
-      let inserted = false, index = -1
-
-      targetNode.children = targetNode.children.reduce((prev, cur) => {
-        tree[cur].data.valid && ++index
-        if (index === _position && !inserted) {
-          inserted = true
-          prev.push(uid)
-        }
-
-        prev.push(cur)
-        return prev
-      }, [] as TNodeUid[])
-
-      !inserted && targetNode.children.push(uid)
-    } else {
-      targetNode.children.push(uid)
-    }
-
-    // format node
-    if (treeType === 'html') {
-      addFormatTextBeforeNode(tree, node, String(++_nodeMaxUid) as TNodeUid, osType, tabSize)
-      addFormatTextAfterNode(tree, node, String(++_nodeMaxUid) as TNodeUid, osType, tabSize)
-
-      targetNodeDepth !== parentNodeDepth && indentNode(tree, node, (targetNodeDepth - parentNodeDepth) * tabSize, osType)
-    }
-  })
-
-  return { tree, nodeMaxUid: String(_nodeMaxUid) as TNodeUid }
-}
 export const copyNode = (tree: TNodeTreeData, targetUid: TNodeUid, isBetween: boolean, position: number, uids: TNodeUid[], treeType: TNodeTreeContext, nodeMaxUid: TNodeUid, osType: TOsType, tabSize: number): TNodeApiResponse => {
   let _nodeMaxUid = Number(nodeMaxUid)
 
@@ -339,6 +265,80 @@ export const copyNode = (tree: TNodeTreeData, targetUid: TNodeUid, isBetween: bo
   })
 
   return { tree, nodeMaxUid: String(_nodeMaxUid) as TNodeUid, addedUidMap }
+}
+export const moveNode = (tree: TNodeTreeData, targetUid: TNodeUid, isBetween: boolean, position: number, uids: TNodeUid[], treeType: TNodeTreeContext, nodeMaxUid: TNodeUid, osType: TOsType, tabSize: number): TNodeApiResponse => {
+  let _nodeMaxUid = Number(nodeMaxUid)
+
+  const targetNode = tree[targetUid]
+  const targetNodeDepth = getNodeDepth(tree, targetUid)
+
+  uids.map((uid) => {
+    const node = tree[uid]
+
+    const parentNode = tree[node.parentUid as TNodeUid]
+    const parentNodeDepth = getNodeDepth(tree, parentNode.uid)
+
+    // get valid position
+    let validChildIndex = 0
+    if (parentNode.uid === targetUid) {
+      for (const childUid of parentNode.children) {
+        if (childUid === uid) break
+        tree[childUid].data.valid && ++validChildIndex
+      }
+    }
+
+    if (treeType === 'html') {
+      // remove prev format text node
+      const prevNodeUid = getPrevNodeUid(tree, node)
+      if (prevNodeUid !== '') {
+        const prevNode = tree[prevNodeUid]
+        if ((prevNode.data as THtmlNodeData).isFormatText) {
+          delete tree[prevNodeUid]
+          parentNode.children = parentNode.children.filter(childUid => childUid !== prevNodeUid)
+        }
+      }
+    } else {
+      // do nothing
+    }
+
+    // update parent
+    parentNode.children = parentNode.children.filter(childUid => childUid !== uid)
+    parentNode.isEntity = parentNode.children.length === 0
+
+    // add to target
+    node.parentUid = targetUid
+    targetNode.isEntity = false
+
+    if (isBetween) {
+      const _position = parentNode.uid === targetUid && validChildIndex < position ? position - 1 : position
+      let inserted = false, index = -1
+
+      targetNode.children = targetNode.children.reduce((prev, cur) => {
+        tree[cur].data.valid && ++index
+        if (index === _position && !inserted) {
+          inserted = true
+          prev.push(uid)
+        }
+
+        prev.push(cur)
+        return prev
+      }, [] as TNodeUid[])
+
+      !inserted && targetNode.children.push(uid)
+    } else {
+      targetNode.children.push(uid)
+    }
+
+    // format node
+    if (treeType === 'html') {
+      addFormatTextBeforeNode(tree, node, String(++_nodeMaxUid) as TNodeUid, osType, tabSize)
+      addFormatTextAfterNode(tree, node, String(++_nodeMaxUid) as TNodeUid, osType, tabSize)
+
+      targetNodeDepth !== parentNodeDepth && indentNode(tree, node, (targetNodeDepth - parentNodeDepth) * tabSize, osType)
+    }
+  })
+
+  return { tree, nodeMaxUid: String(_nodeMaxUid) as TNodeUid }
 }
 export const duplicateNode = (tree: TNodeTreeData, uids: TNodeUid[], treeType: TNodeTreeContext, nodeMaxUid: TNodeUid, osType: TOsType, tabSize: number): TNodeApiResponse => {
   let _nodeMaxUid = Number(nodeMaxUid)

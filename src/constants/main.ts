@@ -82,7 +82,7 @@ export const ParsableFileTypes: {
 /**
  * log allowing flag
  */
-export const LogAllow: boolean = true
+export const LogAllow: boolean = false
 
 /**
  * auto-save flag on code view

@@ -300,18 +300,18 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     removeRunningActions(['nodeTreeView-select'])
   }, [validNodeTree, selectedItems, selectedItemsObj])
   const cb_expandNode = useCallback((uid: TNodeUid) => {
-    addRunningActions(['nodeTreeView-expand'])
+    addRunningActions(['nodeTreeView-arrow'])
 
     dispatch(expandFNNode([uid]))
 
-    removeRunningActions(['nodeTreeView-expand'])
+    removeRunningActions(['nodeTreeView-arrow'])
   }, [])
   const cb_collapseNode = useCallback((uid: TNodeUid) => {
-    addRunningActions(['nodeTreeView-collapse'])
+    addRunningActions(['nodeTreeView-arrow'])
 
     dispatch(collapseFNNode([uid]))
 
-    removeRunningActions(['nodeTreeView-collapse'])
+    removeRunningActions(['nodeTreeView-arrow'])
   }, [])
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
   useEffect(() => {
@@ -406,8 +406,10 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   const onUngroup = useCallback(() => { }, [])
 
   const onAddNode = useCallback((actionName: string) => {
-    const tagName = actionName.slice(AddNodeActionPrefix.length + 2, actionName.length - 1)
-    cb_addNode(tagName)
+    if (actionName.startsWith(AddNodeActionPrefix)) {
+      const tagName = actionName.slice(AddNodeActionPrefix.length + 2, actionName.length - 1)
+      cb_addNode(tagName)
+    }
   }, [cb_addNode])
 
   // -------------------------------------------------------------- own --------------------------------------------------------------
@@ -416,7 +418,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   }, [])
 
   return useMemo(() => {
-    console.log('node tree  view render')
     return <>
       <Panel minSize={0}>
         <div
@@ -429,22 +430,17 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
           }}
           onClick={onPanelClick}
         >
-          {/* Main TreeView */}
           <TreeView
-            /* style */
             width={'100%'}
             height={'auto'}
 
-            /* info */
             info={{ id: 'node-tree-view' }}
 
-            /* data */
             data={nodeTreeViewData}
             focusedItem={focusedItem}
             selectedItems={selectedItems}
             expandedItems={expandedItems}
 
-            /* renderers */
             renderers={{
               renderTreeContainer: (props) => {
                 return <>
@@ -461,7 +457,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                 </>
               },
               renderItem: (props) => {
-                console.log('node tree item render')
                 return <>
                   <li
                     key={props.item.data.uid}
@@ -482,10 +477,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                         'padding-xs',
                         'outline-default',
 
-                        props.context.isExpanded && props.context.isSelected && 'background-tertiary',
-                        !props.context.isExpanded && props.context.isSelected && 'background-secondary',
-
-                        props.context.isSelected && 'outline-none',
+                        props.context.isSelected && 'background-tertiary outline-none',
                         !props.context.isSelected && props.context.isFocused && 'outline',
 
                         props.context.isDraggingOver && '',
@@ -504,13 +496,11 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                         !props.context.isFocused && addRunningActions(['nodeTreeView-focus'])
                         addRunningActions(['nodeTreeView-select'])
 
-                        removeRunningActions(['nodeTreeView-arrowClick'])
+                        !props.context.isFocused && props.context.focusItem()
 
-                        props.context.isFocused ? null : props.context.focusItem()
-
-                        // e.shiftKey ? props.context.selectUpTo() :
-                        e.ctrlKey ? (props.context.isSelected ? props.context.unselectItem() : props.context.addToSelectedItems()) :
-                          props.context.selectItem()
+                        e.shiftKey ? props.context.selectUpTo() :
+                          e.ctrlKey ? (props.context.isSelected ? props.context.unselectItem() : props.context.addToSelectedItems()) :
+                            (props.context.selectItem())
                       }}
                       onFocus={() => { }}
                       onMouseEnter={() => setFNHoveredItem(props.item.index as TNodeUid)}
@@ -524,7 +514,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                             <SVGIconI {...{ "class": "icon-xs" }}>div</SVGIconI>
                             : <SVGIconII {...{ "class": "icon-xs" }}>div</SVGIconII>
                           : <SVGIconIII {...{ "class": "icon-xs" }}>component</SVGIconIII>}
-
 
                         {props.title}
                       </div>
@@ -545,24 +534,18 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                       <SVGIconI {...{
                         "class": "icon-xs",
                         "onClick": (e: MouseEvent) => {
-                          addRunningActions(['nodeTreeView-arrowClick, nodeTreeView-collapse'])
+                          addRunningActions(['nodeTreeView-arrow'])
                           props.context.toggleExpandedState()
                         },
                       }}>down</SVGIconI> :
                       <SVGIconII {...{
                         "class": "icon-xs",
                         "onClick": (e: MouseEvent) => {
-                          addRunningActions(['nodeTreeView-arrowClick, nodeTreeView-expand'])
+                          addRunningActions(['nodeTreeView-arrow'])
                           props.context.toggleExpandedState()
                         },
                       }}>right</SVGIconII>)
-                    : <div
-                      className='icon-xs'
-                      onClick={(e) => {
-                        addRunningActions(['nodeTreeView-arrowClick'])
-                      }}
-                    >
-                    </div>}
+                    : <div className='icon-xs'></div>}
                 </>
               },
               renderItemTitle: (props) => {
