@@ -65,6 +65,7 @@ export const IFrame = (props: IFrameProps) => {
 
     // global
     pending, setPending, messages, addMessage, removeMessage,
+    iframeLoading, setIFrameLoading,
 
     // reference
     htmlReferenceData, cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions, cmdkReferenceAdd,
@@ -358,7 +359,7 @@ export const IFrame = (props: IFrameProps) => {
   const [iframeEvent, setIframeEvent] = useState<MouseEvent>()
   useEffect(() => {
     if (contentRef) {
-      // setIframeLoading(true)
+      setIFrameLoading(true)
 
       contentRef.onload = () => {
         const _document = contentRef?.contentWindow?.document
@@ -401,7 +402,7 @@ export const IFrame = (props: IFrameProps) => {
           })
         }
 
-        // setIframeLoading(false)
+        setIFrameLoading(false)
       }
     }
   }, [contentRef])

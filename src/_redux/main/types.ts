@@ -31,6 +31,20 @@ import { TSession } from '../../types/main';
  * main context
  */
 export type TMainContext = {
+  // global
+  pending: boolean,
+  setPending: (pending: boolean) => void,
+
+  iframeLoading: boolean,
+  setIFrameLoading: (loading: boolean) => void,
+
+  fsPending: boolean,
+  setFSPending: (pending: boolean) => void,
+
+  messages: TToast[],
+  addMessage: (message: TToast) => void,
+  removeMessage: (index: number) => void,
+
   // groupping action
   addRunningActions: (actionNames: string[]) => void,
   removeRunningActions: (actionNames: string[], effect?: boolean) => void,
@@ -84,13 +98,6 @@ export type TMainContext = {
   setCmdkPages: (pages: string[]) => void,
   cmdkPage: string,
 
-  // global
-  pending: boolean,
-  setPending: (pending: boolean) => void,
-
-  messages: TToast[],
-  addMessage: (message: TToast) => void,
-  removeMessage: (index: number) => void,
 
   // reference
   filesReferenceData: TFilesReferenceData,

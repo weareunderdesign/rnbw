@@ -61,6 +61,7 @@ export default function Process(props: ProcessProps) {
 
   // main context
   const {
+    fsPending, setFSPending,
     // groupping action
     addRunningActions, removeRunningActions,
 
@@ -234,9 +235,9 @@ export default function Process(props: ProcessProps) {
           fileData.contentInApp = htmlInApp
           fileData.changed = fileData.content !== fileData.orgContent
 
-          // setFSPending(true)
+          setFSPending(true)
           writeFile(fileData.path, htmlInApp, () => {
-            // setFSPending(false)
+            setFSPending(false)
           })
 
           const parserRes = parseFile(fileData.type, htmlInApp, getReferenceData(fileData.type), osType, true, String(nodeMaxUid))

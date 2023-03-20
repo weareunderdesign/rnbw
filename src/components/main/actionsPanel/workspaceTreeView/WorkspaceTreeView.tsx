@@ -91,6 +91,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
   // main context
   const {
+    fsPending, setFSPending,
     // groupping action
     addRunningActions, removeRunningActions,
 
@@ -1010,7 +1011,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         return
       }
 
-      setPending(true)
+      setFSPending(true)
 
       // clear session
       clearSession()
@@ -1072,9 +1073,8 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           })
           setFFHandlers(ffHandlerObj)
 
-          setPending(false)
+          setFSPending(false)
         })
-
       } catch (err) {
         LogAllow && console.log('import project err', err)
       }

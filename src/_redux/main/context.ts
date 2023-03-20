@@ -26,6 +26,20 @@ import {
 } from './types';
 
 export const MainContext: Context<TMainContext> = createContext<TMainContext>({
+  // global
+  pending: false,
+  setPending: (pending: boolean) => { },
+
+  iframeLoading: false,
+  setIFrameLoading: (loading: boolean) => { },
+
+  fsPending: false,
+  setFSPending: (pending: boolean) => { },
+
+  messages: [],
+  addMessage: (message: TToast) => { },
+  removeMessage: (index: number) => { },
+
   // groupping action
   addRunningActions: (actionNames: string[]) => { },
   removeRunningActions: (actionNames: string[], effect?: boolean) => { },
@@ -79,14 +93,6 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   cmdkPages: [],
   setCmdkPages: (pages: string[]) => { },
   cmdkPage: '',
-
-  // global
-  pending: false,
-  setPending: (pending: boolean) => { },
-
-  messages: [],
-  addMessage: (message: TToast) => { },
-  removeMessage: (index: number) => { },
 
   // reference
   filesReferenceData: {},

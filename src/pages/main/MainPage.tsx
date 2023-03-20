@@ -108,6 +108,9 @@ export default function MainPage(props: MainPageProps) {
   // -------------------------------------------------------------- main context --------------------------------------------------------------
   // global
   const [pending, setPending] = useState<boolean>(false)
+  const [iframeLoading, setIFrameLoading] = useState<boolean>(false)
+  const [fsPending, setFSPending] = useState<boolean>(false)
+
   const [messages, setMessages] = useState<TToast[]>([])
   const addMessage = useCallback((message: TToast) => {
     setMessages([...messages, message])
@@ -884,6 +887,13 @@ Your changes will be lost if you don't save them.`
     {/* wrap with the context */}
     <MainContext.Provider
       value={{
+        // global
+        pending, setPending,
+        iframeLoading, setIFrameLoading,
+        fsPending, setFSPending,
+
+        messages, addMessage, removeMessage,
+
         // groupping action
         addRunningActions, removeRunningActions,
 
@@ -911,10 +921,7 @@ Your changes will be lost if you don't save them.`
         // cmdk
         currentCommand, setCurrentCommand,
 
-        // global
-        pending, setPending,
 
-        messages, addMessage, removeMessage,
 
         // reference
         filesReferenceData, htmlReferenceData,
@@ -955,7 +962,7 @@ Your changes will be lost if you don't save them.`
       <Process />
 
       {/* spinner */}
-      <Loader show={pending}></Loader>
+      <Loader show={pending || iframeLoading || fsPending}></Loader>
 
       {/* panels */}
       <PanelGroup
