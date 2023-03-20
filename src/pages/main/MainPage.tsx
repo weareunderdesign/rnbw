@@ -633,7 +633,7 @@ Your changes will be lost if you don't save them.`
 
     // add default cmdk actions
     const _cmdkReferenceData: TCmdkReferenceData = {} // cmdk map
-    // Jumpstart
+    // clear
     _cmdkReferenceData['Clear'] = {
       "Name": 'Clear',
       "Icon": '',

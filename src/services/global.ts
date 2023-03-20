@@ -17,7 +17,7 @@ export const getLineBreakCharacter = (osType: TOsType): string => {
  * @param osType 
  * @returns 
  */
-export const getCommandKey = (e: KeyboardEvent, osType: TOsType): boolean => {
+export const getCommandKey = (e: KeyboardEvent | MouseEvent, osType: TOsType): boolean => {
   return osType === 'Windows' ? e.ctrlKey :
     osType === 'Mac' ? e.metaKey :
       osType === 'Linux' ? e.ctrlKey : false

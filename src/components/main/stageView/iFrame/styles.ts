@@ -12,7 +12,7 @@ html {
   outline: 1px solid var(--color-rnbwdev-rainbow-element-background);
   outline-offset: -1px;
 }
-[rnbwdev-rnbw-element-focus] {
+[rnbwdev-rnbw-element-select] {
   outline: 1px solid var(--color-rnbwdev-rainbow-element-foreground);
   outline-offset: -1px;
 }
