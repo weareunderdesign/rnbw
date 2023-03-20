@@ -141,6 +141,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   }, [validNodeTree])
   // -------------------------------------------------------------- node actions handlers --------------------------------------------------------------
   const cb_addNode = useCallback((nodeType: string) => {
+    if (!nodeTree[focusedItem]) return
+
     addRunningActions(['nodeTreeView-add'])
 
     // build node to add
@@ -180,7 +182,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     // side effect
     setNodeMaxUid(Number(res.nodeMaxUid))
-    setEvent({ type: 'add-node', param: [newNode] })
+    setEvent({ type: 'add-node', param: [focusedItem, newNode] })
 
     removeRunningActions(['nodeTreeView-add'])
   }, [addRunningActions, removeRunningActions, nodeTree, focusedItem, nodeMaxUid, osType, tabSize])
@@ -400,7 +402,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   const onUngroup = useCallback(() => { }, [])
 
   const onAddNode = useCallback((actionName: string) => {
-    const tagName = actionName.slice(AddNodeActionPrefix.length + 2)
+    const tagName = actionName.slice(AddNodeActionPrefix.length + 2, actionName.length - 1)
     cb_addNode(tagName)
   }, [cb_addNode])
 
@@ -410,6 +412,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   }, [])
 
   return useMemo(() => {
+    console.log('node tree  view render')
     return <>
       <Panel minSize={0}>
         <div

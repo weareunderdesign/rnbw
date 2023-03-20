@@ -17,7 +17,11 @@ import {
   NodeInAppAttribName,
   RootNodeUid,
 } from '@_constants/main';
-import { TNodeUid } from '@_node/types';
+import { THtmlNodeData } from '@_node/html';
+import {
+  TNode,
+  TNodeUid,
+} from '@_node/types';
 import {
   expandFNNode,
   fnSelector,
@@ -86,155 +90,153 @@ export const IFrame = (props: IFrameProps) => {
   const { workspace, project, file } = useSelector(navigatorSelector)
   const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
 
-  // -------------------------------------------------------------- Sync --------------------------------------------------------------
+  // -------------------------------------------------------------- sync --------------------------------------------------------------
+  const [contentRef, setContentRef] = useState<HTMLIFrameElement | null>(null)
+  // mark&scroll to the focused item
   const focusedItemRef = useRef<TNodeUid>(focusedItem)
-  const fnHoveredItemRef = useRef<TNodeUid>(fnHoveredItem)
-  const [focusedElement, setFocusedElement] = useState<HTMLElement | null>(null)
-  const [hoveredElement, setHoveredElement] = useState<HTMLElement | null>(null)
-
-  // sync from redux
   useEffect(() => {
-    // validate 
-    const node = validNodeTree[focusedItem]
-    if (node === undefined) return
-
-    // skip its own change
     if (focusedItemRef.current === focusedItem) return
 
-    focusedElement?.removeAttribute('rnbwdev-rnbw-component-focus')
+    const curFocusedElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${focusedItemRef.current}"]`)
+    curFocusedElement?.removeAttribute('rnbwdev-rnbw-element-focus')
+    // for the elements which are created by js. (ex: Web Component)
+    let newFocusedElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${focusedItem}"]`)
+    const isValid: null | string = newFocusedElement?.firstElementChild ? newFocusedElement?.firstElementChild.getAttribute(NodeInAppAttribName) : ''
+    isValid === null ? newFocusedElement = newFocusedElement?.firstElementChild : null
+    newFocusedElement?.setAttribute('rnbwdev-rnbw-element-focus', '')
+    newFocusedElement?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' })
 
-    let newComponent = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${focusedItem}"]`)
-    const isValid: null | string = newComponent?.firstElementChild ? newComponent?.firstElementChild.getAttribute(NodeInAppAttribName) : ''
-    isValid === null ? newComponent = newComponent?.firstElementChild : null
-
-    newComponent?.setAttribute('rnbwdev-rnbw-component-focus', '')
-    newComponent?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' })
-
-    setFocusedElement(!newComponent ? null : newComponent as HTMLElement)
     focusedItemRef.current = focusedItem
   }, [focusedItem])
+  // mark hovered item
+  const fnHoveredItemRef = useRef<TNodeUid>(fnHoveredItem)
   useEffect(() => {
-    // validate 
-    const node = validNodeTree[focusedItem]
-    if (node === undefined) return
-
-    // skip its own change
     if (fnHoveredItemRef.current === fnHoveredItem) return
 
-    hoveredElement?.removeAttribute('rnbwdev-rnbw-component-hover')
+    const curHoveredElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${fnHoveredItemRef.current}"]`)
+    curHoveredElement?.removeAttribute('rnbwdev-rnbw-element-hover')
+    // for the elements which are created by js. (ex: Web Component)
+    let newHoveredElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${fnHoveredItem}"]`)
+    const isValid: null | string = newHoveredElement?.firstElementChild ? newHoveredElement?.firstElementChild.getAttribute(NodeInAppAttribName) : ''
+    isValid === null ? newHoveredElement = newHoveredElement?.firstElementChild : null
+    newHoveredElement?.setAttribute('rnbwdev-rnbw-element-hover', '')
 
-    let newComponent = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${fnHoveredItem}"]`)
-    const isValid: null | string = newComponent?.firstElementChild ? newComponent?.firstElementChild.getAttribute(NodeInAppAttribName) : ''
-    isValid === null ? newComponent = newComponent?.firstElementChild : null
-
-    newComponent?.setAttribute('rnbwdev-rnbw-component-hover', '')
-
-    setHoveredElement(!newComponent ? null : newComponent as HTMLElement)
     fnHoveredItemRef.current = fnHoveredItem
   }, [fnHoveredItem])
-
-  // sync to redux
+  // set focused item
   const setFocusedItem = useCallback((uid: TNodeUid) => {
-    // validate
-    if (focusedItem === uid || validNodeTree[uid] === undefined) return
-
     addRunningActions(['stageView-focus'])
 
-    // expand the path to the uid
+    // expand path to the uid
     const _expandedItems: TNodeUid[] = []
-    let node = validNodeTree[uid]
+    let node = nodeTree[uid]
     while (node.uid !== RootNodeUid) {
       _expandedItems.push(node.uid)
-      node = validNodeTree[node.parentUid as TNodeUid]
+      node = nodeTree[node.parentUid as TNodeUid]
     }
     _expandedItems.shift()
     dispatch(expandFNNode(_expandedItems))
 
-    // focus
-    focusedItemRef.current = uid
     dispatch(focusFNNode(uid))
-
-    // select
     dispatch(selectFNNode([uid]))
 
     removeRunningActions(['stageView-focus'])
-  }, [focusedItem, validNodeTree])
-  // -------------------------------------------------------------- Sync --------------------------------------------------------------
-
-  // -------------------------------------------------------------- Handlers --------------------------------------------------------------
-  const [contentRef, setContentRef] = useState<HTMLIFrameElement | null>(null)
-
-  // iframe render flag
+  }, [nodeTree])
+  // node actions - side effect
   useEffect(() => {
-    if (!fileInfo) return
+    if (event) {
+      const { type, param } = event
+      switch (type) {
+        case 'add-node':
+          addElement(...param as [TNodeUid, TNode])
+          break
+        case 'remove-node':
+          removeElements(...param as [TNodeUid[]])
+          break
+        case 'move-node':
+          moveElements()
+          break
+        case 'copy-node':
+          copyElements()
+          break
+        case 'duplicate-node':
+          duplicateElements()
+          break
+        default:
+          break
+      }
+    }
+  }, [event])
+  // -------------------------------------------------------------- side effect handlers --------------------------------------------------------------
+  const addElement = useCallback((targetUid: TNodeUid, node: TNode) => {
+    const nodeData = node.data as THtmlNodeData
+    const newElement = contentRef?.contentWindow?.document?.createElement(nodeData.name)
+    newElement?.setAttribute(NodeInAppAttribName, node.uid)
 
-    !hasSameScript && setHasSameScript(true)
-  }, [hasSameScript])
-
-  // event handlers
-  const onMouseEnter = useCallback((ele: HTMLElement) => {
-    const uid = ele.getAttribute(NodeInAppAttribName)
-  }, [])
+    const targetElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"]`)
+    newElement && targetElement?.parentElement?.insertBefore(newElement, targetElement.nextElementSibling)
+  }, [contentRef])
+  const removeElements = useCallback((uids: TNodeUid[]) => {
+    uids.map((uid) => {
+      const ele = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${uid}"]`)
+      ele?.remove()
+    })
+  }, [contentRef])
+  const moveElements = useCallback(() => { }, [])
+  const copyElements = useCallback(() => { }, [])
+  const duplicateElements = useCallback(() => { }, [])
+  // -------------------------------------------------------------- iframe event handlers --------------------------------------------------------------
+  // mouse events
+  const onMouseEnter = useCallback((ele: HTMLElement) => { }, [])
   const onMouseMove = useCallback((ele: HTMLElement) => {
     let _uid: TNodeUid | null = ele.getAttribute(NodeInAppAttribName)
-
-    // validate element which is added by javascript - such as web component
-    let validElement: HTMLElement = ele
+    // for the elements which are created by js. (ex: Web Component)
+    let newHoveredElement: HTMLElement = ele
     while (!_uid) {
-      const parentEle = validElement.parentElement
+      const parentEle = newHoveredElement.parentElement
       if (!parentEle) break
 
       _uid = parentEle.getAttribute(NodeInAppAttribName)
-
-      !_uid ? validElement = parentEle : null
+      !_uid ? newHoveredElement = parentEle : null
     }
 
-    // markup hovered item
+    // mark hovered item
     if (_uid && _uid !== fnHoveredItem) {
-      hoveredElement?.removeAttribute('rnbwdev-rnbw-component-hover')
-      validElement.setAttribute('rnbwdev-rnbw-component-hover', '')
-      setHoveredElement(validElement)
+      const curHoveredElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${fnHoveredItemRef.current}"]`)
+      curHoveredElement?.removeAttribute('rnbwdev-rnbw-element-hover')
+      newHoveredElement.setAttribute('rnbwdev-rnbw-element-hover', '')
 
       setFNHoveredItem(_uid)
       fnHoveredItemRef.current = _uid
     }
-  }, [fnHoveredItem, hoveredElement])
-  const onMouseLeave = useCallback((ele: HTMLElement) => {
-    const uid = ele.getAttribute(NodeInAppAttribName)
-  }, [])
-
+  }, [fnHoveredItem])
+  const onMouseLeave = useCallback((ele: HTMLElement) => { }, [])
   const onMouseDown = useCallback((ele: HTMLElement) => {
     let _uid: TNodeUid | null = ele.getAttribute(NodeInAppAttribName)
-
-    // validate element which is added by javascript - such as web component
-    let validElement: HTMLElement = ele
+    // for the elements which are created by js. (ex: Web Component)
+    let newFocusedElement: HTMLElement = ele
     while (!_uid) {
-      const parentEle = validElement.parentElement
+      const parentEle = newFocusedElement.parentElement
       if (!parentEle) break
 
       _uid = parentEle.getAttribute(NodeInAppAttribName)
-
-      !_uid ? validElement = parentEle : null
+      !_uid ? newFocusedElement = parentEle : null
     }
 
-    // markup focused item
+    // mark focused item
     if (_uid && _uid !== focusedItem) {
-      focusedElement?.removeAttribute('rnbwdev-rnbw-component-focus')
-      validElement.setAttribute('rnbwdev-rnbw-component-focus', '')
-      setFocusedElement(validElement)
+      const curFocusedElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${focusedItemRef.current}"]`)
+      curFocusedElement?.removeAttribute('rnbwdev-rnbw-element-focus')
+      newFocusedElement.setAttribute('rnbwdev-rnbw-element-focus', '')
 
       setFocusedItem(_uid)
+      focusedItemRef.current = _uid
     }
-  }, [focusedItem, focusedElement, setFocusedItem])
-  const onMouseUp = useCallback((ele: HTMLElement) => {
-    const uid = ele.getAttribute(NodeInAppAttribName)
-  }, [])
-
-  const onDblClick = useCallback((ele: HTMLElement) => {
-    const uid = ele.getAttribute(NodeInAppAttribName)
-  }, [])
-
-  const keyDownListener = useCallback((e: KeyboardEvent) => {
+  }, [focusedItem, setFocusedItem])
+  const onMouseUp = useCallback((ele: HTMLElement) => { }, [])
+  const onDblClick = useCallback((ele: HTMLElement) => { }, [])
+  // key events
+  const onKeyDown = useCallback((e: KeyboardEvent) => {
     // cmdk obj for the current command
     const cmdk: TCmdkKeyMap = {
       cmd: getCommandKey(e, osType),
@@ -260,41 +262,7 @@ export const IFrame = (props: IFrameProps) => {
     LogAllow && console.log('action to be run by cmdk: ', action)
     setCurrentCommand({ action })
   }, [cmdkReferenceData])
-
-  // handle iframe events
-  const [iframeEvent, setIframeEvent] = useState<{ type: string, ele: HTMLElement }>()
-  useEffect(() => {
-    if (!iframeEvent) return
-
-    const { type, ele } = iframeEvent
-
-    switch (type) {
-      case 'onMouseEnter':
-        onMouseEnter(ele)
-        break
-      case 'mousemove':
-        onMouseMove(ele)
-        break
-      case 'mouseleave':
-        onMouseLeave(ele)
-        break
-
-      case 'mousedown':
-        onMouseDown(ele)
-        break
-      case 'mouseup':
-        onMouseUp(ele)
-        break
-
-      case 'dblclick':
-        onDblClick(ele)
-        break
-      default:
-        break
-    }
-  }, [iframeEvent])
-
-  // init
+  // -------------------------------------------------------------- own --------------------------------------------------------------
   useEffect(() => {
     if (contentRef) {
       setPending(true)
@@ -306,7 +274,7 @@ export const IFrame = (props: IFrameProps) => {
 
         if (htmlNode && headNode) {
           // enable cmdk
-          htmlNode.addEventListener('keydown', keyDownListener)
+          htmlNode.addEventListener('keydown', onKeyDown)
 
           // add rnbw css
           const style = _document.createElement('style')
@@ -326,7 +294,6 @@ export const IFrame = (props: IFrameProps) => {
             e.stopPropagation()
             setIframeEvent({ type: e.type, ele: e.target as HTMLElement })
           })
-
           htmlNode.addEventListener('mousedown', (e: MouseEvent) => {
             e.stopPropagation()
             setIframeEvent({ type: e.type, ele: e.target as HTMLElement })
@@ -335,7 +302,6 @@ export const IFrame = (props: IFrameProps) => {
             e.stopPropagation()
             setIframeEvent({ type: e.type, ele: e.target as HTMLElement })
           })
-
           htmlNode.addEventListener('dblclick', (e: MouseEvent) => {
             e.stopPropagation()
             setIframeEvent({ type: e.type, ele: e.target as HTMLElement })
@@ -346,33 +312,48 @@ export const IFrame = (props: IFrameProps) => {
       }
     }
   }, [contentRef])
-
+  const [iframeEvent, setIframeEvent] = useState<{ type: string, ele: HTMLElement }>()
   useEffect(() => {
-    if (event) {
-      if (event.type === 'remove-node') {
-        removeElements(event.param)
-      } else {
-        // do nothing
-      }
-    }
-  }, [event])
+    if (!iframeEvent) return
 
-  const removeElements = useCallback((uids: TNodeUid[]) => {
-    uids.map((uid) => {
-      const selector = `[${NodeInAppAttribName}="${uid}"]`
-      const ele = contentRef?.contentWindow?.document?.querySelector(selector)
-      ele?.remove()
-    })
-  }, [contentRef])
-  // -------------------------------------------------------------- Handlers --------------------------------------------------------------
+    const { type, ele } = iframeEvent
+    switch (type) {
+      case 'mouseenter':
+        onMouseEnter(ele)
+        break
+      case 'mousemove':
+        onMouseMove(ele)
+        break
+      case 'mouseleave':
+        onMouseLeave(ele)
+        break
+      case 'mousedown':
+        onMouseDown(ele)
+        break
+      case 'mouseup':
+        onMouseUp(ele)
+        break
+      case 'dblclick':
+        onDblClick(ele)
+        break
+      default:
+        break
+    }
+  }, [iframeEvent])
+  /* useEffect(() => {
+    if (!fileInfo) return
+
+    !hasSameScript && setHasSameScript(true)
+  }, [hasSameScript]) */
 
   return useMemo(() => {
     return <>
-      {iframeSrc && <iframe
-        ref={setContentRef}
-        src={iframeSrc}
-        style={{ position: "absolute", width: "100%", height: "100%" }}
-      />}
+      {iframeSrc &&
+        <iframe
+          ref={setContentRef}
+          src={iframeSrc}
+          style={{ position: "absolute", width: "100%", height: "100%" }}
+        />}
     </>
   }, [iframeSrc])
 }

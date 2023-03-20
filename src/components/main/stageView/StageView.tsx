@@ -76,9 +76,6 @@ export default function StageView(props: StageViewProps) {
   // const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
   const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
 
-  // -------------------------------------------------------------- Sync --------------------------------------------------------------
-  // -------------------------------------------------------------- Sync --------------------------------------------------------------
-
   // -------------------------------------------------------------- other --------------------------------------------------------------
   // panel focus handler
   const onPanelClick = useCallback((e: React.MouseEvent) => {
