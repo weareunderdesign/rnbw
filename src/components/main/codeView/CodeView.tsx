@@ -17,10 +17,14 @@ import { Panel } from 'react-resizable-panels';
 import {
   CodeViewSyncDelay,
   DefaultTabSize,
+  RootNodeUid,
 } from '@_constants/main';
 import {
+  getSubNodeUidsByBfs,
   TFileNodeData,
   THtmlNodeData,
+  TNode,
+  TNodeUid,
 } from '@_node/index';
 import {
   fnSelector,
@@ -35,7 +39,10 @@ import Editor, {
   Monaco,
 } from '@monaco-editor/react';
 
-import { CodeViewProps } from './types';
+import {
+  CodeSelection,
+  CodeViewProps,
+} from './types';
 
 loader.config({ monaco })
 
@@ -131,36 +138,38 @@ export default function CodeView(props: CodeViewProps) {
   // code -> content
   const codeContent = useRef<string>('')
   const reduxTimeout = useRef<NodeJS.Timeout | null>(null)
+  const [nodeToRender, setNodeToRender] = useState<TNode>()
   const saveFileContentToRedux = useCallback(() => {
     const _file = ffTree[file.uid]
+    if (!_file) return
+
     const fileData = _file.data as TFileNodeData
 
     if (fileData.content === codeContent.current) return
 
-    addRunningActions(['processor-updateOpt'])
+    console.log(nodeToRender, codeContent.current)
 
-    setUpdateOpt({ parse: true, from: 'code' })
     // dispatch(setCurrentFileContent(codeContent.current))
+    addRunningActions(['processor-updateOpt'])
+    setUpdateOpt({ parse: true, from: 'code' })
 
     reduxTimeout.current = null
-  }, [ffTree, file.uid])
+  }, [ffTree, file.uid, nodeToRender])
   const handleEditorChange = useCallback((value: string | undefined, ev: monaco.editor.IModelContentChangedEvent) => {
-    if (file.uid === '') return
-
+    // update redux with debounce
     codeContent.current = value || ''
 
-    // update redux with debounce
     reduxTimeout.current !== null && clearTimeout(reduxTimeout.current)
     reduxTimeout.current = setTimeout(saveFileContentToRedux, CodeViewSyncDelay)
-  }, [file.uid, saveFileContentToRedux])
+  }, [saveFileContentToRedux])
   // -------------------------------------------------------------- monaco-editor --------------------------------------------------------------
   // instance
   const monacoRef = useRef<monaco.editor.IEditor | null>(null)
-  const handleEditorDidMount = (editor: monaco.editor.IStandaloneCodeEditor, monaco: Monaco) => {
+  const handleEditorDidMount = useCallback((editor: monaco.editor.IStandaloneCodeEditor, monaco: Monaco) => {
     // here is another way to get monaco instance
     // you can also store it in `useRef` for further usage
     monacoRef.current = editor
-  }
+  }, [])
   // tabSize
   const [_tabSize, _setTabSize] = useState<number>(DefaultTabSize)
   useEffect(() => {
@@ -190,13 +199,76 @@ export default function CodeView(props: CodeViewProps) {
   }, [_theme])
   // -------------------------------------------------------------- own --------------------------------------------------------------
   // panel focus handler
-  const hasFocus = monacoRef.current?.hasTextFocus()
-  useEffect(() => {
-    hasFocus && setActivePanel('code')
-  }, [hasFocus])
   const onPanelClick = useCallback((e: React.MouseEvent) => {
     setActivePanel('code')
   }, [])
+  // watch code selection in the editor
+  const [selection, setSelection] = useState<CodeSelection | null>({
+    startLineNumber: 0,
+    startColumn: 0,
+    endLineNumber: 0,
+    endColumn: 0,
+  })
+  const detectFocusedNode = useCallback(() => {
+    const _selection = monacoRef.current?.getSelection()
+    if (_selection) {
+      if (!selection || _selection.startLineNumber !== selection.startLineNumber || _selection.startColumn !== selection.startColumn
+        || _selection.endLineNumber !== selection.endLineNumber || _selection.endColumn !== selection.endColumn) {
+        setSelection({
+          startLineNumber: _selection.startLineNumber,
+          startColumn: _selection.startColumn,
+          endLineNumber: _selection.endLineNumber,
+          endColumn: _selection.endColumn,
+        })
+      }
+    } else {
+      setSelection(null)
+    }
+  }, [selection])
+  useEffect(() => {
+    const cursorDetectInterval = setInterval(() => {
+      detectFocusedNode()
+    }, 0)
+
+    return () => clearInterval(cursorDetectInterval)
+  }, [detectFocusedNode])
+  // detect root node of current selection/cursor
+  useEffect(() => {
+    if (!selection) return
+
+    const _file = ffTree[file.uid]
+    if (!_file) return
+
+    const fileData = _file.data as TFileNodeData
+
+    if (selection) {
+      let _uid: TNodeUid = ''
+      const uids = getSubNodeUidsByBfs(RootNodeUid, validNodeTree)
+      uids.reverse()
+      for (const uid of uids) {
+        const node = validNodeTree[uid]
+        const nodeData = node.data as THtmlNodeData
+        const { startLineNumber, startColumn, endLineNumber, endColumn } = nodeData
+
+        const containFront = selection.startLineNumber === startLineNumber ?
+          selection.startColumn >= startColumn
+          : selection.startLineNumber > startLineNumber
+        const containBack = selection.endLineNumber === endLineNumber ?
+          selection.endColumn <= endColumn
+          : selection.endLineNumber < endLineNumber
+
+        if (containFront && containBack) {
+          _uid = uid
+          break
+        }
+      }
+      if (_uid !== '') {
+        const node = validNodeTree[_uid]
+        const rootNode = validNodeTree[node.parentUid as TNodeUid]
+        setNodeToRender(rootNode)
+      }
+    }
+  }, [selection])
 
   return <>
     <Panel minSize={0}>
@@ -224,7 +296,7 @@ export default function CodeView(props: CodeViewProps) {
             // enableLiveAutocompletion: true,
             // enableSnippets: true,
             // showLineNumbers: true,
-            // contextmenu: false,
+            contextmenu: false,
             tabSize: tabSize,
             wordWrap: wordWrap,
             minimap: { enabled: false },
