@@ -236,7 +236,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     // side effect
     setNodeMaxUid(Number(res.nodeMaxUid))
-    setEvent({ type: 'copy-node', param: [{ uids, addedUidMap: res.addedUidMap }] })
+    setEvent({ type: 'copy-node', param: [uids, targetUid, isBetween, position, res.addedUidMap] })
 
     removeRunningActions(['nodeTreeView-copy'])
   }, [addRunningActions, removeRunningActions, nodeTree, nodeMaxUid, osType, tabSize])

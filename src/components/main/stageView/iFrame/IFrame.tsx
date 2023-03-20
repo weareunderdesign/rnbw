@@ -157,7 +157,7 @@ export const IFrame = (props: IFrameProps) => {
           moveElements(...param as [TNodeUid[], TNodeUid, boolean, number])
           break
         case 'copy-node':
-          copyElements()
+          copyElements(...param as [TNodeUid[], TNodeUid, boolean, number, Map<string, string>])
           break
         case 'duplicate-node':
           duplicateElements()
@@ -187,14 +187,51 @@ export const IFrame = (props: IFrameProps) => {
   const moveElements = useCallback((uids: TNodeUid[], targetUid: TNodeUid, isBetween: boolean, position: number) => {
     const targetElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"]`)
     const refElement = isBetween ? contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"] > :nth-child(${position + 1})`) : null
+
     uids.map((uid) => {
+      // clone
       const ele = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${uid}"]`)
       const _ele = ele?.cloneNode(true)
+
+      // update
       ele?.remove()
       _ele && targetElement?.insertBefore(_ele, refElement || null)
     })
   }, [contentRef])
-  const copyElements = useCallback(() => { }, [])
+  const copyElements = useCallback((uids: TNodeUid[], targetUid: TNodeUid, isBetween: boolean, position: number, addedUidMap: Map<string, string>) => {
+    const targetElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"]`)
+    const refElement = isBetween ? contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"] > :nth-child(${position + 1})`) : null
+
+    uids.map((uid) => {
+      // clone
+      const ele = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${uid}"]`)
+      const _ele = ele?.cloneNode(true) as HTMLElement
+
+      // reset nest's uid
+      const _uid = _ele.getAttribute(NodeInAppAttribName)
+      if (_uid) {
+        const _newUid = addedUidMap.get(_uid)
+        if (_newUid) {
+          _ele.setAttribute(NodeInAppAttribName, _newUid)
+        }
+      }
+
+      // reset descendant uids
+      const childElementList = _ele.querySelectorAll('*')
+      childElementList.forEach(childElement => {
+        const childUid = childElement.getAttribute(NodeInAppAttribName)
+        if (childUid) {
+          const newChildUid = addedUidMap.get(childUid)
+          if (newChildUid) {
+            childElement.setAttribute(NodeInAppAttribName, newChildUid)
+          }
+        }
+      })
+
+      // update
+      targetElement?.insertBefore(_ele, refElement || null)
+    })
+  }, [contentRef])
   const duplicateElements = useCallback(() => { }, [])
   // -------------------------------------------------------------- iframe event handlers --------------------------------------------------------------
   // mouse events
