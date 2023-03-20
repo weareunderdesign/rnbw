@@ -369,9 +369,11 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   }, [cmdkPages])
 
   const onCut = useCallback(() => {
+    if (selectedItems.length === 0) return
     setClipboardData({ panel: 'node', type: 'cut', uids: selectedItems })
   }, [selectedItems])
   const onCopy = useCallback(() => {
+    if (selectedItems.length === 0) return
     setClipboardData({ panel: 'node', type: 'copy', uids: selectedItems })
   }, [selectedItems])
   const onPaste = useCallback(() => {
@@ -391,9 +393,11 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     }
   }, [clipboardData, validNodeTree, focusedItem, cb_moveNode, cb_copyNode])
   const onDelete = useCallback(() => {
+    if (selectedItems.length === 0) return
     cb_removeNode(selectedItems)
   }, [cb_removeNode, selectedItems])
   const onDuplicate = useCallback(() => {
+    if (selectedItems.length === 0) return
     cb_duplicateNode(selectedItems)
   }, [cb_duplicateNode, selectedItems])
 
