@@ -220,6 +220,7 @@ export default function Process(props: ProcessProps) {
     if (updateOpt.parse === false) {
       let _fileInfo: TFileInfo = null
       let _nodeTree: TNodeTreeData = {}
+      let _nodeMaxUid: TNodeUid = ''
 
       const _file = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode
       const fileData = _file.data as TFileNodeData
@@ -238,10 +239,12 @@ export default function Process(props: ProcessProps) {
             setFSPending(false)
           })
 
-          const parserRes = parseFile(fileData.type, htmlInApp, getReferenceData(fileData.type), osType, true, String(nodeMaxUid))
-          const { tree, info } = parserRes
+          // need to build html, htmlInApp and code range
+          const parserRes = parseFile(fileData.type, htmlInApp, getReferenceData(fileData.type), osType, true, String(nodeMaxUid) as TNodeUid)
+          const { tree, info, nodeMaxUid: newNodeMaxUid } = parserRes
           _fileInfo = info
           _nodeTree = tree
+          _nodeMaxUid = newNodeMaxUid
         } else {
           // do nothing
         }
@@ -250,6 +253,7 @@ export default function Process(props: ProcessProps) {
       setFFNode(_file)
       setFileInfo(_fileInfo)
       setNodeTree(_nodeTree)
+      setNodeMaxUid(Number(_nodeMaxUid))
       dispatch(setCurrentFileContent(fileData.contentInApp as string))
 
       setUpdateOpt({ parse: null, from: updateOpt.from })

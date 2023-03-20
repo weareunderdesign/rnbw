@@ -5,7 +5,10 @@ import {
 import { SystemFiles } from '@_ref/SystemFiles';
 import { verifyFileHandlerPermission } from '@_services/main';
 import { TOsType } from '@_types/global';
-import { TFileType } from '@_types/main';
+import {
+  TFileInfo,
+  TFileType,
+} from '@_types/main';
 
 import {
   parseHtml,
@@ -175,4 +178,7 @@ export const serializeFile = (type: TFileType, tree: TNodeTreeData, referenceDat
     return serializeHtml(tree, referenceData as THtmlReferenceData)
   }
   return ''
+}
+export const getFileInfo = (tree: TNodeTreeData, fileType: TFileType): TFileInfo => {
+  return null
 }

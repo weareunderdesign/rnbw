@@ -235,7 +235,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     // call api
     const tree = JSON.parse(JSON.stringify(nodeTree)) as TNodeTreeData
     const res = copyNode(tree, targetUid, isBetween, position, uids, 'html', String(nodeMaxUid) as TNodeUid, osType, tabSize)
-    console.log(res)
 
     // processor
     addRunningActions(['processor-updateOpt'])
