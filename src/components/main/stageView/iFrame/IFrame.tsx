@@ -183,13 +183,8 @@ export const IFrame = (props: IFrameProps) => {
       const _ele = ele?.cloneNode(true) as HTMLElement
 
       // reset nest's uid
-      const _uid = _ele.getAttribute(NodeInAppAttribName)
-      if (_uid) {
-        const _newUid = addedUidMap.get(_uid)
-        if (_newUid) {
-          _ele.setAttribute(NodeInAppAttribName, _newUid)
-        }
-      }
+      const newUid = addedUidMap.get(uid)
+      newUid && _ele.setAttribute(NodeInAppAttribName, newUid)
 
       // reset descendant uids
       const childElementList = _ele.querySelectorAll('*')
@@ -214,13 +209,8 @@ export const IFrame = (props: IFrameProps) => {
       const _ele = ele?.cloneNode(true) as HTMLElement
 
       // reset nest's uid
-      const _uid = _ele.getAttribute(NodeInAppAttribName)
-      if (_uid) {
-        const _newUid = addedUidMap.get(_uid)
-        if (_newUid) {
-          _ele.setAttribute(NodeInAppAttribName, _newUid)
-        }
-      }
+      const newUid = addedUidMap.get(uid)
+      newUid && _ele.setAttribute(NodeInAppAttribName, newUid)
 
       // reset descendant uids
       const childElementList = _ele.querySelectorAll('*')
@@ -235,7 +225,7 @@ export const IFrame = (props: IFrameProps) => {
       })
 
       // update
-      _ele.parentElement?.insertBefore(_ele, _ele.nextElementSibling)
+      ele?.parentElement?.insertBefore(_ele, ele.nextElementSibling)
     })
   }, [contentRef])
   // -------------------------------------------------------------- iframe event handlers --------------------------------------------------------------
