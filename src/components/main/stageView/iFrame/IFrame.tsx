@@ -154,7 +154,7 @@ export const IFrame = (props: IFrameProps) => {
           removeElements(...param as [TNodeUid[]])
           break
         case 'move-node':
-          moveElements()
+          moveElements(...param as [TNodeUid[], TNodeUid, boolean, number])
           break
         case 'copy-node':
           copyElements()
@@ -169,10 +169,12 @@ export const IFrame = (props: IFrameProps) => {
   }, [event])
   // -------------------------------------------------------------- side effect handlers --------------------------------------------------------------
   const addElement = useCallback((targetUid: TNodeUid, node: TNode) => {
+    // build new element
     const nodeData = node.data as THtmlNodeData
     const newElement = contentRef?.contentWindow?.document?.createElement(nodeData.name)
     newElement?.setAttribute(NodeInAppAttribName, node.uid)
 
+    // add after target
     const targetElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"]`)
     newElement && targetElement?.parentElement?.insertBefore(newElement, targetElement.nextElementSibling)
   }, [contentRef])
@@ -182,7 +184,16 @@ export const IFrame = (props: IFrameProps) => {
       ele?.remove()
     })
   }, [contentRef])
-  const moveElements = useCallback(() => { }, [])
+  const moveElements = useCallback((uids: TNodeUid[], targetUid: TNodeUid, isBetween: boolean, position: number) => {
+    const targetElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"]`)
+    const refElement = isBetween ? contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"] > :nth-child(${position + 1})`) : null
+    uids.map((uid) => {
+      const ele = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${uid}"]`)
+      const _ele = ele?.cloneNode(true)
+      ele?.remove()
+      _ele && targetElement?.insertBefore(_ele, refElement || null)
+    })
+  }, [contentRef])
   const copyElements = useCallback(() => { }, [])
   const duplicateElements = useCallback(() => { }, [])
   // -------------------------------------------------------------- iframe event handlers --------------------------------------------------------------

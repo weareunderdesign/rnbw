@@ -257,7 +257,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     // side effect
     setNodeMaxUid(Number(res.nodeMaxUid))
-    setEvent({ type: 'move-node', param: [{ uids, targetUid }] })
+    setEvent({ type: 'move-node', param: [uids, targetUid, isBetween, position] })
 
     removeRunningActions(['nodeTreeView-move'])
   }, [addRunningActions, removeRunningActions, nodeTree, nodeMaxUid, osType, tabSize])
