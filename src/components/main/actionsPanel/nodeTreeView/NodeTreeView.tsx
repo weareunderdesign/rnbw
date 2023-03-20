@@ -218,7 +218,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     // side effect
     setNodeMaxUid(Number(res.nodeMaxUid))
-    setEvent({ type: 'duplicate-node', param: [{ uids, addedUidMap: res.addedUidMap }] })
+    setEvent({ type: 'duplicate-node', param: [uids, res.addedUidMap] })
 
     removeRunningActions(['nodeTreeView-duplicate'])
   }, [addRunningActions, removeRunningActions, nodeTree, nodeMaxUid, osType, tabSize])
