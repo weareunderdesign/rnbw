@@ -313,7 +313,6 @@ export const moveNode = (tree: TNodeTreeData, targetUid: TNodeUid, isBetween: bo
 
   // add to new target + position
   const _position = position - uidOffset
-  console.log(_uids)
   _uids.map((uid) => {
     const node = tree[uid]
     const parentNodeDepth = getNodeDepth(tree, node.parentUid as TNodeUid)
@@ -349,7 +348,6 @@ export const moveNode = (tree: TNodeTreeData, targetUid: TNodeUid, isBetween: bo
       targetNodeDepth !== parentNodeDepth && indentNode(tree, node, (targetNodeDepth - parentNodeDepth) * tabSize, osType)
     }
   })
-  console.log(targetNode.children)
 
   return { tree, nodeMaxUid: String(_nodeMaxUid) as TNodeUid, position: _position }
 }

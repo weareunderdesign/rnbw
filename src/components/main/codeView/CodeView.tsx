@@ -18,7 +18,10 @@ import {
   CodeViewSyncDelay,
   DefaultTabSize,
 } from '@_constants/main';
-import { THtmlNodeData } from '@_node/index';
+import {
+  TFileNodeData,
+  THtmlNodeData,
+} from '@_node/index';
 import {
   fnSelector,
   getActionGroupIndexSelector,
@@ -26,7 +29,6 @@ import {
   hmsInfoSelector,
   MainContext,
   navigatorSelector,
-  setCurrentFileContent,
 } from '@_redux/main';
 import Editor, {
   loader,
@@ -92,7 +94,6 @@ export default function CodeView(props: CodeViewProps) {
   useEffect(() => {
     // need to clear the undo/redo history of the monaco-editor
   }, [file.uid])
-
   // focusedItem - code select
   useEffect(() => {
     // validate
@@ -101,7 +102,6 @@ export default function CodeView(props: CodeViewProps) {
     const node = validNodeTree[focusedItem]
     if (node === undefined) return
 
-    // select and reveal the node's code sector
     const { startLineNumber, startColumn, endLineNumber, endColumn } = node.data as THtmlNodeData
 
     const editor = monacoRef.current as monaco.editor.IEditor
@@ -118,29 +118,32 @@ export default function CodeView(props: CodeViewProps) {
       endColumn,
     }, 1/* scrollType - smooth */)
   }, [focusedItem])
-
-  // content - code
+  // update editor's content
   useEffect(() => {
-    // skil its own state change
     if (updateOpt.from === 'code') return
 
-    codeContent.current = file.content
-  }, [file.content])
+    const _file = ffTree[file.uid]
+    if (!_file) return
 
+    const fileData = _file.data as TFileNodeData
+    codeContent.current = fileData.content
+  }, [ffTree[file.uid]])
   // code -> content
-  const codeContent = useRef<string>(file.content)
+  const codeContent = useRef<string>('')
   const reduxTimeout = useRef<NodeJS.Timeout | null>(null)
   const saveFileContentToRedux = useCallback(() => {
-    // skip the same content
-    if (file.content === codeContent.current) return
+    const _file = ffTree[file.uid]
+    const fileData = _file.data as TFileNodeData
+
+    if (fileData.content === codeContent.current) return
 
     addRunningActions(['processor-updateOpt'])
 
     setUpdateOpt({ parse: true, from: 'code' })
-    setTimeout(() => dispatch(setCurrentFileContent(codeContent.current)), 0)
+    // dispatch(setCurrentFileContent(codeContent.current))
 
     reduxTimeout.current = null
-  }, [file.content])
+  }, [ffTree, file.uid])
   const handleEditorChange = useCallback((value: string | undefined, ev: monaco.editor.IModelContentChangedEvent) => {
     if (file.uid === '') return
 
@@ -150,27 +153,25 @@ export default function CodeView(props: CodeViewProps) {
     reduxTimeout.current !== null && clearTimeout(reduxTimeout.current)
     reduxTimeout.current = setTimeout(saveFileContentToRedux, CodeViewSyncDelay)
   }, [file.uid, saveFileContentToRedux])
-  // -------------------------------------------------------------- Sync --------------------------------------------------------------
-
-  // monaco-editor instance
+  // -------------------------------------------------------------- monaco-editor --------------------------------------------------------------
+  // instance
   const monacoRef = useRef<monaco.editor.IEditor | null>(null)
   const handleEditorDidMount = (editor: monaco.editor.IStandaloneCodeEditor, monaco: Monaco) => {
     // here is another way to get monaco instance
     // you can also store it in `useRef` for further usage
     monacoRef.current = editor
   }
-
-  // monaco-editor options
+  // tabSize
   const [_tabSize, _setTabSize] = useState<number>(DefaultTabSize)
   useEffect(() => {
     setTabSize(_tabSize)
   }, [_tabSize])
-
+  // wordWrap
   const [wordWrap, setWordWrap] = useState<'on' | 'off'>('on')
   const toogleWrap = () => setWordWrap(wordWrap === 'on' ? 'off' : 'on')
-
+  // language
   const [language, setLanguage] = useState('html')
-
+  // theme
   const [theme, setTheme] = useState<'vs-dark' | 'light'>()
   const setSystemTheme = useCallback(() => {
     if (
@@ -187,8 +188,7 @@ export default function CodeView(props: CodeViewProps) {
       _theme === 'Light' ? setTheme('light') :
         setSystemTheme()
   }, [_theme])
-
-  // -------------------------------------------------------------- other --------------------------------------------------------------
+  // -------------------------------------------------------------- own --------------------------------------------------------------
   // panel focus handler
   const hasFocus = monacoRef.current?.hasTextFocus()
   useEffect(() => {
@@ -197,7 +197,6 @@ export default function CodeView(props: CodeViewProps) {
   const onPanelClick = useCallback((e: React.MouseEvent) => {
     setActivePanel('code')
   }, [])
-  // -------------------------------------------------------------- other --------------------------------------------------------------
 
   return <>
     <Panel minSize={0}>
