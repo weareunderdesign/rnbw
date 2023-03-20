@@ -142,7 +142,9 @@ export const indentNode = (tree: TNodeTreeData, node: TNode, indentSize: number,
   })
 }
 
-export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData, osType: TOsType): THtmlParserResponse => {
+export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData, osType: TOsType, keepNodeUids: boolean = false, maxNodeUid: TNodeUid = ''): THtmlParserResponse => {
+  let _maxNodeUid = Number(maxNodeUid)
+
   // parse the html content
   let UID = 0
   const tmpTree: TNodeTreeData = {}
@@ -165,7 +167,10 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
       // build depth-1 seed nodes
       const seedNodes: TNode[] = []
       nodes.map((node) => {
-        const uid = String(++UID)
+        const uid = keepNodeUids ?
+          node.attribs ? node.attribs[NodeInAppAttribName] : String(++_maxNodeUid) as TNodeUid
+          : String(++UID) as TNodeUid
+
         tmpTree[RootNodeUid].children.push(uid)
         tmpTree[uid] = {
           uid,
@@ -186,7 +191,9 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
         if (!nodeData.children) continue
 
         nodeData.children.map((child: THtmlDomNodeData) => {
-          const uid = String(++UID)
+          const uid = keepNodeUids ?
+            child.attribs ? child.attribs[NodeInAppAttribName] : String(++_maxNodeUid) as TNodeUid
+            : String(++UID) as TNodeUid
 
           node.children.push(uid)
           node.isEntity = false
@@ -201,8 +208,6 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
           }
           seedNodes.push(tmpTree[uid])
         })
-        for (const _child of nodeData.children) {
-        }
       }
 
       return nodes
@@ -303,7 +308,7 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
     }
   })
 
-  return { formattedContent, contentInApp, tree, nodeMaxUid: String(UID), info: settings }
+  return { formattedContent, contentInApp, tree, nodeMaxUid: String(keepNodeUids ? _maxNodeUid : UID) as TNodeUid, info: settings }
 }
 export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlReferenceData): THtmlNodeData => {
   const uids = getSubNodeUidsByBfs(RootNodeUid, tree)

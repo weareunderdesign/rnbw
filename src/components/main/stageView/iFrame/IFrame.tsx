@@ -181,7 +181,7 @@ export const IFrame = (props: IFrameProps) => {
     focusedItemRef.current = uid
 
     removeRunningActions(['stageView-focus'])
-  }, [nodeTree])
+  }, [addRunningActions, removeRunningActions, nodeTree])
   // -------------------------------------------------------------- side effect handlers --------------------------------------------------------------
   const addElement = useCallback((targetUid: TNodeUid, node: TNode) => {
     // build new element
@@ -358,7 +358,7 @@ export const IFrame = (props: IFrameProps) => {
   const [iframeEvent, setIframeEvent] = useState<MouseEvent>()
   useEffect(() => {
     if (contentRef) {
-      setPending(true)
+      // setIframeLoading(true)
 
       contentRef.onload = () => {
         const _document = contentRef?.contentWindow?.document
@@ -401,7 +401,7 @@ export const IFrame = (props: IFrameProps) => {
           })
         }
 
-        setPending(false)
+        // setIframeLoading(false)
       }
     }
   }, [contentRef])

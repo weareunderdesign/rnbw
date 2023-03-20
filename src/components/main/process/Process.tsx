@@ -22,6 +22,7 @@ import {
   TFileNodeData,
   writeFile,
 } from '@_node/file';
+import { THtmlNodeData } from '@_node/html';
 import {
   TNode,
   TNodeTreeData,
@@ -219,23 +220,29 @@ export default function Process(props: ProcessProps) {
     // serialize tree data
     if (updateOpt.parse === false) {
       let _fileInfo: TFileInfo = null
+      let _nodeTree: TNodeTreeData = {}
+
       const _file = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode
       const fileData = _file.data as TFileNodeData
 
       if (updateOpt.from === 'node') {
-        const newFileContent = serializeFile(fileData.type, nodeTree, getReferenceData(fileData.type))
-        const parserRes = parseFile(fileData.type, newFileContent, getReferenceData(fileData.type), osType)
-        const { formattedContent, contentInApp, tree, nodeMaxUid, info } = parserRes
-
-        _fileInfo = info
-        fileData.content = formattedContent
-        fileData.contentInApp = contentInApp
-        fileData.changed = fileData.content !== fileData.orgContent
+        const serializedRes = serializeFile(fileData.type, nodeTree, getReferenceData(fileData.type))
 
         if (fileData.type === 'html') {
-          writeFile(fileData.path, contentInApp, () => {
-            setIframeSrc(`rnbw${fileData.path}`)
+          const { html, htmlInApp } = serializedRes as THtmlNodeData
+          fileData.content = html
+          fileData.contentInApp = htmlInApp
+          fileData.changed = fileData.content !== fileData.orgContent
+
+          // setFSPending(true)
+          writeFile(fileData.path, htmlInApp, () => {
+            // setFSPending(false)
           })
+
+          const parserRes = parseFile(fileData.type, htmlInApp, getReferenceData(fileData.type), osType, true, String(nodeMaxUid))
+          const { tree, info } = parserRes
+          _fileInfo = info
+          _nodeTree = tree
         } else {
           // do nothing
         }
@@ -243,7 +250,8 @@ export default function Process(props: ProcessProps) {
 
       setFFNode(_file)
       setFileInfo(_fileInfo)
-      dispatch(setCurrentFileContent(fileData.content))
+      setNodeTree(_nodeTree)
+      dispatch(setCurrentFileContent(fileData.contentInApp as string))
 
       setUpdateOpt({ parse: null, from: updateOpt.from })
     }
@@ -281,7 +289,7 @@ export default function Process(props: ProcessProps) {
   useEffect(() => {
     if (updateOpt.parse === null && updateOpt.from === 'file') {
       dispatch(clearFNState())
-      dispatch(expandFNNode(Object.keys(validNodeTree)/* .slice(0, 50) */))
+      dispatch(expandFNNode(Object.keys(validNodeTree).slice(0, 50)))
       removeRunningActions(['processor-validNodeTree'])
     } else if (updateOpt.parse === null && updateOpt.from === 'code') {
       const _focusedItem: TNodeUid = validNodeTree[focusedItem] === undefined ? RootNodeUid : focusedItem

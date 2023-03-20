@@ -11,9 +11,11 @@ import {
   parseHtml,
   serializeHtml,
   TFileParserResponse,
+  THtmlNodeData,
   THtmlReferenceData,
   TNodeReferenceData,
   TNodeTreeData,
+  TNodeUid,
 } from '../';
 import {
   TFileHandlerInfo,
@@ -155,9 +157,9 @@ export const rmnod = (path: string, cb?: () => void) => {
   })
 }
 
-export const parseFile = (type: TFileType, content: string, referenceData: TNodeReferenceData, osType: TOsType): TFileParserResponse => {
+export const parseFile = (type: TFileType, content: string, referenceData: TNodeReferenceData, osType: TOsType, keepNodeUids: boolean = false, maxNodeUid: TNodeUid = ''): TFileParserResponse => {
   if (type === 'html') {
-    return parseHtml(content, referenceData as THtmlReferenceData, osType)
+    return parseHtml(content, referenceData as THtmlReferenceData, osType, keepNodeUids, maxNodeUid)
   } else {
     return {
       formattedContent: '',
@@ -168,10 +170,9 @@ export const parseFile = (type: TFileType, content: string, referenceData: TNode
     }
   }
 }
-export const serializeFile = (type: TFileType, tree: TNodeTreeData, referenceData: TNodeReferenceData): string => {
+export const serializeFile = (type: TFileType, tree: TNodeTreeData, referenceData: TNodeReferenceData): THtmlNodeData | string => {
   if (type === 'html') {
-    const { html } = serializeHtml(tree, referenceData as THtmlReferenceData)
-    return html
+    return serializeHtml(tree, referenceData as THtmlReferenceData)
   }
   return ''
 }

@@ -275,7 +275,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     focusedItemRef.current = uid
 
     removeRunningActions(['nodeTreeView-focus'])
-  }, [focusedItem])
+  }, [addRunningActions, removeRunningActions, focusedItem])
   const cb_selectNode = useCallback((uids: TNodeUid[]) => {
     addRunningActions(['nodeTreeView-select'])
 
@@ -298,21 +298,21 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     dispatch(selectFNNode(_uids))
 
     removeRunningActions(['nodeTreeView-select'])
-  }, [validNodeTree, selectedItems, selectedItemsObj])
+  }, [addRunningActions, removeRunningActions, validNodeTree, selectedItems, selectedItemsObj])
   const cb_expandNode = useCallback((uid: TNodeUid) => {
     addRunningActions(['nodeTreeView-arrow'])
 
     dispatch(expandFNNode([uid]))
 
     removeRunningActions(['nodeTreeView-arrow'])
-  }, [])
+  }, [addRunningActions, removeRunningActions])
   const cb_collapseNode = useCallback((uid: TNodeUid) => {
     addRunningActions(['nodeTreeView-arrow'])
 
     dispatch(collapseFNNode([uid]))
 
     removeRunningActions(['nodeTreeView-arrow'])
-  }, [])
+  }, [addRunningActions, removeRunningActions])
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
   useEffect(() => {
     if (activePanel !== 'node' && activePanel !== 'stage') return
