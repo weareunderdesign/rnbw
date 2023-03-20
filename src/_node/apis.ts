@@ -186,7 +186,9 @@ export const copyNode = (tree: TNodeTreeData, targetUid: TNodeUid, isBetween: bo
 
   const addedUidMap = new Map<TNodeUid, TNodeUid>()
 
-  uids.map((uid) => {
+  const _uids = [...uids]
+  _uids.reverse()
+  _uids.map((uid) => {
     const node = tree[uid]
     const orgSubNodeUids = getSubNodeUidsByBfs(uid, tree)
 
@@ -272,7 +274,9 @@ export const moveNode = (tree: TNodeTreeData, targetUid: TNodeUid, isBetween: bo
   const targetNode = tree[targetUid]
   const targetNodeDepth = getNodeDepth(tree, targetUid)
 
-  uids.map((uid) => {
+  const _uids = [...uids]
+  _uids.reverse()
+  _uids.map((uid) => {
     const node = tree[uid]
 
     const parentNode = tree[node.parentUid as TNodeUid]
