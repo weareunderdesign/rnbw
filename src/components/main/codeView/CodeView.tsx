@@ -207,8 +207,14 @@ export default function CodeView(props: CodeViewProps) {
       }
     }
   }, [selection])
+  const isFirstTime = useRef<boolean>(true)
   useEffect(() => {
     if (focusedNode) {
+      if (isFirstTime.current) {
+        isFirstTime.current = false
+        return
+      }
+
       addRunningActions(['codeView-focus'])
 
       // expand path to the uid
