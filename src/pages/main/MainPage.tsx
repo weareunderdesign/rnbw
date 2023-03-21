@@ -893,8 +893,6 @@ Your changes will be lost if you don't save them.`
         // cmdk
         currentCommand, setCurrentCommand,
 
-
-
         // reference
         filesReferenceData, htmlReferenceData,
         cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions, cmdkReferenceAdd,

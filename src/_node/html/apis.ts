@@ -4,7 +4,6 @@ import {
   NodeInAppAttribName,
   RootNodeUid,
 } from '@_constants/main';
-import { AmbiguousReactShortHandMap } from '@_ref/AmbiguousReactShortHandMap';
 import { getLineBreakCharacter } from '@_services/global';
 import { TOsType } from '@_types/global';
 
@@ -20,7 +19,6 @@ import {
 } from '../';
 import {
   THtmlDomNodeData,
-  THtmlNodeAttributes,
   THtmlPageSettings,
   THtmlParserResponse,
   THtmlReferenceData,
@@ -391,34 +389,4 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
   })
 
   return tree[RootNodeUid].data as THtmlNodeData
-}
-
-export const getShortHand = (attrs: THtmlNodeAttributes): THtmlNodeAttributes => {
-  const newAttr: THtmlNodeAttributes = {}
-
-  for (const attrName in attrs) {
-    const attrContent = attrs[attrName]
-
-    if (attrName === 'style') {
-      newAttr['style'] = {}
-
-      const styles: string[] = attrContent.replace(/ |\r|\n/g, '').split(';')
-      styles.map((style) => {
-        const _style = style.split(':')
-        if (_style.length === 2) {
-          const styleName = _style[0]
-          const styleValue = _style[1]
-          const newStyleName = styleName.replace(/-./g, c => c.slice(1).toUpperCase())
-          newAttr['style'][newStyleName] = styleValue
-        }
-      })
-    } else if (attrName === NodeInAppAttribName) {
-      newAttr[attrName] = attrs[attrName]
-    } else {
-      const newAttrName = AmbiguousReactShortHandMap[attrName] || attrName.replace(/-./g, c => c.slice(1).toUpperCase())
-      newAttr[newAttrName] = attrs[attrName]
-    }
-  }
-
-  return newAttr
 }

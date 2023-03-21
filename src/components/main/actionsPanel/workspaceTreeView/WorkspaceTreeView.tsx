@@ -649,8 +649,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     removeRunningActions(['fileTreeView-create'])
   }, [ffHandlers])
 
-
-
   /**
    * general move api - for rename, copy/paste(duplicate), cut/paste(move)
    * here, the handler params are already verified ones.
@@ -954,9 +952,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     removeRunningActions(['fileTreeView-move'])
   }, [invalidNodes, setInvalidNodes, ffTree, ffHandlers])
 
-
-
-
   const cb_readFFNode = useCallback((uid: TNodeUid) => {
     // for key-nav
     addRunningActions(['fileTreeView-read'])
@@ -1082,8 +1077,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       // do nothing
     }
   }, [clearSession, osType])
-
-
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
 
   // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
@@ -1364,22 +1357,17 @@ This action cannot be undone!`
         }}
         onClick={onPanelClick}
       >
-        {/* Main TreeView */}
         <TreeView
-          /* style */
           width={'100%'}
           height={'auto'}
 
-          /* info */
           info={{ id: 'file-tree-view' }}
 
-          /* data */
           data={fileTreeViewData}
           focusedItem={focusedItem}
           expandedItems={expandedItems}
           selectedItems={selectedItems}
 
-          /* renderers */
           renderers={{
             renderTreeContainer: (props) => {
               return <>
@@ -1466,6 +1454,8 @@ This action cannot be undone!`
                           props.context.selectItem(),
                           props.item.isFolder ? props.context.toggleExpandedState() : props.context.primaryAction(),
                         ]
+
+                      setActivePanel('file')
                     }}
                     onFocus={() => { }}
                     onMouseEnter={() => setFFHoveredItem(props.item.index as TNodeUid)}
@@ -1551,7 +1541,6 @@ This action cannot be undone!`
             },
           }}
 
-          /* possibilities */
           props={{
             canDragAndDrop: true,
             canDropOnFolder: true,
@@ -1562,9 +1551,7 @@ This action cannot be undone!`
             canRename: true,
           }}
 
-          /* cb */
           callbacks={{
-            /* RENAME CALLBACK */
             onStartRenamingItem: useCallback(async (item: TreeItem, treeId: string) => {
               if (invalidNodes[item.data.uid]) {
                 removeInvalidNodes(item.data.uid)
@@ -1652,7 +1639,6 @@ Your changes will be lost if you don't save them.`
               removeInvalidNodes(item.data.uid)
             }, [invalidNodes, cb_renameFFNode, createFFNode, setTemporaryNodes, removeTemporaryNodes, removeInvalidNodes, ffTree, osType, ffHandlers]),
 
-            /* SELECT, FOCUS, EXPAND, COLLAPSE CALLBACK */
             onSelectItems: useCallback((items: TreeItemIndex[], treeId: string) => {
               cb_selectFFNode(items as TNodeUid[])
             }, [cb_selectFFNode]),
@@ -1666,12 +1652,10 @@ Your changes will be lost if you don't save them.`
               cb_collapseFFNode(item.index as TNodeUid)
             }, [cb_collapseFFNode]),
 
-            /* READ CALLBACK */
             onPrimaryAction: useCallback((item: TreeItem, treeId: string) => {
               item.data.data.valid ? cb_readFFNode(item.index as TNodeUid) : removeRunningActions(['fileTreeView-read'], false)
             }, [cb_readFFNode]),
 
-            // DnD CALLBACK
             onDrop: useCallback((items: TreeItem[], target: DraggingPosition) => {
               const targetUid: TNodeUid = (target as DraggingPositionItem).targetItem as TNodeUid
               const uids: TNodeUid[] = items.map(item => item.index as TNodeUid).filter(uid => !invalidNodes[uid])
