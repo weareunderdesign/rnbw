@@ -323,7 +323,9 @@ export const IFrame = (props: IFrameProps) => {
       setFNHoveredItem(_uid)
     }
   }, [fnHoveredItem])
-  const onMouseLeave = useCallback((e: MouseEvent) => { }, [])
+  const onMouseLeave = useCallback((e: MouseEvent) => {
+    setFNHoveredItem('')
+  }, [])
   const onMouseDown = useCallback((e: MouseEvent) => {
     const ele = e.target as HTMLElement
     let _uid: TNodeUid | null = ele.getAttribute(NodeInAppAttribName)

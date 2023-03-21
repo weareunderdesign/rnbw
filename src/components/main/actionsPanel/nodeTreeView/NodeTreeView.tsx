@@ -118,7 +118,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     if (focusedItemRef.current === focusedItem) return
 
     const focusedElement = document.querySelector(`#NodeTreeView-${focusedItem}`)
-    setTimeout(() => focusedElement?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' }), 0)
+    setTimeout(() => focusedElement?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' }), 10)
 
     focusedItemRef.current = focusedItem
   }, [focusedItem])
