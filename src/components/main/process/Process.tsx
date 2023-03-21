@@ -161,59 +161,56 @@ export default function Process(props: ProcessProps) {
 
       orgFileUid.current = file.uid
 
-      /* if (updateOpt.parse === true) {
-        // check if the script list changed
-        let _hasSameScript = true
-        if (fileInfo === null || file.uid !== orgFileUid.current) {
+      // check if the script list changed ----- tmp code
+      /* let _hasSameScript = true
+      if (fileInfo === null || file.uid !== orgFileUid.current) {
+        _hasSameScript = false
+      } else {
+        const _curScripts = !_fileInfo ? [] : _fileInfo.scripts
+        const _orgScripts = fileInfo.scripts
+
+        const curScripts: string[] = []
+        const curScriptObj: { [uid: string]: boolean } = {}
+        _curScripts.map(script => {
+          const attribs = (script.data as THtmlNodeData).attribs
+          const uniqueStr = Object.keys(attribs)
+            .filter(attrName => attrName !== NodeInAppAttribName)
+            .sort((a, b) => a > b ? 1 : -1)
+            .map(attrName => {
+              return `${attrName}${NodeUidSplitter}${attribs[attrName]}`
+            })
+            .join(NodeUidSplitter)
+          curScripts.push(uniqueStr)
+          curScriptObj[uniqueStr] = true
+        })
+
+        const orgScripts: string[] = []
+        const orgScriptObj: { [uid: string]: boolean } = {}
+        _orgScripts.map(script => {
+          const attribs = (script.data as THtmlNodeData).attribs
+          const uniqueStr = Object.keys(attribs)
+            .filter(attrName => attrName !== NodeInAppAttribName)
+            .sort((a, b) => a > b ? 1 : -1)
+            .map(attrName => {
+              return `${attrName}${NodeUidSplitter}${attribs[attrName]}`
+            })
+            .join(NodeUidSplitter)
+          orgScripts.push(uniqueStr)
+          orgScriptObj[uniqueStr] = true
+        })
+
+        if (curScripts.length !== orgScripts.length) {
           _hasSameScript = false
         } else {
-          const _curScripts = !_fileInfo ? [] : _fileInfo.scripts
-          const _orgScripts = fileInfo.scripts
-  
-          const curScripts: string[] = []
-          const curScriptObj: { [uid: string]: boolean } = {}
-          _curScripts.map(script => {
-            const attribs = (script.data as THtmlNodeData).attribs
-            const uniqueStr = Object.keys(attribs)
-              .filter(attrName => attrName !== NodeInAppAttribName)
-              .sort((a, b) => a > b ? 1 : -1)
-              .map(attrName => {
-                return `${attrName}${NodeUidSplitter}${attribs[attrName]}`
-              })
-              .join(NodeUidSplitter)
-            curScripts.push(uniqueStr)
-            curScriptObj[uniqueStr] = true
-          })
-  
-          const orgScripts: string[] = []
-          const orgScriptObj: { [uid: string]: boolean } = {}
-          _orgScripts.map(script => {
-            const attribs = (script.data as THtmlNodeData).attribs
-            const uniqueStr = Object.keys(attribs)
-              .filter(attrName => attrName !== NodeInAppAttribName)
-              .sort((a, b) => a > b ? 1 : -1)
-              .map(attrName => {
-                return `${attrName}${NodeUidSplitter}${attribs[attrName]}`
-              })
-              .join(NodeUidSplitter)
-            orgScripts.push(uniqueStr)
-            orgScriptObj[uniqueStr] = true
-          })
-  
-          if (curScripts.length !== orgScripts.length) {
-            _hasSameScript = false
-          } else {
-            for (const script of curScripts) {
-              if (!orgScriptObj[script]) {
-                _hasSameScript = false
-                break
-              }
+          for (const script of curScripts) {
+            if (!orgScriptObj[script]) {
+              _hasSameScript = false
+              break
             }
           }
         }
-        setHasSameScript(_hasSameScript)
-        setFileInfo(_fileInfo)
-      } */
+      }
+      setHasSameScript(_hasSameScript) */
     }
 
     // serialize tree data

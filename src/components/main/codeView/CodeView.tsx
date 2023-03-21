@@ -103,6 +103,14 @@ export default function CodeView(props: CodeViewProps) {
   // file changed - clear history
   useEffect(() => {
     // need to clear the undo/redo history of the monaco-editor
+    /**
+         * Create an "undo stop" in the undo-redo stack.
+         */
+    // pushUndoStop(): boolean;
+    /**
+     * Remove the "undo stop" in the undo-redo stack.
+     */
+    // popUndoStop(): boolean;
   }, [file.uid])
   // focusedItem - code select
   const focusedItemRef = useRef<TNodeUid>('')
@@ -235,10 +243,13 @@ export default function CodeView(props: CodeViewProps) {
       removeRunningActions(['codeView-focus'])
     }
   }, [focusedNode])
-  // code edit - parse
+  // code edit - highlight/parse
   const codeContent = useRef<string>('')
   const reduxTimeout = useRef<NodeJS.Timeout | null>(null)
   const saveFileContentToRedux = useCallback(() => {
+    decorationsRef.current = []
+    decorationCollectionRef.current?.clear()
+
     const _file = ffTree[file.uid]
     if (!_file) return
 
@@ -246,7 +257,7 @@ export default function CodeView(props: CodeViewProps) {
 
     if (fileData.content === codeContent.current) return
 
-    console.log(focusedNode)
+    // console.log(fileData.content, codeContent.current)
 
     // dispatch(setCurrentFileContent(codeContent.current))
 
@@ -254,21 +265,45 @@ export default function CodeView(props: CodeViewProps) {
     // setUpdateOpt({ parse: true, from: 'code' })
 
     reduxTimeout.current = null
-  }, [ffTree, file.uid, focusedNode])
+  }, [ffTree, file.uid])
   const handleEditorChange = useCallback((value: string | undefined, ev: monaco.editor.IModelContentChangedEvent) => {
+    if (!focusedNode) return
+
+    const change = ev.changes[0]
+    const changedRange: monaco.IRange = true ? (focusedNode.data as THtmlNodeData) : {
+      startLineNumber: change.range.startLineNumber,
+      startColumn: change.range.startColumn,
+      endLineNumber: change.range.startLineNumber + change.text.split(ev.eol).length - 1,
+      endColumn: change.text.split(ev.eol).length === 1 ? change.range.startColumn + change.text.length : change.text.split(ev.eol).pop()?.length || 0,
+    }
+
+    console.log(change, changedRange)
+
+    decorationsRef.current.push({
+      range: changedRange,
+      options: {
+        isWholeLine: true,
+        className: 'changedCode',
+      }
+    })
+    decorationCollectionRef.current?.set(decorationsRef.current)
+
     // update redux with debounce
-    codeContent.current = value || ''
+    // codeContent.current = value || ''
 
     reduxTimeout.current !== null && clearTimeout(reduxTimeout.current)
     reduxTimeout.current = setTimeout(saveFileContentToRedux, CodeViewSyncDelay)
-  }, [saveFileContentToRedux])
+  }, [saveFileContentToRedux, focusedNode])
   // -------------------------------------------------------------- monaco-editor --------------------------------------------------------------
   // instance
   const monacoRef = useRef<monaco.editor.IEditor | null>(null)
+  const decorationsRef = useRef<monaco.editor.IModelDeltaDecoration[]>([])
+  const decorationCollectionRef = useRef<monaco.editor.IEditorDecorationsCollection>()
   const handleEditorDidMount = useCallback((editor: monaco.editor.IStandaloneCodeEditor, monaco: Monaco) => {
     // here is another way to get monaco instance
     // you can also store it in `useRef` for further usage
     monacoRef.current = editor
+    decorationCollectionRef.current = editor.createDecorationsCollection()
   }, [])
   // tabSize
   const [_tabSize, _setTabSize] = useState<number>(DefaultTabSize)

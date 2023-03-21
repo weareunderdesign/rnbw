@@ -108,3 +108,7 @@
   /* rene.css -> .radius-s */
   border-radius: 4px;
 }
+
+.changedCode {
+  background: rgba(0, 50, 0, 0.5);
+}
