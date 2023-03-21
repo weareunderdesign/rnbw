@@ -33,7 +33,10 @@ import {
   updateFNTreeViewState,
 } from '@_redux/main';
 import { getCommandKey } from '@_services/global';
-import { TCmdkKeyMap } from '@_types/main';
+import {
+  TCmdkKeyMap,
+  TCodeChange,
+} from '@_types/main';
 
 import { styles } from './styles';
 import { IFrameProps } from './types';
@@ -302,6 +305,10 @@ export const IFrame = (props: IFrameProps) => {
     dispatch(selectFNNode(newUids))
     removeRunningActions(['stageView-viewState'])
   }, [removeRunningActions, contentRef])
+  const onCodeChange = useCallback((changes: TCodeChange[]) => {
+    console.log('code changes', changes)
+    removeRunningActions(['stageView-codeChange'])
+  }, [removeRunningActions])
   // -------------------------------------------------------------- iframe event handlers --------------------------------------------------------------
   // mouse events
   const onMouseEnter = useCallback((e: MouseEvent) => { }, [])
@@ -470,7 +477,7 @@ export const IFrame = (props: IFrameProps) => {
         break
     }
   }, [iframeEvent])
-  // node actions - side effect
+  // node actions, code change - side effect
   useEffect(() => {
     if (event) {
       const { type, param } = event
@@ -490,6 +497,8 @@ export const IFrame = (props: IFrameProps) => {
         case 'duplicate-node':
           duplicateElements(...param as [TNodeUid[], Map<TNodeUid, TNodeUid>])
           break
+        case 'code-change':
+          onCodeChange(...param as [TCodeChange[]])
         default:
           break
       }

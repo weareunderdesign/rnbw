@@ -38,6 +38,8 @@ import {
   navigatorSelector,
   selectFNNode,
 } from '@_redux/main';
+import { getLineBreakCharacter } from '@_services/global';
+import { TCodeChange } from '@_types/main';
 import Editor, {
   loader,
   Monaco,
@@ -55,6 +57,7 @@ export default function CodeView(props: CodeViewProps) {
 
   // main context
   const {
+    event, setEvent,
     // groupping action
     addRunningActions, removeRunningActions,
 
@@ -253,21 +256,34 @@ export default function CodeView(props: CodeViewProps) {
     decorationCollectionRef.current?.clear()
 
     const _file = ffTree[file.uid]
-    if (!_file) return
-
     const fileData = _file.data as TFileNodeData
-
     if (fileData.content === codeContent.current) {
       validNodeTreeRef.current = JSON.parse(JSON.stringify(validNodeTree))
+
+      codeChangeDecorationRef.current.clear()
+      setCodeEditing(false)
       return
     }
 
+    const currentCode = codeContent.current
+    const currentCodeArr = currentCode.split(getLineBreakCharacter(osType))
+
+    const codeChanges: TCodeChange[] = []
     for (const codeChange of codeChangeDecorationRef.current.entries()) {
       const uid = codeChange[0]
-      const range = codeChange[1][0].range
 
-      console.log(uid, range)
+      const { startLineNumber, startColumn, endLineNumber, endColumn } = codeChange[1][0].range
+      const partCodeArr: string[] = []
+      partCodeArr.push(currentCodeArr[startLineNumber].slice(startColumn))
+      for (let line = startLineNumber + 1; line < endLineNumber; ++line) {
+        partCodeArr.push(currentCodeArr[line])
+      }
+      endLineNumber > startLineNumber && partCodeArr.push(currentCodeArr[endLineNumber].slice(0, endColumn))
+      const content = partCodeArr.join(getLineBreakCharacter(osType))
+
+      codeChanges.push({ uid, content })
     }
+    setEvent({ type: 'code-change', param: [codeChanges] })
 
 
     // dispatch(setCurrentFileContent(codeContent.current))
@@ -276,7 +292,7 @@ export default function CodeView(props: CodeViewProps) {
     setUpdateOpt({ parse: true, from: 'code' })
 
     reduxTimeout.current = null
-  }, [ffTree, file.uid])
+  }, [ffTree, file.uid, osType])
   const handleEditorChange = useCallback((value: string | undefined, ev: monaco.editor.IModelContentChangedEvent) => {
     if (!focusedNode) return
 

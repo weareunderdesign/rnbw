@@ -52,6 +52,7 @@ import {
   addClass,
   removeClass,
 } from '@_services/main';
+import { TCodeChange } from '@_types/main';
 
 import { NodeTreeViewProps } from './types';
 
@@ -426,7 +427,23 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       cb_addNode(tagName)
     }
   }, [cb_addNode])
-
+  // -------------------------------------------------------------- side effect --------------------------------------------------------------
+  // code change - side effect
+  useEffect(() => {
+    if (event) {
+      const { type, param } = event
+      switch (type) {
+        case 'code-change':
+          onCodeChange(...param as [TCodeChange[]])
+        default:
+          break
+      }
+    }
+  }, [event])
+  const onCodeChange = useCallback((changes: TCodeChange[]) => {
+    console.log(changes)
+    removeRunningActions(['nodeTreeView-codeChange'])
+  }, [removeRunningActions])
   // -------------------------------------------------------------- own --------------------------------------------------------------
   const onPanelClick = useCallback(() => {
     setActivePanel('node')

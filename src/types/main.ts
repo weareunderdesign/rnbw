@@ -54,7 +54,7 @@ export type TSession = {
   'opened-file-content': string | null,
 }
 export type TEvent = {
-  type: 'focus-node' | 'select-node' | 'expand-node' | 'collapse-node' | 'add-node' | 'remove-node' | 'move-node' | 'duplicate-node' | 'copy-node',
+  type: 'add-node' | 'remove-node' | 'move-node' | 'duplicate-node' | 'copy-node' | 'code-change',
   param: any[],
 } | null
 /**
@@ -138,4 +138,9 @@ export type TCmdkContext = {
  */
 export type TCmdkGroupData = {
   [groupName: string]: TCmdkReference[],
+}
+
+export type TCodeChange = {
+  uid: TNodeUid,
+  content: string,
 }
