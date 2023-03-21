@@ -441,7 +441,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     }
   }, [event])
   const onCodeChange = useCallback((changes: TCodeChange[]) => {
-    console.log(changes)
     removeRunningActions(['nodeTreeView-codeChange'])
   }, [removeRunningActions])
   // -------------------------------------------------------------- own --------------------------------------------------------------

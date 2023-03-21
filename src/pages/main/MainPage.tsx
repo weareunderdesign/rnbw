@@ -84,6 +84,7 @@ import {
   TCmdkKeyMap,
   TCmdkReference,
   TCmdkReferenceData,
+  TCodeChange,
   TEvent,
   TFileAction,
   TFileInfo,
@@ -158,6 +159,7 @@ export default function MainPage(props: MainPageProps) {
 
   // global event
   const [event, setEvent] = useState<TEvent>(null)
+  const [codeChanges, setCodeChanges] = useState<TCodeChange[]>([])
 
   // file tree view
   const [ffTree, setFFTree] = useState<TNodeTreeData>({})
@@ -865,6 +867,8 @@ Your changes will be lost if you don't save them.`
         iframeLoading, setIFrameLoading,
         fsPending, setFSPending,
         codeEditing, setCodeEditing,
+
+        codeChanges, setCodeChanges,
 
         messages, addMessage, removeMessage,
 

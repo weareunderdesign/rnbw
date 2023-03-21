@@ -12,6 +12,7 @@ import {
 import { TToast } from '@_types/global';
 import {
   TClipboardData,
+  TCodeChange,
   TEvent,
   TFileAction,
   TFileInfo,
@@ -26,6 +27,8 @@ import {
 } from './types';
 
 export const MainContext: Context<TMainContext> = createContext<TMainContext>({
+  codeChanges: [],
+  setCodeChanges: (changes: TCodeChange[]) => { },
   // global
   pending: false,
   setPending: (pending: boolean) => { },

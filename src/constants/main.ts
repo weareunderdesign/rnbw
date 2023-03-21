@@ -13,7 +13,7 @@ export const HistoryStoreLimit: number = 1000000
 /**
  * code-view sync debounce time - by msec
  */
-export const CodeViewSyncDelay: number = 5 * 1000
+export const CodeViewSyncDelay: number = 2 * 1000
 
 /**
  * file auto-save debounce time - by msec

@@ -16,6 +16,7 @@ import {
   TClipboardData,
   TCmdkGroupData,
   TCmdkReferenceData,
+  TCodeChange,
   TEvent,
   TFile,
   TFileAction,
@@ -31,6 +32,9 @@ import { TSession } from '../../types/main';
  * main context
  */
 export type TMainContext = {
+  codeChanges: TCodeChange[],
+  setCodeChanges: (changes: TCodeChange[]) => void,
+
   // global
   pending: boolean,
   setPending: (pending: boolean) => void,

@@ -60,7 +60,7 @@ export default function CodeView(props: CodeViewProps) {
     event, setEvent,
     // groupping action
     addRunningActions, removeRunningActions,
-
+    setCodeChanges,
     // file tree view
     ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree,
 
@@ -274,22 +274,22 @@ export default function CodeView(props: CodeViewProps) {
 
       const { startLineNumber, startColumn, endLineNumber, endColumn } = codeChange[1][0].range
       const partCodeArr: string[] = []
-      partCodeArr.push(currentCodeArr[startLineNumber].slice(startColumn))
-      for (let line = startLineNumber + 1; line < endLineNumber; ++line) {
+      partCodeArr.push(currentCodeArr[startLineNumber - 1].slice(startColumn - 1))
+      for (let line = startLineNumber - 1 + 1; line < endLineNumber - 1; ++line) {
         partCodeArr.push(currentCodeArr[line])
       }
-      endLineNumber > startLineNumber && partCodeArr.push(currentCodeArr[endLineNumber].slice(0, endColumn))
+      endLineNumber > startLineNumber && partCodeArr.push(currentCodeArr[endLineNumber - 1].slice(0, endColumn - 1))
       const content = partCodeArr.join(getLineBreakCharacter(osType))
 
       codeChanges.push({ uid, content })
     }
-    setEvent({ type: 'code-change', param: [codeChanges] })
 
-
-    // dispatch(setCurrentFileContent(codeContent.current))
+    setCodeChanges(codeChanges)
 
     addRunningActions(['processor-updateOpt'])
     setUpdateOpt({ parse: true, from: 'code' })
+
+    codeChangeDecorationRef.current.clear()
 
     reduxTimeout.current = null
   }, [ffTree, file.uid, osType])

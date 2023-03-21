@@ -32,11 +32,13 @@ import {
   clearFNState,
   expandFNNode,
   fnSelector,
+  focusFNNode,
   getActionGroupIndexSelector,
   globalSelector,
   hmsInfoSelector,
   MainContext,
   navigatorSelector,
+  selectFNNode,
   setCurrentFileContent,
 } from '@_redux/main';
 import {
@@ -59,6 +61,7 @@ export default function Process(props: ProcessProps) {
 
   // main context
   const {
+    codeChanges, setEvent,
     fsPending, setFSPending,
     // groupping action
     addRunningActions, removeRunningActions,
@@ -149,11 +152,17 @@ export default function Process(props: ProcessProps) {
       } else if (updateOpt.from === 'hms') {
 
       } else if (updateOpt.from === 'code') {
+        console.log('code changes', codeChanges)
+
+        // node tree side effect
+
+        // iframe side effect
+        // setEvent({ type: 'code-change', param: [codeChanges] })
+
         setCodeEditing(false)
       } else {
         // do nothing
       }
-
 
       setFFNode(_file)
       setFileInfo(_fileInfo)
@@ -296,7 +305,7 @@ export default function Process(props: ProcessProps) {
       dispatch(clearFNState())
       dispatch(expandFNNode(Object.keys(validNodeTree).slice(0, 50)))
     } else if (updateOpt.parse === null && updateOpt.from === 'code') {
-      /* const _focusedItem: TNodeUid = validNodeTree[focusedItem] === undefined ? RootNodeUid : focusedItem
+      const _focusedItem: TNodeUid = validNodeTree[focusedItem] === undefined ? RootNodeUid : focusedItem
       const _expandedItems = expandedItems.filter((uid) => {
         return validNodeTree[uid] !== undefined && validNodeTree[uid].isEntity === false
       })
@@ -307,8 +316,6 @@ export default function Process(props: ProcessProps) {
       dispatch(focusFNNode(_focusedItem))
       dispatch(expandFNNode(_expandedItems))
       dispatch(selectFNNode(_selectedItems))
-
-      setTimeout(() => removeRunningActions(['processor-validNodeTree']), 0) */
     } else {
       // do nothing
     }
