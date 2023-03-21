@@ -109,6 +109,11 @@
   border-radius: 4px;
 }
 
+/* code view highlight */
+.focusedNodeCode {
+  background: rgb(0, 50, 0);
+}
+
 .changedCode {
-  background: rgba(0, 50, 0, 0.5);
+  border: 1px dotted rgba(255, 255, 0, 0.5);
 }

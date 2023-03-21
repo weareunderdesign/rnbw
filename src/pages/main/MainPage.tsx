@@ -110,6 +110,7 @@ export default function MainPage(props: MainPageProps) {
   const [pending, setPending] = useState<boolean>(false)
   const [iframeLoading, setIFrameLoading] = useState<boolean>(false)
   const [fsPending, setFSPending] = useState<boolean>(false)
+  const [codeEditing, setCodeEditing] = useState<boolean>(false)
 
   const [messages, setMessages] = useState<TToast[]>([])
   const addMessage = useCallback((message: TToast) => {
@@ -863,6 +864,7 @@ Your changes will be lost if you don't save them.`
         pending, setPending,
         iframeLoading, setIFrameLoading,
         fsPending, setFSPending,
+        codeEditing, setCodeEditing,
 
         messages, addMessage, removeMessage,
 

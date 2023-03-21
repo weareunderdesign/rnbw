@@ -41,6 +41,9 @@ export type TMainContext = {
   fsPending: boolean,
   setFSPending: (pending: boolean) => void,
 
+  codeEditing: boolean,
+  setCodeEditing: (editing: boolean) => void,
+
   messages: TToast[],
   addMessage: (message: TToast) => void,
   removeMessage: (index: number) => void,

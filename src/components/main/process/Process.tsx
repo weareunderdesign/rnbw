@@ -79,7 +79,7 @@ export default function Process(props: ProcessProps) {
     currentCommand, setCurrentCommand, cmdkOpen, setCmdkOpen, cmdkPages, setCmdkPages, cmdkPage,
 
     // global
-    pending, setPending, messages, addMessage, removeMessage,
+    pending, setPending, messages, addMessage, removeMessage, codeEditing, setCodeEditing,
 
     // reference
     htmlReferenceData, cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions, cmdkReferenceAdd,
@@ -127,7 +127,7 @@ export default function Process(props: ProcessProps) {
       const _file = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode
       const fileData = _file.data as TFileNodeData
 
-      if (updateOpt.from === 'file' || updateOpt.from === 'hms' || updateOpt.from === 'code') {
+      if (updateOpt.from === 'file') {
         const parserRes = parseFile(fileData.type, file.content, getReferenceData(fileData.type), osType)
         const { formattedContent, contentInApp, tree, nodeMaxUid, info } = parserRes
 
@@ -145,10 +145,15 @@ export default function Process(props: ProcessProps) {
           // do nothing
         }
 
-        if (updateOpt.from === 'file') {
-          setNodeMaxUid(Number(nodeMaxUid))
-        }
+        setNodeMaxUid(Number(nodeMaxUid))
+      } else if (updateOpt.from === 'hms') {
+
+      } else if (updateOpt.from === 'code') {
+        setCodeEditing(false)
+      } else {
+        // do nothing
       }
+
 
       setFFNode(_file)
       setFileInfo(_fileInfo)

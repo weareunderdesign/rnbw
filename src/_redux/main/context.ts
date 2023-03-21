@@ -36,6 +36,9 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   fsPending: false,
   setFSPending: (pending: boolean) => { },
 
+  codeEditing: false,
+  setCodeEditing: (editing: boolean) => { },
+
   messages: [],
   addMessage: (message: TToast) => { },
   removeMessage: (index: number) => { },

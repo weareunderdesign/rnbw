@@ -24,6 +24,7 @@ import {
   TFileNodeData,
   THtmlNodeData,
   TNode,
+  TNodeTreeData,
   TNodeUid,
 } from '@_node/index';
 import {
@@ -73,7 +74,7 @@ export default function CodeView(props: CodeViewProps) {
     currentCommand, setCurrentCommand, cmdkOpen, setCmdkOpen, cmdkPages, setCmdkPages, cmdkPage,
 
     // global
-    pending, setPending, messages, addMessage, removeMessage,
+    pending, setPending, messages, addMessage, removeMessage, codeEditing, setCodeEditing,
 
     // reference
     htmlReferenceData, cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions, cmdkReferenceAdd,
@@ -99,53 +100,57 @@ export default function CodeView(props: CodeViewProps) {
   // const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
   const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
 
+  // -------------------------------------------------------------- references --------------------------------------------------------------
+  // references
+  const monacoRef = useRef<monaco.editor.IEditor | null>(null)
+  const decorationCollectionRef = useRef<monaco.editor.IEditorDecorationsCollection>()
+  const codeChangeDecorationRef = useRef<Map<TNodeUid, monaco.editor.IModelDeltaDecoration[]>>(new Map<TNodeUid, monaco.editor.IModelDeltaDecoration[]>())
+  const validNodeTreeRef = useRef<TNodeTreeData>({})
+  const handleEditorDidMount = useCallback((editor: monaco.editor.IStandaloneCodeEditor, monaco: Monaco) => {
+    monacoRef.current = editor
+    decorationCollectionRef.current = editor.createDecorationsCollection()
+  }, [])
   // -------------------------------------------------------------- sync --------------------------------------------------------------
+  // build refernece
+  useEffect(() => {
+    validNodeTreeRef.current = JSON.parse(JSON.stringify(validNodeTree))
+  }, [validNodeTree])
   // file changed - clear history
   useEffect(() => {
     // need to clear the undo/redo history of the monaco-editor
-    /**
-         * Create an "undo stop" in the undo-redo stack.
-         */
-    // pushUndoStop(): boolean;
-    /**
-     * Remove the "undo stop" in the undo-redo stack.
-     */
-    // popUndoStop(): boolean;
   }, [file.uid])
   // focusedItem - code select
   const focusedItemRef = useRef<TNodeUid>('')
   useEffect(() => {
-    if (monacoRef.current === null) return
-
     if (focusedItemRef.current === focusedItem) return
+    if (!validNodeTree[focusedItem]) return
+
+    if (codeEditing) return
 
     const node = validNodeTree[focusedItem]
-    if (node === undefined) return
-
     const { startLineNumber, startColumn, endLineNumber, endColumn } = node.data as THtmlNodeData
 
-    const editor = monacoRef.current as monaco.editor.IEditor
-    editor.setSelection({
+    monacoRef.current?.setSelection({
       startLineNumber,
       startColumn,
       endLineNumber,
       endColumn,
     })
-    editor.revealRangeInCenter({
+    monacoRef.current?.revealRangeInCenter({
       startLineNumber,
       startColumn,
       endLineNumber,
       endColumn,
-    }, 1/* scrollType - smooth */)
+    }, 1)
 
     focusedItemRef.current = focusedItem
   }, [focusedItem])
-  // update editor's content
+  // file content change - set code
   useEffect(() => {
-    if (updateOpt.from === 'code') return
-
     const _file = ffTree[file.uid]
     if (!_file) return
+
+    if (updateOpt.from === 'code') return
 
     const fileData = _file.data as TFileNodeData
     codeContent.current = fileData.content
@@ -180,7 +185,7 @@ export default function CodeView(props: CodeViewProps) {
 
     return () => clearInterval(cursorDetectInterval)
   }, [detectFocusedNode])
-  // detect node of current selection/cursor
+  // detect node of current selection
   const [focusedNode, setFocusedNode] = useState<TNode>()
   useEffect(() => {
     if (!selection) return
@@ -188,20 +193,23 @@ export default function CodeView(props: CodeViewProps) {
     const _file = ffTree[file.uid]
     if (!_file) return
 
+    // this means, code view is already opened before file read
+    if (!validNodeTreeRef.current[RootNodeUid]) return
+
     if (selection) {
       let _uid: TNodeUid = ''
-      const uids = getSubNodeUidsByBfs(RootNodeUid, nodeTree)
+      const uids = getSubNodeUidsByBfs(RootNodeUid, validNodeTreeRef.current)
       uids.reverse()
       for (const uid of uids) {
-        const node = nodeTree[uid]
+        const node = validNodeTreeRef.current[uid]
         const nodeData = node.data as THtmlNodeData
         const { startLineNumber, startColumn, endLineNumber, endColumn } = nodeData
 
         const containFront = selection.startLineNumber === startLineNumber ?
-          selection.startColumn >= startColumn
+          selection.startColumn > startColumn
           : selection.startLineNumber > startLineNumber
         const containBack = selection.endLineNumber === endLineNumber ?
-          selection.endColumn <= endColumn
+          selection.endColumn < endColumn
           : selection.endLineNumber < endLineNumber
 
         if (containFront && containBack) {
@@ -210,27 +218,21 @@ export default function CodeView(props: CodeViewProps) {
         }
       }
       if (_uid !== '') {
-        const node = nodeTree[_uid]
-        setFocusedNode(node)
+        const node = validNodeTreeRef.current[_uid]
+        setFocusedNode(JSON.parse(JSON.stringify(node)))
       }
     }
   }, [selection])
-  const isFirstTime = useRef<boolean>(true)
   useEffect(() => {
     if (focusedNode) {
-      if (isFirstTime.current) {
-        isFirstTime.current = false
-        return
-      }
-
       addRunningActions(['codeView-focus'])
 
       // expand path to the uid
       const _expandedItems: TNodeUid[] = []
-      let node = nodeTree[focusedNode.uid]
+      let node = validNodeTree[focusedNode.uid]
       while (node.uid !== RootNodeUid) {
         _expandedItems.push(node.uid)
-        node = nodeTree[node.parentUid as TNodeUid]
+        node = validNodeTree[node.parentUid as TNodeUid]
       }
       _expandedItems.shift()
       dispatch(expandFNNode(_expandedItems))
@@ -247,7 +249,7 @@ export default function CodeView(props: CodeViewProps) {
   const codeContent = useRef<string>('')
   const reduxTimeout = useRef<NodeJS.Timeout | null>(null)
   const saveFileContentToRedux = useCallback(() => {
-    decorationsRef.current = []
+    // clear highlight
     decorationCollectionRef.current?.clear()
 
     const _file = ffTree[file.uid]
@@ -255,56 +257,142 @@ export default function CodeView(props: CodeViewProps) {
 
     const fileData = _file.data as TFileNodeData
 
-    if (fileData.content === codeContent.current) return
+    if (fileData.content === codeContent.current) {
+      validNodeTreeRef.current = JSON.parse(JSON.stringify(validNodeTree))
+      return
+    }
 
-    // console.log(fileData.content, codeContent.current)
+    for (const codeChange of codeChangeDecorationRef.current.entries()) {
+      const uid = codeChange[0]
+      const range = codeChange[1][0].range
+
+      console.log(uid, range)
+    }
+
 
     // dispatch(setCurrentFileContent(codeContent.current))
 
-    // addRunningActions(['processor-updateOpt'])
-    // setUpdateOpt({ parse: true, from: 'code' })
+    addRunningActions(['processor-updateOpt'])
+    setUpdateOpt({ parse: true, from: 'code' })
 
     reduxTimeout.current = null
   }, [ffTree, file.uid])
   const handleEditorChange = useCallback((value: string | undefined, ev: monaco.editor.IModelContentChangedEvent) => {
     if (!focusedNode) return
 
-    const change = ev.changes[0]
-    const changedRange: monaco.IRange = true ? (focusedNode.data as THtmlNodeData) : {
-      startLineNumber: change.range.startLineNumber,
-      startColumn: change.range.startColumn,
-      endLineNumber: change.range.startLineNumber + change.text.split(ev.eol).length - 1,
-      endColumn: change.text.split(ev.eol).length === 1 ? change.range.startColumn + change.text.length : change.text.split(ev.eol).pop()?.length || 0,
+    // get changed part
+    const { eol } = ev
+    const { range: o_range, text: changedCode } = ev.changes[0]
+    const o_rowCount = o_range.endLineNumber - o_range.startLineNumber + 1
+
+    const changedCodeArr = changedCode.split(eol)
+    const n_rowCount = changedCodeArr.length
+    const n_range: monaco.IRange = {
+      startLineNumber: o_range.startLineNumber,
+      startColumn: o_range.startColumn,
+      endLineNumber: o_range.startLineNumber + n_rowCount - 1,
+      endColumn: n_rowCount === 1 ? o_range.startColumn + changedCode.length : (changedCodeArr.pop() as string).length,
     }
 
-    console.log(change, changedRange)
+    const columnOffset = (o_rowCount === 1 && n_rowCount > 1 ? -1 : 1) * (n_range.endColumn - o_range.endColumn)
 
-    decorationsRef.current.push({
-      range: changedRange,
-      options: {
-        isWholeLine: true,
-        className: 'changedCode',
+    // update code range for node tree
+    const focusedNodeData = focusedNode.data as THtmlNodeData
+    const uids = getSubNodeUidsByBfs(RootNodeUid, validNodeTreeRef.current)
+    let completelyRemoved = false
+    uids.map(uid => {
+      const node = validNodeTreeRef.current[uid]
+      if (!node) return
+
+      const nodeData = node.data as THtmlNodeData
+      const { startLineNumber, startColumn, endLineNumber, endColumn } = nodeData
+
+      const containFront = focusedNodeData.startLineNumber === startLineNumber ?
+        focusedNodeData.startColumn >= startColumn
+        : focusedNodeData.startLineNumber > startLineNumber
+      const containBack = focusedNodeData.endLineNumber === endLineNumber ?
+        focusedNodeData.endColumn <= endColumn
+        : focusedNodeData.endLineNumber < endLineNumber
+
+      if (containFront && containBack) {
+        nodeData.endLineNumber += n_rowCount - o_rowCount
+        nodeData.endColumn += endLineNumber === o_range.endLineNumber ? columnOffset : 0
+
+        if (nodeData.endLineNumber === nodeData.startLineNumber && nodeData.endColumn === nodeData.startColumn) {
+          const parentNode = validNodeTreeRef.current[focusedNode.parentUid as TNodeUid]
+          parentNode.children = parentNode.children.filter(c_uid => c_uid !== focusedNode.uid)
+
+          const subNodeUids = getSubNodeUidsByBfs(focusedNode.uid, validNodeTreeRef.current)
+          subNodeUids.map(uid => {
+            codeChangeDecorationRef.current.delete(uid)
+            delete validNodeTreeRef.current[uid]
+          })
+
+          completelyRemoved = true
+        }
+      } else if (containBack) {
+        nodeData.startLineNumber += n_rowCount - o_rowCount
+        nodeData.startColumn += startLineNumber === o_range.endLineNumber ? columnOffset : 0
+        nodeData.endLineNumber += n_rowCount - o_rowCount
+        nodeData.endColumn += endLineNumber === o_range.endLineNumber ? columnOffset : 0
+      } else {
+        // do nothing
       }
     })
-    decorationCollectionRef.current?.set(decorationsRef.current)
+    if (!completelyRemoved) {
+      const subNodeUids = getSubNodeUidsByBfs(focusedNode.uid, validNodeTreeRef.current, false)
+      subNodeUids.map(uid => {
+        codeChangeDecorationRef.current.delete(uid)
+
+        const node = validNodeTreeRef.current[uid]
+        const nodeData = node.data as THtmlNodeData
+        nodeData.startLineNumber = 0
+        nodeData.startColumn = 0
+        nodeData.endLineNumber = 0
+        nodeData.endColumn = 0
+      })
+    }
+
+    // update decorations
+    const focusedNodeDecorations: monaco.editor.IModelDeltaDecoration[] = []
+    const focusedNodeCodeRange: monaco.IRange = validNodeTreeRef.current[focusedNode.uid].data as THtmlNodeData
+    if (!completelyRemoved) {
+      focusedNodeDecorations.push(
+        {
+          range: focusedNodeCodeRange,
+          options: {
+            isWholeLine: true,
+            className: 'focusedNodeCode',
+          }
+        },
+        {
+          range: n_range,
+          options: {
+            isWholeLine: false,
+            className: 'changedCode',
+          }
+        },
+      )
+    }
+    codeChangeDecorationRef.current.set(focusedNode.uid, focusedNodeDecorations)
+
+    // render decorations
+    const decorationsList = codeChangeDecorationRef.current.values()
+    const wholeDecorations: monaco.editor.IModelDeltaDecoration[] = []
+    for (const decorations of decorationsList) {
+      wholeDecorations.push(...decorations)
+    }
+    decorationCollectionRef.current?.set(wholeDecorations)
 
     // update redux with debounce
-    // codeContent.current = value || ''
+    codeContent.current = value || ''
 
     reduxTimeout.current !== null && clearTimeout(reduxTimeout.current)
     reduxTimeout.current = setTimeout(saveFileContentToRedux, CodeViewSyncDelay)
+
+    setCodeEditing(true)
   }, [saveFileContentToRedux, focusedNode])
-  // -------------------------------------------------------------- monaco-editor --------------------------------------------------------------
-  // instance
-  const monacoRef = useRef<monaco.editor.IEditor | null>(null)
-  const decorationsRef = useRef<monaco.editor.IModelDeltaDecoration[]>([])
-  const decorationCollectionRef = useRef<monaco.editor.IEditorDecorationsCollection>()
-  const handleEditorDidMount = useCallback((editor: monaco.editor.IStandaloneCodeEditor, monaco: Monaco) => {
-    // here is another way to get monaco instance
-    // you can also store it in `useRef` for further usage
-    monacoRef.current = editor
-    decorationCollectionRef.current = editor.createDecorationsCollection()
-  }, [])
+  // -------------------------------------------------------------- monaco-editor options --------------------------------------------------------------
   // tabSize
   const [_tabSize, _setTabSize] = useState<number>(DefaultTabSize)
   useEffect(() => {
@@ -332,7 +420,7 @@ export default function CodeView(props: CodeViewProps) {
       _theme === 'Light' ? setTheme('light') :
         setSystemTheme()
   }, [_theme])
-  // -------------------------------------------------------------- own --------------------------------------------------------------
+  // -------------------------------------------------------------- other --------------------------------------------------------------
   // panel focus handler
   const onPanelClick = useCallback((e: React.MouseEvent) => {
     setActivePanel('code')
