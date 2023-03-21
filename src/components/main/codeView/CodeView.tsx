@@ -27,12 +27,15 @@ import {
   TNodeUid,
 } from '@_node/index';
 import {
+  expandFNNode,
   fnSelector,
+  focusFNNode,
   getActionGroupIndexSelector,
   globalSelector,
   hmsInfoSelector,
   MainContext,
   navigatorSelector,
+  selectFNNode,
 } from '@_redux/main';
 import Editor, {
   loader,
@@ -102,9 +105,11 @@ export default function CodeView(props: CodeViewProps) {
     // need to clear the undo/redo history of the monaco-editor
   }, [file.uid])
   // focusedItem - code select
+  const focusedItemRef = useRef<TNodeUid>('')
   useEffect(() => {
-    // validate
     if (monacoRef.current === null) return
+
+    if (focusedItemRef.current === focusedItem) return
 
     const node = validNodeTree[focusedItem]
     if (node === undefined) return
@@ -124,6 +129,8 @@ export default function CodeView(props: CodeViewProps) {
       endLineNumber,
       endColumn,
     }, 1/* scrollType - smooth */)
+
+    focusedItemRef.current = focusedItem
   }, [focusedItem])
   // update editor's content
   useEffect(() => {
@@ -135,10 +142,96 @@ export default function CodeView(props: CodeViewProps) {
     const fileData = _file.data as TFileNodeData
     codeContent.current = fileData.content
   }, [ffTree[file.uid]])
-  // code -> content
+  // watch code selection in the editor
+  const [selection, setSelection] = useState<CodeSelection | null>({
+    startLineNumber: 0,
+    startColumn: 0,
+    endLineNumber: 0,
+    endColumn: 0,
+  })
+  const detectFocusedNode = useCallback(() => {
+    const _selection = monacoRef.current?.getSelection()
+    if (_selection) {
+      if (!selection || _selection.startLineNumber !== selection.startLineNumber || _selection.startColumn !== selection.startColumn
+        || _selection.endLineNumber !== selection.endLineNumber || _selection.endColumn !== selection.endColumn) {
+        setSelection({
+          startLineNumber: _selection.startLineNumber,
+          startColumn: _selection.startColumn,
+          endLineNumber: _selection.endLineNumber,
+          endColumn: _selection.endColumn,
+        })
+      }
+    } else {
+      setSelection(null)
+    }
+  }, [selection])
+  useEffect(() => {
+    const cursorDetectInterval = setInterval(() => {
+      detectFocusedNode()
+    }, 0)
+
+    return () => clearInterval(cursorDetectInterval)
+  }, [detectFocusedNode])
+  // detect node of current selection/cursor
+  const [focusedNode, setFocusedNode] = useState<TNode>()
+  useEffect(() => {
+    if (!selection) return
+
+    const _file = ffTree[file.uid]
+    if (!_file) return
+
+    if (selection) {
+      let _uid: TNodeUid = ''
+      const uids = getSubNodeUidsByBfs(RootNodeUid, nodeTree)
+      uids.reverse()
+      for (const uid of uids) {
+        const node = nodeTree[uid]
+        const nodeData = node.data as THtmlNodeData
+        const { startLineNumber, startColumn, endLineNumber, endColumn } = nodeData
+
+        const containFront = selection.startLineNumber === startLineNumber ?
+          selection.startColumn >= startColumn
+          : selection.startLineNumber > startLineNumber
+        const containBack = selection.endLineNumber === endLineNumber ?
+          selection.endColumn <= endColumn
+          : selection.endLineNumber < endLineNumber
+
+        if (containFront && containBack) {
+          _uid = uid
+          break
+        }
+      }
+      if (_uid !== '') {
+        const node = nodeTree[_uid]
+        setFocusedNode(node)
+      }
+    }
+  }, [selection])
+  useEffect(() => {
+    if (focusedNode) {
+      addRunningActions(['codeView-focus'])
+
+      // expand path to the uid
+      const _expandedItems: TNodeUid[] = []
+      let node = nodeTree[focusedNode.uid]
+      while (node.uid !== RootNodeUid) {
+        _expandedItems.push(node.uid)
+        node = nodeTree[node.parentUid as TNodeUid]
+      }
+      _expandedItems.shift()
+      dispatch(expandFNNode(_expandedItems))
+
+      dispatch(focusFNNode(focusedNode.uid))
+      dispatch(selectFNNode([focusedNode.uid]))
+
+      focusedItemRef.current = focusedNode.uid
+
+      removeRunningActions(['codeView-focus'])
+    }
+  }, [focusedNode])
+  // code edit - parse
   const codeContent = useRef<string>('')
   const reduxTimeout = useRef<NodeJS.Timeout | null>(null)
-  const [nodeToRender, setNodeToRender] = useState<TNode>()
   const saveFileContentToRedux = useCallback(() => {
     const _file = ffTree[file.uid]
     if (!_file) return
@@ -147,14 +240,14 @@ export default function CodeView(props: CodeViewProps) {
 
     if (fileData.content === codeContent.current) return
 
-    console.log(nodeToRender, codeContent.current)
+    console.log(focusedNode)
 
     // dispatch(setCurrentFileContent(codeContent.current))
-    addRunningActions(['processor-updateOpt'])
-    setUpdateOpt({ parse: true, from: 'code' })
+    // addRunningActions(['processor-updateOpt'])
+    // setUpdateOpt({ parse: true, from: 'code' })
 
     reduxTimeout.current = null
-  }, [ffTree, file.uid, nodeToRender])
+  }, [ffTree, file.uid, focusedNode])
   const handleEditorChange = useCallback((value: string | undefined, ev: monaco.editor.IModelContentChangedEvent) => {
     // update redux with debounce
     codeContent.current = value || ''
@@ -202,73 +295,6 @@ export default function CodeView(props: CodeViewProps) {
   const onPanelClick = useCallback((e: React.MouseEvent) => {
     setActivePanel('code')
   }, [])
-  // watch code selection in the editor
-  const [selection, setSelection] = useState<CodeSelection | null>({
-    startLineNumber: 0,
-    startColumn: 0,
-    endLineNumber: 0,
-    endColumn: 0,
-  })
-  const detectFocusedNode = useCallback(() => {
-    const _selection = monacoRef.current?.getSelection()
-    if (_selection) {
-      if (!selection || _selection.startLineNumber !== selection.startLineNumber || _selection.startColumn !== selection.startColumn
-        || _selection.endLineNumber !== selection.endLineNumber || _selection.endColumn !== selection.endColumn) {
-        setSelection({
-          startLineNumber: _selection.startLineNumber,
-          startColumn: _selection.startColumn,
-          endLineNumber: _selection.endLineNumber,
-          endColumn: _selection.endColumn,
-        })
-      }
-    } else {
-      setSelection(null)
-    }
-  }, [selection])
-  useEffect(() => {
-    const cursorDetectInterval = setInterval(() => {
-      detectFocusedNode()
-    }, 0)
-
-    return () => clearInterval(cursorDetectInterval)
-  }, [detectFocusedNode])
-  // detect root node of current selection/cursor
-  useEffect(() => {
-    if (!selection) return
-
-    const _file = ffTree[file.uid]
-    if (!_file) return
-
-    const fileData = _file.data as TFileNodeData
-
-    if (selection) {
-      let _uid: TNodeUid = ''
-      const uids = getSubNodeUidsByBfs(RootNodeUid, validNodeTree)
-      uids.reverse()
-      for (const uid of uids) {
-        const node = validNodeTree[uid]
-        const nodeData = node.data as THtmlNodeData
-        const { startLineNumber, startColumn, endLineNumber, endColumn } = nodeData
-
-        const containFront = selection.startLineNumber === startLineNumber ?
-          selection.startColumn >= startColumn
-          : selection.startLineNumber > startLineNumber
-        const containBack = selection.endLineNumber === endLineNumber ?
-          selection.endColumn <= endColumn
-          : selection.endLineNumber < endLineNumber
-
-        if (containFront && containBack) {
-          _uid = uid
-          break
-        }
-      }
-      if (_uid !== '') {
-        const node = validNodeTree[_uid]
-        const rootNode = validNodeTree[node.parentUid as TNodeUid]
-        setNodeToRender(rootNode)
-      }
-    }
-  }, [selection])
 
   return <>
     <Panel minSize={0}>

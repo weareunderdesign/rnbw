@@ -391,8 +391,6 @@ export default function MainPage(props: MainPageProps) {
       }
     })()
   }, [file.content]) */
-  // -------------------------------------------------------------- routing --------------------------------------------------------------
-
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
   // key event listener
   const cb_onKeyDown = useCallback((e: KeyboardEvent) => {
@@ -447,7 +445,6 @@ export default function MainPage(props: MainPageProps) {
 
   // command detect & do actions
   useEffect(() => {
-    // cmdk actions handle
     switch (currentCommand.action) {
       case 'Clear':
         onClear()
@@ -473,8 +470,6 @@ export default function MainPage(props: MainPageProps) {
         return
     }
   }, [currentCommand])
-  // -------------------------------------------------------------- cmdk --------------------------------------------------------------
-
   // -------------------------------------------------------------- handlers --------------------------------------------------------------
   // save all of the changed files
   const onSaveAll = useCallback(async () => {
@@ -593,14 +588,11 @@ Your changes will be lost if you don't save them.`
   useEffect(() => {
     futureLength === 0 && fileAction.type !== null && dispatch(setFileAction({ type: null }))
   }, [actionGroupIndex])
-
-  // toogle code view
+  // toogle code view visible
   const [showCodeView, setShowCodeView] = useState(false)
-  const toogleCodeView = async () => {
+  const toogleCodeView = useCallback(() => {
     setShowCodeView(!showCodeView)
-  }
-  // -------------------------------------------------------------- handlers --------------------------------------------------------------
-
+  }, [showCodeView])
   // -------------------------------------------------------------- other --------------------------------------------------------------
   // detect OS & fetch reference - html. Jumpstart.csv, Actions.csv
   useEffect(() => {
@@ -783,7 +775,6 @@ Your changes will be lost if you don't save them.`
 
     removeRunningActions(['detect-os', 'reference-files', 'reference-html-elements', 'reference-cmdk-jumpstart', 'reference-cmdk-actions'], false)
   }, [])
-
   // newbie flag
   useEffect(() => {
     const isNewbie = localStorage.getItem("newbie")
@@ -794,7 +785,6 @@ Your changes will be lost if you don't save them.`
       localStorage.setItem("newbie", 'false')
     }
   }, [])
-
   // theme
   const setSystemTheme = useCallback(() => {
     setTheme('System')
@@ -841,28 +831,11 @@ Your changes will be lost if you don't save them.`
 
     return () => window.matchMedia("(prefers-color-scheme: dark)").removeEventListener('change', setSystemTheme)
   }, [])
-
-  // active panel/element
-  const activeElement = document.activeElement
+  // web-tab close event handler
   useEffect(() => {
-    if (activeElement === null) return
-
-    const id = activeElement.id
-    if (id.startsWith('FileTreeView') === true) {
-      setActivePanel('file')
-    } else if (id.startsWith('NodeTreeView') === true) {
-      setActivePanel('node')
-    } else {
-      // do nothing
-    }
-  }, [activeElement])
-
-  // editor-close event handler
-  useEffect(() => {
-    const uids = Object.keys(ffTree)
-
     let changed = false
 
+    const uids = Object.keys(ffTree)
     for (const uid of uids) {
       const node = ffTree[uid]
       const nodeData = node.data as TFileNodeData
@@ -881,7 +854,6 @@ Your changes will be lost if you don't save them.`
       window.onbeforeunload = null
     }
   }, [ffTree])
-  // -------------------------------------------------------------- other --------------------------------------------------------------
 
   return <>
     {/* wrap with the context */}

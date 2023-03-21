@@ -353,6 +353,8 @@ export const IFrame = (props: IFrameProps) => {
         }
       }
     }
+
+    setActivePanel('stage')
   }, [osType, focusedItem, setFocusedSelectedItems, nodeTree])
   const onMouseUp = useCallback((e: MouseEvent) => { }, [])
   const onDblClick = useCallback((e: MouseEvent) => { }, [])

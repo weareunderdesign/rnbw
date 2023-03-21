@@ -118,7 +118,9 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     if (focusedItemRef.current === focusedItem) return
 
     const focusedElement = document.querySelector(`#NodeTreeView-${focusedItem}`)
-    focusedElement?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' })
+    setTimeout(() => focusedElement?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' }), 0)
+
+    focusedItemRef.current = focusedItem
   }, [focusedItem])
   // build nodeTreeViewData
   const nodeTreeViewData = useMemo(() => {
@@ -514,6 +516,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                         e.shiftKey ? props.context.selectUpTo() :
                           e.ctrlKey ? (props.context.isSelected ? props.context.unselectItem() : props.context.addToSelectedItems()) :
                             (props.context.selectItem())
+
+                        setActivePanel('node')
                       }}
                       onFocus={() => { }}
                       onMouseEnter={() => setFNHoveredItem(props.item.index as TNodeUid)}
