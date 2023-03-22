@@ -126,7 +126,7 @@ export const IFrame = (props: IFrameProps) => {
     if (focusedItemRef.current === focusedItem) return
 
     const newFocusedElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${focusedItem}"]`)
-    setTimeout(() => newFocusedElement?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' }), 100)
+    setTimeout(() => newFocusedElement?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' }), 0)
 
     focusedItemRef.current = focusedItem
   }, [focusedItem])

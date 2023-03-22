@@ -107,6 +107,7 @@ export default function CodeView(props: CodeViewProps) {
   // -------------------------------------------------------------- references --------------------------------------------------------------
   // references
   const monacoRef = useRef<monaco.editor.IEditor | null>(null)
+  const codeContent = useRef<string>('')
   const decorationCollectionRef = useRef<monaco.editor.IEditorDecorationsCollection>()
   const codeChangeDecorationRef = useRef<Map<TNodeUid, monaco.editor.IModelDeltaDecoration[]>>(new Map<TNodeUid, monaco.editor.IModelDeltaDecoration[]>())
   const validNodeTreeRef = useRef<TNodeTreeData>({})
@@ -115,14 +116,14 @@ export default function CodeView(props: CodeViewProps) {
     decorationCollectionRef.current = editor.createDecorationsCollection()
   }, [])
   // -------------------------------------------------------------- sync --------------------------------------------------------------
-  // build refernece
-  useEffect(() => {
-    validNodeTreeRef.current = JSON.parse(JSON.stringify(validNodeTree))
-  }, [validNodeTree])
   // file changed - clear history
   useEffect(() => {
     // need to clear the undo/redo history of the monaco-editor
   }, [file.uid])
+  // build refernece
+  useEffect(() => {
+    validNodeTreeRef.current = JSON.parse(JSON.stringify(validNodeTree))
+  }, [validNodeTree])
   // focusedItem - code select
   const focusedItemRef = useRef<TNodeUid>('')
   const revealed = useRef<boolean>(false)
@@ -168,7 +169,7 @@ export default function CodeView(props: CodeViewProps) {
     endLineNumber: 0,
     endColumn: 0,
   })
-  const detectFocusedNode = useCallback(() => {
+  const updateSelection = useCallback(() => {
     const _selection = monacoRef.current?.getSelection()
     if (_selection) {
       if (!selection || _selection.startLineNumber !== selection.startLineNumber || _selection.startColumn !== selection.startColumn
@@ -185,9 +186,9 @@ export default function CodeView(props: CodeViewProps) {
     }
   }, [selection])
   useEffect(() => {
-    const cursorDetectInterval = setInterval(() => detectFocusedNode(), 0)
+    const cursorDetectInterval = setInterval(() => updateSelection(), 0)
     return () => clearInterval(cursorDetectInterval)
-  }, [detectFocusedNode])
+  }, [updateSelection])
   // detect node of current selection
   const [focusedNode, setFocusedNode] = useState<TNode>()
   useEffect(() => {
@@ -255,12 +256,12 @@ export default function CodeView(props: CodeViewProps) {
     }
   }, [focusedNode])
   // code edit - highlight/parse
-  const codeContent = useRef<string>('')
   const reduxTimeout = useRef<NodeJS.Timeout | null>(null)
   const saveFileContentToRedux = useCallback(() => {
     // clear highlight
     decorationCollectionRef.current?.clear()
 
+    // skip same content
     const _file = ffTree[file.uid]
     const fileData = _file.data as TFileNodeData
     if (fileData.content === codeContent.current) {
@@ -271,9 +272,9 @@ export default function CodeView(props: CodeViewProps) {
       return
     }
 
+    // get code changes
     const currentCode = codeContent.current
     const currentCodeArr = currentCode.split(getLineBreakCharacter(osType))
-
     const codeChanges: TCodeChange[] = []
     for (const codeChange of codeChangeDecorationRef.current.entries()) {
       const uid = codeChange[0]
@@ -289,16 +290,16 @@ export default function CodeView(props: CodeViewProps) {
 
       codeChanges.push({ uid, content })
     }
-
     setCodeChanges(codeChanges)
 
+    // update
     addRunningActions(['processor-updateOpt'])
     setUpdateOpt({ parse: true, from: 'code' })
 
     codeChangeDecorationRef.current.clear()
 
     reduxTimeout.current = null
-  }, [ffTree, file.uid, osType])
+  }, [ffTree, file.uid, validNodeTree, osType])
   const handleEditorChange = useCallback((value: string | undefined, ev: monaco.editor.IModelContentChangedEvent) => {
     if (!focusedNode) return
 
@@ -357,8 +358,6 @@ export default function CodeView(props: CodeViewProps) {
         nodeData.startColumn += startLineNumber === o_range.endLineNumber ? columnOffset : 0
         nodeData.endLineNumber += n_rowCount - o_rowCount
         nodeData.endColumn += endLineNumber === o_range.endLineNumber ? columnOffset : 0
-      } else {
-        // do nothing
       }
     })
     if (!completelyRemoved) {

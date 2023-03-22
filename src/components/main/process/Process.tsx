@@ -15,10 +15,7 @@ import {
   RainbowAppName,
   RootNodeUid,
 } from '@_constants/main';
-import {
-  getSubNodeUidsByBfs,
-  getSubNodeUidsByDfs,
-} from '@_node/apis';
+import { getSubNodeUidsByBfs } from '@_node/apis';
 import {
   parseFile,
   serializeFile,
@@ -48,7 +45,6 @@ import {
   selectFNNode,
   setCurrentFileContent,
 } from '@_redux/main';
-import { getLineBreakCharacter } from '@_services/global';
 import { TFileType } from '@_types/main';
 
 import { ProcessProps } from './types';
@@ -134,7 +130,7 @@ export default function Process(props: ProcessProps) {
 
       if (updateOpt.from === 'file') {
         const parserRes = parseFile(fileData.type, file.content, getReferenceData(fileData.type), osType)
-        const { formattedContent, contentInApp, tree, nodeMaxUid: newNodeMaxUid, info } = parserRes
+        const { formattedContent, contentInApp, tree, nodeMaxUid: newNodeMaxUid } = parserRes
 
         _nodeTree = tree
         _nodeMaxUid = Number(newNodeMaxUid)
@@ -142,20 +138,18 @@ export default function Process(props: ProcessProps) {
         fileData.content = formattedContent
         fileData.contentInApp = contentInApp
         fileData.changed = fileData.content !== fileData.orgContent
-      } else if (updateOpt.from === 'hms') {
-        // do nothing
       } else if (updateOpt.from === 'code') {
         if (fileData.type === 'html') {
           if (codeChanges[0].uid === RootNodeUid) {
             // do nothing for now
           } else {
+            // side effects
             codeChanges.map(codeChange => {
-              // ----------- node tree side effect -----------
+              // ---------------------- node tree side effect ----------------------
               // parse code part
               const parserRes = parseHtmlCodePart(codeChange.content, htmlReferenceData, osType, String(_nodeMaxUid) as TNodeUid)
               const { formattedContent, tree, nodeMaxUid: newNodeMaxUid } = parserRes
               _nodeMaxUid = Number(newNodeMaxUid)
-
               // remove org nodes
               const o_node = _nodeTree[codeChange.uid]
               const o_parentNode = _nodeTree[o_node.parentUid as TNodeUid]
@@ -180,8 +174,7 @@ export default function Process(props: ProcessProps) {
                 const nodeData = node.data as THtmlNodeData
                 nodeData.valid && nodeUids.push(uid)
               })
-
-              // ----------- iframe side effect -----------
+              // ---------------------- iframe side effect ----------------------
               // build element to replace
               let nodeUidIndex = -1
               const divElement = document.createElement('div')
@@ -196,59 +189,25 @@ export default function Process(props: ProcessProps) {
                   nodes.push(childNode)
                 })
               }
-
               // replace element to iframe
               const element = document.querySelector('iframe')?.contentWindow?.window.document.querySelector(`[${NodeInAppAttribName}="${codeChange.uid}"]`)
-              element && element?.parentElement?.insertBefore(divElement.childNodes[0], element?.nextSibling)
+              element?.parentElement?.insertBefore(divElement.childNodes[0], element.nextSibling)
               element?.remove()
             })
-
-            // update file / set html, htmlInApp, code range for the new node tree
+            // rebuild from new tree
             const { html: formattedContent, htmlInApp: contentInApp } = serializeHtml(_nodeTree, htmlReferenceData, osType)
             fileData.content = formattedContent
             fileData.contentInApp = contentInApp
             fileData.changed = fileData.content !== fileData.orgContent
-            writeFile(fileData.path, contentInApp, () => {
-              // wrote file content
-            })
-
-            const detected: Map<string, number> = new Map<string, number>()
-            const uids = getSubNodeUidsByDfs(RootNodeUid, _nodeTree)
-            uids.map((uid) => {
-              const node = _nodeTree[uid]
-              if (!node.data.valid) return
-
-              const { html } = node.data as THtmlNodeData
-              const htmlArr = formattedContent.split(html)
-
-              const detectedCount = detected.get(html) || 0
-              const beforeHtml = htmlArr.slice(0, detectedCount + 1).join(html)
-              detected.set(html, detectedCount + 1)
-
-              const beforeHtmlArr = beforeHtml.split(getLineBreakCharacter(osType))
-              const startLineNumber = beforeHtmlArr.length
-              const startColumn = (beforeHtmlArr.pop()?.length || 0) + 1
-
-              const contentArr = html.split(getLineBreakCharacter(osType))
-              const endLineNumber = startLineNumber + contentArr.length - 1
-              const endColumn = (contentArr.length === 1 ? startColumn : 1) + (contentArr.pop()?.length || 0)
-
-              node.data = {
-                ...node.data,
-                startLineNumber,
-                startColumn,
-                endLineNumber,
-                endColumn,
-              }
-            })
-
-            console.log(contentInApp, _nodeTree, _nodeMaxUid, _file)
           }
         } else {
           // do nothing
         }
 
         setCodeEditing(false)
+      } else if (updateOpt.from === 'hms') {
+        const content = file.content
+        console.log(file.content)
       } else {
         // do nothing
       }
