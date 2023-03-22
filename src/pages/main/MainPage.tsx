@@ -139,7 +139,7 @@ export default function MainPage(props: MainPageProps) {
     if (!found) return
 
     if (noRunningAction()) {
-      LogAllow && effect && console.log('action done', actionNames)
+      LogAllow && effect && console.log('hms added', actionNames)
       setPending(false)
       effect && dispatch(increaseActionGroupIndex())
     }

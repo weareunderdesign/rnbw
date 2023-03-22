@@ -409,6 +409,7 @@ export default function Process(props: ProcessProps) {
     if (updateOpt.parse === null && updateOpt.from === 'file') {
       dispatch(clearFNState())
       dispatch(expandFNNode(Object.keys(validNodeTree).slice(0, 50)))
+      removeRunningActions(['processor-validNodeTree'])
     } else if (updateOpt.parse === null && updateOpt.from === 'code') {
       const _focusedItem: TNodeUid = validNodeTree[focusedItem] === undefined ? newFocusedNodeUid : focusedItem
       const _expandedItems = expandedItems.filter((uid) => {
@@ -421,11 +422,10 @@ export default function Process(props: ProcessProps) {
       dispatch(focusFNNode(_focusedItem))
       dispatch(expandFNNode(_expandedItems))
       dispatch(selectFNNode(_selectedItems))
+      removeRunningActions(['processor-validNodeTree'])
     } else {
-      // do nothing
+      removeRunningActions(['processor-validNodeTree'], false)
     }
-
-    removeRunningActions(['processor-validNodeTree'])
   }, [validNodeTree])
 
   return useMemo(() => {
