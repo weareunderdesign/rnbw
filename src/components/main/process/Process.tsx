@@ -127,11 +127,14 @@ export default function Process(props: ProcessProps) {
   // processor-updateOpt
   useEffect(() => {
     if (updateOpt.parse === true) {
+      let onlyRenderViewState = false
+
       // parse file content
       let _nodeTree: TNodeTreeData = JSON.parse(JSON.stringify(nodeTree))
       let _nodeMaxUid = nodeMaxUid
       let _fileInfo: TFileInfo
       let _hasSameScript = true
+      let _newFocusedNodeUid = ''
 
       const _file = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode
       const fileData = _file.data as TFileNodeData
@@ -172,8 +175,6 @@ export default function Process(props: ProcessProps) {
 
             _hasSameScript = false
           } else {
-            let _newFocusedNodeUid = ''
-
             // side effects
             codeChanges.map(codeChange => {
               // ---------------------- node tree side effect ----------------------
@@ -234,8 +235,6 @@ export default function Process(props: ProcessProps) {
             fileData.content = formattedContent
             fileData.contentInApp = contentInApp
             fileData.changed = fileData.content !== fileData.orgContent
-
-            setNewFocusedNodeUid(_newFocusedNodeUid)
           }
         } else {
           // do nothing
@@ -243,6 +242,23 @@ export default function Process(props: ProcessProps) {
 
         setCodeEditing(false)
       } else if (updateOpt.from === 'hms') {
+        if (file.content === fileData.contentInApp) {
+          // no need to build new node tree
+          onlyRenderViewState = true
+        } else {
+          // parse hms content keeping node uids
+          const parserRes = parseFile(fileData.type, file.content, getReferenceData(fileData.type), osType, true, String(_nodeMaxUid) as TNodeUid)
+          const { formattedContent, contentInApp, tree, nodeMaxUid: newNodeMaxUid } = parserRes
+
+          _nodeTree = tree
+          _nodeMaxUid = Number(newNodeMaxUid)
+
+          fileData.content = formattedContent
+          fileData.contentInApp = contentInApp
+          fileData.changed = fileData.content !== fileData.orgContent
+        }
+
+        _newFocusedNodeUid = focusedItem
       } else {
         // do nothing
       }
@@ -317,27 +333,30 @@ export default function Process(props: ProcessProps) {
       } else {
         // do nothing
       }
-      // set new file info
-      setFileInfo(_fileInfo)
-      setHasSameScript(_hasSameScript)
 
-      // update idb
-      setFSPending(true)
-      writeFile(fileData.path, fileData.contentInApp as string, () => {
-        if (fileData.type === 'html') {
-          setIFrameSrc(`rnbw${fileData.path}`)
-        } else {
-          // do nothing
-        }
-        setFSPending(false)
-      })
-      // update context
-      setFFNode(_file)
-      addRunningActions(['processor-nodeTree'])
-      setNodeTree(_nodeTree)
-      setNodeMaxUid(_nodeMaxUid)
-      // update redux
-      dispatch(setCurrentFileContent(fileData.contentInApp as string))
+      if (!onlyRenderViewState) {
+        // update idb
+        setFSPending(true)
+        writeFile(fileData.path, fileData.contentInApp as string, () => {
+          if (fileData.type === 'html') {
+            setIFrameSrc(`rnbw${fileData.path}`)
+          } else {
+            // do nothing
+          }
+          setFSPending(false)
+        })
+        // update context
+        setFFNode(_file)
+        addRunningActions(['processor-nodeTree'])
+        setNodeTree(_nodeTree)
+        setNodeMaxUid(_nodeMaxUid)
+        setFileInfo(_fileInfo)
+        setHasSameScript(_hasSameScript)
+        // update redux
+        dispatch(setCurrentFileContent(fileData.contentInApp as string))
+      }
+      // select focused node in code view
+      setNewFocusedNodeUid(_newFocusedNodeUid)
 
       setUpdateOpt({ parse: null, from: updateOpt.from })
     } else if (updateOpt.parse === false) {
@@ -406,6 +425,7 @@ export default function Process(props: ProcessProps) {
   }, [nodeTree])
   // processor-validNodeTree
   useEffect(() => {
+    console.log('processor-validNodeTree')
     if (updateOpt.parse === null && updateOpt.from === 'file') {
       dispatch(clearFNState())
       dispatch(expandFNNode(Object.keys(validNodeTree).slice(0, 50)))

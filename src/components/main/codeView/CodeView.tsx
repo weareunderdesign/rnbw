@@ -127,9 +127,11 @@ export default function CodeView(props: CodeViewProps) {
     validNodeTreeRef.current = JSON.parse(JSON.stringify(validNodeTree))
 
     // set new focused node
-    setFocusedNode(validNodeTree[newFocusedNodeUid])
-    focusedItemRef.current = newFocusedNodeUid
-    setNewFocusedNodeUid('')
+    if (newFocusedNodeUid !== '') {
+      setFocusedNode(validNodeTree[newFocusedNodeUid])
+      focusedItemRef.current = newFocusedNodeUid
+      setNewFocusedNodeUid('')
+    }
   }, [validNodeTree])
   // file content change - set code
   useEffect(() => {
