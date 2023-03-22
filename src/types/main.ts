@@ -40,7 +40,7 @@ export type TFile = {
   content: string,
 }
 
-export type TFileInfo = THtmlPageSettings | null
+export type TFileInfo = THtmlPageSettings | null | undefined
 
 /**
  * session

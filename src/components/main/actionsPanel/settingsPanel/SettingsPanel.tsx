@@ -59,15 +59,13 @@ export default function SettingsPanel(props: SettingsPanelProps) {
     panelResizing,
   } = useContext(MainContext)
 
-  // -------------------------------------------------------------- other --------------------------------------------------------------
+  // -------------------------------------------------------------- own --------------------------------------------------------------
+  // panel size handler
+  const panelSize = useMemo(() => 200 / window.innerHeight * 100, [])
   // panel focus handler
   const onPanelClick = useCallback((e: React.MouseEvent) => {
     setActivePanel('settings')
   }, [])
-
-  // panel size handler
-  const panelSize = useMemo(() => 200 / window.innerHeight * 100, [])
-  // -------------------------------------------------------------- other --------------------------------------------------------------
 
   return useMemo(() => {
     return <>

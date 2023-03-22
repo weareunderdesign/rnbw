@@ -53,7 +53,7 @@ export type TFileParserResponse = {
   contentInApp: string,
   tree: TNodeTreeData,
   nodeMaxUid: TNodeUid,
-  info: TFileInfo,
+  info?: TFileInfo,
 }
 
 
