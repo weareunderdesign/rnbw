@@ -128,6 +128,7 @@ export default function CodeView(props: CodeViewProps) {
     // set new focused node
     setFocusedNode(validNodeTree[newFocusedNodeUid])
     focusedItemRef.current = newFocusedNodeUid
+    setNewFocusedNodeUid('')
   }, [validNodeTree])
   // file content change - set code
   useEffect(() => {
