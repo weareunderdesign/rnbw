@@ -3,7 +3,6 @@ import React, {
   useContext,
   useEffect,
   useMemo,
-  useRef,
 } from 'react';
 
 import {
@@ -50,10 +49,7 @@ import {
   setCurrentFileContent,
 } from '@_redux/main';
 import { getLineBreakCharacter } from '@_services/global';
-import {
-  TFileInfo,
-  TFileType,
-} from '@_types/main';
+import { TFileType } from '@_types/main';
 
 import { ProcessProps } from './types';
 
@@ -91,10 +87,10 @@ export default function Process(props: ProcessProps) {
     currentCommand, setCurrentCommand, cmdkOpen, setCmdkOpen, cmdkPages, setCmdkPages, cmdkPage,
 
     // global
-    pending, setPending, messages, addMessage, removeMessage, codeEditing, setCodeEditing,
+    addMessage, removeMessage, codeEditing, setCodeEditing,
 
     // reference
-    htmlReferenceData, cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions, cmdkReferenceAdd,
+    htmlReferenceData, cmdkReferenceData,
 
     // active panel/clipboard
     activePanel, setActivePanel, clipboardData, setClipboardData,
@@ -106,12 +102,16 @@ export default function Process(props: ProcessProps) {
     tabSize, setTabSize,
 
     // stage-view
-    setIframeSrc,
+    setIFrameSrc,
     fileInfo, setFileInfo,
     hasSameScript, setHasSameScript,
   } = useContext(MainContext)
 
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
+  // service - get reference data for current file type
+  const getReferenceData = useCallback((fileType: TFileType) => {
+    return fileType === 'html' ? htmlReferenceData : htmlReferenceData
+  }, [htmlReferenceData])
   // set app title
   useEffect(() => {
     if (file.uid === '') {
@@ -119,21 +119,13 @@ export default function Process(props: ProcessProps) {
     } else {
       const _file = ffTree[file.uid]
       const fileData = _file.data as TFileNodeData
-
       window.document.title = `${fileData.name}${fileData.ext}`
     }
   }, [fileInfo])
-
-  const getReferenceData = useCallback((fileType: TFileType) => {
-    return fileType === 'html' ? htmlReferenceData : htmlReferenceData
-  }, [htmlReferenceData])
-
   // processor-updateOpt
-  const orgFileUid = useRef<TNodeUid>('')
   useEffect(() => {
-    // parse file content
     if (updateOpt.parse === true) {
-      let _fileInfo: TFileInfo = null
+      // parse file content
       let _nodeTree: TNodeTreeData = JSON.parse(JSON.stringify(nodeTree))
       let _nodeMaxUid = nodeMaxUid
 
@@ -144,21 +136,12 @@ export default function Process(props: ProcessProps) {
         const parserRes = parseFile(fileData.type, file.content, getReferenceData(fileData.type), osType)
         const { formattedContent, contentInApp, tree, nodeMaxUid: newNodeMaxUid, info } = parserRes
 
-        _fileInfo = info
         _nodeTree = tree
+        _nodeMaxUid = Number(newNodeMaxUid)
+
         fileData.content = formattedContent
         fileData.contentInApp = contentInApp
         fileData.changed = fileData.content !== fileData.orgContent
-
-        writeFile(fileData.path, contentInApp, () => {
-          if (fileData.type === 'html') {
-            setIframeSrc(`rnbw${fileData.path}`)
-          } else {
-            // do nothing
-          }
-        })
-
-        _nodeMaxUid = Number(newNodeMaxUid)
       } else if (updateOpt.from === 'hms') {
         // do nothing
       } else if (updateOpt.from === 'code') {
@@ -221,7 +204,7 @@ export default function Process(props: ProcessProps) {
             })
 
             // update file / set html, htmlInApp, code range for the new node tree
-            const { html: formattedContent, htmlInApp: contentInApp } = serializeHtml(_nodeTree, htmlReferenceData)
+            const { html: formattedContent, htmlInApp: contentInApp } = serializeHtml(_nodeTree, htmlReferenceData, osType)
             fileData.content = formattedContent
             fileData.contentInApp = contentInApp
             fileData.changed = fileData.content !== fileData.orgContent
@@ -270,119 +253,67 @@ export default function Process(props: ProcessProps) {
         // do nothing
       }
 
+      // update idb
+      setFSPending(true)
+      writeFile(fileData.path, fileData.contentInApp as string, () => {
+        if (fileData.type === 'html') {
+          setIFrameSrc(`rnbw${fileData.path}`)
+        } else {
+          // do nothing
+        }
+        setFSPending(false)
+      })
+      // update context
       setFFNode(_file)
-      setFileInfo(_fileInfo)
-      dispatch(setCurrentFileContent(fileData.content))
-
       addRunningActions(['processor-nodeTree'])
       setNodeTree(_nodeTree)
       setNodeMaxUid(_nodeMaxUid)
+      // update redux
+      dispatch(setCurrentFileContent(fileData.contentInApp as string))
 
       setUpdateOpt({ parse: null, from: updateOpt.from })
-
-      orgFileUid.current = file.uid
-
-      // check if the script list changed ----- tmp code
-      /* let _hasSameScript = true
-      if (fileInfo === null || file.uid !== orgFileUid.current) {
-        _hasSameScript = false
-      } else {
-        const _curScripts = !_fileInfo ? [] : _fileInfo.scripts
-        const _orgScripts = fileInfo.scripts
-
-        const curScripts: string[] = []
-        const curScriptObj: { [uid: string]: boolean } = {}
-        _curScripts.map(script => {
-          const attribs = (script.data as THtmlNodeData).attribs
-          const uniqueStr = Object.keys(attribs)
-            .filter(attrName => attrName !== NodeInAppAttribName)
-            .sort((a, b) => a > b ? 1 : -1)
-            .map(attrName => {
-              return `${attrName}${NodeUidSplitter}${attribs[attrName]}`
-            })
-            .join(NodeUidSplitter)
-          curScripts.push(uniqueStr)
-          curScriptObj[uniqueStr] = true
-        })
-
-        const orgScripts: string[] = []
-        const orgScriptObj: { [uid: string]: boolean } = {}
-        _orgScripts.map(script => {
-          const attribs = (script.data as THtmlNodeData).attribs
-          const uniqueStr = Object.keys(attribs)
-            .filter(attrName => attrName !== NodeInAppAttribName)
-            .sort((a, b) => a > b ? 1 : -1)
-            .map(attrName => {
-              return `${attrName}${NodeUidSplitter}${attribs[attrName]}`
-            })
-            .join(NodeUidSplitter)
-          orgScripts.push(uniqueStr)
-          orgScriptObj[uniqueStr] = true
-        })
-
-        if (curScripts.length !== orgScripts.length) {
-          _hasSameScript = false
-        } else {
-          for (const script of curScripts) {
-            if (!orgScriptObj[script]) {
-              _hasSameScript = false
-              break
-            }
-          }
-        }
-      }
-      setHasSameScript(_hasSameScript) */
-    }
-
-    // serialize tree data
-    if (updateOpt.parse === false) {
-      let _fileInfo: TFileInfo = null
-      let _nodeTree: TNodeTreeData = {}
-      let _nodeMaxUid: TNodeUid = ''
+    } else if (updateOpt.parse === false) {
+      // serialize node tree data
+      let _nodeTree: TNodeTreeData = JSON.parse(JSON.stringify(nodeTree))
 
       const _file = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode
       const fileData = _file.data as TFileNodeData
 
       if (updateOpt.from === 'node') {
-        const serializedRes = serializeFile(fileData.type, nodeTree, getReferenceData(fileData.type))
+        const serializedRes = serializeFile(fileData.type, _nodeTree, getReferenceData(fileData.type), osType)
 
         if (fileData.type === 'html') {
           const { html, htmlInApp } = serializedRes as THtmlNodeData
+          // update ffTree
           fileData.content = html
           fileData.contentInApp = htmlInApp
           fileData.changed = fileData.content !== fileData.orgContent
-
-          setFSPending(true)
-          writeFile(fileData.path, htmlInApp, () => {
-            setFSPending(false)
-          })
-
-          // need to build html, htmlInApp and code range
-          const parserRes = parseFile(fileData.type, htmlInApp, getReferenceData(fileData.type), osType, true, String(nodeMaxUid) as TNodeUid)
-          const { tree, info, nodeMaxUid: newNodeMaxUid } = parserRes
-          _fileInfo = info
-          _nodeTree = tree
-          _nodeMaxUid = newNodeMaxUid
         } else {
           // do nothing
         }
       }
 
+      // update idb
+      setFSPending(true)
+      writeFile(fileData.path, fileData.contentInApp as string, () => {
+        setFSPending(false)
+      })
+      // update context
       setFFNode(_file)
-      setFileInfo(_fileInfo)
+      addRunningActions(['processor-nodeTree'])
       setNodeTree(_nodeTree)
-      setNodeMaxUid(Number(_nodeMaxUid))
+      // update redux
       dispatch(setCurrentFileContent(fileData.contentInApp as string))
 
       setUpdateOpt({ parse: null, from: updateOpt.from })
+    } else {
+      // do nothing
     }
 
     removeRunningActions(['processor-updateOpt'])
   }, [updateOpt])
-
   // processor-nodeTree
   useEffect(() => {
-    // validate
     if (!nodeTree[RootNodeUid]) return
 
     const _nodeTree: TNodeTreeData = JSON.parse(JSON.stringify(nodeTree))
@@ -405,7 +336,6 @@ export default function Process(props: ProcessProps) {
 
     removeRunningActions(['processor-nodeTree'])
   }, [nodeTree])
-
   // processor-validNodeTree
   useEffect(() => {
     if (updateOpt.parse === null && updateOpt.from === 'file') {

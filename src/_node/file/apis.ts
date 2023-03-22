@@ -166,13 +166,12 @@ export const parseFile = (type: TFileType, content: string, referenceData: TNode
       contentInApp: '',
       tree: {},
       nodeMaxUid: '0',
-      info: null,
     }
   }
 }
-export const serializeFile = (type: TFileType, tree: TNodeTreeData, referenceData: TNodeReferenceData): THtmlNodeData | string => {
+export const serializeFile = (type: TFileType, tree: TNodeTreeData, referenceData: TNodeReferenceData, osType: TOsType): THtmlNodeData | string => {
   if (type === 'html') {
-    return serializeHtml(tree, referenceData as THtmlReferenceData)
+    return serializeHtml(tree, referenceData as THtmlReferenceData, osType)
   }
   return ''
 }

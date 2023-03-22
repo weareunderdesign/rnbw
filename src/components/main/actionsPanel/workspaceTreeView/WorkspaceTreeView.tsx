@@ -111,10 +111,10 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     currentCommand, setCurrentCommand, cmdkOpen, setCmdkOpen, cmdkPages, setCmdkPages, cmdkPage,
 
     // global
-    pending, setPending, messages, addMessage, removeMessage,
+    addMessage, removeMessage,
 
     // reference
-    htmlReferenceData, cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions, cmdkReferenceAdd,
+    htmlReferenceData, cmdkReferenceData,
 
     // active panel/clipboard
     activePanel, setActivePanel, clipboardData, setClipboardData,
@@ -1581,12 +1581,12 @@ This action cannot be undone!`
 Your changes will be lost if you don't save them.`
                   if (window.confirm(message)) {
                     await (async () => {
-                      setPending(true)
+                      setFSPending(true)
 
                       // get the current file handler
                       const handler = ffHandlers[_file.uid]
                       if (handler === undefined) {
-                        setPending(false)
+                        setFSPending(false)
                         return
                       }
 
@@ -1596,7 +1596,7 @@ Your changes will be lost if you don't save them.`
                           type: 'error',
                           content: 'save failed cause of invalid handler',
                         })
-                        setPending(false)
+                        setFSPending(false)
                         return
                       }
 
@@ -1620,7 +1620,7 @@ Your changes will be lost if you don't save them.`
                         })
                       }
 
-                      setPending(false)
+                      setFSPending(false)
                     })()
                   }
                 }

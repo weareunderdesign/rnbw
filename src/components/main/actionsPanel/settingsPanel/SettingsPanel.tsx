@@ -41,10 +41,10 @@ export default function SettingsPanel(props: SettingsPanelProps) {
     currentCommand, setCurrentCommand, cmdkOpen, setCmdkOpen, cmdkPages, setCmdkPages, cmdkPage,
 
     // global
-    pending, setPending, messages, addMessage, removeMessage,
+    addMessage, removeMessage,
 
     // reference
-    htmlReferenceData, cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions, cmdkReferenceAdd,
+    htmlReferenceData, cmdkReferenceData,
 
     // active panel/clipboard
     activePanel, setActivePanel, clipboardData, setClipboardData,

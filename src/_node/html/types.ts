@@ -35,7 +35,6 @@ export type THtmlParserResponse = {
   contentInApp: string,
   tree: TNodeTreeData,
   nodeMaxUid: TNodeUid,
-  info?: THtmlPageSettings,
 }
 
 /**

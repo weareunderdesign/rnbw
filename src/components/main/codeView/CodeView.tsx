@@ -2,6 +2,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -77,10 +78,10 @@ export default function CodeView(props: CodeViewProps) {
     currentCommand, setCurrentCommand, cmdkOpen, setCmdkOpen, cmdkPages, setCmdkPages, cmdkPage,
 
     // global
-    pending, setPending, messages, addMessage, removeMessage, codeEditing, setCodeEditing,
+    addMessage, removeMessage, codeEditing, setCodeEditing,
 
     // reference
-    htmlReferenceData, cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions, cmdkReferenceAdd,
+    htmlReferenceData, cmdkReferenceData,
 
     // active panel/clipboard
     activePanel, setActivePanel, clipboardData, setClipboardData,
@@ -124,6 +125,7 @@ export default function CodeView(props: CodeViewProps) {
   }, [file.uid])
   // focusedItem - code select
   const focusedItemRef = useRef<TNodeUid>('')
+  const revealed = useRef<boolean>(false)
   useEffect(() => {
     if (focusedItemRef.current === focusedItem) return
     if (!validNodeTree[focusedItem]) return
@@ -147,6 +149,7 @@ export default function CodeView(props: CodeViewProps) {
     }, 1)
 
     focusedItemRef.current = focusedItem
+    revealed.current = true
   }, [focusedItem])
   // file content change - set code
   useEffect(() => {
@@ -182,10 +185,7 @@ export default function CodeView(props: CodeViewProps) {
     }
   }, [selection])
   useEffect(() => {
-    const cursorDetectInterval = setInterval(() => {
-      detectFocusedNode()
-    }, 0)
-
+    const cursorDetectInterval = setInterval(() => detectFocusedNode(), 0)
     return () => clearInterval(cursorDetectInterval)
   }, [detectFocusedNode])
   // detect node of current selection
@@ -198,6 +198,12 @@ export default function CodeView(props: CodeViewProps) {
 
     // this means, code view is already opened before file read
     if (!validNodeTreeRef.current[RootNodeUid]) return
+
+    // avoid loop when reveal focused node's code block
+    if (revealed.current === true) {
+      revealed.current = false
+      return
+    }
 
     if (selection) {
       let _uid: TNodeUid = ''
@@ -442,39 +448,46 @@ export default function CodeView(props: CodeViewProps) {
     setActivePanel('code')
   }, [])
 
-  return <>
-    <Panel minSize={0}>
-      <div
-        id="CodeView"
-        className={cx(
-          'scrollable',
-        )}
-        onClick={onPanelClick}
-      >
-        <Editor
-          width="100%"
-          height="100%"
-          defaultLanguage={"html"}
-          language={language}
-          defaultValue={""}
-          value={codeContent.current}
-          theme={theme}
-          // line={line}
-          // beforeMount={() => {}}
-          onMount={handleEditorDidMount}
-          onChange={handleEditorChange}
-          options={{
-            // enableBasicAutocompletion: true,
-            // enableLiveAutocompletion: true,
-            // enableSnippets: true,
-            // showLineNumbers: true,
-            contextmenu: false,
-            tabSize: tabSize,
-            wordWrap: wordWrap,
-            minimap: { enabled: false },
-          }}
-        />
-      </div>
-    </Panel>
-  </>
+  return useMemo(() => {
+    return <>
+      <Panel minSize={0}>
+        <div
+          id="CodeView"
+          className={cx(
+            'scrollable',
+          )}
+          onClick={onPanelClick}
+        >
+          <Editor
+            width="100%"
+            height="100%"
+            defaultLanguage={"html"}
+            language={language}
+            defaultValue={""}
+            value={codeContent.current}
+            theme={theme}
+            // line={line}
+            // beforeMount={() => {}}
+            onMount={handleEditorDidMount}
+            onChange={handleEditorChange}
+            options={{
+              // enableBasicAutocompletion: true,
+              // enableLiveAutocompletion: true,
+              // enableSnippets: true,
+              // showLineNumbers: true,
+              contextmenu: false,
+              tabSize: tabSize,
+              wordWrap: wordWrap,
+              minimap: { enabled: false },
+            }}
+          />
+        </div>
+      </Panel>
+    </>
+  }, [
+    onPanelClick,
+    language, theme,
+    handleEditorDidMount, handleEditorChange,
+    tabSize, wordWrap,
+  ])
 }

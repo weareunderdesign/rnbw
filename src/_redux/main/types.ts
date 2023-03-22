@@ -1,7 +1,5 @@
-import {
-  TFilesReferenceData,
-  THtmlReferenceData,
-} from '@_node/index';
+import { TFilesReferenceData } from '@_node/file';
+import { THtmlReferenceData } from '@_node/html';
 import {
   TNode,
   TNodeTreeData,
@@ -14,7 +12,6 @@ import {
 } from '@_types/global';
 import {
   TClipboardData,
-  TCmdkGroupData,
   TCmdkReferenceData,
   TCodeChange,
   TEvent,
@@ -23,132 +20,88 @@ import {
   TFileInfo,
   TPanelContext,
   TProject,
+  TSession,
   TWorkspace,
 } from '@_types/main';
-
-import { TSession } from '../../types/main';
 
 /**
  * main context
  */
 export type TMainContext = {
-  codeChanges: TCodeChange[],
-  setCodeChanges: (changes: TCodeChange[]) => void,
-
-  // global
-  pending: boolean,
-  setPending: (pending: boolean) => void,
-
-  iframeLoading: boolean,
-  setIFrameLoading: (loading: boolean) => void,
-
-  fsPending: boolean,
-  setFSPending: (pending: boolean) => void,
-
-  codeEditing: boolean,
-  setCodeEditing: (editing: boolean) => void,
-
-  messages: TToast[],
-  addMessage: (message: TToast) => void,
-  removeMessage: (index: number) => void,
-
-  // groupping action
+  // global action
   addRunningActions: (actionNames: string[]) => void,
   removeRunningActions: (actionNames: string[], effect?: boolean) => void,
-
-  // event
+  // node actions
+  activePanel: TPanelContext,
+  setActivePanel: (panel: TPanelContext) => void,
+  clipboardData: TClipboardData,
+  setClipboardData: (data: TClipboardData) => void,
   event: TEvent,
   setEvent: (e: TEvent) => void,
-
   // file tree view
-  ffHoveredItem: TNodeUid,
-  setFFHoveredItem: (uid: TNodeUid) => void,
-
-  ffHandlers: TFileHandlerCollection,
-  setFFHandlers: (ffHandlerObj: TFileHandlerCollection) => void,
+  fsPending: boolean,
+  setFSPending: (pending: boolean) => void,
   ffTree: TNodeTreeData,
   setFFTree: (tree: TNodeTreeData) => void,
   setFFNode: (ffNode: TNode) => void,
-
+  ffHandlers: TFileHandlerCollection,
+  setFFHandlers: (ffHandlerObj: TFileHandlerCollection) => void,
+  ffHoveredItem: TNodeUid,
+  setFFHoveredItem: (uid: TNodeUid) => void,
+  isHms: boolean | null,
+  setIsHms: (is: boolean | null) => void,
+  ffAction: TFileAction,
+  setFFAction: (action: TFileAction) => void,
   // node tree view
   fnHoveredItem: TNodeUid,
   setFNHoveredItem: (uid: TNodeUid) => void,
-
   nodeTree: TNodeTreeData,
   setNodeTree: (tree: TNodeTreeData) => void,
-
   validNodeTree: TNodeTreeData,
   setValidNodeTree: (tree: TNodeTreeData) => void,
-
   nodeMaxUid: number,
   setNodeMaxUid: (uid: number) => void,
-
-  // update opt
+  // stage view
+  iframeLoading: boolean,
+  setIFrameLoading: (loading: boolean) => void,
+  iframeSrc: string | null,
+  setIFrameSrc: (src: string | null) => void,
+  fileInfo: TFileInfo,
+  setFileInfo: (_fileInfo: TFileInfo) => void,
+  hasSameScript: boolean,
+  setHasSameScript: (_hasSameScript: boolean) => void,
+  // code view
+  codeEditing: boolean,
+  setCodeEditing: (editing: boolean) => void,
+  codeChanges: TCodeChange[],
+  setCodeChanges: (changes: TCodeChange[]) => void,
+  tabSize: number,
+  setTabSize: (size: number) => void,
+  // processor
   updateOpt: TUpdateOptions,
   setUpdateOpt: (opt: TUpdateOptions) => void,
-
-  // ff hms
-  isHms: boolean | null,
-  setIsHms: (is: boolean | null) => void,
-
-  ffAction: TFileAction,
-  setFFAction: (action: TFileAction) => void,
-
+  // references
+  filesReferenceData: TFilesReferenceData,
+  htmlReferenceData: THtmlReferenceData,
+  cmdkReferenceData: TCmdkReferenceData,
   // cmdk
   currentCommand: TCommand,
   setCurrentCommand: (command: TCommand) => void,
-
   cmdkOpen: boolean,
   setCmdkOpen: (open: boolean) => void,
-
   cmdkPages: string[],
   setCmdkPages: (pages: string[]) => void,
   cmdkPage: string,
-
-
-  // reference
-  filesReferenceData: TFilesReferenceData,
-  htmlReferenceData: THtmlReferenceData,
-
-  cmdkReferenceData: TCmdkReferenceData,
-  cmdkReferenceJumpstart: TCmdkGroupData,
-  cmdkReferenceActions: TCmdkGroupData,
-  cmdkReferenceAdd: TCmdkGroupData,
-
-  // active panel/clipboard
-  activePanel: TPanelContext,
-  setActivePanel: (panel: TPanelContext) => void,
-
-  clipboardData: TClipboardData,
-  setClipboardData: (data: TClipboardData) => void,
-
-  // os
+  // other
   osType: TOsType,
-
-  // code view
-  tabSize: number,
-  setTabSize: (size: number) => void,
-
-  // theme
   theme: TTheme,
-
-  // session
-  hasSession: boolean,
-  session: TSession | null,
-
-  // panel-resize
   panelResizing: boolean,
   setPanelResizing: (resizing: boolean) => void,
-
-  // stage-view
-  iframeSrc: null | string,
-  setIframeSrc: (src: string | null) => void,
-
-  fileInfo: TFileInfo,
-  setFileInfo: (_fileInfo: TFileInfo) => void,
-
-  hasSameScript: boolean,
-  setHasSameScript: (_hasSameScript: boolean) => void,
+  hasSession: boolean,
+  session: TSession | null,
+  // toasts
+  addMessage: (message: TToast) => void,
+  removeMessage: (index: number) => void,
 }
 
 /**

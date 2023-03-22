@@ -52,7 +52,6 @@ import {
   addClass,
   removeClass,
 } from '@_services/main';
-import { TCodeChange } from '@_types/main';
 
 import { NodeTreeViewProps } from './types';
 
@@ -81,10 +80,10 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     currentCommand, setCurrentCommand, cmdkOpen, setCmdkOpen, cmdkPages, setCmdkPages, cmdkPage,
 
     // global
-    pending, setPending, messages, addMessage, removeMessage,
+    addMessage, removeMessage,
 
     // reference
-    htmlReferenceData, cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions, cmdkReferenceAdd,
+    htmlReferenceData, cmdkReferenceData,
 
     // active panel/clipboard
     activePanel, setActivePanel, clipboardData, setClipboardData,
@@ -119,7 +118,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     if (focusedItemRef.current === focusedItem) return
 
     const focusedElement = document.querySelector(`#NodeTreeView-${focusedItem}`)
-    setTimeout(() => focusedElement?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' }), 10)
+    setTimeout(() => focusedElement?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' }), 100)
 
     focusedItemRef.current = focusedItem
   }, [focusedItem])
@@ -427,22 +426,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       cb_addNode(tagName)
     }
   }, [cb_addNode])
-  // -------------------------------------------------------------- side effect --------------------------------------------------------------
-  // code change - side effect
-  useEffect(() => {
-    if (event) {
-      const { type, param } = event
-      switch (type) {
-        case 'code-change':
-          onCodeChange(...param as [TCodeChange[]])
-        default:
-          break
-      }
-    }
-  }, [event])
-  const onCodeChange = useCallback((changes: TCodeChange[]) => {
-    removeRunningActions(['nodeTreeView-codeChange'])
-  }, [removeRunningActions])
   // -------------------------------------------------------------- own --------------------------------------------------------------
   const onPanelClick = useCallback(() => {
     setActivePanel('node')

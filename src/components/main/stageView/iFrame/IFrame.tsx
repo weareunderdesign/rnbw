@@ -33,10 +33,7 @@ import {
   updateFNTreeViewState,
 } from '@_redux/main';
 import { getCommandKey } from '@_services/global';
-import {
-  TCmdkKeyMap,
-  TCodeChange,
-} from '@_types/main';
+import { TCmdkKeyMap } from '@_types/main';
 
 import { styles } from './styles';
 import { IFrameProps } from './types';
@@ -68,11 +65,11 @@ export const IFrame = (props: IFrameProps) => {
     currentCommand, setCurrentCommand, cmdkOpen, setCmdkOpen, cmdkPages, setCmdkPages, cmdkPage,
 
     // global
-    pending, setPending, messages, addMessage, removeMessage,
+    addMessage, removeMessage,
     iframeLoading, setIFrameLoading,
 
     // reference
-    htmlReferenceData, cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions, cmdkReferenceAdd,
+    htmlReferenceData, cmdkReferenceData,
 
     // active panel/clipboard
     activePanel, setActivePanel, clipboardData, setClipboardData,
@@ -129,7 +126,7 @@ export const IFrame = (props: IFrameProps) => {
     if (focusedItemRef.current === focusedItem) return
 
     const newFocusedElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${focusedItem}"]`)
-    setTimeout(() => newFocusedElement?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' }), 10)
+    setTimeout(() => newFocusedElement?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' }), 100)
 
     focusedItemRef.current = focusedItem
   }, [focusedItem])
@@ -305,10 +302,6 @@ export const IFrame = (props: IFrameProps) => {
     dispatch(selectFNNode(newUids))
     removeRunningActions(['stageView-viewState'])
   }, [removeRunningActions, contentRef])
-  const onCodeChange = useCallback((changes: TCodeChange[]) => {
-    console.log('code changes', changes)
-    removeRunningActions(['stageView-codeChange'])
-  }, [removeRunningActions])
   // -------------------------------------------------------------- iframe event handlers --------------------------------------------------------------
   // mouse events
   const onMouseEnter = useCallback((e: MouseEvent) => { }, [])
@@ -497,8 +490,6 @@ export const IFrame = (props: IFrameProps) => {
         case 'duplicate-node':
           duplicateElements(...param as [TNodeUid[], Map<TNodeUid, TNodeUid>])
           break
-        case 'code-change':
-          onCodeChange(...param as [TCodeChange[]])
         default:
           break
       }
