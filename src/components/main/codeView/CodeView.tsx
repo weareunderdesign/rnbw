@@ -128,7 +128,7 @@ export default function CodeView(props: CodeViewProps) {
   const focusedItemRef = useRef<TNodeUid>('')
   const revealed = useRef<boolean>(false)
   useEffect(() => {
-    if (focusedItemRef.current === focusedItem) return
+    if (focusedItem === RootNodeUid || focusedItemRef.current === focusedItem) return
     if (!validNodeTree[focusedItem]) return
 
     if (codeEditing) return
@@ -235,7 +235,9 @@ export default function CodeView(props: CodeViewProps) {
   }, [selection])
   useEffect(() => {
     if (focusedNode) {
-      addRunningActions(['codeView-focus'])
+      if (focusedNode.uid === focusedItemRef.current) return
+
+      // addRunningActions(['codeView-focus'])
 
       // expand path to the uid
       const _expandedItems: TNodeUid[] = []
@@ -252,7 +254,7 @@ export default function CodeView(props: CodeViewProps) {
 
       focusedItemRef.current = focusedNode.uid
 
-      removeRunningActions(['codeView-focus'])
+      // removeRunningActions(['codeView-focus'])
     }
   }, [focusedNode])
   // code edit - highlight/parse
