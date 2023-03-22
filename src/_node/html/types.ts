@@ -68,7 +68,7 @@ export type THtmlElementsReference = {
 }
 
 export type THtmlPageSettings = {
-  title?: string,
+  title: string,
   favicon: string[],
   scripts: TNode[],
 }

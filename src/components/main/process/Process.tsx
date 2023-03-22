@@ -12,6 +12,7 @@ import {
 
 import {
   NodeInAppAttribName,
+  NodeUidSplitter,
   RainbowAppName,
   RootNodeUid,
 } from '@_constants/main';
@@ -26,6 +27,7 @@ import {
   parseHtmlCodePart,
   serializeHtml,
   THtmlNodeData,
+  THtmlPageSettings,
 } from '@_node/html';
 import {
   TNode,
@@ -128,6 +130,8 @@ export default function Process(props: ProcessProps) {
       // parse file content
       let _nodeTree: TNodeTreeData = JSON.parse(JSON.stringify(nodeTree))
       let _nodeMaxUid = nodeMaxUid
+      let _fileInfo: TFileInfo
+      let _hasSameScript = true
 
       const _file = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode
       const fileData = _file.data as TFileNodeData
@@ -142,10 +146,31 @@ export default function Process(props: ProcessProps) {
         fileData.content = formattedContent
         fileData.contentInApp = contentInApp
         fileData.changed = fileData.content !== fileData.orgContent
+
+        _hasSameScript = false
       } else if (updateOpt.from === 'code') {
         if (fileData.type === 'html') {
-          if (codeChanges[0].uid === RootNodeUid) {
-            // do nothing for now
+          // detect seed node changed
+          let seedNodeChanged = false
+          for (const change of codeChanges) {
+            const { uid } = change
+            const node = _nodeTree[uid]
+            if (uid === RootNodeUid || node.name === '!doctype' || node.name === 'head' || node.name === 'body') {
+              seedNodeChanged = true
+            }
+          }
+          if (seedNodeChanged) {
+            const parserRes = parseFile(fileData.type, file.content, htmlReferenceData, osType)
+            const { formattedContent, contentInApp, tree, nodeMaxUid: newNodeMaxUid } = parserRes
+
+            _nodeTree = tree
+            _nodeMaxUid = Number(newNodeMaxUid)
+
+            fileData.content = formattedContent
+            fileData.contentInApp = contentInApp
+            fileData.changed = fileData.content !== fileData.orgContent
+
+            _hasSameScript = false
           } else {
             let _newFocusedNodeUid = ''
 
@@ -222,6 +247,80 @@ export default function Process(props: ProcessProps) {
         // do nothing
       }
 
+      // get file info from node tree
+      if (fileData.type === 'html') {
+        _fileInfo = {
+          title: '',
+          scripts: [],
+          favicon: [],
+        } as THtmlPageSettings
+        // get html page settings
+        Object.keys(_nodeTree).map(uid => {
+          const node = _nodeTree[uid]
+          const nodeData = node.data as THtmlNodeData
+          if (nodeData.type === 'tag') {
+            if (nodeData.name === 'title') {
+              _fileInfo ? _fileInfo.title = node.uid : null
+            } else if (nodeData.name === 'link' && nodeData.attribs.rel === 'icon' && nodeData.attribs.href) {
+              _fileInfo && _fileInfo.favicon.push(nodeData.attribs.href)
+            }
+          } else if (nodeData.type === 'script') {
+            _fileInfo && _fileInfo.scripts.push(node)
+          }
+        })
+        // compare new file info with org file info
+        if (_hasSameScript && fileInfo) {
+          const _curScripts = _fileInfo.scripts
+          const _orgScripts = fileInfo.scripts
+
+          const curScripts: string[] = []
+          const curScriptObj: { [uid: TNodeUid]: boolean } = {}
+          _curScripts.map(script => {
+            const attribs = (script.data as THtmlNodeData).attribs
+            const uniqueStr = Object.keys(attribs)
+              .filter(attrName => attrName !== NodeInAppAttribName)
+              .sort((a, b) => a > b ? 1 : -1)
+              .map(attrName => {
+                return `${attrName}${NodeUidSplitter}${attribs[attrName]}`
+              })
+              .join(NodeUidSplitter)
+            curScripts.push(uniqueStr)
+            curScriptObj[uniqueStr] = true
+          })
+
+          const orgScripts: string[] = []
+          const orgScriptObj: { [uid: string]: boolean } = {}
+          _orgScripts.map(script => {
+            const attribs = (script.data as THtmlNodeData).attribs
+            const uniqueStr = Object.keys(attribs)
+              .filter(attrName => attrName !== NodeInAppAttribName)
+              .sort((a, b) => a > b ? 1 : -1)
+              .map(attrName => {
+                return `${attrName}${NodeUidSplitter}${attribs[attrName]}`
+              })
+              .join(NodeUidSplitter)
+            orgScripts.push(uniqueStr)
+            orgScriptObj[uniqueStr] = true
+          })
+
+          if (curScripts.length !== orgScripts.length) {
+            _hasSameScript = false
+          } else {
+            for (const script of curScripts) {
+              if (!orgScriptObj[script]) {
+                _hasSameScript = false
+                break
+              }
+            }
+          }
+        }
+      } else {
+        // do nothing
+      }
+      // set new file info
+      setFileInfo(_fileInfo)
+      setHasSameScript(_hasSameScript)
+
       // update idb
       setFSPending(true)
       writeFile(fileData.path, fileData.contentInApp as string, () => {
@@ -235,7 +334,6 @@ export default function Process(props: ProcessProps) {
       // update context
       setFFNode(_file)
       addRunningActions(['processor-nodeTree'])
-      console.log(_nodeTree, _nodeMaxUid)
       setNodeTree(_nodeTree)
       setNodeMaxUid(_nodeMaxUid)
       // update redux
@@ -300,12 +398,6 @@ export default function Process(props: ProcessProps) {
       node.isEntity = node.children.length === 0
       _validNodeTree[uid] = node
     })
-
-    // get file info
-    const _fileInfo: TFileInfo = {
-      scripts: [],
-      favicon: [],
-    }
 
     addRunningActions(['processor-validNodeTree'])
     setValidNodeTree(_validNodeTree)

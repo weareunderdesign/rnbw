@@ -38,6 +38,7 @@ import {
   MainContext,
   navigatorSelector,
   selectFNNode,
+  setCurrentFileContent,
 } from '@_redux/main';
 import { getLineBreakCharacter } from '@_services/global';
 import { TCodeChange } from '@_types/main';
@@ -244,7 +245,6 @@ export default function CodeView(props: CodeViewProps) {
       if (focusedNode.uid === focusedItemRef.current) return
 
       // addRunningActions(['codeView-focus'])
-      console.log(focusedNode)
 
       // expand path to the uid
       const _expandedItems: TNodeUid[] = []
@@ -302,6 +302,7 @@ export default function CodeView(props: CodeViewProps) {
     setCodeChanges(codeChanges)
 
     // update
+    dispatch(setCurrentFileContent(codeContent.current))
     addRunningActions(['processor-updateOpt'])
     setUpdateOpt({ parse: true, from: 'code' })
 
