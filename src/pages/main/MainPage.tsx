@@ -174,6 +174,7 @@ export default function MainPage(props: MainPageProps) {
   const [codeEditing, setCodeEditing] = useState<boolean>(false)
   const [codeChanges, setCodeChanges] = useState<TCodeChange[]>([])
   const [tabSize, setTabSize] = useState<number>(DefaultTabSize)
+  const [newFocusedNodeUid, setNewFocusedNodeUid] = useState<TNodeUid>('')
   // processor
   const [updateOpt, setUpdateOpt] = useState<TUpdateOptions>({ parse: null, from: null })
   // references
@@ -817,6 +818,7 @@ Your changes will be lost if you don't save them.`
         codeEditing, setCodeEditing,
         codeChanges, setCodeChanges,
         tabSize, setTabSize,
+        newFocusedNodeUid, setNewFocusedNodeUid,
         // processor
         updateOpt, setUpdateOpt,
         // references

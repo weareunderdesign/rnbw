@@ -77,6 +77,8 @@ export type TMainContext = {
   setCodeChanges: (changes: TCodeChange[]) => void,
   tabSize: number,
   setTabSize: (size: number) => void,
+  newFocusedNodeUid: TNodeUid,
+  setNewFocusedNodeUid: (uid: TNodeUid) => void,
   // processor
   updateOpt: TUpdateOptions,
   setUpdateOpt: (opt: TUpdateOptions) => void,

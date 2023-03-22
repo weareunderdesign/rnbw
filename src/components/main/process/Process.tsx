@@ -62,6 +62,7 @@ export default function Process(props: ProcessProps) {
 
   // main context
   const {
+    newFocusedNodeUid, setNewFocusedNodeUid,
     codeChanges, setEvent,
     fsPending, setFSPending,
     // groupping action
@@ -143,6 +144,8 @@ export default function Process(props: ProcessProps) {
           if (codeChanges[0].uid === RootNodeUid) {
             // do nothing for now
           } else {
+            let _newFocusedNodeUid = ''
+
             // side effects
             codeChanges.map(codeChange => {
               // ---------------------- node tree side effect ----------------------
@@ -153,7 +156,6 @@ export default function Process(props: ProcessProps) {
               // remove org nodes
               const o_node = _nodeTree[codeChange.uid]
               const o_parentNode = _nodeTree[o_node.parentUid as TNodeUid]
-              const o_uids = getSubNodeUidsByBfs(codeChange.uid, _nodeTree)
               o_parentNode.children = o_parentNode.children.reduce((prev, cur) => {
                 if (cur === codeChange.uid) {
                   prev.push(tree[RootNodeUid].children[0])
@@ -162,6 +164,7 @@ export default function Process(props: ProcessProps) {
                 }
                 return prev
               }, [] as TNodeUid[])
+              const o_uids = getSubNodeUidsByBfs(codeChange.uid, _nodeTree)
               o_uids.map(uid => {
                 delete _nodeTree[uid]
               })
@@ -169,8 +172,12 @@ export default function Process(props: ProcessProps) {
               const uids = getSubNodeUidsByBfs(RootNodeUid, tree, false)
               const nodeUids: TNodeUid[] = []
               uids.map(uid => {
-                _nodeTree[uid] = JSON.parse(JSON.stringify(tree[uid]))
                 const node = tree[uid]
+                if (node.parentUid === RootNodeUid) {
+                  _newFocusedNodeUid = uid
+                  node.parentUid = o_parentNode.uid
+                }
+                _nodeTree[uid] = JSON.parse(JSON.stringify(node))
                 const nodeData = node.data as THtmlNodeData
                 nodeData.valid && nodeUids.push(uid)
               })
@@ -199,6 +206,8 @@ export default function Process(props: ProcessProps) {
             fileData.content = formattedContent
             fileData.contentInApp = contentInApp
             fileData.changed = fileData.content !== fileData.orgContent
+
+            setNewFocusedNodeUid(_newFocusedNodeUid)
           }
         } else {
           // do nothing
@@ -206,8 +215,6 @@ export default function Process(props: ProcessProps) {
 
         setCodeEditing(false)
       } else if (updateOpt.from === 'hms') {
-        const content = file.content
-        console.log(file.content)
       } else {
         // do nothing
       }
@@ -301,7 +308,7 @@ export default function Process(props: ProcessProps) {
       dispatch(clearFNState())
       dispatch(expandFNNode(Object.keys(validNodeTree).slice(0, 50)))
     } else if (updateOpt.parse === null && updateOpt.from === 'code') {
-      const _focusedItem: TNodeUid = validNodeTree[focusedItem] === undefined ? RootNodeUid : focusedItem
+      const _focusedItem: TNodeUid = validNodeTree[focusedItem] === undefined ? newFocusedNodeUid : focusedItem
       const _expandedItems = expandedItems.filter((uid) => {
         return validNodeTree[uid] !== undefined && validNodeTree[uid].isEntity === false
       })
@@ -318,7 +325,6 @@ export default function Process(props: ProcessProps) {
 
     removeRunningActions(['processor-validNodeTree'])
   }, [validNodeTree])
-  // -------------------------------------------------------------- Sync --------------------------------------------------------------
 
   return useMemo(() => {
     return <></>

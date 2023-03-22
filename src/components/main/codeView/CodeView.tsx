@@ -58,6 +58,7 @@ export default function CodeView(props: CodeViewProps) {
 
   // main context
   const {
+    newFocusedNodeUid, setNewFocusedNodeUid,
     event, setEvent,
     // groupping action
     addRunningActions, removeRunningActions,
@@ -123,7 +124,21 @@ export default function CodeView(props: CodeViewProps) {
   // build refernece
   useEffect(() => {
     validNodeTreeRef.current = JSON.parse(JSON.stringify(validNodeTree))
+
+    // set new focused node
+    setFocusedNode(validNodeTree[newFocusedNodeUid])
+    focusedItemRef.current = newFocusedNodeUid
   }, [validNodeTree])
+  // file content change - set code
+  useEffect(() => {
+    const _file = ffTree[file.uid]
+    if (!_file) return
+
+    if (updateOpt.from === 'code') return
+
+    const fileData = _file.data as TFileNodeData
+    codeContent.current = fileData.content
+  }, [ffTree[file.uid]])
   // focusedItem - code select
   const focusedItemRef = useRef<TNodeUid>('')
   const revealed = useRef<boolean>(false)
@@ -152,16 +167,6 @@ export default function CodeView(props: CodeViewProps) {
     focusedItemRef.current = focusedItem
     revealed.current = true
   }, [focusedItem])
-  // file content change - set code
-  useEffect(() => {
-    const _file = ffTree[file.uid]
-    if (!_file) return
-
-    if (updateOpt.from === 'code') return
-
-    const fileData = _file.data as TFileNodeData
-    codeContent.current = fileData.content
-  }, [ffTree[file.uid]])
   // watch code selection in the editor
   const [selection, setSelection] = useState<CodeSelection | null>({
     startLineNumber: 0,
@@ -299,8 +304,8 @@ export default function CodeView(props: CodeViewProps) {
     setUpdateOpt({ parse: true, from: 'code' })
 
     codeChangeDecorationRef.current.clear()
-
     reduxTimeout.current = null
+    setFocusedNode(undefined)
   }, [ffTree, file.uid, validNodeTree, osType])
   const handleEditorChange = useCallback((value: string | undefined, ev: monaco.editor.IModelContentChangedEvent) => {
     if (!focusedNode) return

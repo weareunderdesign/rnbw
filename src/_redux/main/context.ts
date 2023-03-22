@@ -76,6 +76,8 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   setCodeChanges: (changes: TCodeChange[]) => { },
   tabSize: DefaultTabSize,
   setTabSize: (size: number) => { },
+  newFocusedNodeUid: '',
+  setNewFocusedNodeUid: (uid: TNodeUid) => { },
   // processor
   updateOpt: { parse: null, from: null },
   setUpdateOpt: (opt: TUpdateOptions) => { },
