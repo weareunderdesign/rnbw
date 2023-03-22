@@ -11,6 +11,7 @@ import {
   getNodeChildIndex,
   getNodeDepth,
   getSubNodeUidsByBfs,
+  getSubNodeUidsByDfs,
   THtmlNodeData,
   TNode,
   TNodeTreeData,
@@ -137,6 +138,7 @@ export const indentNode = (tree: TNodeTreeData, node: TNode, indentSize: number,
     }
   })
 }
+
 export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData, osType: TOsType, keepNodeUids: boolean = false, nodeMaxUid: TNodeUid = ''): THtmlParserResponse => {
   let _nodeMaxUid = Number(nodeMaxUid)
 
@@ -256,7 +258,7 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
 }
 export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlReferenceData, osType: TOsType): THtmlNodeData => {
   // build html, htmlInApp
-  const uids = getSubNodeUidsByBfs(RootNodeUid, tree)
+  let uids = getSubNodeUidsByBfs(RootNodeUid, tree)
   uids.reverse()
   uids.map((uid) => {
     const node = tree[uid]
@@ -336,6 +338,7 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
   // set code range to nodes
   const { html: formattedContent } = tree[RootNodeUid].data as THtmlNodeData
   const detected: Map<string, number> = new Map<string, number>()
+  uids = getSubNodeUidsByDfs(RootNodeUid, tree)
   uids.map((uid) => {
     const node = tree[uid]
     if (!node.data.valid) return
