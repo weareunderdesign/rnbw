@@ -13,6 +13,7 @@ import MainPage from '@_pages/main';
 import { AppProps } from './types';
 
 export default function App(props: AppProps) {
+  // setup nohost
   useEffect(() => {
     if ('serviceWorker' in navigator) {
       const wb = new Workbox('/nohost-sw.js?route=rnbw')
@@ -45,17 +46,6 @@ declare global {
   interface Window {
     Filer: any,
   }
-  interface Element {
-    appendBefore: (element: Element) => void,
-    appendAfter: (element: Element) => void,
-  }
 }
 
 window.Filer = window.Filer
-
-Element.prototype.appendBefore = function (element: Element) {
-  element.parentNode?.insertBefore(this, element)
-}
-Element.prototype.appendAfter = function (element: Element) {
-  element.parentNode?.insertBefore(this, element.nextSibling)
-}

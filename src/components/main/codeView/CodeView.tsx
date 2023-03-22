@@ -244,6 +244,7 @@ export default function CodeView(props: CodeViewProps) {
       if (focusedNode.uid === focusedItemRef.current) return
 
       // addRunningActions(['codeView-focus'])
+      console.log(focusedNode)
 
       // expand path to the uid
       const _expandedItems: TNodeUid[] = []

@@ -351,12 +351,12 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
     detected.set(html, detectedCount + 1)
 
     const beforeHtmlArr = beforeHtml.split(getLineBreakCharacter(osType))
-    const startLineNumber = beforeHtmlArr.length
-    const startColumn = (beforeHtmlArr.pop()?.length || 0) + 1
+    const startLineNumber = beforeHtmlArr.length - Number(uid === RootNodeUid)
+    const startColumn = (beforeHtmlArr.pop()?.length || 0) + 1 - Number(uid === RootNodeUid)
 
     const contentArr = html.split(getLineBreakCharacter(osType))
-    const endLineNumber = startLineNumber + contentArr.length - 1
-    const endColumn = (contentArr.length === 1 ? startColumn : 1) + (contentArr.pop()?.length || 0)
+    const endLineNumber = startLineNumber + contentArr.length - 1 + Number(uid === RootNodeUid)
+    const endColumn = (contentArr.length === 1 ? startColumn : 1) + (contentArr.pop()?.length || 0) + Number(uid === RootNodeUid)
 
     node.data = {
       ...node.data,

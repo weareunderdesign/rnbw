@@ -45,7 +45,10 @@ import {
   selectFNNode,
   setCurrentFileContent,
 } from '@_redux/main';
-import { TFileType } from '@_types/main';
+import {
+  TFileInfo,
+  TFileType,
+} from '@_types/main';
 
 import { ProcessProps } from './types';
 
@@ -232,6 +235,7 @@ export default function Process(props: ProcessProps) {
       // update context
       setFFNode(_file)
       addRunningActions(['processor-nodeTree'])
+      console.log(_nodeTree, _nodeMaxUid)
       setNodeTree(_nodeTree)
       setNodeMaxUid(_nodeMaxUid)
       // update redux
@@ -296,6 +300,12 @@ export default function Process(props: ProcessProps) {
       node.isEntity = node.children.length === 0
       _validNodeTree[uid] = node
     })
+
+    // get file info
+    const _fileInfo: TFileInfo = {
+      scripts: [],
+      favicon: [],
+    }
 
     addRunningActions(['processor-validNodeTree'])
     setValidNodeTree(_validNodeTree)
