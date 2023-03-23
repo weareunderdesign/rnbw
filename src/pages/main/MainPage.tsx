@@ -138,7 +138,7 @@ export default function MainPage(props: MainPageProps) {
     }
     if (!found) return
 
-    LogAllow && console.log(actionNames, effect)
+    LogAllow && console.log('remove actions', actionNames, effect)
 
     if (noRunningAction()) {
       LogAllow && effect && console.log('hms added')

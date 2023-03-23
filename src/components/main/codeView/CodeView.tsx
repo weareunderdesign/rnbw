@@ -171,16 +171,17 @@ export default function CodeView(props: CodeViewProps) {
     focusedItemRef.current = focusedItem
     revealed.current = true
   }, [focusedItem])
-  // watch code selection in the editor
+  // watch focus/selection for the editor
   const [selection, setSelection] = useState<CodeSelection | null>({
     startLineNumber: 0,
     startColumn: 0,
     endLineNumber: 0,
     endColumn: 0,
   })
-  const updateSelection = useCallback(() => {
+  const updateFocusNSelection = useCallback(() => {
+    const hasFocus = monacoRef.current?.hasTextFocus()
     const _selection = monacoRef.current?.getSelection()
-    if (_selection) {
+    if (_selection && hasFocus) {
       if (!selection || _selection.startLineNumber !== selection.startLineNumber || _selection.startColumn !== selection.startColumn
         || _selection.endLineNumber !== selection.endLineNumber || _selection.endColumn !== selection.endColumn) {
         setSelection({
@@ -195,9 +196,9 @@ export default function CodeView(props: CodeViewProps) {
     }
   }, [selection])
   useEffect(() => {
-    const cursorDetectInterval = setInterval(() => updateSelection(), 0)
+    const cursorDetectInterval = setInterval(() => updateFocusNSelection(), 0)
     return () => clearInterval(cursorDetectInterval)
-  }, [updateSelection])
+  }, [updateFocusNSelection])
   // detect node of current selection
   const [focusedNode, setFocusedNode] = useState<TNode>()
   useEffect(() => {
