@@ -138,7 +138,7 @@ export default function MainPage(props: MainPageProps) {
     }
     if (!found) return
 
-    LogAllow && console.log('remove actions', actionNames, effect)
+    LogAllow && console.log('remove running actions', actionNames, effect)
 
     if (noRunningAction()) {
       LogAllow && effect && console.log('hms added')
@@ -528,7 +528,8 @@ Your changes will be lost if you don't save them.`
   const [showCodeView, setShowCodeView] = useState(false)
   const toogleCodeView = useCallback(() => {
     setShowCodeView(!showCodeView)
-  }, [showCodeView])
+    setNewFocusedNodeUid(fnFocusedItem)
+  }, [showCodeView, fnFocusedItem])
   // -------------------------------------------------------------- other --------------------------------------------------------------
   // detect OS & fetch reference - html. Jumpstart.csv, Actions.csv
   useEffect(() => {

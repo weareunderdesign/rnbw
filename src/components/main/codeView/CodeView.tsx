@@ -108,6 +108,7 @@ export default function CodeView(props: CodeViewProps) {
 
   // -------------------------------------------------------------- references --------------------------------------------------------------
   // references
+  const isFirst = useRef<boolean>(true)
   const monacoRef = useRef<monaco.editor.IEditor | null>(null)
   const codeContent = useRef<string>('')
   const decorationCollectionRef = useRef<monaco.editor.IEditorDecorationsCollection>()
@@ -122,14 +123,14 @@ export default function CodeView(props: CodeViewProps) {
   useEffect(() => {
     // need to clear the undo/redo history of the monaco-editor
   }, [file.uid])
-  // build refernece
+  // build node tree refernece
   useEffect(() => {
     validNodeTreeRef.current = JSON.parse(JSON.stringify(validNodeTree))
 
     // set new focused node
     if (newFocusedNodeUid !== '') {
       setFocusedNode(validNodeTree[newFocusedNodeUid])
-      focusedItemRef.current = newFocusedNodeUid
+      !isFirst.current ? focusedItemRef.current = newFocusedNodeUid : null
       setNewFocusedNodeUid('')
     }
   }, [validNodeTree])
@@ -155,40 +156,66 @@ export default function CodeView(props: CodeViewProps) {
     const node = validNodeTree[focusedItem]
     const { startLineNumber, startColumn, endLineNumber, endColumn } = node.data as THtmlNodeData
 
-    monacoRef.current?.setSelection({
-      startLineNumber,
-      startColumn,
-      endLineNumber,
-      endColumn,
-    })
-    monacoRef.current?.revealRangeInCenter({
-      startLineNumber,
-      startColumn,
-      endLineNumber,
-      endColumn,
-    }, 1)
+    if (isFirst.current) {
+      const firstTimer = setInterval(() => {
+        if (monacoRef.current) {
+          monacoRef.current.setSelection({
+            startLineNumber,
+            startColumn,
+            endLineNumber,
+            endColumn,
+          })
+          monacoRef.current.revealRangeInCenter({
+            startLineNumber,
+            startColumn,
+            endLineNumber,
+            endColumn,
+          }, 1)
+          revealed.current = false
+          clearInterval(firstTimer)
+        }
+      }, 0)
+    } else {
+      monacoRef.current?.setSelection({
+        startLineNumber,
+        startColumn,
+        endLineNumber,
+        endColumn,
+      })
+      monacoRef.current?.revealRangeInCenter({
+        startLineNumber,
+        startColumn,
+        endLineNumber,
+        endColumn,
+      }, 1)
+      revealed.current = true
+    }
 
     focusedItemRef.current = focusedItem
-    revealed.current = true
   }, [focusedItem])
   // watch focus/selection for the editor
-  const [selection, setSelection] = useState<CodeSelection | null>({
-    startLineNumber: 0,
-    startColumn: 0,
-    endLineNumber: 0,
-    endColumn: 0,
-  })
+  const firstSelection = useRef<CodeSelection | null>(null)
+  const [selection, setSelection] = useState<CodeSelection | null>(null)
   const updateSelection = useCallback(() => {
     const _selection = monacoRef.current?.getSelection()
     if (_selection) {
-      if (!selection || _selection.startLineNumber !== selection.startLineNumber || _selection.startColumn !== selection.startColumn
-        || _selection.endLineNumber !== selection.endLineNumber || _selection.endColumn !== selection.endColumn) {
-        setSelection({
-          startLineNumber: _selection.startLineNumber,
-          startColumn: _selection.startColumn,
-          endLineNumber: _selection.endLineNumber,
-          endColumn: _selection.endColumn,
-        })
+      if (isFirst.current) {
+        firstSelection.current = _selection
+        isFirst.current = false
+        return
+      }
+      if (firstSelection.current && (_selection.startLineNumber !== firstSelection.current.startLineNumber || _selection.startColumn !== firstSelection.current.startColumn
+        || _selection.endLineNumber !== firstSelection.current.endLineNumber || _selection.endColumn !== firstSelection.current.endColumn)) {
+        firstSelection.current = _selection
+        if (!selection || _selection.startLineNumber !== selection.startLineNumber || _selection.startColumn !== selection.startColumn
+          || _selection.endLineNumber !== selection.endLineNumber || _selection.endColumn !== selection.endColumn) {
+          setSelection({
+            startLineNumber: _selection.startLineNumber,
+            startColumn: _selection.startColumn,
+            endLineNumber: _selection.endLineNumber,
+            endColumn: _selection.endColumn,
+          })
+        }
       }
     } else {
       setSelection(null)
@@ -246,8 +273,6 @@ export default function CodeView(props: CodeViewProps) {
     if (focusedNode) {
       if (focusedNode.uid === focusedItemRef.current) return
 
-      // addRunningActions(['codeView-focus'])
-
       // expand path to the uid
       const _expandedItems: TNodeUid[] = []
       let node = validNodeTree[focusedNode.uid]
@@ -262,8 +287,6 @@ export default function CodeView(props: CodeViewProps) {
       dispatch(selectFNNode([focusedNode.uid]))
 
       focusedItemRef.current = focusedNode.uid
-
-      // removeRunningActions(['codeView-focus'])
     }
   }, [focusedNode])
   // code edit - highlight/parse
@@ -329,7 +352,7 @@ export default function CodeView(props: CodeViewProps) {
       startLineNumber: o_range.startLineNumber,
       startColumn: o_range.startColumn,
       endLineNumber: o_range.startLineNumber + n_rowCount - 1,
-      endColumn: n_rowCount === 1 ? o_range.startColumn + changedCode.length : (changedCodeArr.pop() as string).length,
+      endColumn: n_rowCount === 1 ? o_range.startColumn + changedCode.length : (changedCodeArr.pop() as string).length + 1,
     }
 
     const columnOffset = (o_rowCount === 1 && n_rowCount > 1 ? -1 : 1) * (n_range.endColumn - o_range.endColumn)
