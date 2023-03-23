@@ -67,7 +67,7 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   setIFrameSrc: (src: string | null) => { },
   fileInfo: null,
   setFileInfo: (_fileInfo: TFileInfo) => { },
-  needToReloadIFrame: false,
+  needToReloadIFrame: true,
   setNeedToReloadIFrame: (_needToReloadIFrame: boolean) => { },
   // code view
   codeEditing: false,

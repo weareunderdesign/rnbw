@@ -50,7 +50,6 @@ import {
   navigatorSelector,
   selectFNNode,
   setCurrentFileContent,
-  updateFNTreeViewState,
 } from '@_redux/main';
 import {
   TFileInfo,
@@ -138,12 +137,12 @@ export default function Process(props: ProcessProps) {
       let _nodeTree: TNodeTreeData = JSON.parse(JSON.stringify(nodeTree))
       let _nodeMaxUid = nodeMaxUid
       let _fileInfo: TFileInfo
-      let _needToReloadIFrame = true
+      let _needToReloadIFrame = false
       let _newFocusedNodeUid = ''
 
-      // remove current file if it's none
+      // origin state
       if (!ffTree[file.uid]) {
-
+        return
       }
 
       const _file = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode
@@ -161,7 +160,7 @@ export default function Process(props: ProcessProps) {
         fileData.changed = fileData.content !== fileData.orgContent
 
         // reload iframe
-        _needToReloadIFrame = false
+        _needToReloadIFrame = true
       } else if (updateOpt.from === 'code') {
         if (fileData.type === 'html') {
           // detect seed node changed
@@ -185,7 +184,7 @@ export default function Process(props: ProcessProps) {
             fileData.changed = fileData.content !== fileData.orgContent
 
             // reload iframe
-            _needToReloadIFrame = false
+            _needToReloadIFrame = true
           } else {
             // side effects
             codeChanges.map(codeChange => {
@@ -278,14 +277,14 @@ export default function Process(props: ProcessProps) {
             const n_node = _nodeTree[o_uid]
             if (!n_node) {
               if (o_node.name === 'html' || o_node.name === 'head' || o_node.name === 'body') {
-                _needToReloadIFrame = false
+                _needToReloadIFrame = true
                 break
               }
             }
           }
 
-          // --------------------------- side effects ---------------------------
-          if (_needToReloadIFrame) {
+          // --------------------------- iframe side effects ---------------------------
+          if (!_needToReloadIFrame) {
             // get deleted/changed uids
             const deletedUids: TNodeUid[] = []
             const _uidsToChange: TNodeUid[] = []
@@ -294,29 +293,31 @@ export default function Process(props: ProcessProps) {
               const o_node = nodeTree[o_uid]
               const o_nodeData = o_node.data as THtmlNodeData
               const n_uid = n_uids[index]
-              if (o_uid !== n_uid && o_nodeData.valid) {
+              const n_node = _nodeTree[n_uid]
+              const n_nodeData = n_node?.data as THtmlNodeData
+              if (o_uid !== n_uid && (o_nodeData.valid || n_nodeData?.valid)) {
                 deletedUids.push(o_uid)
-                o_node.name !== '!doctype' && _uidsToChange.push(o_node.parentUid as TNodeUid)
+                o_node.name !== '!doctype' && _uidsToChange.push((o_nodeData.valid ? o_node.parentUid : n_node.parentUid) as TNodeUid)
               }
             })
             _uidsToChange.reverse()
-            const uidsToChange = getValidNodeUids(nodeTree, _uidsToChange.reduce((prev, cur) => {
+            const uidsToChange = getValidNodeUids(nodeTree, _uidsToChange.filter(uid => nodeTree[uid]).reduce((prev, cur) => {
               if (!prev.length || prev[prev.length - 1] !== cur) {
                 prev.push(cur)
               }
               return prev
             }, [] as TNodeUid[]))
 
-            // node tree view
-            dispatch(updateFNTreeViewState({ deletedUids }))
+            // node tree view - this will affect to hms record
+            // dispatch(updateFNTreeViewState({ deletedUids }))
 
             // iframe
             uidsToChange.map((uid) => {
               const n_node = _nodeTree[uid]
               const n_nodeData = n_node.data as THtmlNodeData
-
+              // replace html in iframe
               const element = document.querySelector('iframe')?.contentWindow?.window.document.querySelector(`[${NodeInAppAttribName}="${uid}"]`)
-              element ? element.innerHTML = n_nodeData.htmlInApp : null
+              element ? element.outerHTML = n_nodeData.htmlInApp : null
             })
           }
         }
@@ -348,7 +349,7 @@ export default function Process(props: ProcessProps) {
           }
         })
         // compare new file info with org file info
-        if (_needToReloadIFrame && fileInfo) {
+        if (!_needToReloadIFrame && fileInfo) {
           const _curScripts = _fileInfo.scripts
           const _orgScripts = fileInfo.scripts
 
@@ -383,11 +384,11 @@ export default function Process(props: ProcessProps) {
           })
 
           if (curScripts.length !== orgScripts.length) {
-            _needToReloadIFrame = false
+            _needToReloadIFrame = true
           } else {
             for (const script of curScripts) {
               if (!orgScriptObj[script]) {
-                _needToReloadIFrame = false
+                _needToReloadIFrame = true
                 break
               }
             }
@@ -397,7 +398,7 @@ export default function Process(props: ProcessProps) {
         // do nothing
       }
 
-      !_needToReloadIFrame && console.log('need to refresh iframe')
+      LogAllow && _needToReloadIFrame && console.log('need to refresh iframe')
       if (!onlyRenderViewState) {
         // update idb
         setFSPending(true)
@@ -417,12 +418,12 @@ export default function Process(props: ProcessProps) {
         setFileInfo(_fileInfo)
         setNeedToReloadIFrame(_needToReloadIFrame)
         // update redux
-        dispatch(setCurrentFileContent(fileData.contentInApp as string))
+        updateOpt.from !== 'hms' && dispatch(setCurrentFileContent(fileData.contentInApp as string))
       }
-      // select focused node in code view
+      // select new focused node in code view
       setNewFocusedNodeUid(_newFocusedNodeUid)
 
-      setUpdateOpt({ parse: null, from: _needToReloadIFrame ? updateOpt.from : null })
+      setUpdateOpt({ parse: null, from: updateOpt.from !== 'hms' && _needToReloadIFrame ? null : updateOpt.from })
     } else if (updateOpt.parse === false) {
       // serialize node tree data
       let _nodeTree: TNodeTreeData = JSON.parse(JSON.stringify(nodeTree))

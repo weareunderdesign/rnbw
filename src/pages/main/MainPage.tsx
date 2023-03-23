@@ -500,7 +500,8 @@ Your changes will be lost if you don't save them.`
   const onUndo = useCallback(() => {
     if (pending || iframeLoading || fsPending || codeEditing) return
 
-    if (pastLength === 0) return
+    LogAllow && pastLength === 1 && console.log('hms - it is the origin state')
+    if (pastLength === 1) return
 
     // setFFAction(fileAction)
     // setIsHms(true)
@@ -511,6 +512,7 @@ Your changes will be lost if you don't save them.`
   const onRedo = useCallback(() => {
     if (pending || iframeLoading || fsPending || codeEditing) return
 
+    LogAllow && futureLength === 0 && console.log('hms - it is the latest state')
     if (futureLength === 0) return
 
     // setIsHms(false)

@@ -497,12 +497,12 @@ export const IFrame = (props: IFrameProps) => {
   }, [event])
   // reload when script changes
   useEffect(() => {
-    !needToReloadIFrame && setNeedToReloadIFrame(true)
+    needToReloadIFrame && setNeedToReloadIFrame(false)
   }, [needToReloadIFrame])
 
   return useMemo(() => {
     return <>
-      {iframeSrc && needToReloadIFrame &&
+      {iframeSrc && !needToReloadIFrame &&
         <iframe
           ref={setContentRef}
           src={iframeSrc}
