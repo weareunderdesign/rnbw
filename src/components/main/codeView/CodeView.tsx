@@ -273,6 +273,8 @@ export default function CodeView(props: CodeViewProps) {
     if (focusedNode) {
       if (focusedNode.uid === focusedItemRef.current) return
 
+      if (updateOpt.from === 'hms') return
+
       // expand path to the uid
       const _expandedItems: TNodeUid[] = []
       let node = validNodeTree[focusedNode.uid]
@@ -285,6 +287,8 @@ export default function CodeView(props: CodeViewProps) {
 
       dispatch(focusFNNode(focusedNode.uid))
       dispatch(selectFNNode([focusedNode.uid]))
+
+      console.log('set focused selected items in code view')
 
       focusedItemRef.current = focusedNode.uid
     }
