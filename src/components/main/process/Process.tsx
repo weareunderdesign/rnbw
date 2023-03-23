@@ -11,12 +11,16 @@ import {
 } from 'react-redux';
 
 import {
+  LogAllow,
   NodeInAppAttribName,
   NodeUidSplitter,
   RainbowAppName,
   RootNodeUid,
 } from '@_constants/main';
-import { getSubNodeUidsByBfs } from '@_node/apis';
+import {
+  getSubNodeUidsByBfs,
+  getValidNodeUids,
+} from '@_node/apis';
 import {
   parseFile,
   serializeFile,
@@ -46,6 +50,7 @@ import {
   navigatorSelector,
   selectFNNode,
   setCurrentFileContent,
+  updateFNTreeViewState,
 } from '@_redux/main';
 import {
   TFileInfo,
@@ -106,7 +111,7 @@ export default function Process(props: ProcessProps) {
     // stage-view
     setIFrameSrc,
     fileInfo, setFileInfo,
-    hasSameScript, setHasSameScript,
+    needToReloadIFrame, setNeedToReloadIFrame,
   } = useContext(MainContext)
 
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
@@ -133,8 +138,13 @@ export default function Process(props: ProcessProps) {
       let _nodeTree: TNodeTreeData = JSON.parse(JSON.stringify(nodeTree))
       let _nodeMaxUid = nodeMaxUid
       let _fileInfo: TFileInfo
-      let _hasSameScript = true
+      let _needToReloadIFrame = true
       let _newFocusedNodeUid = ''
+
+      // remove current file if it's none
+      if (!ffTree[file.uid]) {
+
+      }
 
       const _file = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode
       const fileData = _file.data as TFileNodeData
@@ -150,7 +160,8 @@ export default function Process(props: ProcessProps) {
         fileData.contentInApp = contentInApp
         fileData.changed = fileData.content !== fileData.orgContent
 
-        _hasSameScript = false
+        // reload iframe
+        _needToReloadIFrame = false
       } else if (updateOpt.from === 'code') {
         if (fileData.type === 'html') {
           // detect seed node changed
@@ -158,12 +169,12 @@ export default function Process(props: ProcessProps) {
           for (const change of codeChanges) {
             const { uid } = change
             const node = _nodeTree[uid]
-            if (uid === RootNodeUid || node.name === '!doctype' || node.name === 'head' || node.name === 'body') {
+            if (uid === RootNodeUid || node.name === 'html' || node.name === 'head' || node.name === 'body') {
               seedNodeChanged = true
             }
           }
           if (seedNodeChanged) {
-            const parserRes = parseFile(fileData.type, file.content, htmlReferenceData, osType)
+            const parserRes = parseFile(fileData.type, file.content, htmlReferenceData, osType, null, String(_nodeMaxUid) as TNodeUid)
             const { formattedContent, contentInApp, tree, nodeMaxUid: newNodeMaxUid } = parserRes
 
             _nodeTree = tree
@@ -173,7 +184,8 @@ export default function Process(props: ProcessProps) {
             fileData.contentInApp = contentInApp
             fileData.changed = fileData.content !== fileData.orgContent
 
-            _hasSameScript = false
+            // reload iframe
+            _needToReloadIFrame = false
           } else {
             // side effects
             codeChanges.map(codeChange => {
@@ -243,9 +255,11 @@ export default function Process(props: ProcessProps) {
         setCodeEditing(false)
       } else if (updateOpt.from === 'hms') {
         if (file.content === fileData.contentInApp) {
+          LogAllow && console.log('view state changed by hms')
           // no need to build new node tree
           onlyRenderViewState = true
         } else {
+          LogAllow && console.log('file content changed by hms')
           // parse hms content keeping node uids
           const parserRes = parseFile(fileData.type, file.content, getReferenceData(fileData.type), osType, true, String(_nodeMaxUid) as TNodeUid)
           const { formattedContent, contentInApp, tree, nodeMaxUid: newNodeMaxUid } = parserRes
@@ -256,6 +270,55 @@ export default function Process(props: ProcessProps) {
           fileData.content = formattedContent
           fileData.contentInApp = contentInApp
           fileData.changed = fileData.content !== fileData.orgContent
+
+          // refresh iframe if it has seed node changes
+          const o_uids = getSubNodeUidsByBfs(RootNodeUid, nodeTree)
+          for (const o_uid of o_uids) {
+            const o_node = nodeTree[o_uid]
+            const n_node = _nodeTree[o_uid]
+            if (!n_node) {
+              if (o_node.name === 'html' || o_node.name === 'head' || o_node.name === 'body') {
+                _needToReloadIFrame = false
+                break
+              }
+            }
+          }
+
+          // --------------------------- side effects ---------------------------
+          if (_needToReloadIFrame) {
+            // get deleted/changed uids
+            const deletedUids: TNodeUid[] = []
+            const _uidsToChange: TNodeUid[] = []
+            const n_uids = getSubNodeUidsByBfs(RootNodeUid, _nodeTree)
+            o_uids.map((o_uid, index) => {
+              const o_node = nodeTree[o_uid]
+              const o_nodeData = o_node.data as THtmlNodeData
+              const n_uid = n_uids[index]
+              if (o_uid !== n_uid && o_nodeData.valid) {
+                deletedUids.push(o_uid)
+                o_node.name !== '!doctype' && _uidsToChange.push(o_node.parentUid as TNodeUid)
+              }
+            })
+            _uidsToChange.reverse()
+            const uidsToChange = getValidNodeUids(nodeTree, _uidsToChange.reduce((prev, cur) => {
+              if (!prev.length || prev[prev.length - 1] !== cur) {
+                prev.push(cur)
+              }
+              return prev
+            }, [] as TNodeUid[]))
+
+            // node tree view
+            dispatch(updateFNTreeViewState({ deletedUids }))
+
+            // iframe
+            uidsToChange.map((uid) => {
+              const n_node = _nodeTree[uid]
+              const n_nodeData = n_node.data as THtmlNodeData
+
+              const element = document.querySelector('iframe')?.contentWindow?.window.document.querySelector(`[${NodeInAppAttribName}="${uid}"]`)
+              element ? element.innerHTML = n_nodeData.htmlInApp : null
+            })
+          }
         }
 
         _newFocusedNodeUid = focusedItem
@@ -285,7 +348,7 @@ export default function Process(props: ProcessProps) {
           }
         })
         // compare new file info with org file info
-        if (_hasSameScript && fileInfo) {
+        if (_needToReloadIFrame && fileInfo) {
           const _curScripts = _fileInfo.scripts
           const _orgScripts = fileInfo.scripts
 
@@ -320,11 +383,11 @@ export default function Process(props: ProcessProps) {
           })
 
           if (curScripts.length !== orgScripts.length) {
-            _hasSameScript = false
+            _needToReloadIFrame = false
           } else {
             for (const script of curScripts) {
               if (!orgScriptObj[script]) {
-                _hasSameScript = false
+                _needToReloadIFrame = false
                 break
               }
             }
@@ -334,6 +397,7 @@ export default function Process(props: ProcessProps) {
         // do nothing
       }
 
+      !_needToReloadIFrame && console.log('need to refresh iframe')
       if (!onlyRenderViewState) {
         // update idb
         setFSPending(true)
@@ -351,14 +415,14 @@ export default function Process(props: ProcessProps) {
         setNodeTree(_nodeTree)
         setNodeMaxUid(_nodeMaxUid)
         setFileInfo(_fileInfo)
-        setHasSameScript(_hasSameScript)
+        setNeedToReloadIFrame(_needToReloadIFrame)
         // update redux
         dispatch(setCurrentFileContent(fileData.contentInApp as string))
       }
       // select focused node in code view
       setNewFocusedNodeUid(_newFocusedNodeUid)
 
-      setUpdateOpt({ parse: null, from: updateOpt.from })
+      setUpdateOpt({ parse: null, from: _needToReloadIFrame ? updateOpt.from : null })
     } else if (updateOpt.parse === false) {
       // serialize node tree data
       let _nodeTree: TNodeTreeData = JSON.parse(JSON.stringify(nodeTree))
@@ -425,8 +489,7 @@ export default function Process(props: ProcessProps) {
   }, [nodeTree])
   // processor-validNodeTree
   useEffect(() => {
-    console.log('processor-validNodeTree')
-    if (updateOpt.parse === null && updateOpt.from === 'file') {
+    if (updateOpt.parse === null && (updateOpt.from === 'file' || updateOpt.from === null)) {
       dispatch(clearFNState())
       dispatch(expandFNNode(Object.keys(validNodeTree).slice(0, 50)))
       removeRunningActions(['processor-validNodeTree'])
@@ -442,6 +505,8 @@ export default function Process(props: ProcessProps) {
       dispatch(focusFNNode(_focusedItem))
       dispatch(expandFNNode(_expandedItems))
       dispatch(selectFNNode(_selectedItems))
+      removeRunningActions(['processor-validNodeTree'])
+    } else if (updateOpt.parse === null && updateOpt.from === 'node') {
       removeRunningActions(['processor-validNodeTree'])
     } else {
       removeRunningActions(['processor-validNodeTree'], false)

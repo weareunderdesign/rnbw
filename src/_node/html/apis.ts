@@ -139,11 +139,10 @@ export const indentNode = (tree: TNodeTreeData, node: TNode, indentSize: number,
   })
 }
 
-export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData, osType: TOsType, keepNodeUids: boolean = false, nodeMaxUid: TNodeUid = ''): THtmlParserResponse => {
-  let _nodeMaxUid = Number(nodeMaxUid)
+export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData, osType: TOsType, keepNodeUids: null | boolean = false, nodeMaxUid: TNodeUid = ''): THtmlParserResponse => {
+  let _nodeMaxUid = keepNodeUids === false ? 0 : Number(nodeMaxUid)
 
   // parse the html content
-  let UID = 0
   const tmpTree: TNodeTreeData = {}
   ReactHtmlParser(content, {
     decodeEntities: true,
@@ -166,7 +165,7 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
       nodes.map((node) => {
         const uid = keepNodeUids ?
           node.attribs ? node.attribs[NodeInAppAttribName] : String(++_nodeMaxUid) as TNodeUid
-          : String(++UID) as TNodeUid
+          : String(++_nodeMaxUid) as TNodeUid
 
         tmpTree[RootNodeUid].children.push(uid)
         tmpTree[uid] = {
@@ -190,7 +189,7 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
         nodeData.children.map((child: THtmlDomNodeData) => {
           const uid = keepNodeUids ?
             child.attribs ? child.attribs[NodeInAppAttribName] : String(++_nodeMaxUid) as TNodeUid
-            : String(++UID) as TNodeUid
+            : String(++_nodeMaxUid) as TNodeUid
 
           node.children.push(uid)
           node.isEntity = false
@@ -251,10 +250,11 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
       }
     }
   })
+
   // set html, htmlInApp, code range to nodes
   const { html: formattedContent, htmlInApp: contentInApp } = serializeHtml(tree, htmlReferenceData, osType)
 
-  return { formattedContent, contentInApp, tree, nodeMaxUid: String(keepNodeUids ? _nodeMaxUid : UID) as TNodeUid }
+  return { formattedContent, contentInApp, tree, nodeMaxUid: String(_nodeMaxUid) as TNodeUid }
 }
 export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlReferenceData, osType: TOsType): THtmlNodeData => {
   // build html, htmlInApp

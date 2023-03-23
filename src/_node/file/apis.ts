@@ -157,7 +157,7 @@ export const rmnod = (path: string, cb?: () => void) => {
   })
 }
 
-export const parseFile = (type: TFileType, content: string, referenceData: TNodeReferenceData, osType: TOsType, keepNodeUids: boolean = false, nodeMaxUid: TNodeUid = ''): TFileParserResponse => {
+export const parseFile = (type: TFileType, content: string, referenceData: TNodeReferenceData, osType: TOsType, keepNodeUids: null | boolean = false, nodeMaxUid: TNodeUid = ''): TFileParserResponse => {
   if (type === 'html') {
     return parseHtml(content, referenceData as THtmlReferenceData, osType, keepNodeUids, nodeMaxUid)
   } else {

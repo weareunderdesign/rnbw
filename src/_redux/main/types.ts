@@ -68,8 +68,8 @@ export type TMainContext = {
   setIFrameSrc: (src: string | null) => void,
   fileInfo: TFileInfo,
   setFileInfo: (_fileInfo: TFileInfo) => void,
-  hasSameScript: boolean,
-  setHasSameScript: (_hasSameScript: boolean) => void,
+  needToReloadIFrame: boolean,
+  setNeedToReloadIFrame: (_needToReloadIFrame: boolean) => void,
   // code view
   codeEditing: boolean,
   setCodeEditing: (editing: boolean) => void,

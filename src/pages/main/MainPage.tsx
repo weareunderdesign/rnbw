@@ -138,12 +138,14 @@ export default function MainPage(props: MainPageProps) {
     }
     if (!found) return
 
+    LogAllow && console.log(actionNames, effect)
+
     if (noRunningAction()) {
-      LogAllow && effect && console.log('hms added', actionNames)
+      LogAllow && effect && console.log('hms added')
       setPending(false)
       effect && dispatch(increaseActionGroupIndex())
     }
-  }, [noRunningAction])
+  }, [noRunningAction, file.content])
   // node actions
   const [activePanel, setActivePanel] = useState<TPanelContext>('unknown')
   const [clipboardData, setClipboardData] = useState<TClipboardData>({ panel: 'unknown', type: null, uids: [] })
@@ -169,7 +171,7 @@ export default function MainPage(props: MainPageProps) {
   const [iframeLoading, setIFrameLoading] = useState<boolean>(false)
   const [iframeSrc, setIFrameSrc] = useState<string | null>(null)
   const [fileInfo, setFileInfo] = useState<TFileInfo>(null)
-  const [hasSameScript, setHasSameScript] = useState<boolean>(true)
+  const [needToReloadIFrame, setNeedToReloadIFrame] = useState<boolean>(true)
   // code view
   const [codeEditing, setCodeEditing] = useState<boolean>(false)
   const [codeChanges, setCodeChanges] = useState<TCodeChange[]>([])
@@ -496,26 +498,26 @@ Your changes will be lost if you don't save them.`
   }, [cmdkOpen])
   // hms methods
   const onUndo = useCallback(() => {
-    if (pending) return
+    if (pending || iframeLoading || fsPending || codeEditing) return
 
     if (pastLength === 0) return
 
-    setFFAction(fileAction)
-    setIsHms(true)
+    // setFFAction(fileAction)
+    // setIsHms(true)
 
+    dispatch({ type: 'main/undo' })
     setUpdateOpt({ parse: true, from: 'hms' })
-    setTimeout(() => dispatch({ type: 'main/undo' }), 0)
-  }, [pending, fileAction, pastLength])
+  }, [pending, iframeLoading, fsPending, codeEditing, pastLength])
   const onRedo = useCallback(() => {
-    if (pending) return
+    if (pending || iframeLoading || fsPending || codeEditing) return
 
     if (futureLength === 0) return
 
-    setIsHms(false)
+    // setIsHms(false)
 
+    dispatch({ type: 'main/redo' })
     setUpdateOpt({ parse: true, from: 'hms' })
-    setTimeout(() => dispatch({ type: 'main/redo' }), 0)
-  }, [pending, futureLength])
+  }, [pending, iframeLoading, fsPending, codeEditing, futureLength])
   // reset fileAction in the new history
   useEffect(() => {
     futureLength === 0 && fileAction.type !== null && dispatch(setFileAction({ type: null }))
@@ -813,7 +815,7 @@ Your changes will be lost if you don't save them.`
         iframeLoading, setIFrameLoading,
         iframeSrc, setIFrameSrc,
         fileInfo, setFileInfo,
-        hasSameScript, setHasSameScript,
+        needToReloadIFrame, setNeedToReloadIFrame,
         // code view
         codeEditing, setCodeEditing,
         codeChanges, setCodeChanges,
@@ -840,7 +842,7 @@ Your changes will be lost if you don't save them.`
       <Process />
 
       {/* spinner */}
-      <Loader show={pending || iframeLoading || fsPending}></Loader>
+      <Loader show={pending || iframeLoading || fsPending || codeEditing}></Loader>
 
       {/* panels */}
       <PanelGroup

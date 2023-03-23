@@ -86,7 +86,7 @@ export const IFrame = (props: IFrameProps) => {
     // stage-view
     iframeSrc,
     fileInfo, setFileInfo,
-    hasSameScript, setHasSameScript,
+    needToReloadIFrame, setNeedToReloadIFrame,
   } = useContext(MainContext)
 
   // redux state
@@ -497,17 +497,17 @@ export const IFrame = (props: IFrameProps) => {
   }, [event])
   // reload when script changes
   useEffect(() => {
-    !hasSameScript && setHasSameScript(true)
-  }, [hasSameScript])
+    !needToReloadIFrame && setNeedToReloadIFrame(true)
+  }, [needToReloadIFrame])
 
   return useMemo(() => {
     return <>
-      {iframeSrc && hasSameScript &&
+      {iframeSrc && needToReloadIFrame &&
         <iframe
           ref={setContentRef}
           src={iframeSrc}
           style={{ position: "absolute", width: "100%", height: "100%" }}
         />}
     </>
-  }, [iframeSrc, hasSameScript])
+  }, [iframeSrc, needToReloadIFrame])
 }
