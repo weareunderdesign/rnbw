@@ -495,7 +495,7 @@ export default function Process(props: ProcessProps) {
       dispatch(expandFNNode(Object.keys(validNodeTree).slice(0, 50)))
       removeRunningActions(['processor-validNodeTree'])
     } else if (updateOpt.parse === null && updateOpt.from === 'code') {
-      const _focusedItem: TNodeUid = validNodeTree[focusedItem] === undefined ? newFocusedNodeUid : focusedItem
+      const _focusedItem = newFocusedNodeUid
       const _expandedItems = expandedItems.filter((uid) => {
         return validNodeTree[uid] !== undefined && validNodeTree[uid].isEntity === false
       })
@@ -504,8 +504,8 @@ export default function Process(props: ProcessProps) {
       })
       dispatch(clearFNState())
       dispatch(focusFNNode(_focusedItem))
-      dispatch(expandFNNode(_expandedItems))
-      dispatch(selectFNNode(_selectedItems))
+      dispatch(expandFNNode([..._expandedItems]))
+      dispatch(selectFNNode([..._selectedItems, _focusedItem]))
       removeRunningActions(['processor-validNodeTree'])
     } else if (updateOpt.parse === null && updateOpt.from === 'node') {
       removeRunningActions(['processor-validNodeTree'])
