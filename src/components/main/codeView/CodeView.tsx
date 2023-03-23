@@ -178,10 +178,9 @@ export default function CodeView(props: CodeViewProps) {
     endLineNumber: 0,
     endColumn: 0,
   })
-  const updateFocusNSelection = useCallback(() => {
-    const hasFocus = monacoRef.current?.hasTextFocus()
+  const updateSelection = useCallback(() => {
     const _selection = monacoRef.current?.getSelection()
-    if (_selection && hasFocus) {
+    if (_selection) {
       if (!selection || _selection.startLineNumber !== selection.startLineNumber || _selection.startColumn !== selection.startColumn
         || _selection.endLineNumber !== selection.endLineNumber || _selection.endColumn !== selection.endColumn) {
         setSelection({
@@ -196,9 +195,9 @@ export default function CodeView(props: CodeViewProps) {
     }
   }, [selection])
   useEffect(() => {
-    const cursorDetectInterval = setInterval(() => updateFocusNSelection(), 0)
+    const cursorDetectInterval = setInterval(() => updateSelection(), 0)
     return () => clearInterval(cursorDetectInterval)
-  }, [updateFocusNSelection])
+  }, [updateSelection])
   // detect node of current selection
   const [focusedNode, setFocusedNode] = useState<TNode>()
   useEffect(() => {
@@ -314,6 +313,9 @@ export default function CodeView(props: CodeViewProps) {
     setFocusedNode(undefined)
   }, [ffTree, file.uid, validNodeTree, osType])
   const handleEditorChange = useCallback((value: string | undefined, ev: monaco.editor.IModelContentChangedEvent) => {
+    const hasFocus = monacoRef.current?.hasTextFocus()
+    if (!hasFocus) return
+
     if (!focusedNode) return
 
     // get changed part
