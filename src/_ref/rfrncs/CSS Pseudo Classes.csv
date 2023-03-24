@@ -1,0 +1,38 @@
+﻿Name,Selector,Example,Example description
+Active,:active,a:active,Selects the active link
+Checked,:checked,input:checked,Selects every checked <input> element
+Disabled,:disabled,input:disabled,Selects every disabled <input> element
+Empty,:empty,p:empty,Selects every <p> element that has no children
+Enabled,:enabled,input:enabled,Selects every enabled <input> element
+First Child,:first-child,p:first-child,Selects every <p> elements that is the first child of its parent
+First of Type,:first-of-type,p:first-of-type,Selects every <p> element that is the first <p> element of its parent
+Focus,:focus,input:focus,Selects the <input> element that has focus
+Hover,:hover,a:hover,Selects links on mouse over
+In Range,:in-range,input:in-range,Selects <input> elements with a value within a specified range
+Invalid,:invalid,input:invalid,Selects all <input> elements with an invalid value
+Last Child,:last-child,p:last-child,Selects every <p> elements that is the last child of its parent
+Last of Type,:last-of-type,p:last-of-type,Selects every <p> element that is the last <p> element of its parent
+Link,:link,a:link,Selects all unvisited links
+Only of Type,:only-of-type,p:only-of-type,Selects every <p> element that is the only <p> element of its parent
+Only Child,:only-child,p:only-child,Selects every <p> element that is the only child of its parent
+Optional,:optional,input:optional,"Selects <input> elements with no ""required"" attribute"
+Out of Range,:out-of-range,input:out-of-range,Selects <input> elements with a value outside a specified range
+Read Only,:read-only,input:read-only,"Selects <input> elements with a ""readonly"" attribute specified"
+Read Write,:read-write,input:read-write,"Selects <input> elements with no ""readonly"" attribute"
+Required,:required,input:required,"Selects <input> elements with a ""required"" attribute specified"
+Valid,:valid,input:valid,Selects all <input> elements with a valid value
+Visites,:visited,a:visited,Selects all visited links
+Placeholder,::placeholder,input::placeholder,Selects every <input> element that has placeholder
+After,::after,p::after,Insert content after every <p> element
+Before,::before,p::before,Insert content before every <p> element
+First Letter,::first-letter,p::first-letter,Selects the first letter of every <p> element
+First Line,::first-line,p::first-line,Selects the first line of every <p> element
+Selection,::selection,p::selection,Selects the portion of an element that is selected by a user
+Target,:target,#news:target,Selects the current active #news element (clicked on a URL containing that anchor name)
+Language is…,:lang(language),p:lang(it),"Selects every <p> element with a lang attribute value starting with ""it"""
+Is Not…,:not(selector),:not(p),Selects every element that is not a <p> element
+# Child,:nth-child(n),p:nth-child(2),Selects every <p> element that is the second child of its parent
+# Last Child,:nth-last-child(n),p:nth-last-child(2),"Selects every <p> element that is the second child of its parent, counting from the last child"
+# Last of Type,:nth-last-of-type(n),p:nth-last-of-type(2),"Selects every <p> element that is the second <p> element of its parent, counting from the last child"
+# of Type,:nth-of-type(n),p:nth-of-type(2),Selects every <p> element that is the second <p> element of its parent
+Root,:root,root,Selects the document's root element
