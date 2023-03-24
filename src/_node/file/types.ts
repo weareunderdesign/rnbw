@@ -27,7 +27,6 @@ export type TFileHandlerInfoObj = { [uid: TNodeUid]: TFileHandlerInfo }
 export type TFilesReferenceData = {
   [name: string]: TFilesReference,
 }
-
 /**
  * files reference
  */
@@ -39,7 +38,6 @@ export type TFilesReference = {
   "Description": string,
   "Featured": string,
 }
-
 export type TFileNodeData = {
   valid: boolean,
 

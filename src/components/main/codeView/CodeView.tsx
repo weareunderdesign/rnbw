@@ -40,7 +40,7 @@ import {
   selectFNNode,
   setCurrentFileContent,
 } from '@_redux/main';
-import { getLineBreakCharacter } from '@_services/global';
+import { getLineBreaker } from '@_services/global';
 import { TCodeChange } from '@_types/main';
 import Editor, {
   loader,
@@ -310,7 +310,7 @@ export default function CodeView(props: CodeViewProps) {
 
     // get code changes
     const currentCode = codeContent.current
-    const currentCodeArr = currentCode.split(getLineBreakCharacter(osType))
+    const currentCodeArr = currentCode.split(getLineBreaker(osType))
     const codeChanges: TCodeChange[] = []
     for (const codeChange of codeChangeDecorationRef.current.entries()) {
       const uid = codeChange[0]
@@ -322,7 +322,7 @@ export default function CodeView(props: CodeViewProps) {
         partCodeArr.push(currentCodeArr[line])
       }
       endLineNumber > startLineNumber && partCodeArr.push(currentCodeArr[endLineNumber - 1].slice(0, endColumn - 1))
-      const content = partCodeArr.join(getLineBreakCharacter(osType))
+      const content = partCodeArr.join(getLineBreaker(osType))
 
       codeChanges.push({ uid, content })
     }

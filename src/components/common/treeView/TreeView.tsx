@@ -1,5 +1,3 @@
-// import 'react-complex-tree/lib/style.css';
-
 import React, { useMemo } from 'react';
 
 import {
@@ -13,13 +11,10 @@ export default function TreeView(props: TreeViewProps) {
   // styles
   const width: string = useMemo(() => props.width, [props.width])
   const height: string = useMemo(() => props.height, [props.height])
-
   // tree id, label
   const info = useMemo(() => props.info, [props.info])
-
   // render items
   const data = useMemo(() => props.data, [props.data])
-
   // view state
   const focusedItem = useMemo(() => props.focusedItem, [props.focusedItem])
   const expandedItems = useMemo(() => props.expandedItems, [props.expandedItems])
@@ -34,26 +29,20 @@ export default function TreeView(props: TreeViewProps) {
     return state
   }, [info.id, focusedItem, expandedItems, selectedItems])
 
-  return (<>
+  return <>
     <div style={{ width: width, height: height }}>
       <ControlledTreeEnvironment
         viewState={viewState}
-
         getItemTitle={(item) => {
           return item.data.name
         }}
-
         {...props.renderers}
-
         {...props.props}
-
         {...props.callbacks}
-
-        // Load Data
         items={data}
       >
         <Tree treeId={info.id} rootItem="ROOT" treeLabel={info.label} />
       </ControlledTreeEnvironment>
     </div>
-  </>)
+  </>
 }

@@ -36,21 +36,18 @@ export type THtmlParserResponse = {
   tree: TNodeTreeData,
   nodeMaxUid: TNodeUid,
 }
-
 /**
  * html reference data
  */
 export type THtmlReferenceData = {
   elements: THtmlElementsReferenceData,
 }
-
 /**
  * html elements reference data
  */
 export type THtmlElementsReferenceData = {
   [tag: string]: THtmlElementsReference,
 }
-
 /**
  * html element reference
  */
@@ -66,7 +63,6 @@ export type THtmlElementsReference = {
   "Placeholder": string,
   "Cover Image": string,
 }
-
 export type THtmlPageSettings = {
   title: string,
   favicon: string[],

@@ -4,7 +4,7 @@ import {
   NodeInAppAttribName,
   RootNodeUid,
 } from '@_constants/main';
-import { getLineBreakCharacter } from '@_services/global';
+import { getLineBreaker } from '@_services/global';
 import { TOsType } from '@_types/global';
 
 import {
@@ -45,7 +45,7 @@ export const addFormatTextBeforeNode = (tree: TNodeTreeData, node: TNode, uid: T
 
       type: 'text',
       name: '',
-      data: getLineBreakCharacter(osType) + ' '.repeat((parentNodeDepth) * tabSize),
+      data: getLineBreaker(osType) + ' '.repeat((parentNodeDepth) * tabSize),
       attribs: { [NodeInAppAttribName]: uid },
 
       html: '',
@@ -93,7 +93,7 @@ export const addFormatTextAfterNode = (tree: TNodeTreeData, node: TNode, uid: TN
 
       type: 'text',
       name: '',
-      data: getLineBreakCharacter(osType) + ' '.repeat((position === parentNode.children.length - 1 ? parentNodeDepth - 1 : parentNodeDepth) * tabSize),
+      data: getLineBreaker(osType) + ' '.repeat((position === parentNode.children.length - 1 ? parentNodeDepth - 1 : parentNodeDepth) * tabSize),
       attribs: { [NodeInAppAttribName]: uid },
 
       html: '',
@@ -130,11 +130,11 @@ export const indentNode = (tree: TNodeTreeData, node: TNode, indentSize: number,
     const nodeData = subNode.data as THtmlNodeData
     if (nodeData.isFormatText) {
       const text = nodeData.data
-      const textParts = text.split(getLineBreakCharacter(osType))
+      const textParts = text.split(getLineBreaker(osType))
       const singleLine = textParts.length === 1
       const lastPart = textParts.pop()
       const newLastPart = ' '.repeat(lastPart?.length || 0 + indentSize)
-      nodeData.data = textParts.join(getLineBreakCharacter(osType)) + (singleLine ? '' : getLineBreakCharacter(osType)) + newLastPart
+      nodeData.data = textParts.join(getLineBreaker(osType)) + (singleLine ? '' : getLineBreaker(osType)) + newLastPart
     }
   })
 }
@@ -350,11 +350,11 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
     const beforeHtml = htmlArr.slice(0, detectedCount + 1).join(html)
     detected.set(html, detectedCount + 1)
 
-    const beforeHtmlArr = beforeHtml.split(getLineBreakCharacter(osType))
+    const beforeHtmlArr = beforeHtml.split(getLineBreaker(osType))
     const startLineNumber = beforeHtmlArr.length - Number(uid === RootNodeUid)
     const startColumn = (beforeHtmlArr.pop()?.length || 0) + 1 - Number(uid === RootNodeUid)
 
-    const contentArr = html.split(getLineBreakCharacter(osType))
+    const contentArr = html.split(getLineBreaker(osType))
     const endLineNumber = startLineNumber + contentArr.length - 1 + Number(uid === RootNodeUid)
     const endColumn = (contentArr.length === 1 ? startColumn : 1) + (contentArr.pop()?.length || 0) + Number(uid === RootNodeUid)
 

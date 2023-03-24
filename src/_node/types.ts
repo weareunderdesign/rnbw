@@ -24,19 +24,6 @@ export type TNodeTreeData = {
   [uid: TNodeUid]: TNode,
 }
 export type TNodeTreeContext = 'file' | 'html'
-
-
-
-
-
-
-
-
-
-
-
-
-
 export type TNodeApiResponse = {
   tree: TNodeTreeData,
   nodeMaxUid?: TNodeUid,
@@ -44,10 +31,6 @@ export type TNodeApiResponse = {
   addedUidMap?: Map<TNodeUid, TNodeUid>,
   position?: number,
 }
-
-
-
-
 export type TFileParserResponse = {
   formattedContent: string,
   contentInApp: string,
@@ -55,7 +38,5 @@ export type TFileParserResponse = {
   nodeMaxUid: TNodeUid,
   info?: TFileInfo,
 }
-
-
 export type TNodeReferenceData = THtmlReferenceData
 
