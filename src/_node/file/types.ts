@@ -2,13 +2,31 @@ import { TFileType } from '@_types/main';
 
 import { TNodeUid } from '../';
 
+export type TFileHandlerInfo = {
+  uid: TNodeUid,
+  parentUid: TNodeUid | null,
+  children: TNodeUid[],
+
+  path: string,
+  kind: 'directory' | 'file',
+  name: string,
+  ext?: string,
+
+  content?: string,
+
+  handler: FileSystemHandle,
+}
+export type TFileHandlerInfoObj = { [uid: TNodeUid]: TFileHandlerInfo }
+
+
+
+
 /**
  * files reference data
  */
 export type TFilesReferenceData = {
   [name: string]: TFilesReference,
 }
-
 /**
  * files reference
  */
@@ -20,21 +38,6 @@ export type TFilesReference = {
   "Description": string,
   "Featured": string,
 }
-
-export type TFileHandlerInfo = {
-  uid: TNodeUid,
-  parentUid: TNodeUid | null,
-  path: string,
-  kind: 'directory' | 'file',
-  name: string,
-  ext?: string,
-  handler: FileSystemHandle,
-  content?: string,
-  children: TNodeUid[],
-}
-
-export type TFileHandlerInfoObj = { [uid: TNodeUid]: TFileHandlerInfo }
-
 export type TFileNodeData = {
   valid: boolean,
 

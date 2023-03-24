@@ -1,0 +1,15 @@
+﻿Name,Attribute,Description,Value
+Identifier,id,Specifies a unique id for an element,Free Text
+Title,title,Specifies extra information about an element,Free Text
+Access Key,accesskey,Specifies a shortcut key to activate/focus an element,Free Text
+Editable,contenteditable,Specifies whether the content of an element is editable or not,"Toggle (true, false)"
+Direction,dir,Specifies the text direction for the content in an element,Dropdown
+Draggable,draggable,Specifies whether an element is draggable or not,"Toggle (true, false)"
+Dropzone,dropzone,"Specifies whether the dragged data is copied, moved, or linked, when dropped",
+Hidden,hidden,"Specifies that an element is not yet, or is no longer, relevant","Toggle (true, false)"
+Language,lang,Specifies the language of the element's content,
+Spell Check,spellcheck,Specifies whether the element is to have its spelling and grammar checked or not,
+Tab Index,tabindex,Specifies the tabbing order of an element,
+Translate,translate,Specifies whether the content of an element should be translated or not,
+Class,class,Specifies one or more classnames for an element (refers to a class in a style sheet),
+Style,style,Specifies an inline CSS style for an element,

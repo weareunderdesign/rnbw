@@ -10,17 +10,15 @@ import configureStore from '@_redux/_root';
 import App from './app';
 
 // configure store
-const initialState = {};
-const store = configureStore(initialState);
+const initialState = {}
+const store = configureStore(initialState)
 
 // render #root
 const root = ReactDOMClient.createRoot(
   document.getElementById('root') as HTMLElement
-);
+)
 root.render(
-  // <React.StrictMode>
   <Provider store={store}>
     <App />
   </Provider>
-  // </React.StrictMode>
-);
+)

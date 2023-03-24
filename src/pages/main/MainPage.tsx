@@ -9,6 +9,10 @@ import React, {
 import cx from 'classnames';
 import { Command } from 'cmdk';
 import {
+  getMany,
+  setMany,
+} from 'idb-keyval';
+import {
   useDispatch,
   useSelector,
 } from 'react-redux';
@@ -30,8 +34,10 @@ import {
   StageView,
 } from '@_components/main';
 import {
+  AddNodeActionPrefix,
   DefaultTabSize,
   LogAllow,
+  RootNodeUid,
 } from '@_constants/main';
 import {
   TFileNodeData,
@@ -83,6 +89,8 @@ import {
   TCmdkKeyMap,
   TCmdkReference,
   TCmdkReferenceData,
+  TCodeChange,
+  TEvent,
   TFileAction,
   TFileInfo,
   TPanelContext,
@@ -93,23 +101,22 @@ import { getCommandKey } from '../../services/global';
 import { MainPageProps } from './types';
 
 export default function MainPage(props: MainPageProps) {
+  // -------------------------------------------------------------- redux  --------------------------------------------------------------
   const dispatch = useDispatch()
-
-  // redux state
   const actionGroupIndex = useSelector(getActionGroupIndexSelector)
   const { workspace, project, file } = useSelector(navigatorSelector)
   const { fileAction } = useSelector(globalSelector)
   const { focusedItem: ffFocusedItem, expandedItems: ffExpandedItems, selectedItems: ffSelectedItems, expandedItemsObj: ffExpandedItemsObj, selectedItemsObj: ffSelectedItemsObj } = useSelector(ffSelector)
   const { focusedItem: fnFocusedItem, expandedItems: fnExpandedItems, selectedItems: fnSelectedItems, expandedItemsObj: fnExpandedItemsObj, selectedItemsObj: fnSelectedItemsObj } = useSelector(fnSelector)
   const { futureLength, pastLength } = useSelector(hmsInfoSelector)
-
   // -------------------------------------------------------------- main context --------------------------------------------------------------
-  // groupping action
+  // global action
+  const [pending, setPending] = useState<boolean>(false)
   const runningActions = useRef<{ [actionName: string]: boolean }>({})
-  const noRunningAction = () => {
+  const noRunningAction = useCallback(() => {
     return Object.keys(runningActions.current).length === 0 ? true : false
-  }
-  const addRunningActions = (actionNames: string[]) => {
+  }, [])
+  const addRunningActions = useCallback((actionNames: string[]) => {
     let found: boolean = false
     for (const actionName of actionNames) {
       if (runningActions.current[actionName] === undefined) {
@@ -120,8 +127,8 @@ export default function MainPage(props: MainPageProps) {
     if (!found) return
 
     setPending(true)
-  }
-  const removeRunningActions = (actionNames: string[], effect: boolean = true) => {
+  }, [])
+  const removeRunningActions = useCallback((actionNames: string[], effect: boolean = true) => {
     let found: boolean = false
     for (const actionName of actionNames) {
       if (runningActions.current[actionName] !== undefined) {
@@ -131,13 +138,20 @@ export default function MainPage(props: MainPageProps) {
     }
     if (!found) return
 
+    LogAllow && console.log('remove running actions', actionNames, effect)
+
     if (noRunningAction()) {
+      LogAllow && effect && console.log('hms added')
       setPending(false)
       effect && dispatch(increaseActionGroupIndex())
     }
-  }
-
+  }, [noRunningAction, file.content])
+  // node actions
+  const [activePanel, setActivePanel] = useState<TPanelContext>('unknown')
+  const [clipboardData, setClipboardData] = useState<TClipboardData>({ panel: 'unknown', type: null, uids: [] })
+  const [event, setEvent] = useState<TEvent>(null)
   // file tree view
+  const [fsPending, setFSPending] = useState<boolean>(false)
   const [ffTree, setFFTree] = useState<TNodeTreeData>({})
   const setFFNode = useCallback((ffNode: TNode) => {
     const _ffTree = JSON.parse(JSON.stringify(ffTree))
@@ -146,39 +160,25 @@ export default function MainPage(props: MainPageProps) {
   }, [ffTree])
   const [ffHandlers, setFFHandlers] = useState<TFileHandlerCollection>({})
   const [ffHoveredItem, setFFHoveredItem] = useState<TNodeUid>('')
-
+  const [isHms, setIsHms] = useState<boolean | null>(null)
+  const [ffAction, setFFAction] = useState<TFileAction>({ type: null })
   // node tree view
   const [fnHoveredItem, setFNHoveredItem] = useState<TNodeUid>('')
   const [nodeTree, setNodeTree] = useState<TNodeTreeData>({})
   const [validNodeTree, setValidNodeTree] = useState<TNodeTreeData>({})
-
-  // update opt
+  const [nodeMaxUid, setNodeMaxUid] = useState<number>(0)
+  // stage-view
+  const [iframeLoading, setIFrameLoading] = useState<boolean>(false)
+  const [iframeSrc, setIFrameSrc] = useState<string | null>(null)
+  const [fileInfo, setFileInfo] = useState<TFileInfo>(null)
+  const [needToReloadIFrame, setNeedToReloadIFrame] = useState<boolean>(true)
+  // code view
+  const [codeEditing, setCodeEditing] = useState<boolean>(false)
+  const [codeChanges, setCodeChanges] = useState<TCodeChange[]>([])
+  const [tabSize, setTabSize] = useState<number>(DefaultTabSize)
+  const [newFocusedNodeUid, setNewFocusedNodeUid] = useState<TNodeUid>('')
+  // processor
   const [updateOpt, setUpdateOpt] = useState<TUpdateOptions>({ parse: null, from: null })
-
-  // ff hms
-  const [isHms, setIsHms] = useState<boolean | null>(null)
-  const [ffAction, setFFAction] = useState<TFileAction>({ type: null })
-
-  // cmdk
-  const [currentCommand, setCurrentCommand] = useState<TCommand>({ action: '' })
-  const [cmdkOpen, setCmdkOpen] = useState<boolean>(false)
-  const [cmdkPages, setCmdkPages] = useState<string[]>([])
-  const cmdkPage = useMemo(() => {
-    return cmdkPages.length == 0 ? '' : cmdkPages[cmdkPages.length - 1]
-  }, [cmdkPages])
-
-  // global
-  const [pending, setPending] = useState<boolean>(false)
-  const [messages, setMessages] = useState<TToast[]>([])
-  const addMessage = (message: TToast) => {
-    setMessages([...messages, message])
-  }
-  const removeMessage = (index: number) => {
-    const newMessages = JSON.parse(JSON.stringify(messages))
-    newMessages.splice(index)
-    setMessages(JSON.parse(JSON.stringify(newMessages)))
-  }
-
   // references
   const [filesReferenceData, setFilesReferenceData] = useState<TFilesReferenceData>({})
   const [htmlReferenceData, setHtmlReferenceData] = useState<THtmlReferenceData>({
@@ -187,12 +187,13 @@ export default function MainPage(props: MainPageProps) {
   const [cmdkReferenceData, setCmdkReferenceData] = useState<TCmdkReferenceData>({})
   const [cmdkReferenceJumpstart, setCmdkReferenceJumpstart] = useState<TCmdkGroupData>({})
   const [cmdkReferenceActions, setCmdkReferenceActions] = useState<TCmdkGroupData>({})
-
-  // active panel/clipboard
-  const [activePanel, setActivePanel] = useState<TPanelContext>('unknown')
-  const [clipboardData, setClipboardData] = useState<TClipboardData>({ panel: 'unknown', type: null, uids: [] })
-
-  // cmdk modal handle variables
+  // cmdk
+  const [currentCommand, setCurrentCommand] = useState<TCommand>({ action: '' })
+  const [cmdkOpen, setCmdkOpen] = useState<boolean>(false)
+  const [cmdkPages, setCmdkPages] = useState<string[]>([])
+  const cmdkPage = useMemo(() => {
+    return cmdkPages.length == 0 ? '' : cmdkPages[cmdkPages.length - 1]
+  }, [cmdkPages])
   const [cmdkSearch, setCmdkSearch] = useState<string>('')
   const cmdkReferenceAdd = useMemo<TCmdkGroupData>(() => {
     const data: TCmdkGroupData = {
@@ -281,49 +282,37 @@ export default function MainPage(props: MainPageProps) {
 
     return data
   }, [activePanel, ffTree, ffFocusedItem, filesReferenceData, nodeTree, fnFocusedItem, htmlReferenceData, cmdkSearch])
-
-  // os
+  // other
   const [osType, setOsType] = useState<TOsType>('Windows')
-
-  // code view
-  const [tabSize, setTabSize] = useState<number>(DefaultTabSize)
-
-  // theme
   const [theme, setTheme] = useState<TTheme>('System')
-
-  // session
+  const [panelResizing, setPanelResizing] = useState<boolean>(false)
   const [hasSession, setHasSession] = useState<boolean>(false)
   const [session, setSession] = useState<TSession | null>(null)
-
-  // panel-resize
-  const [panelResizing, setPanelResizing] = useState<boolean>(false)
-
-  // stage-view
-  const [iframeSrc, setIframeSrc] = useState<string | null>(null)
-  const [fileInfo, setFileInfo] = useState<TFileInfo>(null)
-  const [hasSameScript, setHasSameScript] = useState<boolean>(true)
-  // -------------------------------------------------------------- main context --------------------------------------------------------------
-
+  // toasts
+  const [messages, setMessages] = useState<TToast[]>([])
+  const addMessage = useCallback((message: TToast) => {
+    setMessages([...messages, message])
+  }, [messages])
+  const removeMessage = useCallback((index: number) => {
+    const newMessages = JSON.parse(JSON.stringify(messages))
+    newMessages.splice(index)
+    setMessages(JSON.parse(JSON.stringify(newMessages)))
+  }, [messages])
   // -------------------------------------------------------------- routing --------------------------------------------------------------
   // navigating
   const params = useParams()
   const location = useLocation()
-
   // store last edit session
-  /* useEffect(() => {
+  useEffect(() => {
     (async () => {
       const _hasSession = localStorage.getItem('last-edit-session') !== null
       setHasSession(_hasSession)
       let _session: TSession | null = null
       if (_hasSession) {
-        const sessionInfo = await getMany(['project-context', 'project-root-folder-handler', 'file-tree-view-state', 'opened-file-uid', 'node-tree-view-state', 'opened-file-content'])
+        const sessionInfo = await getMany(['project-context', 'project-root-folder-handler'])
         _session = {
           'project-context': sessionInfo[0],
           'project-root-folder-handler': sessionInfo[1],
-          'file-tree-view-state': sessionInfo[2],
-          'opened-file-uid': sessionInfo[3],
-          'node-tree-view-state': sessionInfo[4],
-          'opened-file-content': sessionInfo[5],
         }
         setSession(_session)
       }
@@ -342,46 +331,6 @@ export default function MainPage(props: MainPageProps) {
       }
     })()
   }, [ffTree[RootNodeUid]])
-  useEffect(() => {
-    (async () => {
-      const viewState: TTreeViewState = {
-        focusedItem: ffFocusedItem,
-        selectedItems: ffSelectedItems,
-        expandedItems: ffExpandedItems,
-        selectedItemsObj: ffSelectedItemsObj,
-        expandedItemsObj: ffExpandedItemsObj,
-      }
-      await set('file-tree-view-state', viewState)
-    })()
-  }, [ffFocusedItem, ffSelectedItems, ffExpandedItems, ffSelectedItemsObj, ffExpandedItemsObj])
-  useEffect(() => {
-    (async () => {
-      if (ffTree[file.uid] !== undefined) {
-        await set('opened-file-uid', file.uid)
-      }
-    })()
-  }, [file.uid])
-  useEffect(() => {
-    (async () => {
-      const viewState: TTreeViewState = {
-        focusedItem: fnFocusedItem,
-        selectedItems: fnSelectedItems,
-        expandedItems: fnExpandedItems,
-        selectedItemsObj: fnSelectedItemsObj,
-        expandedItemsObj: fnExpandedItemsObj,
-      }
-      await set('node-tree-view-state', viewState)
-    })()
-  }, [fnFocusedItem, fnSelectedItems, fnExpandedItems, fnSelectedItemsObj, fnExpandedItemsObj])
-  useEffect(() => {
-    (async () => {
-      if (ffTree[file.uid] !== undefined) {
-        await set('opened-file-content', file.content)
-      }
-    })()
-  }, [file.content]) */
-  // -------------------------------------------------------------- routing --------------------------------------------------------------
-
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
   // key event listener
   const cb_onKeyDown = useCallback((e: KeyboardEvent) => {
@@ -427,16 +376,13 @@ export default function MainPage(props: MainPageProps) {
 
     setCurrentCommand({ action })
   }, [cmdkReferenceData, activePanel, osType])
-
   // bind onKeyDownCallback (cb_onKeyDown)
   useEffect(() => {
     document.addEventListener('keydown', cb_onKeyDown)
     return () => document.removeEventListener('keydown', cb_onKeyDown)
   }, [cb_onKeyDown])
-
   // command detect & do actions
   useEffect(() => {
-    // cmdk actions handle
     switch (currentCommand.action) {
       case 'Clear':
         onClear()
@@ -462,8 +408,6 @@ export default function MainPage(props: MainPageProps) {
         return
     }
   }, [currentCommand])
-  // -------------------------------------------------------------- cmdk --------------------------------------------------------------
-
   // -------------------------------------------------------------- handlers --------------------------------------------------------------
   // save all of the changed files
   const onSaveAll = useCallback(async () => {
@@ -517,7 +461,6 @@ export default function MainPage(props: MainPageProps) {
     saveDone && setOpenedFiles(_openedFiles)
     setPending(false) */
   }, [ffHandlers])
-
   // clean rnbw'data
   const onClear = useCallback(async () => {
     /* const uids = Object.keys(openedFiles)
@@ -547,49 +490,46 @@ Your changes will be lost if you don't save them.`
     onJumpstart()
     localStorage.setItem("newbie", 'false') */
   }, [onSaveAll])
-
   // cmdk jumpstart
   const onJumpstart = useCallback(() => {
     if (cmdkOpen) return
     setCmdkPages(['Jumpstart'])
     setCmdkOpen(true)
   }, [cmdkOpen])
-
   // hms methods
   const onUndo = useCallback(() => {
-    if (pending) return
+    if (pending || iframeLoading || fsPending || codeEditing) return
 
-    if (pastLength === 0) return
+    LogAllow && pastLength === 1 && console.log('hms - it is the origin state')
+    if (pastLength === 1) return
 
-    setFFAction(fileAction)
-    setIsHms(true)
+    // setFFAction(fileAction)
+    // setIsHms(true)
 
+    dispatch({ type: 'main/undo' })
     setUpdateOpt({ parse: true, from: 'hms' })
-    setTimeout(() => dispatch({ type: 'main/undo' }), 0)
-  }, [pending, fileAction, pastLength])
+  }, [pending, iframeLoading, fsPending, codeEditing, pastLength])
   const onRedo = useCallback(() => {
-    if (pending) return
+    if (pending || iframeLoading || fsPending || codeEditing) return
 
+    LogAllow && futureLength === 0 && console.log('hms - it is the latest state')
     if (futureLength === 0) return
 
-    setIsHms(false)
+    // setIsHms(false)
 
+    dispatch({ type: 'main/redo' })
     setUpdateOpt({ parse: true, from: 'hms' })
-    setTimeout(() => dispatch({ type: 'main/redo' }), 0)
-  }, [pending, futureLength])
-
+  }, [pending, iframeLoading, fsPending, codeEditing, futureLength])
   // reset fileAction in the new history
   useEffect(() => {
     futureLength === 0 && fileAction.type !== null && dispatch(setFileAction({ type: null }))
   }, [actionGroupIndex])
-
-  // toogle code view
+  // toogle code view visible
   const [showCodeView, setShowCodeView] = useState(false)
-  const toogleCodeView = async () => {
+  const toogleCodeView = useCallback(() => {
     setShowCodeView(!showCodeView)
-  }
-  // -------------------------------------------------------------- handlers --------------------------------------------------------------
-
+    setNewFocusedNodeUid(fnFocusedItem)
+  }, [showCodeView, fnFocusedItem])
   // -------------------------------------------------------------- other --------------------------------------------------------------
   // detect OS & fetch reference - html. Jumpstart.csv, Actions.csv
   useEffect(() => {
@@ -626,7 +566,7 @@ Your changes will be lost if you don't save them.`
 
     // add default cmdk actions
     const _cmdkReferenceData: TCmdkReferenceData = {} // cmdk map
-    // Jumpstart
+    // clear
     _cmdkReferenceData['Clear'] = {
       "Name": 'Clear',
       "Icon": '',
@@ -772,7 +712,6 @@ Your changes will be lost if you don't save them.`
 
     removeRunningActions(['detect-os', 'reference-files', 'reference-html-elements', 'reference-cmdk-jumpstart', 'reference-cmdk-actions'], false)
   }, [])
-
   // newbie flag
   useEffect(() => {
     const isNewbie = localStorage.getItem("newbie")
@@ -783,7 +722,6 @@ Your changes will be lost if you don't save them.`
       localStorage.setItem("newbie", 'false')
     }
   }, [])
-
   // theme
   const setSystemTheme = useCallback(() => {
     setTheme('System')
@@ -830,28 +768,11 @@ Your changes will be lost if you don't save them.`
 
     return () => window.matchMedia("(prefers-color-scheme: dark)").removeEventListener('change', setSystemTheme)
   }, [])
-
-  // active panel/element
-  const activeElement = document.activeElement
+  // web-tab close event handler
   useEffect(() => {
-    if (activeElement === null) return
-
-    const id = activeElement.id
-    if (id.startsWith('FileTreeView') === true) {
-      setActivePanel('file')
-    } else if (id.startsWith('NodeTreeView') === true) {
-      setActivePanel('node')
-    } else {
-      // do nothing
-    }
-  }, [activeElement])
-
-  // editor-close event handler
-  useEffect(() => {
-    const uids = Object.keys(ffTree)
-
     let changed = false
 
+    const uids = Object.keys(ffTree)
     for (const uid of uids) {
       const node = ffTree[uid]
       const nodeData = node.data as TFileNodeData
@@ -870,109 +791,61 @@ Your changes will be lost if you don't save them.`
       window.onbeforeunload = null
     }
   }, [ffTree])
-  // -------------------------------------------------------------- other --------------------------------------------------------------
 
   return <>
     {/* wrap with the context */}
     <MainContext.Provider
       value={{
-        // groupping action
-        addRunningActions,
-        removeRunningActions,
-
+        // global action
+        addRunningActions, removeRunningActions,
+        // node actions
+        activePanel, setActivePanel,
+        clipboardData, setClipboardData,
+        event, setEvent,
         // file tree view
+        fsPending, setFSPending,
         ffTree, setFFTree, setFFNode,
         ffHandlers, setFFHandlers,
         ffHoveredItem, setFFHoveredItem,
-
+        isHms, setIsHms,
+        ffAction, setFFAction,
         // node tree view
-        fnHoveredItem,
-        setFNHoveredItem,
-
-        nodeTree,
-        setNodeTree,
-
-        validNodeTree,
-        setValidNodeTree,
-
-        // update opt
-        updateOpt,
-        setUpdateOpt,
-
-        // ff hms
-        isHms,
-        setIsHms,
-        ffAction,
-        setFFAction,
-
-        // cmdk
-        currentCommand,
-        setCurrentCommand,
-
-        // global
-        pending,
-        setPending,
-
-        messages,
-        addMessage,
-        removeMessage,
-
-        // reference
-        filesReferenceData,
-        htmlReferenceData,
-
-        cmdkReferenceData,
-        cmdkReferenceJumpstart,
-        cmdkReferenceActions,
-        cmdkReferenceAdd,
-
-        // cmdk
-        cmdkOpen,
-        setCmdkOpen,
-
-        cmdkPages,
-        setCmdkPages,
-        cmdkPage,
-
-        // active panel/clipboard
-        activePanel,
-        setActivePanel,
-
-        clipboardData,
-        setClipboardData,
-
-        // os
-        osType,
-
+        fnHoveredItem, setFNHoveredItem,
+        nodeTree, setNodeTree,
+        validNodeTree, setValidNodeTree,
+        nodeMaxUid, setNodeMaxUid,
+        // stage view
+        iframeLoading, setIFrameLoading,
+        iframeSrc, setIFrameSrc,
+        fileInfo, setFileInfo,
+        needToReloadIFrame, setNeedToReloadIFrame,
         // code view
-        tabSize,
-        setTabSize,
-
-        // theme
+        codeEditing, setCodeEditing,
+        codeChanges, setCodeChanges,
+        tabSize, setTabSize,
+        newFocusedNodeUid, setNewFocusedNodeUid,
+        // processor
+        updateOpt, setUpdateOpt,
+        // references
+        filesReferenceData, htmlReferenceData, cmdkReferenceData,
+        // cmdk
+        currentCommand, setCurrentCommand,
+        cmdkOpen, setCmdkOpen,
+        cmdkPages, setCmdkPages, cmdkPage,
+        // other
+        osType,
         theme,
-
-        // session
-        hasSession,
-        session,
-
-        // panel-resize
-        panelResizing,
-        setPanelResizing,
-
-        // stage-view
-        iframeSrc, setIframeSrc,
-        fileInfo,
-        setFileInfo,
-
-        hasSameScript,
-        setHasSameScript,
+        panelResizing, setPanelResizing,
+        hasSession, session,
+        // toasts
+        addMessage, removeMessage,
       }}
     >
       {/* process */}
       <Process />
 
       {/* spinner */}
-      <Loader show={pending}></Loader>
+      <Loader show={pending || iframeLoading || fsPending || codeEditing}></Loader>
 
       {/* panels */}
       <PanelGroup
@@ -1091,7 +964,7 @@ Your changes will be lost if you don't save them.`
                           // disabled={false}
                           onSelect={() => {
                             setCmdkOpen(false)
-                            setCurrentCommand({ action: command.Group === 'Add' ? `AddNode-${command.Context}` : command.Name })
+                            setCurrentCommand({ action: command.Group === 'Add' ? `${AddNodeActionPrefix}-${command.Context}` : command.Name })
                           }}
                         >
                           <div

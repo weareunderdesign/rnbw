@@ -1,77 +1,42 @@
+import { TFileInfo } from '@_types/main';
+
 import { TFileNodeData } from './file';
 import {
+  THtmlDomNodeData,
   THtmlNodeData,
-  THtmlProcessableNode,
   THtmlReferenceData,
-  THtmlSettings,
 } from './html';
 
-/**
- * unique id for a node
- */
 export type TNodeUid = string
-
-/**
- * node
- */
 export type TNode = {
   uid: TNodeUid,
   parentUid: TNodeUid | null,
   name: string,
   isEntity: boolean,
   children: TNodeUid[],
-  data: TNormalNodeData | TFileNodeData | THtmlNodeData | THtmlProcessableNode,
+  data: TNormalNodeData | TFileNodeData | THtmlNodeData | THtmlDomNodeData,
 }
-
-/**
- * general node data
- */
 export type TNormalNodeData = {
   valid: boolean,
-  [prop: string]: any,
+  [propName: string]: any,
 }
-
-/**
- * node tree data
- */
 export type TNodeTreeData = {
   [uid: TNodeUid]: TNode,
 }
-
-/**
- * node tree context
- */
-export type TNodeTreeContext = 'file' | 'html' | 'js'
-
-/**
- * resetNodeTreeUids api response type
- */
-export type TResetNodeTreeUidsApiResponse = {
-  newTree: TNodeTreeData,
-  convertedUids: Map<TNodeUid, TNodeUid>,
-}
-
-/**
- * general node api response type
- */
+export type TNodeTreeContext = 'file' | 'html'
 export type TNodeApiResponse = {
   tree: TNodeTreeData,
+  nodeMaxUid?: TNodeUid,
   deletedUids?: TNodeUid[],
-  convertedUids?: [TNodeUid, TNodeUid][],
+  addedUidMap?: Map<TNodeUid, TNodeUid>,
+  position?: number,
 }
-
-/**
- * node reference data
- */
-export type TNodeReferenceData = THtmlReferenceData
-
-/**
- * parseFile api response type
- */
 export type TFileParserResponse = {
   formattedContent: string,
   contentInApp: string,
   tree: TNodeTreeData,
-  info?: THtmlSettings,
-  maxUid?: TNodeUid,
+  nodeMaxUid: TNodeUid,
+  info?: TFileInfo,
 }
+export type TNodeReferenceData = THtmlReferenceData
+

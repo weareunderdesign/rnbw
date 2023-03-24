@@ -5,30 +5,19 @@ import { TOsType } from '@_types/global';
  * @param osType 
  * @returns 
  */
-export const getLineBreakCharacter = (osType: TOsType): string => {
+export const getLineBreaker = (osType: TOsType): string => {
   return osType === 'Windows' ? '\r\n' :
     osType === 'Mac' ? '\n' :
       osType === 'Linux' ? '\n' : ''
 }
-
 /**
  * get the cmd key for various os type
  * @param e 
  * @param osType 
  * @returns 
  */
-export const getCommandKey = (e: KeyboardEvent, osType: TOsType): boolean => {
+export const getCommandKey = (e: KeyboardEvent | MouseEvent, osType: TOsType): boolean => {
   return osType === 'Windows' ? e.ctrlKey :
     osType === 'Mac' ? e.metaKey :
       osType === 'Linux' ? e.ctrlKey : false
-}
-
-/**
- * get the file extension from the file name
- * @param fileName 
- * @returns 
- */
-export const getFileExtension = (fileName: string) => {
-  const arr: string[] = fileName.split('.')
-  return arr.length === 1 ? '' : `.${arr.pop()}`
 }

@@ -47,7 +47,7 @@ import {
   generateNodeUid,
   getNodeEntryName,
   getParentNodeUid,
-  validateNodeUidCollection,
+  getValidNodeUids,
 } from '@_node/apis';
 import {
   _path,
@@ -91,6 +91,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
   // main context
   const {
+    fsPending, setFSPending,
     // groupping action
     addRunningActions, removeRunningActions,
 
@@ -110,10 +111,10 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     currentCommand, setCurrentCommand, cmdkOpen, setCmdkOpen, cmdkPages, setCmdkPages, cmdkPage,
 
     // global
-    pending, setPending, messages, addMessage, removeMessage,
+    addMessage, removeMessage,
 
     // reference
-    htmlReferenceData, cmdkReferenceData, cmdkReferenceJumpstart, cmdkReferenceActions, cmdkReferenceAdd,
+    htmlReferenceData, cmdkReferenceData,
 
     // active panel/clipboard
     activePanel, setActivePanel, clipboardData, setClipboardData,
@@ -446,7 +447,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
     // validate
     let _uids = [...uids]
-    _uids = validateNodeUidCollection(_uids)
+    _uids = getValidNodeUids(ffTree, _uids)
     _uids = _uids.filter((_uid) => {
       return !(ffTree[_uid] === undefined || invalidNodes[_uid])
     })
@@ -648,8 +649,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     removeRunningActions(['fileTreeView-create'])
   }, [ffHandlers])
 
-
-
   /**
    * general move api - for rename, copy/paste(duplicate), cut/paste(move)
    * here, the handler params are already verified ones.
@@ -798,7 +797,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   const cb_dropFFNode = useCallback(async (uids: TNodeUid[], targetUid: TNodeUid, copy: boolean = false) => {
     // validate
     if (ffTree[targetUid] === undefined) return
-    const validatedUids: TNodeUid[] = validateNodeUidCollection(uids, targetUid)
+    const validatedUids: TNodeUid[] = getValidNodeUids(ffTree, uids, targetUid)
     if (validatedUids.length == 0) return
 
     addRunningActions(['fileTreeView-move'])
@@ -953,9 +952,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     removeRunningActions(['fileTreeView-move'])
   }, [invalidNodes, setInvalidNodes, ffTree, ffHandlers])
 
-
-
-
   const cb_readFFNode = useCallback((uid: TNodeUid) => {
     // for key-nav
     addRunningActions(['fileTreeView-read'])
@@ -978,7 +974,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
 
     // set redux-file and process
-    addRunningActions(['processor-file'])
+    addRunningActions(['processor-updateOpt'])
     dispatch(setCurrentFile({ uid, content: nodeData.content }))
     setUpdateOpt({ parse: true, from: 'file' })
 
@@ -1010,7 +1006,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         return
       }
 
-      setPending(true)
+      setFSPending(true)
 
       // clear session
       clearSession()
@@ -1072,9 +1068,8 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           })
           setFFHandlers(ffHandlerObj)
 
-          setPending(false)
+          setFSPending(false)
         })
-
       } catch (err) {
         LogAllow && console.log('import project err', err)
       }
@@ -1082,8 +1077,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       // do nothing
     }
   }, [clearSession, osType])
-
-
   // -------------------------------------------------------------- Sync --------------------------------------------------------------
 
   // -------------------------------------------------------------- Cmdk --------------------------------------------------------------
@@ -1349,15 +1342,7 @@ This action cannot be undone!`
   }, [])
 
   // panel size handler
-  const [panelSize, setPanelSize] = useState(200 / window.innerHeight * 100)
-  useEffect(() => {
-    const windowResizeHandler = () => {
-      setPanelSize(200 / window.innerHeight * 100)
-    }
-    window.addEventListener('resize', windowResizeHandler)
-
-    return () => window.removeEventListener('resize', windowResizeHandler)
-  }, [])
+  const panelSize = useMemo(() => 200 / window.innerHeight * 100, [])
   // -------------------------------------------------------------- other --------------------------------------------------------------
 
   return <>
@@ -1372,22 +1357,17 @@ This action cannot be undone!`
         }}
         onClick={onPanelClick}
       >
-        {/* Main TreeView */}
         <TreeView
-          /* style */
           width={'100%'}
           height={'auto'}
 
-          /* info */
           info={{ id: 'file-tree-view' }}
 
-          /* data */
           data={fileTreeViewData}
           focusedItem={focusedItem}
           expandedItems={expandedItems}
           selectedItems={selectedItems}
 
-          /* renderers */
           renderers={{
             renderTreeContainer: (props) => {
               return <>
@@ -1474,6 +1454,8 @@ This action cannot be undone!`
                           props.context.selectItem(),
                           props.item.isFolder ? props.context.toggleExpandedState() : props.context.primaryAction(),
                         ]
+
+                      setActivePanel('file')
                     }}
                     onFocus={() => { }}
                     onMouseEnter={() => setFFHoveredItem(props.item.index as TNodeUid)}
@@ -1559,7 +1541,6 @@ This action cannot be undone!`
             },
           }}
 
-          /* possibilities */
           props={{
             canDragAndDrop: true,
             canDropOnFolder: true,
@@ -1570,9 +1551,7 @@ This action cannot be undone!`
             canRename: true,
           }}
 
-          /* cb */
           callbacks={{
-            /* RENAME CALLBACK */
             onStartRenamingItem: useCallback(async (item: TreeItem, treeId: string) => {
               if (invalidNodes[item.data.uid]) {
                 removeInvalidNodes(item.data.uid)
@@ -1602,12 +1581,12 @@ This action cannot be undone!`
 Your changes will be lost if you don't save them.`
                   if (window.confirm(message)) {
                     await (async () => {
-                      setPending(true)
+                      setFSPending(true)
 
                       // get the current file handler
                       const handler = ffHandlers[_file.uid]
                       if (handler === undefined) {
-                        setPending(false)
+                        setFSPending(false)
                         return
                       }
 
@@ -1617,7 +1596,7 @@ Your changes will be lost if you don't save them.`
                           type: 'error',
                           content: 'save failed cause of invalid handler',
                         })
-                        setPending(false)
+                        setFSPending(false)
                         return
                       }
 
@@ -1641,7 +1620,7 @@ Your changes will be lost if you don't save them.`
                         })
                       }
 
-                      setPending(false)
+                      setFSPending(false)
                     })()
                   }
                 }
@@ -1660,7 +1639,6 @@ Your changes will be lost if you don't save them.`
               removeInvalidNodes(item.data.uid)
             }, [invalidNodes, cb_renameFFNode, createFFNode, setTemporaryNodes, removeTemporaryNodes, removeInvalidNodes, ffTree, osType, ffHandlers]),
 
-            /* SELECT, FOCUS, EXPAND, COLLAPSE CALLBACK */
             onSelectItems: useCallback((items: TreeItemIndex[], treeId: string) => {
               cb_selectFFNode(items as TNodeUid[])
             }, [cb_selectFFNode]),
@@ -1674,12 +1652,10 @@ Your changes will be lost if you don't save them.`
               cb_collapseFFNode(item.index as TNodeUid)
             }, [cb_collapseFFNode]),
 
-            /* READ CALLBACK */
             onPrimaryAction: useCallback((item: TreeItem, treeId: string) => {
               item.data.data.valid ? cb_readFFNode(item.index as TNodeUid) : removeRunningActions(['fileTreeView-read'], false)
             }, [cb_readFFNode]),
 
-            // DnD CALLBACK
             onDrop: useCallback((items: TreeItem[], target: DraggingPosition) => {
               const targetUid: TNodeUid = (target as DraggingPositionItem).targetItem as TNodeUid
               const uids: TNodeUid[] = items.map(item => item.index as TNodeUid).filter(uid => !invalidNodes[uid])

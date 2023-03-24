@@ -5,7 +5,18 @@ import {
 import { SystemFiles } from '@_ref/SystemFiles';
 import { verifyFileHandlerPermission } from '@_services/main';
 import { TOsType } from '@_types/global';
+import { TFileType } from '@_types/main';
 
+import {
+  parseHtml,
+  serializeHtml,
+  TFileParserResponse,
+  THtmlNodeData,
+  THtmlReferenceData,
+  TNodeReferenceData,
+  TNodeTreeData,
+  TNodeUid,
+} from '../';
 import {
   TFileHandlerInfo,
   TFileHandlerInfoObj,
@@ -13,20 +24,6 @@ import {
 
 export const _fs = window.Filer.fs
 export const _path = window.Filer.path
-/* 
-var path = Filer.path;
-var dir = path.dirname('/foo/bar/baz/asdf/quux');
-// dir is now '/foo/bar/baz/asdf'
-
-var base = path.basename('/foo/bar/baz/asdf/quux.html');
-// base is now 'quux.html'
-
-var ext = path.extname('index.html');
-// ext is now '.html'
-
-var newpath = path.join('/foo', 'bar', 'baz/asdf', 'quux', '..');
-// new path is now '/foo/bar/baz/asdf'
-*/
 export const _sh = new _fs.Shell()
 
 export const configProject = async (projectHandle: FileSystemDirectoryHandle, osType: TOsType, cb: () => void): Promise<TFileHandlerInfoObj> => {
@@ -132,7 +129,6 @@ export const mkhandler = (handlers: TFileHandlerInfo[], index: number, cb: () =>
     mkhandler(handlers, index + 1, cb)
   }
 }
-
 export const mkdir = (path: string, cb?: () => void) => {
   _fs.mkdir(path, function (err: any) {
     if (err) {
@@ -159,4 +155,23 @@ export const rmnod = (path: string, cb?: () => void) => {
       cb && cb()
     }
   })
+}
+
+export const parseFile = (type: TFileType, content: string, referenceData: TNodeReferenceData, osType: TOsType, keepNodeUids: null | boolean = false, nodeMaxUid: TNodeUid = ''): TFileParserResponse => {
+  if (type === 'html') {
+    return parseHtml(content, referenceData as THtmlReferenceData, osType, keepNodeUids, nodeMaxUid)
+  } else {
+    return {
+      formattedContent: '',
+      contentInApp: '',
+      tree: {},
+      nodeMaxUid: '0',
+    }
+  }
+}
+export const serializeFile = (type: TFileType, tree: TNodeTreeData, referenceData: TNodeReferenceData, osType: TOsType): THtmlNodeData | string => {
+  if (type === 'html') {
+    return serializeHtml(tree, referenceData as THtmlReferenceData, osType)
+  }
+  return ''
 }
