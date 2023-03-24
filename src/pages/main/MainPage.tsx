@@ -838,7 +838,7 @@ Your changes will be lost if you don't save them.`
         panelResizing, setPanelResizing,
         hasSession, session,
         // toasts
-        addMessage, removeMessage
+        addMessage, removeMessage,
       }}
     >
       {/* process */}

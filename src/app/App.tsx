@@ -1,4 +1,7 @@
-import React, { useEffect } from 'react';
+import React, {
+  useEffect,
+  useMemo,
+} from 'react';
 
 import {
   BrowserRouter as Router,
@@ -32,16 +35,18 @@ export default function App(props: AppProps) {
     }
   }, [])
 
-  return <>
-    <Router>
-      <Routes>
-        <Route path="/" element={<MainPage />} />
-      </Routes>
-    </Router>
-  </>
+  return useMemo(() => {
+    return <>
+      <Router>
+        <Routes>
+          <Route path="/" element={<MainPage />} />
+        </Routes>
+      </Router>
+    </>
+  }, [])
 }
 
-// extend global interfaces
+// extend global interfaces for nohost
 declare global {
   interface Window {
     Filer: any,
