@@ -12,11 +12,6 @@ import { MainContext } from '@_redux/main';
 
 import { SettingsPanelProps } from './types';
 
-type StyleProperty = {
-  name: string,
-  value: string,
-}
-
 export default function SettingsPanel(props: SettingsPanelProps) {
   const dispatch = useDispatch()
 

@@ -288,8 +288,6 @@ export default function CodeView(props: CodeViewProps) {
       dispatch(focusFNNode(focusedNode.uid))
       dispatch(selectFNNode([focusedNode.uid]))
 
-      console.log('set focused selected items in code view')
-
       focusedItemRef.current = focusedNode.uid
     }
   }, [focusedNode])
