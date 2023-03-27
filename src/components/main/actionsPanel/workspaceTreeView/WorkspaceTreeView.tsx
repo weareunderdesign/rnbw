@@ -52,7 +52,6 @@ import {
 import {
   _path,
   configProject,
-  TFileHandlerInfo,
   TFileNodeData,
 } from '@_node/file';
 import {
@@ -1013,65 +1012,61 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
       try {
         // configure idb on nohost
-        const handlerObj = await configProject(projectHandle as FileSystemDirectoryHandle, osType, () => {
-          // sort by ASC directory/file
-          Object.keys(handlerObj).map(uid => {
-            const handler = handlerObj[uid]
-            handler.children = handler.children.sort((a, b) => {
-              return handlerObj[a].kind === 'file' && handlerObj[b].kind === 'directory' ? 1 :
-                handlerObj[a].kind === 'directory' && handlerObj[b].kind === 'file' ? -1 :
-                  handlerObj[a].name > handlerObj[b].name ? 1 : -1
-            })
+        const handlerObj = await configProject(projectHandle as FileSystemDirectoryHandle, osType)
+
+        // sort by ASC directory/file
+        Object.keys(handlerObj).map(uid => {
+          const handler = handlerObj[uid]
+          handler.children = handler.children.sort((a, b) => {
+            return handlerObj[a].kind === 'file' && handlerObj[b].kind === 'directory' ? 1 :
+              handlerObj[a].kind === 'directory' && handlerObj[b].kind === 'file' ? -1 :
+                handlerObj[a].name > handlerObj[b].name ? 1 : -1
           })
-
-          // get/set the index/first html to be opened by default
-          let firstHtmlUid: TNodeUid = '', indexHtmlUid: TNodeUid = ''
-          handlerObj[RootNodeUid].children.map(uid => {
-            const handler = handlerObj[uid]
-            if (handler.kind === 'file' && handler.ext === '.html') {
-              firstHtmlUid === '' ? firstHtmlUid = uid : null
-              handler.name === 'index' ? indexHtmlUid = uid : null
-            }
-          })
-          setInitialFileToOpen(indexHtmlUid !== '' ? indexHtmlUid : firstHtmlUid !== '' ? firstHtmlUid : undefined)
-
-          // set ff tree
-          const treeViewData: TNodeTreeData = {}
-          Object.keys(handlerObj).map(uid => {
-            const handler = handlerObj[uid] as TFileHandlerInfo
-
-            treeViewData[uid] = {
-              uid,
-              parentUid: handler.parentUid,
-              name: handler.name,
-              isEntity: handler.kind === 'file',
-              children: handler.children.map(c_uid => String(c_uid)),
-              data: {
-                valid: true,
-                path: handler.path,
-                kind: handler.kind,
-                name: handler.name,
-                ext: handler.ext,
-                type: ParsableFileTypes[handler.ext || ''] ? handler.ext?.slice(1) : 'unknown',
-                orgContent: handler.content?.toString(),
-                content: handler.content?.toString(),
-                changed: false,
-              } as TFileNodeData,
-            } as TNode
-          })
-          setFFTree(treeViewData)
-
-          // set ff handlers
-          const ffHandlerObj: TFileHandlerCollection = {}
-          Object.keys(handlerObj).map(uid => {
-            ffHandlerObj[uid] = handlerObj[uid].handler
-          })
-          setFFHandlers(ffHandlerObj)
-
-          setFSPending(false)
         })
 
-        console.log(handlerObj)
+        // get/set the index/first html to be opened by default
+        let firstHtmlUid: TNodeUid = '', indexHtmlUid: TNodeUid = ''
+        handlerObj[RootNodeUid].children.map(uid => {
+          const handler = handlerObj[uid]
+          if (handler.kind === 'file' && handler.ext === '.html') {
+            firstHtmlUid === '' ? firstHtmlUid = uid : null
+            handler.name === 'index' ? indexHtmlUid = uid : null
+          }
+        })
+        setInitialFileToOpen(indexHtmlUid !== '' ? indexHtmlUid : firstHtmlUid !== '' ? firstHtmlUid : undefined)
+
+        // set ff-tree, ff-handlers
+        const treeViewData: TNodeTreeData = {}
+        const ffHandlerObj: TFileHandlerCollection = {}
+        Object.keys(handlerObj).map(uid => {
+          const { parentUid, children, path, kind, name, ext, content, handler } = handlerObj[uid]
+          const type = ParsableFileTypes[ext || ''] ? ext?.slice(1) : 'unknown'
+          treeViewData[uid] = {
+            uid,
+            parentUid: parentUid,
+            name: name,
+            isEntity: kind === 'file',
+            children: children.map(c_uid => String(c_uid)),
+            data: {
+              valid: true,
+              path: path,
+              kind: kind,
+              name: name,
+              ext: ext,
+              type,
+              orgContent: type !== 'unknown' ? content?.toString() : '',
+              content: type !== 'unknown' ? content?.toString() : '',
+              changed: false,
+            } as TFileNodeData,
+          } as TNode
+
+          ffHandlerObj[uid] = handler
+        })
+
+        setFFTree(treeViewData)
+        setFFHandlers(ffHandlerObj)
+
+        setFSPending(false)
       } catch (err) {
         LogAllow && console.log('import project err', err)
       }

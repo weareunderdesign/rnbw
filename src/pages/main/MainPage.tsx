@@ -792,6 +792,9 @@ Your changes will be lost if you don't save them.`
     }
   }, [ffTree])
 
+  useEffect(() => {
+    console.log({ pending, iframeLoading, fsPending, codeEditing })
+  }, [pending, iframeLoading, fsPending, codeEditing])
   return <>
     {/* wrap with the context */}
     <MainContext.Provider

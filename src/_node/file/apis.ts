@@ -28,7 +28,7 @@ export const _fs = window.Filer.fs
 export const _path = window.Filer.path
 export const _sh = new _fs.Shell()
 
-export const configProject = async (projectHandle: FileSystemDirectoryHandle, osType: TOsType, cb: () => void): Promise<TFileHandlerInfoObj> => {
+export const configProject = async (projectHandle: FileSystemDirectoryHandle, osType: TOsType): Promise<TFileHandlerInfoObj> => {
   return new Promise(async (res, rej) => {
     // verify project-handler permission
     if (!(await verifyFileHandlerPermission(projectHandle))) rej('project handler permission error')
@@ -132,7 +132,7 @@ export const configProject = async (projectHandle: FileSystemDirectoryHandle, os
     }))
   })
 }
-export const createDirectory = (path: string, fb?: () => void, cb?: () => void) => {
+export const createDirectory = (path: string, cb?: () => void, fb?: () => void) => {
   _fs.mkdir(path, function (err: any) {
     if (err) {
       LogAllow && console.log('_fs.mkdir err', path, err)
@@ -143,7 +143,7 @@ export const createDirectory = (path: string, fb?: () => void, cb?: () => void) 
     }
   })
 }
-export const writeFile = (path: string, content: Uint8Array, fb?: () => void, cb?: () => void) => {
+export const writeFile = (path: string, content: Uint8Array | string, cb?: () => void, fb?: () => void) => {
   _fs.writeFile(path, content, (err: any) => {
     if (err) {
       LogAllow && console.log('_fs.writeFile err', path, err)
