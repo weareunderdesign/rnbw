@@ -1053,8 +1053,8 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                 name: handler.name,
                 ext: handler.ext,
                 type: ParsableFileTypes[handler.ext || ''] ? handler.ext?.slice(1) : 'unknown',
-                orgContent: handler.content,
-                content: handler.content,
+                orgContent: handler.content?.toString(),
+                content: handler.content?.toString(),
                 changed: false,
               } as TFileNodeData,
             } as TNode
@@ -1070,6 +1070,8 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
           setFSPending(false)
         })
+
+        console.log(handlerObj)
       } catch (err) {
         LogAllow && console.log('import project err', err)
       }

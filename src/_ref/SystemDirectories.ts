@@ -1,6 +1,6 @@
 import { TOsType } from '../types/global';
 
-export const SystemFiles: {
+export const SystemDirectories: {
   [osType in TOsType]: { [name: string]: boolean }
 } = {
   'Windows': {

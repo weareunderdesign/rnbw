@@ -10,9 +10,9 @@ export type TFileHandlerInfo = {
   path: string,
   kind: 'directory' | 'file',
   name: string,
-  ext?: string,
 
-  content?: string,
+  ext?: string,
+  content?: Uint8Array,
 
   handler: FileSystemHandle,
 }

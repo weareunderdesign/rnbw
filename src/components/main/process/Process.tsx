@@ -402,7 +402,7 @@ export default function Process(props: ProcessProps) {
       if (!onlyRenderViewState) {
         // update idb
         setFSPending(true)
-        writeFile(fileData.path, fileData.contentInApp as string, () => {
+        writeFile(fileData.path, Uint8Array.from(fileData.contentInApp?.split('').map(c => c.charCodeAt(0)) || []), () => {
           if (fileData.type === 'html') {
             setIFrameSrc(`rnbw${fileData.path}`)
           } else {
@@ -447,7 +447,7 @@ export default function Process(props: ProcessProps) {
 
       // update idb
       setFSPending(true)
-      writeFile(fileData.path, fileData.contentInApp as string, () => {
+      writeFile(fileData.path, Uint8Array.from(fileData.contentInApp?.split('').map(c => c.charCodeAt(0)) || []), () => {
         setFSPending(false)
       })
       // update context
