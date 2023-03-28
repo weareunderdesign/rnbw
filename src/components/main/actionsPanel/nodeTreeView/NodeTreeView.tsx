@@ -57,7 +57,6 @@ import { NodeTreeViewProps } from './types';
 
 export default function NodeTreeView(props: NodeTreeViewProps) {
   const dispatch = useDispatch()
-
   // -------------------------------------------------------------- global state --------------------------------------------------------------
   const {
     // groupping action
@@ -98,7 +97,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     panelResizing,
   } = useContext(MainContext)
   const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
-
   // -------------------------------------------------------------- sync --------------------------------------------------------------
   // outline the hovered item
   const hoveredItemRef = useRef<TNodeUid>(fnHoveredItem)
@@ -125,7 +123,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   // build nodeTreeViewData
   const nodeTreeViewData = useMemo(() => {
     const data: TreeViewData = {}
-
     for (const uid in validNodeTree) {
       const node = validNodeTree[uid]
       data[uid] = {
@@ -137,7 +134,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
         canRename: uid !== RootNodeUid,
       }
     }
-
     return data
   }, [validNodeTree])
   // -------------------------------------------------------------- node actions handlers --------------------------------------------------------------
@@ -473,7 +469,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
               renderItem: (props) => {
                 return <>
                   <li
-                    key={props.item.data.uid}
                     className={cx(
                       props.context.isSelected && 'background-secondary',
 
@@ -501,7 +496,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                         flexWrap: "nowrap",
                         paddingLeft: `${props.depth * 10}px`,
                       }}
-
                       {...props.context.itemContainerWithoutChildrenProps}
                       {...props.context.interactiveElementProps}
                       onClick={(e) => {
@@ -520,7 +514,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                       }}
                       onFocus={() => { }}
                       onMouseEnter={() => setFNHoveredItem(props.item.index as TNodeUid)}
-                      onMouseLeave={() => setFNHoveredItem('')}
+                      onMouseLeave={() => setFNHoveredItem('' as TNodeUid)}
                     >
                       <div className="gap-xs padding-xs" style={{ width: "100%" }}>
                         {props.arrow}
