@@ -132,8 +132,109 @@ export const configProject = async (projectHandle: FileSystemDirectoryHandle, os
     }))
   })
 }
-export const reloadProject = async () => {
+export const reloadProject = async (projectHandle: FileSystemDirectoryHandle, osType: TOsType): Promise<TFileHandlerInfoObj> => {
+  return new Promise(async (res, rej) => {
+    // verify project-handler permission
+    if (!(await verifyFileHandlerPermission(projectHandle))) rej('project handler permission error')
 
+    // build project-root
+    const rootHandler: TFileHandlerInfo = {
+      uid: RootNodeUid,
+      parentUid: null,
+      path: `/${projectHandle.name}`,
+      kind: 'directory',
+      name: projectHandle.name,
+      handler: projectHandle,
+      children: [],
+    }
+    const handlerArr: TFileHandlerInfo[] = [rootHandler]
+    const handlerObj: TFileHandlerInfoObj = { [RootNodeUid]: rootHandler }
+    const fsToCreate: { [path: string]: boolean } = { [rootHandler.path]: true }
+
+    // loop through the project
+    const dirHandlers: TFileHandlerInfo[] = [rootHandler]
+    while (dirHandlers.length) {
+      const { uid, path, handler } = dirHandlers.shift() as TFileHandlerInfo
+      try {
+        for await (const entry of (handler as FileSystemDirectoryHandle).values()) {
+          // skip system directories
+          if (SystemDirectories[osType][entry.name]) continue
+
+          // build handler
+          const c_path = _path.join(path, entry.name) as string
+          const c_kind = entry.kind
+          const c_name = entry.name
+          const c_handler = entry
+
+          const c_ext = _path.extname(c_name) as string
+          const nameArr = c_name.split('.')
+          nameArr.length > 1 && nameArr.pop()
+          const _c_name = nameArr.join('.')
+
+          const handlerInfo: TFileHandlerInfo = {
+            uid: c_path,
+            parentUid: uid,
+            path: c_path,
+            kind: c_kind,
+            name: c_kind === 'directory' ? c_name : _c_name,
+            ext: c_ext,
+            handler: c_handler,
+            children: [],
+          }
+
+          // update handler-arr, handler-obj
+          handlerArr.push(handlerInfo)
+          handlerObj[uid].children.push(c_path)
+          handlerObj[c_path] = handlerInfo
+
+          c_kind === 'directory' && dirHandlers.push(handlerInfo)
+          fsToCreate[c_path] = true
+        }
+      } catch (err) {
+        rej(err)
+      }
+    }
+
+    // build idb
+    await Promise.all(handlerArr.map(async (_handler) => {
+      const { kind, path, handler } = _handler
+      if (kind === 'directory') {
+        // create dir
+        createDirectory(path, () => {
+          delete fsToCreate[path]
+          if (Object.keys(fsToCreate).length === 0) {
+            res(handlerObj)
+          }
+        }, () => {
+          delete fsToCreate[path]
+          if (Object.keys(fsToCreate).length === 0) {
+            res(handlerObj)
+          }
+        })
+      } else {
+        // read and store file content
+        const fileEntry = await (handler as FileSystemFileHandle).getFile()
+        const fileReader = new FileReader()
+        fileReader.onload = (e) => {
+          const content = new Uint8Array(e.target?.result as ArrayBuffer)
+          const contentBuffer = Buffer.from(content)
+          handlerObj[path].content = contentBuffer
+          writeFile(path, contentBuffer, () => {
+            delete fsToCreate[path]
+            if (Object.keys(fsToCreate).length === 0) {
+              res(handlerObj)
+            }
+          }, () => {
+            delete fsToCreate[path]
+            if (Object.keys(fsToCreate).length === 0) {
+              res(handlerObj)
+            }
+          })
+        }
+        fileReader.readAsArrayBuffer(fileEntry)
+      }
+    }))
+  })
 }
 export const createDirectory = (path: string, cb?: () => void, fb?: () => void) => {
   _fs.mkdir(path, function (err: any) {

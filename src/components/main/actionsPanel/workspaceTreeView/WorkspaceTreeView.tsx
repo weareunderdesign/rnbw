@@ -7,7 +7,6 @@ import React, {
   useState,
 } from 'react';
 
-import cx from 'classnames';
 import {
   FileSystemDirectoryHandle,
   FileSystemFileHandle,
@@ -16,22 +15,12 @@ import {
 import {
   CustomDirectoryPickerOptions,
 } from 'file-system-access/lib/showDirectoryPicker';
-import {
-  DraggingPositionItem,
-  TreeItem,
-} from 'react-complex-tree';
+import { TreeItem } from 'react-complex-tree';
 import {
   useDispatch,
   useSelector,
 } from 'react-redux';
-import { Panel } from 'react-resizable-panels';
 
-import {
-  SVGIconI,
-  SVGIconII,
-  SVGIconIII,
-  TreeView,
-} from '@_components/common';
 import { TreeViewData } from '@_components/common/treeView/types';
 import {
   AddNodeActionPrefix,
@@ -410,11 +399,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     addRunningActions(['fileTreeView-focus'])
 
     // validate
-    if (invalidNodes[uid]) {
-      removeRunningActions(['fileTreeView-focus'], false)
-      return
-    }
-    if (focusedItem === uid || ffTree[uid] === undefined) {
+    if (invalidNodes[uid] || focusedItem === uid || ffTree[uid] === undefined) {
       removeRunningActions(['fileTreeView-focus'], false)
       return
     }
@@ -428,10 +413,10 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
     // validate
     let _uids = [...uids]
-    _uids = getValidNodeUids(ffTree, _uids)
     _uids = _uids.filter((_uid) => {
       return !(ffTree[_uid] === undefined || invalidNodes[_uid])
     })
+    _uids = getValidNodeUids(ffTree, _uids)
     // check if it's new state
     if (_uids.length === selectedItems.length) {
       let same = true
@@ -455,12 +440,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     addRunningActions(['fileTreeView-expand'])
 
     // validate
-    if (invalidNodes[uid]) {
-      removeRunningActions(['fileTreeView-expand'], false)
-      return
-    }
-    const node = ffTree[uid]
-    if (node === undefined || node.isEntity || expandedItemsObj[uid] === true) {
+    if (invalidNodes[uid] || ffTree[uid] === undefined || ffTree[uid].isEntity || expandedItemsObj[uid]) {
       removeRunningActions(['fileTreeView-expand'], false)
       return
     }
@@ -473,12 +453,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     addRunningActions(['fileTreeView-collapse'])
 
     // validate
-    if (invalidNodes[uid]) {
-      removeRunningActions(['fileTreeView-collapse'], false)
-      return
-    }
-    const node = ffTree[uid]
-    if (node === undefined || node.isEntity || expandedItemsObj[uid] === undefined) {
+    if (invalidNodes[uid] || ffTree[uid] === undefined || ffTree[uid].isEntity || !expandedItemsObj[uid]) {
       removeRunningActions(['fileTreeView-collapse'], false)
       return
     }
@@ -988,10 +963,11 @@ Your changes will be lost if you don't save them.`
     }
     removeInvalidNodes(item.data.uid)
   }, [invalidNodes, _cb_renameNode, createFFNode, setTemporaryNodes, removeTemporaryNodes, removeInvalidNodes, ffTree, osType, ffHandlers])
+
   const cb_moveNode = useCallback(async (uids: TNodeUid[], targetUid: TNodeUid, copy: boolean = false) => {
     // validate
     if (ffTree[targetUid] === undefined) return
-    const validatedUids: TNodeUid[] = getValidNodeUids(ffTree, uids, targetUid)
+    const validatedUids = getValidNodeUids(ffTree, uids, targetUid)
     if (validatedUids.length == 0) return
 
     addRunningActions(['fileTreeView-move'])
@@ -1270,6 +1246,7 @@ Your changes will be lost if you don't save them.`
 
     removeRunningActions(['fileTreeView-duplicate'])
   }, [addRunningActions, removeRunningActions, invalidNodes, setInvalidNodes, selectedItems, ffTree, ffHandlers])
+
   const cb_readNode = useCallback((uid: TNodeUid) => {
     addRunningActions(['fileTreeView-read'])
 
@@ -1340,7 +1317,10 @@ Your changes will be lost if you don't save them.`
   const onAdd = useCallback(() => {
     setCmdkPages([...cmdkPages, 'Add'])
     setCmdkOpen(true)
-  }, [cmdkOpen, cmdkPages])
+  }, [cmdkPages])
+  const onDelete = useCallback(() => {
+    cb_deleteNode()
+  }, [cb_deleteNode])
   const onCut = useCallback(() => {
     setClipboardData({ panel: 'file', type: 'cut', uids: selectedItems })
   }, [selectedItems])
@@ -1350,7 +1330,7 @@ Your changes will be lost if you don't save them.`
   const onPaste = useCallback(() => {
     if (clipboardData.panel !== 'file') return
 
-    // validate focusedItem and selected uids
+    // validate
     if (invalidNodes[focusedItem]) return
     const uids = clipboardData.uids.filter(uid => !invalidNodes[uid])
     if (uids.length === 0) return
@@ -1361,10 +1341,7 @@ Your changes will be lost if you don't save them.`
     } else if (clipboardData.type === 'copy') {
       cb_moveNode(uids, focusedItem, true)
     }
-  }, [invalidNodes, clipboardData, cb_moveNode, focusedItem])
-  const onDelete = useCallback(() => {
-    cb_deleteNode()
-  }, [cb_deleteNode])
+  }, [clipboardData, invalidNodes, focusedItem, cb_moveNode])
   const onDuplicate = useCallback(() => {
     cb_duplicateNode()
   }, [cb_duplicateNode])
@@ -1480,7 +1457,6 @@ Your changes will be lost if you don't save them.`
                         !props.context.isFocused && addRunningActions(['fileTreeView-focus'])
                         !e.shiftKey && !e.ctrlKey && addRunningActions(props.item.isFolder ? [props.context.isExpanded ? 'fileTreeView-collapse' : 'fileTreeView-expand'] : ['fileTreeView-read'])
 
-                        // call back
                         !props.context.isFocused && props.context.focusItem()
                         e.shiftKey ? props.context.selectUpTo() :
                           e.ctrlKey ? (props.context.isSelected ? props.context.unselectItem() : props.context.addToSelectedItems()) : [
@@ -1498,8 +1474,8 @@ Your changes will be lost if you don't save them.`
                         {props.arrow}
 
                         {props.item.isFolder ?
-                          props.context.isExpanded ? <SVGIconI {...{ "class": "icon-xs" }}>folder</SVGIconI> : <SVGIconII {...{ "class": "icon-xs" }}>folder</SVGIconII> :
-                          <SVGIconIII {...{ "class": "icon-xs" }}>page</SVGIconIII>}
+                          props.context.isExpanded ? <SVGIconI {...{ "class": "icon-xs" }}>folder</SVGIconI> : <SVGIconII {...{ "class": "icon-xs" }}>folder</SVGIconII>
+                          : <SVGIconIII {...{ "class": "icon-xs" }}>page</SVGIconIII>}
                       </div>
 
                       {props.title}
@@ -1516,8 +1492,8 @@ Your changes will be lost if you don't save them.`
               renderItemArrow: (props) => {
                 return <>
                   {props.item.isFolder ?
-                    props.context.isExpanded ? <SVGIconI {...{ "class": "icon-xs" }}>down</SVGIconI> : <SVGIconII {...{ "class": "icon-xs" }}>right</SVGIconII> :
-                    <div className='icon-xs'></div>}
+                    props.context.isExpanded ? <SVGIconI {...{ "class": "icon-xs" }}>down</SVGIconI> : <SVGIconII {...{ "class": "icon-xs" }}>right</SVGIconII>
+                    : <div className='icon-xs'></div>}
                 </>
               },
               renderItemTitle: (props) => {
@@ -1569,7 +1545,6 @@ Your changes will be lost if you don't save them.`
                 </>
               },
             }}
-
             props={{
               canDragAndDrop: true,
               canDropOnFolder: true,
@@ -1580,7 +1555,6 @@ Your changes will be lost if you don't save them.`
               canSearchByStartingTyping: false,
               canRename: true,
             }}
-
             callbacks={{
               onStartRenamingItem: (item) => {
                 cb_startRenamingNode(item.index as TNodeUid)
@@ -1626,6 +1600,7 @@ Your changes will be lost if you don't save them.`
     panelSize, panelResizing, onPanelClick,
     ffTree, fileTreeViewData,
     focusedItem, selectedItems, expandedItems,
+    setInvalidNodes,
     addRunningActions, removeRunningActions,
     cb_startRenamingNode, cb_abortRenamingNode, cb_renameNode,
     cb_selectNode, cb_focusNode, cb_expandNode, cb_collapseNode, cb_readNode, cb_moveNode,
