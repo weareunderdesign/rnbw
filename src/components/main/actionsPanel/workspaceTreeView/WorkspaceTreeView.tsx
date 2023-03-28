@@ -867,7 +867,7 @@ This action cannot be undone!`
 
     removeInvalidNodes(item.data.uid)
   }, [ffTree, removeInvalidNodes])
-  const cb_renameFFNode = useCallback(async (uid: TNodeUid, newName: string, ffNodeType: TFileNodeType) => {
+  const _cb_renameNode = useCallback(async (uid: TNodeUid, newName: string, ffNodeType: TFileNodeType) => {
     // validate
     const node = ffTree[uid]
     if (node === undefined || node.name === newName) return
@@ -976,7 +976,7 @@ Your changes will be lost if you don't save them.`
       }
 
       setTemporaryNodes(item.data.uid)
-      await cb_renameFFNode(item.index as TNodeUid, name, item.data.data.type)
+      await _cb_renameNode(item.index as TNodeUid, name, item.data.data.type)
       removeTemporaryNodes(item.data.uid)
     } else {
       await createFFNode(item.data.parentUid, item.data.data.type, name)
@@ -987,7 +987,7 @@ Your changes will be lost if you don't save them.`
       setFFTree(tmpTree)
     }
     removeInvalidNodes(item.data.uid)
-  }, [invalidNodes, cb_renameFFNode, createFFNode, setTemporaryNodes, removeTemporaryNodes, removeInvalidNodes, ffTree, osType, ffHandlers])
+  }, [invalidNodes, _cb_renameNode, createFFNode, setTemporaryNodes, removeTemporaryNodes, removeInvalidNodes, ffTree, osType, ffHandlers])
   const cb_moveNode = useCallback(async (uids: TNodeUid[], targetUid: TNodeUid, copy: boolean = false) => {
     // validate
     if (ffTree[targetUid] === undefined) return

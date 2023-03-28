@@ -132,6 +132,9 @@ export const configProject = async (projectHandle: FileSystemDirectoryHandle, os
     }))
   })
 }
+export const reloadProject = async () => {
+
+}
 export const createDirectory = (path: string, cb?: () => void, fb?: () => void) => {
   _fs.mkdir(path, function (err: any) {
     if (err) {
