@@ -65,6 +65,8 @@ export type TMainContext = {
   setIsHms: (is: boolean | null) => void,
   ffAction: TFileAction,
   setFFAction: (action: TFileAction) => void,
+  currentFileUid: TNodeUid,
+  setCurrentFileUid: (uid: TNodeUid) => void,
   // node tree view
   fnHoveredItem: TNodeUid,
   setFNHoveredItem: (uid: TNodeUid) => void,

@@ -72,6 +72,7 @@ export default function Process(props: ProcessProps) {
     newFocusedNodeUid, setNewFocusedNodeUid,
     codeChanges, setEvent,
     fsPending, setFSPending,
+    currentFileUid,
     // groupping action
     addRunningActions, removeRunningActions,
 
@@ -250,7 +251,9 @@ export default function Process(props: ProcessProps) {
 
         setCodeEditing(false)
       } else if (updateOpt.from === 'hms') {
-        if (file.content === fileData.contentInApp) {
+        const _currentFile = ffTree[currentFileUid]
+        const _currentFileData = _currentFile.data as TFileNodeData
+        if (file.uid === currentFileUid && file.content === fileData.contentInApp) {
           LogAllow && console.log('view state changed by hms')
           // no need to build new node tree
           onlyRenderViewState = true
@@ -267,55 +270,59 @@ export default function Process(props: ProcessProps) {
           fileData.contentInApp = contentInApp
           fileData.changed = fileData.content !== fileData.orgContent
 
-          // refresh iframe if it has seed node changes
-          const o_uids = getSubNodeUidsByBfs(RootNodeUid, nodeTree)
-          for (const o_uid of o_uids) {
-            const o_node = nodeTree[o_uid]
-            const n_node = _nodeTree[o_uid]
-            if (!n_node) {
-              if (o_node.name === 'html' || o_node.name === 'head' || o_node.name === 'body') {
-                _needToReloadIFrame = true
-                break
+          if (file.uid !== currentFileUid) {
+            _needToReloadIFrame = true
+          } else {
+            // refresh iframe if it has seed node changes
+            const o_uids = getSubNodeUidsByBfs(RootNodeUid, nodeTree)
+            for (const o_uid of o_uids) {
+              const o_node = nodeTree[o_uid]
+              const n_node = _nodeTree[o_uid]
+              if (!n_node) {
+                if (o_node.name === 'html' || o_node.name === 'head' || o_node.name === 'body') {
+                  _needToReloadIFrame = true
+                  break
+                }
               }
             }
-          }
 
-          // --------------------------- iframe side effects ---------------------------
-          if (!_needToReloadIFrame) {
-            // get deleted/changed uids
-            const deletedUids: TNodeUid[] = []
-            const _uidsToChange: TNodeUid[] = []
-            const n_uids = getSubNodeUidsByBfs(RootNodeUid, _nodeTree)
-            o_uids.map((o_uid, index) => {
-              const o_node = nodeTree[o_uid]
-              const o_nodeData = o_node.data as THtmlNodeData
-              const n_uid = n_uids[index]
-              const n_node = _nodeTree[n_uid]
-              const n_nodeData = n_node?.data as THtmlNodeData
-              if (o_uid !== n_uid && (o_nodeData.valid || n_nodeData?.valid)) {
-                deletedUids.push(o_uid)
-                o_node.name !== '!doctype' && _uidsToChange.push((o_nodeData.valid ? o_node.parentUid : n_node.parentUid) as TNodeUid)
-              }
-            })
-            _uidsToChange.reverse()
-            const uidsToChange = getValidNodeUids(nodeTree, _uidsToChange.filter(uid => nodeTree[uid]).reduce((prev, cur) => {
-              if (!prev.length || prev[prev.length - 1] !== cur) {
-                prev.push(cur)
-              }
-              return prev
-            }, [] as TNodeUid[]))
+            // --------------------------- iframe side effects ---------------------------
+            if (!_needToReloadIFrame) {
+              // get deleted/changed uids
+              const deletedUids: TNodeUid[] = []
+              const _uidsToChange: TNodeUid[] = []
+              const n_uids = getSubNodeUidsByBfs(RootNodeUid, _nodeTree)
+              o_uids.map((o_uid, index) => {
+                const o_node = nodeTree[o_uid]
+                const o_nodeData = o_node.data as THtmlNodeData
+                const n_uid = n_uids[index]
+                const n_node = _nodeTree[n_uid]
+                const n_nodeData = n_node?.data as THtmlNodeData
+                if (o_uid !== n_uid && (o_nodeData.valid || n_nodeData?.valid)) {
+                  deletedUids.push(o_uid)
+                  o_node.name !== '!doctype' && _uidsToChange.push((o_nodeData.valid ? o_node.parentUid : n_node.parentUid) as TNodeUid)
+                }
+              })
+              _uidsToChange.reverse()
+              const uidsToChange = getValidNodeUids(nodeTree, _uidsToChange.filter(uid => nodeTree[uid]).reduce((prev, cur) => {
+                if (!prev.length || prev[prev.length - 1] !== cur) {
+                  prev.push(cur)
+                }
+                return prev
+              }, [] as TNodeUid[]))
 
-            // node tree view - this will affect to hms record
-            // dispatch(updateFNTreeViewState({ deletedUids }))
+              // node tree view - this will affect to hms record
+              // dispatch(updateFNTreeViewState({ deletedUids }))
 
-            // iframe
-            uidsToChange.map((uid) => {
-              const n_node = _nodeTree[uid]
-              const n_nodeData = n_node.data as THtmlNodeData
-              // replace html in iframe
-              const element = document.querySelector('iframe')?.contentWindow?.window.document.querySelector(`[${NodeInAppAttribName}="${uid}"]`)
-              element ? element.outerHTML = n_nodeData.htmlInApp : null
-            })
+              // iframe
+              uidsToChange.map((uid) => {
+                const n_node = _nodeTree[uid]
+                const n_nodeData = n_node.data as THtmlNodeData
+                // replace html in iframe
+                const element = document.querySelector('iframe')?.contentWindow?.window.document.querySelector(`[${NodeInAppAttribName}="${uid}"]`)
+                element ? element.outerHTML = n_nodeData.htmlInApp : null
+              })
+            }
           }
         }
 

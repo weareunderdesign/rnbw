@@ -945,11 +945,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       removeTemporaryNodes(_file.uid)
     } else {
       await createFFNode(node.parentUid as TNodeUid, nodeData.type, newName)
-
-      const tmpTree = JSON.parse(JSON.stringify(ffTree))
-      tmpTree[node.parentUid as TNodeUid].children = tmpTree[node.parentUid as TNodeUid].children.filter((c_uid: TNodeUid) => c_uid !== node.uid)
-      delete tmpTree[node.uid]
-      setFFTree(tmpTree)
     }
     removeInvalidNodes(node.uid)
   }, [invalidNodes, _cb_renameNode, setTemporaryNodes, removeTemporaryNodes, ffTree, ffHandlers, osType, createFFNode, removeInvalidNodes])

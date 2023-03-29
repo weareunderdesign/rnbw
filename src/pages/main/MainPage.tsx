@@ -162,6 +162,7 @@ export default function MainPage(props: MainPageProps) {
   const [ffHoveredItem, setFFHoveredItem] = useState<TNodeUid>('')
   const [isHms, setIsHms] = useState<boolean | null>(null)
   const [ffAction, setFFAction] = useState<TFileAction>({ type: null })
+  const [currentFileUid, setCurrentFileUid] = useState<TNodeUid>('')
   // node tree view
   const [fnHoveredItem, setFNHoveredItem] = useState<TNodeUid>('')
   const [nodeTree, setNodeTree] = useState<TNodeTreeData>({})
@@ -418,22 +419,24 @@ export default function MainPage(props: MainPageProps) {
     if (pastLength === 1) return
 
     setFFAction(fileAction)
+    setCurrentFileUid(file.uid)
     setIsHms(true)
 
     dispatch({ type: 'main/undo' })
     setUpdateOpt({ parse: true, from: 'hms' })
-  }, [pending, iframeLoading, fsPending, codeEditing, pastLength])
+  }, [pending, iframeLoading, fsPending, codeEditing, pastLength, fileAction, file.uid])
   const onRedo = useCallback(() => {
     if (pending || iframeLoading || fsPending || codeEditing) return
 
     LogAllow && futureLength === 0 && console.log('hms - it is the latest state')
     if (futureLength === 0) return
 
+    setCurrentFileUid(file.uid)
     setIsHms(false)
 
     dispatch({ type: 'main/redo' })
     setUpdateOpt({ parse: true, from: 'hms' })
-  }, [pending, iframeLoading, fsPending, codeEditing, futureLength])
+  }, [pending, iframeLoading, fsPending, codeEditing, futureLength, file.uid])
   // reset fileAction in the new history
   useEffect(() => {
     futureLength === 0 && fileAction.type !== null && dispatch(setFileAction({ type: null }))
@@ -708,6 +711,7 @@ export default function MainPage(props: MainPageProps) {
         ffHoveredItem, setFFHoveredItem,
         isHms, setIsHms,
         ffAction, setFFAction,
+        currentFileUid, setCurrentFileUid,
         // node tree view
         fnHoveredItem, setFNHoveredItem,
         nodeTree, setNodeTree,

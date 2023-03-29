@@ -51,6 +51,8 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   setIsHms: (is: boolean | null) => { },
   ffAction: { type: null },
   setFFAction: (action: TFileAction) => { },
+  currentFileUid: 'TNodeUid',
+  setCurrentFileUid: (uid: TNodeUid) => { },
   // node tree view
   fnHoveredItem: '',
   setFNHoveredItem: (uid: TNodeUid) => { },
