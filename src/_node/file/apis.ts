@@ -200,40 +200,44 @@ export const reloadProject = async (projectHandle: FileSystemDirectoryHandle, ff
       }
     }
 
-    // build idb
-    handlerArr.map(async (_handler) => {
-      const { kind, path, handler } = _handler
-      if (kind === 'directory') {
-        // create dir
-        createDirectory(path, () => {
-          delete fsToCreate[path]
-          if (Object.keys(fsToCreate).length === 0) {
-            res({ handlerObj, deletedUids: Object.keys(orgUids) })
-          }
-        }, () => {
-          delete fsToCreate[path]
-          if (Object.keys(fsToCreate).length === 0) {
-            res({ handlerObj, deletedUids: Object.keys(orgUids) })
-          }
-        })
-      } else {
-        // read and store file content
-        const fileEntry = await (handler as FileSystemFileHandle).getFile()
-        const contentBuffer = Buffer.from(await fileEntry.arrayBuffer())
-        handlerObj[path].content = contentBuffer
-        writeFile(path, contentBuffer, () => {
-          delete fsToCreate[path]
-          if (Object.keys(fsToCreate).length === 0) {
-            res({ handlerObj, deletedUids: Object.keys(orgUids) })
-          }
-        }, () => {
-          delete fsToCreate[path]
-          if (Object.keys(fsToCreate).length === 0) {
-            res({ handlerObj, deletedUids: Object.keys(orgUids) })
-          }
-        })
-      }
-    })
+    if (!handlerArr.length) {
+      res({ handlerObj, deletedUids: Object.keys(orgUids) })
+    } else {
+      // build idb
+      handlerArr.map(async (_handler) => {
+        const { kind, path, handler } = _handler
+        if (kind === 'directory') {
+          // create dir
+          createDirectory(path, () => {
+            delete fsToCreate[path]
+            if (Object.keys(fsToCreate).length === 0) {
+              res({ handlerObj, deletedUids: Object.keys(orgUids) })
+            }
+          }, () => {
+            delete fsToCreate[path]
+            if (Object.keys(fsToCreate).length === 0) {
+              res({ handlerObj, deletedUids: Object.keys(orgUids) })
+            }
+          })
+        } else {
+          // read and store file content
+          const fileEntry = await (handler as FileSystemFileHandle).getFile()
+          const contentBuffer = Buffer.from(await fileEntry.arrayBuffer())
+          handlerObj[path].content = contentBuffer
+          writeFile(path, contentBuffer, () => {
+            delete fsToCreate[path]
+            if (Object.keys(fsToCreate).length === 0) {
+              res({ handlerObj, deletedUids: Object.keys(orgUids) })
+            }
+          }, () => {
+            delete fsToCreate[path]
+            if (Object.keys(fsToCreate).length === 0) {
+              res({ handlerObj, deletedUids: Object.keys(orgUids) })
+            }
+          })
+        }
+      })
+    }
   })
 }
 export const createDirectory = (path: string, cb?: () => void, fb?: () => void) => {
