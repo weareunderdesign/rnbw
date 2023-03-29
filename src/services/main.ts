@@ -16,7 +16,9 @@ export const removeClass = (classList: string, classToRemove: string): string =>
   const validClassList = classList.split(' ').filter(_class => !!_class && _class !== classToRemove).join(' ')
   return validClassList
 }
-
+export const generateQuerySelector = (path: string): string => {
+  return path.replace(/[^A-Za-z]/g, (c) => c.charCodeAt(0).toString())
+}
 /**
  * get file system watch interval from its type
  * @param fsType 

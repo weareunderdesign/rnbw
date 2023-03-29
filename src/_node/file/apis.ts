@@ -258,15 +258,6 @@ export const writeFile = (path: string, content: Uint8Array | string, cb?: () =>
     }
   })
 }
-export const removeFileSystem = (path: string, cb?: () => void) => {
-  _sh.rm(path, { recursive: true }, (err: any) => {
-    if (err) {
-      LogAllow && console.log('rmnod err', path, err)
-    } else {
-      cb && cb()
-    }
-  })
-}
 
 export const parseFile = (type: TFileType, content: string, referenceData: TNodeReferenceData, osType: TOsType, keepNodeUids: null | boolean = false, nodeMaxUid: TNodeUid = ''): TFileParserResponse => {
   if (type === 'html') {
@@ -285,4 +276,14 @@ export const serializeFile = (type: TFileType, tree: TNodeTreeData, referenceDat
     return serializeHtml(tree, referenceData as THtmlReferenceData, osType)
   }
   return ''
+}
+
+export const removeFileSystem = (path: string, cb?: () => void) => {
+  _sh.rm(path, { recursive: true }, (err: any) => {
+    if (err) {
+      LogAllow && console.log('rmnod err', path, err)
+    } else {
+      cb && cb()
+    }
+  })
 }

@@ -71,6 +71,7 @@ import {
 } from '@_redux/main';
 import {
   addClass,
+  generateQuerySelector,
   removeClass,
   verifyFileHandlerPermission,
 } from '@_services/main';
@@ -443,9 +444,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   useEffect(() => {
     if (hoveredItemRef.current === ffHoveredItem) return
 
-    const curHoveredElement = document.querySelector(`#FileTreeView-${hoveredItemRef.current.replace(/[\/.]/g, '-')}`)
+    const curHoveredElement = document.querySelector(`#FileTreeView-${generateQuerySelector(hoveredItemRef.current)}`)
     curHoveredElement?.setAttribute('class', removeClass(curHoveredElement.getAttribute('class') || '', 'outline'))
-    const newHoveredElement = document.querySelector(`#FileTreeView-${ffHoveredItem.replace(/[\/.]/g, '-')}`)
+    const newHoveredElement = document.querySelector(`#FileTreeView-${generateQuerySelector(ffHoveredItem)}`)
     newHoveredElement?.setAttribute('class', addClass(newHoveredElement.getAttribute('class') || '', 'outline'))
 
     hoveredItemRef.current = ffHoveredItem
@@ -455,7 +456,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   useEffect(() => {
     if (focusedItemRef.current === focusedItem) return
 
-    const focusedElement = document.querySelector(`#FileTreeView-${focusedItem.replace(/[\/.]/g, '-')}`)
+    const focusedElement = document.querySelector(`#FileTreeView-${generateQuerySelector(focusedItem)}`)
     setTimeout(() => focusedElement?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' }), 0)
 
     focusedItemRef.current = focusedItem
@@ -1498,7 +1499,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                     {...props.context.itemContainerWithChildrenProps}
                   >
                     <div
-                      id={`FileTreeView-${props.item.index.toString().replace(/[\/|.]/g, '-')}`}
+                      id={`FileTreeView-${generateQuerySelector(props.item.index.toString())}`}
                       className={cx(
                         'justify-stretch',
                         'padding-xs',
