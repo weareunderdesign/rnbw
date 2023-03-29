@@ -934,17 +934,18 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     if (!invalidNodes[node.uid]) return
 
     if (nodeData.valid) {
-      // confirm changed file before renaming
       const _file = ffTree[node.uid]
       const _fileData = _file.data as TFileNodeData
+
       if (_file && _fileData.changed) {
         // confirm
-        const message = `Your changes will be lost if you don't save them before renaming. Are you sure you want to continue without saving?`
+        const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`
         if (!window.confirm(message)) {
           removeInvalidNodes(node.uid)
           return
         }
       }
+
       setTemporaryNodes(_file.uid)
       await _cb_renameNode(_file.uid, newName, _fileData.kind === 'directory' ? '*folder' : _fileData.ext)
       removeTemporaryNodes(_file.uid)
@@ -1011,6 +1012,22 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     if (ffTree[targetUid] === undefined) return
     const validatedUids = getValidNodeUids(ffTree, uids, targetUid)
     if (validatedUids.length === 0) return
+
+    // confirm files' changes
+    let hasChangedFile = false
+    validatedUids.map(uid => {
+      const _file = ffTree[uid]
+      const _fileData = _file.data as TFileNodeData
+      if (_file && _fileData.changed) {
+        hasChangedFile = true
+      }
+    })
+    if (hasChangedFile) {
+      const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`
+      if (!window.confirm(message)) {
+        return
+      }
+    }
 
     addRunningActions(['fileTreeView-move'])
 
@@ -1168,6 +1185,22 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     // validate
     const uids = selectedItems.filter(uid => !invalidNodes[uid])
     if (uids.length === 0) return
+
+    // confirm files' changes
+    let hasChangedFile = false
+    uids.map(uid => {
+      const _file = ffTree[uid]
+      const _fileData = _file.data as TFileNodeData
+      if (_file && _fileData.changed) {
+        hasChangedFile = true
+      }
+    })
+    if (hasChangedFile) {
+      const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`
+      if (!window.confirm(message)) {
+        return
+      }
+    }
 
     addRunningActions(['fileTreeView-duplicate'])
 
