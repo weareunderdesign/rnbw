@@ -72,7 +72,11 @@ import {
   setFileAction,
   TFileHandlerCollection,
 } from '@_redux/main';
-import { verifyFileHandlerPermission } from '@_services/main';
+import {
+  addClass,
+  removeClass,
+  verifyFileHandlerPermission,
+} from '@_services/main';
 import {
   TFileAction,
   TFileNodeType,
@@ -388,6 +392,18 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     removeRunningActions(['fileTreeView-duplicate'], false)
   }, [invalidNodes, setInvalidNodes, ffTree, ffHandlers])
   // -------------------------------------------------------------- sync --------------------------------------------------------------
+  // outline the hovered item
+  const hoveredItemRef = useRef<TNodeUid>(ffHoveredItem)
+  useEffect(() => {
+    if (hoveredItemRef.current === ffHoveredItem) return
+
+    const curHoveredElement = document.querySelector(`#FileTreeView-${hoveredItemRef.current.replace(/[\/.]/g, '-')}`)
+    curHoveredElement?.setAttribute('class', removeClass(curHoveredElement.getAttribute('class') || '', 'outline'))
+    const newHoveredElement = document.querySelector(`#FileTreeView-${ffHoveredItem.replace(/[\/.]/g, '-')}`)
+    newHoveredElement?.setAttribute('class', addClass(newHoveredElement.getAttribute('class') || '', 'outline'))
+
+    hoveredItemRef.current = ffHoveredItem
+  }, [ffHoveredItem])
   // build fileTreeViewData
   const fileTreeViewData = useMemo(() => {
     const data: TreeViewData = {}
@@ -1421,18 +1437,13 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                     {...props.context.itemContainerWithChildrenProps}
                   >
                     <div
-                      id={`FileTreeView-${props.item.index}`}
+                      id={`FileTreeView-${props.item.index.toString().replace(/[\/|.]/g, '-')}`}
                       className={cx(
                         'justify-stretch',
                         'padding-xs',
                         'outline-default',
 
-                        props.item.index === ffHoveredItem ? 'outline' : '',
-
-                        props.context.isExpanded && props.context.isSelected && 'background-tertiary',
-                        !props.context.isExpanded && props.context.isSelected && 'background-secondary',
-
-                        props.context.isSelected && 'outline-none',
+                        props.context.isSelected && 'background-tertiary outline-none',
                         !props.context.isSelected && props.context.isFocused && 'outline',
 
                         props.context.isDraggingOver && '',
