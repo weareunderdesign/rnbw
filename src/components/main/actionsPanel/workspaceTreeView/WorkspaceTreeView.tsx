@@ -64,6 +64,7 @@ import {
   globalSelector,
   MainContext,
   navigatorSelector,
+  removeCurrentFile,
   selectFFNode,
   setCurrentFile,
   setFileAction,
@@ -161,7 +162,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     _setTemporaryNodes(_temporaryNodes)
   }, [temporaryNodes])
   // -------------------------------------------------------------- project load cb for side effect --------------------------------------------------------------
-  const cb_reloadProject = useCallback(async () => {
+  const cb_reloadProject = useCallback(async (uid?: TNodeUid) => {
     try {
       const { handlerObj, deletedUids } = await reloadProject(ffHandlers[RootNodeUid] as FileSystemDirectoryHandle, ffTree, osType)
       dispatch(updateFFTreeViewState({ deletedUids }))
@@ -203,6 +204,14 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
         ffHandlerObj[uid] = handler
       })
+
+      if (uid && !treeViewData[uid]) {
+        setIFrameSrc(null)
+        setNodeTree({})
+        setValidNodeTree({})
+        setCurrentFileUid('')
+        dispatch(removeCurrentFile())
+      }
 
       setFFTree(treeViewData)
       setFFHandlers(ffHandlerObj)
@@ -1008,9 +1017,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
 
     removeInvalidNodes(...uids)
-    await cb_reloadProject()
+    await cb_reloadProject(file.uid)
     removeRunningActions(['fileTreeView-delete'], false)
-  }, [addRunningActions, removeRunningActions, invalidNodes, setInvalidNodes, removeInvalidNodes, selectedItems, ffTree, ffHandlers, cb_reloadProject])
+  }, [addRunningActions, removeRunningActions, invalidNodes, setInvalidNodes, removeInvalidNodes, selectedItems, ffTree, ffHandlers, cb_reloadProject, file.uid])
   const cb_moveNode = useCallback(async (uids: TNodeUid[], targetUid: TNodeUid, copy: boolean = false) => {
     // validate
     if (ffTree[targetUid] === undefined) return
