@@ -192,7 +192,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
             type,
             orgContent: type !== 'unknown' ? (ffTree[uid] ? (ffTree[uid].data as TFileNodeData).orgContent : content?.toString()) : '',
             content: type !== 'unknown' ? (ffTree[uid] ? (ffTree[uid].data as TFileNodeData).content : content?.toString()) : '',
-            changed: false,
+            changed: ffTree[uid] ? (ffTree[uid].data as TFileNodeData).changed : false,
           } as TFileNodeData,
         } as TNode
 

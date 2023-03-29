@@ -60,15 +60,13 @@ import { ProcessProps } from './types';
 
 export default function Process(props: ProcessProps) {
   const dispatch = useDispatch()
-
+  // -------------------------------------------------------------- global state --------------------------------------------------------------
   // redux state
   const actionGroupIndex = useSelector(getActionGroupIndexSelector)
   const { workspace, project, file } = useSelector(navigatorSelector)
   const { fileAction } = useSelector(globalSelector)
   const { futureLength, pastLength } = useSelector(hmsInfoSelector)
-  // const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
   const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
-
   // main context
   const {
     newFocusedNodeUid, setNewFocusedNodeUid,
@@ -112,7 +110,6 @@ export default function Process(props: ProcessProps) {
     fileInfo, setFileInfo,
     needToReloadIFrame, setNeedToReloadIFrame,
   } = useContext(MainContext)
-
   // -------------------------------------------------------------- sync --------------------------------------------------------------
   // service - get reference data for current file type
   const getReferenceData = useCallback((fileType: TFileType) => {
