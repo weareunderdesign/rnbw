@@ -93,7 +93,7 @@ export const configProject = async (projectHandle: FileSystemDirectoryHandle, os
     }
 
     // build idb
-    await Promise.all(handlerArr.map(async (_handler) => {
+    handlerArr.map(async (_handler) => {
       const { kind, path, handler } = _handler
       if (kind === 'directory') {
         // create dir
@@ -125,7 +125,7 @@ export const configProject = async (projectHandle: FileSystemDirectoryHandle, os
           }
         })
       }
-    }))
+    })
   })
 }
 export const reloadProject = async (projectHandle: FileSystemDirectoryHandle, ffTree: TNodeTreeData, osType: TOsType): Promise<{ handlerObj: TFileHandlerInfoObj, deletedUids: TNodeUid[] }> => {
@@ -201,7 +201,7 @@ export const reloadProject = async (projectHandle: FileSystemDirectoryHandle, ff
     }
 
     // build idb
-    await Promise.all(handlerArr.map(async (_handler) => {
+    handlerArr.map(async (_handler) => {
       const { kind, path, handler } = _handler
       if (kind === 'directory') {
         // create dir
@@ -233,7 +233,7 @@ export const reloadProject = async (projectHandle: FileSystemDirectoryHandle, ff
           }
         })
       }
-    }))
+    })
   })
 }
 export const createDirectory = (path: string, cb?: () => void, fb?: () => void) => {

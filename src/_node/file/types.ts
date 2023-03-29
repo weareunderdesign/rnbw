@@ -21,15 +21,9 @@ export type TFileHandlerInfoObj = { [uid: TNodeUid]: TFileHandlerInfo }
 
 
 
-/**
- * files reference data
- */
-export type TFilesReferenceData = {
-  [name: string]: TFilesReference,
-}
-/**
- * files reference
- */
+
+
+
 export type TFilesReference = {
   "Name": string,
   "Extension": string,
@@ -37,6 +31,9 @@ export type TFilesReference = {
   "Icon": string,
   "Description": string,
   "Featured": string,
+}
+export type TFilesReferenceData = {
+  [name: string]: TFilesReference,
 }
 export type TFileNodeData = {
   valid: boolean,

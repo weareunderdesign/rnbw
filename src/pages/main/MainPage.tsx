@@ -384,11 +384,6 @@ export default function MainPage(props: MainPageProps) {
   // command detect & do actions
   useEffect(() => {
     switch (currentCommand.action) {
-      case 'Clear':
-        onClear()
-      case 'Save':
-        onSaveAll()
-        break
       case 'Jumpstart':
         onJumpstart()
         break
@@ -409,87 +404,6 @@ export default function MainPage(props: MainPageProps) {
     }
   }, [currentCommand])
   // -------------------------------------------------------------- handlers --------------------------------------------------------------
-  // save all of the changed files
-  const onSaveAll = useCallback(async () => {
-    /* const _openedFiles: { [uid: TNodeUid]: TFile } = {}
-    const uids = Object.keys(openedFiles)
-    const changedFiles: TFile[] = []
-    uids.map(uid => {
-      const _file = openedFiles[uid]
-      _openedFiles[uid] = { ..._file }
-      _file.changed && changedFiles.push(_file)
-    })
-
-    setPending(true)
-
-    let saveDone = false
-    changedFiles.length && await Promise.all(changedFiles.map(async (_file) => {
-      // get the current file handler
-      const handler = ffHandlers[_file.uid]
-      if (handler === undefined) return
-
-      // verify permission
-      if (await verifyFileHandlerPermission(handler) === false) {
-        addMessage({
-          type: 'error',
-          content: 'save failed cause of invalid handler',
-        })
-        return
-      }
-
-      // update file content
-      try {
-        const writableStream = await (handler as FileSystemFileHandle).createWritable()
-        await writableStream.write(_file.content)
-        await writableStream.close()
-
-        addMessage({
-          type: 'success',
-          content: 'Saved successfully',
-        })
-
-        saveDone = true
-        _openedFiles[_file.uid] = { ..._file, orgContent: _file.content, content: _file.content, changed: false }
-      } catch (err) {
-        addMessage({
-          type: 'error',
-          content: 'error occurred while saving',
-        })
-      }
-    }))
-
-    saveDone && setOpenedFiles(_openedFiles)
-    setPending(false) */
-  }, [ffHandlers])
-  // clean rnbw'data
-  const onClear = useCallback(async () => {
-    /* const uids = Object.keys(openedFiles)
-    const changedFiles: TFile[] = []
-    uids.map(uid => {
-      const _file = openedFiles[uid]
-      _file.changed && changedFiles.push(_file)
-    })
-
-    if (changedFiles.length) {
-      const message = `Do you want to save changes you made to ${changedFiles.length} files?
-Your changes will be lost if you don't save them.`
-      if (window.confirm(message)) {
-        await onSaveAll()
-      }
-    }
-
-    // remove localstorage and session
-    localStorage.clear()
-    await delMany(['project-context', 'project-root-folder-handler', 'file-tree-view-state', 'opened-file-uid', 'node-tree-view-state', 'opened-file-content'])
-    setFFTree({})
-    setNodeTree({})
-    setOpenedFiles({})
-    dispatch(clearMainState())
-
-    // start from newbie
-    onJumpstart()
-    localStorage.setItem("newbie", 'false') */
-  }, [onSaveAll])
   // cmdk jumpstart
   const onJumpstart = useCallback(() => {
     if (cmdkOpen) return
@@ -565,22 +479,7 @@ Your changes will be lost if you don't save them.`
     setHtmlReferenceData({ elements: htmlElementsReferenceData })
 
     // add default cmdk actions
-    const _cmdkReferenceData: TCmdkReferenceData = {} // cmdk map
-    // clear
-    _cmdkReferenceData['Clear'] = {
-      "Name": 'Clear',
-      "Icon": '',
-      "Description": '',
-      "Keyboard Shortcut": {
-        cmd: true,
-        shift: true,
-        alt: false,
-        key: 'KeyR',
-        click: false,
-      },
-      "Group": 'default',
-      "Context": 'all',
-    }
+    const _cmdkReferenceData: TCmdkReferenceData = {}
     // Jumpstart
     _cmdkReferenceData['Jumpstart'] = {
       "Name": 'Jumpstart',

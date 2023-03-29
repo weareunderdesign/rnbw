@@ -113,7 +113,7 @@ export default function Process(props: ProcessProps) {
     needToReloadIFrame, setNeedToReloadIFrame,
   } = useContext(MainContext)
 
-  // -------------------------------------------------------------- Sync --------------------------------------------------------------
+  // -------------------------------------------------------------- sync --------------------------------------------------------------
   // service - get reference data for current file type
   const getReferenceData = useCallback((fileType: TFileType) => {
     return fileType === 'html' ? htmlReferenceData : htmlReferenceData
@@ -409,6 +409,8 @@ export default function Process(props: ProcessProps) {
             // do nothing
           }
           setFSPending(false)
+        }, () => {
+          setFSPending(false)
         })
         // update context
         setFFNode(_file)
@@ -513,7 +515,48 @@ export default function Process(props: ProcessProps) {
       removeRunningActions(['processor-validNodeTree'], false)
     }
   }, [validNodeTree])
+  // -------------------------------------------------------------- cmdk --------------------------------------------------------------
+  // command detect & do actions
+  useEffect(() => {
+    switch (currentCommand.action) {
+      case 'Save':
+        onSave()
+        break
+      default:
+        return
+    }
+  }, [currentCommand])
+  const onSave = useCallback(async () => {
+    if (!ffTree[RootNodeUid]) return
 
+    const _ffTree = JSON.parse(JSON.stringify(ffTree)) as TNodeTreeData
+
+    addRunningActions(['process-save'])
+
+    const uids = getSubNodeUidsByBfs(RootNodeUid, _ffTree)
+    await Promise.all(uids.map(async (uid) => {
+      const node = _ffTree[uid]
+      const nodeData = node.data as TFileNodeData
+      if (nodeData.changed) {
+        try {
+          const handler = ffHandlers[uid]
+          const writableStream = await (handler as FileSystemFileHandle).createWritable()
+          await writableStream.write(nodeData.content)
+          await writableStream.close()
+          nodeData.changed = false
+          nodeData.orgContent = nodeData.content
+        } catch (err) {
+          addMessage({
+            type: 'error',
+            content: 'error occurred while saving',
+          })
+        }
+      }
+    }))
+
+    setFFTree(_ffTree)
+    removeRunningActions(['process-save'], false)
+  }, [ffTree, ffHandlers])
   return useMemo(() => {
     return <></>
   }, [])

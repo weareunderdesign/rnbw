@@ -190,7 +190,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
             name: name,
             ext: ext,
             type,
-            orgContent: type !== 'unknown' ? content?.toString() : '',
+            orgContent: type !== 'unknown' ? (ffTree[uid] ? (ffTree[uid].data as TFileNodeData).orgContent : content?.toString()) : '',
             content: type !== 'unknown' ? (ffTree[uid] ? (ffTree[uid].data as TFileNodeData).content : content?.toString()) : '',
             changed: false,
           } as TFileNodeData,
@@ -201,7 +201,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
       setFFTree(treeViewData)
       setFFHandlers(ffHandlerObj)
-
     } catch (err) {
       LogAllow && console.log('reload project err', err)
     }
@@ -935,47 +934,12 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       const _fileData = _file.data as TFileNodeData
       if (_file && _fileData.changed) {
         // confirm
-        const message = `Do you want to save the changes you made to ${_file.name} before renaming? Your changes will be lost if you don't save them.`
-        if (window.confirm(message)) {
-          await (async () => {
-            // get the current file handler
-            const handler = ffHandlers[_file.uid]
-            if (handler === undefined) return
-
-            setFSPending(true)
-
-            // validate
-            if (!(await verifyFileHandlerPermission(handler))) {
-              addMessage({
-                type: 'error',
-                content: 'save failed cause of invalid handler',
-              })
-              setFSPending(false)
-              return
-            }
-
-            // update file content
-            try {
-              const writableStream = await (handler as FileSystemFileHandle).createWritable()
-              await writableStream.write(_fileData.content)
-              await writableStream.close()
-
-              addMessage({
-                type: 'success',
-                content: 'Saved successfully',
-              })
-            } catch (err) {
-              addMessage({
-                type: 'error',
-                content: 'error occurred while saving',
-              })
-            }
-
-            setFSPending(false)
-          })()
+        const message = `Your changes will be lost if you don't save them before renaming. Are you sure you want to continue without saving?`
+        if (!window.confirm(message)) {
+          removeInvalidNodes(node.uid)
+          return
         }
       }
-
       setTemporaryNodes(_file.uid)
       await _cb_renameNode(_file.uid, newName, _fileData.kind === 'directory' ? '*folder' : _fileData.ext)
       removeTemporaryNodes(_file.uid)
