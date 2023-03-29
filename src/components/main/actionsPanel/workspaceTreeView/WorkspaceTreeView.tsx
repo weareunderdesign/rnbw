@@ -46,6 +46,7 @@ import {
   _path,
   configProject,
   reloadProject,
+  TFileHandlerCollection,
   TFileNodeData,
 } from '@_node/file';
 import {
@@ -66,7 +67,6 @@ import {
   selectFFNode,
   setCurrentFile,
   setFileAction,
-  TFileHandlerCollection,
   updateFFTreeViewState,
 } from '@_redux/main';
 import {

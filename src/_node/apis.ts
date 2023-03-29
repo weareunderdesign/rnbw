@@ -1,7 +1,4 @@
-import {
-  NodeUidSplitter,
-  RootNodeUid,
-} from '@_constants/main';
+import { RootNodeUid } from '@_constants/main';
 import { TOsType } from '@_types/global';
 
 import {
@@ -413,18 +410,4 @@ export const duplicateNode = (tree: TNodeTreeData, uids: TNodeUid[], treeType: T
   })
 
   return { tree, nodeMaxUid: String(_nodeMaxUid) as TNodeUid, addedUidMap }
-}
-
-export const generateNodeUid = (parentUid: TNodeUid, entryName: string | number): TNodeUid => {
-  return `${parentUid}${NodeUidSplitter}${entryName}`
-}
-export const getParentNodeUid = (uid: TNodeUid): TNodeUid => {
-  const uidArr = uid.split(NodeUidSplitter)
-  uidArr.pop()
-  return uidArr.join(NodeUidSplitter)
-}
-export const getNodeEntryName = (uid: TNodeUid): string => {
-  const uidArr = uid.split(NodeUidSplitter)
-  const entryName = uidArr.pop()
-  return entryName || ''
 }

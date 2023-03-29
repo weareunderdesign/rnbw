@@ -1,6 +1,12 @@
-import { TFileType } from '@_types/main';
+import {
+  TFileInfo,
+  TFileType,
+} from '@_types/main';
 
-import { TNodeUid } from '../';
+import {
+  TNodeTreeData,
+  TNodeUid,
+} from '../';
 
 export type TFileHandlerInfo = {
   uid: TNodeUid,
@@ -16,14 +22,10 @@ export type TFileHandlerInfo = {
 
   handler: FileSystemHandle,
 }
+export type TFileHandlerCollection = {
+  [uid: TNodeUid]: FileSystemHandle,
+}
 export type TFileHandlerInfoObj = { [uid: TNodeUid]: TFileHandlerInfo }
-
-
-
-
-
-
-
 export type TFilesReference = {
   "Name": string,
   "Extension": string,
@@ -48,4 +50,11 @@ export type TFileNodeData = {
   content: string,
   contentInApp?: string,
   changed: boolean,
+}
+export type TFileParserResponse = {
+  formattedContent: string,
+  contentInApp: string,
+  tree: TNodeTreeData,
+  nodeMaxUid: TNodeUid,
+  info?: TFileInfo,
 }

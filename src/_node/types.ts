@@ -1,5 +1,3 @@
-import { TFileInfo } from '@_types/main';
-
 import { TFileNodeData } from './file';
 import {
   THtmlDomNodeData,
@@ -31,12 +29,4 @@ export type TNodeApiResponse = {
   addedUidMap?: Map<TNodeUid, TNodeUid>,
   position?: number,
 }
-export type TFileParserResponse = {
-  formattedContent: string,
-  contentInApp: string,
-  tree: TNodeTreeData,
-  nodeMaxUid: TNodeUid,
-  info?: TFileInfo,
-}
 export type TNodeReferenceData = THtmlReferenceData
-

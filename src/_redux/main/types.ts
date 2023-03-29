@@ -1,4 +1,7 @@
-import { TFilesReferenceData } from '@_node/file';
+import {
+  TFileHandlerCollection,
+  TFilesReferenceData,
+} from '@_node/file';
 import { THtmlReferenceData } from '@_node/html';
 import {
   TNode,
@@ -24,9 +27,19 @@ import {
   TWorkspace,
 } from '@_types/main';
 
-/**
- * main context
- */
+export type TMainReducerState = {
+  actionGroupIndex: number,
+  navigator: {
+    workspace: TWorkspace,
+    project: TProject,
+    file: TFile,
+  },
+  global: {
+    fileAction: TFileAction,
+  },
+  fileTreeViewState: TTreeViewState,
+  nodeTreeViewState: TTreeViewState,
+}
 export type TMainContext = {
   // global action
   addRunningActions: (actionNames: string[]) => void,
@@ -105,50 +118,14 @@ export type TMainContext = {
   addMessage: (message: TToast) => void,
   removeMessage: (index: number) => void,
 }
-
-/**
- * file handler collection
- */
-export type TFileHandlerCollection = {
-  [uid: TNodeUid]: FileSystemHandle,
-}
-
-/**
- * update opts
- */
 export type TUpdateOptions = {
   parse: boolean | null,
   from: 'file' | 'node' | 'settings' | 'styles' | 'stage' | 'code' | 'processor' | 'hms' | null,
   isHms?: boolean,
 }
-
-/**
- * command
- */
 export type TCommand = {
   action: string,
 }
-
-/**
- * main reducer state
- */
-export type TMainReducerState = {
-  actionGroupIndex: number,
-  navigator: {
-    workspace: TWorkspace,
-    project: TProject,
-    file: TFile,
-  },
-  global: {
-    fileAction: TFileAction,
-  },
-  fileTreeViewState: TTreeViewState,
-  nodeTreeViewState: TTreeViewState,
-}
-
-/**
- * node tree view state
- */
 export type TTreeViewState = {
   focusedItem: TNodeUid,
   expandedItems: TNodeUid[],
@@ -160,10 +137,6 @@ export type TTreeViewState = {
     [uid: TNodeUid]: boolean,
   },
 }
-
-/**
- * updateTreeViewState redux-action payload
- */
 export type TUpdateTreeViewStatePayload = {
   deletedUids?: TNodeUid[],
   convertedUids?: [TNodeUid, TNodeUid][],

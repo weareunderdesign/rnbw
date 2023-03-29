@@ -40,6 +40,7 @@ import {
   RootNodeUid,
 } from '@_constants/main';
 import {
+  TFileHandlerCollection,
   TFileNodeData,
   TFilesReference,
   TFilesReferenceData,
@@ -65,7 +66,6 @@ import {
   navigatorSelector,
   setFileAction,
   TCommand,
-  TFileHandlerCollection,
   TUpdateOptions,
 } from '@_redux/main';
 // @ts-ignore

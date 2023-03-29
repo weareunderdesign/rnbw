@@ -4,6 +4,7 @@ import {
 } from 'react';
 
 import { DefaultTabSize } from '@_constants/main';
+import { TFileHandlerCollection } from '@_node/file';
 import {
   TNode,
   TNodeTreeData,
@@ -21,7 +22,6 @@ import {
 
 import {
   TCommand,
-  TFileHandlerCollection,
   TMainContext,
   TUpdateOptions,
 } from './types';
