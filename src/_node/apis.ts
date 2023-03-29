@@ -109,8 +109,8 @@ export const getValidNodeUids = (tree: TNodeTreeData, uids: TNodeUid[], targetUi
   if (targetUid) {
     let targetNode = tree[targetUid]
     while (targetNode.uid !== RootNodeUid) {
-      targetNode = tree[targetNode.parentUid as TNodeUid]
       delete validatedUids[targetNode.uid]
+      targetNode = tree[targetNode.parentUid as TNodeUid]
     }
   }
 
