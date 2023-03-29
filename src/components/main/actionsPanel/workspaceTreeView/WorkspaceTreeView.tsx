@@ -41,14 +41,11 @@ import {
   RootNodeUid,
   TmpNodeUid,
 } from '@_constants/main';
-import {
-  generateNodeUid,
-  getParentNodeUid,
-  getValidNodeUids,
-} from '@_node/apis';
+import { getValidNodeUids } from '@_node/apis';
 import {
   _path,
   configProject,
+  reloadProject,
   TFileNodeData,
 } from '@_node/file';
 import {
@@ -70,6 +67,7 @@ import {
   setCurrentFile,
   setFileAction,
   TFileHandlerCollection,
+  updateFFTreeViewState,
 } from '@_redux/main';
 import {
   addClass,
@@ -156,16 +154,64 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     uids.map(uid => delete _temporaryNodes[uid])
     _setTemporaryNodes(_temporaryNodes)
   }, [temporaryNodes])
+  // -------------------------------------------------------------- project load cb for side effect --------------------------------------------------------------
+  const cb_reloadProject = useCallback(async () => {
+    try {
+      const { handlerObj, deletedUids } = await reloadProject(ffHandlers[RootNodeUid] as FileSystemDirectoryHandle, ffTree, osType)
+      dispatch(updateFFTreeViewState({ deletedUids }))
+
+      // sort by ASC directory/file
+      Object.keys(handlerObj).map(uid => {
+        const handler = handlerObj[uid]
+        handler.children = handler.children.sort((a, b) => {
+          return handlerObj[a].kind === 'file' && handlerObj[b].kind === 'directory' ? 1 :
+            handlerObj[a].kind === 'directory' && handlerObj[b].kind === 'file' ? -1 :
+              handlerObj[a].name > handlerObj[b].name ? 1 : -1
+        })
+      })
+
+      // set ff-tree, ff-handlers
+      const treeViewData: TNodeTreeData = {}
+      const ffHandlerObj: TFileHandlerCollection = {}
+      Object.keys(handlerObj).map(uid => {
+        const { parentUid, children, path, kind, name, ext, content, handler } = handlerObj[uid]
+        const type = ParsableFileTypes[ext || ''] ? ext?.slice(1) : 'unknown'
+        treeViewData[uid] = {
+          uid,
+          parentUid: parentUid,
+          name: name,
+          isEntity: kind === 'file',
+          children: [...children],
+          data: {
+            valid: true,
+            path: path,
+            kind: kind,
+            name: name,
+            ext: ext,
+            type,
+            orgContent: type !== 'unknown' ? content?.toString() : '',
+            content: type !== 'unknown' ? (ffTree[uid] ? (ffTree[uid].data as TFileNodeData).content : content?.toString()) : '',
+            changed: false,
+          } as TFileNodeData,
+        } as TNode
+
+        ffHandlerObj[uid] = handler
+      })
+
+      setFFTree(treeViewData)
+      setFFHandlers(ffHandlerObj)
+
+    } catch (err) {
+      LogAllow && console.log('reload project err', err)
+    }
+  }, [ffHandlers, ffTree, osType])
   // -------------------------------------------------------------- hms --------------------------------------------------------------
   const isRedo = useRef<boolean>(false)
   useEffect(() => {
     (async () => {
       if (isHms === null) return
 
-      /**
-       * undo if isHms = true
-       * redo if isHms = false
-       */
+      // isHms === true ? undo : redo
       if (isHms === true) {
         const { type, param1, param2 } = ffAction
         if (type === 'create') {
@@ -173,21 +219,21 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         } else if (type === 'rename') {
           const { uid, parentUid } = param1
           const { orgName, newName } = param2
-          const currentUid = generateNodeUid(parentUid, newName)
+          const currentUid = `${parentUid}/${newName}`
           setTemporaryNodes(currentUid)
           await _rename(currentUid, orgName)
           removeTemporaryNodes(currentUid)
         } else if (type === 'cut') {
-          const _uids: { uid: TNodeUid, name: string }[] = param1
+          const _uids: { uid: TNodeUid, parentUid: TNodeUid, name: string }[] = param1
           const _targetUids: TNodeUid[] = param2
 
           const uids: TNodeUid[] = []
           const targetUids: TNodeUid[] = []
 
           _targetUids.map((targetUid, index) => {
-            const { uid, name } = _uids[index]
-            uids.push(generateNodeUid(targetUid, name))
-            targetUids.push(getParentNodeUid(uid))
+            const { uid, parentUid, name } = _uids[index]
+            uids.push(`${targetUid}/${name}`)
+            targetUids.push(parentUid)
           })
           _cut(uids, targetUids)
         } else if (type === 'copy') {
@@ -197,7 +243,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           const uids: TNodeUid[] = []
           _targetUids.map((targetUid, index) => {
             const { uid, name } = _uids[index]
-            uids.push(generateNodeUid(targetUid, name))
+            uids.push(`${targetUid}/${name}`)
           })
           _delete(uids)
         } else if (type === 'delete') {
@@ -265,10 +311,11 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     } catch (err) {
     }
 
+    await cb_reloadProject()
     removeRunningActions(['fileTreeView-create'], false)
-  }, [addRunningActions, removeRunningActions, ffTree, ffHandlers])
+  }, [addRunningActions, removeRunningActions, ffTree, ffHandlers, cb_reloadProject])
   const _delete = useCallback(async (uids: TNodeUid[]) => {
-    addRunningActions(['fileTreeView_delete'])
+    addRunningActions(['fileTreeView-delete'])
     setInvalidNodes(...uids)
 
     for (const uid of uids) {
@@ -290,8 +337,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
 
     removeInvalidNodes(...uids)
-    removeRunningActions(['fileTreeView_delete'], false)
-  }, [addRunningActions, removeRunningActions, setInvalidNodes, removeInvalidNodes, ffTree, ffHandlers])
+    await cb_reloadProject()
+    removeRunningActions(['fileTreeView-delete'], false)
+  }, [addRunningActions, removeRunningActions, setInvalidNodes, removeInvalidNodes, ffTree, ffHandlers, cb_reloadProject])
   const _rename = useCallback(async (uid: TNodeUid, newName: string) => {
     addRunningActions(['fileTreeView-rename'])
 
@@ -315,8 +363,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     } catch (err) {
     }
 
+    await cb_reloadProject()
     removeRunningActions(['fileTreeView-rename'], false)
-  }, [addRunningActions, removeRunningActions, setTemporaryNodes, removeTemporaryNodes, setInvalidNodes, removeInvalidNodes, ffTree, ffHandlers])
+  }, [addRunningActions, removeRunningActions, setTemporaryNodes, removeTemporaryNodes, setInvalidNodes, removeInvalidNodes, ffTree, ffHandlers, cb_reloadProject])
   const _cut = useCallback(async (uids: TNodeUid[], targetUids: TNodeUid[]) => {
     addRunningActions(['fileTreeView-move'])
 
@@ -349,8 +398,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       setInvalidNodes(...Object.keys(_invalidNodes))
     }))
 
+    await cb_reloadProject()
     removeRunningActions(['fileTreeView-move'], false)
-  }, [addRunningActions, removeRunningActions, invalidNodes, setInvalidNodes, ffTree, ffHandlers])
+  }, [addRunningActions, removeRunningActions, invalidNodes, setInvalidNodes, ffTree, ffHandlers, cb_reloadProject])
   const _copy = useCallback(async (uids: TNodeUid[], names: string[], targetUids: TNodeUid[]) => {
     addRunningActions(['fileTreeView-duplicate'])
 
@@ -384,8 +434,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       setInvalidNodes(...Object.keys(_invalidNodes))
     }))
 
+    await cb_reloadProject()
     removeRunningActions(['fileTreeView-duplicate'], false)
-  }, [addRunningActions, removeRunningActions, invalidNodes, setInvalidNodes, ffTree, ffHandlers])
+  }, [addRunningActions, removeRunningActions, invalidNodes, setInvalidNodes, ffTree, ffHandlers, cb_reloadProject])
   // -------------------------------------------------------------- sync --------------------------------------------------------------
   // outline the hovered item
   const hoveredItemRef = useRef<TNodeUid>(ffHoveredItem)
@@ -785,8 +836,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
     dispatch(setFileAction(action))
 
+    await cb_reloadProject()
     removeRunningActions(['fileTreeView-create'])
-  }, [addRunningActions, removeRunningActions, ffHandlers])
+  }, [addRunningActions, removeRunningActions, ffHandlers, cb_reloadProject])
 
   const cb_startRenamingNode = useCallback((uid: TNodeUid) => {
     // validate
@@ -857,8 +909,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
     dispatch(setFileAction(action))
 
+    await cb_reloadProject()
     removeRunningActions(['fileTreeView-rename'])
-  }, [addRunningActions, removeRunningActions, setInvalidNodes, removeInvalidNodes, ffTree, ffHandlers])
+  }, [addRunningActions, removeRunningActions, setInvalidNodes, removeInvalidNodes, ffTree, ffHandlers, cb_reloadProject])
   const cb_renameNode = useCallback(async (item: TreeItem, newName: string) => {
     const node = item.data as TNode
     const nodeData = node.data as TNormalNodeData
@@ -975,8 +1028,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
 
     removeInvalidNodes(...uids)
+    await cb_reloadProject()
     removeRunningActions(['fileTreeView-delete'], false)
-  }, [addRunningActions, removeRunningActions, invalidNodes, setInvalidNodes, removeInvalidNodes, selectedItems, ffTree, ffHandlers])
+  }, [addRunningActions, removeRunningActions, invalidNodes, setInvalidNodes, removeInvalidNodes, selectedItems, ffTree, ffHandlers, cb_reloadProject])
   const cb_moveNode = useCallback(async (uids: TNodeUid[], targetUid: TNodeUid, copy: boolean = false) => {
     // validate
     if (ffTree[targetUid] === undefined) return
@@ -998,7 +1052,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
 
     let allDone = true
-    const _uids: { uid: TNodeUid, name: string }[] = []
+    const _uids: { uid: TNodeUid, parentUid: TNodeUid, name: string }[] = []
     const _invalidNodes = { ...invalidNodes }
     await Promise.all(validatedUids.map(async (uid) => {
       // validate
@@ -1107,7 +1161,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       // move
       try {
         await moveFF(handler, parentHandler, targetHandler, newName, copy)
-        _uids.push({ uid, name: newName })
+        _uids.push({ uid, parentUid: parentNode.uid, name: newName })
       } catch (err) {
         allDone = false
       }
@@ -1132,8 +1186,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
     dispatch(setFileAction(action))
 
+    await cb_reloadProject()
     removeRunningActions(['fileTreeView-move'])
-  }, [addRunningActions, removeRunningActions, invalidNodes, setInvalidNodes, ffTree, ffHandlers])
+  }, [addRunningActions, removeRunningActions, invalidNodes, setInvalidNodes, ffTree, ffHandlers, , cb_reloadProject])
   const cb_duplicateNode = useCallback(async () => {
     // validate
     const uids = selectedItems.filter(uid => !invalidNodes[uid])
@@ -1258,8 +1313,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
     dispatch(setFileAction(action))
 
+    await cb_reloadProject()
     removeRunningActions(['fileTreeView-duplicate'])
-  }, [addRunningActions, removeRunningActions, invalidNodes, setInvalidNodes, selectedItems, ffTree, ffHandlers])
+  }, [addRunningActions, removeRunningActions, invalidNodes, setInvalidNodes, selectedItems, ffTree, ffHandlers, cb_reloadProject])
 
   const cb_readNode = useCallback((uid: TNodeUid) => {
     addRunningActions(['fileTreeView-read'])

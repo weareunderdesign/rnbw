@@ -10,6 +10,7 @@ import { TOsType } from '@_types/global';
 import { TFileType } from '@_types/main';
 
 import {
+  getSubNodeUidsByBfs,
   parseHtml,
   serializeHtml,
   TFileParserResponse,
@@ -132,7 +133,7 @@ export const configProject = async (projectHandle: FileSystemDirectoryHandle, os
     }))
   })
 }
-export const reloadProject = async (projectHandle: FileSystemDirectoryHandle, osType: TOsType): Promise<TFileHandlerInfoObj> => {
+export const reloadProject = async (projectHandle: FileSystemDirectoryHandle, ffTree: TNodeTreeData, osType: TOsType): Promise<{ handlerObj: TFileHandlerInfoObj, deletedUids: TNodeUid[] }> => {
   return new Promise(async (res, rej) => {
     // verify project-handler permission
     if (!(await verifyFileHandlerPermission(projectHandle))) rej('project handler permission error')
@@ -147,9 +148,14 @@ export const reloadProject = async (projectHandle: FileSystemDirectoryHandle, os
       handler: projectHandle,
       children: [],
     }
-    const handlerArr: TFileHandlerInfo[] = [rootHandler]
+    const handlerArr: TFileHandlerInfo[] = []
     const handlerObj: TFileHandlerInfoObj = { [RootNodeUid]: rootHandler }
     const fsToCreate: { [path: string]: boolean } = { [rootHandler.path]: true }
+
+    const orgUids: { [uid: TNodeUid]: true } = {}
+    getSubNodeUidsByBfs(RootNodeUid, ffTree, false).map(uid => {
+      orgUids[uid] = true
+    })
 
     // loop through the project
     const dirHandlers: TFileHandlerInfo[] = [rootHandler]
@@ -171,6 +177,8 @@ export const reloadProject = async (projectHandle: FileSystemDirectoryHandle, os
           nameArr.length > 1 && nameArr.pop()
           const _c_name = nameArr.join('.')
 
+          delete orgUids[c_path]
+
           const handlerInfo: TFileHandlerInfo = {
             uid: c_path,
             parentUid: uid,
@@ -183,12 +191,14 @@ export const reloadProject = async (projectHandle: FileSystemDirectoryHandle, os
           }
 
           // update handler-arr, handler-obj
-          handlerArr.push(handlerInfo)
           handlerObj[uid].children.push(c_path)
           handlerObj[c_path] = handlerInfo
 
           c_kind === 'directory' && dirHandlers.push(handlerInfo)
-          fsToCreate[c_path] = true
+          if (!ffTree[c_path]) {
+            handlerArr.push(handlerInfo)
+            fsToCreate[c_path] = true
+          }
         }
       } catch (err) {
         rej(err)
@@ -203,12 +213,12 @@ export const reloadProject = async (projectHandle: FileSystemDirectoryHandle, os
         createDirectory(path, () => {
           delete fsToCreate[path]
           if (Object.keys(fsToCreate).length === 0) {
-            res(handlerObj)
+            res({ handlerObj, deletedUids: Object.keys(orgUids) })
           }
         }, () => {
           delete fsToCreate[path]
           if (Object.keys(fsToCreate).length === 0) {
-            res(handlerObj)
+            res({ handlerObj, deletedUids: Object.keys(orgUids) })
           }
         })
       } else {
@@ -222,12 +232,12 @@ export const reloadProject = async (projectHandle: FileSystemDirectoryHandle, os
           writeFile(path, contentBuffer, () => {
             delete fsToCreate[path]
             if (Object.keys(fsToCreate).length === 0) {
-              res(handlerObj)
+              res({ handlerObj, deletedUids: Object.keys(orgUids) })
             }
           }, () => {
             delete fsToCreate[path]
             if (Object.keys(fsToCreate).length === 0) {
-              res(handlerObj)
+              res({ handlerObj, deletedUids: Object.keys(orgUids) })
             }
           })
         }
