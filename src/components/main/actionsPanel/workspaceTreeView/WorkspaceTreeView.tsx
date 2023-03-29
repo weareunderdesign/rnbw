@@ -7,6 +7,7 @@ import React, {
   useState,
 } from 'react';
 
+import cx from 'classnames';
 import {
   FileSystemDirectoryHandle,
   FileSystemFileHandle,
@@ -15,18 +16,27 @@ import {
 import {
   CustomDirectoryPickerOptions,
 } from 'file-system-access/lib/showDirectoryPicker';
-import { TreeItem } from 'react-complex-tree';
+import {
+  DraggingPositionItem,
+  TreeItem,
+} from 'react-complex-tree';
 import {
   useDispatch,
   useSelector,
 } from 'react-redux';
+import { Panel } from 'react-resizable-panels';
 
+import {
+  SVGIconI,
+  SVGIconII,
+  SVGIconIII,
+  TreeView,
+} from '@_components/common';
 import { TreeViewData } from '@_components/common/treeView/types';
 import {
   AddNodeActionPrefix,
   HmsClearActionType,
   LogAllow,
-  NodeUidSplitter,
   ParsableFileTypes,
   RootNodeUid,
   TmpNodeUid,
@@ -396,28 +406,27 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   }, [ffTree])
   // -------------------------------------------------------------- node view state handlers --------------------------------------------------------------
   const cb_focusNode = useCallback((uid: TNodeUid) => {
-    addRunningActions(['fileTreeView-focus'])
-
     // validate
     if (invalidNodes[uid] || focusedItem === uid || ffTree[uid] === undefined) {
       removeRunningActions(['fileTreeView-focus'], false)
       return
     }
 
+    addRunningActions(['fileTreeView-focus'])
     dispatch(focusFFNode(uid))
-
     removeRunningActions(['fileTreeView-focus'])
   }, [addRunningActions, removeRunningActions, invalidNodes, focusedItem, ffTree])
   const cb_selectNode = useCallback((uids: TNodeUid[]) => {
-    addRunningActions(['fileTreeView-select'])
-
     // validate
     let _uids = [...uids]
     _uids = _uids.filter((_uid) => {
       return !(ffTree[_uid] === undefined || invalidNodes[_uid])
     })
+    if (_uids.length === 0) {
+      removeRunningActions(['fileTreeView-select'], false)
+      return
+    }
     _uids = getValidNodeUids(ffTree, _uids)
-    // check if it's new state
     if (_uids.length === selectedItems.length) {
       let same = true
       for (const _uid of _uids) {
@@ -432,34 +441,30 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       }
     }
 
+    addRunningActions(['fileTreeView-select'])
     dispatch(selectFFNode(_uids))
-
     removeRunningActions(['fileTreeView-select'])
   }, [addRunningActions, removeRunningActions, ffTree, invalidNodes, selectedItems, selectedItemsObj])
   const cb_expandNode = useCallback((uid: TNodeUid) => {
-    addRunningActions(['fileTreeView-expand'])
-
     // validate
     if (invalidNodes[uid] || ffTree[uid] === undefined || ffTree[uid].isEntity || expandedItemsObj[uid]) {
       removeRunningActions(['fileTreeView-expand'], false)
       return
     }
 
+    addRunningActions(['fileTreeView-expand'])
     dispatch(expandFFNode([uid]))
-
     removeRunningActions(['fileTreeView-expand'])
   }, [addRunningActions, removeRunningActions, invalidNodes, ffTree, expandedItemsObj])
   const cb_collapseNode = useCallback((uid: TNodeUid) => {
-    addRunningActions(['fileTreeView-collapse'])
-
     // validate
     if (invalidNodes[uid] || ffTree[uid] === undefined || ffTree[uid].isEntity || !expandedItemsObj[uid]) {
       removeRunningActions(['fileTreeView-collapse'], false)
       return
     }
 
+    addRunningActions(['fileTreeView-collapse'])
     dispatch(collapseFFNode([uid]))
-
     removeRunningActions(['fileTreeView-collapse'])
   }, [addRunningActions, removeRunningActions, invalidNodes, ffTree, expandedItemsObj])
   // -------------------------------------------------------------- node actions handlers --------------------------------------------------------------
@@ -530,7 +535,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
             parentUid: parentUid,
             name: name,
             isEntity: kind === 'file',
-            children: children.map(c_uid => String(c_uid)),
+            children: [...children],
             data: {
               valid: true,
               path: path,
@@ -562,7 +567,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   const moveFF = async (handler: FileSystemHandle, parentHandler: FileSystemDirectoryHandle, targetHandler: FileSystemDirectoryHandle, newName: string, copy: boolean = false, showWarning: boolean = false) => {
     if (handler.kind === 'directory') {
       // validate if the new name exists
-      let exists: boolean = true
+      let exists = true
       try {
         await targetHandler.getDirectoryHandle(newName, { create: false })
         exists = true
@@ -607,7 +612,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       }
     } else {
       // validate if the new name exists
-      let exists: boolean = true
+      let exists = true
       try {
         await targetHandler.getFileHandle(newName, { create: false })
         exists = true
@@ -639,39 +644,38 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   }
 
   const createTmpFFNode = useCallback((ffNodeType: TFileNodeType) => {
+    const tmpTree = JSON.parse(JSON.stringify(ffTree))
+
     // validate
-    const node = ffTree[focusedItem]
+    const node = tmpTree[focusedItem]
     if (node === undefined || node.isEntity) return
 
     // expand the focusedItem
     node.uid !== RootNodeUid && expandedItemsObj[node.uid] === undefined && dispatch(expandFFNode([node.uid]))
 
-    setTimeout(() => {
-      // add tmp node
-      const tmpNode: TNode = {
-        uid: `${node.uid}${NodeUidSplitter}${TmpNodeUid}`,
-        parentUid: node.uid,
-        name: '',
-        isEntity: ffNodeType !== '*folder',
-        children: [],
-        data: {
-          valid: false,
-          type: ffNodeType,
-        },
-      }
+    // add tmp node
+    const tmpNode: TNode = {
+      uid: `${node.uid}/${TmpNodeUid}`,
+      parentUid: node.uid,
+      name: '',
+      isEntity: ffNodeType !== '*folder',
+      children: [],
+      data: {
+        valid: false,
+        type: ffNodeType,
+      },
+    }
 
-      node.children.unshift(tmpNode.uid)
+    node.children.unshift(tmpNode.uid)
+    tmpTree[tmpNode.uid] = tmpNode
+    setFFTree(tmpTree)
 
-      const tmpTree = JSON.parse(JSON.stringify(ffTree))
-      tmpTree[tmpNode.uid] = tmpNode
-
-      setFFTree(tmpTree)
-    }, 0)
-  }, [addRunningActions, removeRunningActions, ffTree, focusedItem, expandedItemsObj])
+    setInvalidNodes(tmpNode.uid)
+  }, [ffTree, focusedItem, expandedItemsObj])
   const createFFNode = useCallback(async (parentUid: TNodeUid, ffType: TFileNodeType, ffName: string) => {
     addRunningActions(['fileTreeView-create'])
 
-    // verify handler permission
+    // validate
     const parentHandler = ffHandlers[parentUid] as FileSystemDirectoryHandle
     if (!(await verifyFileHandlerPermission(parentHandler))) {
       addMessage({
@@ -687,8 +691,8 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
     if (ffType === '*folder') {
       // generate new folder name - ex: {aaa - copy}...
-      let folderName: string = ffName
-      let exists: boolean = true
+      let folderName = ffName
+      let exists = true
       try {
         await parentHandler.getDirectoryHandle(ffName, { create: false })
         exists = true
@@ -725,8 +729,8 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       }
     } else { // file
       // generate new file name - ex: {aaa - copy}...
-      let fileName: string = `${ffName}.${ffType}`
-      let exists: boolean = true
+      let fileName = `${ffName}.${ffType}`
+      let exists = true
       try {
         await parentHandler.getFileHandle(`${ffName}.${ffType}`, { create: false })
         exists = true
@@ -765,65 +769,14 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
     const action: TFileAction = {
       type: 'create',
-      param1: `${parentUid}?${newName}`,
+      param1: `${parentUid}/${newName}`,
       param2: ffType,
     }
     dispatch(setFileAction(action))
 
     removeRunningActions(['fileTreeView-create'])
   }, [addRunningActions, removeRunningActions, ffHandlers])
-  const cb_deleteNode = useCallback(async () => {
-    // validate selected uids
-    const uids = selectedItems.filter(uid => !invalidNodes[uid])
-    if (uids.length === 0) return
 
-    // confirm
-    const message = `Are you sure you want to delete them?
-This action cannot be undone!`
-    if (!window.confirm(message)) return
-
-    addRunningActions(['fileTreeView-delete'])
-    setInvalidNodes(...uids)
-
-    let allDone = true
-    await Promise.all(uids.map(async (uid) => {
-      // validate node and parentNode
-      const node: TNode = ffTree[uid]
-      if (node === undefined) {
-        allDone = false
-        return
-      }
-      const parentNode: TNode = ffTree[node.parentUid as TNodeUid]
-      if (parentNode === undefined) {
-        allDone = false
-        return
-      }
-
-      // verify handler permission
-      const parentHandler = ffHandlers[parentNode.uid] as FileSystemDirectoryHandle
-      if (!(await verifyFileHandlerPermission(parentHandler))) {
-        allDone = false
-        return
-      }
-
-      // remove the entry
-      try {
-        await parentHandler.removeEntry(getNodeEntryName(uid), { recursive: true })
-      } catch (err) {
-        allDone = false
-      }
-    }))
-
-    if (!allDone) {
-      addMessage({
-        type: 'warning',
-        content: 'Some directory/file couldn\'t be deleted.',
-      })
-    }
-
-    removeInvalidNodes(...uids)
-    removeRunningActions(['fileTreeView-delete'], false)
-  }, [addRunningActions, removeRunningActions, invalidNodes, setInvalidNodes, removeInvalidNodes, selectedItems, ffTree, ffHandlers])
   const cb_startRenamingNode = useCallback((uid: TNodeUid) => {
     // validate
     if (invalidNodes[uid]) {
@@ -833,16 +786,17 @@ This action cannot be undone!`
     setInvalidNodes(uid)
   }, [invalidNodes, setInvalidNodes, removeInvalidNodes])
   const cb_abortRenamingNode = useCallback((item: TreeItem) => {
-    if (!item.data.data.valid) {
+    const node = item.data as TNode
+    const nodeData = node.data as TFileNodeData
+    if (!nodeData.valid) {
       const tmpTree = JSON.parse(JSON.stringify(ffTree))
-      tmpTree[item.data.parentUid].children = tmpTree[item.data.parentUid].children.filter((c_uid: TNodeUid) => c_uid !== item.data.uid)
+      tmpTree[node.parentUid as TNodeUid].children = tmpTree[node.parentUid as TNodeUid].children.filter((c_uid: TNodeUid) => c_uid !== node.uid)
       delete tmpTree[item.data.uid]
       setFFTree(tmpTree)
     }
-
-    removeInvalidNodes(item.data.uid)
+    removeInvalidNodes(node.uid)
   }, [ffTree, removeInvalidNodes])
-  const _cb_renameNode = useCallback(async (uid: TNodeUid, newName: string, ffNodeType: TFileNodeType) => {
+  const _cb_renameNode = useCallback(async (uid: TNodeUid, newName: string, ext: string) => {
     // validate
     const node = ffTree[uid]
     if (node === undefined || node.name === newName) return
@@ -852,23 +806,23 @@ This action cannot be undone!`
     addRunningActions(['fileTreeView-rename'])
 
     // verify handler permission
-    const handler = ffHandlers[uid] as FileSystemHandle
-    const parentHandler = ffHandlers[parentNode.uid] as FileSystemDirectoryHandle
+    const handler = ffHandlers[uid], parentHandler = ffHandlers[parentNode.uid] as FileSystemDirectoryHandle
     if (!(await verifyFileHandlerPermission(handler)) || !(await verifyFileHandlerPermission(parentHandler))) {
       addMessage({
         type: 'error',
         content: `Invalid directory/file. Check if you have "write" permission for the directory/file.`,
       })
+
       removeRunningActions(['fileTreeView-rename'], false)
       return
     }
 
     // rename using moveFF api
-    const _orgName = getNodeEntryName(uid)
-    const _newName = ffNodeType === '*folder' ? `${newName}` :
-      ffNodeType !== '' ? `${newName}.${ffNodeType}` : `${newName}`
+    const nodeData = node.data as TFileNodeData
+    const _orgName = ext === '*folder' ? `${node.name}` : `${node.name}${nodeData.ext}`
+    const _newName = ext === '*folder' ? `${newName}` : `${newName}${ext}`
 
-    const newUid = generateNodeUid(parentNode.uid, _newName)
+    const newUid = `${parentNode.uid}/${_newName}`
     setInvalidNodes(newUid)
 
     try {
@@ -894,29 +848,29 @@ This action cannot be undone!`
 
     removeRunningActions(['fileTreeView-rename'])
   }, [addRunningActions, removeRunningActions, setInvalidNodes, removeInvalidNodes, ffTree, ffHandlers])
-  const cb_renameNode = useCallback(async (item: TreeItem, name: string) => {
-    if (!invalidNodes[item.data.uid]) return
+  const cb_renameNode = useCallback(async (item: TreeItem, newName: string) => {
+    const node = item.data as TNode
+    const nodeData = node.data as TNormalNodeData
 
-    if (item.data.data.valid) {
+    if (!invalidNodes[node.uid]) return
+
+    if (nodeData.valid) {
       // confirm changed file before renaming
-      const _file = ffTree[item.data.uid]
-      if (_file && (ffTree[_file.uid].data as TFileNodeData).changed) {
+      const _file = ffTree[node.uid]
+      const _fileData = _file.data as TFileNodeData
+      if (_file && _fileData.changed) {
         // confirm
-        const message = `Do you want to save the changes you made to ${(ffTree[_file.uid].data as TFileNodeData).name} before renaming?
-Your changes will be lost if you don't save them.`
+        const message = `Do you want to save the changes you made to ${_file.name} before renaming? Your changes will be lost if you don't save them.`
         if (window.confirm(message)) {
           await (async () => {
-            setFSPending(true)
-
             // get the current file handler
             const handler = ffHandlers[_file.uid]
-            if (handler === undefined) {
-              setFSPending(false)
-              return
-            }
+            if (handler === undefined) return
 
-            // verify permission
-            if (await verifyFileHandlerPermission(handler) === false) {
+            setFSPending(true)
+
+            // validate
+            if (!(await verifyFileHandlerPermission(handler))) {
               addMessage({
                 type: 'error',
                 content: 'save failed cause of invalid handler',
@@ -928,16 +882,13 @@ Your changes will be lost if you don't save them.`
             // update file content
             try {
               const writableStream = await (handler as FileSystemFileHandle).createWritable()
-              await writableStream.write((ffTree[_file.uid].data as TFileNodeData).content)
+              await writableStream.write(_fileData.content)
               await writableStream.close()
 
               addMessage({
                 type: 'success',
                 content: 'Saved successfully',
               })
-
-              // update context files store
-              // setOpenedFiles({ ..._file, orgContent: _file.content, changed: false })
             } catch (err) {
               addMessage({
                 type: 'error',
@@ -950,31 +901,80 @@ Your changes will be lost if you don't save them.`
         }
       }
 
-      setTemporaryNodes(item.data.uid)
-      await _cb_renameNode(item.index as TNodeUid, name, item.data.data.type)
-      removeTemporaryNodes(item.data.uid)
+      setTemporaryNodes(_file.uid)
+      await _cb_renameNode(_file.uid, newName, _fileData.kind === 'directory' ? '*folder' : _fileData.ext)
+      removeTemporaryNodes(_file.uid)
     } else {
-      await createFFNode(item.data.parentUid, item.data.data.type, name)
+      await createFFNode(node.parentUid as TNodeUid, nodeData.type, newName)
 
       const tmpTree = JSON.parse(JSON.stringify(ffTree))
-      tmpTree[item.data.parentUid].children = tmpTree[item.data.parentUid].children.filter((c_uid: TNodeUid) => c_uid !== item.data.uid)
-      delete tmpTree[item.data.uid]
+      tmpTree[node.parentUid as TNodeUid].children = tmpTree[node.parentUid as TNodeUid].children.filter((c_uid: TNodeUid) => c_uid !== node.uid)
+      delete tmpTree[node.uid]
       setFFTree(tmpTree)
     }
-    removeInvalidNodes(item.data.uid)
-  }, [invalidNodes, _cb_renameNode, createFFNode, setTemporaryNodes, removeTemporaryNodes, removeInvalidNodes, ffTree, osType, ffHandlers])
+    removeInvalidNodes(node.uid)
+  }, [invalidNodes, _cb_renameNode, setTemporaryNodes, removeTemporaryNodes, ffTree, ffHandlers, osType, createFFNode, removeInvalidNodes])
 
+  const cb_deleteNode = useCallback(async () => {
+    // validate
+    const uids = selectedItems.filter(uid => !invalidNodes[uid])
+    if (uids.length === 0) return
+
+    // confirm msgbox
+    const message = `Are you sure you want to delete them? This action cannot be undone!`
+    if (!window.confirm(message)) return
+
+    addRunningActions(['fileTreeView-delete'])
+    setInvalidNodes(...uids)
+
+    let allDone = true
+    await Promise.all(uids.map(async (uid) => {
+      // validate
+      const node = ffTree[uid]
+      if (node === undefined) {
+        allDone = false
+        return
+      }
+      const nodeData = node.data as TFileNodeData
+      const parentNode = ffTree[node.parentUid as TNodeUid]
+      if (parentNode === undefined) {
+        allDone = false
+        return
+      }
+      const parentHandler = ffHandlers[parentNode.uid] as FileSystemDirectoryHandle
+      if (!(await verifyFileHandlerPermission(parentHandler))) {
+        allDone = false
+        return
+      }
+
+      // delete
+      try {
+        const entryName = nodeData.kind === 'directory' ? nodeData.name : `${nodeData.name}${nodeData.ext}`
+        await parentHandler.removeEntry(entryName, { recursive: true })
+      } catch (err) {
+        allDone = false
+      }
+    }))
+
+    if (!allDone) {
+      addMessage({
+        type: 'warning',
+        content: 'Some directory/file couldn\'t be deleted.',
+      })
+    }
+
+    removeInvalidNodes(...uids)
+    removeRunningActions(['fileTreeView-delete'], false)
+  }, [addRunningActions, removeRunningActions, invalidNodes, setInvalidNodes, removeInvalidNodes, selectedItems, ffTree, ffHandlers])
   const cb_moveNode = useCallback(async (uids: TNodeUid[], targetUid: TNodeUid, copy: boolean = false) => {
     // validate
     if (ffTree[targetUid] === undefined) return
     const validatedUids = getValidNodeUids(ffTree, uids, targetUid)
-    if (validatedUids.length == 0) return
+    if (validatedUids.length === 0) return
 
     addRunningActions(['fileTreeView-move'])
 
-    const _invalidNodes = { ...invalidNodes }
-
-    /* verify target handler permission */
+    // verify target handler permission
     const targetHandler = ffHandlers[targetUid] as FileSystemDirectoryHandle
     if (!(await verifyFileHandlerPermission(targetHandler))) {
       addMessage({
@@ -988,6 +988,7 @@ Your changes will be lost if you don't save them.`
 
     let allDone = true
     const _uids: { uid: TNodeUid, name: string }[] = []
+    const _invalidNodes = { ...invalidNodes }
     await Promise.all(validatedUids.map(async (uid) => {
       // validate
       const node = ffTree[uid]
@@ -1000,8 +1001,6 @@ Your changes will be lost if you don't save them.`
         allDone = false
         return
       }
-
-      // validate node handler
       const handler = ffHandlers[uid], parentHandler = ffHandlers[parentNode.uid] as FileSystemDirectoryHandle
       if (!(await verifyFileHandlerPermission(handler)) || !(await verifyFileHandlerPermission(parentHandler))) {
         allDone = false
@@ -1047,10 +1046,9 @@ Your changes will be lost if you don't save them.`
             newName = folderName
           }
         } else {
-          const nodeData = node.data as TNormalNodeData
-          const ext: string = nodeData.type !== '' ? '.' + nodeData.type : nodeData.type
-          let name: string = node.name
-          name = `${name} copy`
+          const nodeData = node.data as TFileNodeData
+          const ext = nodeData.ext
+          let name = `${node.name} copy`
           const ffName = `${name}${ext}`
 
           let fileName: string = ffName
@@ -1089,23 +1087,27 @@ Your changes will be lost if you don't save them.`
         }
       }
 
-      // move using moveFF api
-      const newUid = generateNodeUid(targetUid, newName)
+      // update invalidNodes
+      const newUid = `${targetUid}/${newName}`
       _invalidNodes[uid] = true
       _invalidNodes[newUid] = true
       setInvalidNodes(...Object.keys(_invalidNodes))
+
+      // move
       try {
         await moveFF(handler, parentHandler, targetHandler, newName, copy)
         _uids.push({ uid, name: newName })
       } catch (err) {
         allDone = false
       }
+
+      // update invalidNodes
       delete _invalidNodes[uid]
       delete _invalidNodes[newUid]
       setInvalidNodes(...Object.keys(_invalidNodes))
     }))
 
-    if (!allDone) {/* toast error message */
+    if (!allDone) {
       addMessage({
         type: 'warning',
         content: 'Some directory/file couldn\'t be moved.',
@@ -1128,27 +1130,23 @@ Your changes will be lost if you don't save them.`
 
     addRunningActions(['fileTreeView-duplicate'])
 
-    const _invalidNodes = { ...invalidNodes }
-
     let allDone = true
     const _uids: { uid: TNodeUid, name: string }[] = []
     const _targetUids: TNodeUid[] = []
+    const _invalidNodes = { ...invalidNodes }
     await Promise.all(uids.map(async (uid) => {
-      // validate node and parentNode
-      const node: TNode = ffTree[uid]
+      // validate
+      const node = ffTree[uid]
       if (node === undefined) {
         allDone = false
         return
       }
-      const parentNode: TNode = ffTree[node.parentUid as TNodeUid]
+      const parentNode = ffTree[node.parentUid as TNodeUid]
       if (parentNode === undefined) {
         allDone = false
         return
       }
-
-      // verify handler permission
-      const handler = ffHandlers[node.uid] as FileSystemHandle
-      const parentHandler = ffHandlers[parentNode.uid] as FileSystemDirectoryHandle
+      const handler = ffHandlers[node.uid], parentHandler = ffHandlers[parentNode.uid] as FileSystemDirectoryHandle
       if (!(await verifyFileHandlerPermission(handler)) || !(await verifyFileHandlerPermission(parentHandler))) {
         allDone = false
         return
@@ -1158,8 +1156,9 @@ Your changes will be lost if you don't save them.`
       let newName = ''
       if (handler.kind === 'directory') {
         const ffName = `${handler.name} copy`
-        let folderName: string = ffName
-        let exists: boolean = true
+        let folderName = ffName
+        let exists = true
+
         try {
           await parentHandler.getDirectoryHandle(ffName, { create: false })
           exists = true
@@ -1182,14 +1181,14 @@ Your changes will be lost if you don't save them.`
         }
         newName = folderName
       } else {
-        const nodeData = node.data as TNormalNodeData
-        const ext: string = nodeData.type !== '' ? '.' + nodeData.type : nodeData.type
-        let name: string = node.name
-        name = `${name} copy`
+        const nodeData = node.data as TFileNodeData
+        const ext = nodeData.ext
+        let name = `${node.name} copy`
         const ffName = `${name}${ext}`
 
-        let fileName: string = ffName
-        let exists: boolean = true
+        let fileName = ffName
+        let exists = true
+
         try {
           await parentHandler.getFileHandle(ffName, { create: false })
           exists = true
@@ -1213,11 +1212,13 @@ Your changes will be lost if you don't save them.`
         newName = fileName
       }
 
-      // duplicate using moveFF api
-      const newUid = generateNodeUid(getParentNodeUid(uid), newName)
+      // set invalid nodes
+      const newUid = `${node.parentUid}/${newName}`
       _invalidNodes[uid] = true
       _invalidNodes[newUid] = true
       setInvalidNodes(...Object.keys(_invalidNodes))
+
+      // duplicate
       try {
         await moveFF(handler, parentHandler, parentHandler, newName, true)
         _uids.push({ uid, name: newName })
@@ -1225,6 +1226,8 @@ Your changes will be lost if you don't save them.`
       } catch (err) {
         allDone = false
       }
+
+      // set invalid nodes
       delete _invalidNodes[uid]
       delete _invalidNodes[newUid]
       setInvalidNodes(...Object.keys(_invalidNodes))
@@ -1398,9 +1401,8 @@ Your changes will be lost if you don't save them.`
               },
               renderItem: (props) => {
                 useEffect(() => {
-                  const node: TNode = props.item.data
+                  const node = props.item.data as TNode
                   if (!node.data.valid) {
-                    setInvalidNodes(node.uid)
                     props.context.selectItem()
                     props.context.startRenamingItem()
                   }
@@ -1600,7 +1602,6 @@ Your changes will be lost if you don't save them.`
     panelSize, panelResizing, onPanelClick,
     ffTree, fileTreeViewData,
     focusedItem, selectedItems, expandedItems,
-    setInvalidNodes,
     addRunningActions, removeRunningActions,
     cb_startRenamingNode, cb_abortRenamingNode, cb_renameNode,
     cb_selectNode, cb_focusNode, cb_expandNode, cb_collapseNode, cb_readNode, cb_moveNode,
