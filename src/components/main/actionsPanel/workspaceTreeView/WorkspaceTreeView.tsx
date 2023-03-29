@@ -450,6 +450,16 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
     hoveredItemRef.current = ffHoveredItem
   }, [ffHoveredItem])
+  // scroll to the focused item
+  const focusedItemRef = useRef<TNodeUid>(focusedItem)
+  useEffect(() => {
+    if (focusedItemRef.current === focusedItem) return
+
+    const focusedElement = document.querySelector(`#FileTreeView-${focusedItem.replace(/[\/.]/g, '-')}`)
+    setTimeout(() => focusedElement?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' }), 0)
+
+    focusedItemRef.current = focusedItem
+  }, [focusedItem])
   // build fileTreeViewData
   const fileTreeViewData = useMemo(() => {
     const data: TreeViewData = {}

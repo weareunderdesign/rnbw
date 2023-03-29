@@ -145,7 +145,7 @@ export const reloadProject = async (projectHandle: FileSystemDirectoryHandle, ff
     }
     const handlerArr: TFileHandlerInfo[] = []
     const handlerObj: TFileHandlerInfoObj = { [RootNodeUid]: rootHandler }
-    const fsToCreate: { [path: string]: boolean } = { [rootHandler.path]: true }
+    const fsToCreate: { [path: string]: boolean } = {}
 
     const orgUids: { [uid: TNodeUid]: true } = {}
     getSubNodeUidsByBfs(RootNodeUid, ffTree, false).map(uid => {
