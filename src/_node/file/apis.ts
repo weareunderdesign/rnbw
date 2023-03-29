@@ -58,6 +58,7 @@ export const configProject = async (projectHandle: FileSystemDirectoryHandle, os
           if (SystemDirectories[osType][entry.name]) continue
 
           // build handler
+          const c_uid = _path.join(uid, entry.name) as string
           const c_path = _path.join(path, entry.name) as string
           const c_kind = entry.kind
           const c_name = entry.name
@@ -69,7 +70,7 @@ export const configProject = async (projectHandle: FileSystemDirectoryHandle, os
           const _c_name = nameArr.join('.')
 
           const handlerInfo: TFileHandlerInfo = {
-            uid: c_path,
+            uid: c_uid,
             parentUid: uid,
             path: c_path,
             kind: c_kind,
@@ -81,8 +82,8 @@ export const configProject = async (projectHandle: FileSystemDirectoryHandle, os
 
           // update handler-arr, handler-obj
           handlerArr.push(handlerInfo)
-          handlerObj[uid].children.push(c_path)
-          handlerObj[c_path] = handlerInfo
+          handlerObj[uid].children.push(c_uid)
+          handlerObj[c_uid] = handlerInfo
 
           c_kind === 'directory' && dirHandlers.push(handlerInfo)
           fsToCreate[c_path] = true
@@ -94,7 +95,7 @@ export const configProject = async (projectHandle: FileSystemDirectoryHandle, os
 
     // build idb
     handlerArr.map(async (_handler) => {
-      const { kind, path, handler } = _handler
+      const { uid, kind, path, handler } = _handler
       if (kind === 'directory') {
         // create dir
         createDirectory(path, () => {
@@ -112,7 +113,7 @@ export const configProject = async (projectHandle: FileSystemDirectoryHandle, os
         // read and store file content
         const fileEntry = await (handler as FileSystemFileHandle).getFile()
         const contentBuffer = Buffer.from(await fileEntry.arrayBuffer())
-        handlerObj[path].content = contentBuffer
+        handlerObj[uid].content = contentBuffer
         writeFile(path, contentBuffer, () => {
           delete fsToCreate[path]
           if (Object.keys(fsToCreate).length === 0) {
@@ -162,6 +163,7 @@ export const reloadProject = async (projectHandle: FileSystemDirectoryHandle, ff
           if (SystemDirectories[osType][entry.name]) continue
 
           // build handler
+          const c_uid = _path.join(uid, entry.name) as string
           const c_path = _path.join(path, entry.name) as string
           const c_kind = entry.kind
           const c_name = entry.name
@@ -175,7 +177,7 @@ export const reloadProject = async (projectHandle: FileSystemDirectoryHandle, ff
           delete orgUids[c_path]
 
           const handlerInfo: TFileHandlerInfo = {
-            uid: c_path,
+            uid: c_uid,
             parentUid: uid,
             path: c_path,
             kind: c_kind,
@@ -186,11 +188,11 @@ export const reloadProject = async (projectHandle: FileSystemDirectoryHandle, ff
           }
 
           // update handler-arr, handler-obj
-          handlerObj[uid].children.push(c_path)
-          handlerObj[c_path] = handlerInfo
+          handlerObj[uid].children.push(c_uid)
+          handlerObj[c_uid] = handlerInfo
 
           c_kind === 'directory' && dirHandlers.push(handlerInfo)
-          if (!ffTree[c_path]) {
+          if (!ffTree[c_uid]) {
             handlerArr.push(handlerInfo)
             fsToCreate[c_path] = true
           }
@@ -205,7 +207,7 @@ export const reloadProject = async (projectHandle: FileSystemDirectoryHandle, ff
     } else {
       // build idb
       handlerArr.map(async (_handler) => {
-        const { kind, path, handler } = _handler
+        const { uid, kind, path, handler } = _handler
         if (kind === 'directory') {
           // create dir
           createDirectory(path, () => {
@@ -223,7 +225,7 @@ export const reloadProject = async (projectHandle: FileSystemDirectoryHandle, ff
           // read and store file content
           const fileEntry = await (handler as FileSystemFileHandle).getFile()
           const contentBuffer = Buffer.from(await fileEntry.arrayBuffer())
-          handlerObj[path].content = contentBuffer
+          handlerObj[uid].content = contentBuffer
           writeFile(path, contentBuffer, () => {
             delete fsToCreate[path]
             if (Object.keys(fsToCreate).length === 0) {

@@ -924,6 +924,10 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
     dispatch(setFileAction(action))
 
+    // update redux
+    dispatch(setCurrentFile({ uid: newUid, content: nodeData.contentInApp as string }))
+    dispatch(updateFFTreeViewState({ convertedUids: [[uid, newUid]] }))
+
     await cb_reloadProject()
     removeRunningActions(['fileTreeView-rename'])
   }, [addRunningActions, removeRunningActions, setInvalidNodes, removeInvalidNodes, ffTree, ffHandlers, cb_reloadProject])
