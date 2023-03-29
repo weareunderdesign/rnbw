@@ -111,24 +111,19 @@ export const configProject = async (projectHandle: FileSystemDirectoryHandle, os
       } else {
         // read and store file content
         const fileEntry = await (handler as FileSystemFileHandle).getFile()
-        const fileReader = new FileReader()
-        fileReader.onload = (e) => {
-          const content = new Uint8Array(e.target?.result as ArrayBuffer)
-          const contentBuffer = Buffer.from(content)
-          handlerObj[path].content = contentBuffer
-          writeFile(path, contentBuffer, () => {
-            delete fsToCreate[path]
-            if (Object.keys(fsToCreate).length === 0) {
-              res(handlerObj)
-            }
-          }, () => {
-            delete fsToCreate[path]
-            if (Object.keys(fsToCreate).length === 0) {
-              res(handlerObj)
-            }
-          })
-        }
-        fileReader.readAsArrayBuffer(fileEntry)
+        const contentBuffer = Buffer.from(await fileEntry.arrayBuffer())
+        handlerObj[path].content = contentBuffer
+        writeFile(path, contentBuffer, () => {
+          delete fsToCreate[path]
+          if (Object.keys(fsToCreate).length === 0) {
+            res(handlerObj)
+          }
+        }, () => {
+          delete fsToCreate[path]
+          if (Object.keys(fsToCreate).length === 0) {
+            res(handlerObj)
+          }
+        })
       }
     }))
   })
@@ -224,24 +219,19 @@ export const reloadProject = async (projectHandle: FileSystemDirectoryHandle, ff
       } else {
         // read and store file content
         const fileEntry = await (handler as FileSystemFileHandle).getFile()
-        const fileReader = new FileReader()
-        fileReader.onload = (e) => {
-          const content = new Uint8Array(e.target?.result as ArrayBuffer)
-          const contentBuffer = Buffer.from(content)
-          handlerObj[path].content = contentBuffer
-          writeFile(path, contentBuffer, () => {
-            delete fsToCreate[path]
-            if (Object.keys(fsToCreate).length === 0) {
-              res({ handlerObj, deletedUids: Object.keys(orgUids) })
-            }
-          }, () => {
-            delete fsToCreate[path]
-            if (Object.keys(fsToCreate).length === 0) {
-              res({ handlerObj, deletedUids: Object.keys(orgUids) })
-            }
-          })
-        }
-        fileReader.readAsArrayBuffer(fileEntry)
+        const contentBuffer = Buffer.from(await fileEntry.arrayBuffer())
+        handlerObj[path].content = contentBuffer
+        writeFile(path, contentBuffer, () => {
+          delete fsToCreate[path]
+          if (Object.keys(fsToCreate).length === 0) {
+            res({ handlerObj, deletedUids: Object.keys(orgUids) })
+          }
+        }, () => {
+          delete fsToCreate[path]
+          if (Object.keys(fsToCreate).length === 0) {
+            res({ handlerObj, deletedUids: Object.keys(orgUids) })
+          }
+        })
       }
     }))
   })

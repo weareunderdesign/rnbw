@@ -647,8 +647,8 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       // move nested handler-dir to targetHandler with the newName - copy (optional)
       try {
         const newHandler = await targetHandler.getDirectoryHandle(newName, { create: true })
-        const newDirHandlers: FileSystemDirectoryHandle[] = [newHandler]
-        const dirHandlers: FileSystemDirectoryHandle[] = [handler as FileSystemDirectoryHandle]
+        const newDirHandlers = [newHandler]
+        const dirHandlers = [handler as FileSystemDirectoryHandle]
         while (dirHandlers.length) {
           const dirHandler = dirHandlers.shift() as FileSystemDirectoryHandle
           const newDirHandler = newDirHandlers.shift() as FileSystemDirectoryHandle
@@ -693,7 +693,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       try {
         const newFile = await targetHandler.getFileHandle(newName, { create: true })
         const content = await (handler as FileSystemFileHandle).getFile()
-        const writableStream = await (newFile).createWritable()
+        const writableStream = await newFile.createWritable()
         await writableStream.write(content)
         await writableStream.close()
 
