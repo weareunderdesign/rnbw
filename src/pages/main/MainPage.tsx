@@ -503,8 +503,8 @@ Your changes will be lost if you don't save them.`
     LogAllow && pastLength === 1 && console.log('hms - it is the origin state')
     if (pastLength === 1) return
 
-    // setFFAction(fileAction)
-    // setIsHms(true)
+    setFFAction(fileAction)
+    setIsHms(true)
 
     dispatch({ type: 'main/undo' })
     setUpdateOpt({ parse: true, from: 'hms' })
@@ -515,7 +515,7 @@ Your changes will be lost if you don't save them.`
     LogAllow && futureLength === 0 && console.log('hms - it is the latest state')
     if (futureLength === 0) return
 
-    // setIsHms(false)
+    setIsHms(false)
 
     dispatch({ type: 'main/redo' })
     setUpdateOpt({ parse: true, from: 'hms' })
