@@ -14,46 +14,53 @@ import { SettingsPanelProps } from './types';
 
 export default function SettingsPanel(props: SettingsPanelProps) {
   const dispatch = useDispatch()
-
-  // main context
+  // -------------------------------------------------------------- global state --------------------------------------------------------------
   const {
-    // groupping action
+    // global action
     addRunningActions, removeRunningActions,
-
+    // node actions
+    activePanel, setActivePanel,
+    clipboardData, setClipboardData,
+    event, setEvent,
     // file tree view
-    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree,
-
-    // ndoe tree view
-    fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree,
-
-    // update opt
-    updateOpt, setUpdateOpt,
-
-    // ff hms
-    isHms, setIsHms, ffAction, setFFAction,
-
-    // cmdk
-    currentCommand, setCurrentCommand, cmdkOpen, setCmdkOpen, cmdkPages, setCmdkPages, cmdkPage,
-
-    // global
-    addMessage, removeMessage,
-
-    // reference
-    htmlReferenceData, cmdkReferenceData,
-
-    // active panel/clipboard
-    activePanel, setActivePanel, clipboardData, setClipboardData,
-
-    // os
-    osType,
-
+    fsPending, setFSPending,
+    ffTree, setFFTree, setFFNode,
+    ffHandlers, setFFHandlers,
+    ffHoveredItem, setFFHoveredItem,
+    isHms, setIsHms,
+    ffAction, setFFAction,
+    currentFileUid, setCurrentFileUid,
+    // node tree view
+    fnHoveredItem, setFNHoveredItem,
+    nodeTree, setNodeTree,
+    validNodeTree, setValidNodeTree,
+    nodeMaxUid, setNodeMaxUid,
+    // stage view
+    iframeLoading, setIFrameLoading,
+    iframeSrc, setIFrameSrc,
+    fileInfo, setFileInfo,
+    needToReloadIFrame, setNeedToReloadIFrame,
     // code view
+    codeEditing, setCodeEditing,
+    codeChanges, setCodeChanges,
     tabSize, setTabSize,
-
-    // panel-resize
-    panelResizing,
+    newFocusedNodeUid, setNewFocusedNodeUid,
+    // processor
+    updateOpt, setUpdateOpt,
+    // references
+    filesReferenceData, htmlReferenceData, cmdkReferenceData,
+    // cmdk
+    currentCommand, setCurrentCommand,
+    cmdkOpen, setCmdkOpen,
+    cmdkPages, setCmdkPages, cmdkPage,
+    // other
+    osType,
+    theme,
+    panelResizing, setPanelResizing,
+    hasSession, session,
+    // toasts
+    addMessage, removeMessage,
   } = useContext(MainContext)
-
   // -------------------------------------------------------------- own --------------------------------------------------------------
   // panel size handler
   const panelSize = useMemo(() => 200 / window.innerHeight * 100, [])

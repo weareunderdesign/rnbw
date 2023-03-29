@@ -32,9 +32,6 @@ import {
   expandFNNode,
   fnSelector,
   focusFNNode,
-  getActionGroupIndexSelector,
-  globalSelector,
-  hmsInfoSelector,
   MainContext,
   navigatorSelector,
   selectFNNode,
@@ -56,58 +53,56 @@ loader.config({ monaco })
 
 export default function CodeView(props: CodeViewProps) {
   const dispatch = useDispatch()
-
-  // main context
-  const {
-    newFocusedNodeUid, setNewFocusedNodeUid,
-    event, setEvent,
-    // groupping action
-    addRunningActions, removeRunningActions,
-    setCodeChanges,
-    // file tree view
-    ffHoveredItem, setFFHoveredItem, ffHandlers, ffTree, setFFTree,
-
-    // ndoe tree view
-    fnHoveredItem, setFNHoveredItem, nodeTree, setNodeTree, validNodeTree, setValidNodeTree,
-
-    // update opt
-    updateOpt, setUpdateOpt,
-
-    // ff hms
-    isHms, setIsHms, ffAction, setFFAction,
-
-    // cmdk
-    currentCommand, setCurrentCommand, cmdkOpen, setCmdkOpen, cmdkPages, setCmdkPages, cmdkPage,
-
-    // global
-    addMessage, removeMessage, codeEditing, setCodeEditing,
-
-    // reference
-    htmlReferenceData, cmdkReferenceData,
-
-    // active panel/clipboard
-    activePanel, setActivePanel, clipboardData, setClipboardData,
-
-    // os
-    osType,
-
-    // code view
-    tabSize, setTabSize,
-
-    // theme
-    theme: _theme,
-  } = useContext(MainContext)
-
-  // redux state
-  const actionGroupIndex = useSelector(getActionGroupIndexSelector)
+  // -------------------------------------------------------------- global state --------------------------------------------------------------
   const { workspace, project, file } = useSelector(navigatorSelector)
-  const { fileAction } = useSelector(globalSelector)
-  const { futureLength, pastLength } = useSelector(hmsInfoSelector)
-  // const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
   const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
-
+  const {
+    // global action
+    addRunningActions, removeRunningActions,
+    // node actions
+    activePanel, setActivePanel,
+    clipboardData, setClipboardData,
+    event, setEvent,
+    // file tree view
+    fsPending, setFSPending,
+    ffTree, setFFTree, setFFNode,
+    ffHandlers, setFFHandlers,
+    ffHoveredItem, setFFHoveredItem,
+    isHms, setIsHms,
+    ffAction, setFFAction,
+    currentFileUid, setCurrentFileUid,
+    // node tree view
+    fnHoveredItem, setFNHoveredItem,
+    nodeTree, setNodeTree,
+    validNodeTree, setValidNodeTree,
+    nodeMaxUid, setNodeMaxUid,
+    // stage view
+    iframeLoading, setIFrameLoading,
+    iframeSrc, setIFrameSrc,
+    fileInfo, setFileInfo,
+    needToReloadIFrame, setNeedToReloadIFrame,
+    // code view
+    codeEditing, setCodeEditing,
+    codeChanges, setCodeChanges,
+    tabSize, setTabSize,
+    newFocusedNodeUid, setNewFocusedNodeUid,
+    // processor
+    updateOpt, setUpdateOpt,
+    // references
+    filesReferenceData, htmlReferenceData, cmdkReferenceData,
+    // cmdk
+    currentCommand, setCurrentCommand,
+    cmdkOpen, setCmdkOpen,
+    cmdkPages, setCmdkPages, cmdkPage,
+    // other
+    osType,
+    theme: _theme,
+    panelResizing, setPanelResizing,
+    hasSession, session,
+    // toasts
+    addMessage, removeMessage,
+  } = useContext(MainContext)
   // -------------------------------------------------------------- references --------------------------------------------------------------
-  // references
   const isFirst = useRef<boolean>(true)
   const monacoRef = useRef<monaco.editor.IEditor | null>(null)
   const codeContent = useRef<string>('')
