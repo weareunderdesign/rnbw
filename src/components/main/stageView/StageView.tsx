@@ -5,7 +5,6 @@ import React, {
 } from 'react';
 
 import cx from 'classnames';
-import { Panel } from 'react-resizable-panels';
 
 import { MainContext } from '@_redux/main';
 
@@ -21,22 +20,21 @@ export default function StageView(props: StageViewProps) {
 
   return useMemo(() => {
     return <>
-      <Panel minSize={0}>
-        <div
-          id="StageView"
-          className={cx(
-            'scrollable',
-          )}
-          style={{
-            background: iframeSrc ? "white" : "",
-            position: "relative",
-            pointerEvents: panelResizing ? 'none' : 'auto',
-          }}
-          onClick={onPanelClick}
-        >
-          <IFrame />
-        </div>
-      </Panel>
+      <div
+        id="StageView"
+        className={cx(
+          'scrollable',
+        )}
+        style={{
+          height: "100vh",
+          background: iframeSrc ? "white" : "",
+          position: "relative",
+          pointerEvents: panelResizing ? 'none' : 'auto',
+        }}
+        onClick={onPanelClick}
+      >
+        <IFrame />
+      </div>
     </>
   }, [iframeSrc, panelResizing, onPanelClick])
 }

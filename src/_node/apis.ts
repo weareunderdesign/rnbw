@@ -7,10 +7,12 @@ import {
   indentNode,
   setHtmlNodeInAppAttribName,
   THtmlNodeData,
+  THtmlReferenceData,
 } from './html';
 import {
   TNode,
   TNodeApiResponse,
+  TNodeReferenceData,
   TNodeTreeContext,
   TNodeTreeData,
   TNodeUid,
@@ -77,8 +79,8 @@ export const getNodeDepth = (tree: TNodeTreeData, uid: TNodeUid): number => {
 
   return nodeDepth
 }
-export const getValidNodeUids = (tree: TNodeTreeData, uids: TNodeUid[], targetUid?: TNodeUid): TNodeUid[] => {
-  const validatedUids: { [uid: TNodeUid]: boolean } = {}
+export const getValidNodeUids = (tree: TNodeTreeData, uids: TNodeUid[], targetUid?: TNodeUid, treeType?: TNodeTreeContext, referenceData?: TNodeReferenceData): TNodeUid[] => {
+  let validatedUids: { [uid: TNodeUid]: boolean } = {}
 
   // validate collection
   uids.map((uid) => {
@@ -111,6 +113,38 @@ export const getValidNodeUids = (tree: TNodeTreeData, uids: TNodeUid[], targetUi
     while (targetNode.uid !== RootNodeUid) {
       delete validatedUids[targetNode.uid]
       targetNode = tree[targetNode.parentUid as TNodeUid]
+    }
+
+    if (treeType === 'html') {
+      const { elements } = referenceData as THtmlReferenceData
+
+      const targetNode = tree[targetUid]
+      const targetNodeData = targetNode.data as THtmlNodeData
+      const targetRefData = elements[targetNodeData.name]
+
+      if (targetRefData) {
+        if (targetRefData.Contain === 'All') {
+          // do nothing
+        } else if (targetRefData.Contain === 'None') {
+          validatedUids = {}
+        } else {
+          const containTagObj: { [uid: TNodeUid]: boolean } = {}
+          const tagList = targetRefData.Contain.replace(/ /g, '').split(',')
+          tagList.map((tag: string) => {
+            const pureTag = tag.slice(1, tag.length - 1)
+            containTagObj[pureTag] = true
+          })
+
+          Object.keys(validatedUids).map(uid => {
+            const node = tree[uid]
+            const nodeData = node.data as THtmlNodeData
+            if (!containTagObj[nodeData.name]) {
+              delete validatedUids[uid]
+            }
+          })
+        }
+      }
+
     }
   }
 

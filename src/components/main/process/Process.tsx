@@ -493,7 +493,8 @@ export default function Process(props: ProcessProps) {
   useEffect(() => {
     if (updateOpt.parse === null && (updateOpt.from === 'file' || updateOpt.from === null)) {
       dispatch(clearFNState())
-      dispatch(expandFNNode(Object.keys(validNodeTree).slice(0, 50)))
+      const uids = Object.keys(validNodeTree)
+      dispatch(expandFNNode(uids.slice(0, 50)))
       removeRunningActions(['processor-validNodeTree'])
     } else if (updateOpt.parse === null && updateOpt.from === 'code') {
       const _focusedItem = newFocusedNodeUid

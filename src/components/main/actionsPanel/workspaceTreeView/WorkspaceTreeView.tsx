@@ -24,12 +24,10 @@ import {
   useDispatch,
   useSelector,
 } from 'react-redux';
-import { Panel } from 'react-resizable-panels';
 
 import {
   SVGIconI,
   SVGIconII,
-  SVGIconIII,
   TreeView,
 } from '@_components/common';
 import { TreeViewData } from '@_components/common/treeView/types';
@@ -48,6 +46,7 @@ import {
   reloadProject,
   TFileHandlerCollection,
   TFileNodeData,
+  TFilesReference,
 } from '@_node/file';
 import {
   TNode,
@@ -1443,246 +1442,254 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
   }, [createTmpFFNode])
   // -------------------------------------------------------------- own --------------------------------------------------------------
-  const panelSize = useMemo(() => 200 / window.innerHeight * 100, [])
   const onPanelClick = useCallback((e: React.MouseEvent) => {
     setActivePanel('file')
   }, [])
 
   return useMemo(() => {
     return <>
-      <Panel defaultSize={panelSize} minSize={0}>
-        <div
-          id="FileTreeView"
-          className={cx(
-            'scrollable',
-          )}
-          style={{
-            pointerEvents: panelResizing ? 'none' : 'auto',
-          }}
-          onClick={onPanelClick}
-        >
-          <TreeView
-            width={'100%'}
-            height={'auto'}
+      <div
+        id="FileTreeView"
+        className={cx(
+          'scrollable',
+        )}
+        style={{
+          pointerEvents: panelResizing ? 'none' : 'auto',
+        }}
+        onClick={onPanelClick}
+      >
+        <TreeView
+          width={'100%'}
+          height={'auto'}
 
-            info={{ id: 'file-tree-view' }}
+          info={{ id: 'file-tree-view' }}
 
-            data={fileTreeViewData}
-            focusedItem={focusedItem}
-            expandedItems={expandedItems}
-            selectedItems={selectedItems}
+          data={fileTreeViewData}
+          focusedItem={focusedItem}
+          expandedItems={expandedItems}
+          selectedItems={selectedItems}
 
-            renderers={{
-              renderTreeContainer: (props) => {
-                return <>
-                  <ul {...props.containerProps}>
-                    {props.children}
-                  </ul>
-                </>
-              },
-              renderItemsContainer: (props) => {
-                return <>
-                  <ul {...props.containerProps}>
-                    {props.children}
-                  </ul>
-                </>
-              },
-              renderItem: (props) => {
-                useEffect(() => {
-                  const node = props.item.data as TNode
-                  if (!node.data.valid) {
-                    props.context.selectItem()
-                    props.context.startRenamingItem()
-                  }
-                }, [])
+          renderers={{
+            renderTreeContainer: (props) => {
+              return <>
+                <ul {...props.containerProps}>
+                  {props.children}
+                </ul>
+              </>
+            },
+            renderItemsContainer: (props) => {
+              return <>
+                <ul {...props.containerProps}>
+                  {props.children}
+                </ul>
+              </>
+            },
+            renderItem: (props) => {
+              useEffect(() => {
+                const node = props.item.data as TNode
+                if (!node.data.valid) {
+                  props.context.selectItem()
+                  props.context.startRenamingItem()
+                }
+              }, [])
+              const fileReferenceData = useMemo<TFilesReference>(() => {
+                const node = props.item.data as TNode
+                const nodeData = node.data as TFileNodeData
+                const refData = filesReferenceData[nodeData.kind === 'directory' ? 'folder' : nodeData.type]
+                return refData
+              }, [])
 
-                return <>
-                  <li
+              return <>
+                <li
+                  className={cx(
+                    props.context.isSelected && 'background-secondary',
+
+                    props.context.isDraggingOver && '',
+                    props.context.isDraggingOverParent && '',
+
+                    props.context.isFocused && '',
+                  )}
+                  {...props.context.itemContainerWithChildrenProps}
+                >
+                  <div
+                    id={`FileTreeView-${generateQuerySelector(props.item.index.toString())}`}
                     className={cx(
-                      props.context.isSelected && 'background-secondary',
+                      'justify-stretch',
+                      'padding-xs',
+                      'outline-default',
 
-                      props.context.isDraggingOver && '',
+                      props.context.isSelected && 'background-tertiary outline-none',
+                      !props.context.isSelected && props.context.isFocused && 'outline',
+
+                      props.context.isDraggingOver && 'outline',
                       props.context.isDraggingOverParent && '',
 
-                      props.context.isFocused && '',
+                      invalidNodes[props.item.data.uid] && 'opacity-m',
                     )}
-                    {...props.context.itemContainerWithChildrenProps}
+                    style={{
+                      flexWrap: "nowrap",
+                      paddingLeft: `${props.depth * 10}px`,
+                    }}
+                    {...props.context.itemContainerWithoutChildrenProps}
+                    {...props.context.interactiveElementProps}
+                    onClick={(e) => {
+                      e.stopPropagation()
+
+                      // skip click-event from an inline rename input
+                      const targetId = e.target && (e.target as HTMLElement).id
+                      if (targetId === 'FileTreeView-RenameInput') {
+                        return
+                      }
+
+                      addRunningActions(['fileTreeView-select'])
+                      !props.context.isFocused && addRunningActions(['fileTreeView-focus'])
+                      !e.shiftKey && !e.ctrlKey && addRunningActions(props.item.isFolder ? [props.context.isExpanded ? 'fileTreeView-collapse' : 'fileTreeView-expand'] : ['fileTreeView-read'])
+
+                      !props.context.isFocused && props.context.focusItem()
+                      e.shiftKey ? props.context.selectUpTo() :
+                        e.ctrlKey ? (props.context.isSelected ? props.context.unselectItem() : props.context.addToSelectedItems()) : [
+                          props.context.selectItem(),
+                          props.item.isFolder ? props.context.toggleExpandedState() : props.context.primaryAction(),
+                        ]
+
+                      setActivePanel('file')
+                    }}
+                    onFocus={() => { }}
+                    onMouseEnter={() => setFFHoveredItem(props.item.index as TNodeUid)}
+                    onMouseLeave={() => setFFHoveredItem('' as TNodeUid)}
+                    onDragStart={(e: React.DragEvent) => {
+                      const target = e.target as HTMLElement
+                      e.dataTransfer.setDragImage(target, window.outerWidth, window.outerHeight)
+                      props.context.startDragging()
+                    }}
                   >
-                    <div
-                      id={`FileTreeView-${generateQuerySelector(props.item.index.toString())}`}
-                      className={cx(
-                        'justify-stretch',
-                        'padding-xs',
-                        'outline-default',
+                    <div className="gap-xs padding-xs" style={{ width: 'fit-content' }}>
+                      {props.arrow}
 
-                        props.context.isSelected && 'background-tertiary outline-none',
-                        !props.context.isSelected && props.context.isFocused && 'outline',
-
-                        props.context.isDraggingOver && '',
-                        props.context.isDraggingOverParent && '',
-
-                        invalidNodes[props.item.data.uid] && 'opacity-m',
-                      )}
-                      style={{
-                        flexWrap: "nowrap",
-                        paddingLeft: `${props.depth * 10}px`,
-                      }}
-                      {...props.context.itemContainerWithoutChildrenProps}
-                      {...props.context.interactiveElementProps}
-                      onClick={(e) => {
-                        e.stopPropagation()
-
-                        // skip click-event from an inline rename input
-                        const targetId = e.target && (e.target as HTMLElement).id
-                        if (targetId === 'FileTreeView-RenameInput') {
-                          return
-                        }
-
-                        addRunningActions(['fileTreeView-select'])
-                        !props.context.isFocused && addRunningActions(['fileTreeView-focus'])
-                        !e.shiftKey && !e.ctrlKey && addRunningActions(props.item.isFolder ? [props.context.isExpanded ? 'fileTreeView-collapse' : 'fileTreeView-expand'] : ['fileTreeView-read'])
-
-                        !props.context.isFocused && props.context.focusItem()
-                        e.shiftKey ? props.context.selectUpTo() :
-                          e.ctrlKey ? (props.context.isSelected ? props.context.unselectItem() : props.context.addToSelectedItems()) : [
-                            props.context.selectItem(),
-                            props.item.isFolder ? props.context.toggleExpandedState() : props.context.primaryAction(),
-                          ]
-
-                        setActivePanel('file')
-                      }}
-                      onFocus={() => { }}
-                      onMouseEnter={() => setFFHoveredItem(props.item.index as TNodeUid)}
-                      onMouseLeave={() => setFFHoveredItem('' as TNodeUid)}
-                    >
-                      <div className="gap-xs padding-xs" style={{ width: 'fit-content' }}>
-                        {props.arrow}
-
-                        {props.item.isFolder ?
-                          props.context.isExpanded ? <SVGIconI {...{ "class": "icon-xs" }}>folder</SVGIconI> : <SVGIconII {...{ "class": "icon-xs" }}>folder</SVGIconII>
-                          : <SVGIconIII {...{ "class": "icon-xs" }}>page</SVGIconIII>}
-                      </div>
-
-                      {props.title}
+                      {fileReferenceData ?
+                        <SVGIconI {...{ "class": "icon-xs" }}>{fileReferenceData['Icon']}</SVGIconI>
+                        : <div className='icon-xs'></div>}
                     </div>
 
-                    {props.context.isExpanded ? <>
-                      <div>
-                        {props.children}
-                      </div>
-                    </> : null}
-                  </li>
-                </>
-              },
-              renderItemArrow: (props) => {
-                return <>
-                  {props.item.isFolder ?
-                    props.context.isExpanded ? <SVGIconI {...{ "class": "icon-xs" }}>down</SVGIconI> : <SVGIconII {...{ "class": "icon-xs" }}>right</SVGIconII>
-                    : <div className='icon-xs'></div>}
-                </>
-              },
-              renderItemTitle: (props) => {
-                return <>
-                  <span
-                    className='text-s justify-start gap-s'
-                    style={{
-                      width: "100%",
-                      textOverflow: 'ellipsis',
-                      overflow: 'hidden',
-                      whiteSpace: 'nowrap',
-                    }}>
                     {props.title}
-                    {ffTree[props.item.data.uid] && (ffTree[props.item.data.uid].data as TFileNodeData).changed &&
-                      <div className="radius-s foreground-primary" style={{ width: "6px", height: "6px" }}></div>}
-                  </span>
-                </>
-              },
-              renderRenameInput: (props) => {
-                return <>
-                  <form
-                    {...props.formProps}
-                    className={'box'}
-                  >
-                    <input
-                      id={'FileTreeView-RenameInput'}
-                      {...props.inputProps}
-                      ref={props.inputRef}
-                      className={cx(
-                        'text-s',
-                      )}
-                      style={{
-                        outline: 'none',
-                        margin: '0',
-                        border: 'none',
-                        padding: '0',
-                        background: 'transparent',
-                      }}
-                      onChange={(e) => {
-                        props.inputProps.onChange && props.inputProps.onChange(e)
-                      }}
-                      onBlur={(e) => {
-                        props.inputProps.onBlur && props.inputProps.onBlur(e)
-                        props.formProps.onSubmit && props.formProps.onSubmit(new Event('') as unknown as React.FormEvent<HTMLFormElement>)
-                      }}
-                    />
-                    <button ref={props.submitButtonRef} className={'hidden'}></button>
-                  </form>
-                </>
-              },
-            }}
-            props={{
-              canDragAndDrop: true,
-              canDropOnFolder: true,
-              canDropOnNonFolder: false,
-              canReorderItems: false,
+                  </div>
 
-              canSearch: false,
-              canSearchByStartingTyping: false,
-              canRename: true,
-            }}
-            callbacks={{
-              onStartRenamingItem: (item) => {
-                cb_startRenamingNode(item.index as TNodeUid)
-              },
-              onAbortRenamingItem: (item) => {
-                cb_abortRenamingNode(item)
-              },
-              onRenameItem: (item, name) => {
-                cb_renameNode(item, name)
-              },
+                  {props.context.isExpanded ? <>
+                    <div>
+                      {props.children}
+                    </div>
+                  </> : null}
+                </li>
+              </>
+            },
+            renderItemArrow: (props) => {
+              return <>
+                {props.item.isFolder ?
+                  props.context.isExpanded ? <SVGIconI {...{ "class": "icon-xs" }}>down</SVGIconI> : <SVGIconII {...{ "class": "icon-xs" }}>right</SVGIconII>
+                  : <div className='icon-xs'></div>}
+              </>
+            },
+            renderItemTitle: (props) => {
+              return <>
+                <span
+                  className='text-s justify-start gap-s'
+                  style={{
+                    width: "100%",
+                    textOverflow: 'ellipsis',
+                    overflow: 'hidden',
+                    whiteSpace: 'nowrap',
+                  }}>
+                  {props.title}
+                  {ffTree[props.item.data.uid] && (ffTree[props.item.data.uid].data as TFileNodeData).changed &&
+                    <div className="radius-s foreground-primary" style={{ width: "6px", height: "6px" }}></div>}
+                </span>
+              </>
+            },
+            renderRenameInput: (props) => {
+              return <>
+                <form
+                  {...props.formProps}
+                  className={'box'}
+                >
+                  <input
+                    id={'FileTreeView-RenameInput'}
+                    {...props.inputProps}
+                    ref={props.inputRef}
+                    className={cx(
+                      'text-s',
+                    )}
+                    style={{
+                      outline: 'none',
+                      margin: '0',
+                      border: 'none',
+                      padding: '0',
+                      background: 'transparent',
+                    }}
+                    onChange={(e) => {
+                      props.inputProps.onChange && props.inputProps.onChange(e)
+                    }}
+                    onBlur={(e) => {
+                      props.inputProps.onBlur && props.inputProps.onBlur(e)
+                      props.formProps.onSubmit && props.formProps.onSubmit(new Event('') as unknown as React.FormEvent<HTMLFormElement>)
+                    }}
+                  />
+                  <button ref={props.submitButtonRef} className={'hidden'}></button>
+                </form>
+              </>
+            },
+          }}
+          props={{
+            canDragAndDrop: true,
+            canDropOnFolder: true,
+            canDropOnNonFolder: false,
+            canReorderItems: false,
 
-              onSelectItems: (items) => {
-                cb_selectNode(items as TNodeUid[])
-              },
-              onFocusItem: (item) => {
-                cb_focusNode(item.index as TNodeUid)
-              },
-              onExpandItem: (item) => {
-                cb_expandNode(item.index as TNodeUid)
-              },
-              onCollapseItem: (item) => {
-                cb_collapseNode(item.index as TNodeUid)
-              },
+            canSearch: false,
+            canSearchByStartingTyping: false,
+            canRename: true,
+          }}
+          callbacks={{
+            onStartRenamingItem: (item) => {
+              cb_startRenamingNode(item.index as TNodeUid)
+            },
+            onAbortRenamingItem: (item) => {
+              cb_abortRenamingNode(item)
+            },
+            onRenameItem: (item, name) => {
+              cb_renameNode(item, name)
+            },
 
-              onPrimaryAction: (item) => {
-                item.data.data.valid ? cb_readNode(item.index as TNodeUid) : removeRunningActions(['fileTreeView-read'], false)
-              },
+            onSelectItems: (items) => {
+              cb_selectNode(items as TNodeUid[])
+            },
+            onFocusItem: (item) => {
+              cb_focusNode(item.index as TNodeUid)
+            },
+            onExpandItem: (item) => {
+              cb_expandNode(item.index as TNodeUid)
+            },
+            onCollapseItem: (item) => {
+              cb_collapseNode(item.index as TNodeUid)
+            },
 
-              onDrop: (items, target) => {
-                const targetUid = (target as DraggingPositionItem).targetItem as TNodeUid
-                if (invalidNodes[targetUid]) return
-                const uids = items.map(item => item.index as TNodeUid).filter(uid => !invalidNodes[uid])
-                if (uids.length === 0) return
+            onPrimaryAction: (item) => {
+              item.data.data.valid ? cb_readNode(item.index as TNodeUid) : removeRunningActions(['fileTreeView-read'], false)
+            },
 
-                cb_moveNode(uids, targetUid)
-              }
-            }}
-          />
-        </div>
-      </Panel>
+            onDrop: (items, target) => {
+              const targetUid = (target as DraggingPositionItem).targetItem as TNodeUid
+              if (invalidNodes[targetUid]) return
+              const uids = items.map(item => item.index as TNodeUid).filter(uid => !invalidNodes[uid])
+              if (uids.length === 0) return
+
+              cb_moveNode(uids, targetUid)
+            }
+          }}
+        />
+      </div>
     </>
   }, [
-    panelSize, panelResizing, onPanelClick,
+    panelResizing, onPanelClick,
     ffTree, fileTreeViewData,
     focusedItem, selectedItems, expandedItems,
     addRunningActions, removeRunningActions,

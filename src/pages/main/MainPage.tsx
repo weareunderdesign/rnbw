@@ -9,6 +9,7 @@ import React, {
 import cx from 'classnames';
 import { Command } from 'cmdk';
 import {
+  delMany,
   getMany,
   setMany,
 } from 'idb-keyval';
@@ -16,15 +17,14 @@ import {
   useDispatch,
   useSelector,
 } from 'react-redux';
-import { PanelGroup } from 'react-resizable-panels';
 import {
   useLocation,
   useParams,
 } from 'react-router-dom';
+import Split from 'react-split';
 
 import {
   Loader,
-  ResizeHandle,
   SVGIcon,
 } from '@_components/common';
 import {
@@ -229,8 +229,9 @@ export default function MainPage(props: MainPageProps) {
     } else if (activePanel === 'node' || activePanel === 'stage') {
       // validate
       const node = nodeTree[fnFocusedItem]
-      if (node) {
-        const refData = htmlReferenceData.elements[node.name]
+      if (node && node.parentUid && node.parentUid !== RootNodeUid) {
+        const parentNode = nodeTree[node.parentUid as TNodeUid]
+        const refData = htmlReferenceData.elements[parentNode.name]
         if (refData) {
           if (refData.Contain === 'All') {
             Object.keys(htmlReferenceData.elements).map((tag: string) => {
@@ -282,7 +283,7 @@ export default function MainPage(props: MainPageProps) {
     }
 
     return data
-  }, [activePanel, ffTree, ffFocusedItem, filesReferenceData, nodeTree, fnFocusedItem, htmlReferenceData, cmdkSearch])
+  }, [activePanel, ffTree, ffFocusedItem, nodeTree, fnFocusedItem, htmlReferenceData, cmdkSearch])
   // other
   const [osType, setOsType] = useState<TOsType>('Windows')
   const [theme, setTheme] = useState<TTheme>('System')
@@ -373,7 +374,7 @@ export default function MainPage(props: MainPageProps) {
     LogAllow && console.log('action to be run by cmdk: ', action)
 
     // prevent chrome default short keys
-    e.preventDefault()
+    // e.preventDefault()
 
     setCurrentCommand({ action })
   }, [cmdkReferenceData, activePanel, osType])
@@ -385,6 +386,9 @@ export default function MainPage(props: MainPageProps) {
   // command detect & do actions
   useEffect(() => {
     switch (currentCommand.action) {
+      case 'Clear':
+        onClear()
+        break
       case 'Jumpstart':
         onJumpstart()
         break
@@ -405,6 +409,12 @@ export default function MainPage(props: MainPageProps) {
     }
   }, [currentCommand])
   // -------------------------------------------------------------- handlers --------------------------------------------------------------
+  // clear cached session
+  const onClear = useCallback(async () => {
+    // remove localstorage and session
+    localStorage.clear()
+    await delMany(['project-context', 'project-root-folder-handler'])
+  }, [])
   // cmdk jumpstart
   const onJumpstart = useCallback(() => {
     if (cmdkOpen) return
@@ -483,6 +493,21 @@ export default function MainPage(props: MainPageProps) {
 
     // add default cmdk actions
     const _cmdkReferenceData: TCmdkReferenceData = {}
+    // clear
+    _cmdkReferenceData['Clear'] = {
+      "Name": 'Clear',
+      "Icon": '',
+      "Description": '',
+      "Keyboard Shortcut": {
+        cmd: true,
+        shift: true,
+        alt: false,
+        key: 'KeyR',
+        click: false,
+      },
+      "Group": 'default',
+      "Context": 'all',
+    }
     // Jumpstart
     _cmdkReferenceData['Jumpstart'] = {
       "Name": 'Jumpstart',
@@ -750,24 +775,45 @@ export default function MainPage(props: MainPageProps) {
       {/* spinner */}
       <Loader show={pending || iframeLoading || fsPending || codeEditing}></Loader>
 
-      {/* panels */}
-      <PanelGroup
-        // autoSaveId="panel-layout"
-        className='view'
+      <Split
+        className={'view'}
+        style={{ display: 'flex' }}
+
+        sizes={[10, 45, 45]}
+        minSize={240}
+
+        expandToMin={true}
+
+        gutterSize={8}
+
+        snapOffset={30}
+        dragInterval={1}
+
         direction="horizontal"
+        cursor="col-resize"
+
+        onDrag={(sizes: Number[]) => {
+          console.log('onDrag', sizes)
+        }}
+        onDragEnd={(sizes: Number[]) => {
+          console.log('onDragEnd', sizes)
+        }}
+
+        elementStyle={(_dimension: "height" | "width", elementSize: number, _gutterSize: number, _index: number) => {
+          return {
+            'width': 'calc(' + elementSize + '%)',
+          }
+        }}
+        gutterStyle={(_dimension: "height" | "width", gutterSize: number, _index: number) => {
+          return {
+            'width': gutterSize + 'px',
+          }
+        }}
       >
         <ActionsPanel />
-
-        <ResizeHandle direction='horizontal'></ResizeHandle>
-
         <StageView />
-
-        {showCodeView && <>
-          <ResizeHandle direction='horizontal'></ResizeHandle>
-
-          <CodeView />
-        </>}
-      </PanelGroup>
+        {showCodeView ? <CodeView /> : null}
+      </Split>
 
       {/* cmdk modal */}
       <Command.Dialog
@@ -866,7 +912,9 @@ export default function MainPage(props: MainPageProps) {
                           value={command.Name}
                           // disabled={false}
                           onSelect={() => {
-                            setCmdkOpen(false)
+                            // keep modal open when toogling theme
+                            command.Name !== 'Theme' && setCmdkOpen(false)
+
                             setCurrentCommand({ action: command.Group === 'Add' ? `${AddNodeActionPrefix}-${command.Context}` : command.Name })
                           }}
                         >

@@ -322,6 +322,11 @@ export const IFrame = (props: IFrameProps) => {
   }, [])
   const onMouseDown = useCallback((e: MouseEvent) => {
     const ele = e.target as HTMLElement
+    if (ele.tagName === 'a') {
+      const href = ele.getAttribute('href')
+      console.log(href)
+    }
+
     let _uid: TNodeUid | null = ele.getAttribute(NodeInAppAttribName)
     // for the elements which are created by js. (ex: Web Component)
     let newFocusedElement: HTMLElement = ele
@@ -347,6 +352,12 @@ export const IFrame = (props: IFrameProps) => {
         if (_uid !== focusedItem) {
           setFocusedSelectedItems(_uid)
         }
+      }
+
+      const node = nodeTree[_uid]
+      const nodeData = node.data as THtmlNodeData
+      if (nodeData.name === 'a') {
+        console.log(nodeData)
       }
     }
 
