@@ -370,6 +370,9 @@ export default function MainPage(props: MainPageProps) {
   // command detect & do actions
   useEffect(() => {
     switch (currentCommand.action) {
+      case 'New':
+        onNew()
+        break
       case 'Open':
         onImportProject()
         break
@@ -529,17 +532,37 @@ export default function MainPage(props: MainPageProps) {
     }
   }, [clearSession, osType])
   const onImportProject = useCallback(async (fsType: TProjectContext = 'local'): Promise<void> => {
-    if (fsType === 'local') {
-      try {
-        const projectHandle = await showDirectoryPicker({ _preferPolyfill: false, mode: 'readwrite' } as CustomDirectoryPickerOptions)
-        loadProject(fsType, projectHandle)
-      } catch (err) {
-        return
+    return new Promise<void>(async (resolve, reject) => {
+      if (fsType === 'local') {
+        try {
+          const projectHandle = await showDirectoryPicker({ _preferPolyfill: false, mode: 'readwrite' } as CustomDirectoryPickerOptions)
+          await loadProject(fsType, projectHandle)
+        } catch (err) {
+          reject(err)
+        }
+      } else if (fsType === 'idb') {
+        try {
+          await loadProject(fsType)
+        } catch (err) {
+          reject(err)
+        }
       }
-    } else if (fsType === 'idb') {
-      loadProject(fsType)
-    }
+      resolve()
+    })
   }, [loadProject])
+  const onNew = useCallback(async () => {
+    setFSPending(true)
+
+    // init/open default project
+    try {
+      await initDefaultProject(DefaultProjectPath)
+      await onImportProject('idb')
+    } catch (err) {
+      LogAllow && console.log('failed to init/load default project')
+    }
+
+    setFSPending(false)
+  }, [onImportProject])
   // clear
   const onClear = useCallback(async () => {
     // remove localstorage and session
@@ -781,23 +804,17 @@ export default function MainPage(props: MainPageProps) {
       (async () => {
         setFSPending(true)
         try {
+          // init/open default project if it's newbie
           await initDefaultProject(DefaultProjectPath)
-          setDefaultProjectInited(true)
-          LogAllow && console.log('default project inited')
+          await onImportProject('idb')
+          LogAllow && console.log('inited/loaded default project')
         } catch (err) {
-          LogAllow && console.log('failed to init default project')
+          LogAllow && console.log('failed to init/load default project')
         }
         setFSPending(false)
       })()
     }
   }, [])
-  // open default project if it's newbie
-  const [defaultProjectInited, setDefaultProjectInited] = useState(false)
-  useEffect(() => {
-    if (defaultProjectInited) {
-      onImportProject('idb')
-    }
-  }, [defaultProjectInited])
   // theme
   const setSystemTheme = useCallback(() => {
     setTheme('System')
