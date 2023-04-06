@@ -1,3 +1,5 @@
+import JSZip from 'jszip';
+
 import {
   TFileInfo,
   TFileType,
@@ -8,6 +10,10 @@ import {
   TNodeUid,
 } from '../';
 
+export type TZipFileInfo = {
+  path: string,
+  zip: JSZip | null | undefined,
+}
 export type TIDBFileInfo = {
   uid: TNodeUid,
   parentUid: TNodeUid | null,

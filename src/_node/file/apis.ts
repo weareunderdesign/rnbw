@@ -1,4 +1,6 @@
 import { Buffer } from 'buffer';
+import FileSaver from 'file-saver';
+import JSZip from 'jszip';
 
 import {
   RootNodeUid,
@@ -25,13 +27,14 @@ import {
   TFileHandlerInfoObj,
   TIDBFileInfo,
   TIDBFileInfoObj,
+  TZipFileInfo,
 } from './types';
 
 export const _fs = window.Filer.fs
 export const _path = window.Filer.path
 export const _sh = new _fs.Shell()
 
-export const initDefaultProject = async (projectPath: string): Promise<void> => {
+export const initIDBProject = async (projectPath: string): Promise<void> => {
   return new Promise<void>(async (resolve, reject) => {
     // remove original default project
     try {
@@ -42,14 +45,14 @@ export const initDefaultProject = async (projectPath: string): Promise<void> => 
 
     // create new default project
     try {
-      await createDefaultProject(projectPath)
+      await createIDBProject(projectPath)
       resolve()
     } catch (err) {
       reject(err)
     }
   })
 }
-export const createDefaultProject = async (projectPath: string): Promise<void> => {
+export const createIDBProject = async (projectPath: string): Promise<void> => {
   return new Promise<void>(async (resolve, reject) => {
     try {
       // create root directory
@@ -76,7 +79,7 @@ export const createDefaultProject = async (projectPath: string): Promise<void> =
     }
   })
 }
-export const loadDefaultProject = async (projectPath: string): Promise<TIDBFileInfoObj> => {
+export const loadIDBProject = async (projectPath: string): Promise<TIDBFileInfoObj> => {
   return new Promise<TIDBFileInfoObj>(async (resolve, reject) => {
     try {
       // build project-root
@@ -137,7 +140,7 @@ export const loadDefaultProject = async (projectPath: string): Promise<TIDBFileI
     }
   })
 }
-export const reloadDefaultProject = async (projectPath: string, ffTree: TNodeTreeData): Promise<{ handlerObj: TIDBFileInfoObj, deletedUids: TNodeUid[] }> => {
+export const reloadIDBProject = async (projectPath: string, ffTree: TNodeTreeData): Promise<{ handlerObj: TIDBFileInfoObj, deletedUids: TNodeUid[] }> => {
   return new Promise<{ handlerObj: TIDBFileInfoObj, deletedUids: TNodeUid[] }>(async (resolve, reject) => {
     try {
       // build project-root
@@ -383,6 +386,61 @@ export const reloadLocalProject = async (projectHandle: FileSystemDirectoryHandl
     }
 
     res({ handlerObj, deletedUids: Object.keys(orgUids) })
+  })
+}
+
+export const downloadProject = async (projectPath: string): Promise<void> => {
+  return new Promise<void>(async (resolve, reject) => {
+    try {
+      const zip = new JSZip()
+
+      // build project-root
+      const projectName = projectPath.slice(1)
+      const rootFolder = zip.folder(projectName)
+      const rootHandler: TZipFileInfo = {
+        path: projectPath,
+        zip: rootFolder,
+      }
+
+      // loop through the project
+      const dirHandlers: TZipFileInfo[] = [rootHandler]
+      while (dirHandlers.length) {
+        const { path, zip } = dirHandlers.shift() as TZipFileInfo
+
+        const entries = await readDir(path)
+        await Promise.all(entries.map(async (entry) => {
+          // skip stage preview files
+          if (entry.startsWith(StagePreviewPathPrefix)) return
+
+          // build handler
+          const c_path = _path.join(path, entry) as string
+          const stats = await getStat(c_path)
+          const c_name = entry
+          const c_kind = stats.type === 'DIRECTORY' ? 'directory' : 'file'
+
+          let c_zip: JSZip | null | undefined
+          if (c_kind === 'directory') {
+            c_zip = zip?.folder(c_name)
+          } else {
+            const content = await readFile(c_path)
+            c_zip = zip?.file(c_name, content)
+          }
+
+          const handlerInfo: TZipFileInfo = {
+            path: c_path,
+            zip: c_zip,
+          }
+          c_kind === 'directory' && dirHandlers.push(handlerInfo)
+        }))
+      }
+
+      const projectBlob = await zip.generateAsync({ type: 'blob' })
+      FileSaver.saveAs(projectBlob, `${projectName}.zip`)
+
+      resolve()
+    } catch (err) {
+      reject(err)
+    }
   })
 }
 

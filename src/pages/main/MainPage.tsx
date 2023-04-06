@@ -46,8 +46,9 @@ import {
   RootNodeUid,
 } from '@_constants/main';
 import {
-  initDefaultProject,
-  loadDefaultProject,
+  downloadProject,
+  initIDBProject,
+  loadIDBProject,
   loadLocalProject,
   TFileHandlerCollection,
   TFileNodeData,
@@ -356,7 +357,7 @@ export default function MainPage(props: MainPageProps) {
     LogAllow && console.log('action to be run by cmdk: ', action)
 
     // prevent chrome default short keys
-    if (action === 'Save') {
+    if (action === 'Save' || action === 'Download') {
       e.preventDefault()
     }
 
@@ -370,20 +371,20 @@ export default function MainPage(props: MainPageProps) {
   // command detect & do actions
   useEffect(() => {
     switch (currentCommand.action) {
+      case 'Jumpstart':
+        onJumpstart()
+        break
       case 'New':
         onNew()
         break
       case 'Open':
         onImportProject()
         break
-      case 'Clear':
-        onClear()
-        break
-      case 'Jumpstart':
-        onJumpstart()
-        break
       case 'Theme':
         onToggleTheme()
+        break
+      case 'Clear':
+        onClear()
         break
       case 'Undo':
         onUndo()
@@ -394,12 +395,14 @@ export default function MainPage(props: MainPageProps) {
       case 'Code':
         toogleCodeView()
         break
+      case 'Download':
+        onDownload()
+        break
       default:
         return
     }
   }, [currentCommand])
   // -------------------------------------------------------------- handlers --------------------------------------------------------------
-  // project
   const clearSession = useCallback(() => {
     dispatch(clearMainState())
     dispatch({ type: HmsClearActionType })
@@ -473,7 +476,7 @@ export default function MainPage(props: MainPageProps) {
       setFSPending(true)
       clearSession()
       try {
-        const handlerObj = await loadDefaultProject(DefaultProjectPath)
+        const handlerObj = await loadIDBProject(DefaultProjectPath)
 
         // sort by ASC directory/file
         Object.keys(handlerObj).map(uid => {
@@ -531,6 +534,7 @@ export default function MainPage(props: MainPageProps) {
       setFSPending(false)
     }
   }, [clearSession, osType])
+  // open
   const onImportProject = useCallback(async (fsType: TProjectContext = 'local'): Promise<void> => {
     return new Promise<void>(async (resolve, reject) => {
       if (fsType === 'local') {
@@ -550,12 +554,13 @@ export default function MainPage(props: MainPageProps) {
       resolve()
     })
   }, [loadProject])
+  // new
   const onNew = useCallback(async () => {
     setFSPending(true)
 
     // init/open default project
     try {
-      await initDefaultProject(DefaultProjectPath)
+      await initIDBProject(DefaultProjectPath)
       await onImportProject('idb')
     } catch (err) {
       LogAllow && console.log('failed to init/load default project')
@@ -563,6 +568,16 @@ export default function MainPage(props: MainPageProps) {
 
     setFSPending(false)
   }, [onImportProject])
+  // download
+  const onDownload = useCallback(async () => {
+    if (project.context !== 'idb') return
+
+    try {
+      await downloadProject(DefaultProjectPath)
+    } catch (err) {
+      LogAllow && console.log('failed to download project')
+    }
+  }, [project.context])
   // clear
   const onClear = useCallback(async () => {
     // remove localstorage and session
@@ -805,7 +820,7 @@ export default function MainPage(props: MainPageProps) {
         setFSPending(true)
         try {
           // init/open default project if it's newbie
-          await initDefaultProject(DefaultProjectPath)
+          await initIDBProject(DefaultProjectPath)
           await onImportProject('idb')
           LogAllow && console.log('inited/loaded default project')
         } catch (err) {

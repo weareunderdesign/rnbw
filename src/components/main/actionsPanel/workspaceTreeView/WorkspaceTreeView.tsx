@@ -43,7 +43,7 @@ import {
   getStat,
   readDir,
   readFile,
-  reloadDefaultProject,
+  reloadIDBProject,
   reloadLocalProject,
   removeFileSystem,
   TFileHandlerCollection,
@@ -212,7 +212,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       }
     } else if (project.context === 'idb') {
       try {
-        const { handlerObj, deletedUids } = await reloadDefaultProject(DefaultProjectPath, ffTree)
+        const { handlerObj, deletedUids } = await reloadIDBProject(DefaultProjectPath, ffTree)
         _deletedUids = deletedUids
 
         // sort by ASC directory/file
