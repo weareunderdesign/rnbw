@@ -320,10 +320,24 @@ export const IFrame = (props: IFrameProps) => {
   const onMouseLeave = useCallback((e: MouseEvent) => {
     setFNHoveredItem('')
   }, [])
-  const onMouseDown = useCallback((e: MouseEvent) => {
+  const onClick = useCallback((e: MouseEvent) => {
     const ele = e.target as HTMLElement
-    if (ele.tagName === 'a') {
-      const href = ele.getAttribute('href')
+
+    // detect link tag
+    let isLinkTag = false
+    let linkElement = ele
+    while (true) {
+      if (linkElement.tagName === 'A') {
+        isLinkTag = true
+        break
+      }
+      const parentEle = linkElement.parentElement
+      if (!parentEle) break
+
+      linkElement = parentEle
+    }
+    if (isLinkTag) {
+      const href = linkElement.getAttribute('href')
       console.log(href)
     }
 
@@ -353,17 +367,10 @@ export const IFrame = (props: IFrameProps) => {
           setFocusedSelectedItems(_uid)
         }
       }
-
-      const node = nodeTree[_uid]
-      const nodeData = node.data as THtmlNodeData
-      if (nodeData.name === 'a') {
-        console.log(nodeData)
-      }
     }
 
     setActivePanel('stage')
   }, [osType, focusedItem, setFocusedSelectedItems, nodeTree])
-  const onMouseUp = useCallback((e: MouseEvent) => { }, [])
   const onDblClick = useCallback((e: MouseEvent) => { }, [])
   // key events
   const onKeyDown = useCallback((e: KeyboardEvent) => {
@@ -419,27 +426,20 @@ export const IFrame = (props: IFrameProps) => {
 
           // define event handlers
           htmlNode.addEventListener('mouseenter', (e: MouseEvent) => {
-            e.stopPropagation()
             setIframeEvent(e)
           })
           htmlNode.addEventListener('mousemove', (e: MouseEvent) => {
-            e.stopPropagation()
             setIframeEvent(e)
           })
           htmlNode.addEventListener('mouseleave', (e: MouseEvent) => {
-            e.stopPropagation()
             setIframeEvent(e)
           })
-          htmlNode.addEventListener('mousedown', (e: MouseEvent) => {
-            e.stopPropagation()
-            setIframeEvent(e)
-          })
-          htmlNode.addEventListener('mouseup', (e: MouseEvent) => {
-            e.stopPropagation()
+          htmlNode.addEventListener('click', (e: MouseEvent) => {
+            e.preventDefault()
             setIframeEvent(e)
           })
           htmlNode.addEventListener('dblclick', (e: MouseEvent) => {
-            e.stopPropagation()
+            e.preventDefault()
             setIframeEvent(e)
           })
         }
@@ -462,11 +462,8 @@ export const IFrame = (props: IFrameProps) => {
       case 'mouseleave':
         onMouseLeave(iframeEvent)
         break
-      case 'mousedown':
-        onMouseDown(iframeEvent)
-        break
-      case 'mouseup':
-        onMouseUp(iframeEvent)
+      case 'click':
+        onClick(iframeEvent)
         break
       case 'dblclick':
         onDblClick(iframeEvent)
