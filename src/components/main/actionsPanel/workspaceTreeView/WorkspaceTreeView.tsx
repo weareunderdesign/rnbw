@@ -30,6 +30,7 @@ import {
 import { TreeViewData } from '@_components/common/treeView/types';
 import {
   AddNodeActionPrefix,
+  DefaultProjectPath,
   LogAllow,
   ParsableFileTypes,
   RootNodeUid,
@@ -38,10 +39,14 @@ import {
 import { getValidNodeUids } from '@_node/apis';
 import {
   _path,
-  reloadProject,
+  createDirectory,
+  getStat,
+  reloadDefaultProject,
+  reloadLocalProject,
   TFileHandlerCollection,
   TFileNodeData,
   TFilesReference,
+  writeFile,
 } from '@_node/file';
 import {
   TNode,
@@ -154,63 +159,109 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     _setTemporaryNodes(_temporaryNodes)
   }, [temporaryNodes])
   // -------------------------------------------------------------- project load cb for side effect --------------------------------------------------------------
-  const cb_reloadProject = useCallback(async (uid?: TNodeUid) => {
-    try {
-      const { handlerObj, deletedUids } = await reloadProject(ffHandlers[RootNodeUid] as FileSystemDirectoryHandle, ffTree, osType)
-      dispatch(updateFFTreeViewState({ deletedUids }))
+  const cb_reloadProject = useCallback(async (_uid?: TNodeUid) => {
+    const treeViewData: TNodeTreeData = {}
+    const ffHandlerObj: TFileHandlerCollection = {}
+    let _deletedUids: TNodeUid[] = []
 
-      // sort by ASC directory/file
-      Object.keys(handlerObj).map(uid => {
-        const handler = handlerObj[uid]
-        handler.children = handler.children.sort((a, b) => {
-          return handlerObj[a].kind === 'file' && handlerObj[b].kind === 'directory' ? 1 :
-            handlerObj[a].kind === 'directory' && handlerObj[b].kind === 'file' ? -1 :
-              handlerObj[a].name > handlerObj[b].name ? 1 : -1
+    if (project.context === 'local') {
+      try {
+        const { handlerObj, deletedUids } = await reloadLocalProject(ffHandlers[RootNodeUid] as FileSystemDirectoryHandle, ffTree, osType)
+        _deletedUids = deletedUids
+
+        // sort by ASC directory/file
+        Object.keys(handlerObj).map(uid => {
+          const handler = handlerObj[uid]
+          handler.children = handler.children.sort((a, b) => {
+            return handlerObj[a].kind === 'file' && handlerObj[b].kind === 'directory' ? 1 :
+              handlerObj[a].kind === 'directory' && handlerObj[b].kind === 'file' ? -1 :
+                handlerObj[a].name > handlerObj[b].name ? 1 : -1
+          })
         })
-      })
 
-      // set ff-tree, ff-handlers
-      const treeViewData: TNodeTreeData = {}
-      const ffHandlerObj: TFileHandlerCollection = {}
-      Object.keys(handlerObj).map(uid => {
-        const { parentUid, children, path, kind, name, ext, content, handler } = handlerObj[uid]
-        const type = ParsableFileTypes[ext || ''] ? ext?.slice(1) : 'unknown'
-        treeViewData[uid] = {
-          uid,
-          parentUid: parentUid,
-          name: name,
-          isEntity: kind === 'file',
-          children: [...children],
-          data: {
-            valid: true,
-            path: path,
-            kind: kind,
+        // set ff-tree, ff-handlers
+        Object.keys(handlerObj).map(uid => {
+          const { parentUid, children, path, kind, name, ext, content, handler } = handlerObj[uid]
+          const type = ParsableFileTypes[ext || ''] ? ext?.slice(1) : 'unknown'
+          treeViewData[uid] = {
+            uid,
+            parentUid: parentUid,
             name: name,
-            ext: ext,
-            type,
-            orgContent: type !== 'unknown' ? (ffTree[uid] ? (ffTree[uid].data as TFileNodeData).orgContent : content?.toString()) : '',
-            content: type !== 'unknown' ? (ffTree[uid] ? (ffTree[uid].data as TFileNodeData).content : content?.toString()) : '',
-            changed: ffTree[uid] ? (ffTree[uid].data as TFileNodeData).changed : false,
-          } as TFileNodeData,
-        } as TNode
+            isEntity: kind === 'file',
+            children: [...children],
+            data: {
+              valid: true,
+              path: path,
+              kind: kind,
+              name: name,
+              ext: ext,
+              type,
+              orgContent: type !== 'unknown' ? (ffTree[uid] ? (ffTree[uid].data as TFileNodeData).orgContent : content?.toString()) : '',
+              content: type !== 'unknown' ? (ffTree[uid] ? (ffTree[uid].data as TFileNodeData).content : content?.toString()) : '',
+              changed: ffTree[uid] ? (ffTree[uid].data as TFileNodeData).changed : false,
+            } as TFileNodeData,
+          } as TNode
 
-        ffHandlerObj[uid] = handler
-      })
-
-      if (uid && !treeViewData[uid]) {
-        setIFrameSrc(null)
-        setNodeTree({})
-        setValidNodeTree({})
-        setCurrentFileUid('')
-        dispatch(removeCurrentFile())
+          ffHandlerObj[uid] = handler
+        })
+      } catch (err) {
+        LogAllow && console.log('failed to reload local project')
       }
+    } else if (project.context === 'idb') {
+      try {
+        const { handlerObj, deletedUids } = await reloadDefaultProject(DefaultProjectPath, ffTree)
+        _deletedUids = deletedUids
 
-      setFFTree(treeViewData)
-      setFFHandlers(ffHandlerObj)
-    } catch (err) {
-      LogAllow && console.log('reload project err', err)
+        // sort by ASC directory/file
+        Object.keys(handlerObj).map(uid => {
+          const handler = handlerObj[uid]
+          handler.children = handler.children.sort((a, b) => {
+            return handlerObj[a].kind === 'file' && handlerObj[b].kind === 'directory' ? 1 :
+              handlerObj[a].kind === 'directory' && handlerObj[b].kind === 'file' ? -1 :
+                handlerObj[a].name > handlerObj[b].name ? 1 : -1
+          })
+        })
+
+        // set ff-tree, ff-handlers
+        Object.keys(handlerObj).map(uid => {
+          const { parentUid, children, path, kind, name, ext, content } = handlerObj[uid]
+          const type = ParsableFileTypes[ext || ''] ? ext?.slice(1) : 'unknown'
+          treeViewData[uid] = {
+            uid,
+            parentUid: parentUid,
+            name: name,
+            isEntity: kind === 'file',
+            children: [...children],
+            data: {
+              valid: true,
+              path: path,
+              kind: kind,
+              name: name,
+              ext: ext,
+              type,
+              orgContent: type !== 'unknown' ? content?.toString() : '',
+              content: type !== 'unknown' ? content?.toString() : '',
+              changed: false,
+            } as TFileNodeData,
+          } as TNode
+        })
+      } catch (err) {
+        LogAllow && console.log('failed to reload default project')
+      }
     }
-  }, [ffHandlers, ffTree, osType])
+
+    dispatch(updateFFTreeViewState({ deletedUids: _deletedUids }))
+    if (_uid && !treeViewData[_uid]) {
+      setIFrameSrc(null)
+      setNodeTree({})
+      setValidNodeTree({})
+      setCurrentFileUid('')
+      dispatch(removeCurrentFile())
+    }
+
+    setFFTree(treeViewData)
+    setFFHandlers(ffHandlerObj)
+  }, [project.context, ffHandlers, ffTree, osType])
   // -------------------------------------------------------------- hms --------------------------------------------------------------
   const isRedo = useRef<boolean>(false)
   useEffect(() => {
@@ -545,7 +596,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     dispatch(collapseFFNode([uid]))
     removeRunningActions(['fileTreeView-collapse'])
   }, [addRunningActions, removeRunningActions, invalidNodes, ffTree, expandedItemsObj])
-  // -------------------------------------------------------------- project import --------------------------------------------------------------
+  // -------------------------------------------------------------- project --------------------------------------------------------------
   useEffect(() => {
     if (initialFileToOpen !== '' && ffTree[initialFileToOpen] !== undefined) {
       setInitialFileToOpen('')
@@ -669,95 +720,177 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   const createFFNode = useCallback(async (parentUid: TNodeUid, ffType: TFileNodeType, ffName: string) => {
     addRunningActions(['fileTreeView-create'])
 
-    // validate
-    const parentHandler = ffHandlers[parentUid] as FileSystemDirectoryHandle
-    if (!(await verifyFileHandlerPermission(parentHandler))) {
-      addMessage({
-        type: 'error',
-        content: `Invalid target directory. Check if you have "write" permission for the directory.`,
-      })
-      removeRunningActions(['fileTreeView-create'], false)
-      return
-    }
-
-    // new name
     let newName: string = ''
 
-    if (ffType === '*folder') {
-      // generate new folder name - ex: {aaa - copy}...
-      let folderName = ffName
-      let exists = true
-      try {
-        await parentHandler.getDirectoryHandle(ffName, { create: false })
-        exists = true
-      } catch (err) {
-        exists = false
-      }
-
-      if (exists) {
-        let index = 0
-        while (exists) {
-          const _folderName = `${ffName} (${++index})`
-          try {
-            await parentHandler.getDirectoryHandle(_folderName, { create: false })
-            exists = true
-          } catch (err) {
-            folderName = _folderName
-            exists = false
-          }
-        }
-      }
-
-      newName = folderName
-
-      // create the directory with generated name
-      try {
-        await parentHandler.getDirectoryHandle(folderName, { create: true })
-      } catch (err) {
+    if (project.context === 'local') {
+      // validate
+      const parentHandler = ffHandlers[parentUid] as FileSystemDirectoryHandle
+      if (!(await verifyFileHandlerPermission(parentHandler))) {
         addMessage({
           type: 'error',
-          content: 'Error occurred while creating a new folder.',
+          content: `Invalid target directory. Check if you have "write" permission for the directory.`,
         })
         removeRunningActions(['fileTreeView-create'], false)
         return
       }
-    } else { // file
-      // generate new file name - ex: {aaa - copy}...
-      let fileName = `${ffName}.${ffType}`
-      let exists = true
-      try {
-        await parentHandler.getFileHandle(`${ffName}.${ffType}`, { create: false })
-        exists = true
-      } catch (err) {
-        exists = false
-      }
 
-      if (exists) {
-        let index = 0
-        while (exists) {
-          const _fileName = `${ffName} (${++index}).${ffType}`
-          try {
-            await parentHandler.getFileHandle(_fileName, { create: false })
-            exists = true
-          } catch (err) {
-            fileName = _fileName
-            exists = false
+      if (ffType === '*folder') {
+        // generate new folder name - ex: {aaa - copy}...
+        let folderName = ffName
+        let exists = true
+        try {
+          await parentHandler.getDirectoryHandle(ffName, { create: false })
+          exists = true
+        } catch (err) {
+          exists = false
+        }
+
+        if (exists) {
+          let index = 0
+          while (exists) {
+            const _folderName = `${ffName} (${++index})`
+            try {
+              await parentHandler.getDirectoryHandle(_folderName, { create: false })
+              exists = true
+            } catch (err) {
+              folderName = _folderName
+              exists = false
+            }
           }
         }
+
+        newName = folderName
+
+        // create the directory with generated name
+        try {
+          await parentHandler.getDirectoryHandle(folderName, { create: true })
+        } catch (err) {
+          addMessage({
+            type: 'error',
+            content: 'Error occurred while creating a new folder.',
+          })
+          removeRunningActions(['fileTreeView-create'], false)
+          return
+        }
+      } else { // file
+        // generate new file name - ex: {aaa - copy}...
+        let fileName = `${ffName}.${ffType}`
+        let exists = true
+        try {
+          await parentHandler.getFileHandle(`${ffName}.${ffType}`, { create: false })
+          exists = true
+        } catch (err) {
+          exists = false
+        }
+
+        if (exists) {
+          let index = 0
+          while (exists) {
+            const _fileName = `${ffName} (${++index}).${ffType}`
+            try {
+              await parentHandler.getFileHandle(_fileName, { create: false })
+              exists = true
+            } catch (err) {
+              fileName = _fileName
+              exists = false
+            }
+          }
+        }
+
+        newName = fileName
+
+        // create the file with generated name
+        try {
+          await parentHandler.getFileHandle(fileName, { create: true })
+        } catch (err) {
+          addMessage({
+            type: 'error',
+            content: 'Error occurred while creating a new file.',
+          })
+          removeRunningActions(['fileTreeView-create'], false)
+          return
+        }
       }
+    } else if (project.context === 'idb') {
+      const parentNode = ffTree[parentUid]
+      const parentNodeData = parentNode.data as TFileNodeData
 
-      newName = fileName
+      if (ffType === '*folder') {
+        // generate new folder name - ex: {aaa - copy}...
+        let folderName = ffName
+        let exists = true
+        try {
+          await getStat(`${parentNodeData.path}/${ffName}`)
+          exists = true
+        } catch (err) {
+          exists = false
+        }
 
-      // create the file with generated name
-      try {
-        await parentHandler.getFileHandle(fileName, { create: true })
-      } catch (err) {
-        addMessage({
-          type: 'error',
-          content: 'Error occurred while creating a new file.',
-        })
-        removeRunningActions(['fileTreeView-create'], false)
-        return
+        if (exists) {
+          let index = 0
+          while (exists) {
+            const _folderName = `${ffName} (${++index})`
+            try {
+              await getStat(`${parentNodeData.path}/${_folderName}`)
+              exists = true
+            } catch (err) {
+              folderName = _folderName
+              exists = false
+            }
+          }
+        }
+
+        newName = folderName
+
+        // create the directory with generated name
+        try {
+          await createDirectory(`${parentNodeData.path}/${folderName}`)
+        } catch (err) {
+          addMessage({
+            type: 'error',
+            content: 'Error occurred while creating a new folder.',
+          })
+          removeRunningActions(['fileTreeView-create'], false)
+          return
+        }
+      } else { // file
+        // generate new file name - ex: {aaa - copy}...
+        let fileName = `${ffName}.${ffType}`
+        let exists = true
+        try {
+          await getStat(`${parentNodeData.path}/${ffName}.${ffType}`)
+          exists = true
+        } catch (err) {
+          exists = false
+        }
+
+        if (exists) {
+          let index = 0
+          while (exists) {
+            const _fileName = `${ffName} (${++index}).${ffType}`
+            try {
+              await getStat(`${parentNodeData.path}/${_fileName}`)
+              exists = true
+            } catch (err) {
+              fileName = _fileName
+              exists = false
+            }
+          }
+        }
+
+        newName = fileName
+
+        // create the file with generated name
+        try {
+          await writeFile(`${parentNodeData.path}/${fileName}`, '')
+        } catch (err) {
+          addMessage({
+            type: 'error',
+            content: 'Error occurred while creating a new file.',
+          })
+          removeRunningActions(['fileTreeView-create'], false)
+          return
+        }
       }
     }
 
@@ -770,7 +903,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
     await cb_reloadProject()
     removeRunningActions(['fileTreeView-create'])
-  }, [addRunningActions, removeRunningActions, ffHandlers, cb_reloadProject])
+  }, [addRunningActions, removeRunningActions, project.context, ffHandlers, cb_reloadProject])
 
   const cb_startRenamingNode = useCallback((uid: TNodeUid) => {
     // validate
@@ -1347,6 +1480,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   // -------------------------------------------------------------- own --------------------------------------------------------------
   const onPanelClick = useCallback((e: React.MouseEvent) => {
     setActivePanel('file')
+    dispatch(focusFFNode(RootNodeUid))
   }, [])
 
   return useMemo(() => {

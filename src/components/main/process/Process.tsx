@@ -16,6 +16,7 @@ import {
   NodeUidSplitter,
   RainbowAppName,
   RootNodeUid,
+  StagePreviewPathPrefix,
 } from '@_constants/main';
 import {
   getSubNodeUidsByBfs,
@@ -402,9 +403,11 @@ export default function Process(props: ProcessProps) {
         (async () => {
           setFSPending(true)
           try {
-            await writeFile(fileData.path, fileData.contentInApp as string)
+            const p_fileData = ffTree[_file.parentUid as TNodeUid].data as TFileNodeData
+            const previewPath = `${p_fileData.path}/${StagePreviewPathPrefix}${fileData.name}${fileData.ext}`
+            await writeFile(previewPath, fileData.contentInApp as string)
             if (fileData.type === 'html') {
-              setIFrameSrc(`rnbw${fileData.path}`)
+              setIFrameSrc(`rnbw${previewPath}`)
             } else {
               // do nothing
             }

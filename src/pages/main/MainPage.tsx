@@ -46,9 +46,9 @@ import {
   RootNodeUid,
 } from '@_constants/main';
 import {
-  configProject,
   initDefaultProject,
   loadDefaultProject,
+  loadLocalProject,
   TFileHandlerCollection,
   TFileNodeData,
   TFilesReference,
@@ -315,37 +315,6 @@ export default function MainPage(props: MainPageProps) {
   // navigating
   const params = useParams()
   const location = useLocation()
-  // store last edit session
-  useEffect(() => {
-    (async () => {
-      const hasSession = localStorage.getItem('last-edit-session') !== null
-      if (hasSession) {
-        try {
-          const sessionInfo = await getMany(['project-context', 'project-root-folder-handler'])
-          const session: TSession = {
-            'project-context': sessionInfo[0],
-            'project-root-folder-handler': sessionInfo[1],
-          }
-          await loadProject(session['project-context'], session['project-root-folder-handler'])
-          LogAllow && console.log('last session loaded')
-        } catch (err) {
-          LogAllow && console.log('failed to load last session')
-        }
-      }
-    })()
-  }, [])
-  useEffect(() => {
-    (async () => {
-      if (ffTree[RootNodeUid]) {
-        try {
-          await setMany([['project-context', project.context], ['project-root-folder-handler', ffHandlers[RootNodeUid]]])
-          localStorage.setItem('last-edit-session', 'yes')
-        } catch (err) {
-          localStorage.removeItem('last-edit-session')
-        }
-      }
-    })()
-  }, [ffTree[RootNodeUid]])
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
   // key event listener
   const cb_onKeyDown = useCallback((e: KeyboardEvent) => {
@@ -438,7 +407,7 @@ export default function MainPage(props: MainPageProps) {
       clearSession()
       try {
         // configure idb on nohost
-        const handlerObj = await configProject(projectHandle as FileSystemDirectoryHandle, osType)
+        const handlerObj = await loadLocalProject(projectHandle as FileSystemDirectoryHandle, osType)
 
         // sort by ASC directory/file
         Object.keys(handlerObj).map(uid => {
@@ -898,6 +867,37 @@ export default function MainPage(props: MainPageProps) {
       window.onbeforeunload = null
     }
   }, [ffTree])
+  // store/restore last edit session
+  useEffect(() => {
+    (async () => {
+      const hasSession = localStorage.getItem('last-edit-session') !== null
+      if (hasSession) {
+        try {
+          const sessionInfo = await getMany(['project-context', 'project-root-folder-handler'])
+          const session: TSession = {
+            'project-context': sessionInfo[0],
+            'project-root-folder-handler': sessionInfo[1],
+          }
+          await loadProject(session['project-context'], session['project-root-folder-handler'])
+          LogAllow && console.log('last session loaded')
+        } catch (err) {
+          LogAllow && console.log('failed to load last session')
+        }
+      }
+    })()
+  }, [])
+  useEffect(() => {
+    (async () => {
+      if (ffTree[RootNodeUid]) {
+        try {
+          await setMany([['project-context', project.context], ['project-root-folder-handler', ffHandlers[RootNodeUid]]])
+          localStorage.setItem('last-edit-session', 'yes')
+        } catch (err) {
+          localStorage.removeItem('last-edit-session')
+        }
+      }
+    })()
+  }, [ffTree[RootNodeUid]])
 
   return <>
     {/* wrap with the context */}

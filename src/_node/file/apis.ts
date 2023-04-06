@@ -1,6 +1,9 @@
 import { Buffer } from 'buffer';
 
-import { RootNodeUid } from '@_constants/main';
+import {
+  RootNodeUid,
+  StagePreviewPathPrefix,
+} from '@_constants/main';
 import { SystemDirectories } from '@_ref/SystemDirectories';
 import { verifyFileHandlerPermission } from '@_services/main';
 import { TOsType } from '@_types/global';
@@ -30,12 +33,14 @@ export const _sh = new _fs.Shell()
 
 export const initDefaultProject = async (projectPath: string): Promise<void> => {
   return new Promise<void>(async (resolve, reject) => {
+    // remove original default project
     try {
       await removeFileSystem(projectPath)
     } catch (err) {
 
     }
 
+    // create new default project
     try {
       await createDefaultProject(projectPath)
       resolve()
@@ -47,8 +52,10 @@ export const initDefaultProject = async (projectPath: string): Promise<void> => 
 export const createDefaultProject = async (projectPath: string): Promise<void> => {
   return new Promise<void>(async (resolve, reject) => {
     try {
+      // create root directory
       await createDirectory(projectPath)
 
+      // create index.html
       const indexHtmlPath = `${projectPath}/index.html`
       const indexHtmlContent = `<!DOCTYPE html>
 
@@ -72,6 +79,7 @@ export const createDefaultProject = async (projectPath: string): Promise<void> =
 export const loadDefaultProject = async (projectPath: string): Promise<TIDBFileInfoObj> => {
   return new Promise<TIDBFileInfoObj>(async (resolve, reject) => {
     try {
+      // build project-root
       const rootHandler: TIDBFileInfo = {
         uid: RootNodeUid,
         parentUid: null,
@@ -82,12 +90,17 @@ export const loadDefaultProject = async (projectPath: string): Promise<TIDBFileI
       }
       const handlerObj: TIDBFileInfoObj = { [RootNodeUid]: rootHandler }
 
+      // loop through the project
       const dirHandlers: TIDBFileInfo[] = [rootHandler]
       while (dirHandlers.length) {
         const { uid, path } = dirHandlers.shift() as TIDBFileInfo
 
         const entries = await readDir(path)
         await Promise.all(entries.map(async (entry) => {
+          // skip stage preview files
+          if (entry.startsWith(StagePreviewPathPrefix)) return
+
+          // build handler
           const c_uid = _path.join(uid, entry) as string
           const c_path = _path.join(path, entry) as string
           const stats = await getStat(c_path)
@@ -110,6 +123,7 @@ export const loadDefaultProject = async (projectPath: string): Promise<TIDBFileI
             content: c_kind === 'directory' ? undefined : await readFile(c_path),
           }
 
+          // update handler-obj
           handlerObj[uid].children.push(c_uid)
           handlerObj[c_uid] = handlerInfo
 
@@ -123,8 +137,76 @@ export const loadDefaultProject = async (projectPath: string): Promise<TIDBFileI
     }
   })
 }
+export const reloadDefaultProject = async (projectPath: string, ffTree: TNodeTreeData): Promise<{ handlerObj: TIDBFileInfoObj, deletedUids: TNodeUid[] }> => {
+  return new Promise<{ handlerObj: TIDBFileInfoObj, deletedUids: TNodeUid[] }>(async (resolve, reject) => {
+    try {
+      // build project-root
+      const rootHandler: TIDBFileInfo = {
+        uid: RootNodeUid,
+        parentUid: null,
+        children: [],
+        path: projectPath,
+        kind: 'directory',
+        name: 'default project',
+      }
+      const handlerObj: TIDBFileInfoObj = { [RootNodeUid]: rootHandler }
 
-export const configProject = async (projectHandle: FileSystemDirectoryHandle, osType: TOsType): Promise<TFileHandlerInfoObj> => {
+      const orgUids: { [uid: TNodeUid]: true } = {}
+      getSubNodeUidsByBfs(RootNodeUid, ffTree, false).map(uid => {
+        orgUids[uid] = true
+      })
+
+      // loop through the project
+      const dirHandlers: TIDBFileInfo[] = [rootHandler]
+      while (dirHandlers.length) {
+        const { uid, path } = dirHandlers.shift() as TIDBFileInfo
+
+        const entries = await readDir(path)
+        await Promise.all(entries.map(async (entry) => {
+          // skip stage preview files
+          if (entry.startsWith(StagePreviewPathPrefix)) return
+
+          // build handler
+          const c_uid = _path.join(uid, entry) as string
+          const c_path = _path.join(path, entry) as string
+          const stats = await getStat(c_path)
+          const c_name = entry
+          const c_kind = stats.type === 'DIRECTORY' ? 'directory' : 'file'
+
+          const c_ext = _path.extname(c_name) as string
+          const nameArr = c_name.split('.')
+          nameArr.length > 1 && nameArr.pop()
+          const _c_name = nameArr.join('.')
+
+          delete orgUids[c_uid]
+
+          const handlerInfo: TIDBFileInfo = {
+            uid: c_uid,
+            parentUid: uid,
+            children: [],
+            path: c_path,
+            kind: c_kind,
+            name: c_kind === 'directory' ? c_name : _c_name,
+            ext: c_ext,
+            content: c_kind === 'directory' ? undefined : await readFile(c_path),
+          }
+
+          // update handler-obj
+          handlerObj[uid].children.push(c_uid)
+          handlerObj[c_uid] = handlerInfo
+
+          c_kind === 'directory' && dirHandlers.push(handlerInfo)
+        }))
+      }
+
+      resolve({ handlerObj, deletedUids: Object.keys(orgUids) })
+    } catch (err) {
+      reject(err)
+    }
+  })
+}
+
+export const loadLocalProject = async (projectHandle: FileSystemDirectoryHandle, osType: TOsType): Promise<TFileHandlerInfoObj> => {
   return new Promise(async (res, rej) => {
     // verify project-handler permission
     if (!(await verifyFileHandlerPermission(projectHandle))) rej('project handler permission error')
@@ -209,7 +291,7 @@ export const configProject = async (projectHandle: FileSystemDirectoryHandle, os
     res(handlerObj)
   })
 }
-export const reloadProject = async (projectHandle: FileSystemDirectoryHandle, ffTree: TNodeTreeData, osType: TOsType): Promise<{ handlerObj: TFileHandlerInfoObj, deletedUids: TNodeUid[] }> => {
+export const reloadLocalProject = async (projectHandle: FileSystemDirectoryHandle, ffTree: TNodeTreeData, osType: TOsType): Promise<{ handlerObj: TFileHandlerInfoObj, deletedUids: TNodeUid[] }> => {
   return new Promise(async (res, rej) => {
     // verify project-handler permission
     if (!(await verifyFileHandlerPermission(projectHandle))) rej('project handler permission error')
@@ -254,7 +336,7 @@ export const reloadProject = async (projectHandle: FileSystemDirectoryHandle, ff
           nameArr.length > 1 && nameArr.pop()
           const _c_name = nameArr.join('.')
 
-          delete orgUids[c_path]
+          delete orgUids[c_uid]
 
           const handlerInfo: TFileHandlerInfo = {
             uid: c_uid,
@@ -270,12 +352,12 @@ export const reloadProject = async (projectHandle: FileSystemDirectoryHandle, ff
           // update handler-arr, handler-obj
           handlerObj[uid].children.push(c_uid)
           handlerObj[c_uid] = handlerInfo
-
-          c_kind === 'directory' && dirHandlers.push(handlerInfo)
           if (!ffTree[c_uid]) {
             handlerArr.push(handlerInfo)
             fsToCreate[c_path] = true
           }
+
+          c_kind === 'directory' && dirHandlers.push(handlerInfo)
         }
       } catch (err) {
         rej(err)
