@@ -364,9 +364,52 @@ export const IFrame = (props: IFrameProps) => {
     setActivePanel('stage')
   }, [osType, focusedItem, setFocusedSelectedItems, nodeTree])
   const onMouseUp = useCallback((e: MouseEvent) => { }, [])
-  const onDblClick = useCallback((e: MouseEvent) => { }, [])
-  // key events
+
+  // text editing
+  const contentEditableUidRef = useRef('')
+  useEffect(() => {
+    const node = validNodeTree[contentEditableUidRef.current]
+    if (!node) return
+    const ele = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${contentEditableUidRef.current}"]`)
+    if (!ele) return
+
+    ele.setAttribute('contentEditable', 'false')
+    ele.removeEventListener('input', onInput)
+
+    contentEditableUidRef.current = ''
+    onTextEdit(node, ele.innerHTML)
+  }, [focusedItem])
+  const [innerHtml, setInnerHtml] = useState('')
+  const onTextEdit = useCallback((node: TNode, _innerHtml: string) => {
+    if (innerHtml === _innerHtml) return
+
+    const nodeData = node.data as THtmlNodeData
+    console.log(nodeData, _innerHtml)
+
+    setCodeChanges([{ uid: node.uid, content: _innerHtml }])
+
+    addRunningActions(['processor-updateOpt'])
+    setUpdateOpt({ parse: true, from: 'stage' })
+  }, [innerHtml])
+  const onInput = useCallback((e: Event) => {
+    e.stopPropagation()
+  }, [])
+  const onDblClick = useCallback((e: MouseEvent) => {
+    const ele = e.target as HTMLElement
+    let uid: TNodeUid | null = ele.getAttribute(NodeInAppAttribName)
+    if (uid) {
+      setInnerHtml(ele.innerHTML)
+
+      ele.setAttribute('contentEditable', 'true')
+      ele.addEventListener('input', onInput)
+
+      contentEditableUidRef.current = uid
+    }
+  }, [onInput])
+  // -------------------------------------------------------------- cmdk --------------------------------------------------------------
   const onKeyDown = useCallback((e: KeyboardEvent) => {
+    if (contentEditableUidRef.current !== '') return
+
     // cmdk obj for the current command
     const cmdk: TCmdkKeyMap = {
       cmd: getCommandKey(e, osType),
@@ -397,6 +440,7 @@ export const IFrame = (props: IFrameProps) => {
     setCurrentCommand({ action })
   }, [cmdkReferenceData])
   // -------------------------------------------------------------- own --------------------------------------------------------------
+
   // iframe event listeners
   const [iframeEvent, setIframeEvent] = useState<MouseEvent>()
   useEffect(() => {
