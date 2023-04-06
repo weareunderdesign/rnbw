@@ -248,7 +248,7 @@ export default function Process(props: ProcessProps) {
       } else if (updateOpt.from === 'hms') {
         const _currentFile = ffTree[currentFileUid]
         const _currentFileData = _currentFile.data as TFileNodeData
-        if (file.uid === currentFileUid && file.content === fileData.contentInApp) {
+        if (file.uid === currentFileUid && file.content === _currentFileData.contentInApp) {
           LogAllow && console.log('view state changed by hms')
           // no need to build new node tree
           onlyRenderViewState = true

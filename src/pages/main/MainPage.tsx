@@ -582,7 +582,6 @@ export default function MainPage(props: MainPageProps) {
     LogAllow && pastLength === 1 && console.log('hms - it is the origin state')
     if (pastLength === 1) return
 
-    setFFAction(fileAction)
     setCurrentFileUid(file.uid)
     setIsHms(true)
 
@@ -595,6 +594,7 @@ export default function MainPage(props: MainPageProps) {
     LogAllow && futureLength === 0 && console.log('hms - it is the latest state')
     if (futureLength === 0) return
 
+    setFFAction(fileAction)
     setCurrentFileUid(file.uid)
     setIsHms(false)
 
