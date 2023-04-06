@@ -4,13 +4,13 @@ import {
   TNodeUid,
 } from '@_node/index';
 
-export type TFileSystemType = 'local'
+export type TProjectContext = 'local' | 'idb'
 export type TWorkspace = {
   name: string,
   projects: TProject[],
 }
 export type TProject = {
-  context: TFileSystemType,
+  context: TProjectContext,
   files: TNodeTreeData,
 }
 export type TFile = {
@@ -20,7 +20,7 @@ export type TFile = {
 export type TFileType = 'html' | 'unknown'
 export type TFileInfo = THtmlPageSettings | null | undefined
 export type TSession = {
-  'project-context': TFileSystemType,
+  'project-context': TProjectContext,
   'project-root-folder-handler': FileSystemHandle,
 }
 export type TEvent = {

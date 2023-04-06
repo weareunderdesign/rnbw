@@ -8,6 +8,21 @@ import {
   TNodeUid,
 } from '../';
 
+export type TIDBFileInfo = {
+  uid: TNodeUid,
+  parentUid: TNodeUid | null,
+  children: TNodeUid[],
+
+  path: string,
+  kind: 'directory' | 'file',
+  name: string,
+
+  ext?: string,
+  content?: Uint8Array,
+}
+export type TIDBFileInfoObj = {
+  [uid: TNodeUid]: TIDBFileInfo,
+}
 export type TFileHandlerInfo = {
   uid: TNodeUid,
   parentUid: TNodeUid | null,

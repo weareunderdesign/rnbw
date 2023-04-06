@@ -52,6 +52,8 @@ export type TMainContext = {
   event: TEvent,
   setEvent: (e: TEvent) => void,
   // file tree view
+  initialFileToOpen: TNodeUid,
+  setInitialFileToOpen: (uid: TNodeUid) => void,
   fsPending: boolean,
   setFSPending: (pending: boolean) => void,
   ffTree: TNodeTreeData,

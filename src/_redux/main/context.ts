@@ -38,6 +38,8 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   event: null,
   setEvent: (e: TEvent) => { },
   // file tree view
+  initialFileToOpen: '',
+  setInitialFileToOpen: (uid: TNodeUid) => { },
   fsPending: false,
   setFSPending: (pending: boolean) => { },
   ffTree: {},

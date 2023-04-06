@@ -400,17 +400,19 @@ export default function Process(props: ProcessProps) {
       LogAllow && _needToReloadIFrame && console.log('need to refresh iframe')
       if (!onlyRenderViewState) {
         // update idb
-        setFSPending(true)
-        writeFile(fileData.path, fileData.contentInApp as string, () => {
-          if (fileData.type === 'html') {
-            setIFrameSrc(`rnbw${fileData.path}`)
-          } else {
-            // do nothing
+        (async () => {
+          setFSPending(true)
+          try {
+            await writeFile(fileData.path, fileData.contentInApp as string)
+            if (fileData.type === 'html') {
+              setIFrameSrc(`rnbw${fileData.path}`)
+            } else {
+              // do nothing
+            }
+          } catch (err) {
           }
           setFSPending(false)
-        }, () => {
-          setFSPending(false)
-        })
+        })()
         // update context
         setFFNode(_file)
         addRunningActions(['processor-nodeTree'])
@@ -447,10 +449,14 @@ export default function Process(props: ProcessProps) {
       }
 
       // update idb
-      setFSPending(true)
-      writeFile(fileData.path, fileData.contentInApp as string, () => {
+      (async () => {
+        setFSPending(true)
+        try {
+          await writeFile(fileData.path, fileData.contentInApp as string)
+        } catch (err) {
+        }
         setFSPending(false)
-      })
+      })()
       // update context
       setFFNode(_file)
       addRunningActions(['processor-nodeTree'])
@@ -539,12 +545,16 @@ export default function Process(props: ProcessProps) {
       const nodeData = node.data as TFileNodeData
       if (nodeData.changed) {
         try {
-          const handler = ffHandlers[uid]
-          const writableStream = await (handler as FileSystemFileHandle).createWritable()
-          await writableStream.write(nodeData.content)
-          await writableStream.close()
-          nodeData.changed = false
-          nodeData.orgContent = nodeData.content
+          if (project.context === 'local') {
+            const handler = ffHandlers[uid]
+            const writableStream = await (handler as FileSystemFileHandle).createWritable()
+            await writableStream.write(nodeData.content)
+            await writableStream.close()
+          } else if (project.context === 'idb') {
+            await writeFile(nodeData.path, nodeData.content)
+            nodeData.changed = false
+            nodeData.orgContent = nodeData.content
+          }
         } catch (err) {
           addMessage({
             type: 'error',
@@ -555,6 +565,7 @@ export default function Process(props: ProcessProps) {
     }))
 
     setFFTree(_ffTree)
+
     removeRunningActions(['process-save'], false)
   }, [ffTree, ffHandlers])
 

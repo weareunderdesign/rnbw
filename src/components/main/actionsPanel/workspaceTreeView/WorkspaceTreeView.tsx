@@ -14,9 +14,6 @@ import {
   FileSystemHandle,
 } from 'file-system-access';
 import {
-  CustomDirectoryPickerOptions,
-} from 'file-system-access/lib/showDirectoryPicker';
-import {
   DraggingPositionItem,
   TreeItem,
 } from 'react-complex-tree';
@@ -33,7 +30,6 @@ import {
 import { TreeViewData } from '@_components/common/treeView/types';
 import {
   AddNodeActionPrefix,
-  HmsClearActionType,
   LogAllow,
   ParsableFileTypes,
   RootNodeUid,
@@ -42,7 +38,6 @@ import {
 import { getValidNodeUids } from '@_node/apis';
 import {
   _path,
-  configProject,
   reloadProject,
   TFileHandlerCollection,
   TFileNodeData,
@@ -55,7 +50,6 @@ import {
   TNormalNodeData,
 } from '@_node/types';
 import {
-  clearMainState,
   collapseFFNode,
   expandFFNode,
   ffSelector,
@@ -78,7 +72,6 @@ import {
 import {
   TFileAction,
   TFileNodeType,
-  TFileSystemType,
 } from '@_types/main';
 
 import { WorkspaceTreeViewProps } from './types';
@@ -97,6 +90,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     clipboardData, setClipboardData,
     event, setEvent,
     // file tree view
+    initialFileToOpen, setInitialFileToOpen,
     fsPending, setFSPending,
     ffTree, setFFTree, setFFNode,
     ffHandlers, setFFHandlers,
@@ -553,10 +547,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     removeRunningActions(['fileTreeView-collapse'])
   }, [addRunningActions, removeRunningActions, invalidNodes, ffTree, expandedItemsObj])
   // -------------------------------------------------------------- project import --------------------------------------------------------------
-  const [initialFileToOpen, setInitialFileToOpen] = useState<TNodeUid>()
   useEffect(() => {
-    if (initialFileToOpen && ffTree[initialFileToOpen] !== undefined) {
-      setInitialFileToOpen(undefined)
+    if (initialFileToOpen !== '' && ffTree[initialFileToOpen] !== undefined) {
+      setInitialFileToOpen('')
 
       // focus/select/read the initial file
       addRunningActions(['fileTreeView-focus', 'fileTreeView-select', 'fileTreeView-read'])
@@ -565,89 +558,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       cb_readNode(initialFileToOpen)
     }
   }, [initialFileToOpen])
-  const clearSession = useCallback(() => {
-    dispatch(clearMainState())
-    dispatch({ type: HmsClearActionType })
-  }, [])
-  const onImportProject = useCallback(async (fsType: TFileSystemType = 'local'): Promise<void> => {
-    if (fsType === 'local') {
-      // open directory picker and get the project directory handle
-      let projectHandle: FileSystemHandle
-      try {
-        projectHandle = await showDirectoryPicker({ _preferPolyfill: false, mode: 'readwrite' } as CustomDirectoryPickerOptions)
-      } catch (err) {
-        return
-      }
-
-      setFSPending(true)
-
-      // clear session
-      clearSession()
-
-      try {
-        // configure idb on nohost
-        const handlerObj = await configProject(projectHandle as FileSystemDirectoryHandle, osType)
-
-        // sort by ASC directory/file
-        Object.keys(handlerObj).map(uid => {
-          const handler = handlerObj[uid]
-          handler.children = handler.children.sort((a, b) => {
-            return handlerObj[a].kind === 'file' && handlerObj[b].kind === 'directory' ? 1 :
-              handlerObj[a].kind === 'directory' && handlerObj[b].kind === 'file' ? -1 :
-                handlerObj[a].name > handlerObj[b].name ? 1 : -1
-          })
-        })
-
-        // get/set the index/first html to be opened by default
-        let firstHtmlUid: TNodeUid = '', indexHtmlUid: TNodeUid = ''
-        handlerObj[RootNodeUid].children.map(uid => {
-          const handler = handlerObj[uid]
-          if (handler.kind === 'file' && handler.ext === '.html') {
-            firstHtmlUid === '' ? firstHtmlUid = uid : null
-            handler.name === 'index' ? indexHtmlUid = uid : null
-          }
-        })
-        setInitialFileToOpen(indexHtmlUid !== '' ? indexHtmlUid : firstHtmlUid !== '' ? firstHtmlUid : undefined)
-
-        // set ff-tree, ff-handlers
-        const treeViewData: TNodeTreeData = {}
-        const ffHandlerObj: TFileHandlerCollection = {}
-        Object.keys(handlerObj).map(uid => {
-          const { parentUid, children, path, kind, name, ext, content, handler } = handlerObj[uid]
-          const type = ParsableFileTypes[ext || ''] ? ext?.slice(1) : 'unknown'
-          treeViewData[uid] = {
-            uid,
-            parentUid: parentUid,
-            name: name,
-            isEntity: kind === 'file',
-            children: [...children],
-            data: {
-              valid: true,
-              path: path,
-              kind: kind,
-              name: name,
-              ext: ext,
-              type,
-              orgContent: type !== 'unknown' ? content?.toString() : '',
-              content: type !== 'unknown' ? content?.toString() : '',
-              changed: false,
-            } as TFileNodeData,
-          } as TNode
-
-          ffHandlerObj[uid] = handler
-        })
-
-        setFFTree(treeViewData)
-        setFFHandlers(ffHandlerObj)
-
-        setFSPending(false)
-      } catch (err) {
-        LogAllow && console.log('import project err', err)
-      }
-    } else if (fsType === '') {
-      // do nothing
-    }
-  }, [clearSession, osType])
   // -------------------------------------------------------------- node actions handlers --------------------------------------------------------------
   const moveFF = async (handler: FileSystemHandle, parentHandler: FileSystemDirectoryHandle, targetHandler: FileSystemDirectoryHandle, newName: string, copy: boolean = false, showWarning: boolean = false) => {
     if (handler.kind === 'directory') {
@@ -1364,39 +1274,33 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   }, [addRunningActions, removeRunningActions, invalidNodes, ffTree, file.uid])
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
   useEffect(() => {
-    if (currentCommand.action === '') return
+    if (activePanel !== 'file') return
 
-    if (currentCommand.action === 'Open') {
-      onImportProject()
-    } else {
-      if (activePanel !== 'file') return
-
-      switch (currentCommand.action) {
-        case 'Actions':
-          onActions()
-          break
-        case 'Add':
-          onAdd()
-          break
-        case 'Cut':
-          onCut()
-          break
-        case 'Copy':
-          onCopy()
-          break
-        case 'Paste':
-          onPaste()
-          break
-        case 'Delete':
-          onDelete()
-          break
-        case 'Duplicate':
-          onDuplicate()
-          break
-        default:
-          onAddNode(currentCommand.action)
-          break
-      }
+    switch (currentCommand.action) {
+      case 'Actions':
+        onActions()
+        break
+      case 'Add':
+        onAdd()
+        break
+      case 'Cut':
+        onCut()
+        break
+      case 'Copy':
+        onCopy()
+        break
+      case 'Paste':
+        onPaste()
+        break
+      case 'Delete':
+        onDelete()
+        break
+      case 'Duplicate':
+        onDuplicate()
+        break
+      default:
+        onAddNode(currentCommand.action)
+        break
     }
   }, [currentCommand])
   const onActions = useCallback(() => {
