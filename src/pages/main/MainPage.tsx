@@ -779,7 +779,7 @@ export default function MainPage(props: MainPageProps) {
         className={'view'}
         style={{ display: 'flex' }}
 
-        sizes={[10, 45, 45]}
+        sizes={[10, 60, 30]}
         minSize={240}
 
         expandToMin={true}
