@@ -23,7 +23,6 @@ import {
   TFileInfo,
   TPanelContext,
   TProject,
-  TSession,
   TWorkspace,
 } from '@_types/main';
 
@@ -116,8 +115,6 @@ export type TMainContext = {
   theme: TTheme,
   panelResizing: boolean,
   setPanelResizing: (resizing: boolean) => void,
-  hasSession: boolean,
-  session: TSession | null,
   // toasts
   addMessage: (message: TToast) => void,
   removeMessage: (index: number) => void,

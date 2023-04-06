@@ -301,8 +301,6 @@ export default function MainPage(props: MainPageProps) {
   const [osType, setOsType] = useState<TOsType>('Windows')
   const [theme, setTheme] = useState<TTheme>('System')
   const [panelResizing, setPanelResizing] = useState<boolean>(false)
-  const [hasSession, setHasSession] = useState<boolean>(false)
-  const [session, setSession] = useState<TSession | null>(null)
   // toasts
   const [messages, setMessages] = useState<TToast[]>([])
   const addMessage = useCallback((message: TToast) => {
@@ -320,18 +318,20 @@ export default function MainPage(props: MainPageProps) {
   // store last edit session
   useEffect(() => {
     (async () => {
-      const _hasSession = localStorage.getItem('last-edit-session') !== null
-      setHasSession(_hasSession)
-      let _session: TSession | null = null
-      if (_hasSession) {
-        const sessionInfo = await getMany(['project-context', 'project-root-folder-handler'])
-        _session = {
-          'project-context': sessionInfo[0],
-          'project-root-folder-handler': sessionInfo[1],
+      const hasSession = localStorage.getItem('last-edit-session') !== null
+      if (hasSession) {
+        try {
+          const sessionInfo = await getMany(['project-context', 'project-root-folder-handler'])
+          const session: TSession = {
+            'project-context': sessionInfo[0],
+            'project-root-folder-handler': sessionInfo[1],
+          }
+          await loadProject(session['project-context'], session['project-root-folder-handler'])
+          LogAllow && console.log('last session loaded')
+        } catch (err) {
+          LogAllow && console.log('failed to load last session')
         }
-        setSession(_session)
       }
-      LogAllow && console.log('last-edit-session', _session)
     })()
   }, [])
   useEffect(() => {
@@ -387,7 +387,9 @@ export default function MainPage(props: MainPageProps) {
     LogAllow && console.log('action to be run by cmdk: ', action)
 
     // prevent chrome default short keys
-    // e.preventDefault()
+    if (action === 'Save') {
+      e.preventDefault()
+    }
 
     setCurrentCommand({ action })
   }, [cmdkReferenceData, activePanel, osType])
@@ -430,21 +432,10 @@ export default function MainPage(props: MainPageProps) {
     dispatch(clearMainState())
     dispatch({ type: HmsClearActionType })
   }, [])
-  const onImportProject = useCallback(async (fsType: TProjectContext = 'local'): Promise<void> => {
+  const loadProject = useCallback(async (fsType: TProjectContext, projectHandle?: FileSystemHandle | null) => {
     if (fsType === 'local') {
-      // open directory picker and get the project directory handle
-      let projectHandle: FileSystemHandle
-      try {
-        projectHandle = await showDirectoryPicker({ _preferPolyfill: false, mode: 'readwrite' } as CustomDirectoryPickerOptions)
-      } catch (err) {
-        return
-      }
-
       setFSPending(true)
-
-      // clear session
       clearSession()
-
       try {
         // configure idb on nohost
         const handlerObj = await configProject(projectHandle as FileSystemDirectoryHandle, osType)
@@ -502,12 +493,13 @@ export default function MainPage(props: MainPageProps) {
         setFFHandlers(ffHandlerObj)
 
         dispatch(setProjectContext('local'))
-        setFSPending(false)
       } catch (err) {
-        LogAllow && console.log('import project err', err)
+        LogAllow && console.log('failed to load local project')
       }
+      setFSPending(false)
     } else if (fsType === 'idb') {
       setFSPending(true)
+      clearSession()
       try {
         const handlerObj = await loadDefaultProject(DefaultProjectPath)
 
@@ -531,9 +523,6 @@ export default function MainPage(props: MainPageProps) {
           }
         })
         setInitialFileToOpen(indexHtmlUid !== '' ? indexHtmlUid : firstHtmlUid !== '' ? firstHtmlUid : '')
-
-        // clear session
-        clearSession()
 
         // set ff-tree, ff-handlers
         const treeViewData: TNodeTreeData = {}
@@ -564,48 +553,24 @@ export default function MainPage(props: MainPageProps) {
         setFFHandlers(ffHandlerObj)
 
         dispatch(setProjectContext('idb'))
-        setDefaultProjectLoaded(true)
       } catch (err) {
-        LogAllow && console.log('failed to set default project')
+        LogAllow && console.log('failed to load default project')
       }
       setFSPending(false)
     }
   }, [clearSession, osType])
-  const [defaultProjectInited, setDefaultProjectInited] = useState(false)
-  const [defaultProjectloaded, setDefaultProjectLoaded] = useState(false)
-  useEffect(() => {
-    if (defaultProjectInited) {
-      onImportProject('idb')
-    }
-  }, [defaultProjectInited])
-  useEffect(() => {
-    if (defaultProjectloaded) {
-      console.log('default project loaded', project.context, ffTree, initialFileToOpen)
-    }
-  }, [defaultProjectloaded])
-  useEffect(() => {
-    // web-tab close event handler
-    let changed = false
-
-    const uids = Object.keys(ffTree)
-    for (const uid of uids) {
-      const node = ffTree[uid]
-      const nodeData = node.data as TFileNodeData
-
-      if (nodeData.changed) {
-        changed = true
-        break
+  const onImportProject = useCallback(async (fsType: TProjectContext = 'local'): Promise<void> => {
+    if (fsType === 'local') {
+      try {
+        const projectHandle = await showDirectoryPicker({ _preferPolyfill: false, mode: 'readwrite' } as CustomDirectoryPickerOptions)
+        loadProject(fsType, projectHandle)
+      } catch (err) {
+        return
       }
+    } else if (fsType === 'idb') {
+      loadProject(fsType)
     }
-
-    window.onbeforeunload = changed ? () => {
-      return 'changed'
-    } : null
-
-    return () => {
-      window.onbeforeunload = null
-    }
-  }, [ffTree])
+  }, [loadProject])
   // clear
   const onClear = useCallback(async () => {
     // remove localstorage and session
@@ -857,6 +822,13 @@ export default function MainPage(props: MainPageProps) {
       })()
     }
   }, [])
+  // open default project if it's newbie
+  const [defaultProjectInited, setDefaultProjectInited] = useState(false)
+  useEffect(() => {
+    if (defaultProjectInited) {
+      onImportProject('idb')
+    }
+  }, [defaultProjectInited])
   // theme
   const setSystemTheme = useCallback(() => {
     setTheme('System')
@@ -903,6 +875,29 @@ export default function MainPage(props: MainPageProps) {
 
     return () => window.matchMedia("(prefers-color-scheme: dark)").removeEventListener('change', setSystemTheme)
   }, [])
+  // web-tab close event handler
+  useEffect(() => {
+    let changed = false
+
+    const uids = Object.keys(ffTree)
+    for (const uid of uids) {
+      const node = ffTree[uid]
+      const nodeData = node.data as TFileNodeData
+
+      if (nodeData.changed) {
+        changed = true
+        break
+      }
+    }
+
+    window.onbeforeunload = changed ? () => {
+      return 'changed'
+    } : null
+
+    return () => {
+      window.onbeforeunload = null
+    }
+  }, [ffTree])
 
   return <>
     {/* wrap with the context */}
@@ -950,7 +945,6 @@ export default function MainPage(props: MainPageProps) {
         osType,
         theme,
         panelResizing, setPanelResizing,
-        hasSession, session,
         // toasts
         addMessage, removeMessage,
       }}

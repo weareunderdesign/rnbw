@@ -125,7 +125,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     osType,
     theme,
     panelResizing, setPanelResizing,
-    hasSession, session,
     // toasts
     addMessage, removeMessage,
   } = useContext(MainContext)

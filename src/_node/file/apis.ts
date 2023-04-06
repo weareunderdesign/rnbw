@@ -189,19 +189,22 @@ export const configProject = async (projectHandle: FileSystemDirectoryHandle, os
     }
 
     // build idb
-    await Promise.all(handlerArr.map(async (_handler) => {
-      const { uid, kind, path, handler } = _handler
-      if (kind === 'directory') {
-        // create dir
-        await createDirectory(path)
-      } else {
-        // read and store file content
-        const fileEntry = await (handler as FileSystemFileHandle).getFile()
-        const contentBuffer = Buffer.from(await fileEntry.arrayBuffer())
-        handlerObj[uid].content = contentBuffer
-        await writeFile(path, contentBuffer)
-      }
-    }))
+    try {
+      await Promise.all(handlerArr.map(async (_handler) => {
+        const { uid, kind, path, handler } = _handler
+        if (kind === 'directory') {
+          // create directory
+          await createDirectory(path)
+        } else {
+          // read and store file content
+          const fileEntry = await (handler as FileSystemFileHandle).getFile()
+          const contentBuffer = Buffer.from(await fileEntry.arrayBuffer())
+          handlerObj[uid].content = contentBuffer
+          await writeFile(path, contentBuffer)
+        }
+      }))
+    } catch (err) {
+    }
 
     res(handlerObj)
   })
@@ -280,19 +283,22 @@ export const reloadProject = async (projectHandle: FileSystemDirectoryHandle, ff
     }
 
     // build idb
-    await Promise.all(handlerArr.map(async (_handler) => {
-      const { uid, kind, path, handler } = _handler
-      if (kind === 'directory') {
-        // create dir
-        await createDirectory(path)
-      } else {
-        // read and store file content
-        const fileEntry = await (handler as FileSystemFileHandle).getFile()
-        const contentBuffer = Buffer.from(await fileEntry.arrayBuffer())
-        handlerObj[uid].content = contentBuffer
-        await writeFile(path, contentBuffer)
-      }
-    }))
+    try {
+      await Promise.all(handlerArr.map(async (_handler) => {
+        const { uid, kind, path, handler } = _handler
+        if (kind === 'directory') {
+          // create directory
+          await createDirectory(path)
+        } else {
+          // read and store file content
+          const fileEntry = await (handler as FileSystemFileHandle).getFile()
+          const contentBuffer = Buffer.from(await fileEntry.arrayBuffer())
+          handlerObj[uid].content = contentBuffer
+          await writeFile(path, contentBuffer)
+        }
+      }))
+    } catch (err) {
+    }
 
     res({ handlerObj, deletedUids: Object.keys(orgUids) })
   })

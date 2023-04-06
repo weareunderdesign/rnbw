@@ -21,7 +21,7 @@ export type TFileType = 'html' | 'unknown'
 export type TFileInfo = THtmlPageSettings | null | undefined
 export type TSession = {
   'project-context': TProjectContext,
-  'project-root-folder-handler': FileSystemHandle,
+  'project-root-folder-handler': FileSystemHandle | null | undefined,
 }
 export type TEvent = {
   type: 'add-node' | 'remove-node' | 'move-node' | 'duplicate-node' | 'copy-node' | 'code-change',

@@ -83,7 +83,6 @@ export const IFrame = (props: IFrameProps) => {
     osType,
     theme,
     panelResizing, setPanelResizing,
-    hasSession, session,
     // toasts
     addMessage, removeMessage,
   } = useContext(MainContext)
@@ -392,7 +391,9 @@ export const IFrame = (props: IFrameProps) => {
     LogAllow && console.log('action to be run by cmdk: ', action)
 
     // prevent chrome default short keys
-    e.preventDefault()
+    if (action === 'Save') {
+      e.preventDefault()
+    }
 
     setCurrentCommand({ action })
   }, [cmdkReferenceData])

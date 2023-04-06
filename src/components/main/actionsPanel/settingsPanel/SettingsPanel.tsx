@@ -56,7 +56,6 @@ export default function SettingsPanel(props: SettingsPanelProps) {
     osType,
     theme,
     panelResizing, setPanelResizing,
-    hasSession, session,
     // toasts
     addMessage, removeMessage,
   } = useContext(MainContext)

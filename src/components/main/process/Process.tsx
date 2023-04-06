@@ -102,7 +102,6 @@ export default function Process(props: ProcessProps) {
     osType,
     theme,
     panelResizing, setPanelResizing,
-    hasSession, session,
     // toasts
     addMessage, removeMessage,
   } = useContext(MainContext)
