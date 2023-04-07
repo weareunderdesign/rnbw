@@ -66,6 +66,7 @@ export const IFrame = (props: IFrameProps) => {
     iframeSrc, setIFrameSrc,
     fileInfo, setFileInfo,
     needToReloadIFrame, setNeedToReloadIFrame,
+    linkToOpen, setLinkToOpen,
     // code view
     codeEditing, setCodeEditing,
     codeChanges, setCodeChanges,
@@ -323,7 +324,7 @@ export const IFrame = (props: IFrameProps) => {
   const onClick = useCallback((e: MouseEvent) => {
     const ele = e.target as HTMLElement
 
-    // detect link tag
+    // handle links
     let isLinkTag = false
     let linkElement = ele
     while (true) {
@@ -337,8 +338,18 @@ export const IFrame = (props: IFrameProps) => {
       linkElement = parentEle
     }
     if (isLinkTag) {
-      const href = linkElement.getAttribute('href')
-      console.log(href)
+      const uid: TNodeUid | null = linkElement.getAttribute(NodeInAppAttribName)
+      if (uid !== null) {
+        if (uid === linkTagUid.current) {
+          const href = linkElement.getAttribute('href')
+          href && setLinkToOpen(href)
+          linkTagUid.current = ''
+        } else {
+          linkTagUid.current = uid
+        }
+      }
+    } else {
+      linkTagUid.current = ''
     }
 
     let _uid: TNodeUid | null = ele.getAttribute(NodeInAppAttribName)
@@ -404,6 +415,7 @@ export const IFrame = (props: IFrameProps) => {
     setCurrentCommand({ action })
   }, [cmdkReferenceData])
   // -------------------------------------------------------------- own --------------------------------------------------------------
+  const linkTagUid = useRef<TNodeUid>('')
   // iframe event listeners
   const [iframeEvent, setIframeEvent] = useState<MouseEvent>()
   useEffect(() => {
@@ -439,7 +451,6 @@ export const IFrame = (props: IFrameProps) => {
             setIframeEvent(e)
           })
           htmlNode.addEventListener('dblclick', (e: MouseEvent) => {
-            e.preventDefault()
             setIframeEvent(e)
           })
         }
@@ -499,7 +510,10 @@ export const IFrame = (props: IFrameProps) => {
   }, [event])
   // reload when script changes
   useEffect(() => {
-    needToReloadIFrame && setNeedToReloadIFrame(false)
+    if (needToReloadIFrame) {
+      setNeedToReloadIFrame(false)
+      linkTagUid.current = ''
+    }
   }, [needToReloadIFrame])
 
   return useMemo(() => {

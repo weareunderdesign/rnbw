@@ -43,6 +43,7 @@ import { getValidNodeUids } from '@_node/apis';
 import {
   _path,
   configProject,
+  getNormalizedPath,
   reloadProject,
   TFileHandlerCollection,
   TFileNodeData,
@@ -114,6 +115,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     iframeSrc, setIFrameSrc,
     fileInfo, setFileInfo,
     needToReloadIFrame, setNeedToReloadIFrame,
+    linkToOpen, setLinkToOpen,
     // code view
     codeEditing, setCodeEditing,
     codeChanges, setCodeChanges,
@@ -1362,6 +1364,33 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
     removeRunningActions(['fileTreeView-read'])
   }, [addRunningActions, removeRunningActions, invalidNodes, ffTree, file.uid])
+
+  // handlle links-open
+  const openFile = useCallback((uid: TNodeUid) => {
+    // focus/select/read the file
+    addRunningActions(['fileTreeView-focus', 'fileTreeView-select', 'fileTreeView-read'])
+    cb_focusNode(uid)
+    cb_selectNode([uid])
+    cb_readNode(uid)
+  }, [addRunningActions, cb_focusNode, cb_selectNode, cb_readNode])
+  useEffect(() => {
+    if (linkToOpen === '') return
+
+    const node = ffTree[file.uid]
+    if (node === undefined) return
+    const parentNode = ffTree[node.parentUid as TNodeUid]
+    if (parentNode === undefined) return
+
+    const { isAbsolutePath, normalizedPath } = getNormalizedPath(linkToOpen)
+    console.log({ isAbsolutePath, normalizedPath })
+    if (isAbsolutePath) {
+      window.open(normalizedPath, '_blank')?.focus()
+    } else {
+      const pathArr = normalizedPath.split('../')
+      const fileUidToOpen = _path.join(parentNode.uid, normalizedPath)
+      openFile(fileUidToOpen)
+    }
+  }, [linkToOpen])
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
   useEffect(() => {
     if (currentCommand.action === '') return

@@ -71,6 +71,8 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   setFileInfo: (_fileInfo: TFileInfo) => { },
   needToReloadIFrame: true,
   setNeedToReloadIFrame: (_needToReloadIFrame: boolean) => { },
+  linkToOpen: '',
+  setLinkToOpen: (href: string) => { },
   // code view
   codeEditing: false,
   setCodeEditing: (editing: boolean) => { },
