@@ -6,7 +6,6 @@ import React, {
 
 import cx from 'classnames';
 import { useDispatch } from 'react-redux';
-import { Panel } from 'react-resizable-panels';
 
 import { MainContext } from '@_redux/main';
 
@@ -57,33 +56,27 @@ export default function SettingsPanel(props: SettingsPanelProps) {
     osType,
     theme,
     panelResizing, setPanelResizing,
-    hasSession, session,
     // toasts
     addMessage, removeMessage,
   } = useContext(MainContext)
   // -------------------------------------------------------------- own --------------------------------------------------------------
-  // panel size handler
-  const panelSize = useMemo(() => 200 / window.innerHeight * 100, [])
-  // panel focus handler
   const onPanelClick = useCallback((e: React.MouseEvent) => {
     setActivePanel('settings')
   }, [])
 
   return useMemo(() => {
     return <>
-      <Panel defaultSize={panelSize} minSize={0}>
-        <div
-          id="SettingsView"
-          className={cx(
-            'scrollable',
-          )}
-          style={{
-            pointerEvents: panelResizing ? 'none' : 'auto',
-          }}
-          onClick={onPanelClick}
-        >
-        </div>
-      </Panel>
+      <div
+        id="SettingsView"
+        className={cx(
+          'scrollable',
+        )}
+        style={{
+          pointerEvents: panelResizing ? 'none' : 'auto',
+        }}
+        onClick={onPanelClick}
+      >
+      </div>
     </>
-  }, [panelSize, onPanelClick])
+  }, [onPanelClick])
 }

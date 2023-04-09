@@ -1,11 +1,6 @@
 import React, { useMemo } from 'react';
 
-import {
-  Panel,
-  PanelGroup,
-} from 'react-resizable-panels';
-
-import { ResizeHandle } from '@_components/common';
+import Split from 'react-split';
 
 import NodeTreeView from './nodeTreeView';
 import SettingsPanel from './settingsPanel';
@@ -13,23 +8,46 @@ import { ActionsPanelProps } from './types';
 import WorkspaceTreeView from './workspaceTreeView';
 
 export default function ActionsPanel(props: ActionsPanelProps) {
-  const panelSize = useMemo(() => 240 / window.innerWidth * 100, [])
-
   return useMemo(() => {
     return <>
-      <Panel defaultSize={panelSize} minSize={0}>
-        <PanelGroup direction="vertical">
-          <WorkspaceTreeView />
+      <Split
+        style={{ height: '100vh' }}
 
-          <ResizeHandle direction='vertical'></ResizeHandle>
+        sizes={[10, 80, 10]}
+        minSize={200}
 
-          <NodeTreeView />
+        expandToMin={true}
 
-          <ResizeHandle direction='vertical'></ResizeHandle>
+        gutterSize={8}
 
-          <SettingsPanel />
-        </PanelGroup>
-      </Panel>
+        snapOffset={30}
+        dragInterval={1}
+
+        direction="vertical"
+        cursor="row-resize"
+
+        onDrag={(sizes: Number[]) => {
+          console.log('onDrag', sizes)
+        }}
+        onDragEnd={(sizes: Number[]) => {
+          console.log('onDragEnd', sizes)
+        }}
+
+        elementStyle={(dimension: "height" | "width", elementSize: number, gutterSize: number, index: number) => {
+          return {
+            'height': 'calc(' + elementSize + '%)',
+          }
+        }}
+        gutterStyle={(dimension: "height" | "width", gutterSize: number, index: number) => {
+          return {
+            'height': gutterSize + 'px',
+          }
+        }}
+      >
+        <WorkspaceTreeView />
+        <NodeTreeView />
+        <SettingsPanel />
+      </Split>
     </>
-  }, [panelSize])
+  }, [])
 }

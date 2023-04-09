@@ -278,8 +278,13 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
     const attribsHtml = nodeData.attribs === undefined ? '' :
       Object.keys(nodeData.attribs).map(attr => {
         if (attr === NodeInAppAttribName) return
+        if (attr === 'class') {
+          const className = (nodeData.attribs['class'] as string).split(' ').filter(className => !!className).join(' ')
+          if (className === '') return
+          return ` class="${className}"`
+        }
 
-        const attrContent = nodeData.attribs[attr]
+        const attrContent = nodeData.attribs[attr] as string
         return attrContent === '' ? ` ${attr}` : ` ${attr}="${attrContent}"`
       }).join('')
     const attribsHtmlInApp = nodeData.attribs === undefined ? '' :

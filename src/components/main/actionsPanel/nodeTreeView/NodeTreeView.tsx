@@ -11,12 +11,10 @@ import {
   useDispatch,
   useSelector,
 } from 'react-redux';
-import { Panel } from 'react-resizable-panels';
 
 import {
   SVGIconI,
   SVGIconII,
-  SVGIconIII,
   TreeView,
 } from '@_components/common';
 import { TreeViewData } from '@_components/common/treeView/types';
@@ -33,6 +31,7 @@ import {
   getValidNodeUids,
   moveNode,
   removeNode,
+  THtmlElementsReference,
   THtmlNodeData,
 } from '@_node/index';
 import {
@@ -101,7 +100,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     osType,
     theme: _theme,
     panelResizing, setPanelResizing,
-    hasSession, session,
     // toasts
     addMessage, removeMessage,
   } = useContext(MainContext)
@@ -257,10 +255,11 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     removeRunningActions(['nodeTreeView-copy'])
   }, [addRunningActions, removeRunningActions, nodeTree, nodeMaxUid, osType, tabSize])
   const cb_moveNode = useCallback((_uids: TNodeUid[], targetUid: TNodeUid, isBetween: boolean, position: number) => {
-    addRunningActions(['nodeTreeView-move'])
-
     // validate
-    const uids = getValidNodeUids(nodeTree, _uids, targetUid)
+    const uids = getValidNodeUids(nodeTree, _uids, targetUid, 'html', htmlReferenceData)
+    if (uids.length === 0) return
+
+    addRunningActions(['nodeTreeView-move'])
 
     // call api
     const tree = JSON.parse(JSON.stringify(nodeTree)) as TNodeTreeData
@@ -279,7 +278,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     setEvent({ type: 'move-node', param: [uids, targetUid, isBetween, res.position] })
 
     removeRunningActions(['nodeTreeView-move'])
-  }, [addRunningActions, removeRunningActions, nodeTree, nodeMaxUid, osType, tabSize])
+  }, [addRunningActions, removeRunningActions, nodeTree, htmlReferenceData, nodeMaxUid, osType, tabSize])
   // -------------------------------------------------------------- node view state handlers --------------------------------------------------------------
   const cb_focusNode = useCallback((uid: TNodeUid) => {
     addRunningActions(['nodeTreeView-focus'])
@@ -437,204 +436,212 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
   return useMemo(() => {
     return <>
-      <Panel minSize={0}>
-        <div
-          id="NodeTreeView"
-          className={cx(
-            'scrollable',
-          )}
-          style={{
-            pointerEvents: panelResizing ? 'none' : 'auto',
-          }}
-          onClick={onPanelClick}
-        >
-          <TreeView
-            width={'100%'}
-            height={'auto'}
+      <div
+        id="NodeTreeView"
+        className={cx(
+          'scrollable',
+        )}
+        style={{
+          pointerEvents: panelResizing ? 'none' : 'auto',
+        }}
+        onClick={onPanelClick}
+      >
+        <TreeView
+          width={'100%'}
+          height={'auto'}
 
-            info={{ id: 'node-tree-view' }}
+          info={{ id: 'node-tree-view' }}
 
-            data={nodeTreeViewData}
-            focusedItem={focusedItem}
-            selectedItems={selectedItems}
-            expandedItems={expandedItems}
+          data={nodeTreeViewData}
+          focusedItem={focusedItem}
+          selectedItems={selectedItems}
+          expandedItems={expandedItems}
 
-            renderers={{
-              renderTreeContainer: (props) => {
-                return <>
-                  <ul {...props.containerProps}>
-                    {props.children}
-                  </ul>
-                </>
-              },
-              renderItemsContainer: (props) => {
-                return <>
-                  <ul {...props.containerProps}>
-                    {props.children}
-                  </ul>
-                </>
-              },
-              renderItem: (props) => {
-                return <>
-                  <li
+          renderers={{
+            renderTreeContainer: (props) => {
+              return <>
+                <ul {...props.containerProps}>
+                  {props.children}
+                </ul>
+              </>
+            },
+            renderItemsContainer: (props) => {
+              return <>
+                <ul {...props.containerProps}>
+                  {props.children}
+                </ul>
+              </>
+            },
+            renderItem: (props) => {
+              const htmlElementReferenceData = useMemo<THtmlElementsReference>(() => {
+                const node = props.item.data as TNode
+                const nodeData = node.data as THtmlNodeData
+                const refData = htmlReferenceData.elements[nodeData.name]
+                return refData
+              }, [])
+
+              return <>
+                <li
+                  className={cx(
+                    props.context.isSelected && 'background-secondary',
+
+                    props.context.isDraggingOver && '',
+                    props.context.isDraggingOverParent && '',
+
+                    props.context.isFocused && '',
+                  )}
+                  {...props.context.itemContainerWithChildrenProps}
+                >
+                  <div
+                    id={`NodeTreeView-${props.item.index}`}
                     className={cx(
-                      props.context.isSelected && 'background-secondary',
+                      'justify-stretch',
+                      'padding-xs',
+                      'outline-default',
 
-                      props.context.isDraggingOver && '',
+                      props.context.isSelected && 'background-tertiary outline-none',
+                      !props.context.isSelected && props.context.isFocused && 'outline',
+
+                      props.context.isDraggingOver && 'outline',
                       props.context.isDraggingOverParent && '',
-
-                      props.context.isFocused && '',
                     )}
-                    {...props.context.itemContainerWithChildrenProps}
-                  >
-                    <div
-                      id={`NodeTreeView-${props.item.index}`}
-                      className={cx(
-                        'justify-stretch',
-                        'padding-xs',
-                        'outline-default',
-
-                        props.context.isSelected && 'background-tertiary outline-none',
-                        !props.context.isSelected && props.context.isFocused && 'outline',
-
-                        props.context.isDraggingOver && '',
-                        props.context.isDraggingOverParent && '',
-                      )}
-                      style={{
-                        flexWrap: "nowrap",
-                        paddingLeft: `${props.depth * 10}px`,
-                      }}
-                      {...props.context.itemContainerWithoutChildrenProps}
-                      {...props.context.interactiveElementProps}
-                      onClick={(e) => {
-                        e.stopPropagation()
-
-                        !props.context.isFocused && addRunningActions(['nodeTreeView-focus'])
-                        addRunningActions(['nodeTreeView-select'])
-
-                        !props.context.isFocused && props.context.focusItem()
-
-                        e.shiftKey ? props.context.selectUpTo() :
-                          e.ctrlKey ? (props.context.isSelected ? props.context.unselectItem() : props.context.addToSelectedItems()) :
-                            (props.context.selectItem())
-
-                        setActivePanel('node')
-                      }}
-                      onFocus={() => { }}
-                      onMouseEnter={() => setFNHoveredItem(props.item.index as TNodeUid)}
-                      onMouseLeave={() => setFNHoveredItem('' as TNodeUid)}
-                    >
-                      <div className="gap-xs padding-xs" style={{ width: "100%" }}>
-                        {props.arrow}
-
-                        {props.item.isFolder ?
-                          props.context.isExpanded ?
-                            <SVGIconI {...{ "class": "icon-xs" }}>div</SVGIconI>
-                            : <SVGIconII {...{ "class": "icon-xs" }}>div</SVGIconII>
-                          : <SVGIconIII {...{ "class": "icon-xs" }}>component</SVGIconIII>}
-
-                        {props.title}
-                      </div>
-                    </div>
-
-                    {props.context.isExpanded ? <>
-                      <div>
-                        {props.children}
-                      </div>
-                    </> : null}
-                  </li>
-                </>
-              },
-              renderItemArrow: (props) => {
-                return <>
-                  {props.item.isFolder ?
-                    (props.context.isExpanded ?
-                      <SVGIconI {...{
-                        "class": "icon-xs",
-                        "onClick": (e: MouseEvent) => {
-                          addRunningActions(['nodeTreeView-arrow'])
-                          props.context.toggleExpandedState()
-                        },
-                      }}>down</SVGIconI> :
-                      <SVGIconII {...{
-                        "class": "icon-xs",
-                        "onClick": (e: MouseEvent) => {
-                          addRunningActions(['nodeTreeView-arrow'])
-                          props.context.toggleExpandedState()
-                        },
-                      }}>right</SVGIconII>)
-                    : <div className='icon-xs'></div>}
-                </>
-              },
-              renderItemTitle: (props) => {
-                return <>
-                  <span
-                    className='text-s justify-stretch'
                     style={{
-                      width: "calc(100% - 32px)",
-                      textOverflow: 'ellipsis',
-                      overflow: 'hidden',
-                      whiteSpace: 'nowrap',
+                      flexWrap: "nowrap",
+                      paddingLeft: `${props.depth * 10}px`,
+                    }}
+                    {...props.context.itemContainerWithoutChildrenProps}
+                    {...props.context.interactiveElementProps}
+                    onClick={(e) => {
+                      e.stopPropagation()
+
+                      !props.context.isFocused && addRunningActions(['nodeTreeView-focus'])
+                      addRunningActions(['nodeTreeView-select'])
+
+                      !props.context.isFocused && props.context.focusItem()
+
+                      e.shiftKey ? props.context.selectUpTo() :
+                        e.ctrlKey ? (props.context.isSelected ? props.context.unselectItem() : props.context.addToSelectedItems()) :
+                          (props.context.selectItem())
+
+                      setActivePanel('node')
+                    }}
+                    onFocus={() => { }}
+                    onMouseEnter={() => setFNHoveredItem(props.item.index as TNodeUid)}
+                    onMouseLeave={() => setFNHoveredItem('' as TNodeUid)}
+                    onDragStart={(e: React.DragEvent) => {
+                      const target = e.target as HTMLElement
+                      e.dataTransfer.setDragImage(target, window.outerWidth, window.outerHeight)
+                      props.context.startDragging()
                     }}
                   >
-                    {props.title}
-                  </span>
-                </>
-              },
-              renderDragBetweenLine: ({ draggingPosition, lineProps }) => (
-                <div
-                  {...lineProps}
-                  className={'foreground-tertiary'}
+                    <div className="gap-xs padding-xs" style={{ width: "100%" }}>
+                      {props.arrow}
+
+                      {htmlElementReferenceData ?
+                        <SVGIconI {...{ "class": "icon-xs" }}>{htmlElementReferenceData['Icon']}</SVGIconI>
+                        : <div className='icon-xs'></div>}
+
+                      {props.title}
+                    </div>
+                  </div>
+
+                  {props.context.isExpanded ? <>
+                    <div>
+                      {props.children}
+                    </div>
+                  </> : null}
+                </li>
+              </>
+            },
+            renderItemArrow: (props) => {
+              return <>
+                {props.item.isFolder ?
+                  (props.context.isExpanded ?
+                    <SVGIconI {...{
+                      "class": "icon-xs",
+                      "onClick": (e: MouseEvent) => {
+                        addRunningActions(['nodeTreeView-arrow'])
+                        props.context.toggleExpandedState()
+                      },
+                    }}>down</SVGIconI> :
+                    <SVGIconII {...{
+                      "class": "icon-xs",
+                      "onClick": (e: MouseEvent) => {
+                        addRunningActions(['nodeTreeView-arrow'])
+                        props.context.toggleExpandedState()
+                      },
+                    }}>right</SVGIconII>)
+                  : <div className='icon-xs'></div>}
+              </>
+            },
+            renderItemTitle: (props) => {
+              return <>
+                <span
+                  className='text-s justify-stretch'
                   style={{
-                    position: 'absolute',
-                    right: '0',
-                    top:
-                      draggingPosition.targetType === 'between-items' && draggingPosition.linePosition === 'top' ? '0px'
-                        : draggingPosition.targetType === 'between-items' && draggingPosition.linePosition === 'bottom' ? '-4px'
-                          : '-2px',
-                    left: `${draggingPosition.depth * 10}px`,
-                    height: '2px',
+                    width: "calc(100% - 32px)",
+                    textOverflow: 'ellipsis',
+                    overflow: 'hidden',
+                    whiteSpace: 'nowrap',
                   }}
-                />
-              ),
-            }}
+                >
+                  {props.title}
+                </span>
+              </>
+            },
+            renderDragBetweenLine: ({ draggingPosition, lineProps }) => (
+              <div
+                {...lineProps}
+                className={'foreground-tertiary'}
+                style={{
+                  position: 'absolute',
+                  right: '0',
+                  top:
+                    draggingPosition.targetType === 'between-items' && draggingPosition.linePosition === 'top' ? '0px'
+                      : draggingPosition.targetType === 'between-items' && draggingPosition.linePosition === 'bottom' ? '-2px'
+                        : '-2px',
+                  left: `${draggingPosition.depth * 10 + 16}px`,
+                  height: '2px',
+                }}
+              />
+            ),
+          }}
 
-            props={{
-              canDragAndDrop: true,
-              canDropOnFolder: true,
-              canDropOnNonFolder: true,
-              canReorderItems: true,
+          props={{
+            canDragAndDrop: true,
+            canDropOnFolder: true,
+            canDropOnNonFolder: true,
+            canReorderItems: true,
 
-              canSearch: false,
-              canSearchByStartingTyping: false,
-              canRename: false,
-            }}
+            canSearch: false,
+            canSearchByStartingTyping: false,
+            canRename: false,
+          }}
 
-            callbacks={{
-              onSelectItems: (items) => {
-                cb_selectNode(items as TNodeUid[])
-              },
-              onFocusItem: (item) => {
-                cb_focusNode(item.index as TNodeUid)
-              },
-              onExpandItem: (item) => {
-                cb_expandNode(item.index as TNodeUid)
-              },
-              onCollapseItem: (item) => {
-                cb_collapseNode(item.index as TNodeUid)
-              },
-              onDrop: (items, target) => {
-                const uids: TNodeUid[] = items.map(item => item.index as TNodeUid)
-                const isBetween = target.targetType === 'between-items'
-                const targetUid = (isBetween ? target.parentItem : target.targetItem) as TNodeUid
-                const position = isBetween ? target.childIndex : 0
+          callbacks={{
+            onSelectItems: (items) => {
+              cb_selectNode(items as TNodeUid[])
+            },
+            onFocusItem: (item) => {
+              cb_focusNode(item.index as TNodeUid)
+            },
+            onExpandItem: (item) => {
+              cb_expandNode(item.index as TNodeUid)
+            },
+            onCollapseItem: (item) => {
+              cb_collapseNode(item.index as TNodeUid)
+            },
+            onDrop: (items, target) => {
+              const uids: TNodeUid[] = items.map(item => item.index as TNodeUid)
+              const isBetween = target.targetType === 'between-items'
+              const targetUid = (isBetween ? target.parentItem : target.targetItem) as TNodeUid
+              const position = isBetween ? target.childIndex : 0
 
-                cb_moveNode(uids, targetUid, isBetween, position)
-              },
-            }}
-          />
-        </div>
-      </Panel>
+              cb_moveNode(uids, targetUid, isBetween, position)
+            },
+          }}
+        />
+      </div>
     </>
   }, [
     panelResizing, onPanelClick,

@@ -13,7 +13,6 @@ import {
   useDispatch,
   useSelector,
 } from 'react-redux';
-import { Panel } from 'react-resizable-panels';
 
 import {
   CodeViewSyncDelay,
@@ -98,7 +97,6 @@ export default function CodeView(props: CodeViewProps) {
     osType,
     theme: _theme,
     panelResizing, setPanelResizing,
-    hasSession, session,
     // toasts
     addMessage, removeMessage,
   } = useContext(MainContext)
@@ -484,42 +482,44 @@ export default function CodeView(props: CodeViewProps) {
 
   return useMemo(() => {
     return <>
-      <Panel minSize={0}>
-        <div
-          id="CodeView"
-          className={cx(
-            'scrollable',
-          )}
-          onClick={onPanelClick}
-        >
-          <Editor
-            width="100%"
-            height="100%"
-            defaultLanguage={"html"}
-            language={language}
-            defaultValue={""}
-            value={codeContent.current}
-            theme={theme}
-            // line={line}
-            // beforeMount={() => {}}
-            onMount={handleEditorDidMount}
-            onChange={handleEditorChange}
-            options={{
-              // enableBasicAutocompletion: true,
-              // enableLiveAutocompletion: true,
-              // enableSnippets: true,
-              // showLineNumbers: true,
-              contextmenu: false,
-              tabSize: tabSize,
-              wordWrap: wordWrap,
-              minimap: { enabled: false },
-            }}
-          />
-        </div>
-      </Panel>
+      <div
+        id="CodeView"
+        className={cx(
+          'scrollable',
+        )}
+        style={{
+          height: "100vh",
+          pointerEvents: panelResizing ? 'none' : 'auto',
+        }}
+        onClick={onPanelClick}
+      >
+        <Editor
+          width="100%"
+          height="100%"
+          defaultLanguage={"html"}
+          language={language}
+          defaultValue={""}
+          value={codeContent.current}
+          theme={theme}
+          // line={line}
+          // beforeMount={() => {}}
+          onMount={handleEditorDidMount}
+          onChange={handleEditorChange}
+          options={{
+            // enableBasicAutocompletion: true,
+            // enableLiveAutocompletion: true,
+            // enableSnippets: true,
+            // showLineNumbers: true,
+            contextmenu: false,
+            tabSize: tabSize,
+            wordWrap: wordWrap,
+            minimap: { enabled: false },
+          }}
+        />
+      </div>
     </>
   }, [
-    onPanelClick,
+    panelResizing, onPanelClick,
     language, theme,
     handleEditorDidMount, handleEditorChange,
     tabSize, wordWrap,
