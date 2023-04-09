@@ -505,3 +505,12 @@ export const serializeFile = (type: TFileType, tree: TNodeTreeData, referenceDat
   }
   return ''
 }
+
+export const getNormalizedPath = (path: string): { isAbsolutePath: boolean, normalizedPath: string } => {
+  if (path.startsWith('https://') || path.startsWith('http://')) {
+    return { isAbsolutePath: true, normalizedPath: path }
+  }
+  const isAbsolutePath = _path.isAbsolute(path)
+  const normalizedPath = _path.normalize(path)
+  return { isAbsolutePath, normalizedPath }
+}

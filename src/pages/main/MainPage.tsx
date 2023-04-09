@@ -187,6 +187,7 @@ export default function MainPage(props: MainPageProps) {
   const [iframeSrc, setIFrameSrc] = useState<string | null>(null)
   const [fileInfo, setFileInfo] = useState<TFileInfo>(null)
   const [needToReloadIFrame, setNeedToReloadIFrame] = useState<boolean>(true)
+  const [linkToOpen, setLinkToOpen] = useState<string>('')
   // code view
   const [codeEditing, setCodeEditing] = useState<boolean>(false)
   const [codeChanges, setCodeChanges] = useState<TCodeChange[]>([])
@@ -960,6 +961,7 @@ export default function MainPage(props: MainPageProps) {
         iframeSrc, setIFrameSrc,
         fileInfo, setFileInfo,
         needToReloadIFrame, setNeedToReloadIFrame,
+        linkToOpen, setLinkToOpen,
         // code view
         codeEditing, setCodeEditing,
         codeChanges, setCodeChanges,

@@ -86,6 +86,8 @@ export type TMainContext = {
   setFileInfo: (_fileInfo: TFileInfo) => void,
   needToReloadIFrame: boolean,
   setNeedToReloadIFrame: (_needToReloadIFrame: boolean) => void,
+  linkToOpen: string,
+  setLinkToOpen: (href: string) => void,
   // code view
   codeEditing: boolean,
   setCodeEditing: (editing: boolean) => void,

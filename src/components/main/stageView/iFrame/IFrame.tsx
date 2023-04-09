@@ -66,6 +66,7 @@ export const IFrame = (props: IFrameProps) => {
     iframeSrc, setIFrameSrc,
     fileInfo, setFileInfo,
     needToReloadIFrame, setNeedToReloadIFrame,
+    linkToOpen, setLinkToOpen,
     // code view
     codeEditing, setCodeEditing,
     codeChanges, setCodeChanges,
@@ -319,11 +320,35 @@ export const IFrame = (props: IFrameProps) => {
   const onMouseLeave = useCallback((e: MouseEvent) => {
     setFNHoveredItem('')
   }, [])
-  const onMouseDown = useCallback((e: MouseEvent) => {
+  const onClick = useCallback((e: MouseEvent) => {
     const ele = e.target as HTMLElement
-    if (ele.tagName === 'a') {
-      const href = ele.getAttribute('href')
-      console.log(href)
+
+    // handle links
+    let isLinkTag = false
+    let linkElement = ele
+    while (true) {
+      if (linkElement.tagName === 'A') {
+        isLinkTag = true
+        break
+      }
+      const parentEle = linkElement.parentElement
+      if (!parentEle) break
+
+      linkElement = parentEle
+    }
+    if (isLinkTag) {
+      const uid: TNodeUid | null = linkElement.getAttribute(NodeInAppAttribName)
+      if (uid !== null) {
+        if (uid === linkTagUid.current) {
+          const href = linkElement.getAttribute('href')
+          href && setLinkToOpen(href)
+          linkTagUid.current = ''
+        } else {
+          linkTagUid.current = uid
+        }
+      }
+    } else {
+      linkTagUid.current = ''
     }
 
     let _uid: TNodeUid | null = ele.getAttribute(NodeInAppAttribName)
@@ -352,17 +377,10 @@ export const IFrame = (props: IFrameProps) => {
           setFocusedSelectedItems(_uid)
         }
       }
-
-      const node = nodeTree[_uid]
-      const nodeData = node.data as THtmlNodeData
-      if (nodeData.name === 'a') {
-        console.log(nodeData)
-      }
     }
 
     setActivePanel('stage')
   }, [osType, focusedItem, setFocusedSelectedItems, nodeTree])
-  const onMouseUp = useCallback((e: MouseEvent) => { }, [])
 
   // text editing
   const contentEditableUidRef = useRef('')
@@ -438,7 +456,8 @@ export const IFrame = (props: IFrameProps) => {
     setCurrentCommand({ action })
   }, [cmdkReferenceData])
   // -------------------------------------------------------------- own --------------------------------------------------------------
-
+  const linkTagUid = useRef<TNodeUid>('')
+  
   // iframe event listeners
   const [iframeEvent, setIframeEvent] = useState<MouseEvent>()
   useEffect(() => {
@@ -461,27 +480,19 @@ export const IFrame = (props: IFrameProps) => {
 
           // define event handlers
           htmlNode.addEventListener('mouseenter', (e: MouseEvent) => {
-            e.stopPropagation()
             setIframeEvent(e)
           })
           htmlNode.addEventListener('mousemove', (e: MouseEvent) => {
-            e.stopPropagation()
             setIframeEvent(e)
           })
           htmlNode.addEventListener('mouseleave', (e: MouseEvent) => {
-            e.stopPropagation()
             setIframeEvent(e)
           })
-          htmlNode.addEventListener('mousedown', (e: MouseEvent) => {
-            e.stopPropagation()
-            setIframeEvent(e)
-          })
-          htmlNode.addEventListener('mouseup', (e: MouseEvent) => {
-            e.stopPropagation()
+          htmlNode.addEventListener('click', (e: MouseEvent) => {
+            e.preventDefault()
             setIframeEvent(e)
           })
           htmlNode.addEventListener('dblclick', (e: MouseEvent) => {
-            e.stopPropagation()
             setIframeEvent(e)
           })
         }
@@ -504,11 +515,8 @@ export const IFrame = (props: IFrameProps) => {
       case 'mouseleave':
         onMouseLeave(iframeEvent)
         break
-      case 'mousedown':
-        onMouseDown(iframeEvent)
-        break
-      case 'mouseup':
-        onMouseUp(iframeEvent)
+      case 'click':
+        onClick(iframeEvent)
         break
       case 'dblclick':
         onDblClick(iframeEvent)
@@ -544,7 +552,10 @@ export const IFrame = (props: IFrameProps) => {
   }, [event])
   // reload when script changes
   useEffect(() => {
-    needToReloadIFrame && setNeedToReloadIFrame(false)
+    if (needToReloadIFrame) {
+      setNeedToReloadIFrame(false)
+      linkTagUid.current = ''
+    }
   }, [needToReloadIFrame])
 
   return useMemo(() => {
