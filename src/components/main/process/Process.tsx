@@ -154,7 +154,7 @@ export default function Process(props: ProcessProps) {
 
         // reload iframe
         _needToReloadIFrame = true
-      } else if (updateOpt.from === 'code') {
+      } else if (updateOpt.from === 'code' || updateOpt.from === 'stage') {
         if (fileData.type === 'html') {
           // detect seed node changed
           let seedNodeChanged = false
@@ -244,7 +244,7 @@ export default function Process(props: ProcessProps) {
           // do nothing
         }
 
-        setCodeEditing(false)
+        updateOpt.from === 'code' && setCodeEditing(false)
       } else if (updateOpt.from === 'hms') {
         const _currentFile = ffTree[currentFileUid]
         const _currentFileData = _currentFile.data as TFileNodeData
