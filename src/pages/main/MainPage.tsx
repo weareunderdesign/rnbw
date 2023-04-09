@@ -1007,9 +1007,6 @@ export default function MainPage(props: MainPageProps) {
         direction="horizontal"
         cursor="col-resize"
 
-        onDrag={(sizes: Number[]) => {
-          console.log('onDrag', sizes)
-        }}
         onDragEnd={(sizes: Number[]) => {
           console.log('onDragEnd', sizes)
         }}

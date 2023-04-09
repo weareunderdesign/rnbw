@@ -26,9 +26,6 @@ export default function ActionsPanel(props: ActionsPanelProps) {
         direction="vertical"
         cursor="row-resize"
 
-        onDrag={(sizes: Number[]) => {
-          console.log('onDrag', sizes)
-        }}
         onDragEnd={(sizes: Number[]) => {
           console.log('onDragEnd', sizes)
         }}
