@@ -994,7 +994,8 @@ export default function MainPage(props: MainPageProps) {
         style={{ display: 'flex' }}
 
         sizes={[10, 60, 30]}
-        minSize={240}
+        minSize={showCodeView ? 240 : [240, 240, 0]}
+        maxSize={showCodeView ? undefined : [10000, 10000, 0]}
 
         expandToMin={true}
 
@@ -1026,8 +1027,9 @@ export default function MainPage(props: MainPageProps) {
       >
         <ActionsPanel />
         <StageView />
-        <CodeView />
-        {/* {showCodeView ? <CodeView /> : null} */}
+        <div>
+          {showCodeView ? <CodeView /> : null}
+        </div>
       </Split>
 
       {/* cmdk modal */}
