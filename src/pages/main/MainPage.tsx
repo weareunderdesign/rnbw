@@ -9,6 +9,9 @@ import React, {
 import cx from 'classnames';
 import { Command } from 'cmdk';
 import {
+  CustomDirectoryPickerOptions,
+} from 'file-system-access/lib/showDirectoryPicker';
+import {
   delMany,
   getMany,
   setMany,
@@ -35,11 +38,18 @@ import {
 } from '@_components/main';
 import {
   AddNodeActionPrefix,
+  DefaultProjectPath,
   DefaultTabSize,
+  HmsClearActionType,
   LogAllow,
+  ParsableFileTypes,
   RootNodeUid,
 } from '@_constants/main';
 import {
+  downloadProject,
+  initIDBProject,
+  loadIDBProject,
+  loadLocalProject,
   TFileHandlerCollection,
   TFileNodeData,
   TFilesReference,
@@ -56,6 +66,7 @@ import {
   TNodeUid,
 } from '@_node/types';
 import {
+  clearMainState,
   ffSelector,
   fnSelector,
   getActionGroupIndexSelector,
@@ -65,6 +76,7 @@ import {
   MainContext,
   navigatorSelector,
   setFileAction,
+  setProjectContext,
   TCommand,
   TUpdateOptions,
 } from '@_redux/main';
@@ -94,6 +106,7 @@ import {
   TFileAction,
   TFileInfo,
   TPanelContext,
+  TProjectContext,
   TSession,
 } from '@_types/main';
 
@@ -151,6 +164,7 @@ export default function MainPage(props: MainPageProps) {
   const [clipboardData, setClipboardData] = useState<TClipboardData>({ panel: 'unknown', type: null, uids: [] })
   const [event, setEvent] = useState<TEvent>(null)
   // file tree view
+  const [initialFileToOpen, setInitialFileToOpen] = useState<TNodeUid>('')
   const [fsPending, setFSPending] = useState<boolean>(false)
   const [ffTree, setFFTree] = useState<TNodeTreeData>({})
   const setFFNode = useCallback((ffNode: TNode) => {
@@ -173,6 +187,7 @@ export default function MainPage(props: MainPageProps) {
   const [iframeSrc, setIFrameSrc] = useState<string | null>(null)
   const [fileInfo, setFileInfo] = useState<TFileInfo>(null)
   const [needToReloadIFrame, setNeedToReloadIFrame] = useState<boolean>(true)
+  const [linkToOpen, setLinkToOpen] = useState<string>('')
   // code view
   const [codeEditing, setCodeEditing] = useState<boolean>(false)
   const [codeChanges, setCodeChanges] = useState<TCodeChange[]>([])
@@ -288,8 +303,6 @@ export default function MainPage(props: MainPageProps) {
   const [osType, setOsType] = useState<TOsType>('Windows')
   const [theme, setTheme] = useState<TTheme>('System')
   const [panelResizing, setPanelResizing] = useState<boolean>(false)
-  const [hasSession, setHasSession] = useState<boolean>(false)
-  const [session, setSession] = useState<TSession | null>(null)
   // toasts
   const [messages, setMessages] = useState<TToast[]>([])
   const addMessage = useCallback((message: TToast) => {
@@ -304,35 +317,6 @@ export default function MainPage(props: MainPageProps) {
   // navigating
   const params = useParams()
   const location = useLocation()
-  // store last edit session
-  useEffect(() => {
-    (async () => {
-      const _hasSession = localStorage.getItem('last-edit-session') !== null
-      setHasSession(_hasSession)
-      let _session: TSession | null = null
-      if (_hasSession) {
-        const sessionInfo = await getMany(['project-context', 'project-root-folder-handler'])
-        _session = {
-          'project-context': sessionInfo[0],
-          'project-root-folder-handler': sessionInfo[1],
-        }
-        setSession(_session)
-      }
-      LogAllow && console.log('last-edit-session', _session)
-    })()
-  }, [])
-  useEffect(() => {
-    (async () => {
-      if (ffTree[RootNodeUid]) {
-        try {
-          await setMany([['project-context', project.context], ['project-root-folder-handler', ffHandlers[RootNodeUid]]])
-          localStorage.setItem('last-edit-session', 'yes')
-        } catch (err) {
-          localStorage.removeItem('last-edit-session')
-        }
-      }
-    })()
-  }, [ffTree[RootNodeUid]])
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
   // key event listener
   const cb_onKeyDown = useCallback((e: KeyboardEvent) => {
@@ -374,7 +358,9 @@ export default function MainPage(props: MainPageProps) {
     LogAllow && console.log('action to be run by cmdk: ', action)
 
     // prevent chrome default short keys
-    // e.preventDefault()
+    if (action === 'Save' || action === 'Download') {
+      e.preventDefault()
+    }
 
     setCurrentCommand({ action })
   }, [cmdkReferenceData, activePanel, osType])
@@ -386,14 +372,20 @@ export default function MainPage(props: MainPageProps) {
   // command detect & do actions
   useEffect(() => {
     switch (currentCommand.action) {
-      case 'Clear':
-        onClear()
-        break
       case 'Jumpstart':
         onJumpstart()
         break
+      case 'New':
+        onNew()
+        break
+      case 'Open':
+        onImportProject()
+        break
       case 'Theme':
         onToggleTheme()
+        break
+      case 'Clear':
+        onClear()
         break
       case 'Undo':
         onUndo()
@@ -404,31 +396,208 @@ export default function MainPage(props: MainPageProps) {
       case 'Code':
         toogleCodeView()
         break
+      case 'Download':
+        onDownload()
+        break
       default:
         return
     }
   }, [currentCommand])
   // -------------------------------------------------------------- handlers --------------------------------------------------------------
-  // clear cached session
+  const clearSession = useCallback(() => {
+    dispatch(clearMainState())
+    dispatch({ type: HmsClearActionType })
+  }, [])
+  const loadProject = useCallback(async (fsType: TProjectContext, projectHandle?: FileSystemHandle | null) => {
+    if (fsType === 'local') {
+      setFSPending(true)
+      clearSession()
+      try {
+        // configure idb on nohost
+        const handlerObj = await loadLocalProject(projectHandle as FileSystemDirectoryHandle, osType)
+
+        // sort by ASC directory/file
+        Object.keys(handlerObj).map(uid => {
+          const handler = handlerObj[uid]
+          handler.children = handler.children.sort((a, b) => {
+            return handlerObj[a].kind === 'file' && handlerObj[b].kind === 'directory' ? 1 :
+              handlerObj[a].kind === 'directory' && handlerObj[b].kind === 'file' ? -1 :
+                handlerObj[a].name > handlerObj[b].name ? 1 : -1
+          })
+        })
+
+        // get/set the index/first html to be opened by default
+        let firstHtmlUid: TNodeUid = '', indexHtmlUid: TNodeUid = ''
+        handlerObj[RootNodeUid].children.map(uid => {
+          const handler = handlerObj[uid]
+          if (handler.kind === 'file' && handler.ext === '.html') {
+            firstHtmlUid === '' ? firstHtmlUid = uid : null
+            handler.name === 'index' ? indexHtmlUid = uid : null
+          }
+        })
+        setInitialFileToOpen(indexHtmlUid !== '' ? indexHtmlUid : firstHtmlUid !== '' ? firstHtmlUid : '')
+
+        // set ff-tree, ff-handlers
+        const treeViewData: TNodeTreeData = {}
+        const ffHandlerObj: TFileHandlerCollection = {}
+        Object.keys(handlerObj).map(uid => {
+          const { parentUid, children, path, kind, name, ext, content, handler } = handlerObj[uid]
+          const type = ParsableFileTypes[ext || ''] ? ext?.slice(1) : 'unknown'
+          treeViewData[uid] = {
+            uid,
+            parentUid: parentUid,
+            name: name,
+            isEntity: kind === 'file',
+            children: [...children],
+            data: {
+              valid: true,
+              path: path,
+              kind: kind,
+              name: name,
+              ext: ext,
+              type,
+              orgContent: type !== 'unknown' ? content?.toString() : '',
+              content: type !== 'unknown' ? content?.toString() : '',
+              changed: false,
+            } as TFileNodeData,
+          } as TNode
+
+          ffHandlerObj[uid] = handler
+        })
+
+        setFFTree(treeViewData)
+        setFFHandlers(ffHandlerObj)
+
+        dispatch(setProjectContext('local'))
+      } catch (err) {
+        LogAllow && console.log('failed to load local project')
+      }
+      setFSPending(false)
+    } else if (fsType === 'idb') {
+      setFSPending(true)
+      clearSession()
+      try {
+        const handlerObj = await loadIDBProject(DefaultProjectPath)
+
+        // sort by ASC directory/file
+        Object.keys(handlerObj).map(uid => {
+          const handler = handlerObj[uid]
+          handler.children = handler.children.sort((a, b) => {
+            return handlerObj[a].kind === 'file' && handlerObj[b].kind === 'directory' ? 1 :
+              handlerObj[a].kind === 'directory' && handlerObj[b].kind === 'file' ? -1 :
+                handlerObj[a].name > handlerObj[b].name ? 1 : -1
+          })
+        })
+
+        // get/set the index/first html to be opened by default
+        let firstHtmlUid: TNodeUid = '', indexHtmlUid: TNodeUid = ''
+        handlerObj[RootNodeUid].children.map(uid => {
+          const handler = handlerObj[uid]
+          if (handler.kind === 'file' && handler.ext === '.html') {
+            firstHtmlUid === '' ? firstHtmlUid = uid : null
+            handler.name === 'index' ? indexHtmlUid = uid : null
+          }
+        })
+        setInitialFileToOpen(indexHtmlUid !== '' ? indexHtmlUid : firstHtmlUid !== '' ? firstHtmlUid : '')
+
+        // set ff-tree, ff-handlers
+        const treeViewData: TNodeTreeData = {}
+        const ffHandlerObj: TFileHandlerCollection = {}
+        Object.keys(handlerObj).map(uid => {
+          const { parentUid, children, path, kind, name, ext, content } = handlerObj[uid]
+          const type = ParsableFileTypes[ext || ''] ? ext?.slice(1) : 'unknown'
+          treeViewData[uid] = {
+            uid,
+            parentUid: parentUid,
+            name: name,
+            isEntity: kind === 'file',
+            children: [...children],
+            data: {
+              valid: true,
+              path: path,
+              kind: kind,
+              name: name,
+              ext: ext,
+              type,
+              orgContent: type !== 'unknown' ? content?.toString() : '',
+              content: type !== 'unknown' ? content?.toString() : '',
+              changed: false,
+            } as TFileNodeData,
+          } as TNode
+        })
+        setFFTree(treeViewData)
+        setFFHandlers(ffHandlerObj)
+
+        dispatch(setProjectContext('idb'))
+      } catch (err) {
+        LogAllow && console.log('failed to load default project')
+      }
+      setFSPending(false)
+    }
+  }, [clearSession, osType])
+  // open
+  const onImportProject = useCallback(async (fsType: TProjectContext = 'local'): Promise<void> => {
+    return new Promise<void>(async (resolve, reject) => {
+      if (fsType === 'local') {
+        try {
+          const projectHandle = await showDirectoryPicker({ _preferPolyfill: false, mode: 'readwrite' } as CustomDirectoryPickerOptions)
+          await loadProject(fsType, projectHandle)
+        } catch (err) {
+          reject(err)
+        }
+      } else if (fsType === 'idb') {
+        try {
+          await loadProject(fsType)
+        } catch (err) {
+          reject(err)
+        }
+      }
+      resolve()
+    })
+  }, [loadProject])
+  // new
+  const onNew = useCallback(async () => {
+    setFSPending(true)
+
+    // init/open default project
+    try {
+      await initIDBProject(DefaultProjectPath)
+      await onImportProject('idb')
+    } catch (err) {
+      LogAllow && console.log('failed to init/load default project')
+    }
+
+    setFSPending(false)
+  }, [onImportProject])
+  // download
+  const onDownload = useCallback(async () => {
+    if (project.context !== 'idb') return
+
+    try {
+      await downloadProject(DefaultProjectPath)
+    } catch (err) {
+      LogAllow && console.log('failed to download project')
+    }
+  }, [project.context])
+  // clear
   const onClear = useCallback(async () => {
     // remove localstorage and session
     localStorage.clear()
     await delMany(['project-context', 'project-root-folder-handler'])
   }, [])
-  // cmdk jumpstart
+  // jumpstart
   const onJumpstart = useCallback(() => {
     if (cmdkOpen) return
     setCmdkPages(['Jumpstart'])
     setCmdkOpen(true)
   }, [cmdkOpen])
-  // hms methods
+  // hms
   const onUndo = useCallback(() => {
     if (pending || iframeLoading || fsPending || codeEditing) return
 
     LogAllow && pastLength === 1 && console.log('hms - it is the origin state')
     if (pastLength === 1) return
 
-    setFFAction(fileAction)
     setCurrentFileUid(file.uid)
     setIsHms(true)
 
@@ -441,17 +610,18 @@ export default function MainPage(props: MainPageProps) {
     LogAllow && futureLength === 0 && console.log('hms - it is the latest state')
     if (futureLength === 0) return
 
+    setFFAction(fileAction)
     setCurrentFileUid(file.uid)
     setIsHms(false)
 
     dispatch({ type: 'main/redo' })
     setUpdateOpt({ parse: true, from: 'hms' })
   }, [pending, iframeLoading, fsPending, codeEditing, futureLength, file.uid])
-  // reset fileAction in the new history
   useEffect(() => {
+    // reset fileAction in the new history
     futureLength === 0 && fileAction.type !== null && dispatch(setFileAction({ type: null }))
   }, [actionGroupIndex])
-  // toogle code view visible
+  // toogle code view
   const [showCodeView, setShowCodeView] = useState(false)
   const toogleCodeView = useCallback(() => {
     setShowCodeView(!showCodeView)
@@ -644,9 +814,21 @@ export default function MainPage(props: MainPageProps) {
     const isNewbie = localStorage.getItem("newbie")
     LogAllow && console.log('isNewbie: ', isNewbie === null ? true : false)
     if (!isNewbie) {
-      // open Jumpstart for newbie
       onJumpstart()
-      localStorage.setItem("newbie", 'false')
+      localStorage.setItem("newbie", 'false');
+
+      (async () => {
+        setFSPending(true)
+        try {
+          // init/open default project if it's newbie
+          await initIDBProject(DefaultProjectPath)
+          await onImportProject('idb')
+          LogAllow && console.log('inited/loaded default project')
+        } catch (err) {
+          LogAllow && console.log('failed to init/load default project')
+        }
+        setFSPending(false)
+      })()
     }
   }, [])
   // theme
@@ -718,6 +900,37 @@ export default function MainPage(props: MainPageProps) {
       window.onbeforeunload = null
     }
   }, [ffTree])
+  // store/restore last edit session
+  useEffect(() => {
+    (async () => {
+      const hasSession = localStorage.getItem('last-edit-session') !== null
+      if (hasSession) {
+        try {
+          const sessionInfo = await getMany(['project-context', 'project-root-folder-handler'])
+          const session: TSession = {
+            'project-context': sessionInfo[0],
+            'project-root-folder-handler': sessionInfo[1],
+          }
+          await loadProject(session['project-context'], session['project-root-folder-handler'])
+          LogAllow && console.log('last session loaded')
+        } catch (err) {
+          LogAllow && console.log('failed to load last session')
+        }
+      }
+    })()
+  }, [])
+  useEffect(() => {
+    (async () => {
+      if (ffTree[RootNodeUid]) {
+        try {
+          await setMany([['project-context', project.context], ['project-root-folder-handler', ffHandlers[RootNodeUid]]])
+          localStorage.setItem('last-edit-session', 'yes')
+        } catch (err) {
+          localStorage.removeItem('last-edit-session')
+        }
+      }
+    })()
+  }, [ffTree[RootNodeUid]])
 
   return <>
     {/* wrap with the context */}
@@ -730,6 +943,7 @@ export default function MainPage(props: MainPageProps) {
         clipboardData, setClipboardData,
         event, setEvent,
         // file tree view
+        initialFileToOpen, setInitialFileToOpen,
         fsPending, setFSPending,
         ffTree, setFFTree, setFFNode,
         ffHandlers, setFFHandlers,
@@ -747,6 +961,7 @@ export default function MainPage(props: MainPageProps) {
         iframeSrc, setIFrameSrc,
         fileInfo, setFileInfo,
         needToReloadIFrame, setNeedToReloadIFrame,
+        linkToOpen, setLinkToOpen,
         // code view
         codeEditing, setCodeEditing,
         codeChanges, setCodeChanges,
@@ -764,7 +979,6 @@ export default function MainPage(props: MainPageProps) {
         osType,
         theme,
         panelResizing, setPanelResizing,
-        hasSession, session,
         // toasts
         addMessage, removeMessage,
       }}
@@ -812,7 +1026,8 @@ export default function MainPage(props: MainPageProps) {
       >
         <ActionsPanel />
         <StageView />
-        {showCodeView ? <CodeView /> : null}
+        <CodeView />
+        {/* {showCodeView ? <CodeView /> : null} */}
       </Split>
 
       {/* cmdk modal */}

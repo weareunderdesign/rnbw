@@ -100,7 +100,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     osType,
     theme: _theme,
     panelResizing, setPanelResizing,
-    hasSession, session,
     // toasts
     addMessage, removeMessage,
   } = useContext(MainContext)

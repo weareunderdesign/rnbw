@@ -38,6 +38,8 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   event: null,
   setEvent: (e: TEvent) => { },
   // file tree view
+  initialFileToOpen: '',
+  setInitialFileToOpen: (uid: TNodeUid) => { },
   fsPending: false,
   setFSPending: (pending: boolean) => { },
   ffTree: {},
@@ -71,6 +73,8 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   setFileInfo: (_fileInfo: TFileInfo) => { },
   needToReloadIFrame: true,
   setNeedToReloadIFrame: (_needToReloadIFrame: boolean) => { },
+  linkToOpen: '',
+  setLinkToOpen: (href: string) => { },
   // code view
   codeEditing: false,
   setCodeEditing: (editing: boolean) => { },
@@ -102,8 +106,6 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   theme: 'System',
   panelResizing: false,
   setPanelResizing: (resizing: boolean) => { },
-  hasSession: false,
-  session: null,
   // toasts
   addMessage: (message: TToast) => { },
   removeMessage: (index: number) => { },
