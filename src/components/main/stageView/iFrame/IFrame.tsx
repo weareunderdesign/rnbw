@@ -84,7 +84,6 @@ export const IFrame = (props: IFrameProps) => {
     osType,
     theme,
     panelResizing, setPanelResizing,
-    hasSession, session,
     // toasts
     addMessage, removeMessage,
   } = useContext(MainContext)
@@ -382,9 +381,49 @@ export const IFrame = (props: IFrameProps) => {
 
     setActivePanel('stage')
   }, [osType, focusedItem, setFocusedSelectedItems, nodeTree])
-  const onDblClick = useCallback((e: MouseEvent) => { }, [])
-  // key events
+
+  // text editing
+  const contentEditableUidRef = useRef('')
+  const [contentEditableAttr, setContentEditableAttr] = useState<string | null>(null)
+  const [outerHtml, setOuterHtml] = useState('')
+  useEffect(() => {
+    const node = validNodeTree[contentEditableUidRef.current]
+    if (!node) return
+    const ele = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${contentEditableUidRef.current}"]`)
+    if (!ele) return
+
+    contentEditableAttr ? ele.setAttribute('contenteditable', contentEditableAttr) : ele.removeAttribute('contenteditable')
+    contentEditableUidRef.current = ''
+    onTextEdit(node, ele.outerHTML)
+  }, [focusedItem])
+  const onTextEdit = useCallback((node: TNode, _outerHtml: string) => {
+    if (outerHtml === _outerHtml) return
+
+    setCodeChanges([{ uid: node.uid, content: _outerHtml }])
+    addRunningActions(['processor-updateOpt'])
+    setUpdateOpt({ parse: true, from: 'stage' })
+  }, [outerHtml])
+  const onDblClick = useCallback((e: MouseEvent) => {
+    const ele = e.target as HTMLElement
+    let uid: TNodeUid | null = ele.getAttribute(NodeInAppAttribName)
+    if (uid) {
+      const node = validNodeTree[uid]
+      if (!node) return
+      const nodeData = node.data as THtmlNodeData
+      if (nodeData.name === 'html' || nodeData.name === 'head' || nodeData.name === 'body') return
+
+      setOuterHtml(ele.outerHTML)
+      if (ele.hasAttribute('contenteditable')) {
+        setContentEditableAttr(ele.getAttribute('contenteditable'))
+      }
+      ele.setAttribute('contenteditable', 'true')
+      contentEditableUidRef.current = uid
+    }
+  }, [validNodeTree])
+  // -------------------------------------------------------------- cmdk --------------------------------------------------------------
   const onKeyDown = useCallback((e: KeyboardEvent) => {
+    if (contentEditableUidRef.current !== '') return
+
     // cmdk obj for the current command
     const cmdk: TCmdkKeyMap = {
       cmd: getCommandKey(e, osType),
@@ -410,12 +449,15 @@ export const IFrame = (props: IFrameProps) => {
     LogAllow && console.log('action to be run by cmdk: ', action)
 
     // prevent chrome default short keys
-    e.preventDefault()
+    if (action === 'Save') {
+      e.preventDefault()
+    }
 
     setCurrentCommand({ action })
   }, [cmdkReferenceData])
   // -------------------------------------------------------------- own --------------------------------------------------------------
   const linkTagUid = useRef<TNodeUid>('')
+  
   // iframe event listeners
   const [iframeEvent, setIframeEvent] = useState<MouseEvent>()
   useEffect(() => {

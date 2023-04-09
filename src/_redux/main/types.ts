@@ -23,7 +23,6 @@ import {
   TFileInfo,
   TPanelContext,
   TProject,
-  TSession,
   TWorkspace,
 } from '@_types/main';
 
@@ -52,6 +51,8 @@ export type TMainContext = {
   event: TEvent,
   setEvent: (e: TEvent) => void,
   // file tree view
+  initialFileToOpen: TNodeUid,
+  setInitialFileToOpen: (uid: TNodeUid) => void,
   fsPending: boolean,
   setFSPending: (pending: boolean) => void,
   ffTree: TNodeTreeData,
@@ -116,8 +117,6 @@ export type TMainContext = {
   theme: TTheme,
   panelResizing: boolean,
   setPanelResizing: (resizing: boolean) => void,
-  hasSession: boolean,
-  session: TSession | null,
   // toasts
   addMessage: (message: TToast) => void,
   removeMessage: (index: number) => void,

@@ -11,6 +11,7 @@ import { TNodeUid } from '@_node/types';
 import {
   TFile,
   TFileAction,
+  TProjectContext,
 } from '@_types/main';
 import {
   createSlice,
@@ -77,6 +78,11 @@ const slice = createSlice({
     },
 
     // navigator
+    setProjectContext(state, action: PayloadAction<TProjectContext>) {
+      const payload = action.payload
+      state.navigator.project.context = payload
+    },
+
     setCurrentFile(state, action: PayloadAction<TFile>) {
       const payload = action.payload
       state.navigator.file = payload
@@ -236,6 +242,8 @@ export const {
   clearMainState,
 
   // navigator
+  setProjectContext,
+
   setCurrentFile,
   removeCurrentFile,
   setCurrentFileContent,

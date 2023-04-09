@@ -16,6 +16,7 @@ import {
   NodeUidSplitter,
   RainbowAppName,
   RootNodeUid,
+  StagePreviewPathPrefix,
 } from '@_constants/main';
 import {
   getSubNodeUidsByBfs,
@@ -102,7 +103,6 @@ export default function Process(props: ProcessProps) {
     osType,
     theme,
     panelResizing, setPanelResizing,
-    hasSession, session,
     // toasts
     addMessage, removeMessage,
   } = useContext(MainContext)
@@ -154,7 +154,7 @@ export default function Process(props: ProcessProps) {
 
         // reload iframe
         _needToReloadIFrame = true
-      } else if (updateOpt.from === 'code') {
+      } else if (updateOpt.from === 'code' || updateOpt.from === 'stage') {
         if (fileData.type === 'html') {
           // detect seed node changed
           let seedNodeChanged = false
@@ -244,11 +244,11 @@ export default function Process(props: ProcessProps) {
           // do nothing
         }
 
-        setCodeEditing(false)
+        updateOpt.from === 'code' && setCodeEditing(false)
       } else if (updateOpt.from === 'hms') {
         const _currentFile = ffTree[currentFileUid]
         const _currentFileData = _currentFile.data as TFileNodeData
-        if (file.uid === currentFileUid && file.content === fileData.contentInApp) {
+        if (file.uid === currentFileUid && file.content === _currentFileData.contentInApp) {
           LogAllow && console.log('view state changed by hms')
           // no need to build new node tree
           onlyRenderViewState = true
@@ -400,17 +400,21 @@ export default function Process(props: ProcessProps) {
       LogAllow && _needToReloadIFrame && console.log('need to refresh iframe')
       if (!onlyRenderViewState) {
         // update idb
-        setFSPending(true)
-        writeFile(fileData.path, fileData.contentInApp as string, () => {
-          if (fileData.type === 'html') {
-            setIFrameSrc(`rnbw${fileData.path}`)
-          } else {
-            // do nothing
+        (async () => {
+          setFSPending(true)
+          try {
+            const p_fileData = ffTree[_file.parentUid as TNodeUid].data as TFileNodeData
+            const previewPath = `${p_fileData.path}/${StagePreviewPathPrefix}${fileData.name}${fileData.ext}`
+            await writeFile(previewPath, fileData.contentInApp as string)
+            if (fileData.type === 'html') {
+              setIFrameSrc(`rnbw${previewPath}`)
+            } else {
+              // do nothing
+            }
+          } catch (err) {
           }
           setFSPending(false)
-        }, () => {
-          setFSPending(false)
-        })
+        })()
         // update context
         setFFNode(_file)
         addRunningActions(['processor-nodeTree'])
@@ -447,10 +451,14 @@ export default function Process(props: ProcessProps) {
       }
 
       // update idb
-      setFSPending(true)
-      writeFile(fileData.path, fileData.contentInApp as string, () => {
+      (async () => {
+        setFSPending(true)
+        try {
+          await writeFile(fileData.path, fileData.contentInApp as string)
+        } catch (err) {
+        }
         setFSPending(false)
-      })
+      })()
       // update context
       setFFNode(_file)
       addRunningActions(['processor-nodeTree'])
@@ -539,12 +547,16 @@ export default function Process(props: ProcessProps) {
       const nodeData = node.data as TFileNodeData
       if (nodeData.changed) {
         try {
-          const handler = ffHandlers[uid]
-          const writableStream = await (handler as FileSystemFileHandle).createWritable()
-          await writableStream.write(nodeData.content)
-          await writableStream.close()
-          nodeData.changed = false
-          nodeData.orgContent = nodeData.content
+          if (project.context === 'local') {
+            const handler = ffHandlers[uid]
+            const writableStream = await (handler as FileSystemFileHandle).createWritable()
+            await writableStream.write(nodeData.content)
+            await writableStream.close()
+          } else if (project.context === 'idb') {
+            await writeFile(nodeData.path, nodeData.content)
+            nodeData.changed = false
+            nodeData.orgContent = nodeData.content
+          }
         } catch (err) {
           addMessage({
             type: 'error',
@@ -555,6 +567,7 @@ export default function Process(props: ProcessProps) {
     }))
 
     setFFTree(_ffTree)
+
     removeRunningActions(['process-save'], false)
   }, [ffTree, ffHandlers])
 

@@ -97,7 +97,6 @@ export default function CodeView(props: CodeViewProps) {
     osType,
     theme: _theme,
     panelResizing, setPanelResizing,
-    hasSession, session,
     // toasts
     addMessage, removeMessage,
   } = useContext(MainContext)
