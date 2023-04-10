@@ -14,7 +14,7 @@ import {
 import {
   delMany,
   getMany,
-  setMany,
+  set,
 } from 'idb-keyval';
 import {
   useDispatch,
@@ -378,7 +378,7 @@ export default function MainPage(props: MainPageProps) {
         onNew()
         break
       case 'Open':
-        onImportProject()
+        onOpen()
         break
       case 'Theme':
         onToggleTheme()
@@ -534,13 +534,13 @@ export default function MainPage(props: MainPageProps) {
       setFSPending(false)
     }
   }, [clearSession, osType])
-  // open
   const onImportProject = useCallback(async (fsType: TProjectContext = 'local'): Promise<void> => {
     return new Promise<void>(async (resolve, reject) => {
       if (fsType === 'local') {
         try {
           const projectHandle = await showDirectoryPicker({ _preferPolyfill: false, mode: 'readwrite' } as CustomDirectoryPickerOptions)
           await loadProject(fsType, projectHandle)
+          await set('project-root-folder-handler', projectHandle)
         } catch (err) {
           reject(err)
         }
@@ -554,6 +554,18 @@ export default function MainPage(props: MainPageProps) {
       resolve()
     })
   }, [loadProject])
+  // open
+  const onOpen = useCallback(async () => {
+    setFSPending(true)
+
+    try {
+      await onImportProject()
+    } catch (err) {
+      LogAllow && console.log('failed to open project')
+    }
+
+    setFSPending(false)
+  }, [onImportProject])
   // new
   const onNew = useCallback(async () => {
     setFSPending(true)
@@ -927,16 +939,14 @@ export default function MainPage(props: MainPageProps) {
   }, [])
   useEffect(() => {
     (async () => {
-      if (ffTree[RootNodeUid]) {
-        try {
-          await setMany([['project-context', project.context], ['project-root-folder-handler', ffHandlers[RootNodeUid]]])
-          localStorage.setItem('last-edit-session', 'yes')
-        } catch (err) {
-          localStorage.removeItem('last-edit-session')
-        }
+      try {
+        await set('project-context', project.context)
+        localStorage.setItem('last-edit-session', 'yes')
+      } catch (err) {
+        localStorage.removeItem('last-edit-session')
       }
     })()
-  }, [ffTree[RootNodeUid]])
+  }, [project.context])
 
   return <>
     {/* wrap with the context */}
