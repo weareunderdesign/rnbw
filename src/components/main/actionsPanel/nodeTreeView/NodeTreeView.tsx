@@ -99,7 +99,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     // other
     osType,
     theme: _theme,
-    panelResizing, setPanelResizing,
     // toasts
     addMessage, removeMessage,
   } = useContext(MainContext)
@@ -438,12 +437,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     return <>
       <div
         id="NodeTreeView"
-        className={cx(
-          'scrollable',
-        )}
-        style={{
-          pointerEvents: panelResizing ? 'none' : 'auto',
-        }}
+        className={'scrollable'}
         onClick={onPanelClick}
       >
         <TreeView
@@ -644,7 +638,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       </div>
     </>
   }, [
-    panelResizing, onPanelClick,
+    onPanelClick,
     nodeTreeViewData,
     focusedItem, selectedItems, expandedItems,
     addRunningActions, removeRunningActions,

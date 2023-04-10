@@ -1,4 +1,8 @@
-import React, { useMemo } from 'react';
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import Split from 'react-split';
 
@@ -8,12 +12,20 @@ import { ActionsPanelProps } from './types';
 import WorkspaceTreeView from './workspaceTreeView';
 
 export default function ActionsPanel(props: ActionsPanelProps) {
+  // -------------------------------------------------------------- resizable panels --------------------------------------------------------------
+  const [panelSizes, setPanelSizes] = useState<number[]>([10, 80, 10])
+  useEffect(() => {
+    const sizes = localStorage.getItem('actions-panel-panel-sizes')
+    sizes && setPanelSizes(JSON.parse(sizes))
+  }, [])
+
   return useMemo(() => {
     return <>
       <Split
+        id='ActionsPanel'
         style={{ height: '100vh' }}
 
-        sizes={[10, 80, 10]}
+        sizes={panelSizes}
         minSize={200}
 
         expandToMin={true}
@@ -26,8 +38,9 @@ export default function ActionsPanel(props: ActionsPanelProps) {
         direction="vertical"
         cursor="row-resize"
 
-        onDragEnd={(sizes: Number[]) => {
-          console.log('onDragEnd', sizes)
+        onDragEnd={(sizes: number[]) => {
+          setPanelSizes(sizes)
+          localStorage.setItem('actions-panel-panel-sizes', JSON.stringify(sizes))
         }}
 
         elementStyle={(dimension: "height" | "width", elementSize: number, gutterSize: number, index: number) => {

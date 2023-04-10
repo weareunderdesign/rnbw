@@ -20,7 +20,7 @@ export default function App(props: AppProps) {
   // setup nohost
   const [nohostReady, setNohostReady] = useState(false)
   useEffect(() => {
-    if (!navigator.serviceWorker.controller) {
+    if (navigator.serviceWorker.controller) {
       setNohostReady(true)
     } else {
       if ('serviceWorker' in navigator) {
@@ -28,7 +28,6 @@ export default function App(props: AppProps) {
 
         wb.controlling.then(() => {
           setNohostReady(true)
-          LogAllow && console.log('nohost ready')
         })
 
         wb.addEventListener('installed', (event) => {
@@ -41,6 +40,9 @@ export default function App(props: AppProps) {
       }
     }
   }, [])
+  useEffect(() => {
+    LogAllow && nohostReady && console.log('nohost ready')
+  }, [nohostReady])
 
   return useMemo(() => {
     return <>

@@ -39,8 +39,8 @@ import {
 import { getValidNodeUids } from '@_node/apis';
 import {
   _path,
-  getNormalizedPath,
   createDirectory,
+  getNormalizedPath,
   getStat,
   readDir,
   readFile,
@@ -134,7 +134,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     // other
     osType,
     theme,
-    panelResizing, setPanelResizing,
     // toasts
     addMessage, removeMessage,
   } = useContext(MainContext)
@@ -1863,12 +1862,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     return <>
       <div
         id="FileTreeView"
-        className={cx(
-          'scrollable',
-        )}
-        style={{
-          pointerEvents: panelResizing ? 'none' : 'auto',
-        }}
+        className={'scrollable'}
         onClick={onPanelClick}
       >
         <TreeView
@@ -2102,7 +2096,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       </div>
     </>
   }, [
-    panelResizing, onPanelClick,
+    onPanelClick,
     ffTree, fileTreeViewData,
     focusedItem, selectedItems, expandedItems,
     addRunningActions, removeRunningActions,

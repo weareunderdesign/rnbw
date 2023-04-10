@@ -104,8 +104,6 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   // other
   osType: 'Windows',
   theme: 'System',
-  panelResizing: false,
-  setPanelResizing: (resizing: boolean) => { },
   // toasts
   addMessage: (message: TToast) => { },
   removeMessage: (index: number) => { },

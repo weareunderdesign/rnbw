@@ -4,7 +4,6 @@ import React, {
   useMemo,
 } from 'react';
 
-import cx from 'classnames';
 import { useDispatch } from 'react-redux';
 
 import { MainContext } from '@_redux/main';
@@ -55,7 +54,6 @@ export default function SettingsPanel(props: SettingsPanelProps) {
     // other
     osType,
     theme,
-    panelResizing, setPanelResizing,
     // toasts
     addMessage, removeMessage,
   } = useContext(MainContext)
@@ -67,13 +65,8 @@ export default function SettingsPanel(props: SettingsPanelProps) {
   return useMemo(() => {
     return <>
       <div
-        id="SettingsView"
-        className={cx(
-          'scrollable',
-        )}
-        style={{
-          pointerEvents: panelResizing ? 'none' : 'auto',
-        }}
+        id="SettingsPanel"
+        className={'scrollable'}
         onClick={onPanelClick}
       >
       </div>

@@ -83,7 +83,6 @@ export const IFrame = (props: IFrameProps) => {
     // other
     osType,
     theme,
-    panelResizing, setPanelResizing,
     // toasts
     addMessage, removeMessage,
   } = useContext(MainContext)
@@ -457,7 +456,7 @@ export const IFrame = (props: IFrameProps) => {
   }, [cmdkReferenceData])
   // -------------------------------------------------------------- own --------------------------------------------------------------
   const linkTagUid = useRef<TNodeUid>('')
-  
+
   // iframe event listeners
   const [iframeEvent, setIframeEvent] = useState<MouseEvent>()
   useEffect(() => {

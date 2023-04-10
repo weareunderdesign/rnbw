@@ -115,8 +115,6 @@ export type TMainContext = {
   // other
   osType: TOsType,
   theme: TTheme,
-  panelResizing: boolean,
-  setPanelResizing: (resizing: boolean) => void,
   // toasts
   addMessage: (message: TToast) => void,
   removeMessage: (index: number) => void,

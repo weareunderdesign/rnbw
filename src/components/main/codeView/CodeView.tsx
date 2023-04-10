@@ -7,7 +7,7 @@ import React, {
   useState,
 } from 'react';
 
-import cx from 'classnames';
+import { debounce } from 'lodash';
 import * as monaco from 'monaco-editor';
 import {
   useDispatch,
@@ -96,13 +96,13 @@ export default function CodeView(props: CodeViewProps) {
     // other
     osType,
     theme: _theme,
-    panelResizing, setPanelResizing,
     // toasts
     addMessage, removeMessage,
   } = useContext(MainContext)
   // -------------------------------------------------------------- references --------------------------------------------------------------
   const isFirst = useRef<boolean>(true)
   const monacoRef = useRef<monaco.editor.IEditor | null>(null)
+  const editorWrapperRef = useRef<HTMLDivElement>(null)
   const codeContent = useRef<string>('')
   const decorationCollectionRef = useRef<monaco.editor.IEditorDecorationsCollection>()
   const codeChangeDecorationRef = useRef<Map<TNodeUid, monaco.editor.IModelDeltaDecoration[]>>(new Map<TNodeUid, monaco.editor.IModelDeltaDecoration[]>())
@@ -479,23 +479,33 @@ export default function CodeView(props: CodeViewProps) {
   const onPanelClick = useCallback((e: React.MouseEvent) => {
     setActivePanel('code')
   }, [])
+  // editor-resize
+  useEffect(() => {
+    const resetEditorLayout = () => {
+      monacoRef.current?.layout({ width: 0, height: 0 })
+      window.requestAnimationFrame(() => {
+        const wrapperRect = editorWrapperRef.current?.getBoundingClientRect()
+        wrapperRect && monacoRef.current?.layout({ width: wrapperRect.width, height: wrapperRect.height })
+      })
+    }
+    const debounced = debounce(resetEditorLayout, 100)
+    const resizeObserver = new ResizeObserver(debounced)
+
+    editorWrapperRef.current && resizeObserver.observe(editorWrapperRef.current)
+    return () => {
+      editorWrapperRef.current && resizeObserver.unobserve(editorWrapperRef.current)
+    }
+  }, [editorWrapperRef.current])
 
   return useMemo(() => {
     return <>
       <div
         id="CodeView"
-        className={cx(
-          'scrollable',
-        )}
-        style={{
-          height: "100vh",
-          pointerEvents: panelResizing ? 'none' : 'auto',
-        }}
+        className={'scrollable'}
         onClick={onPanelClick}
+        ref={editorWrapperRef}
       >
         <Editor
-          width="100%"
-          height="100%"
           defaultLanguage={"html"}
           language={language}
           defaultValue={""}
@@ -514,12 +524,13 @@ export default function CodeView(props: CodeViewProps) {
             tabSize: tabSize,
             wordWrap: wordWrap,
             minimap: { enabled: false },
+            automaticLayout: false,
           }}
         />
       </div>
     </>
   }, [
-    panelResizing, onPanelClick,
+    onPanelClick,
     language, theme,
     handleEditorDidMount, handleEditorChange,
     tabSize, wordWrap,

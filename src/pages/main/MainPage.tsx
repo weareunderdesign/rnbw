@@ -302,7 +302,6 @@ export default function MainPage(props: MainPageProps) {
   // other
   const [osType, setOsType] = useState<TOsType>('Windows')
   const [theme, setTheme] = useState<TTheme>('System')
-  const [panelResizing, setPanelResizing] = useState<boolean>(false)
   // toasts
   const [messages, setMessages] = useState<TToast[]>([])
   const addMessage = useCallback((message: TToast) => {
@@ -627,6 +626,13 @@ export default function MainPage(props: MainPageProps) {
     setShowCodeView(!showCodeView)
     setNewFocusedNodeUid(fnFocusedItem)
   }, [showCodeView, fnFocusedItem])
+  // -------------------------------------------------------------- resizable panels --------------------------------------------------------------
+  const [showActionsPanel, setShowActionsPanel] = useState(true)
+  const [panelSizes, setPanelSizes] = useState<number[]>([10, 60, 30])
+  useEffect(() => {
+    const sizes = localStorage.getItem('main-page-panel-sizes')
+    sizes && setPanelSizes(JSON.parse(sizes))
+  }, [])
   // -------------------------------------------------------------- other --------------------------------------------------------------
   // detect OS & fetch reference - html. Jumpstart.csv, Actions.csv
   useEffect(() => {
@@ -978,7 +984,6 @@ export default function MainPage(props: MainPageProps) {
         // other
         osType,
         theme,
-        panelResizing, setPanelResizing,
         // toasts
         addMessage, removeMessage,
       }}
@@ -990,12 +995,13 @@ export default function MainPage(props: MainPageProps) {
       <Loader show={pending || iframeLoading || fsPending || codeEditing}></Loader>
 
       <Split
+        id='MainPage'
         className={'view'}
         style={{ display: 'flex' }}
 
-        sizes={[10, 60, 30]}
-        minSize={showCodeView ? 240 : [240, 240, 0]}
-        maxSize={showCodeView ? undefined : [10000, 10000, 0]}
+        sizes={panelSizes}
+        minSize={[showActionsPanel ? 240 : 0, 240, showCodeView ? 400 : 0]}
+        maxSize={[Infinity, Infinity, showCodeView ? Infinity : 0]}
 
         expandToMin={true}
 
@@ -1007,8 +1013,9 @@ export default function MainPage(props: MainPageProps) {
         direction="horizontal"
         cursor="col-resize"
 
-        onDragEnd={(sizes: Number[]) => {
-          console.log('onDragEnd', sizes)
+        onDragEnd={(sizes: number[]) => {
+          setPanelSizes(sizes)
+          localStorage.setItem('main-page-panel-sizes', JSON.stringify(sizes))
         }}
 
         elementStyle={(_dimension: "height" | "width", elementSize: number, _gutterSize: number, _index: number) => {
@@ -1021,11 +1028,13 @@ export default function MainPage(props: MainPageProps) {
             'width': gutterSize + 'px',
           }
         }}
+
+        collapsed={!showCodeView ? 2 : undefined}
       >
         <ActionsPanel />
         <StageView />
-        <div>
-          {showCodeView ? <CodeView /> : null}
+        <div id='CodeViewWrapper'>
+          {showCodeView && <CodeView />}
         </div>
       </Split>
 
