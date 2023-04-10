@@ -20,24 +20,11 @@ export default function App(props: AppProps) {
   // setup nohost
   const [nohostReady, setNohostReady] = useState(false)
   useEffect(() => {
-    if (navigator.serviceWorker.controller) {
-      setNohostReady(true)
-    } else {
-      if ('serviceWorker' in navigator) {
-        const wb = new Workbox('/nohost-sw.js?route=rnbw')
-
-        wb.controlling.then(() => {
-          setNohostReady(true)
-        })
-
-        wb.addEventListener('installed', (event) => {
-          if (!event.isUpdate) {
-            LogAllow && console.log('nohost first time installed')
-          }
-        })
-
-        wb.register()
-      }
+    if ('serviceWorker' in navigator) {
+      const wb = new Workbox('/nohost-sw.js?route=rnbw')
+      wb.register().then(() => {
+        setNohostReady(true)
+      })
     }
   }, [])
   useEffect(() => {
