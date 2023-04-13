@@ -1099,7 +1099,6 @@ export default function MainPage(props: MainPageProps) {
           return value.includes(search) !== false ? 1 : 0
         }}
         loop={true}
-        className='hidden-on-mobile box-l direction-row align-center justify-stretch radius-s border shadow background-primary'
         label={cmdkPage}
       >
         {/* search input */}
