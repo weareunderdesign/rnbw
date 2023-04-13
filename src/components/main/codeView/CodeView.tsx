@@ -112,10 +112,6 @@ export default function CodeView(props: CodeViewProps) {
     decorationCollectionRef.current = editor.createDecorationsCollection()
   }, [])
   // -------------------------------------------------------------- sync --------------------------------------------------------------
-  // file changed - clear history
-  useEffect(() => {
-    // need to clear the undo/redo history of the monaco-editor
-  }, [file.uid])
   // build node tree refernece
   useEffect(() => {
     validNodeTreeRef.current = JSON.parse(JSON.stringify(validNodeTree))

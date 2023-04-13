@@ -971,6 +971,14 @@ export default function MainPage(props: MainPageProps) {
 
     return () => clearInterval(hoveredMenuItemDetecter)
   }, [cmdkOpen])
+  // file changed - reload the monaco-editor to clear history
+  const [needToReloadCodeView, setNeedToReloadCodeView] = useState(false)
+  useEffect(() => {
+    setNeedToReloadCodeView(true)
+  }, [file.uid])
+  useEffect(() => {
+    setNeedToReloadCodeView(false)
+  }, [needToReloadCodeView])
 
   return <>
     {/* wrap with the context */}
@@ -1069,7 +1077,7 @@ export default function MainPage(props: MainPageProps) {
         <ActionsPanel />
         <StageView />
         <div id='CodeViewWrapper'>
-          {showCodeView && <CodeView />}
+          {showCodeView && !needToReloadCodeView && <CodeView />}
         </div>
       </Split>
 
