@@ -5,7 +5,7 @@ export const getLineBreaker = (osType: TOsType): string => {
     osType === 'Mac' ? '\n' :
       osType === 'Linux' ? '\n' : ''
 }
-export const getCommandKey = (e: KeyboardEvent | MouseEvent, osType: TOsType): boolean => {
+export const getCommandKey = (e: KeyboardEvent | MouseEvent | React.MouseEvent, osType: TOsType): boolean => {
   return osType === 'Windows' ? e.ctrlKey :
     osType === 'Mac' ? e.metaKey :
       osType === 'Linux' ? e.ctrlKey : false

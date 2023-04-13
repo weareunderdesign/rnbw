@@ -47,6 +47,7 @@ import {
   MainContext,
   selectFNNode,
 } from '@_redux/main';
+import { getCommandKey } from '@_services/global';
 import {
   addClass,
   removeClass,
@@ -543,7 +544,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                     }}
                     {...props.context.itemContainerWithoutChildrenProps}
                     {...props.context.interactiveElementProps}
-                    onClick={(e) => {
+                    onClick={(e: React.MouseEvent) => {
                       e.stopPropagation()
 
                       !props.context.isFocused && addRunningActions(['nodeTreeView-focus'])
@@ -552,7 +553,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                       !props.context.isFocused && props.context.focusItem()
 
                       e.shiftKey ? props.context.selectUpTo() :
-                        e.ctrlKey ? (props.context.isSelected ? props.context.unselectItem() : props.context.addToSelectedItems()) :
+                        getCommandKey(e, osType) ? (props.context.isSelected ? props.context.unselectItem() : props.context.addToSelectedItems()) :
                           (props.context.selectItem())
 
                       setActivePanel('node')

@@ -182,7 +182,9 @@ export const IFrame = (props: IFrameProps) => {
     // build new element
     const nodeData = node.data as THtmlNodeData
     const newElement = contentRef?.contentWindow?.document?.createElement(nodeData.name)
-    newElement?.setAttribute(NodeInAppAttribName, node.uid)
+    for (const attrName in nodeData.attribs) {
+      newElement?.setAttribute(attrName, nodeData.attribs[attrName])
+    }
     if (contentNode && newElement) {
       const contentNodeData = contentNode.data as THtmlNodeData
       newElement.innerHTML = contentNodeData.data
