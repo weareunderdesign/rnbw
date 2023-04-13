@@ -560,7 +560,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     if (focusedItemRef.current === focusedItem) return
 
     const focusedElement = document.querySelector(`#FileTreeView-${generateQuerySelector(focusedItem)}`)
-    setTimeout(() => focusedElement?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' }), 0)
+    setTimeout(() => focusedElement?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'auto' }), 0)
 
     focusedItemRef.current = focusedItem
   }, [focusedItem])
