@@ -218,91 +218,94 @@ export default function MainPage(props: MainPageProps) {
       "Recent": [],
     }
 
-    if (activePanel === 'file') {
-      const node = ffTree[ffFocusedItem]
-      if (node && !node.isEntity) {
-        filesRef.map((fileRef: TFilesReference) => {
-          fileRef.Name && data['Files'].push({
-            "Featured": fileRef.Featured === 'Yes',
-            "Name": fileRef.Name,
-            "Icon": fileRef.Icon,
-            "Description": fileRef.Description,
-            "Keyboard Shortcut": {
-              cmd: false,
-              shift: false,
-              alt: false,
-              key: '',
-              click: false,
-            },
-            "Group": 'Add',
-            "Context": fileRef.Extension,
-          })
+    // Files
+    const fileNode = ffTree[ffFocusedItem]
+    if (fileNode && !fileNode.isEntity) {
+      filesRef.map((fileRef: TFilesReference) => {
+        fileRef.Name && data['Files'].push({
+          "Featured": fileRef.Featured === 'Yes',
+          "Name": fileRef.Name,
+          "Icon": fileRef.Icon,
+          "Description": fileRef.Description,
+          "Keyboard Shortcut": {
+            cmd: false,
+            shift: false,
+            alt: false,
+            key: '',
+            click: false,
+          },
+          "Group": 'Add',
+          "Context": fileRef.Extension,
         })
-        data['Files'] = data['Files'].filter((element) => element.Featured || !!cmdkSearch)
-      }
-    } else {
+      })
+    }
+    data['Files'] = data['Files'].filter((element) => element.Featured || !!cmdkSearch)
+    if (data['Files'].length === 0) {
       delete data['Files']
     }
 
-    if (activePanel === 'node' || activePanel === 'stage') {
-      const node = nodeTree[fnFocusedItem]
-      if (node && node.parentUid && node.parentUid !== RootNodeUid) {
-        const parentNode = nodeTree[node.parentUid as TNodeUid]
-        const refData = htmlReferenceData.elements[parentNode.name]
-        if (refData) {
-          if (refData.Contain === 'All') {
-            Object.keys(htmlReferenceData.elements).map((tag: string) => {
-              const tagRef = htmlReferenceData.elements[tag]
-              data['Elements'].push({
-                "Featured": tagRef.Featured === 'Yes',
-                "Name": tagRef.Name,
-                "Icon": tagRef.Icon,
-                "Description": tagRef.Description,
-                "Keyboard Shortcut": {
-                  cmd: false,
-                  shift: false,
-                  alt: false,
-                  key: '',
-                  click: false,
-                },
-                "Group": 'Add',
-                "Context": tagRef.Tag,
-              })
+    // Elements
+    const htmlNode = nodeTree[fnFocusedItem]
+    if (htmlNode && htmlNode.parentUid && htmlNode.parentUid !== RootNodeUid) {
+      const parentNode = nodeTree[htmlNode.parentUid as TNodeUid]
+      const refData = htmlReferenceData.elements[parentNode.name]
+      if (refData) {
+        if (refData.Contain === 'All') {
+          Object.keys(htmlReferenceData.elements).map((tag: string) => {
+            const tagRef = htmlReferenceData.elements[tag]
+            data['Elements'].push({
+              "Featured": tagRef.Featured === 'Yes',
+              "Name": tagRef.Name,
+              "Icon": tagRef.Icon,
+              "Description": tagRef.Description,
+              "Keyboard Shortcut": {
+                cmd: false,
+                shift: false,
+                alt: false,
+                key: '',
+                click: false,
+              },
+              "Group": 'Add',
+              "Context": tagRef.Tag,
             })
-          } else if (refData.Contain === 'None') {
-            // do nothing
-          } else {
-            const tagList = refData.Contain.replace(/ /g, '').split(',')
-            tagList.map((tag: string) => {
-              const pureTag = tag.slice(1, tag.length - 1)
-              const tagRef = htmlReferenceData.elements[pureTag]
+          })
+        } else if (refData.Contain === 'None') {
+          // do nothing
+        } else {
+          const tagList = refData.Contain.replace(/ /g, '').split(',')
+          tagList.map((tag: string) => {
+            const pureTag = tag.slice(1, tag.length - 1)
+            const tagRef = htmlReferenceData.elements[pureTag]
 
-              data['Elements'].push({
-                "Featured": tagRef.Featured === 'Yes',
-                "Name": tagRef.Name,
-                "Icon": tagRef.Icon,
-                "Description": tagRef.Description,
-                "Keyboard Shortcut": {
-                  cmd: false,
-                  shift: false,
-                  alt: false,
-                  key: '',
-                  click: false,
-                },
-                "Group": 'Add',
-                "Context": tagRef.Tag,
-              })
+            data['Elements'].push({
+              "Featured": tagRef.Featured === 'Yes',
+              "Name": tagRef.Name,
+              "Icon": tagRef.Icon,
+              "Description": tagRef.Description,
+              "Keyboard Shortcut": {
+                cmd: false,
+                shift: false,
+                alt: false,
+                key: '',
+                click: false,
+              },
+              "Group": 'Add',
+              "Context": tagRef.Tag,
             })
-          }
-          data['Elements'] = data['Elements'].filter((element) => element.Featured || !!cmdkSearch)
+          })
         }
       }
-    } else {
+    }
+    data['Elements'] = data['Elements'].filter((element) => element.Featured || !!cmdkSearch)
+    if (data['Elements'].length === 0) {
       delete data['Elements']
     }
 
+    // Recent
+    delete data['Recent']
+
     return data
-  }, [activePanel, ffTree, ffFocusedItem, nodeTree, fnFocusedItem, htmlReferenceData, cmdkSearch])
+  }, [ffTree, ffFocusedItem, nodeTree, fnFocusedItem, htmlReferenceData, cmdkSearch])
   // other
   const [osType, setOsType] = useState<TOsType>('Windows')
   const [theme, setTheme] = useState<TTheme>('System')
