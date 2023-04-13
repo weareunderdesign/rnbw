@@ -419,13 +419,6 @@ export default function CodeView(props: CodeViewProps) {
             className: 'focusedNodeCode',
           }
         },
-        {
-          range: n_range,
-          options: {
-            isWholeLine: false,
-            className: 'changedCode',
-          }
-        },
       )
     }
     codeChangeDecorationRef.current.set(focusedNode.uid, focusedNodeDecorations)
