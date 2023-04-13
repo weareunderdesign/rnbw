@@ -173,7 +173,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
         endColumn: 0,
       } as THtmlNodeData
     }
-
     let contentNode: TNode | null = null
     const refData = htmlReferenceData.elements[nodeType]
     if (refData) {

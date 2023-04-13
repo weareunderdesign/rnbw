@@ -1025,6 +1025,7 @@ export default function MainPage(props: MainPageProps) {
       {/* spinner */}
       <Loader show={pending || iframeLoading || fsPending || codeEditing}></Loader>
 
+      {/* main page */}
       <Split
         id='MainPage'
         className={'view'}

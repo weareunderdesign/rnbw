@@ -40,6 +40,21 @@ export default function TreeView(props: TreeViewProps) {
         {...props.props}
         {...props.callbacks}
         items={data}
+        keyboardBindings={{
+          primaryAction: ['Space'],
+          moveFocusToFirstItem: [],
+          moveFocusToLastItem: [],
+          expandSiblings: [],
+          renameItem: ['F2'],
+          abortRenameItem: ['Escape'],
+          toggleSelectItem: [],
+          abortSearch: [],
+          startSearch: [],
+          selectAll: [],
+          startProgrammaticDnd: [],
+          abortProgrammaticDnd: [],
+          completeProgrammaticDnd: [],
+        }}
       >
         <Tree treeId={info.id} rootItem="ROOT" treeLabel={info.label} />
       </ControlledTreeEnvironment>
