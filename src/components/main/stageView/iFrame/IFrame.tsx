@@ -396,9 +396,11 @@ export const IFrame = (props: IFrameProps) => {
     const ele = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${contentEditableUidRef.current}"]`)
     if (!ele) return
 
-    contentEditableAttr ? ele.setAttribute('contenteditable', contentEditableAttr) : ele.removeAttribute('contenteditable')
     contentEditableUidRef.current = ''
-    onTextEdit(node, ele.outerHTML)
+
+    contentEditableAttr ? ele.setAttribute('contenteditable', contentEditableAttr) : ele.removeAttribute('contenteditable')
+    const cleanedUpCode = ele.outerHTML.replace(/rnbwdev-rnbw-element-hover=""|rnbwdev-rnbw-element-select=""/g, '')
+    onTextEdit(node, cleanedUpCode)
   }, [focusedItem])
   const onTextEdit = useCallback((node: TNode, _outerHtml: string) => {
     if (outerHtml === _outerHtml) return
@@ -416,7 +418,8 @@ export const IFrame = (props: IFrameProps) => {
       const nodeData = node.data as THtmlNodeData
       if (nodeData.name === 'html' || nodeData.name === 'head' || nodeData.name === 'body') return
 
-      setOuterHtml(ele.outerHTML)
+      const cleanedUpCode = ele.outerHTML.replace(/rnbwdev-rnbw-element-hover=""|rnbwdev-rnbw-element-select=""/g, '')
+      setOuterHtml(cleanedUpCode)
       if (ele.hasAttribute('contenteditable')) {
         setContentEditableAttr(ele.getAttribute('contenteditable'))
       }
