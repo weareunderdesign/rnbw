@@ -573,7 +573,19 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                         <SVGIconI {...{ "class": "icon-xs" }}>{htmlElementReferenceData['Icon']}</SVGIconI>
                         : <div className='icon-xs'></div>}
 
-                      {props.title}
+                      {htmlElementReferenceData ? <>
+                        <span
+                          className='text-s justify-stretch'
+                          style={{
+                            width: "calc(100% - 32px)",
+                            textOverflow: 'ellipsis',
+                            overflow: 'hidden',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {htmlElementReferenceData['Name']}
+                        </span>
+                      </> : props.title}
                     </div>
                   </div>
 
