@@ -442,7 +442,9 @@ export const IFrame = (props: IFrameProps) => {
     for (const actionName in cmdkReferenceData) {
       const _cmdk = cmdkReferenceData[actionName]['Keyboard Shortcut'] as TCmdkKeyMap
 
-      const key = _cmdk.key.length === 0 ? '' : (_cmdk.key.length === 1 ? 'Key' : '') + _cmdk.key[0].toUpperCase() + _cmdk.key.slice(1)
+      const key = _cmdk.key.length === 0 ? ''
+        : _cmdk.key === '\\' ? 'Backslash'
+          : (_cmdk.key.length === 1 ? 'Key' : '') + _cmdk.key[0].toUpperCase() + _cmdk.key.slice(1)
       if (cmdk.cmd === _cmdk.cmd && cmdk.shift === _cmdk.shift && cmdk.alt === _cmdk.alt && cmdk.key === key) {
         action = actionName
         break

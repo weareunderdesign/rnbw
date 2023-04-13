@@ -13,10 +13,10 @@ import WorkspaceTreeView from './workspaceTreeView';
 
 export default function ActionsPanel(props: ActionsPanelProps) {
   // -------------------------------------------------------------- resizable panels --------------------------------------------------------------
-  const [panelSizes, setPanelSizes] = useState<number[]>([10, 90, 0])
+  const [actionsPanelPanelSizes, setActionsPanelPanelSizes] = useState<number[]>([10, 90, 0])
   useEffect(() => {
     const sizes = localStorage.getItem('actions-panel-panel-sizes')
-    sizes && setPanelSizes(JSON.parse(sizes))
+    sizes && setActionsPanelPanelSizes(JSON.parse(sizes))
   }, [])
 
   return useMemo(() => {
@@ -25,7 +25,7 @@ export default function ActionsPanel(props: ActionsPanelProps) {
         id='ActionsPanel'
         style={{ height: '100vh' }}
 
-        sizes={panelSizes}
+        sizes={actionsPanelPanelSizes}
         minSize={[200, 200, 0]}
         maxSize={[Infinity, Infinity, 0]}
 
@@ -40,7 +40,7 @@ export default function ActionsPanel(props: ActionsPanelProps) {
         cursor="row-resize"
 
         onDragEnd={(sizes: number[]) => {
-          setPanelSizes(sizes)
+          setActionsPanelPanelSizes(sizes)
           localStorage.setItem('actions-panel-panel-sizes', JSON.stringify(sizes))
         }}
 
