@@ -306,7 +306,7 @@ export default function CodeView(props: CodeViewProps) {
 
       const { startLineNumber, startColumn, endLineNumber, endColumn } = codeChange[1][0].range
       const partCodeArr: string[] = []
-      partCodeArr.push(currentCodeArr[startLineNumber - 1].slice(startColumn - 1))
+      partCodeArr.push(currentCodeArr[startLineNumber !== 0 ? startLineNumber - 1 : 0].slice(startColumn !== 0 ? startColumn - 1 : 0))
       for (let line = startLineNumber - 1 + 1; line < endLineNumber - 1; ++line) {
         partCodeArr.push(currentCodeArr[line])
       }

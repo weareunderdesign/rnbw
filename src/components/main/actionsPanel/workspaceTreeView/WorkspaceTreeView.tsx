@@ -1901,7 +1901,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
               const fileReferenceData = useMemo<TFilesReference>(() => {
                 const node = props.item.data as TNode
                 const nodeData = node.data as TFileNodeData
-                const refData = filesReferenceData[nodeData.kind === 'directory' ? 'folder' : nodeData.ext.slice(1)]
+                const refData = filesReferenceData[nodeData.kind === 'directory' ? 'folder' : (nodeData.ext ? nodeData.ext.slice(1) : nodeData.type)]
                 return refData
               }, [])
 
