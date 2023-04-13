@@ -954,9 +954,12 @@ export default function MainPage(props: MainPageProps) {
       }
     })()
   }, [project.context])
-  // clear cmdk pages when close the modal
+  // clear cmdk pages and search text when close the modal
   useEffect(() => {
-    !cmdkOpen && setCmdkPages([])
+    if (!cmdkOpen) {
+      setCmdkPages([])
+      setCmdkSearch('')
+    }
   }, [cmdkOpen])
   // detect hovered menu item in cmdk modal
   const [hoveredMenuItemDescription, setHoverMenuItemDescription] = useState<string | null | undefined>()
