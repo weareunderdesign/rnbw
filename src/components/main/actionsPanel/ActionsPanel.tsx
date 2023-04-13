@@ -13,7 +13,7 @@ import WorkspaceTreeView from './workspaceTreeView';
 
 export default function ActionsPanel(props: ActionsPanelProps) {
   // -------------------------------------------------------------- resizable panels --------------------------------------------------------------
-  const [panelSizes, setPanelSizes] = useState<number[]>([10, 80, 10])
+  const [panelSizes, setPanelSizes] = useState<number[]>([10, 90, 0])
   useEffect(() => {
     const sizes = localStorage.getItem('actions-panel-panel-sizes')
     sizes && setPanelSizes(JSON.parse(sizes))
@@ -26,7 +26,8 @@ export default function ActionsPanel(props: ActionsPanelProps) {
         style={{ height: '100vh' }}
 
         sizes={panelSizes}
-        minSize={200}
+        minSize={[200, 200, 0]}
+        maxSize={[Infinity, Infinity, 0]}
 
         expandToMin={true}
 
@@ -53,6 +54,8 @@ export default function ActionsPanel(props: ActionsPanelProps) {
             'height': gutterSize + 'px',
           }
         }}
+
+        collapsed={2}
       >
         <WorkspaceTreeView />
         <NodeTreeView />
