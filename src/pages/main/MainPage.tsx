@@ -219,7 +219,6 @@ export default function MainPage(props: MainPageProps) {
     }
 
     if (activePanel === 'file') {
-      // validate
       const node = ffTree[ffFocusedItem]
       if (node && !node.isEntity) {
         filesRef.map((fileRef: TFilesReference) => {
@@ -241,8 +240,11 @@ export default function MainPage(props: MainPageProps) {
         })
         data['Files'] = data['Files'].filter((element) => element.Featured || !!cmdkSearch)
       }
-    } else if (activePanel === 'node' || activePanel === 'stage') {
-      // validate
+    } else {
+      delete data['Files']
+    }
+
+    if (activePanel === 'node' || activePanel === 'stage') {
       const node = nodeTree[fnFocusedItem]
       if (node && node.parentUid && node.parentUid !== RootNodeUid) {
         const parentNode = nodeTree[node.parentUid as TNodeUid]
@@ -295,6 +297,8 @@ export default function MainPage(props: MainPageProps) {
           data['Elements'] = data['Elements'].filter((element) => element.Featured || !!cmdkSearch)
         }
       }
+    } else {
+      delete data['Elements']
     }
 
     return data
@@ -947,6 +951,23 @@ export default function MainPage(props: MainPageProps) {
       }
     })()
   }, [project.context])
+  // clear cmdk pages when close the modal
+  useEffect(() => {
+    !cmdkOpen && setCmdkPages([])
+  }, [cmdkOpen])
+  // detect hovered menu item in cmdk modal
+  const [hoveredMenuItemDescription, setHoverMenuItemDescription] = useState<string | null | undefined>()
+  useEffect(() => {
+    let hoveredMenuItemDetecter: NodeJS.Timer
+    if (cmdkOpen) {
+      hoveredMenuItemDetecter = setInterval(() => {
+        const description = cmdkPage === 'Add' ? document.querySelector('.rnbw-cmdk-menu-item[aria-selected="true"]')?.getAttribute('rnbw-cmdk-menu-item-description') : ''
+        setHoverMenuItemDescription(description)
+      }, 10)
+    }
+
+    return () => clearInterval(hoveredMenuItemDetecter)
+  }, [cmdkOpen])
 
   return <>
     {/* wrap with the context */}
@@ -1053,17 +1074,14 @@ export default function MainPage(props: MainPageProps) {
         open={cmdkOpen}
         onOpenChange={setCmdkOpen}
         onKeyDown={(e: React.KeyboardEvent) => {
-          // Escape goes to previous page
-          // Backspace goes to previous page when search is empty
           if (e.code === 'Escape' || (e.code === 'Backspace' && !cmdkSearch)) {
             if (e.code === 'Escape' && cmdkPages.length === 1) {
               setCmdkPages([])
               setCmdkOpen(false)
+            } else {
+              cmdkPages.length !== 1 && setCmdkPages((cmdkPages) => cmdkPages.slice(0, -1))
             }
-
-            cmdkPages.length !== 1 && setCmdkPages((cmdkPages) => cmdkPages.slice(0, -1))
           }
-
           e.stopPropagation()
         }}
         filter={(value: string, search: string) => {
@@ -1078,13 +1096,7 @@ export default function MainPage(props: MainPageProps) {
           <Command.Input
             value={cmdkSearch}
             onValueChange={setCmdkSearch}
-            className={cx(
-              'justify-start',
-              'padding-s',
-              'gap-s',
-              'text-l',
-              'background-primary',
-            )}
+            className='justify-start padding-s gap-s text-l background-primary'
             placeholder={cmdkPage === 'Jumpstart' ? 'Jumpstart...' :
               cmdkPage === 'Actions' ? 'Do something...' :
                 cmdkPage === 'Add' ? 'Add something...' : ''} />
@@ -1092,8 +1104,8 @@ export default function MainPage(props: MainPageProps) {
 
         {/* modal content */}
         <div
-          className={cmdkPage === 'Actions' ? "" : "box-l direction-column align-stretch box"}
-          style={cmdkPage === 'Actions' ? { width: "100%" } : {}}
+          className={cmdkPage !== 'Add' ? "" : "box-l direction-column align-stretch box"}
+          style={cmdkPage !== 'Add' ? { width: "100%" } : {}}
         >
           {/* menu list - left panel */}
           <div className="padding-m">
@@ -1130,20 +1142,18 @@ export default function MainPage(props: MainPageProps) {
                             (false)
                           )) ||
                           ((activePanel === 'node' || activePanel === 'stage') && (
-                            (/* file.type === 'html' &&  */context['html'] === true) ||
+                            (ffTree[file.uid] && (ffTree[file.uid].data as TFileNodeData).type === 'html' && context['html'] === true) ||
                             (false)
                           ))
                         )) ||
-                        (cmdkPage === 'Add' && (
-                          (activePanel === 'file' && groupName === 'Files') ||
-                          ((activePanel === 'node' || activePanel === 'stage') && groupName === 'Elements')
-                        ))
+                        (cmdkPage === 'Add')
                       )
                       return show ?
                         <Command.Item
                           key={command.Name}
                           value={command.Name}
-                          // disabled={false}
+                          className='rnbw-cmdk-menu-item'
+                          {...{ 'rnbw-cmdk-menu-item-description': command.Description }}
                           onSelect={() => {
                             // keep modal open when toogling theme
                             command.Name !== 'Theme' && setCmdkOpen(false)
@@ -1151,13 +1161,7 @@ export default function MainPage(props: MainPageProps) {
                             setCurrentCommand({ action: command.Group === 'Add' ? `${AddNodeActionPrefix}-${command.Context}` : command.Name })
                           }}
                         >
-                          <div
-                            className={cx(
-                              'justify-stretch padding-s',
-                              // false && 'opacity-m', // disabled
-                              // command['Name'] === currentCommand.action && 'background-secondary radius-xs', // hover
-                            )}
-                          >
+                          <div className='justify-stretch padding-s'>
                             <div className="gap-s align-center">
                               {/* detect Theme Group and render check boxes */}
                               {cmdkPage === 'Jumpstart' && command.Name === 'Theme' ?
@@ -1199,9 +1203,13 @@ export default function MainPage(props: MainPageProps) {
           </div>
 
           {/* description - right panel */}
-          {cmdkPage !== 'Actions' && <div className="box align-center border-left direction-row">
-            Description
-          </div>}
+          {cmdkPage === 'Add' &&
+            <div className={cx(
+              "box align-center border-left padding-l text-l",
+              !!hoveredMenuItemDescription ? '' : 'opacity-m',
+            )}>
+              {!!hoveredMenuItemDescription ? hoveredMenuItemDescription : 'Description'}
+            </div>}
         </div>
       </Command.Dialog>
     </MainContext.Provider>
