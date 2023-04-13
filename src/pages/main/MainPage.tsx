@@ -963,10 +963,14 @@ export default function MainPage(props: MainPageProps) {
   }, [cmdkOpen])
   // detect hovered menu item in cmdk modal
   const [hoveredMenuItemDescription, setHoverMenuItemDescription] = useState<string | null | undefined>()
+  const [validMenuItemCount, setValidMenuItemCount] = useState(0)
   useEffect(() => {
     let hoveredMenuItemDetecter: NodeJS.Timer
     if (cmdkOpen) {
       hoveredMenuItemDetecter = setInterval(() => {
+        const menuItems = document.querySelectorAll('.rnbw-cmdk-menu-item')
+        setValidMenuItemCount(menuItems.length)
+
         const description = cmdkPage === 'Add' ? document.querySelector('.rnbw-cmdk-menu-item[aria-selected="true"]')?.getAttribute('rnbw-cmdk-menu-item-description') : ''
         setHoverMenuItemDescription(description)
       }, 10)
@@ -1211,7 +1215,7 @@ export default function MainPage(props: MainPageProps) {
           </div>
 
           {/* description - right panel */}
-          {cmdkPage === 'Add' &&
+          {cmdkPage === 'Add' && validMenuItemCount !== 0 &&
             <div className={cx(
               "box align-center border-left padding-l text-l",
               !!hoveredMenuItemDescription ? '' : 'opacity-m',
