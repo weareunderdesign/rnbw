@@ -178,12 +178,15 @@ export const IFrame = (props: IFrameProps) => {
     removeRunningActions(['stageView-focus'])
   }, [addRunningActions, removeRunningActions, nodeTree])
   // -------------------------------------------------------------- side effect handlers --------------------------------------------------------------
-  const addElement = useCallback((targetUid: TNodeUid, node: TNode) => {
+  const addElement = useCallback((targetUid: TNodeUid, node: TNode, contentNode: TNode | null) => {
     // build new element
     const nodeData = node.data as THtmlNodeData
     const newElement = contentRef?.contentWindow?.document?.createElement(nodeData.name)
     newElement?.setAttribute(NodeInAppAttribName, node.uid)
-
+    if (contentNode && newElement) {
+      const contentNodeData = contentNode.data as THtmlNodeData
+      newElement.innerHTML = contentNodeData.data
+    }
     // add after target
     const targetElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"]`)
     newElement && targetElement?.parentElement?.insertBefore(newElement, targetElement.nextElementSibling)
@@ -530,7 +533,7 @@ export const IFrame = (props: IFrameProps) => {
       const { type, param } = event
       switch (type) {
         case 'add-node':
-          addElement(...param as [TNodeUid, TNode])
+          addElement(...param as [TNodeUid, TNode, TNode | null])
           break
         case 'remove-node':
           removeElements(...param as [TNodeUid[], TNodeUid[]])

@@ -173,9 +173,47 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       } as THtmlNodeData
     }
 
+    let contentNode: TNode | null = null
+    const refData = htmlReferenceData.elements[nodeType]
+    if (refData) {
+      const { Placeholder, Content } = refData
+      if (Placeholder) {
+        const newNodeData = newNode.data as THtmlNodeData
+        newNodeData.attribs['placeholder'] = Placeholder
+      }
+      if (Content) {
+        newNode.isEntity = false
+        newNode.children = [String(nodeMaxUid + 2) as TNodeUid]
+        contentNode = {
+          uid: String(nodeMaxUid + 2) as TNodeUid,
+          parentUid: String(nodeMaxUid + 1) as TNodeUid,
+          name: 'text',
+          isEntity: true,
+          children: [],
+          data: {
+            valid: false,
+            isFormatText: false,
+
+            type: 'text',
+            name: 'text',
+            data: Content,
+            attribs: { [NodeInAppAttribName]: String(nodeMaxUid + 2) as TNodeUid },
+
+            html: '',
+            htmlInApp: '',
+
+            startLineNumber: 0,
+            startColumn: 0,
+            endLineNumber: 0,
+            endColumn: 0,
+          } as THtmlNodeData
+        } as TNode
+      }
+    }
+
     // call api
     const tree = JSON.parse(JSON.stringify(nodeTree))
-    const res = addNode(tree, focusedItem, newNode, 'html', String(nodeMaxUid + 1) as TNodeUid, osType, tabSize)
+    const res = addNode(tree, focusedItem, newNode, contentNode, 'html', String(contentNode ? nodeMaxUid + 2 : nodeMaxUid + 1) as TNodeUid, osType, tabSize)
 
     // processor
     addRunningActions(['processor-updateOpt'])
@@ -187,10 +225,10 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     // side effect
     setNodeMaxUid(Number(res.nodeMaxUid))
-    setEvent({ type: 'add-node', param: [focusedItem, newNode] })
+    setEvent({ type: 'add-node', param: [focusedItem, newNode, contentNode] })
 
     removeRunningActions(['nodeTreeView-add'])
-  }, [addRunningActions, removeRunningActions, nodeTree, focusedItem, nodeMaxUid, osType, tabSize])
+  }, [addRunningActions, removeRunningActions, nodeTree, focusedItem, nodeMaxUid, osType, tabSize, htmlReferenceData])
   const cb_removeNode = useCallback((uids: TNodeUid[]) => {
     addRunningActions(['nodeTreeView-remove'])
 

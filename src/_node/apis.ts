@@ -151,7 +151,7 @@ export const getValidNodeUids = (tree: TNodeTreeData, uids: TNodeUid[], targetUi
   return uids.filter(uid => validatedUids[uid])
 }
 
-export const addNode = (tree: TNodeTreeData, targetUid: TNodeUid, node: TNode, treeType: TNodeTreeContext, nodeMaxUid: TNodeUid, osType: TOsType, tabSize: number): TNodeApiResponse => {
+export const addNode = (tree: TNodeTreeData, targetUid: TNodeUid, node: TNode, contentNode: TNode | null, treeType: TNodeTreeContext, nodeMaxUid: TNodeUid, osType: TOsType, tabSize: number): TNodeApiResponse => {
   let _nodeMaxUid = Number(nodeMaxUid)
 
   // update parent
@@ -163,7 +163,9 @@ export const addNode = (tree: TNodeTreeData, targetUid: TNodeUid, node: TNode, t
 
   // add node
   tree[node.uid] = node
-
+  if (contentNode) {
+    tree[contentNode.uid] = contentNode
+  }
   if (treeType === 'html') {
     // format node
     addFormatTextBeforeNode(tree, node, String(++_nodeMaxUid) as TNodeUid, osType, tabSize)
