@@ -1166,7 +1166,7 @@ export default function MainPage(props: MainPageProps) {
                           {...{ 'rnbw-cmdk-menu-item-description': command.Description }}
                           onSelect={() => {
                             // keep modal open when toogling theme
-                            command.Name !== 'Theme' && setCmdkOpen(false)
+                            command.Name !== 'Theme' && command.Name !== 'Add' && setCmdkOpen(false)
 
                             setCurrentCommand({ action: command.Group === 'Add' ? `${AddNodeActionPrefix}-${command.Context}` : command.Name })
                           }}

@@ -414,7 +414,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
   const onActions = useCallback(() => {
     if (cmdkOpen) return
-
     setCmdkPages(['Actions'])
     setCmdkOpen(true)
   }, [cmdkOpen])
