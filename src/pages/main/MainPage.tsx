@@ -831,18 +831,21 @@ export default function MainPage(props: MainPageProps) {
 
     removeRunningActions(['detect-os', 'reference-files', 'reference-html-elements', 'reference-cmdk-jumpstart', 'reference-cmdk-actions'], false)
   }, [])
+  // open jumpstart menu on startup
+  useEffect(() => {
+    // wait until "cmdkReferenceJumpstart" is ready
+    setTimeout(() => onJumpstart(), 0)
+  }, [])
   // newbie flag
   useEffect(() => {
     const isNewbie = localStorage.getItem("newbie")
     LogAllow && console.log('isNewbie: ', isNewbie === null ? true : false)
     if (!isNewbie) {
-      onJumpstart()
       localStorage.setItem("newbie", 'false');
-
+      // init/open default project
       (async () => {
         setFSPending(true)
         try {
-          // init/open default project if it's newbie
           await initIDBProject(DefaultProjectPath)
           await onImportProject('idb')
           LogAllow && console.log('inited/loaded default project')
@@ -1119,8 +1122,8 @@ export default function MainPage(props: MainPageProps) {
                 {Object.keys(cmdkPage === 'Jumpstart' ? cmdkReferenceJumpstart :
                   cmdkPage === 'Actions' ? cmdkReferenceActions :
                     cmdkPage === 'Add' ? cmdkReferenceAdd : {}
-                ).map((groupName: string) =>
-                  <Command.Group
+                ).map((groupName: string) => {
+                  return <Command.Group
                     key={groupName}
                     // heading={groupName}
                     value={groupName}
@@ -1198,6 +1201,7 @@ export default function MainPage(props: MainPageProps) {
                     }
                     )}
                   </Command.Group>
+                }
                 )}
               </Command.List>
             </div>
