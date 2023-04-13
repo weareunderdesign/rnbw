@@ -1177,7 +1177,7 @@ export default function MainPage(props: MainPageProps) {
                               {cmdkPage === 'Jumpstart' && command.Name === 'Theme' ?
                                 <>
                                   <div className="padding-xs">
-                                    <div className="radius-m icon-xs align-center background-secondary"></div>
+                                    <div className="radius-m icon-xs align-center background-tertiary"></div>
                                   </div>
                                   <div className="gap-s align-center">
                                     <span className="text-m opacity-m">Theme</span>

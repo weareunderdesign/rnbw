@@ -117,9 +117,9 @@
 }
 
 [cmdk-item][aria-selected=true] {
-  /* rene.css -> .background-tertiary */
-  background-color: var(--color-tertiary-background);
-  color: var(--color-tertiary-foreground);
+  /* rene.css -> .background-secondary */
+  background-color: var(--color-secondary-background);
+  color: var(--color-secondary-foreground);
 
   /* rene.css -> .radius-s */
   border-radius: 4px;
