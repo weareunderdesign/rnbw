@@ -566,7 +566,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                       props.context.startDragging()
                     }}
                   >
-                    <div className="gap-xs padding-xs" style={{ width: "100%" }}>
+                    <div className="gap-s padding-xs" style={{ width: "100%" }}>
                       {props.arrow}
 
                       {htmlElementReferenceData ?
@@ -632,7 +632,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                     draggingPosition.targetType === 'between-items' && draggingPosition.linePosition === 'top' ? '0px'
                       : draggingPosition.targetType === 'between-items' && draggingPosition.linePosition === 'bottom' ? '-2px'
                         : '-2px',
-                  left: `${draggingPosition.depth * 10 + 16}px`,
+                  left: `${draggingPosition.depth * 10 + 20}px`,
                   height: '2px',
                 }}
               />

@@ -1969,7 +1969,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                       props.context.startDragging()
                     }}
                   >
-                    <div className="gap-xs padding-xs" style={{ width: 'fit-content' }}>
+                    <div className="gap-s padding-xs" style={{ width: 'fit-content' }}>
                       {props.arrow}
 
                       {fileReferenceData ?
