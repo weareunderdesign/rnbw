@@ -446,7 +446,7 @@ export default function CodeView(props: CodeViewProps) {
     setTabSize(_tabSize)
   }, [_tabSize])
   // wordWrap
-  const [wordWrap, setWordWrap] = useState<'on' | 'off'>('on')
+  const [wordWrap, setWordWrap] = useState<'on' | 'off'>('off')
   const toogleWrap = () => setWordWrap(wordWrap === 'on' ? 'off' : 'on')
   // language
   const [language, setLanguage] = useState('html')
@@ -494,7 +494,7 @@ export default function CodeView(props: CodeViewProps) {
     return <>
       <div
         id="CodeView"
-        className={'scrollable'}
+        style={{ height: '100vh' }}
         onClick={onPanelClick}
         ref={editorWrapperRef}
       >
@@ -514,8 +514,8 @@ export default function CodeView(props: CodeViewProps) {
             // enableSnippets: true,
             // showLineNumbers: true,
             contextmenu: false,
-            tabSize: tabSize,
-            wordWrap: wordWrap,
+            tabSize,
+            wordWrap,
             minimap: { enabled: false },
             automaticLayout: false,
           }}
