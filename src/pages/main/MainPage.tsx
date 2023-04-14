@@ -163,6 +163,8 @@ export default function MainPage(props: MainPageProps) {
   const [activePanel, setActivePanel] = useState<TPanelContext>('unknown')
   const [clipboardData, setClipboardData] = useState<TClipboardData>({ panel: 'unknown', type: null, uids: [] })
   const [event, setEvent] = useState<TEvent>(null)
+  // actions panel
+  const [showActionsPanel, setShowActionsPanel] = useState(false)
   // file tree view
   const [initialFileToOpen, setInitialFileToOpen] = useState<TNodeUid>('')
   const [fsPending, setFSPending] = useState<boolean>(false)
@@ -648,7 +650,6 @@ export default function MainPage(props: MainPageProps) {
     setNewFocusedNodeUid(fnFocusedItem)
   }, [showCodeView, fnFocusedItem])
   // toogle actions panel
-  const [showActionsPanel, setShowActionsPanel] = useState(false)
   const toogleActionsPanel = useCallback(() => {
     setShowActionsPanel(!showActionsPanel)
   }, [showActionsPanel])
@@ -995,6 +996,8 @@ export default function MainPage(props: MainPageProps) {
         activePanel, setActivePanel,
         clipboardData, setClipboardData,
         event, setEvent,
+        // actions panel
+        showActionsPanel,
         // file tree view
         initialFileToOpen, setInitialFileToOpen,
         fsPending, setFSPending,

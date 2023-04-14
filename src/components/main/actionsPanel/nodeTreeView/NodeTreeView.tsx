@@ -66,6 +66,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     activePanel, setActivePanel,
     clipboardData, setClipboardData,
     event, setEvent,
+    // actions panel
+    showActionsPanel,
     // file tree view
     fsPending, setFSPending,
     ffTree, setFFTree, setFFNode,
@@ -475,7 +477,10 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     return <>
       <div
         id="NodeTreeView"
-        className={'scrollable'}
+        style={{
+          overflow: 'auto',
+          ...(showActionsPanel ? {} : { width: '0' }),
+        }}
         onClick={onPanelClick}
       >
         <TreeView
@@ -676,7 +681,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       </div>
     </>
   }, [
-    onPanelClick,
+    onPanelClick, showActionsPanel,
     nodeTreeViewData,
     focusedItem, selectedItems, expandedItems,
     addRunningActions, removeRunningActions,

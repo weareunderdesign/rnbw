@@ -50,6 +50,8 @@ export type TMainContext = {
   setClipboardData: (data: TClipboardData) => void,
   event: TEvent,
   setEvent: (e: TEvent) => void,
+  // actions panel
+  showActionsPanel: boolean,
   // file tree view
   initialFileToOpen: TNodeUid,
   setInitialFileToOpen: (uid: TNodeUid) => void,
