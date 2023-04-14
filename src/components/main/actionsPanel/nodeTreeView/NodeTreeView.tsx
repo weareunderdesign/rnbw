@@ -244,6 +244,10 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     setNodeTree(res.tree)
 
     // view state
+    if (res.lastNodeUid && res.lastNodeUid !== '') {
+      dispatch(focusFNNode(res.lastNodeUid))
+      dispatch(selectFNNode([res.lastNodeUid]))
+    }
     addRunningActions(['stageView-viewState'])
 
     // side effect
