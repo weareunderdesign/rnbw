@@ -62,5 +62,5 @@ export default function ActionsPanel(props: ActionsPanelProps) {
         <SettingsPanel />
       </Split>
     </>
-  }, [])
+  }, [actionsPanelPanelSizes])
 }

@@ -115,6 +115,9 @@ export const loadIDBProject = async (projectPath: string): Promise<TIDBFileInfoO
           nameArr.length > 1 && nameArr.pop()
           const _c_name = nameArr.join('.')
 
+          // skip hidden files with no name
+          if (c_kind === 'file' && _c_name === '') return
+
           const handlerInfo: TIDBFileInfo = {
             uid: c_uid,
             parentUid: uid,
@@ -180,6 +183,9 @@ export const reloadIDBProject = async (projectPath: string, ffTree: TNodeTreeDat
           const nameArr = c_name.split('.')
           nameArr.length > 1 && nameArr.pop()
           const _c_name = nameArr.join('.')
+
+          // skip hidden files with no name
+          if (c_kind === 'file' && _c_name === '') return
 
           delete orgUids[c_uid]
 
@@ -248,6 +254,9 @@ export const loadLocalProject = async (projectHandle: FileSystemDirectoryHandle,
           const nameArr = c_name.split('.')
           nameArr.length > 1 && nameArr.pop()
           const _c_name = nameArr.join('.')
+
+          // skip hidden files with no name
+          if (c_kind === 'file' && _c_name === '') continue
 
           const handlerInfo: TFileHandlerInfo = {
             uid: c_uid,
@@ -338,6 +347,9 @@ export const reloadLocalProject = async (projectHandle: FileSystemDirectoryHandl
           const nameArr = c_name.split('.')
           nameArr.length > 1 && nameArr.pop()
           const _c_name = nameArr.join('.')
+
+          // skip hidden files with no name
+          if (c_kind === 'file' && _c_name === '') continue
 
           delete orgUids[c_uid]
 
