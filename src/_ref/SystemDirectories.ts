@@ -8,13 +8,16 @@ export const SystemDirectories: {
     'System Volume Information': true,
     '.git': true,
     '.gitignore': true,
+    'node_modules': true,
   },
   'Mac': {
     '.git': true,
     '.gitignore': true,
+    'node_modules': true,
   },
   'Linux': {
     '.git': true,
     '.gitignore': true,
+    'node_modules': true,
   },
 }

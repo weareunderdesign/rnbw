@@ -36,11 +36,7 @@ import {
   RootNodeUid,
   TmpNodeUid,
 } from '@_constants/main';
-import {
-  getSubNodeUidsByBfs,
-  getValidNodeUids,
-  getValidPrevNodeUid,
-} from '@_node/apis';
+import { getValidNodeUids } from '@_node/apis';
 import {
   _path,
   createDirectory,
@@ -1162,19 +1158,17 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     addRunningActions(['fileTreeView-delete'])
     setInvalidNodes(...uids)
 
-    let lastNodeUid = ''
-    const _ffTree = JSON.parse(JSON.stringify(ffTree)) as TNodeTreeData
     if (project.context === 'local') {
       let allDone = true
       await Promise.all(uids.map(async (uid) => {
         // validate
-        const node = _ffTree[uid]
+        const node = ffTree[uid]
         if (node === undefined) {
           allDone = false
           return
         }
         const nodeData = node.data as TFileNodeData
-        const parentNode = _ffTree[node.parentUid as TNodeUid]
+        const parentNode = ffTree[node.parentUid as TNodeUid]
         if (parentNode === undefined) {
           allDone = false
           return
@@ -1189,19 +1183,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         try {
           const entryName = nodeData.kind === 'directory' ? nodeData.name : `${nodeData.name}${nodeData.ext}`
           await parentHandler.removeEntry(entryName, { recursive: true })
-
-          // store last element when delete nodes
-          lastNodeUid = getValidPrevNodeUid(_ffTree, node)
-
-          // update parent
-          parentNode.children = parentNode.children.filter(c_uid => c_uid !== uid)
-          parentNode.isEntity = parentNode.children.length === 0
-
-          // remove nest nodes
-          const subUids = getSubNodeUidsByBfs(uid, _ffTree)
-          subUids.map((subUid) => {
-            delete _ffTree[subUid]
-          })
         } catch (err) {
           allDone = false
         }
@@ -1222,28 +1203,10 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           return
         }
         const nodeData = node.data as TFileNodeData
-        const parentNode = _ffTree[node.parentUid as TNodeUid]
-        if (parentNode === undefined) {
-          allDone = false
-          return
-        }
 
         // delete
         try {
           await removeFileSystem(nodeData.path)
-
-          // store last element when delete nodes
-          lastNodeUid = getValidPrevNodeUid(_ffTree, node)
-
-          // update parent
-          parentNode.children = parentNode.children.filter(c_uid => c_uid !== uid)
-          parentNode.isEntity = parentNode.children.length === 0
-
-          // remove nest nodes
-          const subUids = getSubNodeUidsByBfs(uid, _ffTree)
-          subUids.map((subUid) => {
-            delete _ffTree[subUid]
-          })
         } catch (err) {
           allDone = false
         }
@@ -1254,12 +1217,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           content: 'Some directory/file couldn\'t be deleted.',
         })
       }
-    }
-
-    // view state
-    if (lastNodeUid && lastNodeUid !== '') {
-      dispatch(focusFFNode(lastNodeUid))
-      dispatch(selectFFNode([lastNodeUid]))
     }
 
     removeInvalidNodes(...uids)

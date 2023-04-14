@@ -232,7 +232,6 @@ export const loadLocalProject = async (projectHandle: FileSystemDirectoryHandle,
     }
     const handlerArr: TFileHandlerInfo[] = [rootHandler]
     const handlerObj: TFileHandlerInfoObj = { [RootNodeUid]: rootHandler }
-    const fsToCreate: { [path: string]: boolean } = { [rootHandler.path]: true }
 
     // loop through the project
     const dirHandlers: TFileHandlerInfo[] = [rootHandler]
@@ -275,7 +274,6 @@ export const loadLocalProject = async (projectHandle: FileSystemDirectoryHandle,
           handlerObj[c_uid] = handlerInfo
 
           c_kind === 'directory' && dirHandlers.push(handlerInfo)
-          fsToCreate[c_path] = true
         }
       } catch (err) {
         rej(err)
@@ -320,7 +318,6 @@ export const reloadLocalProject = async (projectHandle: FileSystemDirectoryHandl
     }
     const handlerArr: TFileHandlerInfo[] = []
     const handlerObj: TFileHandlerInfoObj = { [RootNodeUid]: rootHandler }
-    const fsToCreate: { [path: string]: boolean } = {}
 
     const orgUids: { [uid: TNodeUid]: true } = {}
     getSubNodeUidsByBfs(RootNodeUid, ffTree, false).map(uid => {
@@ -369,7 +366,6 @@ export const reloadLocalProject = async (projectHandle: FileSystemDirectoryHandl
           handlerObj[c_uid] = handlerInfo
           if (!ffTree[c_uid]) {
             handlerArr.push(handlerInfo)
-            fsToCreate[c_path] = true
           }
 
           c_kind === 'directory' && dirHandlers.push(handlerInfo)
