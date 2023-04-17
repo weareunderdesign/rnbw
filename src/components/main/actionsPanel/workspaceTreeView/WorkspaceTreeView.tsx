@@ -560,7 +560,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     if (focusedItemRef.current === focusedItem) return
 
     const focusedElement = document.querySelector(`#FileTreeView-${generateQuerySelector(focusedItem)}`)
-    setTimeout(() => focusedElement?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' }), 0)
+    setTimeout(() => focusedElement?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'auto' }), 0)
 
     focusedItemRef.current = focusedItem
   }, [focusedItem])
@@ -1901,7 +1901,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
               const fileReferenceData = useMemo<TFilesReference>(() => {
                 const node = props.item.data as TNode
                 const nodeData = node.data as TFileNodeData
-                const refData = filesReferenceData[nodeData.kind === 'directory' ? 'folder' : nodeData.ext.slice(1)]
+                const refData = filesReferenceData[nodeData.kind === 'directory' ? 'folder' : (nodeData.ext ? nodeData.ext.slice(1) : nodeData.type)]
                 return refData
               }, [])
 
