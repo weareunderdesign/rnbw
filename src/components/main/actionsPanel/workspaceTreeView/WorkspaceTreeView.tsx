@@ -29,7 +29,7 @@ import {
 } from '@_components/common';
 import { TreeViewData } from '@_components/common/treeView/types';
 import {
-  AddNodeActionPrefix,
+  AddFileActionPrefix,
   DefaultProjectPath,
   LogAllow,
   ParsableFileTypes,
@@ -811,11 +811,14 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   }
 
   const createTmpFFNode = useCallback((ffNodeType: TFileNodeType) => {
-    const tmpTree = JSON.parse(JSON.stringify(ffTree))
+    const tmpTree = JSON.parse(JSON.stringify(ffTree)) as TNodeTreeData
 
     // validate
-    const node = tmpTree[focusedItem]
-    if (node === undefined || node.isEntity) return
+    let node = tmpTree[focusedItem]
+    if (node === undefined) return
+    if (node.isEntity) {
+      node = tmpTree[node.parentUid as TNodeUid]
+    }
 
     // expand the focusedItem
     node.uid !== RootNodeUid && expandedItemsObj[node.uid] === undefined && dispatch(expandFFNode([node.uid]))
@@ -1780,15 +1783,14 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   }, [linkToOpen])
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
   useEffect(() => {
+    if (isAddFileAction(currentCommand.action)) {
+      onAddNode(currentCommand.action)
+      return
+    }
+
     if (activePanel !== 'file') return
 
     switch (currentCommand.action) {
-      case 'Actions':
-        onActions()
-        break
-      case 'Add':
-        onAdd()
-        break
       case 'Cut':
         onCut()
         break
@@ -1805,19 +1807,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         onDuplicate()
         break
       default:
-        onAddNode(currentCommand.action)
         break
     }
   }, [currentCommand])
-  const onActions = useCallback(() => {
-    if (cmdkOpen) return
-    setCmdkPages(['Actions'])
-    setCmdkOpen(true)
-  }, [cmdkOpen])
-  const onAdd = useCallback(() => {
-    setCmdkPages([...cmdkPages, 'Add'])
-    setCmdkOpen(true)
-  }, [cmdkPages])
   const onDelete = useCallback(() => {
     cb_deleteNode()
   }, [cb_deleteNode])
@@ -1845,11 +1837,12 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   const onDuplicate = useCallback(() => {
     cb_duplicateNode()
   }, [cb_duplicateNode])
+  const isAddFileAction = (actionName: string): boolean => {
+    return actionName.startsWith(AddFileActionPrefix) ? true : false
+  }
   const onAddNode = useCallback((actionName: string) => {
-    if (actionName.startsWith(AddNodeActionPrefix)) {
-      const nodeType = actionName.slice(AddNodeActionPrefix.length + 1)
-      createTmpFFNode(nodeType === 'folder' ? '*folder' : nodeType as TFileNodeType)
-    }
+    const nodeType = actionName.slice(AddFileActionPrefix.length + 1)
+    createTmpFFNode(nodeType === 'folder' ? '*folder' : nodeType as TFileNodeType)
   }, [createTmpFFNode])
   // -------------------------------------------------------------- own --------------------------------------------------------------
   const onPanelClick = useCallback((e: React.MouseEvent) => {

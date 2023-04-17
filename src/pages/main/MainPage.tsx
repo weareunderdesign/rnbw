@@ -37,7 +37,7 @@ import {
   StageView,
 } from '@_components/main';
 import {
-  AddNodeActionPrefix,
+  AddActionPrefix,
   DefaultProjectPath,
   DefaultTabSize,
   HmsClearActionType,
@@ -220,7 +220,7 @@ export default function MainPage(props: MainPageProps) {
 
     // Files
     const fileNode = ffTree[ffFocusedItem]
-    if (fileNode && !fileNode.isEntity) {
+    if (fileNode) {
       filesRef.map((fileRef: TFilesReference) => {
         fileRef.Name && data['Files'].push({
           "Featured": fileRef.Featured === 'Yes',
@@ -235,7 +235,7 @@ export default function MainPage(props: MainPageProps) {
             click: false,
           },
           "Group": 'Add',
-          "Context": fileRef.Extension,
+          "Context": `File-${fileRef.Extension}`,
         })
       })
     }
@@ -266,7 +266,7 @@ export default function MainPage(props: MainPageProps) {
                 click: false,
               },
               "Group": 'Add',
-              "Context": tagRef.Tag,
+              "Context": `Node-${tagRef.Tag}`,
             })
           })
         } else if (refData.Contain === 'None') {
@@ -290,7 +290,7 @@ export default function MainPage(props: MainPageProps) {
                 click: false,
               },
               "Group": 'Add',
-              "Context": tagRef.Tag,
+              "Context": `Node-${tagRef.Tag}`,
             })
           })
         }
@@ -398,6 +398,12 @@ export default function MainPage(props: MainPageProps) {
         break
       case 'Redo':
         onRedo()
+        break
+      case 'Actions':
+        onActions()
+        break
+      case 'Add':
+        onAdd()
         break
       case 'Code':
         toogleCodeView()
@@ -587,6 +593,17 @@ export default function MainPage(props: MainPageProps) {
 
     setFSPending(false)
   }, [onImportProject])
+  // actions
+  const onActions = useCallback(() => {
+    if (cmdkOpen) return
+    setCmdkPages(['Actions'])
+    setCmdkOpen(true)
+  }, [cmdkOpen])
+  // add
+  const onAdd = useCallback(() => {
+    setCmdkPages([...cmdkPages, 'Add'])
+    setCmdkOpen(true)
+  }, [cmdkPages])
   // download
   const onDownload = useCallback(async () => {
     if (project.context !== 'idb') return
@@ -1149,6 +1166,7 @@ export default function MainPage(props: MainPageProps) {
                       const show: boolean = (
                         (cmdkPage === 'Jumpstart') ||
                         (cmdkPage === 'Actions' && (
+                          (command.Name === 'Add') ||
                           (context.all === true) ||
                           (activePanel === 'file' && (
                             (context['file'] === true) ||
@@ -1171,7 +1189,7 @@ export default function MainPage(props: MainPageProps) {
                             // keep modal open when toogling theme
                             command.Name !== 'Theme' && command.Name !== 'Add' && setCmdkOpen(false)
 
-                            setCurrentCommand({ action: command.Group === 'Add' ? `${AddNodeActionPrefix}-${command.Context}` : command.Name })
+                            setCurrentCommand({ action: command.Group === 'Add' ? `${AddActionPrefix}-${command.Context}` : command.Name })
                           }}
                         >
                           <div className='justify-stretch padding-s'>
