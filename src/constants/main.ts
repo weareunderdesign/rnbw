@@ -17,6 +17,8 @@ export const ParsableFileTypes: {
   '.html': true,
 }
 export const LogAllow: boolean = true
-export const AddNodeActionPrefix = 'AddNode'
+export const AddActionPrefix = 'AddAction'
+export const AddFileActionPrefix = `${AddActionPrefix}-File`
+export const AddNodeActionPrefix = `${AddActionPrefix}-Node`
 export const DefaultProjectPath = '/_rnbw_default_project'
 export const StagePreviewPathPrefix = 'rnbw-stage-preview-'

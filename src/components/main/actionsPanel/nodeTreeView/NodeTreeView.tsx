@@ -376,16 +376,14 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   }, [addRunningActions, removeRunningActions])
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
   useEffect(() => {
+    if (isAddNodeAction(currentCommand.action)) {
+      onAddNode(currentCommand.action)
+      return
+    }
+
     if (activePanel !== 'node' && activePanel !== 'stage') return
 
     switch (currentCommand.action) {
-      case 'Actions':
-        onActions()
-        break
-      case 'Add':
-        onAdd()
-        break
-
       case 'Cut':
         onCut()
         break
@@ -413,21 +411,9 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
         break
 
       default:
-        onAddNode(currentCommand.action)
         break
     }
   }, [currentCommand])
-
-  const onActions = useCallback(() => {
-    if (cmdkOpen) return
-
-    setCmdkPages(['Actions'])
-    setCmdkOpen(true)
-  }, [cmdkOpen])
-  const onAdd = useCallback(() => {
-    setCmdkPages([...cmdkPages, 'Add'])
-    setCmdkOpen(true)
-  }, [cmdkPages])
 
   const onCut = useCallback(() => {
     if (selectedItems.length === 0) return
@@ -466,11 +452,13 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   const onGroup = useCallback(() => { }, [])
   const onUngroup = useCallback(() => { }, [])
 
+  const isAddNodeAction = (actionName: string): boolean => {
+    return actionName.startsWith(AddNodeActionPrefix) ? true : false
+  }
   const onAddNode = useCallback((actionName: string) => {
-    if (actionName.startsWith(AddNodeActionPrefix)) {
-      const tagName = actionName.slice(AddNodeActionPrefix.length + 2, actionName.length - 1)
-      cb_addNode(tagName)
-    }
+    const tagName = actionName.slice(AddNodeActionPrefix.length + 2, actionName.length - 1)
+    console.log({ tagName })
+    cb_addNode(tagName)
   }, [cb_addNode])
   // -------------------------------------------------------------- own --------------------------------------------------------------
   const onPanelClick = useCallback(() => {

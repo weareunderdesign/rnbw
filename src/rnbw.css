@@ -54,7 +54,7 @@
 [cmdk-overlay] {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.2);
 }
 
 [cmdk-dialog] {
@@ -75,6 +75,22 @@
 
   overflow: auto;
   outline: none;
+
+  /* rene.css -> .shadow */
+  box-shadow: 0 2px 8px 0 rgb(0 0 0 / 10%);
+  /* rene.css -> .radius-s */
+  border-radius: 8px;
+  /* rene.css -> .background-primary */
+  background-color: var(--color-primary-background);
+  border-color: var(--color-primary-background);
+  color: var(--color-primary-foreground)
+}
+
+/* rene.css -> .hidden-on-mobile */
+@media (max-width: 768px) {
+  [cmdk-dialog] {
+    display: none;
+  }
 }
 
 [cmdk-root] {
@@ -102,8 +118,8 @@
 
 [cmdk-item][aria-selected=true] {
   /* rene.css -> .background-secondary */
-  background-color: var(--color-tertiary-background);
-  color: var(--color-tertiary-foreground);
+  background-color: var(--color-secondary-background);
+  color: var(--color-secondary-foreground);
 
   /* rene.css -> .radius-s */
   border-radius: 4px;

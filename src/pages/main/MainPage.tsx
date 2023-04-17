@@ -37,7 +37,7 @@ import {
   StageView,
 } from '@_components/main';
 import {
-  AddNodeActionPrefix,
+  AddActionPrefix,
   DefaultProjectPath,
   DefaultTabSize,
   HmsClearActionType,
@@ -220,91 +220,94 @@ export default function MainPage(props: MainPageProps) {
       "Recent": [],
     }
 
-    if (activePanel === 'file') {
-      const node = ffTree[ffFocusedItem]
-      if (node && !node.isEntity) {
-        filesRef.map((fileRef: TFilesReference) => {
-          fileRef.Name && data['Files'].push({
-            "Featured": fileRef.Featured === 'Yes',
-            "Name": fileRef.Name,
-            "Icon": fileRef.Icon,
-            "Description": fileRef.Description,
-            "Keyboard Shortcut": {
-              cmd: false,
-              shift: false,
-              alt: false,
-              key: '',
-              click: false,
-            },
-            "Group": 'Add',
-            "Context": fileRef.Extension,
-          })
+    // Files
+    const fileNode = ffTree[ffFocusedItem]
+    if (fileNode) {
+      filesRef.map((fileRef: TFilesReference) => {
+        fileRef.Name && data['Files'].push({
+          "Featured": fileRef.Featured === 'Yes',
+          "Name": fileRef.Name,
+          "Icon": fileRef.Icon,
+          "Description": fileRef.Description,
+          "Keyboard Shortcut": {
+            cmd: false,
+            shift: false,
+            alt: false,
+            key: '',
+            click: false,
+          },
+          "Group": 'Add',
+          "Context": `File-${fileRef.Extension}`,
         })
-        data['Files'] = data['Files'].filter((element) => element.Featured || !!cmdkSearch)
-      }
-    } else {
+      })
+    }
+    data['Files'] = data['Files'].filter((element) => element.Featured || !!cmdkSearch)
+    if (data['Files'].length === 0) {
       delete data['Files']
     }
 
-    if (activePanel === 'node' || activePanel === 'stage') {
-      const node = nodeTree[fnFocusedItem]
-      if (node && node.parentUid && node.parentUid !== RootNodeUid) {
-        const parentNode = nodeTree[node.parentUid as TNodeUid]
-        const refData = htmlReferenceData.elements[parentNode.name]
-        if (refData) {
-          if (refData.Contain === 'All') {
-            Object.keys(htmlReferenceData.elements).map((tag: string) => {
-              const tagRef = htmlReferenceData.elements[tag]
-              data['Elements'].push({
-                "Featured": tagRef.Featured === 'Yes',
-                "Name": tagRef.Name,
-                "Icon": tagRef.Icon,
-                "Description": tagRef.Description,
-                "Keyboard Shortcut": {
-                  cmd: false,
-                  shift: false,
-                  alt: false,
-                  key: '',
-                  click: false,
-                },
-                "Group": 'Add',
-                "Context": tagRef.Tag,
-              })
+    // Elements
+    const htmlNode = nodeTree[fnFocusedItem]
+    if (htmlNode && htmlNode.parentUid && htmlNode.parentUid !== RootNodeUid) {
+      const parentNode = nodeTree[htmlNode.parentUid as TNodeUid]
+      const refData = htmlReferenceData.elements[parentNode.name]
+      if (refData) {
+        if (refData.Contain === 'All') {
+          Object.keys(htmlReferenceData.elements).map((tag: string) => {
+            const tagRef = htmlReferenceData.elements[tag]
+            data['Elements'].push({
+              "Featured": tagRef.Featured === 'Yes',
+              "Name": tagRef.Name,
+              "Icon": tagRef.Icon,
+              "Description": tagRef.Description,
+              "Keyboard Shortcut": {
+                cmd: false,
+                shift: false,
+                alt: false,
+                key: '',
+                click: false,
+              },
+              "Group": 'Add',
+              "Context": `Node-${tagRef.Tag}`,
             })
-          } else if (refData.Contain === 'None') {
-            // do nothing
-          } else {
-            const tagList = refData.Contain.replace(/ /g, '').split(',')
-            tagList.map((tag: string) => {
-              const pureTag = tag.slice(1, tag.length - 1)
-              const tagRef = htmlReferenceData.elements[pureTag]
+          })
+        } else if (refData.Contain === 'None') {
+          // do nothing
+        } else {
+          const tagList = refData.Contain.replace(/ /g, '').split(',')
+          tagList.map((tag: string) => {
+            const pureTag = tag.slice(1, tag.length - 1)
+            const tagRef = htmlReferenceData.elements[pureTag]
 
-              data['Elements'].push({
-                "Featured": tagRef.Featured === 'Yes',
-                "Name": tagRef.Name,
-                "Icon": tagRef.Icon,
-                "Description": tagRef.Description,
-                "Keyboard Shortcut": {
-                  cmd: false,
-                  shift: false,
-                  alt: false,
-                  key: '',
-                  click: false,
-                },
-                "Group": 'Add',
-                "Context": tagRef.Tag,
-              })
+            data['Elements'].push({
+              "Featured": tagRef.Featured === 'Yes',
+              "Name": tagRef.Name,
+              "Icon": tagRef.Icon,
+              "Description": tagRef.Description,
+              "Keyboard Shortcut": {
+                cmd: false,
+                shift: false,
+                alt: false,
+                key: '',
+                click: false,
+              },
+              "Group": 'Add',
+              "Context": `Node-${tagRef.Tag}`,
             })
-          }
-          data['Elements'] = data['Elements'].filter((element) => element.Featured || !!cmdkSearch)
+          })
         }
       }
-    } else {
+    }
+    data['Elements'] = data['Elements'].filter((element) => element.Featured || !!cmdkSearch)
+    if (data['Elements'].length === 0) {
       delete data['Elements']
     }
 
+    // Recent
+    delete data['Recent']
+
     return data
-  }, [activePanel, ffTree, ffFocusedItem, nodeTree, fnFocusedItem, htmlReferenceData, cmdkSearch])
+  }, [ffTree, ffFocusedItem, nodeTree, fnFocusedItem, htmlReferenceData, cmdkSearch])
   // other
   const [osType, setOsType] = useState<TOsType>('Windows')
   const [theme, setTheme] = useState<TTheme>('System')
@@ -325,6 +328,8 @@ export default function MainPage(props: MainPageProps) {
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
   // key event listener
   const cb_onKeyDown = useCallback((e: KeyboardEvent) => {
+    if (cmdkOpen) return
+
     // skip inline rename input in file-tree-view
     const targetId = e.target && (e.target as HTMLElement).id
     if (targetId === 'FileTreeView-RenameInput') {
@@ -370,7 +375,7 @@ export default function MainPage(props: MainPageProps) {
     }
 
     setCurrentCommand({ action })
-  }, [cmdkReferenceData, activePanel, osType])
+  }, [cmdkOpen, cmdkReferenceData, activePanel, osType])
   // bind onKeyDownCallback (cb_onKeyDown)
   useEffect(() => {
     document.addEventListener('keydown', cb_onKeyDown)
@@ -399,6 +404,12 @@ export default function MainPage(props: MainPageProps) {
         break
       case 'Redo':
         onRedo()
+        break
+      case 'Actions':
+        onActions()
+        break
+      case 'Add':
+        onAdd()
         break
       case 'Code':
         toogleCodeView()
@@ -591,6 +602,17 @@ export default function MainPage(props: MainPageProps) {
 
     setFSPending(false)
   }, [onImportProject])
+  // actions
+  const onActions = useCallback(() => {
+    if (cmdkOpen) return
+    setCmdkPages(['Actions'])
+    setCmdkOpen(true)
+  }, [cmdkOpen])
+  // add
+  const onAdd = useCallback(() => {
+    setCmdkPages([...cmdkPages, 'Add'])
+    setCmdkOpen(true)
+  }, [cmdkPages])
   // download
   const onDownload = useCallback(async () => {
     if (project.context !== 'idb') return
@@ -968,16 +990,23 @@ export default function MainPage(props: MainPageProps) {
       }
     })()
   }, [project.context])
-  // clear cmdk pages when close the modal
+  // clear cmdk pages and search text when close the modal
   useEffect(() => {
-    !cmdkOpen && setCmdkPages([])
+    if (!cmdkOpen) {
+      setCmdkPages([])
+      setCmdkSearch('')
+    }
   }, [cmdkOpen])
   // detect hovered menu item in cmdk modal
   const [hoveredMenuItemDescription, setHoverMenuItemDescription] = useState<string | null | undefined>()
+  const [validMenuItemCount, setValidMenuItemCount] = useState(0)
   useEffect(() => {
     let hoveredMenuItemDetecter: NodeJS.Timer
     if (cmdkOpen) {
       hoveredMenuItemDetecter = setInterval(() => {
+        const menuItems = document.querySelectorAll('.rnbw-cmdk-menu-item')
+        setValidMenuItemCount(menuItems.length)
+
         const description = cmdkPage === 'Add' ? document.querySelector('.rnbw-cmdk-menu-item[aria-selected="true"]')?.getAttribute('rnbw-cmdk-menu-item-description') : ''
         setHoverMenuItemDescription(description)
       }, 10)
@@ -1156,7 +1185,6 @@ export default function MainPage(props: MainPageProps) {
           return value.includes(search) !== false ? 1 : 0
         }}
         loop={true}
-        className='hidden-on-mobile box-l direction-row align-center justify-stretch radius-s border shadow background-primary'
         label={cmdkPage}
       >
         {/* search input */}
@@ -1204,6 +1232,7 @@ export default function MainPage(props: MainPageProps) {
                       const show: boolean = (
                         (cmdkPage === 'Jumpstart') ||
                         (cmdkPage === 'Actions' && (
+                          (command.Name === 'Add') ||
                           (context.all === true) ||
                           (activePanel === 'file' && (
                             (context['file'] === true) ||
@@ -1226,9 +1255,9 @@ export default function MainPage(props: MainPageProps) {
                             console.log(command.Name)
 
                             // keep modal open when toogling theme
-                            command.Name !== 'Theme' && setCmdkOpen(false)
+                            command.Name !== 'Theme' && command.Name !== 'Add' && setCmdkOpen(false)
 
-                            setCurrentCommand({ action: command.Group === 'Add' ? `${AddNodeActionPrefix}-${command.Context}` : command.Name })
+                            setCurrentCommand({ action: command.Group === 'Add' ? `${AddActionPrefix}-${command.Context}` : command.Name })
                           }}
                         >
                           <div className='justify-stretch padding-s'>
@@ -1237,7 +1266,7 @@ export default function MainPage(props: MainPageProps) {
                               {cmdkPage === 'Jumpstart' && command.Name === 'Theme' ?
                                 <>
                                   <div className="padding-xs">
-                                    <div className="radius-m icon-xs align-center background-secondary"></div>
+                                    <div className="radius-m icon-xs align-center background-tertiary"></div>
                                   </div>
                                   <div className="gap-s align-center">
                                     <span className="text-m opacity-m">Theme</span>
@@ -1274,7 +1303,7 @@ export default function MainPage(props: MainPageProps) {
           </div>
 
           {/* description - right panel */}
-          {cmdkPage === 'Add' &&
+          {cmdkPage === 'Add' && validMenuItemCount !== 0 &&
             <div className={cx(
               "box align-center border-left padding-l text-l",
               !!hoveredMenuItemDescription ? '' : 'opacity-m',
