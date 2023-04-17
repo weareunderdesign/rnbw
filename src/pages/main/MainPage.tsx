@@ -328,6 +328,8 @@ export default function MainPage(props: MainPageProps) {
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
   // key event listener
   const cb_onKeyDown = useCallback((e: KeyboardEvent) => {
+    if (cmdkOpen) return
+
     // skip inline rename input in file-tree-view
     const targetId = e.target && (e.target as HTMLElement).id
     if (targetId === 'FileTreeView-RenameInput') {
@@ -373,7 +375,7 @@ export default function MainPage(props: MainPageProps) {
     }
 
     setCurrentCommand({ action })
-  }, [cmdkReferenceData, activePanel, osType])
+  }, [cmdkOpen, cmdkReferenceData, activePanel, osType])
   // bind onKeyDownCallback (cb_onKeyDown)
   useEffect(() => {
     document.addEventListener('keydown', cb_onKeyDown)
