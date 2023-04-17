@@ -6,18 +6,12 @@ export const SystemDirectories: {
   'Windows': {
     '$RECYCLE.BIN': true,
     'System Volume Information': true,
-    '.git': true,
-    '.gitignore': true,
     'node_modules': true,
   },
   'Mac': {
-    '.git': true,
-    '.gitignore': true,
     'node_modules': true,
   },
   'Linux': {
-    '.git': true,
-    '.gitignore': true,
     'node_modules': true,
   },
 }
