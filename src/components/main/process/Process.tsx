@@ -165,7 +165,20 @@ export default function Process(props: ProcessProps) {
             }
           }
           if (seedNodeChanged) {
-            const parserRes = parseFile(fileData.type, file.content, htmlReferenceData, osType, null, String(_nodeMaxUid) as TNodeUid)
+            let fileContent = file.content
+            if (updateOpt.from === 'stage') {
+              for (const change of codeChanges) {
+                const { uid, content } = change
+                const node = _nodeTree[uid]
+                const nodeData = node.data as THtmlNodeData
+                nodeData.html = content
+              }
+              // rebuild from new tree
+              const { html: formattedContent } = serializeHtml(_nodeTree, htmlReferenceData, osType)
+              fileContent = formattedContent
+            }
+
+            const parserRes = parseFile(fileData.type, fileContent, htmlReferenceData, osType, null, String(_nodeMaxUid) as TNodeUid)
             const { formattedContent, contentInApp, tree, nodeMaxUid: newNodeMaxUid } = parserRes
 
             _nodeTree = tree

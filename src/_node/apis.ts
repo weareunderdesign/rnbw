@@ -16,6 +16,7 @@ import {
   TNodeTreeContext,
   TNodeTreeData,
   TNodeUid,
+  TNormalNodeData,
 } from './types';
 
 export const getSubNodeUidsByBfs = (uid: TNodeUid, tree: TNodeTreeData, withItSelf: boolean = true): TNodeUid[] => {
@@ -48,8 +49,8 @@ export const getSubNodeUidsByDfs = (uid: TNodeUid, tree: TNodeTreeData, withItSe
 
   return subUids
 }
-export const getPrevNodeUid = (tree: TNodeTreeData, node: TNode): TNodeUid => {
-  let beforeUid: TNodeUid = ''
+export const getPrevSiblingNodeUid = (tree: TNodeTreeData, node: TNode): TNodeUid => {
+  let beforeUid = '' as TNodeUid
 
   const parentNode = tree[node.parentUid as TNodeUid]
   for (const uid of parentNode.children) {
@@ -58,6 +59,22 @@ export const getPrevNodeUid = (tree: TNodeTreeData, node: TNode): TNodeUid => {
   }
 
   return beforeUid
+}
+export const getValidPrevNodeUid = (tree: TNodeTreeData, node: TNode): TNodeUid => {
+  let prevNodeUid = '' as TNodeUid
+
+  const parentNode = tree[node.parentUid as TNodeUid]
+  for (const uid of parentNode.children) {
+    if (uid === node.uid) break
+
+    const childNode = tree[uid]
+    const childNodeData = childNode.data as TNormalNodeData
+    if (!childNodeData.valid) continue
+
+    prevNodeUid = uid
+  }
+
+  return prevNodeUid === '' ? parentNode.uid : prevNodeUid
 }
 export const getNodeChildIndex = (parentNode: TNode, node: TNode): number => {
   let childIndex = 0
@@ -176,6 +193,7 @@ export const addNode = (tree: TNodeTreeData, targetUid: TNodeUid, node: TNode, c
   return { tree, nodeMaxUid: String(_nodeMaxUid) as TNodeUid }
 }
 export const removeNode = (tree: TNodeTreeData, uids: TNodeUid[], treeType: TNodeTreeContext): TNodeApiResponse => {
+  let validPrevNodeUid = '' as TNodeUid
   const deletedUids: TNodeUid[] = []
 
   uids.map((uid) => {
@@ -183,8 +201,11 @@ export const removeNode = (tree: TNodeTreeData, uids: TNodeUid[], treeType: TNod
     const parentNode = tree[node.parentUid as TNodeUid]
 
     if (treeType === 'html') {
+      // store last element when delete nodes
+      validPrevNodeUid = getValidPrevNodeUid(tree, node)
+
       // remove prev format text node
-      const prevNodeUid = getPrevNodeUid(tree, node)
+      const prevNodeUid = getPrevSiblingNodeUid(tree, node)
       if (prevNodeUid !== '') {
         const prevNode = tree[prevNodeUid]
         if ((prevNode.data as THtmlNodeData).isFormatText) {
@@ -209,7 +230,7 @@ export const removeNode = (tree: TNodeTreeData, uids: TNodeUid[], treeType: TNod
     deletedUids.push(...subUids)
   })
 
-  return { tree, deletedUids }
+  return { tree, deletedUids, lastNodeUid: validPrevNodeUid }
 }
 export const copyNode = (tree: TNodeTreeData, targetUid: TNodeUid, isBetween: boolean, position: number, uids: TNodeUid[], treeType: TNodeTreeContext, nodeMaxUid: TNodeUid, osType: TOsType, tabSize: number): TNodeApiResponse => {
   let _nodeMaxUid = Number(nodeMaxUid)
@@ -327,7 +348,7 @@ export const moveNode = (tree: TNodeTreeData, targetUid: TNodeUid, isBetween: bo
 
     if (treeType === 'html') {
       // remove prev format text node
-      const prevNodeUid = getPrevNodeUid(tree, node)
+      const prevNodeUid = getPrevSiblingNodeUid(tree, node)
       if (prevNodeUid !== '') {
         const prevNode = tree[prevNodeUid]
         if ((prevNode.data as THtmlNodeData).isFormatText) {

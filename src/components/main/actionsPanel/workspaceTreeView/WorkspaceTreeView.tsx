@@ -98,6 +98,8 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     activePanel, setActivePanel,
     clipboardData, setClipboardData,
     event, setEvent,
+    // actions panel
+    showActionsPanel,
     // file tree view
     initialFileToOpen, setInitialFileToOpen,
     fsPending, setFSPending,
@@ -560,7 +562,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     if (focusedItemRef.current === focusedItem) return
 
     const focusedElement = document.querySelector(`#FileTreeView-${generateQuerySelector(focusedItem)}`)
-    setTimeout(() => focusedElement?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' }), 0)
+    setTimeout(() => focusedElement?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'auto' }), 0)
 
     focusedItemRef.current = focusedItem
   }, [focusedItem])
@@ -1854,7 +1856,10 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     return <>
       <div
         id="FileTreeView"
-        className={'scrollable'}
+        style={{
+          overflow: 'auto',
+          ...(showActionsPanel ? {} : { width: '0' }),
+        }}
         onClick={onPanelClick}
       >
         <TreeView
@@ -1894,7 +1899,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
               const fileReferenceData = useMemo<TFilesReference>(() => {
                 const node = props.item.data as TNode
                 const nodeData = node.data as TFileNodeData
-                const refData = filesReferenceData[nodeData.kind === 'directory' ? 'folder' : nodeData.ext.slice(1)]
+                const refData = filesReferenceData[nodeData.kind === 'directory' ? 'folder' : (nodeData.ext ? nodeData.ext.slice(1) : nodeData.type)]
                 return refData
               }, [])
 
@@ -1962,7 +1967,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                       props.context.startDragging()
                     }}
                   >
-                    <div className="gap-xs padding-xs" style={{ width: 'fit-content' }}>
+                    <div className="gap-s padding-xs" style={{ width: 'fit-content' }}>
                       {props.arrow}
 
                       {fileReferenceData ?
@@ -2088,7 +2093,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       </div>
     </>
   }, [
-    onPanelClick,
+    onPanelClick, showActionsPanel,
     ffTree, fileTreeViewData,
     focusedItem, selectedItems, expandedItems,
     addRunningActions, removeRunningActions,

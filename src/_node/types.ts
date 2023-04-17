@@ -28,5 +28,6 @@ export type TNodeApiResponse = {
   deletedUids?: TNodeUid[],
   addedUidMap?: Map<TNodeUid, TNodeUid>,
   position?: number,
+  lastNodeUid?: TNodeUid,
 }
 export type TNodeReferenceData = THtmlReferenceData

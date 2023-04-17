@@ -20,11 +20,11 @@ export default function StageView(props: StageViewProps) {
     return <>
       <div
         id="StageView"
-        className={'scrollable'}
         style={{
           height: "100vh",
           background: iframeSrc ? "white" : "",
           position: "relative",
+          marginRight: '2px',
         }}
         onClick={onPanelClick}
       >

@@ -119,7 +119,7 @@ export const IFrame = (props: IFrameProps) => {
     if (focusedItemRef.current === focusedItem) return
 
     const newFocusedElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${focusedItem}"]`)
-    setTimeout(() => newFocusedElement?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' }), 0)
+    setTimeout(() => newFocusedElement?.scrollIntoView({ block: 'start', inline: 'end', behavior: 'auto' }), 0)
 
     focusedItemRef.current = focusedItem
   }, [focusedItem])
@@ -396,9 +396,11 @@ export const IFrame = (props: IFrameProps) => {
     const ele = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${contentEditableUidRef.current}"]`)
     if (!ele) return
 
-    contentEditableAttr ? ele.setAttribute('contenteditable', contentEditableAttr) : ele.removeAttribute('contenteditable')
     contentEditableUidRef.current = ''
-    onTextEdit(node, ele.outerHTML)
+
+    contentEditableAttr ? ele.setAttribute('contenteditable', contentEditableAttr) : ele.removeAttribute('contenteditable')
+    const cleanedUpCode = ele.outerHTML.replace(/rnbwdev-rnbw-element-hover=""|rnbwdev-rnbw-element-select=""/g, '')
+    onTextEdit(node, cleanedUpCode)
   }, [focusedItem])
   const onTextEdit = useCallback((node: TNode, _outerHtml: string) => {
     if (outerHtml === _outerHtml) return
@@ -416,7 +418,8 @@ export const IFrame = (props: IFrameProps) => {
       const nodeData = node.data as THtmlNodeData
       if (nodeData.name === 'html' || nodeData.name === 'head' || nodeData.name === 'body') return
 
-      setOuterHtml(ele.outerHTML)
+      const cleanedUpCode = ele.outerHTML.replace(/rnbwdev-rnbw-element-hover=""|rnbwdev-rnbw-element-select=""/g, '')
+      setOuterHtml(cleanedUpCode)
       if (ele.hasAttribute('contenteditable')) {
         setContentEditableAttr(ele.getAttribute('contenteditable'))
       }
@@ -442,7 +445,9 @@ export const IFrame = (props: IFrameProps) => {
     for (const actionName in cmdkReferenceData) {
       const _cmdk = cmdkReferenceData[actionName]['Keyboard Shortcut'] as TCmdkKeyMap
 
-      const key = _cmdk.key.length === 0 ? '' : (_cmdk.key.length === 1 ? 'Key' : '') + _cmdk.key[0].toUpperCase() + _cmdk.key.slice(1)
+      const key = _cmdk.key.length === 0 ? ''
+        : _cmdk.key === '\\' ? 'Backslash'
+          : (_cmdk.key.length === 1 ? 'Key' : '') + _cmdk.key[0].toUpperCase() + _cmdk.key.slice(1)
       if (cmdk.cmd === _cmdk.cmd && cmdk.shift === _cmdk.shift && cmdk.alt === _cmdk.alt && cmdk.key === key) {
         action = actionName
         break

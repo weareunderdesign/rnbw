@@ -163,6 +163,8 @@ export default function MainPage(props: MainPageProps) {
   const [activePanel, setActivePanel] = useState<TPanelContext>('unknown')
   const [clipboardData, setClipboardData] = useState<TClipboardData>({ panel: 'unknown', type: null, uids: [] })
   const [event, setEvent] = useState<TEvent>(null)
+  // actions panel
+  const [showActionsPanel, setShowActionsPanel] = useState(false)
   // file tree view
   const [initialFileToOpen, setInitialFileToOpen] = useState<TNodeUid>('')
   const [fsPending, setFSPending] = useState<boolean>(false)
@@ -353,7 +355,9 @@ export default function MainPage(props: MainPageProps) {
     for (const actionName in cmdkReferenceData) {
       const _cmdk = cmdkReferenceData[actionName]['Keyboard Shortcut'] as TCmdkKeyMap
 
-      const key = _cmdk.key.length === 0 ? '' : (_cmdk.key.length === 1 ? 'Key' : '') + _cmdk.key[0].toUpperCase() + _cmdk.key.slice(1)
+      const key = _cmdk.key.length === 0 ? ''
+        : _cmdk.key === '\\' ? 'Backslash'
+          : (_cmdk.key.length === 1 ? 'Key' : '') + _cmdk.key[0].toUpperCase() + _cmdk.key.slice(1)
       if (cmdk.cmd === _cmdk.cmd && cmdk.shift === _cmdk.shift && cmdk.alt === _cmdk.alt && cmdk.key === key) {
         action = actionName
         break
@@ -407,6 +411,9 @@ export default function MainPage(props: MainPageProps) {
         break
       case 'Code':
         toogleCodeView()
+        break
+      case 'Design':
+        toogleActionsPanel()
         break
       case 'Download':
         onDownload()
@@ -662,12 +669,19 @@ export default function MainPage(props: MainPageProps) {
     setShowCodeView(!showCodeView)
     setNewFocusedNodeUid(fnFocusedItem)
   }, [showCodeView, fnFocusedItem])
+  // toogle actions panel
+  const toogleActionsPanel = useCallback(() => {
+    setShowActionsPanel(!showActionsPanel)
+  }, [showActionsPanel])
   // -------------------------------------------------------------- resizable panels --------------------------------------------------------------
-  const [showActionsPanel, setShowActionsPanel] = useState(true)
-  const [panelSizes, setPanelSizes] = useState<number[]>([10, 60, 30])
+  const [mainPagePanelSizes, setMainPagePanelSizes] = useState<number[]>([10, 90])
+  const [designPanelPanelSizes, setDesignPanelPanelSizes] = useState<number[]>([60, 40])
   useEffect(() => {
-    const sizes = localStorage.getItem('main-page-panel-sizes')
-    sizes && setPanelSizes(JSON.parse(sizes))
+    const _mainPagePanelSizes = localStorage.getItem('main-page-panel-sizes')
+    _mainPagePanelSizes && setMainPagePanelSizes(JSON.parse(_mainPagePanelSizes))
+
+    const _designPanelPanelSizes = localStorage.getItem('design-panel-panel-sizes')
+    _designPanelPanelSizes && setDesignPanelPanelSizes(JSON.parse(_designPanelPanelSizes))
   }, [])
   // -------------------------------------------------------------- other --------------------------------------------------------------
   // detect OS & fetch reference - html. Jumpstart.csv, Actions.csv
@@ -998,6 +1012,14 @@ export default function MainPage(props: MainPageProps) {
 
     return () => clearInterval(hoveredMenuItemDetecter)
   }, [cmdkOpen])
+  // file changed - reload the monaco-editor to clear history
+  const [needToReloadCodeView, setNeedToReloadCodeView] = useState(false)
+  useEffect(() => {
+    setNeedToReloadCodeView(true)
+  }, [file.uid])
+  useEffect(() => {
+    setNeedToReloadCodeView(false)
+  }, [needToReloadCodeView])
 
   return <>
     {/* wrap with the context */}
@@ -1009,6 +1031,8 @@ export default function MainPage(props: MainPageProps) {
         activePanel, setActivePanel,
         clipboardData, setClipboardData,
         event, setEvent,
+        // actions panel
+        showActionsPanel,
         // file tree view
         initialFileToOpen, setInitialFileToOpen,
         fsPending, setFSPending,
@@ -1061,9 +1085,9 @@ export default function MainPage(props: MainPageProps) {
         className={'view'}
         style={{ display: 'flex' }}
 
-        sizes={panelSizes}
-        minSize={[showActionsPanel ? 240 : 0, 240, showCodeView ? 400 : 0]}
-        maxSize={[Infinity, Infinity, showCodeView ? Infinity : 0]}
+        sizes={mainPagePanelSizes}
+        minSize={[showActionsPanel ? 240 : 0, 320]}
+        maxSize={[showActionsPanel ? Infinity : 0, Infinity]}
 
         expandToMin={true}
 
@@ -1076,7 +1100,7 @@ export default function MainPage(props: MainPageProps) {
         cursor="col-resize"
 
         onDragEnd={(sizes: number[]) => {
-          setPanelSizes(sizes)
+          setMainPagePanelSizes(sizes)
           localStorage.setItem('main-page-panel-sizes', JSON.stringify(sizes))
         }}
 
@@ -1091,12 +1115,52 @@ export default function MainPage(props: MainPageProps) {
           }
         }}
 
-        collapsed={!showCodeView ? 2 : undefined}
+        collapsed={!showActionsPanel ? 0 : undefined}
       >
         <ActionsPanel />
-        <StageView />
-        <div id='CodeViewWrapper'>
-          {showCodeView && <CodeView />}
+        <div id='DesignPanel'>
+          <Split
+            id='MainPage'
+            className={'view'}
+            style={{ display: 'flex' }}
+
+            sizes={designPanelPanelSizes}
+            minSize={[320, showCodeView ? 500 : 0]}
+            maxSize={[Infinity, showCodeView ? Infinity : 0]}
+
+            expandToMin={true}
+
+            gutterSize={8}
+
+            snapOffset={30}
+            dragInterval={1}
+
+            direction="horizontal"
+            cursor="col-resize"
+
+            onDragEnd={(sizes: number[]) => {
+              setDesignPanelPanelSizes(sizes)
+              localStorage.setItem('design-panel-panel-sizes', JSON.stringify(sizes))
+            }}
+
+            elementStyle={(_dimension: "height" | "width", elementSize: number, _gutterSize: number, _index: number) => {
+              return {
+                'width': 'calc(' + elementSize + '%)',
+              }
+            }}
+            gutterStyle={(_dimension: "height" | "width", gutterSize: number, _index: number) => {
+              return {
+                'width': gutterSize + 'px',
+              }
+            }}
+
+            collapsed={!showCodeView ? 1 : undefined}
+          >
+            <StageView />
+            <div id='CodeViewWrapper'>
+              {showCodeView && !needToReloadCodeView && <CodeView />}
+            </div>
+          </Split>
         </div>
       </Split>
 
@@ -1186,6 +1250,8 @@ export default function MainPage(props: MainPageProps) {
                           className='rnbw-cmdk-menu-item'
                           {...{ 'rnbw-cmdk-menu-item-description': command.Description }}
                           onSelect={() => {
+                            console.log(command.Name)
+
                             // keep modal open when toogling theme
                             command.Name !== 'Theme' && command.Name !== 'Add' && setCmdkOpen(false)
 

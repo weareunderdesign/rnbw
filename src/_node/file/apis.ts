@@ -115,6 +115,9 @@ export const loadIDBProject = async (projectPath: string): Promise<TIDBFileInfoO
           nameArr.length > 1 && nameArr.pop()
           const _c_name = nameArr.join('.')
 
+          // skip hidden files with no name
+          if (c_kind === 'file' && _c_name === '') return
+
           const handlerInfo: TIDBFileInfo = {
             uid: c_uid,
             parentUid: uid,
@@ -181,6 +184,9 @@ export const reloadIDBProject = async (projectPath: string, ffTree: TNodeTreeDat
           nameArr.length > 1 && nameArr.pop()
           const _c_name = nameArr.join('.')
 
+          // skip hidden files with no name
+          if (c_kind === 'file' && _c_name === '') return
+
           delete orgUids[c_uid]
 
           const handlerInfo: TIDBFileInfo = {
@@ -226,7 +232,6 @@ export const loadLocalProject = async (projectHandle: FileSystemDirectoryHandle,
     }
     const handlerArr: TFileHandlerInfo[] = [rootHandler]
     const handlerObj: TFileHandlerInfoObj = { [RootNodeUid]: rootHandler }
-    const fsToCreate: { [path: string]: boolean } = { [rootHandler.path]: true }
 
     // loop through the project
     const dirHandlers: TFileHandlerInfo[] = [rootHandler]
@@ -249,6 +254,9 @@ export const loadLocalProject = async (projectHandle: FileSystemDirectoryHandle,
           nameArr.length > 1 && nameArr.pop()
           const _c_name = nameArr.join('.')
 
+          // skip hidden files with no name
+          if (c_kind === 'file' && _c_name === '') continue
+
           const handlerInfo: TFileHandlerInfo = {
             uid: c_uid,
             parentUid: uid,
@@ -266,7 +274,6 @@ export const loadLocalProject = async (projectHandle: FileSystemDirectoryHandle,
           handlerObj[c_uid] = handlerInfo
 
           c_kind === 'directory' && dirHandlers.push(handlerInfo)
-          fsToCreate[c_path] = true
         }
       } catch (err) {
         rej(err)
@@ -311,7 +318,6 @@ export const reloadLocalProject = async (projectHandle: FileSystemDirectoryHandl
     }
     const handlerArr: TFileHandlerInfo[] = []
     const handlerObj: TFileHandlerInfoObj = { [RootNodeUid]: rootHandler }
-    const fsToCreate: { [path: string]: boolean } = {}
 
     const orgUids: { [uid: TNodeUid]: true } = {}
     getSubNodeUidsByBfs(RootNodeUid, ffTree, false).map(uid => {
@@ -339,6 +345,9 @@ export const reloadLocalProject = async (projectHandle: FileSystemDirectoryHandl
           nameArr.length > 1 && nameArr.pop()
           const _c_name = nameArr.join('.')
 
+          // skip hidden files with no name
+          if (c_kind === 'file' && _c_name === '') continue
+
           delete orgUids[c_uid]
 
           const handlerInfo: TFileHandlerInfo = {
@@ -357,7 +366,6 @@ export const reloadLocalProject = async (projectHandle: FileSystemDirectoryHandl
           handlerObj[c_uid] = handlerInfo
           if (!ffTree[c_uid]) {
             handlerArr.push(handlerInfo)
-            fsToCreate[c_path] = true
           }
 
           c_kind === 'directory' && dirHandlers.push(handlerInfo)

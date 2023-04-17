@@ -126,22 +126,8 @@
 }
 
 /* code view highlight */
-[data-theme=light] {
-  --color-vscode-focused-node-code: rgb(255, 200, 255);
-  --color-vscode-changed-code: rgba(0, 0, 255, 0.5);
-}
-
-[data-theme=dark] {
-  --color-vscode-focused-node-code: rgb(0, 55, 0);
-  --color-vscode-changed-code: rgba(255, 255, 0, 0.5);
-}
-
 .focusedNodeCode {
-  background: var(--color-vscode-focused-node-code);
-}
-
-.changedCode {
-  border: 1px dotted var(--color-vscode-changed-code);
+  background: var(--color-tertiary-background);
 }
 
 /* react split css - for resizable panels */
