@@ -124,7 +124,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     if (focusedItemRef.current === focusedItem) return
 
     const focusedElement = document.querySelector(`#NodeTreeView-${focusedItem}`)
-    setTimeout(() => focusedElement?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' }), 0)
+    setTimeout(() => focusedElement?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'auto' }), 0)
 
     focusedItemRef.current = focusedItem
   }, [focusedItem])
@@ -582,7 +582,19 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                         <SVGIconI {...{ "class": "icon-xs" }}>{htmlElementReferenceData['Icon']}</SVGIconI>
                         : <div className='icon-xs'></div>}
 
-                      {props.title}
+                      {htmlElementReferenceData ? <>
+                        <span
+                          className='text-s justify-stretch'
+                          style={{
+                            width: "calc(100% - 32px)",
+                            textOverflow: 'ellipsis',
+                            overflow: 'hidden',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {htmlElementReferenceData['Name']}
+                        </span>
+                      </> : props.title}
                     </div>
                   </div>
 
