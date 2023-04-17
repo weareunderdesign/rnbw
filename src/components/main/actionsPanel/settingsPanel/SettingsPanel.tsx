@@ -66,7 +66,6 @@ export default function SettingsPanel(props: SettingsPanelProps) {
     return <>
       <div
         id="SettingsPanel"
-        className={'scrollable'}
         onClick={onPanelClick}
       >
       </div>

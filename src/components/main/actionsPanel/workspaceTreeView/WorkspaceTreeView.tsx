@@ -98,6 +98,8 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     activePanel, setActivePanel,
     clipboardData, setClipboardData,
     event, setEvent,
+    // actions panel
+    showActionsPanel,
     // file tree view
     initialFileToOpen, setInitialFileToOpen,
     fsPending, setFSPending,
@@ -1861,7 +1863,10 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     return <>
       <div
         id="FileTreeView"
-        className={'scrollable'}
+        style={{
+          overflow: 'auto',
+          ...(showActionsPanel ? {} : { width: '0' }),
+        }}
         onClick={onPanelClick}
       >
         <TreeView
@@ -1969,7 +1974,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                       props.context.startDragging()
                     }}
                   >
-                    <div className="gap-xs padding-xs" style={{ width: 'fit-content' }}>
+                    <div className="gap-s padding-xs" style={{ width: 'fit-content' }}>
                       {props.arrow}
 
                       {fileReferenceData ?
@@ -2095,7 +2100,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       </div>
     </>
   }, [
-    onPanelClick,
+    onPanelClick, showActionsPanel,
     ffTree, fileTreeViewData,
     focusedItem, selectedItems, expandedItems,
     addRunningActions, removeRunningActions,

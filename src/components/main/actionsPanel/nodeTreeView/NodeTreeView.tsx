@@ -66,6 +66,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     activePanel, setActivePanel,
     clipboardData, setClipboardData,
     event, setEvent,
+    // actions panel
+    showActionsPanel,
     // file tree view
     fsPending, setFSPending,
     ffTree, setFFTree, setFFNode,
@@ -242,6 +244,10 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     setNodeTree(res.tree)
 
     // view state
+    if (res.lastNodeUid && res.lastNodeUid !== '') {
+      dispatch(focusFNNode(res.lastNodeUid))
+      dispatch(selectFNNode([res.lastNodeUid]))
+    }
     addRunningActions(['stageView-viewState'])
 
     // side effect
@@ -475,7 +481,10 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     return <>
       <div
         id="NodeTreeView"
-        className={'scrollable'}
+        style={{
+          overflow: 'auto',
+          ...(showActionsPanel ? {} : { width: '0' }),
+        }}
         onClick={onPanelClick}
       >
         <TreeView
@@ -566,7 +575,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                       props.context.startDragging()
                     }}
                   >
-                    <div className="gap-xs padding-xs" style={{ width: "100%" }}>
+                    <div className="gap-s padding-xs" style={{ width: "100%" }}>
                       {props.arrow}
 
                       {htmlElementReferenceData ?
@@ -644,7 +653,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                     draggingPosition.targetType === 'between-items' && draggingPosition.linePosition === 'top' ? '0px'
                       : draggingPosition.targetType === 'between-items' && draggingPosition.linePosition === 'bottom' ? '-2px'
                         : '-2px',
-                  left: `${draggingPosition.depth * 10 + 16}px`,
+                  left: `${draggingPosition.depth * 10 + 20}px`,
                   height: '2px',
                 }}
               />
@@ -688,7 +697,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       </div>
     </>
   }, [
-    onPanelClick,
+    onPanelClick, showActionsPanel,
     nodeTreeViewData,
     focusedItem, selectedItems, expandedItems,
     addRunningActions, removeRunningActions,

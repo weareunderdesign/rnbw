@@ -37,6 +37,8 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   setClipboardData: (data: TClipboardData) => { },
   event: null,
   setEvent: (e: TEvent) => { },
+  // actions panel
+  showActionsPanel: false,
   // file tree view
   initialFileToOpen: '',
   setInitialFileToOpen: (uid: TNodeUid) => { },
