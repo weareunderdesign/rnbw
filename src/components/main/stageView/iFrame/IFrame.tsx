@@ -458,7 +458,7 @@ export const IFrame = (props: IFrameProps) => {
     LogAllow && console.log('action to be run by cmdk: ', action)
 
     // prevent chrome default short keys
-    if (action === 'Save' || action === 'Download') {
+    if (action === 'Save' || action === 'Download' || action === 'Duplicate') {
       e.preventDefault()
     }
 

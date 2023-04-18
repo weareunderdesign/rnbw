@@ -61,15 +61,71 @@ export const createIDBProject = async (projectPath: string): Promise<void> => {
       // create index.html
       const indexHtmlPath = `${projectPath}/index.html`
       const indexHtmlContent = `<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>rnbw</title>
+        <meta name="description" content="rainbow">
+        <meta property="og:title" content="design. develop. ship.">
+        <link rel="icon" href="images/favicon.png">
+        <link rel="stylesheet" href="https://unpkg.com/renecss/dist/rene.min.css">
+        <script type="module" src="https://unpkg.com/@rainbowapp/svg-icon.js/dist/svg-icon.min.js"></script>
+        <script defer data-domain="rnbw.company" src="https://plausible.io/js/script.js"></script>
+    </head>
 
-<html>
+    <body>
+        <div class="view align-center direction-row">
+            <div class="page">
+                <div class="align-center">
+                    <img src="https://rnbw.company/images/rnbwcolor.svg" class="box-m">
+                </div>
+                <div class="align-center">
+                    <div class="box-m">
+                        <h4 class="text-center">
+                            welcome to rnbw! hit
+                            <span class="padding-s radius-s background-secondary">A</span>
+                            to add something. hit
+                            <span class="padding-s radius-s background-secondary">W</span>
+                            to do something. hit
+                            <span class="padding-s radius-s background-secondary">J</span>
+                            to jumpstart. hit
+                            <span class="padding-s radius-s background-secondary">O</span>
+                            to open a project. that's it, you'll get the rest of
+                            it!
+                        </h4>
+                    </div>
+                </div>
 
-<head></head>
-
-<body>
-  <h1>Build Web Page with Rainbow</h1>
-</body>
-
+                <img class="dark" src="https://rnbw.company/images/keyboard-dark.svg">
+                <img class="light" src="https://rnbw.company/images/keyboard-light.svg">
+                <div class="direction-column gap-xl">
+                    <div class="box direction-row">
+                        <p>
+                            rnbw is an environment to design in the web medium.
+                            build websites, apps, and design systems. create
+                            with popular libraries or make your stuff. while you
+                            act on your ideas, HTML & CSS are generated in the
+                            background.
+                        </p>
+                    </div>
+                    <div class="box direction-row">
+                        <p>
+                            your design is an unlimited living product. it helps
+                            you embrace HTML, CSS (and JS!) as the ultimate
+                            design tool and common ground with your development
+                            workflows. when your design is done, it’s done.
+                        </p>
+                    </div>
+                </div>
+                <rnbw-nav></rnbw-nav>
+            </div>
+        </div>
+        <rnbw-footer></rnbw-footer>
+    </body>
+    <script src="https://rnbw.company/rnbw-nav.js"></script>
+    <script src="https://rnbw.company/rnbw-footer.js"></script>
 </html>`
       await writeFile(indexHtmlPath, indexHtmlContent)
 

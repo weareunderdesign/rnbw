@@ -370,7 +370,7 @@ export default function MainPage(props: MainPageProps) {
     LogAllow && console.log('action to be run by cmdk: ', action)
 
     // prevent chrome default short keys
-    if (action === 'Save' || action === 'Download') {
+    if (action === 'Save' || action === 'Download' || action === 'Duplicate') {
       e.preventDefault()
     }
 
@@ -562,7 +562,7 @@ export default function MainPage(props: MainPageProps) {
         try {
           const projectHandle = await showDirectoryPicker({ _preferPolyfill: false, mode: 'readwrite' } as CustomDirectoryPickerOptions)
           await loadProject(fsType, projectHandle)
-          await set('project-root-folder-handler', projectHandle)
+          await set('recent-project', projectHandle)
         } catch (err) {
           reject(err)
         }
@@ -809,6 +809,9 @@ export default function MainPage(props: MainPageProps) {
         _cmdkRefJumpstartData[groupName].push(_command)
       } else {
         _cmdkRefJumpstartData[groupName] = [_command]
+      }
+      if (groupName === 'Projects') {
+        _cmdkRefJumpstartData['Recent'] = []
       }
 
       _cmdkReferenceData[_command['Name']] = _command
