@@ -429,6 +429,24 @@ export default function MainPage(props: MainPageProps) {
   const [recentProjectContext, setRecentProjectContext] = useState<(TProjectContext)[]>([])
   const [recentProjectName, setRecentProjectName] = useState<(string)[]>([])
   const [recentProjectHandler, setRecentProjectHandler] = useState<(FileSystemHandle | null)[]>([])
+  const cmdkReferneceRecentProject = useMemo<TCmdkReference[]>(() => {
+    return recentProjectContext.map((_v, index) => {
+      return {
+        "Name": recentProjectName[index],
+        "Icon": 'folder',
+        "Description": '',
+        "Keyboard Shortcut": {
+          cmd: false,
+          shift: false,
+          alt: false,
+          key: '',
+          click: false,
+        },
+        "Group": 'Recent',
+        "Context": index.toString(),
+      } as TCmdkReference
+    })
+  }, [recentProjectContext, recentProjectName, recentProjectHandler])
   // -------------------------------------------------------------- handlers --------------------------------------------------------------
   const clearSession = useCallback(() => {
     dispatch(clearMainState())
@@ -1295,7 +1313,7 @@ export default function MainPage(props: MainPageProps) {
                     <div className="padding-m gap-s">
                       <span className="text-s opacity-m">{groupName}</span>
                     </div>
-                    {(cmdkPage === 'Jumpstart' ? cmdkReferenceJumpstart[groupName] :
+                    {(cmdkPage === 'Jumpstart' ? (groupName !== 'Recent' ? cmdkReferenceJumpstart[groupName] : cmdkReferneceRecentProject) :
                       cmdkPage === 'Actions' ? cmdkReferenceActions[groupName] :
                         cmdkPage === 'Add' ? cmdkReferenceAdd[groupName] : []
                     ).map((command: TCmdkReference) => {
