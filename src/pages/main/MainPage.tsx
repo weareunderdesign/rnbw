@@ -14,7 +14,7 @@ import {
 import {
   delMany,
   getMany,
-  set,
+  setMany,
 } from 'idb-keyval';
 import {
   useDispatch,
@@ -43,6 +43,7 @@ import {
   HmsClearActionType,
   LogAllow,
   ParsableFileTypes,
+  RecentProjectCount,
   RootNodeUid,
 } from '@_constants/main';
 import {
@@ -424,6 +425,28 @@ export default function MainPage(props: MainPageProps) {
         return
     }
   }, [currentCommand])
+  // -------------------------------------------------------------- recent project --------------------------------------------------------------
+  const [recentProjectContext, setRecentProjectContext] = useState<(TProjectContext)[]>([])
+  const [recentProjectName, setRecentProjectName] = useState<(string)[]>([])
+  const [recentProjectHandler, setRecentProjectHandler] = useState<(FileSystemHandle | null)[]>([])
+  const cmdkReferneceRecentProject = useMemo<TCmdkReference[]>(() => {
+    return recentProjectContext.map((_v, index) => {
+      return {
+        "Name": recentProjectName[index],
+        "Icon": 'folder',
+        "Description": '',
+        "Keyboard Shortcut": {
+          cmd: false,
+          shift: false,
+          alt: false,
+          key: '',
+          click: false,
+        },
+        "Group": 'Recent',
+        "Context": index.toString(),
+      } as TCmdkReference
+    })
+  }, [recentProjectContext, recentProjectName, recentProjectHandler])
   // -------------------------------------------------------------- handlers --------------------------------------------------------------
   const clearSession = useCallback(() => {
     dispatch(clearMainState())
@@ -490,6 +513,31 @@ export default function MainPage(props: MainPageProps) {
         setFFHandlers(ffHandlerObj)
 
         dispatch(setProjectContext('local'))
+
+        // store last edit session
+        const _recentProjectContext = [...recentProjectContext]
+        const _recentProjectName = [...recentProjectName]
+        const _recentProjectHandler = [...recentProjectHandler]
+        for (let index = 0; index < _recentProjectContext.length; ++index) {
+          if (_recentProjectContext[index] === fsType && projectHandle?.name === _recentProjectName[index]) {
+            _recentProjectContext.splice(index, 1)
+            _recentProjectName.splice(index, 1)
+            _recentProjectHandler.splice(index, 1)
+            break
+          }
+        }
+        if (_recentProjectContext.length === RecentProjectCount) {
+          _recentProjectContext.pop()
+          _recentProjectName.pop()
+          _recentProjectHandler.pop()
+        }
+        _recentProjectContext.unshift(fsType)
+        _recentProjectName.unshift((projectHandle as FileSystemDirectoryHandle).name)
+        _recentProjectHandler.unshift(projectHandle as FileSystemDirectoryHandle)
+        setRecentProjectContext(_recentProjectContext)
+        setRecentProjectName(_recentProjectName)
+        setRecentProjectHandler(_recentProjectHandler)
+        await setMany([['recent-project-context', _recentProjectContext], ['recent-project-name', _recentProjectName], ['recent-project-handler', _recentProjectHandler]])
       } catch (err) {
         LogAllow && console.log('failed to load local project')
       }
@@ -550,19 +598,43 @@ export default function MainPage(props: MainPageProps) {
         setFFHandlers(ffHandlerObj)
 
         dispatch(setProjectContext('idb'))
+
+        // store last edit session
+        const _recentProjectContext = [...recentProjectContext]
+        const _recentProjectName = [...recentProjectName]
+        const _recentProjectHandler = [...recentProjectHandler]
+        for (let index = 0; index < _recentProjectContext.length; ++index) {
+          if (_recentProjectContext[index] === fsType) {
+            _recentProjectContext.splice(index, 1)
+            _recentProjectName.splice(index, 1)
+            _recentProjectHandler.splice(index, 1)
+            break
+          }
+        }
+        if (_recentProjectContext.length === RecentProjectCount) {
+          _recentProjectContext.pop()
+          _recentProjectName.pop()
+          _recentProjectHandler.pop()
+        }
+        _recentProjectContext.unshift(fsType)
+        _recentProjectName.unshift('default project')
+        _recentProjectHandler.unshift(null)
+        setRecentProjectContext(_recentProjectContext)
+        setRecentProjectName(_recentProjectName)
+        setRecentProjectHandler(_recentProjectHandler)
+        await setMany([['recent-project-context', _recentProjectContext], ['recent-project-name', _recentProjectName], ['recent-project-handler', _recentProjectHandler]])
       } catch (err) {
         LogAllow && console.log('failed to load default project')
       }
       setFSPending(false)
     }
-  }, [clearSession, osType])
+  }, [clearSession, osType, recentProjectContext, recentProjectName, recentProjectHandler])
   const onImportProject = useCallback(async (fsType: TProjectContext = 'local'): Promise<void> => {
     return new Promise<void>(async (resolve, reject) => {
       if (fsType === 'local') {
         try {
           const projectHandle = await showDirectoryPicker({ _preferPolyfill: false, mode: 'readwrite' } as CustomDirectoryPickerOptions)
           await loadProject(fsType, projectHandle)
-          await set('recent-project', projectHandle)
         } catch (err) {
           reject(err)
         }
@@ -627,7 +699,7 @@ export default function MainPage(props: MainPageProps) {
   const onClear = useCallback(async () => {
     // remove localstorage and session
     localStorage.clear()
-    await delMany(['project-context', 'project-root-folder-handler'])
+    await delMany(['recent-project-context', 'recent-project-name', 'recent-project-handler'])
   }, [])
   // jumpstart
   const onJumpstart = useCallback(() => {
@@ -688,187 +760,230 @@ export default function MainPage(props: MainPageProps) {
   // -------------------------------------------------------------- other --------------------------------------------------------------
   // detect OS & fetch reference - html. Jumpstart.csv, Actions.csv
   useEffect(() => {
-    addRunningActions(['detect-os', 'reference-files', 'reference-html-elements', 'reference-cmdk-jumpstart', 'reference-cmdk-actions'])
+    (async () => {
+      addRunningActions(['detect-os', 'reference-files', 'reference-html-elements', 'reference-cmdk-jumpstart', 'reference-cmdk-actions'])
 
-    // detect os
-    LogAllow && console.log('navigator: ', navigator.userAgent)
-    if (navigator.userAgent.indexOf('Mac OS X') !== -1) {
-      setOsType('Mac')
-    } else if (navigator.userAgent.indexOf('Linux') !== -1) {
-      setOsType('Linux')
-    } else {
-      setOsType('Windows')
-    }
-
-    // reference-files
-    const _filesReferenceData: TFilesReferenceData = {}
-    filesRef.map((fileRef: TFilesReference) => {
-      _filesReferenceData[fileRef.Extension] = fileRef
-    })
-    setFilesReferenceData(_filesReferenceData)
-    LogAllow && console.log('files reference data: ', _filesReferenceData)
-
-    // reference-html-elements
-    const htmlElementsReferenceData: THtmlElementsReferenceData = {}
-    htmlRefElements.map((htmlRefElement: THtmlElementsReference) => {
-      const pureTag = htmlRefElement['Name'] === 'Comment' ? 'comment' : htmlRefElement['Tag'].slice(1, htmlRefElement['Tag'].length - 1)
-      htmlElementsReferenceData[pureTag] = htmlRefElement
-    })
-    LogAllow && console.log('html elements reference data: ', htmlElementsReferenceData)
-
-    // set html reference
-    setHtmlReferenceData({ elements: htmlElementsReferenceData })
-
-    // add default cmdk actions
-    const _cmdkReferenceData: TCmdkReferenceData = {}
-    // clear
-    _cmdkReferenceData['Clear'] = {
-      "Name": 'Clear',
-      "Icon": '',
-      "Description": '',
-      "Keyboard Shortcut": {
-        cmd: true,
-        shift: true,
-        alt: false,
-        key: 'KeyR',
-        click: false,
-      },
-      "Group": 'default',
-      "Context": 'all',
-    }
-    // Jumpstart
-    _cmdkReferenceData['Jumpstart'] = {
-      "Name": 'Jumpstart',
-      "Icon": '',
-      "Description": '',
-      "Keyboard Shortcut": {
-        cmd: false,
-        shift: false,
-        alt: false,
-        key: 'KeyJ',
-        click: false,
-      },
-      "Group": 'default',
-      "Context": 'all',
-    }
-    // Actions
-    _cmdkReferenceData['Actions'] = {
-      "Name": 'Actions',
-      "Icon": '',
-      "Description": '',
-      "Keyboard Shortcut": {
-        cmd: false,
-        shift: false,
-        alt: false,
-        key: 'KeyW',
-        click: false,
-      },
-      "Group": 'default',
-      "Context": 'all',
-    }
-    // File Save
-    _cmdkReferenceData['Save'] = {
-      "Name": 'Save',
-      "Icon": '',
-      "Description": '',
-      "Keyboard Shortcut": {
-        cmd: true,
-        shift: false,
-        alt: false,
-        key: 'KeyS',
-        click: false,
-      },
-      "Group": 'default',
-      "Context": 'all',
-    }
-
-    // reference-cmdk-jumpstart
-    const _cmdkRefJumpstartData: TCmdkGroupData = {}
-    cmdkRefJumpstart.map((command: TCmdkReference) => {
-      const keys: string[] = (command["Keyboard Shortcut"] as string)?.replace(/ /g, "").split('+')
-      const keyObj: TCmdkKeyMap = {
-        cmd: false,
-        shift: false,
-        alt: false,
-        key: '',
-        click: false,
-      }
-      keys?.map((key) => {
-        if (key === 'cmd' || key === 'shift' || key === 'alt' || key === 'click') {
-          keyObj[key] = true
-        } else {
-          keyObj.key = key
-        }
-      })
-
-      const _command: TCmdkReference = JSON.parse(JSON.stringify(command))
-      _command['Keyboard Shortcut'] = keyObj
-
-      const groupName = _command['Group']
-      if (_cmdkRefJumpstartData[groupName] !== undefined) {
-        _cmdkRefJumpstartData[groupName].push(_command)
+      // detect os
+      LogAllow && console.log('navigator: ', navigator.userAgent)
+      if (navigator.userAgent.indexOf('Mac OS X') !== -1) {
+        setOsType('Mac')
+      } else if (navigator.userAgent.indexOf('Linux') !== -1) {
+        setOsType('Linux')
       } else {
-        _cmdkRefJumpstartData[groupName] = [_command]
-      }
-      if (groupName === 'Projects') {
-        _cmdkRefJumpstartData['Recent'] = []
+        setOsType('Windows')
       }
 
-      _cmdkReferenceData[_command['Name']] = _command
-    })
-    setCmdkReferenceJumpstart(_cmdkRefJumpstartData)
-    LogAllow && console.log('cmdk jumpstart reference data: ', _cmdkRefJumpstartData)
-
-    // reference-cmdk-actions
-    const _cmdkRefActionsData: TCmdkGroupData = {}
-    cmdkRefActions.map((command: TCmdkReference) => {
-      const contexts: TCmdkContextScope[] = (command['Context'] as string)?.replace(/ /g, "").split(',').map((scope: string) => scope as TCmdkContextScope)
-      const contextObj: TCmdkContext = {
-        "all": false,
-        "file": false,
-        "html": false,
-      }
-      contexts?.map((context: TCmdkContextScope) => {
-        contextObj[context] = true
+      // reference-files
+      const _filesReferenceData: TFilesReferenceData = {}
+      filesRef.map((fileRef: TFilesReference) => {
+        _filesReferenceData[fileRef.Extension] = fileRef
       })
+      setFilesReferenceData(_filesReferenceData)
+      LogAllow && console.log('files reference data: ', _filesReferenceData)
 
-      const keys: string[] = (command["Keyboard Shortcut"] as string)?.replace(/ /g, "").split('+')
-      const keyObj: TCmdkKeyMap = {
-        cmd: false,
-        shift: false,
-        alt: false,
-        key: '',
-        click: false,
+      // reference-html-elements
+      const htmlElementsReferenceData: THtmlElementsReferenceData = {}
+      htmlRefElements.map((htmlRefElement: THtmlElementsReference) => {
+        const pureTag = htmlRefElement['Name'] === 'Comment' ? 'comment' : htmlRefElement['Tag'].slice(1, htmlRefElement['Tag'].length - 1)
+        htmlElementsReferenceData[pureTag] = htmlRefElement
+      })
+      LogAllow && console.log('html elements reference data: ', htmlElementsReferenceData)
+
+      // set html reference
+      setHtmlReferenceData({ elements: htmlElementsReferenceData })
+
+      // add default cmdk actions
+      const _cmdkReferenceData: TCmdkReferenceData = {}
+      // clear
+      _cmdkReferenceData['Clear'] = {
+        "Name": 'Clear',
+        "Icon": '',
+        "Description": '',
+        "Keyboard Shortcut": {
+          cmd: true,
+          shift: true,
+          alt: false,
+          key: 'KeyR',
+          click: false,
+        },
+        "Group": 'default',
+        "Context": 'all',
       }
-      keys?.map((key: string) => {
-        if (key === 'cmd' || key === 'shift' || key === 'alt' || key === 'click') {
-          keyObj[key] = true
-        } else {
-          keyObj.key = key
+      // Jumpstart
+      _cmdkReferenceData['Jumpstart'] = {
+        "Name": 'Jumpstart',
+        "Icon": '',
+        "Description": '',
+        "Keyboard Shortcut": {
+          cmd: false,
+          shift: false,
+          alt: false,
+          key: 'KeyJ',
+          click: false,
+        },
+        "Group": 'default',
+        "Context": 'all',
+      }
+      // Actions
+      _cmdkReferenceData['Actions'] = {
+        "Name": 'Actions',
+        "Icon": '',
+        "Description": '',
+        "Keyboard Shortcut": {
+          cmd: false,
+          shift: false,
+          alt: false,
+          key: 'KeyW',
+          click: false,
+        },
+        "Group": 'default',
+        "Context": 'all',
+      }
+      // File Save
+      _cmdkReferenceData['Save'] = {
+        "Name": 'Save',
+        "Icon": '',
+        "Description": '',
+        "Keyboard Shortcut": {
+          cmd: true,
+          shift: false,
+          alt: false,
+          key: 'KeyS',
+          click: false,
+        },
+        "Group": 'default',
+        "Context": 'all',
+      }
+
+      // reference-cmdk-jumpstart
+      const _cmdkRefJumpstartData: TCmdkGroupData = {}
+      await Promise.all(cmdkRefJumpstart.map(async (command: TCmdkReference) => {
+        const keys: string[] = (command["Keyboard Shortcut"] as string)?.replace(/ /g, "").split('+')
+        const keyObj: TCmdkKeyMap = {
+          cmd: false,
+          shift: false,
+          alt: false,
+          key: '',
+          click: false,
         }
-      })
+        keys?.map((key) => {
+          if (key === 'cmd' || key === 'shift' || key === 'alt' || key === 'click') {
+            keyObj[key] = true
+          } else {
+            keyObj.key = key
+          }
+        })
 
-      const _command: TCmdkReference = JSON.parse(JSON.stringify(command))
-      _command['Context'] = contextObj
-      _command['Keyboard Shortcut'] = keyObj
+        const _command: TCmdkReference = JSON.parse(JSON.stringify(command))
+        _command['Keyboard Shortcut'] = keyObj
 
-      const groupName = _command['Group']
-      if (_cmdkRefActionsData[groupName] !== undefined) {
-        _cmdkRefActionsData[groupName].push(_command)
-      } else {
-        _cmdkRefActionsData[groupName] = [_command]
+        const groupName = _command['Group']
+        if (_cmdkRefJumpstartData[groupName] !== undefined) {
+          _cmdkRefJumpstartData[groupName].push(_command)
+        } else {
+          _cmdkRefJumpstartData[groupName] = [_command]
+        }
+        if (groupName === 'Projects' && _cmdkRefJumpstartData['Recent'] === undefined) {
+          _cmdkRefJumpstartData['Recent'] = []
+          // restore last edit session
+          try {
+            const sessionInfo = await getMany(['recent-project-context', 'recent-project-name', 'recent-project-handler'])
+            if (sessionInfo[0] && sessionInfo[1] && sessionInfo[2]) {
+              const _session: TSession = {
+                'recent-project-context': sessionInfo[0],
+                'recent-project-name': sessionInfo[1],
+                'recent-project-handler': sessionInfo[2],
+              }
+              setRecentProjectContext(_session['recent-project-context'])
+              setRecentProjectName(_session['recent-project-name'])
+              setRecentProjectHandler(_session['recent-project-handler'])
+
+              for (let index = 0; index < _session['recent-project-context'].length; ++index) {
+                const _recentProjectCommand = {
+                  "Name": _session['recent-project-name'][index],
+                  "Icon": 'folder',
+                  "Description": '',
+                  "Keyboard Shortcut": {
+                    cmd: false,
+                    shift: false,
+                    alt: false,
+                    key: '',
+                    click: false,
+                  },
+                  "Group": 'Recent',
+                  "Context": index.toString(),
+                } as TCmdkReference
+                _cmdkRefJumpstartData['Recent'].push(_recentProjectCommand)
+              }
+              LogAllow && console.log('last session loaded', _session);
+            } else {
+              LogAllow && console.log('has no last session')
+            }
+          } catch (err) {
+            LogAllow && console.log('failed to load last session')
+          }
+        }
+
+        _cmdkReferenceData[_command['Name']] = _command
+      }))
+
+      if (_cmdkRefJumpstartData['Recent'].length === 0) {
+        delete _cmdkRefJumpstartData['Recent']
       }
+      setCmdkReferenceJumpstart(_cmdkRefJumpstartData)
+      LogAllow && console.log('cmdk jumpstart reference data: ', _cmdkRefJumpstartData)
 
-      _cmdkReferenceData[_command['Name']] = _command
-    })
-    setCmdkReferenceActions(_cmdkRefActionsData)
-    LogAllow && console.log('cmdk actions reference data: ', _cmdkRefActionsData)
+      // reference-cmdk-actions
+      const _cmdkRefActionsData: TCmdkGroupData = {}
+      cmdkRefActions.map((command: TCmdkReference) => {
+        const contexts: TCmdkContextScope[] = (command['Context'] as string)?.replace(/ /g, "").split(',').map((scope: string) => scope as TCmdkContextScope)
+        const contextObj: TCmdkContext = {
+          "all": false,
+          "file": false,
+          "html": false,
+        }
+        contexts?.map((context: TCmdkContextScope) => {
+          contextObj[context] = true
+        })
 
-    // set cmdk map
-    setCmdkReferenceData(_cmdkReferenceData)
-    LogAllow && console.log('cmdk map: ', _cmdkReferenceData)
+        const keys: string[] = (command["Keyboard Shortcut"] as string)?.replace(/ /g, "").split('+')
+        const keyObj: TCmdkKeyMap = {
+          cmd: false,
+          shift: false,
+          alt: false,
+          key: '',
+          click: false,
+        }
+        keys?.map((key: string) => {
+          if (key === 'cmd' || key === 'shift' || key === 'alt' || key === 'click') {
+            keyObj[key] = true
+          } else {
+            keyObj.key = key
+          }
+        })
 
-    removeRunningActions(['detect-os', 'reference-files', 'reference-html-elements', 'reference-cmdk-jumpstart', 'reference-cmdk-actions'], false)
+        const _command: TCmdkReference = JSON.parse(JSON.stringify(command))
+        _command['Context'] = contextObj
+        _command['Keyboard Shortcut'] = keyObj
+
+        const groupName = _command['Group']
+        if (_cmdkRefActionsData[groupName] !== undefined) {
+          _cmdkRefActionsData[groupName].push(_command)
+        } else {
+          _cmdkRefActionsData[groupName] = [_command]
+        }
+
+        _cmdkReferenceData[_command['Name']] = _command
+      })
+      setCmdkReferenceActions(_cmdkRefActionsData)
+      LogAllow && console.log('cmdk actions reference data: ', _cmdkRefActionsData)
+
+      // set cmdk map
+      setCmdkReferenceData(_cmdkReferenceData)
+      LogAllow && console.log('cmdk map: ', _cmdkReferenceData)
+
+      removeRunningActions(['detect-os', 'reference-files', 'reference-html-elements', 'reference-cmdk-jumpstart', 'reference-cmdk-actions'], false)
+    })()
   }, [])
   // open jumpstart menu on startup
   useEffect(() => {
@@ -964,35 +1079,6 @@ export default function MainPage(props: MainPageProps) {
       window.onbeforeunload = null
     }
   }, [ffTree])
-  // store/restore last edit session
-  useEffect(() => {
-    (async () => {
-      const hasSession = localStorage.getItem('last-edit-session') !== null
-      if (hasSession) {
-        try {
-          const sessionInfo = await getMany(['project-context', 'project-root-folder-handler'])
-          const session: TSession = {
-            'project-context': sessionInfo[0],
-            'project-root-folder-handler': sessionInfo[1],
-          }
-          await loadProject(session['project-context'], session['project-root-folder-handler'])
-          LogAllow && console.log('last session loaded')
-        } catch (err) {
-          LogAllow && console.log('failed to load last session')
-        }
-      }
-    })()
-  }, [])
-  useEffect(() => {
-    (async () => {
-      try {
-        await set('project-context', project.context)
-        localStorage.setItem('last-edit-session', 'yes')
-      } catch (err) {
-        localStorage.removeItem('last-edit-session')
-      }
-    })()
-  }, [project.context])
   // clear cmdk pages and search text when close the modal
   useEffect(() => {
     if (!cmdkOpen) {
@@ -1227,7 +1313,7 @@ export default function MainPage(props: MainPageProps) {
                     <div className="padding-m gap-s">
                       <span className="text-s opacity-m">{groupName}</span>
                     </div>
-                    {(cmdkPage === 'Jumpstart' ? cmdkReferenceJumpstart[groupName] :
+                    {(cmdkPage === 'Jumpstart' ? (groupName !== 'Recent' ? cmdkReferenceJumpstart[groupName] : cmdkReferneceRecentProject) :
                       cmdkPage === 'Actions' ? cmdkReferenceActions[groupName] :
                         cmdkPage === 'Add' ? cmdkReferenceAdd[groupName] : []
                     ).map((command: TCmdkReference) => {
@@ -1248,19 +1334,28 @@ export default function MainPage(props: MainPageProps) {
                         )) ||
                         (cmdkPage === 'Add')
                       )
+
                       return show ?
                         <Command.Item
-                          key={command.Name}
+                          key={`${command.Name}-${command.Context}`}
                           value={command.Name}
                           className='rnbw-cmdk-menu-item'
                           {...{ 'rnbw-cmdk-menu-item-description': command.Description }}
                           onSelect={() => {
-                            console.log(command.Name)
-
-                            // keep modal open when toogling theme
+                            // keep modal open when toogling theme or go "Add" menu from "Actions" menu
                             command.Name !== 'Theme' && command.Name !== 'Add' && setCmdkOpen(false)
 
-                            setCurrentCommand({ action: command.Group === 'Add' ? `${AddActionPrefix}-${command.Context}` : command.Name })
+                            if (command.Group === 'Add') {
+                              setCurrentCommand({ action: `${AddActionPrefix}-${command.Context}` })
+                            } else if (cmdkPage === 'Jumpstart' && command.Group === 'Recent') {
+                              const index = Number(command.Context)
+                              const projectContext = recentProjectContext[index]
+                              const projectHandler = recentProjectHandler[index]
+                              loadProject(projectContext, projectHandler)
+                            } else if (cmdkPage === 'Add' && command.Group === 'Recent') {
+                            } else {
+                              setCurrentCommand({ action: command.Name })
+                            }
                           }}
                         >
                           <div className='justify-stretch padding-s'>
