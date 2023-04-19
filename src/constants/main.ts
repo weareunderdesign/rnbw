@@ -22,3 +22,4 @@ export const AddFileActionPrefix = `${AddActionPrefix}-File`
 export const AddNodeActionPrefix = `${AddActionPrefix}-Node`
 export const DefaultProjectPath = '/_rnbw_default_project'
 export const StagePreviewPathPrefix = 'rnbw-stage-preview-'
+export const RecentProjectCount = 3
