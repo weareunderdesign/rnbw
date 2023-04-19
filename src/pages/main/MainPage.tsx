@@ -495,6 +495,31 @@ export default function MainPage(props: MainPageProps) {
         setFFHandlers(ffHandlerObj)
 
         dispatch(setProjectContext('local'))
+
+        // store last edit session
+        const _recentProjectContext = [...recentProjectContext]
+        const _recentProjectName = [...recentProjectName]
+        const _recentProjectHandler = [...recentProjectHandler]
+        for (let index = 0; index < _recentProjectContext.length; ++index) {
+          if (_recentProjectContext[index] === fsType && projectHandle?.name === _recentProjectName[index]) {
+            _recentProjectContext.splice(index, 1)
+            _recentProjectName.splice(index, 1)
+            _recentProjectHandler.splice(index, 1)
+            break
+          }
+        }
+        if (_recentProjectContext.length === RecentProjectCount) {
+          _recentProjectContext.pop()
+          _recentProjectName.pop()
+          _recentProjectHandler.pop()
+        }
+        _recentProjectContext.unshift(fsType)
+        _recentProjectName.unshift((projectHandle as FileSystemDirectoryHandle).name)
+        _recentProjectHandler.unshift(projectHandle as FileSystemDirectoryHandle)
+        setRecentProjectContext(_recentProjectContext)
+        setRecentProjectName(_recentProjectName)
+        setRecentProjectHandler(_recentProjectHandler)
+        await setMany([['recent-project-context', _recentProjectContext], ['recent-project-name', _recentProjectName], ['recent-project-handler', _recentProjectHandler]])
       } catch (err) {
         LogAllow && console.log('failed to load local project')
       }
@@ -555,80 +580,56 @@ export default function MainPage(props: MainPageProps) {
         setFFHandlers(ffHandlerObj)
 
         dispatch(setProjectContext('idb'))
+
+        // store last edit session
+        const _recentProjectContext = [...recentProjectContext]
+        const _recentProjectName = [...recentProjectName]
+        const _recentProjectHandler = [...recentProjectHandler]
+        for (let index = 0; index < _recentProjectContext.length; ++index) {
+          if (_recentProjectContext[index] === fsType) {
+            _recentProjectContext.splice(index, 1)
+            _recentProjectName.splice(index, 1)
+            _recentProjectHandler.splice(index, 1)
+            break
+          }
+        }
+        if (_recentProjectContext.length === RecentProjectCount) {
+          _recentProjectContext.pop()
+          _recentProjectName.pop()
+          _recentProjectHandler.pop()
+        }
+        _recentProjectContext.unshift(fsType)
+        _recentProjectName.unshift('default project')
+        _recentProjectHandler.unshift(null)
+        setRecentProjectContext(_recentProjectContext)
+        setRecentProjectName(_recentProjectName)
+        setRecentProjectHandler(_recentProjectHandler)
+        await setMany([['recent-project-context', _recentProjectContext], ['recent-project-name', _recentProjectName], ['recent-project-handler', _recentProjectHandler]])
       } catch (err) {
         LogAllow && console.log('failed to load default project')
       }
       setFSPending(false)
     }
-  }, [clearSession, osType])
+  }, [clearSession, osType, recentProjectContext, recentProjectName, recentProjectHandler])
   const onImportProject = useCallback(async (fsType: TProjectContext = 'local'): Promise<void> => {
     return new Promise<void>(async (resolve, reject) => {
       if (fsType === 'local') {
         try {
           const projectHandle = await showDirectoryPicker({ _preferPolyfill: false, mode: 'readwrite' } as CustomDirectoryPickerOptions)
           await loadProject(fsType, projectHandle)
-
-          // store last edit session
-          const _recentProjectContext = [...recentProjectContext]
-          if (_recentProjectContext.length === RecentProjectCount) {
-            _recentProjectContext.pop()
-          }
-          _recentProjectContext.unshift(fsType)
-
-          const _recentProjectName = [...recentProjectName]
-          if (_recentProjectName.length === RecentProjectCount) {
-            _recentProjectName.pop()
-          }
-          _recentProjectName.unshift(projectHandle.name)
-
-          const _recentProjectHandler = [...recentProjectHandler]
-          if (_recentProjectHandler.length === RecentProjectCount) {
-            _recentProjectHandler.pop()
-          }
-          _recentProjectHandler.unshift(projectHandle)
-
-          setRecentProjectContext(_recentProjectContext)
-          setRecentProjectName(_recentProjectName)
-          setRecentProjectHandler(_recentProjectHandler)
-          await setMany([['recent-project-context', _recentProjectContext], ['recent-project-name', _recentProjectName], ['recent-project-handler', _recentProjectHandler]])
         } catch (err) {
           reject(err)
         }
       } else if (fsType === 'idb') {
         try {
           await loadProject(fsType)
-
-          // store last edit session
-          const _recentProjectContext = [...recentProjectContext]
-          if (_recentProjectContext.length === RecentProjectCount) {
-            _recentProjectContext.pop()
-          }
-          _recentProjectContext.unshift(fsType)
-
-          const _recentProjectName = [...recentProjectName]
-          if (_recentProjectName.length === RecentProjectCount) {
-            _recentProjectName.pop()
-          }
-          _recentProjectName.unshift('default project')
-
-          const _recentProjectHandler = [...recentProjectHandler]
-          if (_recentProjectHandler.length === RecentProjectCount) {
-            _recentProjectHandler.pop()
-          }
-          _recentProjectHandler.unshift(null)
-
-          console.log(_recentProjectContext, _recentProjectName, _recentProjectHandler)
-          setRecentProjectContext(_recentProjectContext)
-          setRecentProjectName(_recentProjectName)
-          setRecentProjectHandler(_recentProjectHandler)
-          await setMany([['recent-project-context', _recentProjectContext], ['recent-project-name', _recentProjectName], ['recent-project-handler', _recentProjectHandler]])
         } catch (err) {
           reject(err)
         }
       }
       resolve()
     })
-  }, [loadProject, recentProjectContext, recentProjectName, recentProjectHandler])
+  }, [loadProject])
   // open
   const onOpen = useCallback(async () => {
     setFSPending(true)
@@ -897,8 +898,6 @@ export default function MainPage(props: MainPageProps) {
                 _cmdkRefJumpstartData['Recent'].push(_recentProjectCommand)
               }
               LogAllow && console.log('last session loaded', _session);
-
-              loadProject(_session['recent-project-context'][0], _session['recent-project-handler'][0])
             } else {
               LogAllow && console.log('has no last session')
             }
