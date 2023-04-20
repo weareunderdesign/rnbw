@@ -30,6 +30,9 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   // global action
   addRunningActions: (actionNames: string[]) => { },
   removeRunningActions: (actionNames: string[], effect?: boolean) => { },
+  // navigator
+  workspace: { name: 'local', projects: [] },
+  project: { context: 'idb', name: 'default project', handler: null },
   // node actions
   activePanel: 'unknown',
   setActivePanel: (panel: TPanelContext) => { },

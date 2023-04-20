@@ -59,11 +59,14 @@ import { ProcessProps } from './types';
 export default function Process(props: ProcessProps) {
   const dispatch = useDispatch()
   // -------------------------------------------------------------- global state --------------------------------------------------------------
-  const { workspace, project, file } = useSelector(navigatorSelector)
+  const { file } = useSelector(navigatorSelector)
   const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
   const {
     // global action
     addRunningActions, removeRunningActions,
+    // navigator
+    workspace,
+    project,
     // node actions
     activePanel, setActivePanel,
     clipboardData, setClipboardData,

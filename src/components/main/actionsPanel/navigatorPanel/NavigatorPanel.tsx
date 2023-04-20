@@ -1,6 +1,7 @@
 import React, {
   useCallback,
   useContext,
+  useEffect,
   useMemo,
 } from 'react';
 
@@ -21,12 +22,15 @@ import { NavigatorPanelProps } from './types';
 export default function NavigatorPanel(props: NavigatorPanelProps) {
   const dispatch = useDispatch()
   // -------------------------------------------------------------- global state --------------------------------------------------------------
-  const { workspace, project, file } = useSelector(navigatorSelector)
+  const { file } = useSelector(navigatorSelector)
   const { fileAction } = useSelector(globalSelector)
   const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
   const {
     // global action
     addRunningActions, removeRunningActions,
+    // navigator
+    workspace,
+    project,
     // node actions
     activePanel, setActivePanel,
     clipboardData, setClipboardData,
@@ -72,6 +76,10 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
     // toasts
     addMessage, removeMessage,
   } = useContext(MainContext)
+  // -------------------------------------------------------------- sync --------------------------------------------------------------
+  useEffect(() => {
+    console.log({ workspace, project, ffTree, file })
+  }, [workspace, project, ffTree, file])
   // -------------------------------------------------------------- own --------------------------------------------------------------
   const onPanelClick = useCallback((e: React.MouseEvent) => {
     setActivePanel('file')
