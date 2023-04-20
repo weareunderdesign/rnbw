@@ -1849,7 +1849,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   // -------------------------------------------------------------- own --------------------------------------------------------------
   const onPanelClick = useCallback((e: React.MouseEvent) => {
     setActivePanel('file')
-    dispatch(focusFFNode(RootNodeUid))
   }, [])
 
   return useMemo(() => {
