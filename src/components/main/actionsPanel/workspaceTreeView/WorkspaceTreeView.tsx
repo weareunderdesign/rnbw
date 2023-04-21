@@ -1949,7 +1949,10 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                       !props.context.isFocused && addRunningActions(['fileTreeView-focus'])
                       !e.shiftKey && !e.ctrlKey && addRunningActions(props.item.isFolder ? [props.context.isExpanded ? 'fileTreeView-collapse' : 'fileTreeView-expand'] : ['fileTreeView-read'])
 
-                      !props.context.isFocused && props.context.focusItem()
+                      if (!props.context.isFocused) {
+                        props.context.focusItem()
+                        focusedItemRef.current = props.item.index as TNodeUid
+                      }
                       e.shiftKey ? props.context.selectUpTo() :
                         e.ctrlKey ? (props.context.isSelected ? props.context.unselectItem() : props.context.addToSelectedItems()) : [
                           props.context.selectItem(),
