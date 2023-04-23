@@ -950,12 +950,6 @@ export default function MainPage(props: MainPageProps) {
       setCmdkReferenceJumpstart(_cmdkRefJumpstartData)
       LogAllow && console.log('cmdk jumpstart reference data: ', _cmdkRefJumpstartData)
 
-      // open default project and jumpstart menu on startup
-      setTimeout(() => {
-        setOpenDefaultProject(true)
-        setOpenDefaultJumpstart(true)
-      }, 0)
-
       // reference-cmdk-actions
       const _cmdkRefActionsData: TCmdkGroupData = {}
       cmdkRefActions.map((command: TCmdkReference) => {
