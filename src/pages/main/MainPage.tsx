@@ -706,7 +706,7 @@ export default function MainPage(props: MainPageProps) {
     if (cmdkOpen) return
     setCmdkPages(['Jumpstart'])
     setCmdkOpen(true)
-  }, [cmdkOpen])
+  }, [cmdkOpen, cmdkReferenceJumpstart])
   // hms
   const onUndo = useCallback(() => {
     if (pending || iframeLoading || fsPending || codeEditing) return
@@ -988,8 +988,8 @@ export default function MainPage(props: MainPageProps) {
   // open jumpstart menu on startup
   useEffect(() => {
     // wait until "cmdkReferenceJumpstart" is ready
-    setTimeout(() => onJumpstart(), 0)
-  }, [])
+    Object.keys(cmdkReferenceJumpstart).length !== 0 && onJumpstart()
+  }, [cmdkReferenceJumpstart])
   // newbie flag
   useEffect(() => {
     const isNewbie = localStorage.getItem("newbie")
@@ -1079,19 +1079,13 @@ export default function MainPage(props: MainPageProps) {
       window.onbeforeunload = null
     }
   }, [ffTree])
-  // clear cmdk pages and search text when close the modal
-  useEffect(() => {
-    if (!cmdkOpen) {
-      setCmdkPages([])
-      setCmdkSearch('')
-    }
-  }, [cmdkOpen])
-  // detect hovered menu item in cmdk modal
+  // cmdk modal handle
   const [hoveredMenuItemDescription, setHoverMenuItemDescription] = useState<string | null | undefined>()
-  const [validMenuItemCount, setValidMenuItemCount] = useState(0)
+  const [validMenuItemCount, setValidMenuItemCount] = useState<number>()
   useEffect(() => {
     let hoveredMenuItemDetecter: NodeJS.Timer
     if (cmdkOpen) {
+      // detect hovered menu item in cmdk modal if its open
       hoveredMenuItemDetecter = setInterval(() => {
         const menuItems = document.querySelectorAll('.rnbw-cmdk-menu-item')
         setValidMenuItemCount(menuItems.length)
@@ -1099,6 +1093,11 @@ export default function MainPage(props: MainPageProps) {
         const description = cmdkPage === 'Add' ? document.querySelector('.rnbw-cmdk-menu-item[aria-selected="true"]')?.getAttribute('rnbw-cmdk-menu-item-description') : ''
         setHoverMenuItemDescription(description)
       }, 10)
+    } else {
+      // clear cmdk pages and search text when close the modal
+      setCmdkPages([])
+      setCmdkSearch('')
+      // setValidMenuItemCount(undefined)
     }
 
     return () => clearInterval(hoveredMenuItemDetecter)
@@ -1277,7 +1276,10 @@ export default function MainPage(props: MainPageProps) {
         label={cmdkPage}
       >
         {/* search input */}
-        <div className='gap-m box-l border-bottom padding-m justify-start'>
+        <div className={cx(
+          'gap-m box-l padding-m justify-start',
+          validMenuItemCount === 0 ? '' : 'border-bottom',
+        )}>
           <Command.Input
             value={cmdkSearch}
             onValueChange={setCmdkSearch}
@@ -1290,7 +1292,10 @@ export default function MainPage(props: MainPageProps) {
         {/* modal content */}
         <div
           className={cmdkPage !== 'Add' ? "" : "box-l direction-column align-stretch box"}
-          style={cmdkPage !== 'Add' ? { width: "100%" } : {}}
+          style={{
+            ...(cmdkPage !== 'Add' ? { width: "100%" } : {}),
+            ...(validMenuItemCount === 0 ? { height: '0px', overflow: 'hidden' } : {}),
+          }}
         >
           {/* menu list - left panel */}
           <div className="padding-m">
@@ -1401,7 +1406,7 @@ export default function MainPage(props: MainPageProps) {
           </div>
 
           {/* description - right panel */}
-          {cmdkPage === 'Add' && validMenuItemCount !== 0 &&
+          {cmdkPage === 'Add' &&
             <div className={cx(
               "box align-center border-left padding-l text-l",
               !!hoveredMenuItemDescription ? '' : 'opacity-m',
