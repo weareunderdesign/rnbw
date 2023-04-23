@@ -1923,6 +1923,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                       'justify-stretch',
                       'padding-xs',
                       'outline-default',
+                      'gap-s',
 
                       props.context.isSelected && 'background-tertiary outline-none',
                       !props.context.isSelected && props.context.isFocused && 'outline',
@@ -1951,7 +1952,10 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                       !props.context.isFocused && addRunningActions(['fileTreeView-focus'])
                       !e.shiftKey && !e.ctrlKey && addRunningActions(props.item.isFolder ? [props.context.isExpanded ? 'fileTreeView-collapse' : 'fileTreeView-expand'] : ['fileTreeView-read'])
 
-                      !props.context.isFocused && props.context.focusItem()
+                      if (!props.context.isFocused) {
+                        props.context.focusItem()
+                        focusedItemRef.current = props.item.index as TNodeUid
+                      }
                       e.shiftKey ? props.context.selectUpTo() :
                         e.ctrlKey ? (props.context.isSelected ? props.context.unselectItem() : props.context.addToSelectedItems()) : [
                           props.context.selectItem(),
@@ -1969,7 +1973,12 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                       props.context.startDragging()
                     }}
                   >
-                    <div className="gap-s padding-xs" style={{ width: 'fit-content' }}>
+                    <div
+                      className="gap-s padding-xs"
+                      style={{
+                        width: 'fit-content',
+                        paddingRight: `0px`,
+                      }}>
                       {props.arrow}
 
                       {fileReferenceData ?
