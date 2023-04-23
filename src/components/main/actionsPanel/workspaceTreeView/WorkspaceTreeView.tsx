@@ -88,12 +88,15 @@ import { WorkspaceTreeViewProps } from './types';
 export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   const dispatch = useDispatch()
   // -------------------------------------------------------------- global state --------------------------------------------------------------
-  const { workspace, project, file } = useSelector(navigatorSelector)
+  const { file } = useSelector(navigatorSelector)
   const { fileAction } = useSelector(globalSelector)
   const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
   const {
     // global action
     addRunningActions, removeRunningActions,
+    // navigator
+    workspace,
+    project,
     // node actions
     activePanel, setActivePanel,
     clipboardData, setClipboardData,
@@ -1849,7 +1852,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   // -------------------------------------------------------------- own --------------------------------------------------------------
   const onPanelClick = useCallback((e: React.MouseEvent) => {
     setActivePanel('file')
-    dispatch(focusFFNode(RootNodeUid))
   }, [])
 
   return useMemo(() => {

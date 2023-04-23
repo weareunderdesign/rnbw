@@ -29,8 +29,6 @@ import {
 export type TMainReducerState = {
   actionGroupIndex: number,
   navigator: {
-    workspace: TWorkspace,
-    project: TProject,
     file: TFile,
   },
   global: {
@@ -43,6 +41,9 @@ export type TMainContext = {
   // global action
   addRunningActions: (actionNames: string[]) => void,
   removeRunningActions: (actionNames: string[], effect?: boolean) => void,
+  // navigator
+  workspace: TWorkspace,
+  project: TProject,
   // node actions
   activePanel: TPanelContext,
   setActivePanel: (panel: TPanelContext) => void,

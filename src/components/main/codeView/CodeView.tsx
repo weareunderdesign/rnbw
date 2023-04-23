@@ -53,7 +53,7 @@ loader.config({ monaco })
 export default function CodeView(props: CodeViewProps) {
   const dispatch = useDispatch()
   // -------------------------------------------------------------- global state --------------------------------------------------------------
-  const { workspace, project, file } = useSelector(navigatorSelector)
+  const { file } = useSelector(navigatorSelector)
   const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
   const {
     // global action

@@ -1,6 +1,5 @@
 import {
   THtmlPageSettings,
-  TNodeTreeData,
   TNodeUid,
 } from '@_node/index';
 
@@ -11,7 +10,8 @@ export type TWorkspace = {
 }
 export type TProject = {
   context: TProjectContext,
-  files: TNodeTreeData,
+  name: string,
+  handler: FileSystemDirectoryHandle | null,
 }
 export type TFile = {
   uid: TNodeUid,

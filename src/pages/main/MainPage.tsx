@@ -77,7 +77,6 @@ import {
   MainContext,
   navigatorSelector,
   setFileAction,
-  setProjectContext,
   TCommand,
   TUpdateOptions,
 } from '@_redux/main';
@@ -107,8 +106,10 @@ import {
   TFileAction,
   TFileInfo,
   TPanelContext,
+  TProject,
   TProjectContext,
   TSession,
+  TWorkspace,
 } from '@_types/main';
 
 import { getCommandKey } from '../../services/global';
@@ -118,7 +119,7 @@ export default function MainPage(props: MainPageProps) {
   // -------------------------------------------------------------- redux  --------------------------------------------------------------
   const dispatch = useDispatch()
   const actionGroupIndex = useSelector(getActionGroupIndexSelector)
-  const { workspace, project, file } = useSelector(navigatorSelector)
+  const { file } = useSelector(navigatorSelector)
   const { fileAction } = useSelector(globalSelector)
   const { focusedItem: ffFocusedItem, expandedItems: ffExpandedItems, selectedItems: ffSelectedItems, expandedItemsObj: ffExpandedItemsObj, selectedItemsObj: ffSelectedItemsObj } = useSelector(ffSelector)
   const { focusedItem: fnFocusedItem, expandedItems: fnExpandedItems, selectedItems: fnSelectedItems, expandedItemsObj: fnExpandedItemsObj, selectedItemsObj: fnSelectedItemsObj } = useSelector(fnSelector)
@@ -160,12 +161,15 @@ export default function MainPage(props: MainPageProps) {
       effect && dispatch(increaseActionGroupIndex())
     }
   }, [noRunningAction, file.content])
+  // navigator
+  const [workspace, setWorkspace] = useState<TWorkspace>({ name: 'local', projects: [] })
+  const [project, setProject] = useState<TProject>({ context: 'idb', name: 'default project', handler: null })
   // node actions
   const [activePanel, setActivePanel] = useState<TPanelContext>('unknown')
   const [clipboardData, setClipboardData] = useState<TClipboardData>({ panel: 'unknown', type: null, uids: [] })
   const [event, setEvent] = useState<TEvent>(null)
   // actions panel
-  const [showActionsPanel, setShowActionsPanel] = useState(false)
+  const [showActionsPanel, setShowActionsPanel] = useState(true)
   // file tree view
   const [initialFileToOpen, setInitialFileToOpen] = useState<TNodeUid>('')
   const [fsPending, setFSPending] = useState<boolean>(false)
@@ -326,6 +330,40 @@ export default function MainPage(props: MainPageProps) {
   // navigating
   const params = useParams()
   const location = useLocation()
+  useEffect(() => {
+    setWorkspace({ name: 'local', projects: [] })
+  }, [])
+  // -------------------------------------------------------------- recent project --------------------------------------------------------------
+  const [recentProjectContext, setRecentProjectContext] = useState<(TProjectContext)[]>([])
+  const [recentProjectName, setRecentProjectName] = useState<(string)[]>([])
+  const [recentProjectHandler, setRecentProjectHandler] = useState<(FileSystemDirectoryHandle | null)[]>([])
+  const cmdkReferneceRecentProject = useMemo<TCmdkReference[]>(() => {
+    const _projects: TProject[] = []
+    const _cmdkReferneceRecentProject: TCmdkReference[] = []
+    recentProjectContext.map((_v, index) => {
+      _projects.push({
+        context: recentProjectContext[index],
+        name: recentProjectName[index],
+        handler: recentProjectHandler[index],
+      })
+      _cmdkReferneceRecentProject.push({
+        "Name": recentProjectName[index],
+        "Icon": 'folder',
+        "Description": '',
+        "Keyboard Shortcut": {
+          cmd: false,
+          shift: false,
+          alt: false,
+          key: '',
+          click: false,
+        },
+        "Group": 'Recent',
+        "Context": index.toString(),
+      })
+    })
+    setWorkspace({ name: workspace.name, projects: _projects })
+    return _cmdkReferneceRecentProject
+  }, [recentProjectContext, recentProjectName, recentProjectHandler])
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
   // key event listener
   const cb_onKeyDown = useCallback((e: KeyboardEvent) => {
@@ -425,28 +463,6 @@ export default function MainPage(props: MainPageProps) {
         return
     }
   }, [currentCommand])
-  // -------------------------------------------------------------- recent project --------------------------------------------------------------
-  const [recentProjectContext, setRecentProjectContext] = useState<(TProjectContext)[]>([])
-  const [recentProjectName, setRecentProjectName] = useState<(string)[]>([])
-  const [recentProjectHandler, setRecentProjectHandler] = useState<(FileSystemHandle | null)[]>([])
-  const cmdkReferneceRecentProject = useMemo<TCmdkReference[]>(() => {
-    return recentProjectContext.map((_v, index) => {
-      return {
-        "Name": recentProjectName[index],
-        "Icon": 'folder',
-        "Description": '',
-        "Keyboard Shortcut": {
-          cmd: false,
-          shift: false,
-          alt: false,
-          key: '',
-          click: false,
-        },
-        "Group": 'Recent',
-        "Context": index.toString(),
-      } as TCmdkReference
-    })
-  }, [recentProjectContext, recentProjectName, recentProjectHandler])
   // -------------------------------------------------------------- handlers --------------------------------------------------------------
   const clearSession = useCallback(() => {
     dispatch(clearMainState())
@@ -512,7 +528,7 @@ export default function MainPage(props: MainPageProps) {
         setFFTree(treeViewData)
         setFFHandlers(ffHandlerObj)
 
-        dispatch(setProjectContext('local'))
+        setProject({ context: 'local', name: (projectHandle as FileSystemDirectoryHandle).name, handler: projectHandle as FileSystemDirectoryHandle })
 
         // store last edit session
         const _recentProjectContext = [...recentProjectContext]
@@ -597,7 +613,7 @@ export default function MainPage(props: MainPageProps) {
         setFFTree(treeViewData)
         setFFHandlers(ffHandlerObj)
 
-        dispatch(setProjectContext('idb'))
+        setProject({ context: 'idb', name: 'default project', handler: null })
 
         // store last edit session
         const _recentProjectContext = [...recentProjectContext]
@@ -758,7 +774,7 @@ export default function MainPage(props: MainPageProps) {
     _designPanelPanelSizes && setDesignPanelPanelSizes(JSON.parse(_designPanelPanelSizes))
   }, [])
   // -------------------------------------------------------------- other --------------------------------------------------------------
-  // detect OS & fetch reference - html. Jumpstart.csv, Actions.csv
+  // detect OS & fetch reference - html. Jumpstart.csv, Actions.csv - restore recent project session - open default project and jumpstart menu ons tartup
   useEffect(() => {
     (async () => {
       addRunningActions(['detect-os', 'reference-files', 'reference-html-elements', 'reference-cmdk-jumpstart', 'reference-cmdk-actions'])
@@ -894,6 +910,7 @@ export default function MainPage(props: MainPageProps) {
                 'recent-project-name': sessionInfo[1],
                 'recent-project-handler': sessionInfo[2],
               }
+              console.log(_session)
               setRecentProjectContext(_session['recent-project-context'])
               setRecentProjectName(_session['recent-project-name'])
               setRecentProjectHandler(_session['recent-project-handler'])
@@ -932,6 +949,12 @@ export default function MainPage(props: MainPageProps) {
       }
       setCmdkReferenceJumpstart(_cmdkRefJumpstartData)
       LogAllow && console.log('cmdk jumpstart reference data: ', _cmdkRefJumpstartData)
+
+      // open default project and jumpstart menu on startup
+      setTimeout(() => {
+        setOpenDefaultProject(true)
+        setOpenDefaultJumpstart(true)
+      }, 0)
 
       // reference-cmdk-actions
       const _cmdkRefActionsData: TCmdkGroupData = {}
@@ -985,7 +1008,7 @@ export default function MainPage(props: MainPageProps) {
       removeRunningActions(['detect-os', 'reference-files', 'reference-html-elements', 'reference-cmdk-jumpstart', 'reference-cmdk-actions'], false)
     })()
   }, [])
-  // open jumpstart menu on startup
+  const [openDefaultProject, setOpenDefaultProject] = useState(false)
   useEffect(() => {
     // wait until "cmdkReferenceJumpstart" is ready
     Object.keys(cmdkReferenceJumpstart).length !== 0 && onJumpstart()
@@ -1117,6 +1140,9 @@ export default function MainPage(props: MainPageProps) {
       value={{
         // global action
         addRunningActions, removeRunningActions,
+        // navigator
+        workspace,
+        project,
         // node actions
         activePanel, setActivePanel,
         clipboardData, setClipboardData,
