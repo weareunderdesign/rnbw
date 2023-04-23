@@ -1921,6 +1921,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                       'justify-stretch',
                       'padding-xs',
                       'outline-default',
+                      'gap-s',
 
                       props.context.isSelected && 'background-tertiary outline-none',
                       !props.context.isSelected && props.context.isFocused && 'outline',
@@ -1970,7 +1971,12 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                       props.context.startDragging()
                     }}
                   >
-                    <div className="gap-s padding-xs" style={{ width: 'fit-content' }}>
+                    <div
+                      className="gap-s padding-xs"
+                      style={{
+                        width: 'fit-content',
+                        paddingRight: `0px`,
+                      }}>
                       {props.arrow}
 
                       {fileReferenceData ?
