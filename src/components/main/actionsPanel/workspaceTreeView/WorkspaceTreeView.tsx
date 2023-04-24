@@ -649,6 +649,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     removeRunningActions(['fileTreeView-collapse'])
   }, [addRunningActions, removeRunningActions, invalidNodes, ffTree, expandedItemsObj])
   // -------------------------------------------------------------- project --------------------------------------------------------------
+  // open default initial html file
   useEffect(() => {
     if (initialFileToOpen !== '' && ffTree[initialFileToOpen] !== undefined) {
       setInitialFileToOpen('')
@@ -1781,7 +1782,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     if (isAbsolutePath) {
       window.open(normalizedPath, '_blank')?.focus()
     } else {
-      const pathArr = normalizedPath.split('../')
       const fileUidToOpen = _path.join(parentNode.uid, normalizedPath)
       openFile(fileUidToOpen)
     }

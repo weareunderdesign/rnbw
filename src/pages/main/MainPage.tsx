@@ -330,6 +330,7 @@ export default function MainPage(props: MainPageProps) {
   // navigating
   const params = useParams()
   const location = useLocation()
+  // init workspace
   useEffect(() => {
     setWorkspace({ name: 'local', projects: [] })
   }, [])
@@ -722,7 +723,7 @@ export default function MainPage(props: MainPageProps) {
     if (cmdkOpen) return
     setCmdkPages(['Jumpstart'])
     setCmdkOpen(true)
-  }, [cmdkOpen, cmdkReferenceJumpstart])
+  }, [cmdkOpen])
   // hms
   const onUndo = useCallback(() => {
     if (pending || iframeLoading || fsPending || codeEditing) return
