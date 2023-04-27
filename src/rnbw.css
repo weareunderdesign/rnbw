@@ -176,3 +176,38 @@
   position: absolute;
   margin-top: 3px;
 }
+
+/* navigator panel dropdown */
+.navigator-project-item {
+  cursor: pointer;
+}
+
+.navigator-project-item.selected,
+.navigator-project-item:hover {
+  /* rene.css -> .background-secondary */
+  background-color: var(--color-secondary-background);
+  color: var(--color-secondary-foreground);
+}
+
+.navigator-project-item-icon {
+  /* rene.css -> .background-secondary */
+  background-color: var(--color-secondary-background);
+  color: var(--color-secondary-foreground);
+}
+
+.navigator-project-item-name {
+  /* rene.css -> .opacity-m */
+  opacity: .5;
+}
+
+.navigator-project-item.selected .navigator-project-item-icon,
+.navigator-project-item:hover .navigator-project-item-icon {
+  /* rene.css -> .background-primary */
+  background-color: var(--color-primary-background);
+  color: var(--color-primary-foreground);
+}
+
+.navigator-project-item.selected .navigator-project-item-name,
+.navigator-project-item:hover .navigator-project-item-name {
+  opacity: 1;
+}

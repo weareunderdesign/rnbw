@@ -1119,7 +1119,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     dispatch(setFileAction(action))
 
     // update redux
-    dispatch(setCurrentFile({ uid: newUid, content: nodeData.contentInApp as string }))
+    dispatch(setCurrentFile({ uid: newUid, parentUid: parentNode.uid, name: nodeData.name, content: nodeData.contentInApp as string }))
     dispatch(updateFFTreeViewState({ convertedUids: [[uid, newUid]] }))
 
     await cb_reloadProject()
@@ -1756,7 +1756,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
 
     addRunningActions(['processor-updateOpt'])
-    dispatch(setCurrentFile({ uid, content: nodeData.content }))
+    dispatch(setCurrentFile({ uid, parentUid: node.parentUid as TNodeUid, name: nodeData.name, content: nodeData.content }))
     setUpdateOpt({ parse: true, from: 'file' })
 
     removeRunningActions(['fileTreeView-read'])

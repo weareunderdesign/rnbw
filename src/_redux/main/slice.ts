@@ -28,6 +28,8 @@ const initialState: TMainReducerState = {
   navigator: {
     file: {
       uid: '',
+      parentUid: '',
+      name: '',
       content: '',
     },
   },
