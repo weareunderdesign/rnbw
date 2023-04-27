@@ -22,7 +22,6 @@ import {
 } from '@_redux/main';
 import { TProject } from '@_types/main';
 
-import WorkspaceTreeView from '../workspaceTreeView';
 import { NavigatorPanelProps } from './types';
 
 export default function NavigatorPanel(props: NavigatorPanelProps) {
@@ -179,7 +178,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
             </> : <></>}
       </div>
 
-      {dropDownType && <div
+      {!!dropDownType && <div
         style={{
           position: 'fixed',
           inset: '0',
@@ -197,7 +196,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
         </div>
 
         <div
-          className='border-left border-right border-bottom radius-s'
+          className='border-left border-right border-bottom radius-s background-primary shadow'
           style={{
             position: 'absolute',
             left: Number(navigatorPanelRef.current?.offsetLeft),
@@ -233,7 +232,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
             })}
           </> :
             dropDownType === 'project' ? <>
-              <WorkspaceTreeView />
+              {/* <WorkspaceTreeView /> */}
             </> : <></>}
         </div>
       </div>}
