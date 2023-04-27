@@ -190,7 +190,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
         <div
           className='view'
           style={{
-            background: 'rgba(0, 0, 0, 0.2)',
+            // background: 'rgba(0, 0, 0, 0.2)',
             zIndex: '1',
           }}>
         </div>
@@ -199,8 +199,8 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
           className='border-left border-right border-bottom radius-s background-primary shadow'
           style={{
             position: 'absolute',
-            left: Number(navigatorPanelRef.current?.offsetLeft),
-            top: Number(navigatorPanelRef.current?.offsetTop) + 41,
+            left: Number(navigatorPanelRef.current?.getBoundingClientRect().left),
+            top: Number(navigatorPanelRef.current?.getBoundingClientRect().top) + 41,
 
             width: Number(navigatorPanelRef.current?.clientWidth),
             maxHeight: '300px',
