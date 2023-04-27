@@ -130,53 +130,6 @@
   background: var(--color-tertiary-background);
 }
 
-/* react split css - for resizable panels */
-.gutter {
-  background: transparent;
-  z-index: 1;
-}
-
-.gutter::before {
-  content: "";
-  display: flex;
-  background-color: var(--color-secondary-background);
-}
-
-.gutter:hover::before {
-  background-color: var(--color-tertiary-background);
-}
-
-.gutter.gutter-horizontal {
-  cursor: col-resize;
-
-  margin-left: -4px;
-  margin-right: -4px;
-}
-
-.gutter.gutter-horizontal::before {
-  width: 1px;
-  height: 100%;
-
-  margin-left: 3px;
-}
-
-.gutter.gutter-vertical {
-  cursor: row-resize;
-
-  margin-top: -4px;
-  margin-bottom: -4px;
-
-  position: relative;
-}
-
-.gutter.gutter-vertical::before {
-  width: 100%;
-  height: 1px;
-
-  position: absolute;
-  margin-top: 3px;
-}
-
 /* navigator panel dropdown */
 .navigator-project-item {
   cursor: pointer;

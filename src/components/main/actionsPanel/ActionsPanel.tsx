@@ -22,10 +22,21 @@ export default function ActionsPanel(props: ActionsPanelProps) {
 
   return useMemo(() => {
     return <>
-      <div id='ActionsPanel' style={{ height: 'calc(100vh)' }}>
+      <div
+        id='ActionsPanel'
+        className='border radius-s background-primary shadow'
+        style={{
+          position: 'absolute',
+          top: props.offsetTop,
+          left: props.offsetLeft,
+          width: props.width,
+          height: props.height,
+          zIndex: 2,
+        }}
+      >
         <NavigatorPanel />
         <Split
-          style={{ height: 'calc(100vh - 41px)' }}
+          style={{ height: 'calc(100% - 41px)' }}
 
           sizes={actionsPanelPanelSizes}
           minSize={[200, 200, 0]}

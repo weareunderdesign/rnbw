@@ -24,7 +24,6 @@ import {
   useLocation,
   useParams,
 } from 'react-router-dom';
-import Split from 'react-split';
 
 import {
   Loader,
@@ -1191,89 +1190,20 @@ export default function MainPage(props: MainPageProps) {
       <Loader show={pending || iframeLoading || fsPending || codeEditing}></Loader>
 
       {/* main page */}
-      <Split
+      <div
         id='MainPage'
         className={'view'}
-        style={{ display: 'flex' }}
-
-        sizes={mainPagePanelSizes}
-        minSize={[showActionsPanel ? 240 : 0, 320]}
-        maxSize={[showActionsPanel ? Infinity : 0, Infinity]}
-
-        expandToMin={true}
-
-        gutterSize={8}
-
-        snapOffset={30}
-        dragInterval={1}
-
-        direction="horizontal"
-        cursor="col-resize"
-
-        onDragEnd={(sizes: number[]) => {
-          setMainPagePanelSizes(sizes)
-          localStorage.setItem('main-page-panel-sizes', JSON.stringify(sizes))
-        }}
-
-        elementStyle={(_dimension: "height" | "width", elementSize: number, _gutterSize: number, _index: number) => {
-          return {
-            'width': 'calc(' + elementSize + '%)',
-          }
-        }}
-        gutterStyle={(_dimension: "height" | "width", gutterSize: number, _index: number) => {
-          return {
-            'width': gutterSize + 'px',
-          }
-        }}
-
-        collapsed={!showActionsPanel ? 0 : undefined}
+        style={{ display: 'relative' }}
       >
-        <ActionsPanel />
-        <div id='DesignPanel'>
-          <Split
-            id='MainPage'
-            className={'view'}
-            style={{ display: 'flex' }}
-
-            sizes={designPanelPanelSizes}
-            minSize={[320, showCodeView ? 500 : 0]}
-            maxSize={[Infinity, showCodeView ? Infinity : 0]}
-
-            expandToMin={true}
-
-            gutterSize={8}
-
-            snapOffset={30}
-            dragInterval={1}
-
-            direction="horizontal"
-            cursor="col-resize"
-
-            onDragEnd={(sizes: number[]) => {
-              setDesignPanelPanelSizes(sizes)
-              localStorage.setItem('design-panel-panel-sizes', JSON.stringify(sizes))
-            }}
-
-            elementStyle={(_dimension: "height" | "width", elementSize: number, _gutterSize: number, _index: number) => {
-              return {
-                'width': 'calc(' + elementSize + '%)',
-              }
-            }}
-            gutterStyle={(_dimension: "height" | "width", gutterSize: number, _index: number) => {
-              return {
-                'width': gutterSize + 'px',
-              }
-            }}
-
-            collapsed={!showCodeView ? 1 : undefined}
-          >
-            <StageView />
-            <div id='CodeViewWrapper'>
-              {showCodeView && !needToReloadCodeView && <CodeView />}
-            </div>
-          </Split>
-        </div>
-      </Split>
+        <StageView />
+        <ActionsPanel
+          offsetTop='10px'
+          offsetLeft='10px'
+          width='240px'
+          height='calc(100vh - 20px)'
+        />
+        {showCodeView && !needToReloadCodeView && <CodeView />}
+      </div>
 
       {/* cmdk modal */}
       <Command.Dialog
