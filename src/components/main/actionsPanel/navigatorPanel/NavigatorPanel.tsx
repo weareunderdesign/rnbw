@@ -84,7 +84,6 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
   } = useContext(MainContext)
   // -------------------------------------------------------------- sync --------------------------------------------------------------
   useEffect(() => {
-
     console.log({ workspace, project, ffTree, file })
   }, [workspace, project, file, ffTree])
   // -------------------------------------------------------------- dropdown --------------------------------------------------------------
@@ -111,9 +110,6 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
   const onPanelClick = useCallback((e: React.MouseEvent) => {
     setActivePanel('file')
   }, [])
-  useEffect(() => {
-    console.log(navigatorDropDownRef.current)
-  }, [navigatorDropDownRef])
 
   return useMemo(() => {
     return <>
@@ -223,7 +219,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
                 className={cx(
                   'navigator-project-item',
                   'justify-stretch padding-s',
-                  (_project.context === project.context && _project.name === project.name) ? 'selected' : '',
+                  (_project.context === project.context && _project.name === project.name && _project.handler === project.handler) ? 'selected' : '',
                 )}
                 onClick={(e) => {
                   e.stopPropagation()
