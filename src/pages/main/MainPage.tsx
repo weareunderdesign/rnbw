@@ -170,7 +170,7 @@ export default function MainPage(props: MainPageProps) {
   const [clipboardData, setClipboardData] = useState<TClipboardData>({ panel: 'unknown', type: null, uids: [] })
   const [event, setEvent] = useState<TEvent>(null)
   // actions panel
-  const [showActionsPanel, setShowActionsPanel] = useState(true)
+  const [showActionsPanel, setShowActionsPanel] = useState(false)
   // file tree view
   const [initialFileToOpen, setInitialFileToOpen] = useState<TNodeUid>('')
   const [fsPending, setFSPending] = useState<boolean>(false)
