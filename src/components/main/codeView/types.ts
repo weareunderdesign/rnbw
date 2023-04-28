@@ -1,4 +1,9 @@
-export type CodeViewProps = {}
+export type CodeViewProps = {
+  offsetBottom: number | string,
+  offsetLeft: number | string,
+  width: number | string,
+  height: number | string,
+}
 
 export type CursorPos = {
   lineNumber: number,

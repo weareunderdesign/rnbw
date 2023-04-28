@@ -765,16 +765,14 @@ export default function MainPage(props: MainPageProps) {
   const toogleActionsPanel = useCallback(() => {
     setShowActionsPanel(!showActionsPanel)
   }, [showActionsPanel])
-  // -------------------------------------------------------------- resizable panels --------------------------------------------------------------
-  const [mainPagePanelSizes, setMainPagePanelSizes] = useState<number[]>([10, 90])
-  const [designPanelPanelSizes, setDesignPanelPanelSizes] = useState<number[]>([60, 40])
-  useEffect(() => {
-    const _mainPagePanelSizes = localStorage.getItem('main-page-panel-sizes')
-    _mainPagePanelSizes && setMainPagePanelSizes(JSON.parse(_mainPagePanelSizes))
+  // -------------------------------------------------------------- pos/size for panels --------------------------------------------------------------
+  const [actionsPanelOffsetTop, setActionsPanelOffsetTop] = useState(10)
+  const [actionsPanelOffsetLeft, setActionsPanelOffsetLeft] = useState(10)
+  const [actionsPanelWidth, setActionsPanelWidth] = useState(240)
 
-    const _designPanelPanelSizes = localStorage.getItem('design-panel-panel-sizes')
-    _designPanelPanelSizes && setDesignPanelPanelSizes(JSON.parse(_designPanelPanelSizes))
-  }, [])
+  const [codeViewOffsetBottom, setCodeViewOffsetBottom] = useState(10)
+  const [codeViewOffsetLeft, setCodeViewOffsetLeft] = useState(10)
+  const [codeViewHeight, setCodeViewHeight] = useState(500)
   // -------------------------------------------------------------- other --------------------------------------------------------------
   // detect OS & fetch reference - html. Jumpstart.csv, Actions.csv - restore recent project session - open default project and jumpstart menu ons tartup
   useEffect(() => {
@@ -1201,12 +1199,18 @@ export default function MainPage(props: MainPageProps) {
       >
         <StageView />
         <ActionsPanel
-          offsetTop='10px'
-          offsetLeft='10px'
-          width='240px'
-          height='calc(100vh - 20px)'
+          offsetTop={actionsPanelOffsetTop}
+          offsetLeft={actionsPanelOffsetLeft}
+          width={`${actionsPanelWidth}px`}
+          height={`calc(100vh - ${actionsPanelOffsetTop * 2}px)`}
         />
-        {showCodeView && !needToReloadCodeView && <CodeView />}
+        {showCodeView && !needToReloadCodeView ?
+          <CodeView
+            offsetBottom={codeViewOffsetBottom}
+            offsetLeft={showActionsPanel ? actionsPanelOffsetLeft * 2 + actionsPanelWidth : codeViewOffsetLeft}
+            width={`calc(100vw - ${(showActionsPanel ? actionsPanelWidth + actionsPanelOffsetLeft * 2 : codeViewOffsetLeft) + codeViewOffsetLeft}px)`}
+            height={`${codeViewHeight}px`}
+          /> : null}
       </div>
 
       {/* cmdk modal */}

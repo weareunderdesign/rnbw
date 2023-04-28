@@ -1,6 +1,6 @@
 export type ActionsPanelProps = {
-  offsetTop: string,
-  offsetLeft: string,
-  width: string,
-  height: string,
+  offsetTop: number | string,
+  offsetLeft: number | string,
+  width: number | string,
+  height: number | string,
 }
