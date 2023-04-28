@@ -44,6 +44,8 @@ export type TMainContext = {
   // navigator
   workspace: TWorkspace,
   project: TProject,
+  navigatorDropDownType: TNavigatorDropDownType,
+  setNavigatorDropDownType: (type: TNavigatorDropDownType) => void,
   // node actions
   activePanel: TPanelContext,
   setActivePanel: (panel: TPanelContext) => void,
@@ -130,6 +132,7 @@ export type TUpdateOptions = {
 export type TCommand = {
   action: string,
 }
+export type TNavigatorDropDownType = 'workspace' | 'project' | null
 export type TTreeViewState = {
   focusedItem: TNodeUid,
   expandedItems: TNodeUid[],

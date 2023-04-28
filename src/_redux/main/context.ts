@@ -23,6 +23,7 @@ import {
 import {
   TCommand,
   TMainContext,
+  TNavigatorDropDownType,
   TUpdateOptions,
 } from './types';
 
@@ -33,6 +34,8 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   // navigator
   workspace: { name: 'local', projects: [] },
   project: { context: 'idb', name: 'default project', handler: null },
+  navigatorDropDownType: null,
+  setNavigatorDropDownType: (type: TNavigatorDropDownType) => { },
   // node actions
   activePanel: 'unknown',
   setActivePanel: (panel: TPanelContext) => { },

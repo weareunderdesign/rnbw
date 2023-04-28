@@ -77,6 +77,7 @@ import {
   navigatorSelector,
   setFileAction,
   TCommand,
+  TNavigatorDropDownType,
   TUpdateOptions,
 } from '@_redux/main';
 // @ts-ignore
@@ -163,6 +164,7 @@ export default function MainPage(props: MainPageProps) {
   // navigator
   const [workspace, setWorkspace] = useState<TWorkspace>({ name: 'local', projects: [] })
   const [project, setProject] = useState<TProject>({ context: 'idb', name: 'default project', handler: null })
+  const [navigatorDropDownType, setNavigatorDropDownType] = useState<TNavigatorDropDownType>(null)
   // node actions
   const [activePanel, setActivePanel] = useState<TPanelContext>('unknown')
   const [clipboardData, setClipboardData] = useState<TClipboardData>({ panel: 'unknown', type: null, uids: [] })
@@ -1137,6 +1139,8 @@ export default function MainPage(props: MainPageProps) {
         // navigator
         workspace,
         project,
+        navigatorDropDownType,
+        setNavigatorDropDownType,
         // node actions
         activePanel, setActivePanel,
         clipboardData, setClipboardData,

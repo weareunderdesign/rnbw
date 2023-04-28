@@ -45,6 +45,7 @@ import {
   fnSelector,
   focusFNNode,
   MainContext,
+  navigatorSelector,
   selectFNNode,
 } from '@_redux/main';
 import { getCommandKey } from '@_services/global';
@@ -58,6 +59,7 @@ import { NodeTreeViewProps } from './types';
 export default function NodeTreeView(props: NodeTreeViewProps) {
   const dispatch = useDispatch()
   // -------------------------------------------------------------- global state --------------------------------------------------------------
+  const { file } = useSelector(navigatorSelector)
   const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
   const {
     // global action
@@ -466,12 +468,17 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   }, [])
 
   return useMemo(() => {
-    return <>
+    return file.uid !== '' ? <>
       <div
         id="NodeTreeView"
         style={{
+          position: 'absolute',
+          top: 41,
+          left: 0,
+          width: '100%',
+          height: 'calc(100% - 41px)',
+
           overflow: 'auto',
-          ...(showActionsPanel ? {} : { width: '0' }),
         }}
         onClick={onPanelClick}
       >
@@ -683,10 +690,10 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
           }}
         />
       </div>
-    </>
+    </> : <></>
   }, [
     onPanelClick, showActionsPanel,
-    nodeTreeViewData,
+    nodeTreeViewData, file,
     focusedItem, selectedItems, expandedItems,
     addRunningActions, removeRunningActions,
     cb_selectNode, cb_focusNode, cb_expandNode, cb_collapseNode, cb_moveNode,

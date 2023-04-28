@@ -4,7 +4,6 @@ import React, {
   useEffect,
   useMemo,
   useRef,
-  useState,
 } from 'react';
 
 import cx from 'classnames';
@@ -36,6 +35,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
     // navigator
     workspace,
     project,
+    navigatorDropDownType, setNavigatorDropDownType,
     // node actions
     activePanel, setActivePanel,
     clipboardData, setClipboardData,
@@ -88,18 +88,17 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
   // -------------------------------------------------------------- dropdown --------------------------------------------------------------
   const navigatorPanelRef = useRef<HTMLDivElement | null>(null)
   const navigatorDropDownRef = useRef<HTMLDivElement | null>(null)
-  const [dropDownType, setDropDownType] = useState<'workspace' | 'project' | 'file' | null>(null)
   const onWorkspaceClick = useCallback(() => {
-    setDropDownType('workspace')
+    setNavigatorDropDownType('workspace')
   }, [])
   const onProjectClick = useCallback(() => {
-    setDropDownType('project')
+    setNavigatorDropDownType('project')
   }, [])
   const onFileClick = useCallback(() => {
-    setDropDownType('file')
+    setNavigatorDropDownType('project')
   }, [])
   const onCloseDropDown = useCallback(() => {
-    setDropDownType(null)
+    setNavigatorDropDownType(null)
   }, [])
   // -------------------------------------------------------------- handlers --------------------------------------------------------------
   const onOpenProject = useCallback((project: TProject) => {
@@ -111,20 +110,25 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
   }, [])
 
   return useMemo(() => {
-    return <>
+    return file.uid !== '' ? <>
       <div
         id="NavigatorPanel"
         style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+
           overflow: 'auto',
+
           display: 'flex',
           alignItems: 'center',
-          ...(showActionsPanel ? {} : { width: '0' }),
         }}
         className='padding-s border-bottom gap-s'
         onClick={onPanelClick}
         ref={navigatorPanelRef}
       >
-        {!dropDownType ? <>
+        {!navigatorDropDownType ? <>
           {/* workspace */}
           <>
             <div className="radius-m icon-s align-center background-secondary" onClick={onWorkspaceClick}></div>
@@ -154,13 +158,13 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
             </div>
           </>}
         </> :
-          dropDownType === 'workspace' ? <>
+          navigatorDropDownType === 'workspace' ? <>
             {/* workspace */}
             <>
               <div className="radius-m icon-s align-center background-secondary" onClick={onWorkspaceClick}></div>
             </>
           </> :
-            dropDownType === 'project' ? <>
+            navigatorDropDownType === 'project' ? <>
               {/* workspace */}
               <>
                 <div className="radius-m icon-s align-center background-secondary" onClick={onWorkspaceClick}></div>
@@ -178,40 +182,34 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
             </> : <></>}
       </div>
 
-      {!!dropDownType && <div
+      {navigatorDropDownType && <div
         style={{
           position: 'fixed',
-          inset: '0',
-          zIndex: '2',
+          inset: 0,
+          zIndex: 1,
         }}
         ref={navigatorDropDownRef}
         onClick={onCloseDropDown}
       >
-        <div
-          className='view'
-          style={{
-            // background: 'rgba(0, 0, 0, 0.2)',
-            zIndex: '1',
-          }}>
-        </div>
+        <div className='view' />
 
-        <div
-          className='border-left border-right border-bottom radius-s background-primary shadow'
-          style={{
-            position: 'absolute',
-            left: Number(navigatorPanelRef.current?.getBoundingClientRect().left),
-            top: Number(navigatorPanelRef.current?.getBoundingClientRect().top) + 41,
+        {navigatorDropDownType === 'workspace' ?
+          <div
+            className='border-left border-right border-bottom radius-s background-primary shadow'
+            style={{
+              position: 'absolute',
+              left: Number(navigatorPanelRef.current?.getBoundingClientRect().left),
+              top: Number(navigatorPanelRef.current?.getBoundingClientRect().top) + 41,
 
-            width: Number(navigatorPanelRef.current?.clientWidth),
-            maxHeight: '300px',
+              width: Number(navigatorPanelRef.current?.clientWidth),
+              maxHeight: '300px',
 
-            borderTopLeftRadius: '0px',
-            borderTopRightRadius: '0px',
+              borderTopLeftRadius: '0px',
+              borderTopRightRadius: '0px',
 
-            zIndex: '2',
-          }}
-        >
-          {dropDownType === 'workspace' ? <>
+              zIndex: '2',
+            }}
+          >
             {workspace.projects.map((_project, index) => {
               return <div
                 key={index}
@@ -230,19 +228,15 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
                 </div>
               </div>
             })}
-          </> :
-            dropDownType === 'project' ? <>
-              {/* <WorkspaceTreeView /> */}
-            </> : <></>}
-        </div>
+          </div> : null}
       </div>}
-    </>
+    </> : <></>
   }, [
-    onPanelClick, showActionsPanel,
+    onPanelClick,
     workspace, project, file,
     filesReferenceData, ffTree,
     onWorkspaceClick, onProjectClick, onFileClick,
-    dropDownType, onCloseDropDown,
+    navigatorDropDownType, onCloseDropDown,
     onOpenProject,
   ])
 }

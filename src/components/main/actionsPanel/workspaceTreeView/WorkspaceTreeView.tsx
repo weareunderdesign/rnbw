@@ -97,6 +97,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     // navigator
     workspace,
     project,
+    navigatorDropDownType, setNavigatorDropDownType,
     // node actions
     activePanel, setActivePanel,
     clipboardData, setClipboardData,
@@ -1855,13 +1856,21 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   }, [])
 
   return useMemo(() => {
-    return <>
+    return (file.uid === '' || navigatorDropDownType === 'project') ? <>
       <div
         id="FileTreeView"
         style={{
+          position: 'absolute',
+          top: navigatorDropDownType ? 41 : 0,
+          left: 0,
+          width: '100%',
+          height: navigatorDropDownType ? '200px' : '100%',
+
           overflow: 'auto',
-          ...(showActionsPanel ? {} : { width: '0' }),
+
+          ...(navigatorDropDownType ? { zIndex: 2 } : {})
         }}
+        className={navigatorDropDownType ? 'border-left border-right border-bottom shadow background-primary' : ''}
         onClick={onPanelClick}
       >
         <TreeView
@@ -2102,10 +2111,11 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           }}
         />
       </div>
+    </> : <>
     </>
   }, [
-    onPanelClick, showActionsPanel,
-    ffTree, fileTreeViewData,
+    onPanelClick, showActionsPanel, navigatorDropDownType,
+    ffTree, fileTreeViewData, file,
     focusedItem, selectedItems, expandedItems,
     addRunningActions, removeRunningActions,
     cb_startRenamingNode, cb_abortRenamingNode, cb_renameNode,
