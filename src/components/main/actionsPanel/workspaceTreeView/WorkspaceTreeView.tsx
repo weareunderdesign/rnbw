@@ -97,6 +97,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     // navigator
     workspace,
     project,
+    navigatorDropDownType, setNavigatorDropDownType,
     // node actions
     activePanel, setActivePanel,
     clipboardData, setClipboardData,
@@ -649,6 +650,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     removeRunningActions(['fileTreeView-collapse'])
   }, [addRunningActions, removeRunningActions, invalidNodes, ffTree, expandedItemsObj])
   // -------------------------------------------------------------- project --------------------------------------------------------------
+  // open default initial html file
   useEffect(() => {
     if (initialFileToOpen !== '' && ffTree[initialFileToOpen] !== undefined) {
       setInitialFileToOpen('')
@@ -1118,7 +1120,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     dispatch(setFileAction(action))
 
     // update redux
-    dispatch(setCurrentFile({ uid: newUid, content: nodeData.contentInApp as string }))
+    dispatch(setCurrentFile({ uid: newUid, parentUid: parentNode.uid, name: nodeData.name, content: nodeData.contentInApp as string }))
     dispatch(updateFFTreeViewState({ convertedUids: [[uid, newUid]] }))
 
     await cb_reloadProject()
@@ -1755,7 +1757,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
 
     addRunningActions(['processor-updateOpt'])
-    dispatch(setCurrentFile({ uid, content: nodeData.content }))
+    dispatch(setCurrentFile({ uid, parentUid: node.parentUid as TNodeUid, name: nodeData.name, content: nodeData.content }))
     setUpdateOpt({ parse: true, from: 'file' })
 
     removeRunningActions(['fileTreeView-read'])
@@ -1781,7 +1783,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     if (isAbsolutePath) {
       window.open(normalizedPath, '_blank')?.focus()
     } else {
-      const pathArr = normalizedPath.split('../')
       const fileUidToOpen = _path.join(parentNode.uid, normalizedPath)
       openFile(fileUidToOpen)
     }
@@ -1855,13 +1856,21 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   }, [])
 
   return useMemo(() => {
-    return <>
+    return (file.uid === '' || navigatorDropDownType === 'project') ? <>
       <div
         id="FileTreeView"
         style={{
+          position: 'absolute',
+          top: navigatorDropDownType ? 41 : 0,
+          left: 0,
+          width: '100%',
+          height: navigatorDropDownType ? '200px' : '100%',
+
           overflow: 'auto',
-          ...(showActionsPanel ? {} : { width: '0' }),
+
+          ...(navigatorDropDownType ? { zIndex: 2 } : {})
         }}
+        className={navigatorDropDownType ? 'border-left border-right border-bottom shadow background-primary' : ''}
         onClick={onPanelClick}
       >
         <TreeView
@@ -2102,10 +2111,11 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           }}
         />
       </div>
+    </> : <>
     </>
   }, [
-    onPanelClick, showActionsPanel,
-    ffTree, fileTreeViewData,
+    onPanelClick, showActionsPanel, navigatorDropDownType,
+    ffTree, fileTreeViewData, file,
     focusedItem, selectedItems, expandedItems,
     addRunningActions, removeRunningActions,
     cb_startRenamingNode, cb_abortRenamingNode, cb_renameNode,

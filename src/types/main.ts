@@ -15,6 +15,8 @@ export type TProject = {
 }
 export type TFile = {
   uid: TNodeUid,
+  parentUid: TNodeUid,
+  name: string,
   content: string,
 }
 export type TFileType = 'html' | 'unknown'

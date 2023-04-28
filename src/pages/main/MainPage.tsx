@@ -24,7 +24,6 @@ import {
   useLocation,
   useParams,
 } from 'react-router-dom';
-import Split from 'react-split';
 
 import {
   Loader,
@@ -78,6 +77,7 @@ import {
   navigatorSelector,
   setFileAction,
   TCommand,
+  TNavigatorDropDownType,
   TUpdateOptions,
 } from '@_redux/main';
 // @ts-ignore
@@ -164,12 +164,13 @@ export default function MainPage(props: MainPageProps) {
   // navigator
   const [workspace, setWorkspace] = useState<TWorkspace>({ name: 'local', projects: [] })
   const [project, setProject] = useState<TProject>({ context: 'idb', name: 'default project', handler: null })
+  const [navigatorDropDownType, setNavigatorDropDownType] = useState<TNavigatorDropDownType>(null)
   // node actions
   const [activePanel, setActivePanel] = useState<TPanelContext>('unknown')
   const [clipboardData, setClipboardData] = useState<TClipboardData>({ panel: 'unknown', type: null, uids: [] })
   const [event, setEvent] = useState<TEvent>(null)
   // actions panel
-  const [showActionsPanel, setShowActionsPanel] = useState(true)
+  const [showActionsPanel, setShowActionsPanel] = useState(false)
   // file tree view
   const [initialFileToOpen, setInitialFileToOpen] = useState<TNodeUid>('')
   const [fsPending, setFSPending] = useState<boolean>(false)
@@ -330,6 +331,7 @@ export default function MainPage(props: MainPageProps) {
   // navigating
   const params = useParams()
   const location = useLocation()
+  // init workspace
   useEffect(() => {
     setWorkspace({ name: 'local', projects: [] })
   }, [])
@@ -722,7 +724,7 @@ export default function MainPage(props: MainPageProps) {
     if (cmdkOpen) return
     setCmdkPages(['Jumpstart'])
     setCmdkOpen(true)
-  }, [cmdkOpen, cmdkReferenceJumpstart])
+  }, [cmdkOpen])
   // hms
   const onUndo = useCallback(() => {
     if (pending || iframeLoading || fsPending || codeEditing) return
@@ -763,16 +765,14 @@ export default function MainPage(props: MainPageProps) {
   const toogleActionsPanel = useCallback(() => {
     setShowActionsPanel(!showActionsPanel)
   }, [showActionsPanel])
-  // -------------------------------------------------------------- resizable panels --------------------------------------------------------------
-  const [mainPagePanelSizes, setMainPagePanelSizes] = useState<number[]>([10, 90])
-  const [designPanelPanelSizes, setDesignPanelPanelSizes] = useState<number[]>([60, 40])
-  useEffect(() => {
-    const _mainPagePanelSizes = localStorage.getItem('main-page-panel-sizes')
-    _mainPagePanelSizes && setMainPagePanelSizes(JSON.parse(_mainPagePanelSizes))
+  // -------------------------------------------------------------- pos/size for panels --------------------------------------------------------------
+  const [actionsPanelOffsetTop, setActionsPanelOffsetTop] = useState(10)
+  const [actionsPanelOffsetLeft, setActionsPanelOffsetLeft] = useState(10)
+  const [actionsPanelWidth, setActionsPanelWidth] = useState(240)
 
-    const _designPanelPanelSizes = localStorage.getItem('design-panel-panel-sizes')
-    _designPanelPanelSizes && setDesignPanelPanelSizes(JSON.parse(_designPanelPanelSizes))
-  }, [])
+  const [codeViewOffsetBottom, setCodeViewOffsetBottom] = useState(10)
+  const [codeViewOffsetLeft, setCodeViewOffsetLeft] = useState(10)
+  const [codeViewHeight, setCodeViewHeight] = useState(500)
   // -------------------------------------------------------------- other --------------------------------------------------------------
   // detect OS & fetch reference - html. Jumpstart.csv, Actions.csv - restore recent project session - open default project and jumpstart menu ons tartup
   useEffect(() => {
@@ -1137,6 +1137,8 @@ export default function MainPage(props: MainPageProps) {
         // navigator
         workspace,
         project,
+        navigatorDropDownType,
+        setNavigatorDropDownType,
         // node actions
         activePanel, setActivePanel,
         clipboardData, setClipboardData,
@@ -1190,89 +1192,26 @@ export default function MainPage(props: MainPageProps) {
       <Loader show={pending || iframeLoading || fsPending || codeEditing}></Loader>
 
       {/* main page */}
-      <Split
+      <div
         id='MainPage'
         className={'view'}
-        style={{ display: 'flex' }}
-
-        sizes={mainPagePanelSizes}
-        minSize={[showActionsPanel ? 240 : 0, 320]}
-        maxSize={[showActionsPanel ? Infinity : 0, Infinity]}
-
-        expandToMin={true}
-
-        gutterSize={8}
-
-        snapOffset={30}
-        dragInterval={1}
-
-        direction="horizontal"
-        cursor="col-resize"
-
-        onDragEnd={(sizes: number[]) => {
-          setMainPagePanelSizes(sizes)
-          localStorage.setItem('main-page-panel-sizes', JSON.stringify(sizes))
-        }}
-
-        elementStyle={(_dimension: "height" | "width", elementSize: number, _gutterSize: number, _index: number) => {
-          return {
-            'width': 'calc(' + elementSize + '%)',
-          }
-        }}
-        gutterStyle={(_dimension: "height" | "width", gutterSize: number, _index: number) => {
-          return {
-            'width': gutterSize + 'px',
-          }
-        }}
-
-        collapsed={!showActionsPanel ? 0 : undefined}
+        style={{ display: 'relative' }}
       >
-        <ActionsPanel />
-        <div id='DesignPanel'>
-          <Split
-            id='MainPage'
-            className={'view'}
-            style={{ display: 'flex' }}
-
-            sizes={designPanelPanelSizes}
-            minSize={[320, showCodeView ? 500 : 0]}
-            maxSize={[Infinity, showCodeView ? Infinity : 0]}
-
-            expandToMin={true}
-
-            gutterSize={8}
-
-            snapOffset={30}
-            dragInterval={1}
-
-            direction="horizontal"
-            cursor="col-resize"
-
-            onDragEnd={(sizes: number[]) => {
-              setDesignPanelPanelSizes(sizes)
-              localStorage.setItem('design-panel-panel-sizes', JSON.stringify(sizes))
-            }}
-
-            elementStyle={(_dimension: "height" | "width", elementSize: number, _gutterSize: number, _index: number) => {
-              return {
-                'width': 'calc(' + elementSize + '%)',
-              }
-            }}
-            gutterStyle={(_dimension: "height" | "width", gutterSize: number, _index: number) => {
-              return {
-                'width': gutterSize + 'px',
-              }
-            }}
-
-            collapsed={!showCodeView ? 1 : undefined}
-          >
-            <StageView />
-            <div id='CodeViewWrapper'>
-              {showCodeView && !needToReloadCodeView && <CodeView />}
-            </div>
-          </Split>
-        </div>
-      </Split>
+        <StageView />
+        <ActionsPanel
+          offsetTop={actionsPanelOffsetTop}
+          offsetLeft={actionsPanelOffsetLeft}
+          width={`${actionsPanelWidth}px`}
+          height={`calc(100vh - ${actionsPanelOffsetTop * 2}px)`}
+        />
+        {showCodeView && !needToReloadCodeView ?
+          <CodeView
+            offsetBottom={codeViewOffsetBottom}
+            offsetLeft={showActionsPanel ? actionsPanelOffsetLeft * 2 + actionsPanelWidth : codeViewOffsetLeft}
+            width={`calc(100vw - ${(showActionsPanel ? actionsPanelWidth + actionsPanelOffsetLeft * 2 : codeViewOffsetLeft) + codeViewOffsetLeft}px)`}
+            height={`${codeViewHeight}px`}
+          /> : null}
+      </div>
 
       {/* cmdk modal */}
       <Command.Dialog

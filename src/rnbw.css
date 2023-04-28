@@ -130,49 +130,37 @@
   background: var(--color-tertiary-background);
 }
 
-/* react split css - for resizable panels */
-.gutter {
-  background: transparent;
-  z-index: 1;
+/* navigator panel dropdown */
+.navigator-project-item {
+  cursor: pointer;
 }
 
-.gutter::before {
-  content: "";
-  display: flex;
+.navigator-project-item.selected,
+.navigator-project-item:hover {
+  /* rene.css -> .background-secondary */
   background-color: var(--color-secondary-background);
+  color: var(--color-secondary-foreground);
 }
 
-.gutter:hover::before {
-  background-color: var(--color-tertiary-background);
+.navigator-project-item-icon {
+  /* rene.css -> .background-secondary */
+  background-color: var(--color-secondary-background);
+  color: var(--color-secondary-foreground);
 }
 
-.gutter.gutter-horizontal {
-  cursor: col-resize;
-
-  margin-left: -4px;
-  margin-right: -4px;
+.navigator-project-item-name {
+  /* rene.css -> .opacity-m */
+  opacity: .5;
 }
 
-.gutter.gutter-horizontal::before {
-  width: 1px;
-  height: 100%;
-
-  margin-left: 3px;
+.navigator-project-item.selected .navigator-project-item-icon,
+.navigator-project-item:hover .navigator-project-item-icon {
+  /* rene.css -> .background-primary */
+  background-color: var(--color-primary-background);
+  color: var(--color-primary-foreground);
 }
 
-.gutter.gutter-vertical {
-  cursor: row-resize;
-
-  margin-top: -4px;
-  margin-bottom: -4px;
-
-  position: relative;
-}
-
-.gutter.gutter-vertical::before {
-  width: 100%;
-  height: 1px;
-
-  position: absolute;
-  margin-top: 3px;
+.navigator-project-item.selected .navigator-project-item-name,
+.navigator-project-item:hover .navigator-project-item-name {
+  opacity: 1;
 }

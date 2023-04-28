@@ -474,7 +474,7 @@ export default function CodeView(props: CodeViewProps) {
       monacoRef.current?.layout({ width: 0, height: 0 })
       window.requestAnimationFrame(() => {
         const wrapperRect = editorWrapperRef.current?.getBoundingClientRect()
-        wrapperRect && monacoRef.current?.layout({ width: wrapperRect.width, height: wrapperRect.height })
+        wrapperRect && monacoRef.current?.layout({ width: wrapperRect.width - 18, height: wrapperRect.height - 18 })
       })
     }
     const debounced = debounce(resetEditorLayout, 100)
@@ -490,7 +490,16 @@ export default function CodeView(props: CodeViewProps) {
     return <>
       <div
         id="CodeView"
-        style={{ height: '100vh' }}
+        style={{
+          position: 'absolute',
+          bottom: props.offsetBottom,
+          left: props.offsetLeft,
+          width: props.width,
+          height: props.height,
+
+          overflow: 'hidden',
+        }}
+        className='border padding-s radius-s background-primary shadow'
         onClick={onPanelClick}
         ref={editorWrapperRef}
       >
@@ -519,7 +528,7 @@ export default function CodeView(props: CodeViewProps) {
       </div>
     </>
   }, [
-    onPanelClick,
+    props, onPanelClick,
     language, theme,
     handleEditorDidMount, handleEditorChange,
     tabSize, wordWrap,

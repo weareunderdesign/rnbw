@@ -1,10 +1,19 @@
 import React, {
-  useEffect,
+  useContext,
   useMemo,
-  useState,
 } from 'react';
 
-import Split from 'react-split';
+import {
+  useDispatch,
+  useSelector,
+} from 'react-redux';
+
+import {
+  ffSelector,
+  globalSelector,
+  MainContext,
+  navigatorSelector,
+} from '@_redux/main';
 
 import NavigatorPanel from './navigatorPanel';
 import NodeTreeView from './nodeTreeView';
@@ -13,57 +22,88 @@ import { ActionsPanelProps } from './types';
 import WorkspaceTreeView from './workspaceTreeView';
 
 export default function ActionsPanel(props: ActionsPanelProps) {
-  // -------------------------------------------------------------- resizable panels --------------------------------------------------------------
-  const [actionsPanelPanelSizes, setActionsPanelPanelSizes] = useState<number[]>([0, 10, 90, 0])
-  useEffect(() => {
-    const sizes = localStorage.getItem('actions-panel-panel-sizes')
-    sizes && setActionsPanelPanelSizes(JSON.parse(sizes))
-  }, [])
+  const dispatch = useDispatch()
+  // -------------------------------------------------------------- global state --------------------------------------------------------------
+  const { file } = useSelector(navigatorSelector)
+  const { fileAction } = useSelector(globalSelector)
+  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
+  const {
+    // global action
+    addRunningActions, removeRunningActions,
+    // navigator
+    workspace,
+    project,
+    navigatorDropDownType, setNavigatorDropDownType,
+    // node actions
+    activePanel, setActivePanel,
+    clipboardData, setClipboardData,
+    event, setEvent,
+    // actions panel
+    showActionsPanel,
+    // file tree view
+    initialFileToOpen, setInitialFileToOpen,
+    fsPending, setFSPending,
+    ffTree, setFFTree, setFFNode,
+    ffHandlers, setFFHandlers,
+    ffHoveredItem, setFFHoveredItem,
+    isHms, setIsHms,
+    ffAction, setFFAction,
+    currentFileUid, setCurrentFileUid,
+    // node tree view
+    fnHoveredItem, setFNHoveredItem,
+    nodeTree, setNodeTree,
+    validNodeTree, setValidNodeTree,
+    nodeMaxUid, setNodeMaxUid,
+    // stage view
+    iframeLoading, setIFrameLoading,
+    iframeSrc, setIFrameSrc,
+    fileInfo, setFileInfo,
+    needToReloadIFrame, setNeedToReloadIFrame,
+    linkToOpen, setLinkToOpen,
+    // code view
+    codeEditing, setCodeEditing,
+    codeChanges, setCodeChanges,
+    tabSize, setTabSize,
+    newFocusedNodeUid, setNewFocusedNodeUid,
+    // processor
+    updateOpt, setUpdateOpt,
+    // references
+    filesReferenceData, htmlReferenceData, cmdkReferenceData,
+    // cmdk
+    currentCommand, setCurrentCommand,
+    cmdkOpen, setCmdkOpen,
+    cmdkPages, setCmdkPages, cmdkPage,
+    // other
+    osType,
+    theme,
+    // toasts
+    addMessage, removeMessage,
+  } = useContext(MainContext)
 
   return useMemo(() => {
     return <>
-      <div id='ActionsPanel' style={{ height: 'calc(100vh)' }}>
+      <div
+        id='ActionsPanel'
+        className='border radius-s background-primary shadow'
+        style={{
+          position: 'absolute',
+          top: props.offsetTop,
+          left: props.offsetLeft,
+          width: props.width,
+          height: props.height,
+
+          overflow: 'hidden',
+
+          ...(showActionsPanel ? {} : { width: '0', overflow: 'hidden', border: 'none' }),
+        }}
+      >
         <NavigatorPanel />
-        <Split
-          style={{ height: 'calc(100vh - 41px)' }}
-
-          sizes={actionsPanelPanelSizes}
-          minSize={[200, 200, 0]}
-          maxSize={[Infinity, Infinity, 0]}
-
-          expandToMin={true}
-
-          gutterSize={8}
-
-          snapOffset={30}
-          dragInterval={1}
-
-          direction="vertical"
-          cursor="row-resize"
-
-          onDragEnd={(sizes: number[]) => {
-            setActionsPanelPanelSizes(sizes)
-            localStorage.setItem('actions-panel-panel-sizes', JSON.stringify(sizes))
-          }}
-
-          elementStyle={(dimension: "height" | "width", elementSize: number, gutterSize: number, index: number) => {
-            return {
-              'height': 'calc(' + elementSize + '%)',
-            }
-          }}
-          gutterStyle={(dimension: "height" | "width", gutterSize: number, index: number) => {
-            return {
-              'height': gutterSize + 'px',
-            }
-          }}
-
-          collapsed={2}
-        >
-          <WorkspaceTreeView />
-          <NodeTreeView />
-          <SettingsPanel />
-        </Split>
+        <WorkspaceTreeView />
+        <NodeTreeView />
+        {false && <SettingsPanel />}
       </div>
     </>
-  }, [actionsPanelPanelSizes])
+  }, [
+    props, showActionsPanel,
+  ])
 }
