@@ -800,7 +800,7 @@ export default function MainPage(props: MainPageProps) {
       // reference-html-elements
       const htmlElementsReferenceData: THtmlElementsReferenceData = {}
       htmlRefElements.map((htmlRefElement: THtmlElementsReference) => {
-        const pureTag = htmlRefElement['Name'] === 'Comment' ? 'comment' : htmlRefElement['Tag'].slice(1, htmlRefElement['Tag'].length - 1)
+        const pureTag = htmlRefElement['Name'] === 'Comment' ? 'comment' : htmlRefElement['Tag']?.slice(1, htmlRefElement['Tag'].length - 1)
         htmlElementsReferenceData[pureTag] = htmlRefElement
       })
       LogAllow && console.log('html elements reference data: ', htmlElementsReferenceData)

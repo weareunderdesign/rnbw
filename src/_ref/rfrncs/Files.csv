@@ -5,7 +5,7 @@ Web Page,html,Nodes,page,,Yes
 ,md,Nodes,md,,No
 ,tsx,Logic,script,,No
 ,jsx,Logic,script,,No
-JavaScript,js,Logic,js,,Yes
+JavaScript,js,Logic,script,,Yes
 ,png,Images,image,,No
 ,jpg,Images,image,,No
 ,txt,Text,text,,No
