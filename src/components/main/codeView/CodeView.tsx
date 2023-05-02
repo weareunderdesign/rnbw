@@ -518,7 +518,7 @@ export default function CodeView(props: CodeViewProps) {
             // enableLiveAutocompletion: true,
             // enableSnippets: true,
             // showLineNumbers: true,
-            contextmenu: false,
+            contextmenu: true,
             tabSize,
             wordWrap,
             minimap: { enabled: false },
