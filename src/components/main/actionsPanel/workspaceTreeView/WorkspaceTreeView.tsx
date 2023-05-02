@@ -1992,7 +1992,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                       {props.arrow}
 
                       {fileReferenceData ?
-                        <SVGIconI {...{ "class": "icon-xs" }}>{fileReferenceData['Icon']}</SVGIconI>
+                        <SVGIconI {...{ "class": "icon-xs" }}>{props.item.data?.data.kind === 'file' && props.item.data?.data.name === 'index' && props.item.data?.data.type === 'html' ? 'home' : fileReferenceData['Icon']}</SVGIconI>
                         : <div className='icon-xs'></div>}
                     </div>
 

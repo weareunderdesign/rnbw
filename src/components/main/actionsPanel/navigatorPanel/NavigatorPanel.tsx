@@ -131,7 +131,9 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
         {!navigatorDropDownType ? <>
           {/* workspace */}
           <>
-            <div className="radius-m icon-s align-center background-secondary" onClick={onWorkspaceClick}></div>
+            <div className="radius-m icon-s align-center background-secondary" onClick={onWorkspaceClick}>
+              <img src='https://rnbw.company/images/favicon.png'></img>
+            </div>
           </>
           <span className="text-s opacity-m">/</span>
 
@@ -153,7 +155,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
           {/* file */}
           {ffTree[file.uid] && <>
             <div className="gap-s align-center" onClick={onFileClick}>
-              <SVGIcon {...{ "class": "icon-xs" }}>{filesReferenceData[ffTree[file.uid].data.type].Icon}</SVGIcon>
+              <SVGIcon {...{ "class": "icon-xs" }}>{ffTree[file.uid].data.type == 'html' && ffTree[file.uid].data.name == 'index' ? 'home' : filesReferenceData[ffTree[file.uid].data.type].Icon}</SVGIcon>
               <span className="text-s">{file.name}</span>
             </div>
           </>}
@@ -161,13 +163,17 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
           navigatorDropDownType === 'workspace' ? <>
             {/* workspace */}
             <>
-              <div className="radius-m icon-s align-center background-secondary" onClick={onWorkspaceClick}></div>
+              <div className="radius-m icon-s align-center background-secondary" onClick={onWorkspaceClick}>
+              <img src='https://rnbw.company/images/favicon.png'></img>
+              </div>
             </>
           </> :
             navigatorDropDownType === 'project' ? <>
               {/* workspace */}
               <>
-                <div className="radius-m icon-s align-center background-secondary" onClick={onWorkspaceClick}></div>
+                <div className="radius-m icon-s align-center background-secondary" onClick={onWorkspaceClick}>
+                  <img src='https://rnbw.company/images/favicon.png'></img>
+                </div>
               </>
               <span className="text-s opacity-m">/</span>
 
