@@ -1864,7 +1864,8 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           top: navigatorDropDownType ? 41 : 0,
           left: 0,
           width: '100%',
-          height: navigatorDropDownType ? '200px' : '100%',
+          maxHeight: '200px',
+          height: 'auto',
 
           overflow: 'auto',
 
