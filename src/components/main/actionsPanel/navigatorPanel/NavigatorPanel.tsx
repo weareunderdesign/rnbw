@@ -211,7 +211,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
             }}
           >
             {workspace.projects.map((_project, index) => {
-              return <div
+              return _project.context == 'idb' ? <></> : <div
                 key={index}
                 className={cx(
                   'navigator-project-item',

@@ -343,25 +343,27 @@ export default function MainPage(props: MainPageProps) {
     const _projects: TProject[] = []
     const _cmdkReferneceRecentProject: TCmdkReference[] = []
     recentProjectContext.map((_v, index) => {
-      _projects.push({
-        context: recentProjectContext[index],
-        name: recentProjectName[index],
-        handler: recentProjectHandler[index],
-      })
-      _cmdkReferneceRecentProject.push({
-        "Name": recentProjectName[index],
-        "Icon": 'folder',
-        "Description": '',
-        "Keyboard Shortcut": {
-          cmd: false,
-          shift: false,
-          alt: false,
-          key: '',
-          click: false,
-        },
-        "Group": 'Recent',
-        "Context": index.toString(),
-      })
+      if (_v != 'idb'){
+        _projects.push({
+          context: recentProjectContext[index],
+          name: recentProjectName[index],
+          handler: recentProjectHandler[index],
+        })
+        _cmdkReferneceRecentProject.push({
+          "Name": recentProjectName[index],
+          "Icon": 'folder',
+          "Description": '',
+          "Keyboard Shortcut": {
+            cmd: false,
+            shift: false,
+            alt: false,
+            key: '',
+            click: false,
+          },
+          "Group": 'Recent',
+          "Context": index.toString(),
+        })
+      }
     })
     setWorkspace({ name: workspace.name, projects: _projects })
     return _cmdkReferneceRecentProject
