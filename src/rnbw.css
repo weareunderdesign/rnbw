@@ -4,7 +4,9 @@
   outline-style: solid;
   outline-offset: -1px;
 }
-
+body{
+   cursor:default !important;
+}
 .outline-none {
   outline: none;
 }
@@ -69,8 +71,8 @@
 
   width: auto;
   height: auto;
-  min-width: 50vw;
-  max-width: 100vw;
+  width: 50vw;
+  max-width: 744px;
   max-height: 100vh;
 
   overflow: auto;
