@@ -1,11 +1,16 @@
 import React, {
   useEffect,
   useMemo,
+  useState,
 } from 'react';
+
+import LoadingBar from 'react-top-loading-bar';
 
 import { LoaderProps } from './types';
 
 export const Loader = (props: LoaderProps) => {
+  let paceTimer: NodeJS.Timer
+  const [progress, setProgress] = useState(0)
   const animationName = useMemo(() => `loading-bar-animation`, [])
   const keyframesStyle = useMemo(() => `
     @keyframes ${animationName} {
@@ -38,21 +43,29 @@ export const Loader = (props: LoaderProps) => {
   useEffect(() => {
     const styleElement = document.createElement('style')
     let styleSheet = null
-
     document.head.appendChild(styleElement)
 
     styleSheet = styleElement.sheet
-
     styleSheet?.insertRule(keyframesStyle, styleSheet?.cssRules.length)
   }, [])
-
+  useEffect(() => {
+    if (props.show) {
+      paceTimer = setInterval(() => {
+        let temp = progress
+        setProgress(temp + 3) 
+      }, 20)
+    }
+    else{
+      setProgress(0)
+    }
+    return () => clearInterval(paceTimer)
+  }, [props.show, progress])
+  useEffect(() => {
+    if (progress > 98){
+      clearInterval(paceTimer)
+    }
+  }, [progress])
   return <>
-    {props.show && <div style={{
-      zIndex: "1",
-      position: 'absolute',
-      height: '2px',
-      background: 'var(--color-tertiary-foreground)',
-      animation: `${animationName} 5s linear infinite`,
-    }} />}
+    {props.show && <LoadingBar color='#28b485' progress={progress} shadow={true} />}
   </>
 }
