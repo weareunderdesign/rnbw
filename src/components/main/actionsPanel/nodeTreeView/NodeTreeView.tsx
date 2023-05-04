@@ -512,7 +512,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
               const htmlElementReferenceData = useMemo<THtmlElementsReference>(() => {
                 const node = props.item.data as TNode
                 const nodeData = node.data as THtmlNodeData
-                const refData = htmlReferenceData.elements[nodeData.name]
+                const refData = htmlReferenceData.elements[nodeData.name === '!doctype' ? '!DOCTYPE' : nodeData.name]
                 return refData
               }, [])
 
@@ -575,7 +575,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
                       {htmlElementReferenceData ?
                         <SVGIconI {...{ "class": "icon-xs" }}>{htmlElementReferenceData['Icon']}</SVGIconI>
-                        : <div className='icon-xs'></div>}
+                        : <div className='icon-xs'><SVGIconI {...{ "class": "icon-xs" }}>component</SVGIconI></div>}
 
                       {htmlElementReferenceData ? <>
                         <span
