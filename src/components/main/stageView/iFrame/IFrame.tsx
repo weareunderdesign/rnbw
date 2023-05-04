@@ -399,7 +399,7 @@ export const IFrame = (props: IFrameProps) => {
     contentEditableUidRef.current = ''
 
     contentEditableAttr ? ele.setAttribute('contenteditable', contentEditableAttr) : ele.removeAttribute('contenteditable')
-    const cleanedUpCode = ele.outerHTML.replace(/rnbwdev-rnbw-element-hover=""|rnbwdev-rnbw-element-select=""/g, '')
+    const cleanedUpCode = ele.outerHTML.replace(/rnbwdev-rnbw-element-hover=""|rnbwdev-rnbw-element-select=""|contenteditable="true"|contenteditable="false"/g, '')
     onTextEdit(node, cleanedUpCode)
   }, [focusedItem])
   const onTextEdit = useCallback((node: TNode, _outerHtml: string) => {
