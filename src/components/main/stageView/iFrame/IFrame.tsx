@@ -503,6 +503,9 @@ export const IFrame = (props: IFrameProps) => {
           })
           htmlNode.addEventListener('dblclick', (e: MouseEvent) => {
             setIframeEvent(e)
+          }),
+          _document.addEventListener('contextmenu', (e: MouseEvent) => {
+            e.preventDefault()
           })
         }
 
