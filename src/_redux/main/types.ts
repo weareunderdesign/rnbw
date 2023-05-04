@@ -23,6 +23,7 @@ import {
   TFileInfo,
   TPanelContext,
   TProject,
+  TProjectContext,
   TWorkspace,
 } from '@_types/main';
 
@@ -123,6 +124,7 @@ export type TMainContext = {
   // toasts
   addMessage: (message: TToast) => void,
   removeMessage: (index: number) => void,
+  loadProject: (fsType: TProjectContext, projectHandle?: FileSystemHandle | null, internal?: boolean | true) => void
 }
 export type TUpdateOptions = {
   parse: boolean | null,

@@ -18,6 +18,7 @@ import {
   TFileAction,
   TFileInfo,
   TPanelContext,
+  TProjectContext,
 } from '@_types/main';
 
 import {
@@ -115,4 +116,6 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   // toasts
   addMessage: (message: TToast) => { },
   removeMessage: (index: number) => { },
+  // load project
+  loadProject: (fsType: TProjectContext, projectHandle?: FileSystemHandle | null, internal?: boolean) => { },
 })

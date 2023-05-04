@@ -80,6 +80,8 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
     theme,
     // toasts
     addMessage, removeMessage,
+    // open project
+    loadProject
   } = useContext(MainContext)
   // -------------------------------------------------------------- sync --------------------------------------------------------------
   useEffect(() => {
@@ -103,6 +105,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
   // -------------------------------------------------------------- handlers --------------------------------------------------------------
   const onOpenProject = useCallback((project: TProject) => {
     console.log('open project', { project })
+    loadProject(project.context, project.handler, false)
   }, [])
   // -------------------------------------------------------------- own --------------------------------------------------------------
   const onPanelClick = useCallback((e: React.MouseEvent) => {
@@ -243,6 +246,6 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
     filesReferenceData, ffTree,
     onWorkspaceClick, onProjectClick, onFileClick,
     navigatorDropDownType, onCloseDropDown,
-    onOpenProject,
+    onOpenProject, loadProject
   ])
 }
