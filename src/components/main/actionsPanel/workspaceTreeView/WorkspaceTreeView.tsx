@@ -834,7 +834,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     const tmpNode: TNode = {
       uid: `${node.uid}/${TmpNodeUid}`,
       parentUid: node.uid,
-      name: '',
+      name: ffNodeType === '*folder' ? 'New folder' : ffNodeType === 'html' ? 'New page' : 'New',
       isEntity: ffNodeType !== '*folder',
       children: [],
       data: {
@@ -1992,8 +1992,8 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                       {props.arrow}
 
                       {fileReferenceData ?
-                        <SVGIconI {...{ "class": "icon-xs" }}>{props.item.data?.data.kind === 'file' && props.item.data?.data.name === 'index' && props.item.data?.data.type === 'html' ? 'home' : fileReferenceData['Icon']}</SVGIconI>
-                        : <div className='icon-xs'></div>}
+                        <SVGIconI {...{ "class": "icon-xs" }}>{props.item.data?.data.kind === 'file' && props.item.data?.data.name === 'index' && props.item.data?.data.type === 'html' ? 'home' :  props.item.data?.data.kind === 'file' && props.item.data?.data.type === "unknown" ? 'page' : fileReferenceData['Icon']}</SVGIconI>
+                        : <div className='icon-xs'><SVGIconI {...{ "class": "icon-xs" }}>{props.item.data?.data.kind === 'file' ? 'page' : 'folder'}</SVGIconI></div>}
                     </div>
 
                     {props.title}
