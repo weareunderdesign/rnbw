@@ -22,7 +22,7 @@ export default function StageView(props: StageViewProps) {
         id="StageView"
         style={{
           height: "100vh",
-          background: iframeSrc ? "white" : "",
+          // background: iframeSrc ? "white" : "",
           position: "relative",
         }}
         onClick={onPanelClick}
