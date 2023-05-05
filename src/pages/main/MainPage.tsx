@@ -75,6 +75,7 @@ import {
   increaseActionGroupIndex,
   MainContext,
   navigatorSelector,
+  removeCurrentFile,
   setFileAction,
   TCommand,
   TNavigatorDropDownType,
@@ -334,6 +335,13 @@ export default function MainPage(props: MainPageProps) {
   // init workspace
   useEffect(() => {
     setWorkspace({ name: 'local', projects: [] })
+    console.log('workspace:' + workspace)
+    document.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+    });
+    window.document.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+    });
   }, [])
   // -------------------------------------------------------------- recent project --------------------------------------------------------------
   const [recentProjectContext, setRecentProjectContext] = useState<(TProjectContext)[]>([])
@@ -371,14 +379,6 @@ export default function MainPage(props: MainPageProps) {
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
   // key event listener
   const cb_onKeyDown = useCallback((e: KeyboardEvent) => {
-    if (cmdkOpen) return
-
-    // skip inline rename input in file-tree-view
-    const targetId = e.target && (e.target as HTMLElement).id
-    if (targetId === 'FileTreeView-RenameInput') {
-      return
-    }
-
     // cmdk obj for the current command
     const cmdk: TCmdkKeyMap = {
       cmd: getCommandKey(e, osType),
@@ -386,6 +386,16 @@ export default function MainPage(props: MainPageProps) {
       alt: e.altKey,
       key: e.code,
       click: false,
+    }
+    if (cmdk.shift && cmdk.cmd && cmdk.key === 'KeyR') {
+      onClear()
+    }
+    if (cmdkOpen) return
+
+    // skip inline rename input in file-tree-view
+    const targetId = e.target && (e.target as HTMLElement).id
+    if (targetId === 'FileTreeView-RenameInput') {
+      return
     }
 
     // skip monaco-editor shortkeys and general coding
@@ -472,7 +482,7 @@ export default function MainPage(props: MainPageProps) {
     dispatch(clearMainState())
     dispatch({ type: HmsClearActionType })
   }, [])
-  const loadProject = useCallback(async (fsType: TProjectContext, projectHandle?: FileSystemHandle | null) => {
+  const loadProject = useCallback(async (fsType: TProjectContext, projectHandle?: FileSystemHandle | null, internal?: boolean | true) => {
     if (fsType === 'local') {
       setFSPending(true)
       clearSession()
@@ -499,6 +509,14 @@ export default function MainPage(props: MainPageProps) {
             handler.name === 'index' ? indexHtmlUid = uid : null
           }
         })
+
+        // set default background
+        setIFrameSrc(null)
+        setNodeTree({})
+        setValidNodeTree({})
+        setCurrentFileUid('')
+        dispatch(removeCurrentFile())
+
         setInitialFileToOpen(indexHtmlUid !== '' ? indexHtmlUid : firstHtmlUid !== '' ? firstHtmlUid : '')
 
         // set ff-tree, ff-handlers
@@ -534,30 +552,32 @@ export default function MainPage(props: MainPageProps) {
 
         setProject({ context: 'local', name: (projectHandle as FileSystemDirectoryHandle).name, handler: projectHandle as FileSystemDirectoryHandle })
 
-        // store last edit session
-        const _recentProjectContext = [...recentProjectContext]
-        const _recentProjectName = [...recentProjectName]
-        const _recentProjectHandler = [...recentProjectHandler]
-        for (let index = 0; index < _recentProjectContext.length; ++index) {
-          if (_recentProjectContext[index] === fsType && projectHandle?.name === _recentProjectName[index]) {
-            _recentProjectContext.splice(index, 1)
-            _recentProjectName.splice(index, 1)
-            _recentProjectHandler.splice(index, 1)
-            break
+        if (internal) {
+          // store last edit session
+          const _recentProjectContext = [...recentProjectContext]
+          const _recentProjectName = [...recentProjectName]
+          const _recentProjectHandler = [...recentProjectHandler]
+          for (let index = 0; index < _recentProjectContext.length; ++index) {
+            if (_recentProjectContext[index] === fsType && projectHandle?.name === _recentProjectName[index]) {
+              _recentProjectContext.splice(index, 1)
+              _recentProjectName.splice(index, 1)
+              _recentProjectHandler.splice(index, 1)
+              break
+            }
           }
+          if (_recentProjectContext.length === RecentProjectCount) {
+            _recentProjectContext.pop()
+            _recentProjectName.pop()
+            _recentProjectHandler.pop()
+          }
+          _recentProjectContext.unshift(fsType)
+          _recentProjectName.unshift((projectHandle as FileSystemDirectoryHandle).name)
+          _recentProjectHandler.unshift(projectHandle as FileSystemDirectoryHandle)
+          setRecentProjectContext(_recentProjectContext)
+          setRecentProjectName(_recentProjectName)
+          setRecentProjectHandler(_recentProjectHandler)
+          await setMany([['recent-project-context', _recentProjectContext], ['recent-project-name', _recentProjectName], ['recent-project-handler', _recentProjectHandler]])
         }
-        if (_recentProjectContext.length === RecentProjectCount) {
-          _recentProjectContext.pop()
-          _recentProjectName.pop()
-          _recentProjectHandler.pop()
-        }
-        _recentProjectContext.unshift(fsType)
-        _recentProjectName.unshift((projectHandle as FileSystemDirectoryHandle).name)
-        _recentProjectHandler.unshift(projectHandle as FileSystemDirectoryHandle)
-        setRecentProjectContext(_recentProjectContext)
-        setRecentProjectName(_recentProjectName)
-        setRecentProjectHandler(_recentProjectHandler)
-        await setMany([['recent-project-context', _recentProjectContext], ['recent-project-name', _recentProjectName], ['recent-project-handler', _recentProjectHandler]])
       } catch (err) {
         LogAllow && console.log('failed to load local project')
       }
@@ -619,30 +639,32 @@ export default function MainPage(props: MainPageProps) {
 
         setProject({ context: 'idb', name: 'default project', handler: null })
 
-        // store last edit session
-        const _recentProjectContext = [...recentProjectContext]
-        const _recentProjectName = [...recentProjectName]
-        const _recentProjectHandler = [...recentProjectHandler]
-        for (let index = 0; index < _recentProjectContext.length; ++index) {
-          if (_recentProjectContext[index] === fsType) {
-            _recentProjectContext.splice(index, 1)
-            _recentProjectName.splice(index, 1)
-            _recentProjectHandler.splice(index, 1)
-            break
+        if (internal) {
+          // store last edit session
+          const _recentProjectContext = [...recentProjectContext]
+          const _recentProjectName = [...recentProjectName]
+          const _recentProjectHandler = [...recentProjectHandler]
+          for (let index = 0; index < _recentProjectContext.length; ++index) {
+            if (_recentProjectContext[index] === fsType) {
+              _recentProjectContext.splice(index, 1)
+              _recentProjectName.splice(index, 1)
+              _recentProjectHandler.splice(index, 1)
+              break
+            }
           }
+          if (_recentProjectContext.length === RecentProjectCount) {
+            _recentProjectContext.pop()
+            _recentProjectName.pop()
+            _recentProjectHandler.pop()
+          }
+          _recentProjectContext.unshift(fsType)
+          _recentProjectName.unshift('default project')
+          _recentProjectHandler.unshift(null)
+          setRecentProjectContext(_recentProjectContext)
+          setRecentProjectName(_recentProjectName)
+          setRecentProjectHandler(_recentProjectHandler)
+          await setMany([['recent-project-context', _recentProjectContext], ['recent-project-name', _recentProjectName], ['recent-project-handler', _recentProjectHandler]])
         }
-        if (_recentProjectContext.length === RecentProjectCount) {
-          _recentProjectContext.pop()
-          _recentProjectName.pop()
-          _recentProjectHandler.pop()
-        }
-        _recentProjectContext.unshift(fsType)
-        _recentProjectName.unshift('default project')
-        _recentProjectHandler.unshift(null)
-        setRecentProjectContext(_recentProjectContext)
-        setRecentProjectName(_recentProjectName)
-        setRecentProjectHandler(_recentProjectHandler)
-        await setMany([['recent-project-context', _recentProjectContext], ['recent-project-name', _recentProjectName], ['recent-project-handler', _recentProjectHandler]])
       } catch (err) {
         LogAllow && console.log('failed to load default project')
       }
@@ -654,13 +676,13 @@ export default function MainPage(props: MainPageProps) {
       if (fsType === 'local') {
         try {
           const projectHandle = await showDirectoryPicker({ _preferPolyfill: false, mode: 'readwrite' } as CustomDirectoryPickerOptions)
-          await loadProject(fsType, projectHandle)
+          await loadProject(fsType, projectHandle, true)
         } catch (err) {
           reject(err)
         }
       } else if (fsType === 'idb') {
         try {
-          await loadProject(fsType)
+          await loadProject(fsType, null, true)
         } catch (err) {
           reject(err)
         }
@@ -718,7 +740,7 @@ export default function MainPage(props: MainPageProps) {
   // clear
   const onClear = useCallback(async () => {
     // remove localstorage and session
-    localStorage.clear()
+    window.localStorage.clear()
     await delMany(['recent-project-context', 'recent-project-name', 'recent-project-handler'])
   }, [])
   // jumpstart
@@ -1185,6 +1207,8 @@ export default function MainPage(props: MainPageProps) {
         theme,
         // toasts
         addMessage, removeMessage,
+        // load project
+        loadProject
       }}
     >
       {/* process */}
@@ -1196,7 +1220,7 @@ export default function MainPage(props: MainPageProps) {
       {/* main page */}
       <div
         id='MainPage'
-        className={'view'}
+        className={'view background-primary'}
         style={{ display: 'relative' }}
       >
         <StageView />
@@ -1317,7 +1341,7 @@ export default function MainPage(props: MainPageProps) {
                               const index = Number(command.Context)
                               const projectContext = recentProjectContext[index]
                               const projectHandler = recentProjectHandler[index]
-                              loadProject(projectContext, projectHandler)
+                              loadProject(projectContext, projectHandler, true)
                             } else if (cmdkPage === 'Add' && command.Group === 'Recent') {
                             } else {
                               setCurrentCommand({ action: command.Name })
