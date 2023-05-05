@@ -1,7 +1,7 @@
 import { TOsType } from '@_types/global';
 
 export const getLineBreaker = (osType: TOsType): string => {
-  return osType === 'Windows' ? '\r\n' :
+  return osType === 'Windows' ? '\n' :
     osType === 'Mac' ? '\n' :
       osType === 'Linux' ? '\n' : ''
 }
