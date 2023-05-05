@@ -110,9 +110,9 @@ export default function CodeView(props: CodeViewProps) {
   const handleEditorDidMount = useCallback((editor: monaco.editor.IStandaloneCodeEditor, monaco: Monaco) => {
     monacoRef.current = editor
     decorationCollectionRef.current = editor.createDecorationsCollection()
-    setTimeout(function() {
-      editor?.getAction('editor.action.formatDocument')?.run();
-    }, 300);
+    // setTimeout(function() {
+    //   editor?.getAction('editor.action.formatDocument')?.run();
+    // }, 300);
   }, [])
   // -------------------------------------------------------------- sync --------------------------------------------------------------
   // build node tree refernece
