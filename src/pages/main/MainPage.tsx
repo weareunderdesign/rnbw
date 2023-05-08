@@ -517,7 +517,15 @@ export default function MainPage(props: MainPageProps) {
         setCurrentFileUid('')
         dispatch(removeCurrentFile())
 
-        setInitialFileToOpen(indexHtmlUid !== '' ? indexHtmlUid : firstHtmlUid !== '' ? firstHtmlUid : '')
+        let initialFile = indexHtmlUid !== '' ? indexHtmlUid : firstHtmlUid !== '' ? firstHtmlUid : ''
+        
+        // hide element panel when there is no index.html
+        if (initialFile === '' ){
+            setShowActionsPanel(false)
+            setNavigatorDropDownType(null)
+        }
+
+        setInitialFileToOpen(initialFile)
 
         // set ff-tree, ff-handlers
         const treeViewData: TNodeTreeData = {}
@@ -551,7 +559,7 @@ export default function MainPage(props: MainPageProps) {
         setFFHandlers(ffHandlerObj)
 
         setProject({ context: 'local', name: (projectHandle as FileSystemDirectoryHandle).name, handler: projectHandle as FileSystemDirectoryHandle })
-
+        setNavigatorDropDownType(null)
         if (internal) {
           // store last edit session
           const _recentProjectContext = [...recentProjectContext]
