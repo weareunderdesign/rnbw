@@ -152,6 +152,7 @@ export default function Process(props: ProcessProps) {
 
         fileData.content = formattedContent
         fileData.contentInApp = contentInApp
+        // console.log(fileData.content,  fileData.orgContent)
         fileData.changed = fileData.content !== fileData.orgContent
 
         // reload iframe
@@ -443,7 +444,9 @@ export default function Process(props: ProcessProps) {
       // select new focused node in code view
       setNewFocusedNodeUid(_newFocusedNodeUid)
 
-      setUpdateOpt({ parse: null, from: updateOpt.from !== 'hms' && _needToReloadIFrame ? null : updateOpt.from })
+      // setUpdateOpt({ parse: null, from: updateOpt.from !== 'hms' && _needToReloadIFrame ? null : updateOpt.from })
+      setUpdateOpt({ parse: null, from: null })
+      console.log(updateOpt.from, updateOpt.from !== 'hms' && _needToReloadIFrame)
     } else if (updateOpt.parse === false) {
       // serialize node tree data
       let _nodeTree: TNodeTreeData = JSON.parse(JSON.stringify(nodeTree))
