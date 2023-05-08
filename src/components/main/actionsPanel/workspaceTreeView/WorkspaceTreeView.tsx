@@ -834,7 +834,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     const tmpNode: TNode = {
       uid: `${node.uid}/${TmpNodeUid}`,
       parentUid: node.uid,
-      name: ffNodeType === '*folder' ? 'New folder' : ffNodeType === 'html' ? 'New page' : 'New',
+      name: ffNodeType === '*folder' ? 'New folder' : ffNodeType === 'html' ? 'Unnamed' : 'Unnamed',
       isEntity: ffNodeType !== '*folder',
       children: [],
       data: {
