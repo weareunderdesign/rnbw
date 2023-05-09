@@ -61,7 +61,6 @@ export const Loader = (props: LoaderProps) => {
     if (props.show) {
       paceTimer = setInterval(() => {
         let temp = progress
-        console.log(temp)
         setProgress(temp + 3) 
       }, 20)
     }
