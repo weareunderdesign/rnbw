@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from 'react';
 
 import cx from 'classnames';
@@ -13,6 +14,7 @@ import {
 } from 'react-redux';
 
 import { SVGIcon } from '@_components/common';
+import { THtmlNodeData } from '@_node/html';
 import {
   ffSelector,
   globalSelector,
@@ -83,10 +85,31 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
     // open project
     loadProject
   } = useContext(MainContext)
+  // -------------------------------------------------------------- favicon --------------------------------------------------------------
+  const [favicon, setFavicon] = useState('')
+  useEffect(() => {
+    if (validNodeTree) {
+      let hasFavicon = false
+      for (const x in validNodeTree) {
+        const nodeData = validNodeTree[x].data as THtmlNodeData
+        if (nodeData && nodeData.type === 'tag' && nodeData.name === 'link' && nodeData.attribs.rel === 'icon') {
+          setFavicon('http://localhost:8080/rnbw/' + project.name + '/' + nodeData.attribs.href)
+          hasFavicon = true
+        }
+      }
+
+      if (!hasFavicon) {
+        setFavicon('')
+      }
+    }
+    else{
+      setFavicon('')
+    }
+    console.log({ workspace, project, ffTree, file, validNodeTree })
+  }, [validNodeTree])
   // -------------------------------------------------------------- sync --------------------------------------------------------------
   useEffect(() => {
-    console.log({ workspace, project, ffTree, file })
-  }, [workspace, project, file, ffTree])
+  }, [workspace, project, file, ffTree, validNodeTree])
   // -------------------------------------------------------------- dropdown --------------------------------------------------------------
   const navigatorPanelRef = useRef<HTMLDivElement | null>(null)
   const navigatorDropDownRef = useRef<HTMLDivElement | null>(null)
@@ -134,8 +157,8 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
         {!navigatorDropDownType ? <>
           {/* workspace */}
           <>
-            <div className="radius-m icon-s align-center background-secondary" onClick={onWorkspaceClick}>
-              <img src='https://rnbw.company/images/favicon.png'></img>
+            <div style={{'minWidth': '24px'}} className="radius-m icon-s align-center background-secondary" onClick={onWorkspaceClick}>
+              <img className='icon-s' src='https://rnbw.company/images/favicon.png'></img>
             </div>
           </>
           <span className="text-s opacity-m">/</span>
@@ -143,7 +166,12 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
           {/* project */}
           <>
             <div className="gap-s align-center" onClick={onProjectClick}>
-              <div className="radius-m icon-s align-center background-secondary"></div>
+              <div className="radius-m icon-s align-center background-secondary">
+                {favicon === null || favicon === "" ? 
+                  <></> : 
+                  <img className='icon-s' src={project.context === 'idb' ? 'https://rnbw.company/images/favicon.png' : favicon}></img>
+                }
+              </div>
               <span className="text-s">{project.name}</span>
             </div>
           </>
@@ -166,8 +194,8 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
           navigatorDropDownType === 'workspace' ? <>
             {/* workspace */}
             <>
-              <div className="radius-m icon-s align-center background-secondary" onClick={onWorkspaceClick}>
-              <img src='https://rnbw.company/images/favicon.png'></img>
+              <div  style={{'minWidth': '24px'}} className="radius-m icon-s align-center background-secondary" onClick={onWorkspaceClick}>
+                <img className='icon-s' src='https://rnbw.company/images/favicon.png'></img>
               </div>
             </>
           </> :
@@ -175,7 +203,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
               {/* workspace */}
               <>
                 <div className="radius-m icon-s align-center background-secondary" onClick={onWorkspaceClick}>
-                  <img src='https://rnbw.company/images/favicon.png'></img>
+                  <img className='icon-s' src='https://rnbw.company/images/favicon.png'></img>
                 </div>
               </>
               <span className="text-s opacity-m">/</span>
@@ -183,7 +211,12 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
               {/* project */}
               <>
                 <div className="gap-s align-center" onClick={onProjectClick}>
-                  <div className="radius-m icon-s align-center background-secondary"></div>
+                  <div className="radius-m icon-s align-center background-secondary">
+                    {favicon === null || favicon === "" ? 
+                      <></> : 
+                      <img className='icon-s' src={project.context === 'idb' ? 'https://rnbw.company/images/favicon.png' : favicon}></img>
+                    }
+                  </div>
                   <span className="text-s">{project.name}</span>
                 </div>
               </>
@@ -246,6 +279,6 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
     filesReferenceData, ffTree,
     onWorkspaceClick, onProjectClick, onFileClick,
     navigatorDropDownType, onCloseDropDown,
-    onOpenProject, loadProject
+    onOpenProject, loadProject, favicon
   ])
 }
