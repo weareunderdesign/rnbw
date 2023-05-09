@@ -89,11 +89,12 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
   const [favicon, setFavicon] = useState('')
   useEffect(() => {
     if (validNodeTree) {
+      console.log(window.location)
       let hasFavicon = false
       for (const x in validNodeTree) {
         const nodeData = validNodeTree[x].data as THtmlNodeData
         if (nodeData && nodeData.type === 'tag' && nodeData.name === 'link' && nodeData.attribs.rel === 'icon') {
-          setFavicon('http://localhost:8080/rnbw/' + project.name + '/' + nodeData.attribs.href)
+          setFavicon('http://' + window.location.host + '/rnbw/' + project.name + '/' + nodeData.attribs.href)
           hasFavicon = true
         }
       }

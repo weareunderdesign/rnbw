@@ -57,7 +57,6 @@ export const Loader = (props: LoaderProps) => {
     styleSheet?.insertRule(keyframesStyle, styleSheet?.cssRules.length)
   }, [])
   useEffect(() => {
-    console.log(props.show)
     if (props.show) {
       paceTimer = setInterval(() => {
         let temp = progress
