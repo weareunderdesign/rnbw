@@ -1755,7 +1755,18 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       removeRunningActions(['fileTreeView-read'], false)
       return
     }
-
+     // set initial content of the html
+     let initialContent = ''
+     if (nodeData.type === 'html' && nodeData.kind === 'file' && nodeData.content === '') {
+       initialContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+</head>
+<body>
+</body>
+</html>`
+      nodeData.content = initialContent
+     }
     addRunningActions(['processor-updateOpt'])
     dispatch(setCurrentFile({ uid, parentUid: node.parentUid as TNodeUid, name: nodeData.name, content: nodeData.content }))
     setUpdateOpt({ parse: true, from: 'file' })
