@@ -1,4 +1,5 @@
 import React, {
+  useContext,
   useEffect,
   useMemo,
   useState,
@@ -6,12 +7,19 @@ import React, {
 
 import LoadingBar from 'react-top-loading-bar';
 
+import { MainContext } from '@_redux/main/context';
+
 import { LoaderProps } from './types';
 
 export const Loader = (props: LoaderProps) => {
   let paceTimer: NodeJS.Timer
   const [progress, setProgress] = useState(0)
   const animationName = useMemo(() => `loading-bar-animation`, [])
+
+  const {
+    theme,
+  } = useContext(MainContext)
+
   const keyframesStyle = useMemo(() => `
     @keyframes ${animationName} {
       0% {
@@ -49,23 +57,26 @@ export const Loader = (props: LoaderProps) => {
     styleSheet?.insertRule(keyframesStyle, styleSheet?.cssRules.length)
   }, [])
   useEffect(() => {
+    console.log(props.show)
     if (props.show) {
       paceTimer = setInterval(() => {
         let temp = progress
+        console.log(temp)
         setProgress(temp + 3) 
       }, 20)
     }
     else{
       setProgress(0)
+      clearInterval(paceTimer)
     }
     return () => clearInterval(paceTimer)
   }, [props.show, progress])
   useEffect(() => {
-    if (progress > 98){
+    if (progress > 97){
       clearInterval(paceTimer)
     }
   }, [progress])
   return <>
-    {props.show && <LoadingBar color='#28b485' progress={progress} shadow={true} />}
+    {props.show && <LoadingBar color={theme === 'Light' ? '#111' : '#fff'} progress={progress} shadow={true} />}
   </>
 }
