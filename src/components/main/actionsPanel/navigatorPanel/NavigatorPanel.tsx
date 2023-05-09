@@ -94,7 +94,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
       for (const x in validNodeTree) {
         const nodeData = validNodeTree[x].data as THtmlNodeData
         if (nodeData && nodeData.type === 'tag' && nodeData.name === 'link' && nodeData.attribs.rel === 'icon') {
-          setFavicon('http://' + window.location.host + '/rnbw/' + project.name + '/' + nodeData.attribs.href)
+          setFavicon(window.location.origin + '/rnbw/' + project.name + '/' + nodeData.attribs.href)
           hasFavicon = true
         }
       }
