@@ -262,21 +262,23 @@ export default function MainPage(props: MainPageProps) {
         if (refData.Contain === 'All') {
           Object.keys(htmlReferenceData.elements).map((tag: string) => {
             const tagRef = htmlReferenceData.elements[tag]
-            data['Elements'].push({
-              "Featured": tagRef.Featured === 'Yes',
-              "Name": tagRef.Name,
-              "Icon": tagRef.Icon,
-              "Description": tagRef.Description,
-              "Keyboard Shortcut": {
-                cmd: false,
-                shift: false,
-                alt: false,
-                key: '',
-                click: false,
-              },
-              "Group": 'Add',
-              "Context": `Node-${tagRef.Tag}`,
-            })
+            if (tagRef !== undefined) {
+              data['Elements'].push({
+                "Featured": tagRef && tagRef.Featured === 'Yes' ? true : false,
+                "Name": tagRef.Name,
+                "Icon": tagRef.Icon,
+                "Description": tagRef.Description,
+                "Keyboard Shortcut": {
+                  cmd: false,
+                  shift: false,
+                  alt: false,
+                  key: '',
+                  click: false,
+                },
+                "Group": 'Add',
+                "Context": `Node-${tagRef.Tag}`,
+              })
+            }
           })
         } else if (refData.Contain === 'None') {
           // do nothing
@@ -285,22 +287,23 @@ export default function MainPage(props: MainPageProps) {
           tagList.map((tag: string) => {
             const pureTag = tag.slice(1, tag.length - 1)
             const tagRef = htmlReferenceData.elements[pureTag]
-
-            data['Elements'].push({
-              "Featured": tagRef.Featured === 'Yes',
-              "Name": tagRef.Name,
-              "Icon": tagRef.Icon,
-              "Description": tagRef.Description,
-              "Keyboard Shortcut": {
-                cmd: false,
-                shift: false,
-                alt: false,
-                key: '',
-                click: false,
-              },
-              "Group": 'Add',
-              "Context": `Node-${tagRef.Tag}`,
-            })
+            if (tagRef !== undefined) {
+              data['Elements'].push({
+                "Featured": tagRef && tagRef.Featured === 'Yes' ? true : false,
+                "Name": tagRef.Name,
+                "Icon": tagRef.Icon,
+                "Description": tagRef.Description,
+                "Keyboard Shortcut": {
+                  cmd: false,
+                  shift: false,
+                  alt: false,
+                  key: '',
+                  click: false,
+                },
+                "Group": 'Add',
+                "Context": `Node-${tagRef.Tag}`,
+              })
+            }
           })
         }
       }
@@ -335,7 +338,6 @@ export default function MainPage(props: MainPageProps) {
   // init workspace
   useEffect(() => {
     setWorkspace({ name: 'local', projects: [] })
-    console.log('workspace:' + workspace)
     document.addEventListener('contextmenu', (e) => {
       e.preventDefault();
     });
@@ -942,7 +944,6 @@ export default function MainPage(props: MainPageProps) {
                 'recent-project-name': sessionInfo[1],
                 'recent-project-handler': sessionInfo[2],
               }
-              console.log(_session)
               setRecentProjectContext(_session['recent-project-context'])
               setRecentProjectName(_session['recent-project-name'])
               setRecentProjectHandler(_session['recent-project-handler'])
