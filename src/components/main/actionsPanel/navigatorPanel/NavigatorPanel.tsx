@@ -14,6 +14,7 @@ import {
 } from 'react-redux';
 
 import { SVGIcon } from '@_components/common';
+import { TFileNodeData } from '@_node/file';
 import { THtmlNodeData } from '@_node/html';
 import {
   ffSelector,
@@ -25,6 +26,7 @@ import { TProject } from '@_types/main';
 
 import { NavigatorPanelProps } from './types';
 
+const unsavedProjectImg = "https://user-images.githubusercontent.com/13418616/236864312-a08fa9a8-735e-44c1-aa9d-1f74aa8608fd.png"
 export default function NavigatorPanel(props: NavigatorPanelProps) {
   const dispatch = useDispatch()
   // -------------------------------------------------------------- global state --------------------------------------------------------------
@@ -89,7 +91,6 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
   const [favicon, setFavicon] = useState('')
   useEffect(() => {
     if (validNodeTree) {
-      console.log(window.location)
       let hasFavicon = false
       for (const x in validNodeTree) {
         const nodeData = validNodeTree[x].data as THtmlNodeData
@@ -109,8 +110,18 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
     console.log({ workspace, project, ffTree, file, validNodeTree })
   }, [validNodeTree])
   // -------------------------------------------------------------- sync --------------------------------------------------------------
-  useEffect(() => {
-  }, [workspace, project, file, ffTree, validNodeTree])
+  const [unsavedProject, setUnsavedProject] = useState(false)
+  useMemo(() => {
+    setUnsavedProject(false)
+    for (let x in ffTree){
+      if (!ffTree[x].data) continue 
+      const nodeData = ffTree[x].data as unknown as TFileNodeData
+      if (nodeData.changed) {
+        console.log('true')
+        setUnsavedProject(true)
+      }
+    }
+  }, [ffTree])
   // -------------------------------------------------------------- dropdown --------------------------------------------------------------
   const navigatorPanelRef = useRef<HTMLDivElement | null>(null)
   const navigatorDropDownRef = useRef<HTMLDivElement | null>(null)
@@ -159,7 +170,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
           {/* workspace */}
           <>
             <div style={{'minWidth': '24px'}} className="radius-m icon-s align-center background-secondary" onClick={onWorkspaceClick}>
-              <img className='icon-s' src='https://rnbw.company/images/favicon.png'></img>
+              <img className='icon-s' src={unsavedProject ? unsavedProjectImg : 'https://rnbw.company/images/favicon.png'}></img>
             </div>
           </>
           <span className="text-s opacity-m">/</span>
@@ -196,7 +207,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
             {/* workspace */}
             <>
               <div  style={{'minWidth': '24px'}} className="radius-m icon-s align-center background-secondary" onClick={onWorkspaceClick}>
-                <img className='icon-s' src='https://rnbw.company/images/favicon.png'></img>
+                <img className='icon-s' src={unsavedProject ? unsavedProjectImg : 'https://rnbw.company/images/favicon.png'}></img>
               </div>
             </>
           </> :
@@ -204,7 +215,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
               {/* workspace */}
               <>
                 <div className="radius-m icon-s align-center background-secondary" onClick={onWorkspaceClick}>
-                  <img className='icon-s' src='https://rnbw.company/images/favicon.png'></img>
+                  <img className='icon-s' src={unsavedProject ? unsavedProjectImg : 'https://rnbw.company/images/favicon.png'}></img>
                 </div>
               </>
               <span className="text-s opacity-m">/</span>
@@ -280,6 +291,6 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
     filesReferenceData, ffTree,
     onWorkspaceClick, onProjectClick, onFileClick,
     navigatorDropDownType, onCloseDropDown,
-    onOpenProject, loadProject, favicon
+    onOpenProject, loadProject, favicon, unsavedProject
   ])
 }
