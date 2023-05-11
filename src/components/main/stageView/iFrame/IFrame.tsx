@@ -409,6 +409,23 @@ export const IFrame = (props: IFrameProps) => {
     addRunningActions(['processor-updateOpt'])
     setUpdateOpt({ parse: true, from: 'stage' })
   }, [outerHtml])
+  const onCmdEnter = useCallback((e: KeyboardEvent) => {
+    // cmdk obj for the current command
+    const cmdk: TCmdkKeyMap = {
+      cmd: getCommandKey(e, osType),
+      shift: e.shiftKey,
+      alt: e.altKey,
+      key: e.code,
+      click: false,
+    }
+
+    if (cmdk.cmd && cmdk.key === 'Enter'){
+      const ele = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${contentEditableUidRef.current}"]`)
+      if (!ele) return
+      (ele as HTMLElement).blur();
+      setFocusedSelectedItems(focusedItem)
+    }
+  }, [focusedItem, validNodeTree, contentRef])
   const onDblClick = useCallback((e: MouseEvent) => {
     const ele = e.target as HTMLElement
     let uid: TNodeUid | null = ele.getAttribute(NodeInAppAttribName)
@@ -418,7 +435,7 @@ export const IFrame = (props: IFrameProps) => {
       const nodeData = node.data as THtmlNodeData
       if (nodeData.name === 'html' || nodeData.name === 'head' || nodeData.name === 'body') return
 
-      const cleanedUpCode = ele.outerHTML.replace(/rnbwdev-rnbw-element-hover=""|rnbwdev-rnbw-element-select=""/g, '')
+      const cleanedUpCode = ele.outerHTML.replace(/rnbwdev-rnbw-element-hover=""|rnbwdev-rnbw-element-select=""|contenteditable="true"|contenteditable="false"/g, '')
       setOuterHtml(cleanedUpCode)
       if (ele.hasAttribute('contenteditable')) {
         setContentEditableAttr(ele.getAttribute('contenteditable'))
@@ -503,7 +520,10 @@ export const IFrame = (props: IFrameProps) => {
           })
           htmlNode.addEventListener('dblclick', (e: MouseEvent) => {
             setIframeEvent(e)
-          }),
+          })
+          htmlNode.addEventListener('keydown', (e: KeyboardEvent) => {
+            onCmdEnter(e)
+          })
           _document.addEventListener('contextmenu', (e: MouseEvent) => {
             e.preventDefault()
           })
