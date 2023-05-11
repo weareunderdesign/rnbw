@@ -197,7 +197,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
           {/* file */}
           {ffTree[file.uid] && <>
             <div className="gap-s align-center" onClick={onFileClick}>
-              <SVGIcon {...{ "class": "icon-xs" }}>{ffTree[file.uid].data.type == 'html' && ffTree[file.uid].data.name == 'index' ? 'home' : filesReferenceData[ffTree[file.uid].data.type].Icon}</SVGIcon>
+              <SVGIcon {...{ "class": "icon-xs" }}>{ffTree[file.uid].data.type == 'html' && ffTree[file.uid].data.name == 'index' ? 'home' : filesReferenceData[ffTree[file.uid].data.type] ? filesReferenceData[ffTree[file.uid].data.type].Icon : 'page'}</SVGIcon>
               <span className="text-s">{file.name}</span>
             </div>
           </>}
