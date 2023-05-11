@@ -117,7 +117,6 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
       if (!ffTree[x].data) continue 
       const nodeData = ffTree[x].data as unknown as TFileNodeData
       if (nodeData.changed) {
-        console.log('true')
         setUnsavedProject(true)
       }
     }

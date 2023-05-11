@@ -1253,6 +1253,17 @@ export default function MainPage(props: MainPageProps) {
         open={cmdkOpen}
         onOpenChange={setCmdkOpen}
         onKeyDown={(e: React.KeyboardEvent) => {
+          // cmdk obj for the current command
+          const cmdk: TCmdkKeyMap = {
+            cmd: getCommandKey(e as unknown as KeyboardEvent, osType),
+            shift: e.shiftKey,
+            alt: e.altKey,
+            key: e.code,
+            click: false,
+          }
+          if (cmdk.shift && cmdk.cmd && cmdk.key === 'KeyR') {
+            onClear()
+          }
           if (e.code === 'Escape' || (e.code === 'Backspace' && !cmdkSearch)) {
             if (e.code === 'Escape' && cmdkPages.length === 1) {
               setCmdkPages([])
