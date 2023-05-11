@@ -152,7 +152,7 @@ export default function Process(props: ProcessProps) {
 
         fileData.content = formattedContent
         fileData.contentInApp = contentInApp
-        // console.log(fileData.content,  fileData.orgContent)
+        // console.log(fileData.content,  fileData.orgContent, fileData.content !== fileData.orgContent)
         fileData.changed = fileData.content !== fileData.orgContent
 
         // reload iframe
@@ -446,7 +446,6 @@ export default function Process(props: ProcessProps) {
 
       // setUpdateOpt({ parse: null, from: updateOpt.from !== 'hms' && _needToReloadIFrame ? null : updateOpt.from })
       setUpdateOpt({ parse: null, from: null })
-      console.log(updateOpt.from, updateOpt.from !== 'hms' && _needToReloadIFrame)
     } else if (updateOpt.parse === false) {
       // serialize node tree data
       let _nodeTree: TNodeTreeData = JSON.parse(JSON.stringify(nodeTree))
@@ -561,25 +560,28 @@ export default function Process(props: ProcessProps) {
 
     const uids = getSubNodeUidsByBfs(RootNodeUid, _ffTree)
     await Promise.all(uids.map(async (uid) => {
-      const node = _ffTree[uid]
-      const nodeData = node.data as TFileNodeData
-      if (nodeData.changed) {
-        try {
-          if (project.context === 'local') {
-            const handler = ffHandlers[uid]
-            const writableStream = await (handler as FileSystemFileHandle).createWritable()
-            await writableStream.write(nodeData.content)
-            await writableStream.close()
-          } else if (project.context === 'idb') {
-            await writeFile(nodeData.path, nodeData.content)
-            nodeData.changed = false
-            nodeData.orgContent = nodeData.content
+      if (file.uid === uid) {  /* only save current file */
+        const node = _ffTree[uid]
+        const nodeData = node.data as TFileNodeData
+        if (nodeData.changed) {
+          try {
+            if (project.context === 'local') {
+              const handler = ffHandlers[uid]
+              const writableStream = await (handler as FileSystemFileHandle).createWritable()
+              await writableStream.write(nodeData.content)
+              await writableStream.close()
+              nodeData.changed = false
+            } else if (project.context === 'idb') {
+              await writeFile(nodeData.path, nodeData.content)
+              nodeData.changed = false
+              nodeData.orgContent = nodeData.content
+            }
+          } catch (err) {
+            addMessage({
+              type: 'error',
+              content: 'error occurred while saving',
+            })
           }
-        } catch (err) {
-          addMessage({
-            type: 'error',
-            content: 'error occurred while saving',
-          })
         }
       }
     }))
