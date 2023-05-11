@@ -79,7 +79,7 @@ export const createIDBProject = async (projectPath: string): Promise<void> => {
         <div class="view align-center direction-row">
             <div class="page">
                 <div class="align-center">
-                    <img src="https://rnbw.company/images/rnbwcolor.svg" class="box-m">
+                    <img src="https://rnbw.company/images/rnbwcolor.svg" class="box-m"></img>
                 </div>
                 <div class="align-center">
                     <div class="box-m">
@@ -98,8 +98,8 @@ export const createIDBProject = async (projectPath: string): Promise<void> => {
                     </div>
                 </div>
 
-                <img class="dark" src="https://rnbw.company/images/keyboard-dark.svg">
-                <img class="light" src="https://rnbw.company/images/keyboard-light.svg">
+                <img class="dark" src="https://rnbw.company/images/keyboard-dark.svg"></img>
+                <img class="light" src="https://rnbw.company/images/keyboard-light.svg"></img>
                 <div class="direction-column gap-xl">
                     <div class="box direction-row">
                         <p>
