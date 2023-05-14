@@ -276,7 +276,9 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
                   onOpenProject(_project)
                 }}>
                 <div className="gap-s align-center">
-                  <div className="navigator-project-item-icon radius-m icon-s align-center"></div>
+                  <div className="navigator-project-item-icon radius-m icon-s align-center">
+                    <SVGIcon {...{ "class": "icon-xs" }}>folder</SVGIcon>
+                  </div>
                   <span className="navigator-project-item-name text-s">{_project.name}</span>
                 </div>
               </div>
