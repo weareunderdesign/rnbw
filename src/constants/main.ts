@@ -1,7 +1,7 @@
 import { TNodeUid } from '@_node/index';
 
 export const HistoryStoreLimit: number = 1000000
-export const CodeViewSyncDelay: number = 2 * 1000
+export const CodeViewSyncDelay: number = 4 * 1000
 export const RootNodeUid: TNodeUid = 'ROOT'
 export const NodeUidSplitter: string = '?'
 export const RainbowAppName = 'rnbw'
