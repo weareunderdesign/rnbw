@@ -36,14 +36,14 @@ export const _sh = new _fs.Shell()
 
 export const initIDBProject = async (projectPath: string): Promise<void> => {
   return new Promise<void>(async (resolve, reject) => {
-    // remove original default project
+    // remove original welcome project
     try {
       await removeFileSystem(projectPath)
     } catch (err) {
 
     }
 
-    // create new default project
+    // create new welcome project
     try {
       await createIDBProject(projectPath)
       resolve()
@@ -145,7 +145,7 @@ export const loadIDBProject = async (projectPath: string): Promise<TIDBFileInfoO
         children: [],
         path: projectPath,
         kind: 'directory',
-        name: 'default project',
+        name: 'welcome',
       }
       const handlerObj: TIDBFileInfoObj = { [RootNodeUid]: rootHandler }
 
@@ -209,7 +209,7 @@ export const reloadIDBProject = async (projectPath: string, ffTree: TNodeTreeDat
         children: [],
         path: projectPath,
         kind: 'directory',
-        name: 'default project',
+        name: 'welcome',
       }
       const handlerObj: TIDBFileInfoObj = { [RootNodeUid]: rootHandler }
 
