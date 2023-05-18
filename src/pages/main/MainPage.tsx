@@ -164,7 +164,7 @@ export default function MainPage(props: MainPageProps) {
   }, [noRunningAction, file.content])
   // navigator
   const [workspace, setWorkspace] = useState<TWorkspace>({ name: 'local', projects: [] })
-  const [project, setProject] = useState<TProject>({ context: 'idb', name: 'default project', handler: null })
+  const [project, setProject] = useState<TProject>({ context: 'idb', name: 'welcome', handler: null })
   const [navigatorDropDownType, setNavigatorDropDownType] = useState<TNavigatorDropDownType>(null)
   // node actions
   const [activePanel, setActivePanel] = useState<TPanelContext>('unknown')
@@ -212,6 +212,8 @@ export default function MainPage(props: MainPageProps) {
   const [cmdkReferenceData, setCmdkReferenceData] = useState<TCmdkReferenceData>({})
   const [cmdkReferenceJumpstart, setCmdkReferenceJumpstart] = useState<TCmdkGroupData>({})
   const [cmdkReferenceActions, setCmdkReferenceActions] = useState<TCmdkGroupData>({})
+  // non-parse file editable
+  const [parseFileFlag, setParseFile] = useState<boolean>(true)
   // cmdk
   const [currentCommand, setCurrentCommand] = useState<TCommand>({ action: '' })
   const [cmdkOpen, setCmdkOpen] = useState<boolean>(false)
@@ -308,7 +310,9 @@ export default function MainPage(props: MainPageProps) {
         }
       }
     }
-    data['Elements'] = data['Elements'].filter((element) => element.Featured || !!cmdkSearch)
+    if (data['Elements'].length > 0 && data['Elements'].filter((element) => element.Featured || !!cmdkSearch).length > 0) {
+      data['Elements'] = data['Elements'].filter((element) => element.Featured || !!cmdkSearch)
+    }
     if (data['Elements'].length === 0) {
       delete data['Elements']
     }
@@ -388,6 +392,10 @@ export default function MainPage(props: MainPageProps) {
       alt: e.altKey,
       key: e.code,
       click: false,
+    }
+    if (e.key === 'Escape') {
+      closeAllPanel()
+      return
     }
     if (cmdk.shift && cmdk.cmd && cmdk.key === 'KeyR') {
       onClear()
@@ -548,8 +556,8 @@ export default function MainPage(props: MainPageProps) {
               name: name,
               ext: ext,
               type,
-              orgContent: type !== 'unknown' ? content?.toString() : '',
-              content: type !== 'unknown' ? content?.toString() : '',
+              orgContent:  content?.toString(),
+              content: content?.toString(),
               changed: false,
             } as TFileNodeData,
           } as TNode
@@ -646,37 +654,34 @@ export default function MainPage(props: MainPageProps) {
         })
         setFFTree(treeViewData)
         setFFHandlers(ffHandlerObj)
-
-        setProject({ context: 'idb', name: 'default project', handler: null })
-
-        if (internal) {
-          // store last edit session
-          const _recentProjectContext = [...recentProjectContext]
-          const _recentProjectName = [...recentProjectName]
-          const _recentProjectHandler = [...recentProjectHandler]
-          for (let index = 0; index < _recentProjectContext.length; ++index) {
-            if (_recentProjectContext[index] === fsType) {
-              _recentProjectContext.splice(index, 1)
-              _recentProjectName.splice(index, 1)
-              _recentProjectHandler.splice(index, 1)
-              break
-            }
-          }
-          if (_recentProjectContext.length === RecentProjectCount) {
-            _recentProjectContext.pop()
-            _recentProjectName.pop()
-            _recentProjectHandler.pop()
-          }
-          _recentProjectContext.unshift(fsType)
-          _recentProjectName.unshift('default project')
-          _recentProjectHandler.unshift(null)
-          setRecentProjectContext(_recentProjectContext)
-          setRecentProjectName(_recentProjectName)
-          setRecentProjectHandler(_recentProjectHandler)
-          await setMany([['recent-project-context', _recentProjectContext], ['recent-project-name', _recentProjectName], ['recent-project-handler', _recentProjectHandler]])
-        }
+        setProject({ context: 'idb', name: 'welcome', handler: null })
+        
+        // store last edit session
+        // const _recentProjectContext = [...recentProjectContext]
+        // const _recentProjectName = [...recentProjectName]
+        // const _recentProjectHandler = [...recentProjectHandler]
+        // for (let index = 0; index < _recentProjectContext.length; ++index) {
+        //   if (_recentProjectContext[index] === fsType) {
+        //     _recentProjectContext.splice(index, 1)
+        //     _recentProjectName.splice(index, 1)
+        //     _recentProjectHandler.splice(index, 1)
+        //     break
+        //   }
+        // }
+        // if (_recentProjectContext.length === RecentProjectCount) {
+        //   _recentProjectContext.pop()
+        //   _recentProjectName.pop()
+        //   _recentProjectHandler.pop()
+        // }
+        // _recentProjectContext.unshift(fsType)
+        // _recentProjectName.unshift('welcome')
+        // _recentProjectHandler.unshift(null)
+        // setRecentProjectContext(_recentProjectContext)
+        // setRecentProjectName(_recentProjectName)
+        // setRecentProjectHandler(_recentProjectHandler)
+        // await setMany([['recent-project-context', _recentProjectContext], ['recent-project-name', _recentProjectName], ['recent-project-handler', _recentProjectHandler]])
       } catch (err) {
-        LogAllow && console.log('failed to load default project')
+        LogAllow && console.log('failed to load welcome project')
       }
       setFSPending(false)
     }
@@ -716,12 +721,12 @@ export default function MainPage(props: MainPageProps) {
   const onNew = useCallback(async () => {
     setFSPending(true)
 
-    // init/open default project
+    // init/open welcome project
     try {
       await initIDBProject(DefaultProjectPath)
       await onImportProject('idb')
     } catch (err) {
-      LogAllow && console.log('failed to init/load default project')
+      LogAllow && console.log('failed to init/load welcome project')
     }
 
     setFSPending(false)
@@ -749,6 +754,7 @@ export default function MainPage(props: MainPageProps) {
   }, [project.context])
   // clear
   const onClear = useCallback(async () => {
+    alert()
     // remove localstorage and session
     window.localStorage.clear()
     await delMany(['recent-project-context', 'recent-project-name', 'recent-project-handler'])
@@ -759,9 +765,15 @@ export default function MainPage(props: MainPageProps) {
     setCmdkPages(['Jumpstart'])
     setCmdkOpen(true)
   }, [cmdkOpen])
+
+  // close all panel
+  const closeAllPanel = useCallback(() => {
+    setShowCodeView(false)
+    setShowActionsPanel(false)
+  }, [])
   // hms
   const onUndo = useCallback(() => {
-    if (pending || iframeLoading || fsPending || codeEditing) return
+    if (pending || iframeLoading || fsPending || codeEditing || !parseFileFlag) return
 
     LogAllow && pastLength === 1 && console.log('hms - it is the origin state')
     if (pastLength === 1) return
@@ -773,7 +785,7 @@ export default function MainPage(props: MainPageProps) {
     setUpdateOpt({ parse: true, from: 'hms' })
   }, [pending, iframeLoading, fsPending, codeEditing, pastLength, fileAction, file.uid])
   const onRedo = useCallback(() => {
-    if (pending || iframeLoading || fsPending || codeEditing) return
+    if (pending || iframeLoading || fsPending || codeEditing  || !parseFileFlag) return
 
     LogAllow && futureLength === 0 && console.log('hms - it is the latest state')
     if (futureLength === 0) return
@@ -804,11 +816,13 @@ export default function MainPage(props: MainPageProps) {
   const [actionsPanelOffsetLeft, setActionsPanelOffsetLeft] = useState(10)
   const [actionsPanelWidth, setActionsPanelWidth] = useState(240)
 
-  const [codeViewOffsetBottom, setCodeViewOffsetBottom] = useState(10)
+  const [codeViewOffsetBottom, setCodeViewOffsetBottom] = useState('10')
+  const [codeViewOffsetTop, setCodeViewOffsetTop] = useState('66')
   const [codeViewOffsetLeft, setCodeViewOffsetLeft] = useState(10)
-  const [codeViewHeight, setCodeViewHeight] = useState(500)
+  const [codeViewHeight, setCodeViewHeight] = useState("33.33")
+  const [codeViewDragging, setCodeViewDragging] = useState(false)
   // -------------------------------------------------------------- other --------------------------------------------------------------
-  // detect OS & fetch reference - html. Jumpstart.csv, Actions.csv - restore recent project session - open default project and jumpstart menu ons tartup
+  // detect OS & fetch reference - html. Jumpstart.csv, Actions.csv - restore recent project session - open welcome project and jumpstart menu ons tartup
   useEffect(() => {
     (async () => {
       addRunningActions(['detect-os', 'reference-files', 'reference-html-elements', 'reference-cmdk-jumpstart', 'reference-cmdk-actions'])
@@ -977,7 +991,7 @@ export default function MainPage(props: MainPageProps) {
         _cmdkReferenceData[_command['Name']] = _command
       }))
 
-      if (_cmdkRefJumpstartData['Recent'].length === 0) {
+      if (_cmdkRefJumpstartData['Recent'].length === 1 || _cmdkRefJumpstartData['Recent'].length === 0) {
         delete _cmdkRefJumpstartData['Recent']
       }
       setCmdkReferenceJumpstart(_cmdkRefJumpstartData)
@@ -1046,19 +1060,40 @@ export default function MainPage(props: MainPageProps) {
     LogAllow && console.log('isNewbie: ', isNewbie === null ? true : false)
     if (!isNewbie) {
       localStorage.setItem("newbie", 'false');
-      // init/open default project
+      // init/open welcome project
       (async () => {
         setFSPending(true)
         try {
           await initIDBProject(DefaultProjectPath)
           await onImportProject('idb')
-          LogAllow && console.log('inited/loaded default project')
+          LogAllow && console.log('inited/loaded welcome project')
         } catch (err) {
-          LogAllow && console.log('failed to init/load default project')
+          LogAllow && console.log('failed to init/load welcome project')
         }
         setFSPending(false)
       })()
     }
+    // always show default project when do refresh
+    else{
+      onNew()
+    }
+
+    // set initial codeview height & offset
+    const offsetTop = localStorage.getItem("offsetTop")
+    const codeViewHeight = localStorage.getItem("codeViewHeight")
+    if (offsetTop) {
+      setCodeViewOffsetTop(offsetTop)
+    }
+    else {
+      setCodeViewOffsetTop('66')
+    }
+    if (codeViewHeight) {
+      setCodeViewHeight(codeViewHeight)
+    }
+    else {
+      setCodeViewHeight('33.33')
+    }
+
   }, [])
   // theme
   const setSystemTheme = useCallback(() => {
@@ -1140,7 +1175,7 @@ export default function MainPage(props: MainPageProps) {
         const menuItems = document.querySelectorAll('.rnbw-cmdk-menu-item')
         setValidMenuItemCount(menuItems.length)
 
-        const description = cmdkPage === 'Add' ? document.querySelector('.rnbw-cmdk-menu-item[aria-selected="true"]')?.getAttribute('rnbw-cmdk-menu-item-description') : ''
+        const description = cmdkPage === 'Add' || cmdkPage === 'Jumpstart' ? document.querySelector('.rnbw-cmdk-menu-item[aria-selected="true"]')?.getAttribute('rnbw-cmdk-menu-item-description') : ''
         setHoverMenuItemDescription(description)
       }, 10)
     } else {
@@ -1160,6 +1195,29 @@ export default function MainPage(props: MainPageProps) {
   useEffect(() => {
     setNeedToReloadCodeView(false)
   }, [needToReloadCodeView])
+
+
+  // drag & dragend code view event
+  const dragCodeView = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    setCodeViewOffsetTop((e.clientY / document.documentElement.clientHeight * 100 < 1 ? 1 : e.clientY / document.documentElement.clientHeight * 100).toString())
+    if (!codeViewDragging) {
+      setCodeViewDragging(true)
+    }
+  }, [])
+
+  const dragEndCodeView = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    const offsetTop = (e.clientY / document.documentElement.clientHeight * 100 < 1 ? 1 : e.clientY / document.documentElement.clientHeight * 100).toString()
+    setCodeViewOffsetTop(offsetTop)
+    setCodeViewDragging(false)
+    localStorage.setItem('offsetTop', offsetTop)
+  }, [])
+
+  const dropCodeView = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()    
+  }, [])
+
 
   return <>
     {/* wrap with the context */}
@@ -1217,7 +1275,10 @@ export default function MainPage(props: MainPageProps) {
         // toasts
         addMessage, removeMessage,
         // load project
-        loadProject
+        loadProject,
+        parseFileFlag, setParseFile,
+        // close all panel
+        closeAllPanel
       }}
     >
       {/* process */}
@@ -1241,10 +1302,15 @@ export default function MainPage(props: MainPageProps) {
         />
         {showCodeView && !needToReloadCodeView ?
           <CodeView
+            offsetTop={`${codeViewOffsetTop}vh`}
             offsetBottom={codeViewOffsetBottom}
             offsetLeft={showActionsPanel ? actionsPanelOffsetLeft * 2 + actionsPanelWidth : codeViewOffsetLeft}
             width={`calc(100vw - ${(showActionsPanel ? actionsPanelWidth + actionsPanelOffsetLeft * 2 : codeViewOffsetLeft) + codeViewOffsetLeft}px)`}
-            height={`${codeViewHeight}px`}
+            height={`${codeViewHeight}vh`}
+            dropCodeView={dropCodeView}
+            dragCodeView={dragCodeView}
+            dragEndCodeView={dragEndCodeView}
+            codeViewDragging={codeViewDragging}
           /> : null}
       </div>
 
@@ -1296,9 +1362,9 @@ export default function MainPage(props: MainPageProps) {
 
         {/* modal content */}
         <div
-          className={cmdkPage !== 'Add' ? "" : "box-l direction-column align-stretch box"}
+          className={cmdkPage !== 'Add' && cmdkPage !== 'Jumpstart' ? "" : "box-l direction-column align-stretch box"}
           style={{
-            ...(cmdkPage !== 'Add' ? { width: "100%" } : {}),
+            ...(cmdkPage !== 'Add' && cmdkPage !== 'Jumpstart' ? { width: "100%" } : {}),
             ...(validMenuItemCount === 0 ? { height: '0px', overflow: 'hidden' } : {}),
           }}
         >
@@ -1314,15 +1380,42 @@ export default function MainPage(props: MainPageProps) {
                   cmdkPage === 'Actions' ? cmdkReferenceActions :
                     cmdkPage === 'Add' ? cmdkReferenceAdd : {}
                 ).map((groupName: string) => {
+                  let groupNameShow: boolean = false;
+                  (cmdkPage === 'Jumpstart' ? (groupName !== 'Recent' ? cmdkReferenceJumpstart[groupName] : cmdkReferneceRecentProject) :
+                      cmdkPage === 'Actions' ? cmdkReferenceActions[groupName] :
+                        cmdkPage === 'Add' ? cmdkReferenceAdd[groupName] : []
+                    ).map((command: TCmdkReference) => {
+                      const context: TCmdkContext = (command.Context as TCmdkContext)
+                      groupNameShow = (
+                        (cmdkPage === 'Jumpstart') ||
+                        (cmdkPage === 'Actions' && (
+                          (command.Name === 'Add') ||
+                          (context.all === true) ||
+                          (activePanel === 'file' && (
+                            (context['file'] === true) ||
+                            (false)
+                          )) ||
+                          ((activePanel === 'node' || activePanel === 'stage') && (
+                            (ffTree[file.uid] && (ffTree[file.uid].data as TFileNodeData).type === 'html' && context['html'] === true) ||
+                            (false)
+                          ))
+                        )) ||
+                        (cmdkPage === 'Add')
+                      )
+                    })
+                  
                   return <Command.Group
                     key={groupName}
                     // heading={groupName}
                     value={groupName}
                   >
+                    
                     {/* group heading label */}
-                    <div className="padding-m gap-s">
-                      <span className="text-s opacity-m">{groupName}</span>
-                    </div>
+                    {groupNameShow ? 
+                      <div className="padding-m gap-s">
+                        <span className="text-s opacity-m">{groupName}</span>
+                      </div> : <></>
+                    }
                     {(cmdkPage === 'Jumpstart' ? (groupName !== 'Recent' ? cmdkReferenceJumpstart[groupName] : cmdkReferneceRecentProject) :
                       cmdkPage === 'Actions' ? cmdkReferenceActions[groupName] :
                         cmdkPage === 'Add' ? cmdkReferenceAdd[groupName] : []
@@ -1411,7 +1504,7 @@ export default function MainPage(props: MainPageProps) {
           </div>
 
           {/* description - right panel */}
-          {cmdkPage === 'Add' &&
+          {(cmdkPage === 'Add' || cmdkPage === 'Jumpstart') &&
             <div className={cx(
               "box align-center border-left padding-l text-l",
               !!hoveredMenuItemDescription ? '' : 'opacity-m',
