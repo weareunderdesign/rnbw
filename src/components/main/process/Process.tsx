@@ -152,7 +152,7 @@ export default function Process(props: ProcessProps) {
 
         fileData.content = formattedContent
         fileData.contentInApp = contentInApp
-        // console.log(fileData.content,  fileData.orgContent, fileData.content !== fileData.orgContent)
+        // console.log(fileData.content.slice(600, 700),  fileData.orgContent.slice(600, 700), fileData.content.slice(0, 600) !== fileData.orgContent.slice(0, 600))
         fileData.changed = fileData.content !== fileData.orgContent
 
         // reload iframe
@@ -238,6 +238,7 @@ export default function Process(props: ProcessProps) {
               const nodes: Node[] = [divElement.childNodes[0]]
               while (nodes.length) {
                 const node = nodes.shift() as Node
+                if (node === undefined) continue
                 if (node.nodeName === '#text') continue
 
                 (node as HTMLElement).setAttribute(NodeInAppAttribName, nodeUids[++nodeUidIndex])

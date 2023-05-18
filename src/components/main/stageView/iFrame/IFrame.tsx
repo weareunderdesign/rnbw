@@ -37,6 +37,11 @@ import { TCmdkKeyMap } from '@_types/main';
 import { styles } from './styles';
 import { IFrameProps } from './types';
 
+// const fallback img, audio, video images 
+const defaultImage = "https://user-images.githubusercontent.com/13418616/234660226-dc0cb352-3735-478c-bcc0-d47f73eb3e31.svg"
+const defaultAudio = "https://user-images.githubusercontent.com/13418616/234660225-7195abb2-91e7-402f-aa7d-902bbf7d66f8.svg"
+const defaultVideo = "https://user-images.githubusercontent.com/13418616/234660227-aeb91595-1ed6-4b46-8197-c6feb7af3718.svg"
+
 export const IFrame = (props: IFrameProps) => {
   const dispatch = useDispatch()
   // -------------------------------------------------------------- global state --------------------------------------------------------------
@@ -85,6 +90,9 @@ export const IFrame = (props: IFrameProps) => {
     theme,
     // toasts
     addMessage, removeMessage,
+    parseFileFlag,
+    // close all panel
+    closeAllPanel
   } = useContext(MainContext)
   // -------------------------------------------------------------- sync --------------------------------------------------------------
   const [contentRef, setContentRef] = useState<HTMLIFrameElement | null>(null)
@@ -119,7 +127,7 @@ export const IFrame = (props: IFrameProps) => {
     if (focusedItemRef.current === focusedItem) return
 
     const newFocusedElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${focusedItem}"]`)
-    setTimeout(() => newFocusedElement?.scrollIntoView({ block: 'start', inline: 'end', behavior: 'auto' }), 0)
+    setTimeout(() => newFocusedElement?.scrollIntoView({ block: 'nearest', inline: 'start', behavior: 'smooth' }), 50)
 
     focusedItemRef.current = focusedItem
   }, [focusedItem])
@@ -368,7 +376,7 @@ export const IFrame = (props: IFrameProps) => {
 
     // set focused/selected items
     if (_uid) {
-      if (getCommandKey(e, osType)) {
+      if (e.shiftKey) {
         let found = false
         const _selectedItems = selectedItemsRef.current.filter(uid => {
           uid === _uid ? found = true : null
@@ -403,6 +411,12 @@ export const IFrame = (props: IFrameProps) => {
     onTextEdit(node, cleanedUpCode)
   }, [focusedItem])
   const onTextEdit = useCallback((node: TNode, _outerHtml: string) => {
+    // replace enter to br
+    while(true){
+      _outerHtml = _outerHtml.replace('<div><br></div>', '<br>')
+      if (_outerHtml.search('<div><br></div>') === -1)
+        break
+    }
     if (outerHtml === _outerHtml) return
 
     setCodeChanges([{ uid: node.uid, content: _outerHtml }])
@@ -417,6 +431,11 @@ export const IFrame = (props: IFrameProps) => {
       alt: e.altKey,
       key: e.code,
       click: false,
+    }
+    
+    if (e.key === 'Escape') {
+      closeAllPanel()
+      return
     }
 
     if (cmdk.cmd && cmdk.key === 'Enter'){
@@ -486,6 +505,11 @@ export const IFrame = (props: IFrameProps) => {
 
   // iframe event listeners
   const [iframeEvent, setIframeEvent] = useState<MouseEvent>()
+
+  // iframe skeleton
+  const Skeleton = () => {
+    return <div>Cool loading screen</div>;
+  };
   useEffect(() => {
     if (contentRef) {
       setIFrameLoading(true)
@@ -596,8 +620,8 @@ export const IFrame = (props: IFrameProps) => {
         <iframe
           ref={setContentRef}
           src={iframeSrc}
-          style={{ position: "absolute", width: "100%", height: "100%" }}
+          style={parseFileFlag ? { position: "absolute", width: "100%", height: "100%" } : { position: "absolute", width: "100%", height: "100%", overflow: 'hidden',pointerEvents: 'none', opacity: 0.2 }}
         />}
     </>
-  }, [iframeSrc, needToReloadIFrame])
+  }, [iframeSrc, needToReloadIFrame, parseFileFlag])
 }

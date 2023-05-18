@@ -31,6 +31,7 @@ import { TreeViewData } from '@_components/common/treeView/types';
 import {
   AddFileActionPrefix,
   DefaultProjectPath,
+  HmsClearActionType,
   LogAllow,
   ParsableFileTypes,
   RootNodeUid,
@@ -64,6 +65,7 @@ import {
   ffSelector,
   focusFFNode,
   globalSelector,
+  hmsInfoSelector,
   MainContext,
   navigatorSelector,
   removeCurrentFile,
@@ -90,6 +92,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   // -------------------------------------------------------------- global state --------------------------------------------------------------
   const { file } = useSelector(navigatorSelector)
   const { fileAction } = useSelector(globalSelector)
+  const { futureLength, pastLength } = useSelector(hmsInfoSelector)
   const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
   const {
     // global action
@@ -142,6 +145,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     theme,
     // toasts
     addMessage, removeMessage,
+
+    // non-parse file
+    parseFileFlag, setParseFile
   } = useContext(MainContext)
   // -------------------------------------------------------------- node status --------------------------------------------------------------
   //  invalid - can't do any actions on the nodes
@@ -256,7 +262,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           } as TNode
         })
       } catch (err) {
-        LogAllow && console.log('failed to reload default project')
+        LogAllow && console.log('failed to reload welcome project')
       }
     }
 
@@ -602,7 +608,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     // validate
     let _uids = [...uids]
     _uids = _uids.filter((_uid) => {
-      return !(ffTree[_uid] === undefined || invalidNodes[_uid])
+      return !(ffTree[_uid] === undefined)
     })
     if (_uids.length === 0) {
       removeRunningActions(['fileTreeView-select'], false)
@@ -622,6 +628,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         return
       }
     }
+    console.log(_uids)
 
     addRunningActions(['fileTreeView-select'])
     dispatch(selectFFNode(_uids))
@@ -834,7 +841,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     const tmpNode: TNode = {
       uid: `${node.uid}/${TmpNodeUid}`,
       parentUid: node.uid,
-      name: ffNodeType === '*folder' ? 'New folder' : ffNodeType === 'html' ? 'Unnamed' : 'Unnamed',
+      name: ffNodeType === '*folder' ? 'Untitled' : ffNodeType === 'html' ? 'Untitled' : 'Untitled',
       isEntity: ffNodeType !== '*folder',
       children: [],
       data: {
@@ -1739,7 +1746,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
   const cb_readNode = useCallback((uid: TNodeUid) => {
     addRunningActions(['fileTreeView-read'])
-
+    dispatch({ type: HmsClearActionType })
     // validate
     if (invalidNodes[uid]) {
       removeRunningActions(['fileTreeView-read'], false)
@@ -1752,26 +1759,33 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
     const nodeData = node.data as TFileNodeData
     if (nodeData.type === 'unknown') {
-      removeRunningActions(['fileTreeView-read'], false)
-      return
+      dispatch(setCurrentFile({ uid, parentUid: node.parentUid as TNodeUid, name: nodeData.name, content: nodeData.content }))
+      removeRunningActions(['fileTreeView-read'])
+      setParseFile(false)
     }
-     // set initial content of the html
-     let initialContent = ''
-     if (nodeData.type === 'html' && nodeData.kind === 'file' && nodeData.content === '') {
-       initialContent = `<!DOCTYPE html>
+    else {
+      // set initial content of the html
+      let initialContent = ''
+      if (nodeData.type === 'html' && nodeData.kind === 'file' && nodeData.content === '') {
+        initialContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
+<meta charset="UTF-8">
+<link rel="icon" href="https://rnbw.company/images/favicon.png">
 </head>
 <body>
+  <div></div>
 </body>
 </html>`
-      nodeData.content = initialContent
-     }
-    addRunningActions(['processor-updateOpt'])
-    dispatch(setCurrentFile({ uid, parentUid: node.parentUid as TNodeUid, name: nodeData.name, content: nodeData.content }))
-    setUpdateOpt({ parse: true, from: 'file' })
+       nodeData.content = initialContent
+      }
+     addRunningActions(['processor-updateOpt'])
+     dispatch(setCurrentFile({ uid, parentUid: node.parentUid as TNodeUid, name: nodeData.name, content: nodeData.content }))
+     setUpdateOpt({ parse: true, from: 'file' })
+     setParseFile(true)
+     removeRunningActions(['fileTreeView-read'])
 
-    removeRunningActions(['fileTreeView-read'])
+    }
   }, [addRunningActions, removeRunningActions, invalidNodes, ffTree, file.uid])
 
   // handlle links-open
@@ -2028,7 +2042,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
             renderItemTitle: (props) => {
               return <>
                 <span
-                  className='text-s justify-start gap-s'
+                  className='text-s justify-start gap-s align-center'
                   style={{
                     width: "100%",
                     textOverflow: 'ellipsis',
@@ -2131,6 +2145,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     focusedItem, selectedItems, expandedItems,
     addRunningActions, removeRunningActions,
     cb_startRenamingNode, cb_abortRenamingNode, cb_renameNode,
-    cb_selectNode, cb_focusNode, cb_expandNode, cb_collapseNode, cb_readNode, cb_moveNode,
+    cb_selectNode, cb_focusNode, cb_expandNode, cb_collapseNode, cb_readNode, cb_moveNode, parseFileFlag, setParseFile
   ])
 }

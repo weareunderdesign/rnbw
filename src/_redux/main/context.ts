@@ -34,7 +34,7 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   removeRunningActions: (actionNames: string[], effect?: boolean) => { },
   // navigator
   workspace: { name: 'local', projects: [] },
-  project: { context: 'idb', name: 'default project', handler: null },
+  project: { context: 'idb', name: 'welcome', handler: null },
   navigatorDropDownType: null,
   setNavigatorDropDownType: (type: TNavigatorDropDownType) => { },
   // node actions
@@ -118,4 +118,9 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   removeMessage: (index: number) => { },
   // load project
   loadProject: (fsType: TProjectContext, projectHandle?: FileSystemHandle | null, internal?: boolean) => { },
+
+  // close all panel
+  closeAllPanel: () => {},
+  // non-parse file
+  parseFileFlag: true, setParseFile: (parseFile: boolean) => { },
 })

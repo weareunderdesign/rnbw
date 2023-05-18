@@ -106,6 +106,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     theme: _theme,
     // toasts
     addMessage, removeMessage,
+    parseFileFlag, setParseFile
   } = useContext(MainContext)
   // -------------------------------------------------------------- sync --------------------------------------------------------------
   // outline the hovered item
@@ -459,7 +460,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   }
   const onAddNode = useCallback((actionName: string) => {
     const tagName = actionName.slice(AddNodeActionPrefix.length + 2, actionName.length - 1)
-    console.log({ tagName })
     cb_addNode(tagName)
   }, [cb_addNode])
   // -------------------------------------------------------------- own --------------------------------------------------------------
@@ -468,7 +468,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   }, [])
 
   return useMemo(() => {
-    return file.uid !== '' ? <>
+    return file.uid !== '' && parseFileFlag ? <>
       <div
         id="NodeTreeView"
         style={{
@@ -696,6 +696,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     nodeTreeViewData, file,
     focusedItem, selectedItems, expandedItems,
     addRunningActions, removeRunningActions,
-    cb_selectNode, cb_focusNode, cb_expandNode, cb_collapseNode, cb_moveNode,
+    cb_selectNode, cb_focusNode, cb_expandNode, cb_collapseNode, cb_moveNode, parseFileFlag, setParseFile
   ])
 }

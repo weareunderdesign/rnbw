@@ -84,6 +84,7 @@ export default function ActionsPanel(props: ActionsPanelProps) {
     return <>
       <div
         id='ActionsPanel'
+        draggable
         className='border radius-s background-primary shadow'
         style={{
           position: 'absolute',
