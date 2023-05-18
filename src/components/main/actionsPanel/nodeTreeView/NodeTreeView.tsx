@@ -181,10 +181,19 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     let contentNode: TNode | null = null
     const refData = htmlReferenceData.elements[nodeType]
     if (refData) {
-      const { Placeholder, Content } = refData
-      if (Placeholder) {
+      const { Attributes, Content } = refData
+      if (Attributes) {
         const newNodeData = newNode.data as THtmlNodeData
-        newNodeData.attribs['placeholder'] = Placeholder
+        let temp = ""
+        Attributes.split(' ').map(attr => {
+          console.log(temp, attr)
+          temp = temp + ' ' + attr
+          if ((temp.match(/”/g) || [])?.length > 1 || (temp.match(/"/g) || [])?.length > 1) {
+            const parseAttr = temp.split('=')
+            newNodeData.attribs[parseAttr[0].trim()] = parseAttr[1].replace('”', '').replace('”', '').replace('"', '').replace('"', '')
+            temp = ""
+          }
+        })
       }
       if (Content) {
         newNode.isEntity = false

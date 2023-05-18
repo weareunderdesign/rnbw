@@ -45,7 +45,7 @@ export type THtmlElementsReference = {
   "Description": string,
   "Icon": string,
   "Content": string,
-  "Placeholder": string,
+  "Attributes": string,
   "Cover Image": string,
 }
 export type THtmlElementsReferenceData = {
