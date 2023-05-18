@@ -4,6 +4,8 @@ import {
   NodeInAppAttribName,
   RootNodeUid,
 } from '@_constants/main';
+// @ts-ignore
+import htmlAttrs from '@_ref/rfrncs/HTML Attributes.csv';
 import { getLineBreaker } from '@_services/global';
 import { TOsType } from '@_types/global';
 
@@ -292,7 +294,6 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
         const attrContent = nodeData.attribs[attr]
         return attrContent === '' ? ` ${attr}` : ` ${attr}="${attrContent}"`
       }).join('')
-
     // wrap with the current node
     if (nodeData.type === 'directive') {
       nodeHtml = `<${nodeData.data}>`
@@ -301,8 +302,8 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
       nodeHtml = `<!--${nodeData.data}-->`
       nodeHtmlInApp = `<!--${nodeData.data}-->`
     } else if (nodeData.type === 'text') {
-      // replace "<" or ">" to "&lt;" and "&gt;"
-      nodeHtml = nodeData.data.replace(/</g, `&lt;`).replace(/>/g, `&gt;`)
+      // replace "<" or ">" to "&lt;" and "&gt;", only in app
+      nodeHtml = nodeData.data
       nodeHtmlInApp = nodeData.data.replace(/</g, `&lt;`).replace(/>/g, `&gt;`)
     } else if (nodeData.type === 'script' || nodeData.type === 'style') {
       nodeHtml = `<${nodeData.type}${attribsHtml}>${childrenHtml}</${nodeData.type}>`
