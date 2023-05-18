@@ -14,8 +14,8 @@ import {
   useSelector,
 } from 'react-redux';
 
+import { SVGIconI } from '@_components/common';
 import {
-  CodeViewSyncDelay,
   DefaultTabSize,
   RootNodeUid,
 } from '@_constants/main';
@@ -98,6 +98,7 @@ export default function CodeView(props: CodeViewProps) {
     theme: _theme,
     // toasts
     addMessage, removeMessage,
+    parseFileFlag
   } = useContext(MainContext)
   // -------------------------------------------------------------- references --------------------------------------------------------------
   const isFirst = useRef<boolean>(true)
@@ -111,30 +112,31 @@ export default function CodeView(props: CodeViewProps) {
     monacoRef.current = editor
     decorationCollectionRef.current = editor.createDecorationsCollection()
     // setTimeout(function() {
-    //   editor?.getAction('editor.action.formatDocument')?.run();
-    // }, 300);
-  }, [])
-  // -------------------------------------------------------------- sync --------------------------------------------------------------
-  // build node tree refernece
-  useEffect(() => {
-    validNodeTreeRef.current = JSON.parse(JSON.stringify(validNodeTree))
-
-    // set new focused node
-    if (newFocusedNodeUid !== '') {
-      setFocusedNode(validNodeTree[newFocusedNodeUid])
-      !isFirst.current ? focusedItemRef.current = newFocusedNodeUid : null
-      setNewFocusedNodeUid('')
-    }
-  }, [validNodeTree])
-  // file content change - set code
-  useEffect(() => {
-    const _file = ffTree[file.uid]
-    if (!_file) return
-
-    if (updateOpt.from === 'code') return
-
-    const fileData = _file.data as TFileNodeData
-    codeContent.current = fileData.content
+      //   editor?.getAction('editor.action.formatDocument')?.run();
+      // }, 300);
+    }, [])
+    // -------------------------------------------------------------- sync --------------------------------------------------------------
+    // build node tree refernece
+    useEffect(() => {
+      validNodeTreeRef.current = JSON.parse(JSON.stringify(validNodeTree))
+      
+      // set new focused node
+      if (newFocusedNodeUid !== '') {
+        setFocusedNode(validNodeTree[newFocusedNodeUid])
+        !isFirst.current ? focusedItemRef.current = newFocusedNodeUid : null
+        setNewFocusedNodeUid('')
+      }
+    }, [validNodeTree])
+    // file content change - set code
+    useEffect(() => {
+      const _file = ffTree[file.uid]
+      if (!_file) return
+      
+      if (updateOpt.from === 'code') return
+      
+      const fileData = _file.data as TFileNodeData
+      setLanguage(fileData.type === 'unknown' ? 'html' : fileData.type)
+      codeContent.current = fileData.content
   }, [ffTree[file.uid]])
   // focusedItem - code select
   const focusedItemRef = useRef<TNodeUid>('')
@@ -270,6 +272,9 @@ export default function CodeView(props: CodeViewProps) {
       // expand path to the uid
       const _expandedItems: TNodeUid[] = []
       let node = validNodeTree[focusedNode.uid]
+      if (!node) {
+        return
+      }
       while (node.uid !== RootNodeUid) {
         _expandedItems.push(node.uid)
         node = validNodeTree[node.parentUid as TNodeUid]
@@ -286,158 +291,175 @@ export default function CodeView(props: CodeViewProps) {
   // code edit - highlight/parse
   const reduxTimeout = useRef<NodeJS.Timeout | null>(null)
   const saveFileContentToRedux = useCallback(() => {
-    // clear highlight
-    decorationCollectionRef.current?.clear()
-
-    // skip same content
-    const _file = ffTree[file.uid]
-    const fileData = _file.data as TFileNodeData
-    if (fileData.content === codeContent.current) {
-      validNodeTreeRef.current = JSON.parse(JSON.stringify(validNodeTree))
-
+    if (parseFileFlag) {
+      // clear highlight
+      decorationCollectionRef.current?.clear()
+  
+      // skip same content
+      const _file = ffTree[file.uid]
+      const fileData = _file.data as TFileNodeData
+      if (fileData.content === codeContent.current) {
+        validNodeTreeRef.current = JSON.parse(JSON.stringify(validNodeTree))
+  
+        codeChangeDecorationRef.current.clear()
+        setCodeEditing(false)
+        return
+      }
+  
+      // get code changes
+      const currentCode = codeContent.current
+      const currentCodeArr = currentCode.split(getLineBreaker(osType))
+      const codeChanges: TCodeChange[] = []
+      for (const codeChange of codeChangeDecorationRef.current.entries()) {
+        const uid = codeChange[0]
+  
+        const { startLineNumber, startColumn, endLineNumber, endColumn } = codeChange[1][0].range
+        const partCodeArr: string[] = []
+        partCodeArr.push(currentCodeArr[startLineNumber !== 0 ? startLineNumber - 1 : 0].slice(startColumn !== 0 ? startColumn - 1 : 0))
+        for (let line = startLineNumber - 1 + 1; line < endLineNumber - 1; ++line) {
+          partCodeArr.push(currentCodeArr[line])
+        }
+        endLineNumber > startLineNumber && partCodeArr.push(currentCodeArr[endLineNumber - 1].slice(0, endColumn - 1))
+        const content = partCodeArr.join(getLineBreaker(osType))
+  
+        codeChanges.push({ uid, content })
+      }
+      setCodeChanges(codeChanges)
+      
+      // update
+      dispatch(setCurrentFileContent(codeContent.current))
+      addRunningActions(['processor-updateOpt'])
+      setUpdateOpt({ parse: true, from: 'code' })
+  
+      codeChangeDecorationRef.current.clear()
+      reduxTimeout.current = null
+      setFocusedNode(undefined)
+    }
+    else {
+      // non-parse file save
+      const _file = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode
+      addRunningActions(['processor-updateOpt'])
+      const fileData = _file.data as TFileNodeData
+      (ffTree[file.uid].data as TFileNodeData).content = codeContent.current;
+      (ffTree[file.uid].data as TFileNodeData).contentInApp = codeContent.current;
+      (ffTree[file.uid].data as TFileNodeData).changed = codeContent.current !== fileData.orgContent;
+      setFFTree(ffTree)
+      setUpdateOpt({ parse: true, from: 'code' })
       codeChangeDecorationRef.current.clear()
       setCodeEditing(false)
-      return
     }
-
-    // get code changes
-    const currentCode = codeContent.current
-    const currentCodeArr = currentCode.split(getLineBreaker(osType))
-    const codeChanges: TCodeChange[] = []
-    for (const codeChange of codeChangeDecorationRef.current.entries()) {
-      const uid = codeChange[0]
-
-      const { startLineNumber, startColumn, endLineNumber, endColumn } = codeChange[1][0].range
-      const partCodeArr: string[] = []
-      partCodeArr.push(currentCodeArr[startLineNumber !== 0 ? startLineNumber - 1 : 0].slice(startColumn !== 0 ? startColumn - 1 : 0))
-      for (let line = startLineNumber - 1 + 1; line < endLineNumber - 1; ++line) {
-        partCodeArr.push(currentCodeArr[line])
-      }
-      endLineNumber > startLineNumber && partCodeArr.push(currentCodeArr[endLineNumber - 1].slice(0, endColumn - 1))
-      const content = partCodeArr.join(getLineBreaker(osType))
-
-      codeChanges.push({ uid, content })
-    }
-    setCodeChanges(codeChanges)
-
-    // update
-    dispatch(setCurrentFileContent(codeContent.current))
-    addRunningActions(['processor-updateOpt'])
-    setUpdateOpt({ parse: true, from: 'code' })
-
-    codeChangeDecorationRef.current.clear()
-    reduxTimeout.current = null
-    setFocusedNode(undefined)
   }, [ffTree, file.uid, validNodeTree, osType])
   const handleEditorChange = useCallback((value: string | undefined, ev: monaco.editor.IModelContentChangedEvent) => {
-    const hasFocus = monacoRef.current?.hasTextFocus()
-    if (!hasFocus) return
+    if (parseFileFlag){
+      const hasFocus = monacoRef.current?.hasTextFocus()
 
-    if (!focusedNode) return
-
-    // get changed part
-    const { eol } = ev
-    const { range: o_range, text: changedCode } = ev.changes[0]
-    const o_rowCount = o_range.endLineNumber - o_range.startLineNumber + 1
-
-    const changedCodeArr = changedCode.split(eol)
-    const n_rowCount = changedCodeArr.length
-    const n_range: monaco.IRange = {
-      startLineNumber: o_range.startLineNumber,
-      startColumn: o_range.startColumn,
-      endLineNumber: o_range.startLineNumber + n_rowCount - 1,
-      endColumn: n_rowCount === 1 ? o_range.startColumn + changedCode.length : (changedCodeArr.pop() as string).length + 1,
-    }
-
-    const columnOffset = (o_rowCount === 1 && n_rowCount > 1 ? -1 : 1) * (n_range.endColumn - o_range.endColumn)
-
-    // update code range for node tree
-    const focusedNodeData = focusedNode.data as THtmlNodeData
-    const uids = getSubNodeUidsByBfs(RootNodeUid, validNodeTreeRef.current)
-    let completelyRemoved = false
-    uids.map(uid => {
-      const node = validNodeTreeRef.current[uid]
-      if (!node) return
-
-      const nodeData = node.data as THtmlNodeData
-      const { startLineNumber, startColumn, endLineNumber, endColumn } = nodeData
-
-      const containFront = focusedNodeData.startLineNumber === startLineNumber ?
-        focusedNodeData.startColumn >= startColumn
-        : focusedNodeData.startLineNumber > startLineNumber
-      const containBack = focusedNodeData.endLineNumber === endLineNumber ?
-        focusedNodeData.endColumn <= endColumn
-        : focusedNodeData.endLineNumber < endLineNumber
-
-      if (containFront && containBack) {
-        nodeData.endLineNumber += n_rowCount - o_rowCount
-        nodeData.endColumn += endLineNumber === o_range.endLineNumber ? columnOffset : 0
-
-        if (nodeData.endLineNumber === nodeData.startLineNumber && nodeData.endColumn === nodeData.startColumn) {
-          const parentNode = validNodeTreeRef.current[focusedNode.parentUid as TNodeUid]
-          parentNode.children = parentNode.children.filter(c_uid => c_uid !== focusedNode.uid)
-
-          const subNodeUids = getSubNodeUidsByBfs(focusedNode.uid, validNodeTreeRef.current)
-          subNodeUids.map(uid => {
-            codeChangeDecorationRef.current.delete(uid)
-            delete validNodeTreeRef.current[uid]
-          })
-
-          completelyRemoved = true
-        }
-      } else if (containBack) {
-        nodeData.startLineNumber += n_rowCount - o_rowCount
-        nodeData.startColumn += startLineNumber === o_range.endLineNumber ? columnOffset : 0
-        nodeData.endLineNumber += n_rowCount - o_rowCount
-        nodeData.endColumn += endLineNumber === o_range.endLineNumber ? columnOffset : 0
+      if (!hasFocus) return
+  
+      if (!focusedNode) return
+  
+      // get changed part
+      const { eol } = ev
+      const { range: o_range, text: changedCode } = ev.changes[0]
+      const o_rowCount = o_range.endLineNumber - o_range.startLineNumber + 1
+  
+      const changedCodeArr = changedCode.split(eol)
+      const n_rowCount = changedCodeArr.length
+      const n_range: monaco.IRange = {
+        startLineNumber: o_range.startLineNumber,
+        startColumn: o_range.startColumn,
+        endLineNumber: o_range.startLineNumber + n_rowCount - 1,
+        endColumn: n_rowCount === 1 ? o_range.startColumn + changedCode.length : (changedCodeArr.pop() as string).length + 1,
       }
-    })
-    if (!completelyRemoved) {
-      const subNodeUids = getSubNodeUidsByBfs(focusedNode.uid, validNodeTreeRef.current, false)
-      subNodeUids.map(uid => {
-        codeChangeDecorationRef.current.delete(uid)
-
+  
+      const columnOffset = (o_rowCount === 1 && n_rowCount > 1 ? -1 : 1) * (n_range.endColumn - o_range.endColumn)
+  
+      // update code range for node tree
+      const focusedNodeData = focusedNode.data as THtmlNodeData
+      const uids = getSubNodeUidsByBfs(RootNodeUid, validNodeTreeRef.current)
+      let completelyRemoved = false
+      uids.map(uid => {
         const node = validNodeTreeRef.current[uid]
+        if (!node) return
+  
         const nodeData = node.data as THtmlNodeData
-        nodeData.startLineNumber = 0
-        nodeData.startColumn = 0
-        nodeData.endLineNumber = 0
-        nodeData.endColumn = 0
-      })
-    }
-
-    // update decorations
-    const focusedNodeDecorations: monaco.editor.IModelDeltaDecoration[] = []
-    const focusedNodeCodeRange: monaco.IRange = validNodeTreeRef.current[focusedNode.uid].data as THtmlNodeData
-    if (!completelyRemoved) {
-      focusedNodeDecorations.push(
-        {
-          range: focusedNodeCodeRange,
-          options: {
-            isWholeLine: true,
-            className: 'focusedNodeCode',
+        const { startLineNumber, startColumn, endLineNumber, endColumn } = nodeData
+  
+        const containFront = focusedNodeData.startLineNumber === startLineNumber ?
+          focusedNodeData.startColumn >= startColumn
+          : focusedNodeData.startLineNumber > startLineNumber
+        const containBack = focusedNodeData.endLineNumber === endLineNumber ?
+          focusedNodeData.endColumn <= endColumn
+          : focusedNodeData.endLineNumber < endLineNumber
+  
+        if (containFront && containBack) {
+          nodeData.endLineNumber += n_rowCount - o_rowCount
+          nodeData.endColumn += endLineNumber === o_range.endLineNumber ? columnOffset : 0
+  
+          if (nodeData.endLineNumber === nodeData.startLineNumber && nodeData.endColumn === nodeData.startColumn) {
+            const parentNode = validNodeTreeRef.current[focusedNode.parentUid as TNodeUid]
+            parentNode.children = parentNode.children.filter(c_uid => c_uid !== focusedNode.uid)
+  
+            const subNodeUids = getSubNodeUidsByBfs(focusedNode.uid, validNodeTreeRef.current)
+            subNodeUids.map(uid => {
+              codeChangeDecorationRef.current.delete(uid)
+              delete validNodeTreeRef.current[uid]
+            })
+  
+            completelyRemoved = true
           }
-        },
-      )
+        } else if (containBack) {
+          nodeData.startLineNumber += n_rowCount - o_rowCount
+          nodeData.startColumn += startLineNumber === o_range.endLineNumber ? columnOffset : 0
+          nodeData.endLineNumber += n_rowCount - o_rowCount
+          nodeData.endColumn += endLineNumber === o_range.endLineNumber ? columnOffset : 0
+        }
+      })
+      if (!completelyRemoved) {
+        const subNodeUids = getSubNodeUidsByBfs(focusedNode.uid, validNodeTreeRef.current, false)
+        subNodeUids.map(uid => {
+          codeChangeDecorationRef.current.delete(uid)
+  
+          const node = validNodeTreeRef.current[uid]
+          const nodeData = node.data as THtmlNodeData
+          nodeData.startLineNumber = 0
+          nodeData.startColumn = 0
+          nodeData.endLineNumber = 0
+          nodeData.endColumn = 0
+        })
+      }
+  
+      // update decorations
+      const focusedNodeDecorations: monaco.editor.IModelDeltaDecoration[] = []
+      const focusedNodeCodeRange: monaco.IRange = validNodeTreeRef.current[focusedNode.uid].data as THtmlNodeData
+      if (!completelyRemoved) {
+        focusedNodeDecorations.push(
+          {
+            range: focusedNodeCodeRange,
+            options: {
+              isWholeLine: true,
+              className: 'focusedNodeCode',
+            }
+          },
+        )
+      }
+      codeChangeDecorationRef.current.set(focusedNode.uid, focusedNodeDecorations)
+  
+      // render decorations
+      const decorationsList = codeChangeDecorationRef.current.values()
+      const wholeDecorations: monaco.editor.IModelDeltaDecoration[] = []
+      for (const decorations of decorationsList) {
+        wholeDecorations.push(...decorations)
+      }
+      decorationCollectionRef.current?.set(wholeDecorations)
+  
     }
-    codeChangeDecorationRef.current.set(focusedNode.uid, focusedNodeDecorations)
-
-    // render decorations
-    const decorationsList = codeChangeDecorationRef.current.values()
-    const wholeDecorations: monaco.editor.IModelDeltaDecoration[] = []
-    for (const decorations of decorationsList) {
-      wholeDecorations.push(...decorations)
-    }
-    decorationCollectionRef.current?.set(wholeDecorations)
-
     // update redux with debounce
     codeContent.current = value || ''
-
     reduxTimeout.current !== null && clearTimeout(reduxTimeout.current)
-    reduxTimeout.current = setTimeout(saveFileContentToRedux, CodeViewSyncDelay)
+    reduxTimeout.current = setTimeout(saveFileContentToRedux, 500)
 
     setCodeEditing(true)
-  }, [saveFileContentToRedux, focusedNode])
+  }, [saveFileContentToRedux, focusedNode, activePanel])
   // -------------------------------------------------------------- monaco-editor options --------------------------------------------------------------
   // tabSize
   const [_tabSize, _setTabSize] = useState<number>(DefaultTabSize)
@@ -451,6 +473,10 @@ export default function CodeView(props: CodeViewProps) {
   const [language, setLanguage] = useState('html')
   // theme
   const [theme, setTheme] = useState<'vs-dark' | 'light'>()
+
+  // height
+  const [height, setHeight] = useState(localStorage.getItem('codeViewHeight'))
+  const initHeight = useRef(true)
   const setSystemTheme = useCallback(() => {
     if (
       window.matchMedia &&
@@ -460,6 +486,8 @@ export default function CodeView(props: CodeViewProps) {
     } else {
       setTheme('light')
     }
+    setHeight(localStorage.getItem('codeViewHeight'))    
+    initHeight.current = true
   }, [])
   useEffect(() => {
     _theme === 'Dark' ? setTheme('vs-dark') :
@@ -489,23 +517,86 @@ export default function CodeView(props: CodeViewProps) {
     }
   }, [editorWrapperRef.current])
 
+  // hide dragging preview
+  const dragStart = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    const ele = document.getElementById('CodeView')
+    if (ele){
+      let crt = ele.cloneNode(true) as HTMLElement;
+      // crt.style.backgroundColor = "red";
+      // crt.style.display = "none"; /* or visibility: hidden, or any of the above */
+      // document.body.appendChild(crt);
+      // console.log(crt)
+    }
+  }, [])
+
+  const resize_ob = new ResizeObserver(function(entries) {
+    // since we are observing only a single element, so we access the first element in entries array
+    let rect = entries[0].contentRect;
+  
+    // current width & height
+    let width = rect.width;
+    let height = rect.height;
+    const real_height = (height / document.documentElement.clientHeight * 100 < 1 ? 1 : height / document.documentElement.clientHeight * 100).toString()
+    if (!initHeight.current) {
+      real_height !== '1' && localStorage.setItem('codeViewHeight', real_height)
+    }
+    initHeight.current = false
+  });
+
+  useEffect(() => {
+    const ele = document.getElementById('CodeView')
+    if (ele) {
+      resize_ob.observe(ele);
+    }
+
+  }, [])
+
+  
+
   return useMemo(() => {
     return <>
       <div
         id="CodeView"
+        draggable
+        onDrag={
+          props.dragCodeView
+        }
+        onDragEnd={
+          props.dragEndCodeView
+        }
+        onDrop={
+          props.dropCodeView
+        }
+        onDragStart={(e) => {
+          dragStart(e)
+        }}
+        onDragCapture={(e) => {e.preventDefault()}}
+        onDragOver={(e) => {e.preventDefault()}}
         style={{
           position: 'absolute',
-          bottom: props.offsetBottom,
+          top: props.offsetTop,
           left: props.offsetLeft,
           width: props.width,
-          height: props.height,
-
+          height: height + 'vh',
+          zIndex: 999,
           overflow: 'hidden',
+          minHeight: '180px',
+          resize: 'vertical',
         }}
-        className='border padding-s radius-s background-primary shadow'
+        className={'border padding-s radius-s background-primary shadow' + (props.codeViewDragging ? ' dragging' : '')}
         onClick={onPanelClick}
         ref={editorWrapperRef}
       >
+        <div 
+          id="CodeViewHeader"
+          style={{
+            width: '100%',
+            height: '18px',
+            cursor: 'move'
+          }}
+        >
+          <SVGIconI {...{ "class": "icon-xs" }}>list</SVGIconI>
+        </div>
         <Editor
           defaultLanguage={"html"}
           language={language}
@@ -513,7 +604,7 @@ export default function CodeView(props: CodeViewProps) {
           value={codeContent.current}
           theme={theme}
           // line={line}
-          // beforeMount={() => {}}
+          // beforeMount={() => {}
           onMount={handleEditorDidMount}
           onChange={handleEditorChange}
           options={{
@@ -534,6 +625,6 @@ export default function CodeView(props: CodeViewProps) {
     props, onPanelClick,
     language, theme,
     handleEditorDidMount, handleEditorChange,
-    tabSize, wordWrap,
+    tabSize, wordWrap, parseFileFlag, activePanel
   ])
 }
