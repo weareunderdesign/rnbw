@@ -125,6 +125,9 @@ export type TMainContext = {
   addMessage: (message: TToast) => void,
   removeMessage: (index: number) => void,
   loadProject: (fsType: TProjectContext, projectHandle?: FileSystemHandle | null, internal?: boolean | true) => void
+  closeAllPanel: () => void,
+  parseFileFlag: boolean,
+  setParseFile: (parseFile: boolean) => void,
 }
 export type TUpdateOptions = {
   parse: boolean | null,
