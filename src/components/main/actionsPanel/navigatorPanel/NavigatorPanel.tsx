@@ -14,13 +14,18 @@ import {
 } from 'react-redux';
 
 import { SVGIcon } from '@_components/common';
+import { RootNodeUid } from '@_constants/main';
 import { TFileNodeData } from '@_node/file';
 import { THtmlNodeData } from '@_node/html';
+import { TNodeUid } from '@_node/types';
 import {
+  expandFNNode,
   ffSelector,
+  focusFNNode,
   globalSelector,
   MainContext,
   navigatorSelector,
+  selectFNNode,
 } from '@_redux/main';
 import { TProject } from '@_types/main';
 
@@ -107,7 +112,41 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
     else{
       setFavicon('')
     }
-    console.log({ workspace, project, ffTree, file, validNodeTree })
+    
+    if (file.uid !== '') {
+      let bodyId = '0'
+      for (let x in validNodeTree) {
+        if (validNodeTree[x].data.type === 'tag' && validNodeTree[x].data.name === 'body'){
+          bodyId = validNodeTree[x].uid
+          break;
+        }
+      }
+      if (bodyId !== '0') {
+        let firstNodeId = '0'
+        for (let x in validNodeTree) {
+          if (validNodeTree[x].data.type === 'tag' && validNodeTree[x].parentUid === bodyId){
+            firstNodeId = validNodeTree[x].uid
+            break;
+          }
+        }
+        if (firstNodeId !== '0') {
+          addRunningActions(['stageView-focus'])
+          // expand path to the uid
+          const _expandedItems: TNodeUid[] = []
+          let node = nodeTree[firstNodeId]
+          while (node.uid !== RootNodeUid) {
+            _expandedItems.push(node.uid)
+            node = nodeTree[node.parentUid as TNodeUid]
+          }
+          _expandedItems.shift()
+          dispatch(expandFNNode(_expandedItems))
+          dispatch(focusFNNode(firstNodeId))
+          dispatch(selectFNNode([firstNodeId]))
+          removeRunningActions(['stageView-focus'])
+        }
+      }
+    }
+    console.log({ workspace, project, ffTree, file, validNodeTree, selectedItems})
   }, [validNodeTree])
   // -------------------------------------------------------------- sync --------------------------------------------------------------
   const [unsavedProject, setUnsavedProject] = useState(false)
