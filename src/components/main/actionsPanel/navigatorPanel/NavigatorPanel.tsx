@@ -156,10 +156,19 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
       if (!ffTree[x].data) continue 
       const nodeData = ffTree[x].data as unknown as TFileNodeData
       if (nodeData.changed) {
+        
         setUnsavedProject(true)
       }
     }
   }, [ffTree])
+
+  // set app's favicon
+  useEffect(() => {
+    let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement
+    if (link) {
+      link.href = unsavedProject ? unsavedProjectImg : 'https://rnbw.company/images/favicon.png'
+    }
+  }, [unsavedProject]);
   // -------------------------------------------------------------- dropdown --------------------------------------------------------------
   const navigatorPanelRef = useRef<HTMLDivElement | null>(null)
   const navigatorDropDownRef = useRef<HTMLDivElement | null>(null)
