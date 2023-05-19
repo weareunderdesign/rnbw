@@ -628,7 +628,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         return
       }
     }
-    console.log(_uids)
 
     addRunningActions(['fileTreeView-select'])
     dispatch(selectFFNode(_uids))
@@ -1848,7 +1847,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     setClipboardData({ panel: 'file', type: 'cut', uids: selectedItems, fileType: ffTree[file.uid].data.type, data: {} })
   }, [selectedItems, ffTree[file.uid]])
   const onCopy = useCallback(() => {
-    console.log(selectedItems)
     setClipboardData({ panel: 'file', type: 'copy', uids: selectedItems, fileType: ffTree[file.uid].data.type, data: {} })
   }, [selectedItems, ffTree[file.uid]])
   const onPaste = useCallback(() => {
@@ -2018,8 +2016,8 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                       {props.arrow}
 
                       {fileReferenceData ?
-                        <SVGIconI {...{ "class": "icon-xs" }}>{props.item.data?.data.kind === 'file' && props.item.data?.data.name === 'index' && props.item.data?.data.type === 'html' ? 'home' :  props.item.data?.data.kind === 'file' && props.item.data?.data.type === "unknown" ? 'page' : fileReferenceData['Icon']}</SVGIconI>
-                        : <div className='icon-xs'><SVGIconI {...{ "class": "icon-xs" }}>{props.item.data?.data.kind === 'file' ? 'page' : 'folder'}</SVGIconI></div>}
+                        <SVGIconI {...{ "class": "icon-xs" }}>{props.item.data?.data.kind === 'file' && props.item.data?.data.name === 'index' && props.item.data?.data.type === 'html' ? 'home' :  fileReferenceData['Icon'] ? fileReferenceData['Icon'] : 'page'}</SVGIconI>
+                        : <div className='icon-xs'><SVGIconI {...{ "class": "icon-xs" }}>{props.item.data?.data.kind === 'file' ? fileReferenceData['Icon'] : 'folder'}</SVGIconI></div>}
                     </div>
 
                     {props.title}
