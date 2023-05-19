@@ -854,6 +854,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     setFFTree(tmpTree)
 
     setInvalidNodes(tmpNode.uid)
+    openFile(tmpNode.uid)
   }, [ffTree, focusedItem, expandedItemsObj])
   const createFFNode = useCallback(async (parentUid: TNodeUid, ffType: TFileNodeType, ffName: string) => {
     addRunningActions(['fileTreeView-create'])
@@ -2100,6 +2101,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           callbacks={{
             onStartRenamingItem: (item) => {
               cb_startRenamingNode(item.index as TNodeUid)
+              cb_abortRenamingNode(item)
             },
             onAbortRenamingItem: (item) => {
               cb_abortRenamingNode(item)

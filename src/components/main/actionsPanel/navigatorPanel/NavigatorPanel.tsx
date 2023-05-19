@@ -177,10 +177,10 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
           {/* project */}
           <>
             <div className="gap-s align-center" onClick={onProjectClick}>
-              <div className="radius-m icon-s align-center background-secondary">
+              <div className="radius-m icon-s align-center">
                 {favicon === null || favicon === "" ? 
                   <></> : 
-                  <img className='icon-s' src={project.context === 'idb' ? 'https://rnbw.company/images/favicon.png' : favicon}></img>
+                  <img className='icon-s' style={{'borderRadius': '50%'}} src={project.context === 'idb' ? 'https://rnbw.company/images/favicon.png' : favicon}></img>
                 }
               </div>
               <span className="text-s">{project.name}</span>
@@ -222,10 +222,10 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
               {/* project */}
               <>
                 <div className="gap-s align-center" onClick={onProjectClick}>
-                  <div className="radius-m icon-s align-center background-secondary">
+                  <div className="radius-m icon-s align-center">
                     {favicon === null || favicon === "" ? 
                       <></> : 
-                      <img className='icon-s' src={project.context === 'idb' ? 'https://rnbw.company/images/favicon.png' : favicon}></img>
+                      <img className='icon-s' style={{'borderRadius': '50%'}} src={project.context === 'idb' ? 'https://rnbw.company/images/favicon.png' : favicon}></img>
                     }
                   </div>
                   <span className="text-s">{project.name}</span>

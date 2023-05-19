@@ -130,7 +130,6 @@ export const IFrame = (props: IFrameProps) => {
     const newFocusedElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${focusedItem}"]`)
     const elementRect = (newFocusedElement as HTMLElement)?.getBoundingClientRect()
     setTimeout(() => newFocusedElement?.scrollIntoView({ block: 'nearest', inline: 'start', behavior: 'smooth' }), 50)
-    console.log(elementRect, contentRef?.contentWindow?.document.documentElement.clientHeight)
     if (elementRect) {
       if (elementRect.y < 0) {
         setCodeViewOffsetTop('66')
