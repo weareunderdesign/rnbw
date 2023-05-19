@@ -40,7 +40,7 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   // node actions
   activePanel: 'unknown',
   setActivePanel: (panel: TPanelContext) => { },
-  clipboardData: { panel: 'unknown', type: null, uids: [] },
+  clipboardData: { panel: 'unknown', type: null, uids: [], fileType: 'html', data: {} },
   setClipboardData: (data: TClipboardData) => { },
   event: null,
   setEvent: (e: TEvent) => { },
@@ -93,6 +93,7 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   setTabSize: (size: number) => { },
   newFocusedNodeUid: '',
   setNewFocusedNodeUid: (uid: TNodeUid) => { },
+  setCodeViewOffsetTop: (offsetTop: string) => { },
   // processor
   updateOpt: { parse: null, from: null },
   setUpdateOpt: (opt: TUpdateOptions) => { },

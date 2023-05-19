@@ -1845,11 +1845,12 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     cb_deleteNode()
   }, [cb_deleteNode])
   const onCut = useCallback(() => {
-    setClipboardData({ panel: 'file', type: 'cut', uids: selectedItems })
-  }, [selectedItems])
+    setClipboardData({ panel: 'file', type: 'cut', uids: selectedItems, fileType: ffTree[file.uid].data.type, data: {} })
+  }, [selectedItems, ffTree[file.uid]])
   const onCopy = useCallback(() => {
-    setClipboardData({ panel: 'file', type: 'copy', uids: selectedItems })
-  }, [selectedItems])
+    console.log(selectedItems)
+    setClipboardData({ panel: 'file', type: 'copy', uids: selectedItems, fileType: ffTree[file.uid].data.type, data: {} })
+  }, [selectedItems, ffTree[file.uid]])
   const onPaste = useCallback(() => {
     if (clipboardData.panel !== 'file') return
 
@@ -1859,7 +1860,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     if (uids.length === 0) return
 
     if (clipboardData.type === 'cut') {
-      setClipboardData({ panel: 'file', type: 'cut', uids: [] })
+      setClipboardData({ panel: 'file', type: 'cut', uids: [], fileType: 'html', data: {} })
       cb_moveNode(uids, focusedItem)
     } else if (clipboardData.type === 'copy') {
       cb_moveNode(uids, focusedItem, true)

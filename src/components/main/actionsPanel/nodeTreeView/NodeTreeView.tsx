@@ -186,7 +186,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
         const newNodeData = newNode.data as THtmlNodeData
         let temp = ""
         Attributes.split(' ').map(attr => {
-          console.log(temp, attr)
           temp = temp + ' ' + attr
           if ((temp.match(/”/g) || [])?.length > 1 || (temp.match(/"/g) || [])?.length > 1) {
             const parseAttr = temp.split('=')
@@ -429,12 +428,13 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
   const onCut = useCallback(() => {
     if (selectedItems.length === 0) return
-    setClipboardData({ panel: 'node', type: 'cut', uids: selectedItems })
-  }, [selectedItems])
+    setClipboardData({ panel: 'node', type: 'cut', uids: selectedItems, fileType: ffTree[file.uid].data.type, data: {} })
+  }, [selectedItems, ffTree[file.uid]])
   const onCopy = useCallback(() => {
+    console.log(selectedItems, ffTree, ffTree[file.uid].data)
     if (selectedItems.length === 0) return
-    setClipboardData({ panel: 'node', type: 'copy', uids: selectedItems })
-  }, [selectedItems])
+    setClipboardData({ panel: 'node', type: 'copy', uids: selectedItems, fileType: ffTree[file.uid].data.type, data: {} })
+  }, [selectedItems, ffTree[file.uid]])
   const onPaste = useCallback(() => {
     if (clipboardData.panel !== 'node') return
 
@@ -445,7 +445,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     const childIndex = getNodeChildIndex(parentNode, focusedNode)
 
     if (clipboardData.type === 'cut') {
-      setClipboardData({ panel: 'unknown', type: null, uids: [] })
+      setClipboardData({ panel: 'unknown', type: null, uids: [], fileType: 'html', data: {} })
       cb_moveNode(uids, parentNode.uid, true, childIndex + 1)
     } else {
       cb_copyNode(uids, parentNode.uid, true, childIndex + 1)

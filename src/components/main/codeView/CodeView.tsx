@@ -14,7 +14,6 @@ import {
   useSelector,
 } from 'react-redux';
 
-import { SVGIconI } from '@_components/common';
 import {
   DefaultTabSize,
   RootNodeUid,
@@ -529,35 +528,13 @@ export default function CodeView(props: CodeViewProps) {
     }
   }, [])
 
-  const resize_ob = new ResizeObserver(function(entries) {
-    // since we are observing only a single element, so we access the first element in entries array
-    let rect = entries[0].contentRect;
-  
-    // current width & height
-    let width = rect.width;
-    let height = rect.height;
-    const real_height = (height / document.documentElement.clientHeight * 100 < 1 ? 1 : height / document.documentElement.clientHeight * 100).toString()
-    if (!initHeight.current) {
-      real_height !== '1' && localStorage.setItem('codeViewHeight', real_height)
-    }
-    initHeight.current = false
-  });
-
-  useEffect(() => {
-    const ele = document.getElementById('CodeView')
-    if (ele) {
-      resize_ob.observe(ele);
-    }
-
-  }, [])
-
   
 
   return useMemo(() => {
     return <>
       <div
         id="CodeView"
-        draggable
+        // draggable
         onDrag={
           props.dragCodeView
         }
@@ -577,26 +554,27 @@ export default function CodeView(props: CodeViewProps) {
           top: props.offsetTop,
           left: props.offsetLeft,
           width: props.width,
-          height: height + 'vh',
+          height: props.height,
           zIndex: 999,
           overflow: 'hidden',
           minHeight: '180px',
-          resize: 'vertical',
         }}
-        className={'border padding-s radius-s background-primary shadow' + (props.codeViewDragging ? ' dragging' : '')}
+        className={'border radius-s background-primary shadow' + (props.codeViewDragging ? ' dragging' : '')}
         onClick={onPanelClick}
         ref={editorWrapperRef}
       >
-        <div 
+        {/* <div 
           id="CodeViewHeader"
           style={{
             width: '100%',
-            height: '18px',
-            cursor: 'move'
+            height: '23px',
+            cursor: 'move',
+            paddingTop: '5px',
+            paddingLeft: '10px'
           }}
         >
           <SVGIconI {...{ "class": "icon-xs" }}>list</SVGIconI>
-        </div>
+        </div> */}
         <Editor
           defaultLanguage={"html"}
           language={language}

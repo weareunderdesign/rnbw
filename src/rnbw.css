@@ -166,3 +166,15 @@ body{
 .navigator-project-item:hover .navigator-project-item-name {
   opacity: 1;
 }
+.monaco-editor{
+  width: 100% !important;
+  height: 100% !important;
+}
+.overflow-guard{
+  width: 100% !important;
+  height: 100% !important;
+}
+.monaco-scrollable-element.editor-scrollable {
+  height: 100% !important;
+  width: calc(100% - 64px) !important;
+}

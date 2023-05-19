@@ -1,5 +1,6 @@
 import {
   THtmlPageSettings,
+  TNodeTreeData,
   TNodeUid,
 } from '@_node/index';
 
@@ -46,6 +47,8 @@ export type TClipboardData = {
   panel: TPanelContext,
   type: 'cut' | 'copy' | null,
   uids: TNodeUid[],
+  fileType: 'html' | 'unknown',
+  data: TNodeTreeData
 }
 export type TCmdkReference = {
   "Featured"?: boolean,

@@ -103,6 +103,7 @@ export type TMainContext = {
   setTabSize: (size: number) => void,
   newFocusedNodeUid: TNodeUid,
   setNewFocusedNodeUid: (uid: TNodeUid) => void,
+  setCodeViewOffsetTop: (offsetTop: string) => void,
   // processor
   updateOpt: TUpdateOptions,
   setUpdateOpt: (opt: TUpdateOptions) => void,

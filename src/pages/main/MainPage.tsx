@@ -168,7 +168,7 @@ export default function MainPage(props: MainPageProps) {
   const [navigatorDropDownType, setNavigatorDropDownType] = useState<TNavigatorDropDownType>(null)
   // node actions
   const [activePanel, setActivePanel] = useState<TPanelContext>('unknown')
-  const [clipboardData, setClipboardData] = useState<TClipboardData>({ panel: 'unknown', type: null, uids: [] })
+  const [clipboardData, setClipboardData] = useState<TClipboardData>({ panel: 'unknown', type: null, uids: [], fileType: 'html', data: {} })
   const [event, setEvent] = useState<TEvent>(null)
   // actions panel
   const [showActionsPanel, setShowActionsPanel] = useState(false)
@@ -1079,20 +1079,14 @@ export default function MainPage(props: MainPageProps) {
     }
 
     // set initial codeview height & offset
-    const offsetTop = localStorage.getItem("offsetTop")
-    const codeViewHeight = localStorage.getItem("codeViewHeight")
-    if (offsetTop) {
-      setCodeViewOffsetTop(offsetTop)
-    }
-    else {
-      setCodeViewOffsetTop('66')
-    }
-    if (codeViewHeight) {
-      setCodeViewHeight(codeViewHeight)
-    }
-    else {
-      setCodeViewHeight('33.33')
-    }
+    // const offsetTop = localStorage.getItem("offsetTop")
+    // const codeViewHeight = localStorage.getItem("codeViewHeight")
+    // if (offsetTop) {
+    //   setCodeViewOffsetTop(offsetTop)
+    // }
+    // else {
+    //   setCodeViewOffsetTop('66')
+    // }
 
   }, [])
   // theme
@@ -1261,6 +1255,7 @@ export default function MainPage(props: MainPageProps) {
         codeChanges, setCodeChanges,
         tabSize, setTabSize,
         newFocusedNodeUid, setNewFocusedNodeUid,
+        setCodeViewOffsetTop,
         // processor
         updateOpt, setUpdateOpt,
         // references

@@ -77,6 +77,7 @@ export const IFrame = (props: IFrameProps) => {
     codeChanges, setCodeChanges,
     tabSize, setTabSize,
     newFocusedNodeUid, setNewFocusedNodeUid,
+    setCodeViewOffsetTop,
     // processor
     updateOpt, setUpdateOpt,
     // references
@@ -127,8 +128,28 @@ export const IFrame = (props: IFrameProps) => {
     if (focusedItemRef.current === focusedItem) return
 
     const newFocusedElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${focusedItem}"]`)
+    const elementRect = (newFocusedElement as HTMLElement)?.getBoundingClientRect()
     setTimeout(() => newFocusedElement?.scrollIntoView({ block: 'nearest', inline: 'start', behavior: 'smooth' }), 50)
-
+    console.log(elementRect, contentRef?.contentWindow?.document.documentElement.clientHeight)
+    if (elementRect) {
+      if (elementRect.y < 0) {
+        setCodeViewOffsetTop('66')
+      }
+      else {
+        const innerHeight = contentRef?.contentWindow?.document.documentElement.clientHeight
+        const elePosition = elementRect.y + elementRect.height / 2
+        if (innerHeight) {
+          if (elementRect.height < innerHeight / 2) {
+            if (elePosition / innerHeight * 100 > 66) {
+              setCodeViewOffsetTop('1')
+            }
+            if (elePosition / innerHeight * 100 < 33) {
+              setCodeViewOffsetTop('66')
+            }
+          }
+        }
+      }
+    }
     focusedItemRef.current = focusedItem
   }, [focusedItem])
   // mark selected items
