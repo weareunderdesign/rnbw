@@ -178,3 +178,6 @@ body{
   height: 100% !important;
   width: calc(100% - 64px) !important;
 }
+#CodeView {
+  transition: 0.3s all;
+}
