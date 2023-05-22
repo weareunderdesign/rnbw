@@ -134,7 +134,7 @@ export default function CodeView(props: CodeViewProps) {
       if (updateOpt.from === 'code') return
       
       const fileData = _file.data as TFileNodeData
-      setLanguage(fileData.type === 'unknown' ? 'html' : fileData.type)
+      setLanguage(fileData.ext === '.html' ? 'html' : fileData.ext === '.md' ? 'markdown' : fileData.type)
       codeContent.current = fileData.content
   }, [ffTree[file.uid]])
   // focusedItem - code select
@@ -289,6 +289,7 @@ export default function CodeView(props: CodeViewProps) {
   }, [focusedNode])
   // code edit - highlight/parse
   const reduxTimeout = useRef<NodeJS.Timeout | null>(null)
+  const isAttrEditing = useRef<boolean>(false)
   const saveFileContentToRedux = useCallback(() => {
     if (parseFileFlag) {
       // clear highlight
@@ -321,8 +322,10 @@ export default function CodeView(props: CodeViewProps) {
         endLineNumber > startLineNumber && partCodeArr.push(currentCodeArr[endLineNumber - 1].slice(0, endColumn - 1))
         const content = partCodeArr.join(getLineBreaker(osType))
   
+        // console.log(validNodeTree[uid].data, (validNodeTree[uid].data as THtmlNodeData).html, content)
         codeChanges.push({ uid, content })
       }
+      // check attr editing
       setCodeChanges(codeChanges)
       
       // update
@@ -349,6 +352,7 @@ export default function CodeView(props: CodeViewProps) {
     }
   }, [ffTree, file.uid, validNodeTree, osType])
   const handleEditorChange = useCallback((value: string | undefined, ev: monaco.editor.IModelContentChangedEvent) => {
+    let delay = 300
     if (parseFileFlag){
       const hasFocus = monacoRef.current?.hasTextFocus()
 
@@ -359,6 +363,13 @@ export default function CodeView(props: CodeViewProps) {
       // get changed part
       const { eol } = ev
       const { range: o_range, text: changedCode } = ev.changes[0]
+      if (changedCode === " " || changedCode === "=" || changedCode === '"' || changedCode === '""'  || changedCode === "''" || changedCode === "'" || changedCode.search('=""') !== -1) {
+        delay = 5000
+      }
+      else {
+        reduxTimeout.current !== null && clearTimeout(reduxTimeout.current)
+        delay = 300
+      }
       const o_rowCount = o_range.endLineNumber - o_range.startLineNumber + 1
   
       const changedCodeArr = changedCode.split(eol)
@@ -369,8 +380,7 @@ export default function CodeView(props: CodeViewProps) {
         endLineNumber: o_range.startLineNumber + n_rowCount - 1,
         endColumn: n_rowCount === 1 ? o_range.startColumn + changedCode.length : (changedCodeArr.pop() as string).length + 1,
       }
-  
-      const columnOffset = (o_rowCount === 1 && n_rowCount > 1 ? -1 : 1) * (n_range.endColumn - o_range.endColumn)
+      const columnOffset = (o_rowCount === 1 && n_rowCount > 1 ? -1 : 1) * (n_range.endColumn - o_range.endColumn) 
   
       // update code range for node tree
       const focusedNodeData = focusedNode.data as THtmlNodeData
@@ -382,14 +392,14 @@ export default function CodeView(props: CodeViewProps) {
   
         const nodeData = node.data as THtmlNodeData
         const { startLineNumber, startColumn, endLineNumber, endColumn } = nodeData
-  
+
         const containFront = focusedNodeData.startLineNumber === startLineNumber ?
           focusedNodeData.startColumn >= startColumn
           : focusedNodeData.startLineNumber > startLineNumber
         const containBack = focusedNodeData.endLineNumber === endLineNumber ?
           focusedNodeData.endColumn <= endColumn
           : focusedNodeData.endLineNumber < endLineNumber
-  
+        
         if (containFront && containBack) {
           nodeData.endLineNumber += n_rowCount - o_rowCount
           nodeData.endColumn += endLineNumber === o_range.endLineNumber ? columnOffset : 0
@@ -442,7 +452,7 @@ export default function CodeView(props: CodeViewProps) {
         )
       }
       codeChangeDecorationRef.current.set(focusedNode.uid, focusedNodeDecorations)
-  
+      
       // render decorations
       const decorationsList = codeChangeDecorationRef.current.values()
       const wholeDecorations: monaco.editor.IModelDeltaDecoration[] = []
@@ -450,12 +460,11 @@ export default function CodeView(props: CodeViewProps) {
         wholeDecorations.push(...decorations)
       }
       decorationCollectionRef.current?.set(wholeDecorations)
-  
     }
     // update redux with debounce
     codeContent.current = value || ''
     reduxTimeout.current !== null && clearTimeout(reduxTimeout.current)
-    reduxTimeout.current = setTimeout(saveFileContentToRedux, 500)
+    reduxTimeout.current = setTimeout(saveFileContentToRedux, delay)
 
     setCodeEditing(true)
   }, [saveFileContentToRedux, focusedNode, activePanel])
@@ -585,6 +594,7 @@ export default function CodeView(props: CodeViewProps) {
           // beforeMount={() => {}
           onMount={handleEditorDidMount}
           onChange={handleEditorChange}
+          loading={''}
           options={{
             // enableBasicAutocompletion: true,
             // enableLiveAutocompletion: true,
