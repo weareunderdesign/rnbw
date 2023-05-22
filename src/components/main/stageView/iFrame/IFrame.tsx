@@ -18,6 +18,7 @@ import {
   RootNodeUid,
 } from '@_constants/main';
 import { getValidNodeUids } from '@_node/apis';
+import { TFileNodeData } from '@_node/file';
 import { THtmlNodeData } from '@_node/html';
 import {
   TNode,
@@ -28,7 +29,9 @@ import {
   fnSelector,
   focusFNNode,
   MainContext,
+  navigatorSelector,
   selectFNNode,
+  setCurrentFile,
   updateFNTreeViewState,
 } from '@_redux/main';
 import { getCommandKey } from '@_services/global';
@@ -44,6 +47,7 @@ const defaultVideo = "https://user-images.githubusercontent.com/13418616/2346602
 
 export const IFrame = (props: IFrameProps) => {
   const dispatch = useDispatch()
+  const { file } = useSelector(navigatorSelector)
   // -------------------------------------------------------------- global state --------------------------------------------------------------
   const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
   const {
@@ -53,6 +57,7 @@ export const IFrame = (props: IFrameProps) => {
     activePanel, setActivePanel,
     clipboardData, setClipboardData,
     event, setEvent,
+    setNavigatorDropDownType,
     // file tree view
     fsPending, setFSPending,
     ffTree, setFFTree, setFFNode,
@@ -91,7 +96,8 @@ export const IFrame = (props: IFrameProps) => {
     theme,
     // toasts
     addMessage, removeMessage,
-    parseFileFlag,
+    parseFileFlag, setParseFile,
+    prevFileUid, setPrevFileUid,
     // close all panel
     closeAllPanel
   } = useContext(MainContext)
@@ -209,17 +215,24 @@ export const IFrame = (props: IFrameProps) => {
   const addElement = useCallback((targetUid: TNodeUid, node: TNode, contentNode: TNode | null) => {
     // build new element
     const nodeData = node.data as THtmlNodeData
-    const newElement = contentRef?.contentWindow?.document?.createElement(nodeData.name)
-    for (const attrName in nodeData.attribs) {
-      newElement?.setAttribute(attrName, nodeData.attribs[attrName])
+    let newElement
+    if (nodeData.name === "!--...--") {
+      const targetElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"]`)
+      // targetElement?.append('<!--...-->')
     }
-    if (contentNode && newElement) {
-      const contentNodeData = contentNode.data as THtmlNodeData
-      newElement.innerHTML = contentNodeData.data
+    else{
+      newElement = contentRef?.contentWindow?.document?.createElement(nodeData.name)
+      for (const attrName in nodeData.attribs) {
+        newElement?.setAttribute(attrName, nodeData.attribs[attrName])
+      }
+      if (contentNode && newElement) {
+        const contentNodeData = contentNode.data as THtmlNodeData
+        newElement.innerHTML = contentNodeData.data
+      }
+      // add after target
+      const targetElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"]`)
+      newElement && targetElement?.parentElement?.insertBefore(newElement, targetElement.nextElementSibling)
     }
-    // add after target
-    const targetElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"]`)
-    newElement && targetElement?.parentElement?.insertBefore(newElement, targetElement.nextElementSibling)
 
     // view state
     dispatch(focusFNNode(node.uid))
@@ -353,66 +366,77 @@ export const IFrame = (props: IFrameProps) => {
     setFNHoveredItem('')
   }, [])
   const onClick = useCallback((e: MouseEvent) => {
-    const ele = e.target as HTMLElement
-
-    // handle links
-    let isLinkTag = false
-    let linkElement = ele
-    while (true) {
-      if (linkElement.tagName === 'A') {
-        isLinkTag = true
-        break
-      }
-      const parentEle = linkElement.parentElement
-      if (!parentEle) break
-
-      linkElement = parentEle
+    if (!parseFileFlag) {
+      const node = ffTree[prevFileUid]
+      const uid = prevFileUid
+      const nodeData = node.data as TFileNodeData
+      setNavigatorDropDownType('project')
+      setParseFile(true)
+      dispatch(setCurrentFile({ uid, parentUid: node.parentUid as TNodeUid, name: nodeData.name, content: nodeData.content }))
+      setCurrentFileUid(uid)
     }
-    if (isLinkTag) {
-      const uid: TNodeUid | null = linkElement.getAttribute(NodeInAppAttribName)
-      if (uid !== null) {
-        if (uid === linkTagUid.current) {
-          const href = linkElement.getAttribute('href')
-          href && setLinkToOpen(href)
-          linkTagUid.current = ''
-        } else {
-          linkTagUid.current = uid
+    else {
+      const ele = e.target as HTMLElement
+  
+      // handle links
+      let isLinkTag = false
+      let linkElement = ele
+      while (true) {
+        if (linkElement.tagName === 'A') {
+          isLinkTag = true
+          break
         }
+        const parentEle = linkElement.parentElement
+        if (!parentEle) break
+  
+        linkElement = parentEle
       }
-    } else {
-      linkTagUid.current = ''
-    }
-
-    let _uid: TNodeUid | null = ele.getAttribute(NodeInAppAttribName)
-    // for the elements which are created by js. (ex: Web Component)
-    let newFocusedElement: HTMLElement = ele
-    while (!_uid) {
-      const parentEle = newFocusedElement.parentElement
-      if (!parentEle) break
-
-      _uid = parentEle.getAttribute(NodeInAppAttribName)
-      !_uid ? newFocusedElement = parentEle : null
-    }
-
-    // set focused/selected items
-    if (_uid) {
-      if (e.shiftKey) {
-        let found = false
-        const _selectedItems = selectedItemsRef.current.filter(uid => {
-          uid === _uid ? found = true : null
-          return uid !== _uid
-        })
-        !found ? _selectedItems.push(_uid) : null
-        setFocusedSelectedItems(_uid, getValidNodeUids(nodeTree, _selectedItems))
+      if (isLinkTag) {
+        const uid: TNodeUid | null = linkElement.getAttribute(NodeInAppAttribName)
+        if (uid !== null) {
+          if (uid === linkTagUid.current) {
+            const href = linkElement.getAttribute('href')
+            href && setLinkToOpen(href)
+            linkTagUid.current = ''
+          } else {
+            linkTagUid.current = uid
+          }
+        }
       } else {
-        if (_uid !== focusedItem) {
-          setFocusedSelectedItems(_uid)
+        linkTagUid.current = ''
+      }
+  
+      let _uid: TNodeUid | null = ele.getAttribute(NodeInAppAttribName)
+      // for the elements which are created by js. (ex: Web Component)
+      let newFocusedElement: HTMLElement = ele
+      while (!_uid) {
+        const parentEle = newFocusedElement.parentElement
+        if (!parentEle) break
+  
+        _uid = parentEle.getAttribute(NodeInAppAttribName)
+        !_uid ? newFocusedElement = parentEle : null
+      }
+  
+      // set focused/selected items
+      if (_uid) {
+        if (e.shiftKey) {
+          let found = false
+          const _selectedItems = selectedItemsRef.current.filter(uid => {
+            uid === _uid ? found = true : null
+            return uid !== _uid
+          })
+          !found ? _selectedItems.push(_uid) : null
+          setFocusedSelectedItems(_uid, getValidNodeUids(nodeTree, _selectedItems))
+        } else {
+          if (_uid !== focusedItem) {
+            setFocusedSelectedItems(_uid)
+          }
         }
       }
     }
 
     setActivePanel('stage')
-  }, [osType, focusedItem, setFocusedSelectedItems, nodeTree])
+  }, [osType, focusedItem, setFocusedSelectedItems, nodeTree, parseFileFlag])
 
   // text editing
   const contentEditableUidRef = useRef('')
@@ -640,8 +664,8 @@ export const IFrame = (props: IFrameProps) => {
         <iframe
           ref={setContentRef}
           src={iframeSrc}
-          style={parseFileFlag ? { position: "absolute", width: "100%", height: "100%" } : { position: "absolute", width: "100%", height: "100%", overflow: 'hidden',pointerEvents: 'none', opacity: 0.2 }}
+          style={parseFileFlag ? { position: "absolute", width: "100%", height: "100%" } : { position: "absolute", width: "100%", height: "100%", overflow: 'hidden', opacity: 0.2 }}
         />}
     </>
-  }, [iframeSrc, needToReloadIFrame, parseFileFlag])
+  }, [iframeSrc, needToReloadIFrame, parseFileFlag, prevFileUid, setParseFile])
 }

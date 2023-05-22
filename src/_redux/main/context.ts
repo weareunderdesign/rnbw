@@ -19,6 +19,7 @@ import {
   TFileInfo,
   TPanelContext,
   TProjectContext,
+  TWorkspace,
 } from '@_types/main';
 
 import {
@@ -34,7 +35,8 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   removeRunningActions: (actionNames: string[], effect?: boolean) => { },
   // navigator
   workspace: { name: 'local', projects: [] },
-  project: { context: 'idb', name: 'welcome', handler: null },
+  setWorkspace: (ws: TWorkspace) => {},
+  project: { context: 'idb', name: 'welcome', handler: null, favicon: null },
   navigatorDropDownType: null,
   setNavigatorDropDownType: (type: TNavigatorDropDownType) => { },
   // node actions
@@ -124,4 +126,5 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   closeAllPanel: () => {},
   // non-parse file
   parseFileFlag: true, setParseFile: (parseFile: boolean) => { },
+  prevFileUid: '', setPrevFileUid: (uid: string) => { },
 })

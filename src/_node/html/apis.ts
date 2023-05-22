@@ -298,9 +298,9 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
     if (nodeData.type === 'directive') {
       nodeHtml = `<${nodeData.data}>`
       nodeHtmlInApp = `<${nodeData.data}>`
-    } else if (nodeData.type === 'comment') {
+    } else if (nodeData.type === 'comment' || nodeData.type === '!--...--') {
       nodeHtml = `<!--${nodeData.data}-->`
-      nodeHtmlInApp = `<!--${nodeData.data}-->`
+      nodeHtmlInApp = ``
     } else if (nodeData.type === 'text') {
       // replace "<" or ">" to "&lt;" and "&gt;", only in app
       nodeHtml = nodeData.data
@@ -338,8 +338,13 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
     }
 
     // set html and htmlInApp
-    nodeData.html = nodeHtml
-    nodeData.htmlInApp = nodeHtmlInApp
+    nodeData.html = nodeHtml.replace('</!--...-->', '')
+    if (nodeData.type === 'comment' || nodeData.type === '!--...--') {
+      nodeData.htmlInApp = ''
+    }
+    else{
+      nodeData.htmlInApp = nodeHtmlInApp
+    }
   })
   // set code range to nodes
   const { html: formattedContent } = tree[RootNodeUid].data as THtmlNodeData

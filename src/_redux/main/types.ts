@@ -44,6 +44,7 @@ export type TMainContext = {
   removeRunningActions: (actionNames: string[], effect?: boolean) => void,
   // navigator
   workspace: TWorkspace,
+  setWorkspace: (ws: TWorkspace) => void,
   project: TProject,
   navigatorDropDownType: TNavigatorDropDownType,
   setNavigatorDropDownType: (type: TNavigatorDropDownType) => void,
@@ -127,8 +128,11 @@ export type TMainContext = {
   removeMessage: (index: number) => void,
   loadProject: (fsType: TProjectContext, projectHandle?: FileSystemHandle | null, internal?: boolean | true) => void
   closeAllPanel: () => void,
+  // non-html editable
   parseFileFlag: boolean,
   setParseFile: (parseFile: boolean) => void,
+  prevFileUid: string,
+  setPrevFileUid: (uid: string) => void
 }
 export type TUpdateOptions = {
   parse: boolean | null,
