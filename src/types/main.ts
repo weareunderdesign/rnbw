@@ -1,5 +1,6 @@
 import {
   THtmlPageSettings,
+  TNode,
   TNodeTreeData,
   TNodeUid,
 } from '@_node/index';
@@ -13,6 +14,7 @@ export type TProject = {
   context: TProjectContext,
   name: string,
   handler: FileSystemDirectoryHandle | null,
+  favicon: string | null
 }
 export type TFile = {
   uid: TNodeUid,
@@ -28,7 +30,7 @@ export type TSession = {
   'recent-project-handler': (FileSystemDirectoryHandle | null)[],
 }
 export type TEvent = {
-  type: 'add-node' | 'remove-node' | 'move-node' | 'duplicate-node' | 'copy-node' | 'code-change',
+  type: 'add-node' | 'remove-node' | 'move-node' | 'duplicate-node' | 'copy-node' | 'copy-node-external' | 'code-change',
   param: any[],
 } | null
 export type TCodeChange = {
@@ -48,7 +50,9 @@ export type TClipboardData = {
   type: 'cut' | 'copy' | null,
   uids: TNodeUid[],
   fileType: 'html' | 'unknown',
-  data: TNodeTreeData
+  data: TNode[],
+  fileUid: TNodeUid,
+  prevNodeTree: TNodeTreeData
 }
 export type TCmdkReference = {
   "Featured"?: boolean,
