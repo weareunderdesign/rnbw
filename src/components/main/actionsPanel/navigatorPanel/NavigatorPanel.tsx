@@ -13,7 +13,10 @@ import {
   useSelector,
 } from 'react-redux';
 
-import { SVGIcon } from '@_components/common';
+import {
+  SVGIcon,
+  SVGIconI,
+} from '@_components/common';
 import { RootNodeUid } from '@_constants/main';
 import { TFileNodeData } from '@_node/file';
 import { THtmlNodeData } from '@_node/html';
@@ -31,7 +34,10 @@ import { TProject } from '@_types/main';
 
 import { NavigatorPanelProps } from './types';
 
-const unsavedProjectImg = "https://user-images.githubusercontent.com/13418616/236864312-a08fa9a8-735e-44c1-aa9d-1f74aa8608fd.png"
+const unsavedProjectImg = window.location.origin + "/images/rnbw-unsaved.png"
+const unsavedProjectSvg = window.location.origin + "/images/rnbw-unsaved.svg"
+const projectImg = window.location.origin + "/images/rnbw.png"
+const projectSvg = window.location.origin + "/images/rnbw.svg"
 export default function NavigatorPanel(props: NavigatorPanelProps) {
   const dispatch = useDispatch()
   // -------------------------------------------------------------- global state --------------------------------------------------------------
@@ -42,7 +48,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
     // global action
     addRunningActions, removeRunningActions,
     // navigator
-    workspace,
+    workspace, setWorkspace,
     project,
     navigatorDropDownType, setNavigatorDropDownType,
     // node actions
@@ -90,10 +96,18 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
     // toasts
     addMessage, removeMessage,
     // open project
-    loadProject
+    loadProject,
+    parseFileFlag, setParseFile
   } = useContext(MainContext)
   // -------------------------------------------------------------- favicon --------------------------------------------------------------
   const [favicon, setFavicon] = useState('')
+  const isFirst = useRef(true)
+  useEffect(() => {
+    isFirst.current = true
+  }, [file.uid])
+
+  const [projectFavicons, setProjectFavicons] = useState([])
+
   useEffect(() => {
     if (validNodeTree) {
       let hasFavicon = false
@@ -112,8 +126,33 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
     else{
       setFavicon('')
     }
-    
-    if (file.uid !== '') {
+
+    // set favicons of the workspace
+    if (file.uid === `${RootNodeUid}/index.html`) {
+
+      let hasFavicon = false
+      let temp = projectFavicons
+      for (const x in validNodeTree) {
+        const nodeData = validNodeTree[x].data as THtmlNodeData
+        if (nodeData && nodeData.type === 'tag' && nodeData.name === 'link' && nodeData.attribs.rel === 'icon') {
+          const _projects: TProject[] = []
+          const pts = workspace.projects as TProject[]
+          pts.map((_v, index) => {
+            if (_v.name != 'idb'){
+              _projects.push({
+                context: _v.context,
+                name: _v.name,
+                handler: _v.handler,
+                favicon: _v.name === project.name ? window.location.origin + '/rnbw/' + project.name + '/' + nodeData.attribs.href : _v.favicon
+              })
+            }
+          })
+          // projectFavicons[project.name] = window.location.origin + '/rnbw/' + project.name + '/' + nodeData.attribs.href
+          setWorkspace({ name: workspace.name, projects: _projects })
+        }
+      }
+    }
+    if (file.uid !== '' && isFirst.current === true) {
       let bodyId = '0'
       for (let x in validNodeTree) {
         if (validNodeTree[x].data.type === 'tag' && validNodeTree[x].data.name === 'body'){
@@ -143,6 +182,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
           dispatch(focusFNNode(firstNodeId))
           dispatch(selectFNNode([firstNodeId]))
           removeRunningActions(['stageView-focus'])
+          isFirst.current = false
         }
       }
     }
@@ -166,7 +206,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
   useEffect(() => {
     let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement
     if (link) {
-      link.href = unsavedProject ? unsavedProjectImg : 'https://rnbw.company/images/favicon.png'
+      link.href = unsavedProject ? unsavedProjectImg : projectImg
     }
   }, [unsavedProject]);
   // -------------------------------------------------------------- dropdown --------------------------------------------------------------
@@ -199,7 +239,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
       <div
         id="NavigatorPanel"
         style={{
-          position: 'absolute',
+          // position: 'absolute',
           top: 0,
           left: 0,
           width: '100%',
@@ -217,7 +257,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
           {/* workspace */}
           <>
             <div style={{'minWidth': '24px'}} className="radius-m icon-s align-center background-secondary" onClick={onWorkspaceClick}>
-              <img className='icon-s' src={unsavedProject ? unsavedProjectImg : 'https://rnbw.company/images/favicon.png'}></img>
+              <img className='icon-s' src={unsavedProject ? unsavedProjectSvg : projectSvg}></img>
             </div>
           </>
           <span className="text-s opacity-m">/</span>
@@ -245,7 +285,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
           {/* file */}
           {ffTree[file.uid] && <>
             <div className="gap-s align-center" onClick={onFileClick}>
-              <SVGIcon {...{ "class": "icon-xs" }}>{ffTree[file.uid].data.type == 'html' && ffTree[file.uid].data.name == 'index' ? 'home' : filesReferenceData[(ffTree[file.uid].data as TFileNodeData).ext.substring(1, (ffTree[file.uid].data as TFileNodeData).ext.length)] ? filesReferenceData[(ffTree[file.uid].data as TFileNodeData).ext.substring(1, (ffTree[file.uid].data as TFileNodeData).ext.length)].Icon : 'page'}</SVGIcon>
+              <SVGIconI {...{ "class": "icon-xs" }}>{ffTree[file.uid].data.type == 'html' && ffTree[file.uid].data.name == 'index' ? 'home' : filesReferenceData[(ffTree[file.uid].data as TFileNodeData).ext.substring(1, (ffTree[file.uid].data as TFileNodeData).ext.length)] ? filesReferenceData[(ffTree[file.uid].data as TFileNodeData).ext.substring(1, (ffTree[file.uid].data as TFileNodeData).ext.length)].Icon : 'page'}</SVGIconI>
               <span className="text-s">{file.name}</span>
             </div>
           </>}
@@ -254,7 +294,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
             {/* workspace */}
             <>
               <div  style={{'minWidth': '24px'}} className="radius-m icon-s align-center background-secondary" onClick={onWorkspaceClick}>
-                <img className='icon-s' src={unsavedProject ? unsavedProjectImg : 'https://rnbw.company/images/favicon.png'}></img>
+                <img className='icon-s' src={unsavedProject ? unsavedProjectSvg : projectSvg}></img>
               </div>
             </>
           </> :
@@ -262,7 +302,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
               {/* workspace */}
               <>
                 <div className="radius-m icon-s align-center background-secondary" onClick={onWorkspaceClick}>
-                  <img className='icon-s' src={unsavedProject ? unsavedProjectImg : 'https://rnbw.company/images/favicon.png'}></img>
+                  <img className='icon-s' src={unsavedProject ? unsavedProjectSvg : projectSvg}></img>
                 </div>
               </>
               <span className="text-s opacity-m">/</span>
@@ -285,22 +325,20 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
 
       {navigatorDropDownType && <div
         style={{
-          position: 'fixed',
           inset: 0,
           zIndex: 1,
         }}
         ref={navigatorDropDownRef}
         onClick={onCloseDropDown}
       >
-        <div className='view' />
+        <div className='view' style={{'minHeight' : '0px'}} />
 
         {navigatorDropDownType === 'workspace' ?
           <div
             className='border-left border-right border-bottom radius-s background-primary shadow'
             style={{
-              position: 'absolute',
-              left: Number(navigatorPanelRef.current?.getBoundingClientRect().left),
-              top: Number(navigatorPanelRef.current?.getBoundingClientRect().top) + 41,
+              // left: Number(navigatorPanelRef.current?.getBoundingClientRect().left),
+              // top: Number(navigatorPanelRef.current?.getBoundingClientRect().top) + 41,
 
               width: Number(navigatorPanelRef.current?.clientWidth),
               maxHeight: '300px',
@@ -308,7 +346,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
               borderTopLeftRadius: '0px',
               borderTopRightRadius: '0px',
 
-              zIndex: '2',
+              zIndex: 2,
             }}
           >
             {workspace.projects.map((_project, index) => {
@@ -325,7 +363,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
                 }}>
                 <div className="gap-s align-center">
                   <div className="navigator-project-item-icon radius-m icon-s align-center">
-                    <SVGIcon {...{ "class": "icon-xs" }}>folder</SVGIcon>
+                    {_project.favicon ? <img className='icon-s' style={{'borderRadius': '50%'}} src={_project.favicon}></img> : <SVGIcon {...{ "class": "icon-xs" }}>folder</SVGIcon>}
                   </div>
                   <span className="navigator-project-item-name text-s">{_project.name}</span>
                 </div>
@@ -340,6 +378,6 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
     filesReferenceData, ffTree,
     onWorkspaceClick, onProjectClick, onFileClick,
     navigatorDropDownType, onCloseDropDown,
-    onOpenProject, loadProject, favicon, unsavedProject
+    onOpenProject, loadProject, favicon, unsavedProject, setParseFile
   ])
 }
