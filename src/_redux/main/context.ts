@@ -42,7 +42,7 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   // node actions
   activePanel: 'unknown',
   setActivePanel: (panel: TPanelContext) => { },
-  clipboardData: { panel: 'unknown', type: null, uids: [], fileType: 'html', data: {} },
+  clipboardData: { panel: 'unknown', type: null, uids: [], fileType: 'html', data: [], fileUid: '', prevNodeTree: {} },
   setClipboardData: (data: TClipboardData) => { },
   event: null,
   setEvent: (e: TEvent) => { },
