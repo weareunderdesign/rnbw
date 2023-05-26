@@ -134,7 +134,7 @@ export default function CodeView(props: CodeViewProps) {
       if (updateOpt.from === 'code') return
       
       const fileData = _file.data as TFileNodeData
-      setLanguage(fileData.ext === '.html' ? 'html' : fileData.ext === '.md' ? 'markdown' : fileData.type)
+      setLanguage(fileData.ext === '.html' ? 'html' : fileData.ext === '.md' ? 'markdown' : fileData.ext === '.js' ? 'javascript' : fileData.ext === '.css' ? 'css' : fileData.type)
       codeContent.current = fileData.content
   }, [ffTree[file.uid]])
   // focusedItem - code select
@@ -363,12 +363,15 @@ export default function CodeView(props: CodeViewProps) {
       // get changed part
       const { eol } = ev
       const { range: o_range, text: changedCode } = ev.changes[0]
-      if (changedCode === " " || changedCode === "=" || changedCode === '"' || changedCode === '""'  || changedCode === "''" || changedCode === "'" || changedCode.search('=""') !== -1) {
+      if ((changedCode === "<" || changedCode === " " || changedCode === "=" || changedCode === '"' || changedCode === '""'  || changedCode === "''" || changedCode === "'" || changedCode.search('=""') !== -1) && parseFileFlag) {
         delay = 5000
       }
       else {
         reduxTimeout.current !== null && clearTimeout(reduxTimeout.current)
-        delay = 300
+        delay = 500
+        if (!parseFileFlag) {
+          delay = 1000
+        }
       }
       const o_rowCount = o_range.endLineNumber - o_range.startLineNumber + 1
   
@@ -529,11 +532,6 @@ export default function CodeView(props: CodeViewProps) {
   const dragStart = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     const ele = document.getElementById('CodeView')
     if (ele){
-      let crt = ele.cloneNode(true) as HTMLElement;
-      // crt.style.backgroundColor = "red";
-      // crt.style.display = "none"; /* or visibility: hidden, or any of the above */
-      // document.body.appendChild(crt);
-      // console.log(crt)
     }
   }, [])
 
@@ -585,7 +583,6 @@ export default function CodeView(props: CodeViewProps) {
           <SVGIconI {...{ "class": "icon-xs" }}>list</SVGIconI>
         </div> */}
         <Editor
-          defaultLanguage={"html"}
           language={language}
           defaultValue={""}
           value={codeContent.current}
