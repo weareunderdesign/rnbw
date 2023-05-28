@@ -1046,14 +1046,14 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     
     if (ffNodeType !== '*folder'){
       openFileUid.current = `${node.uid}/${tmpNode.name}.${ffNodeType}`
-      // openCreatedFile(`${node.uid}/${tmpNode.name}.${ffNodeType}`)
+      setCurrentFileUid(openFileUid.current)
     }
   }, [ffTree, focusedItem, expandedItemsObj, setInvalidNodes, createFFNode, setNavigatorDropDownType, removeInvalidNodes, setFFTree])
   useEffect(() => {
-    if (ffTree[openFileUid.current] !== undefined) {
+    if (ffTree[openFileUid.current] !== undefined && currentFileUid === openFileUid.current) {
       openFile(openFileUid.current)
     }
-  }, [ffTree])
+  }, [ffTree, currentFileUid])
   const cb_startRenamingNode = useCallback((uid: TNodeUid) => {
     // validate
     if (invalidNodes[uid]) {
@@ -1785,11 +1785,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         initialContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta charset="UTF-8">
-<link rel="icon" href="https://rnbw.company/images/favicon.png">
   <meta charset="UTF-8">
-<link rel="icon" href="https://rnbw.company/images/favicon.png">
 </head>
 <body>
   <div></div>
