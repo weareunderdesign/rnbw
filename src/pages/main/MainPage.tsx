@@ -164,11 +164,11 @@ export default function MainPage(props: MainPageProps) {
   }, [noRunningAction, file.content])
   // navigator
   const [workspace, setWorkspace] = useState<TWorkspace>({ name: 'local', projects: [] })
-  const [project, setProject] = useState<TProject>({ context: 'idb', name: 'welcome', handler: null })
+  const [project, setProject] = useState<TProject>({ context: 'idb', name: 'welcome', handler: null, favicon: null })
   const [navigatorDropDownType, setNavigatorDropDownType] = useState<TNavigatorDropDownType>(null)
   // node actions
   const [activePanel, setActivePanel] = useState<TPanelContext>('unknown')
-  const [clipboardData, setClipboardData] = useState<TClipboardData>({ panel: 'unknown', type: null, uids: [], fileType: 'html', data: {} })
+  const [clipboardData, setClipboardData] = useState<TClipboardData>({ panel: 'unknown', type: null, uids: [], fileType: 'html', data: [], fileUid: '', prevNodeTree: {} })
   const [event, setEvent] = useState<TEvent>(null)
   // actions panel
   const [showActionsPanel, setShowActionsPanel] = useState(false)
@@ -214,6 +214,7 @@ export default function MainPage(props: MainPageProps) {
   const [cmdkReferenceActions, setCmdkReferenceActions] = useState<TCmdkGroupData>({})
   // non-parse file editable
   const [parseFileFlag, setParseFile] = useState<boolean>(true)
+  const [prevFileUid, setPrevFileUid] = useState<string>('')
   // cmdk
   const [currentCommand, setCurrentCommand] = useState<TCommand>({ action: '' })
   const [cmdkOpen, setCmdkOpen] = useState<boolean>(false)
@@ -362,6 +363,7 @@ export default function MainPage(props: MainPageProps) {
           context: recentProjectContext[index],
           name: recentProjectName[index],
           handler: recentProjectHandler[index],
+          favicon: null
         })
         _cmdkReferneceRecentProject.push({
           "Name": recentProjectName[index],
@@ -568,7 +570,7 @@ export default function MainPage(props: MainPageProps) {
         setFFTree(treeViewData)
         setFFHandlers(ffHandlerObj)
 
-        setProject({ context: 'local', name: (projectHandle as FileSystemDirectoryHandle).name, handler: projectHandle as FileSystemDirectoryHandle })
+        setProject({ context: 'local', name: (projectHandle as FileSystemDirectoryHandle).name, handler: projectHandle as FileSystemDirectoryHandle, favicon: null })
         setNavigatorDropDownType(null)
         if (internal) {
           // store last edit session
@@ -654,7 +656,7 @@ export default function MainPage(props: MainPageProps) {
         })
         setFFTree(treeViewData)
         setFFHandlers(ffHandlerObj)
-        setProject({ context: 'idb', name: 'welcome', handler: null })
+        setProject({ context: 'idb', name: 'welcome', handler: null, favicon: null })
         
         // store last edit session
         // const _recentProjectContext = [...recentProjectContext]
@@ -754,7 +756,6 @@ export default function MainPage(props: MainPageProps) {
   }, [project.context])
   // clear
   const onClear = useCallback(async () => {
-    alert()
     // remove localstorage and session
     window.localStorage.clear()
     await delMany(['recent-project-context', 'recent-project-name', 'recent-project-handler'])
@@ -991,7 +992,7 @@ export default function MainPage(props: MainPageProps) {
         _cmdkReferenceData[_command['Name']] = _command
       }))
 
-      if (_cmdkRefJumpstartData['Recent'].length === 1 || _cmdkRefJumpstartData['Recent'].length === 0) {
+      if (_cmdkRefJumpstartData['Recent'].length === 0) {
         delete _cmdkRefJumpstartData['Recent']
       }
       setCmdkReferenceJumpstart(_cmdkRefJumpstartData)
@@ -1211,7 +1212,10 @@ export default function MainPage(props: MainPageProps) {
   const dropCodeView = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()    
   }, [])
-
+  // close navigator
+  const onCloseDropDown = useCallback(() => {
+    navigatorDropDownType !== null && setNavigatorDropDownType(null)
+  }, [navigatorDropDownType])
 
   return <>
     {/* wrap with the context */}
@@ -1220,7 +1224,7 @@ export default function MainPage(props: MainPageProps) {
         // global action
         addRunningActions, removeRunningActions,
         // navigator
-        workspace,
+        workspace, setWorkspace,
         project,
         navigatorDropDownType,
         setNavigatorDropDownType,
@@ -1271,7 +1275,9 @@ export default function MainPage(props: MainPageProps) {
         addMessage, removeMessage,
         // load project
         loadProject,
+        // non html editable
         parseFileFlag, setParseFile,
+        prevFileUid, setPrevFileUid,
         // close all panel
         closeAllPanel
       }}
@@ -1287,6 +1293,7 @@ export default function MainPage(props: MainPageProps) {
         id='MainPage'
         className={'view background-primary'}
         style={{ display: 'relative' }}
+        onClick={onCloseDropDown}
       >
         <StageView />
         <ActionsPanel

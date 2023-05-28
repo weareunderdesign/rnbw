@@ -78,6 +78,7 @@ export const getValidPrevNodeUid = (tree: TNodeTreeData, node: TNode): TNodeUid 
 }
 export const getNodeChildIndex = (parentNode: TNode, node: TNode): number => {
   let childIndex = 0
+  if (parentNode === undefined) return childIndex
 
   for (const uid of parentNode.children) {
     if (uid === node.uid) break
@@ -87,6 +88,16 @@ export const getNodeChildIndex = (parentNode: TNode, node: TNode): number => {
   return childIndex
 }
 export const getNodeDepth = (tree: TNodeTreeData, uid: TNodeUid): number => {
+  let nodeDepth = 0, node = tree[uid]
+
+  while (node.uid !== RootNodeUid) {
+    node = tree[node.parentUid as TNodeUid]
+    ++nodeDepth
+  }
+
+  return nodeDepth
+}
+export const getNodeDepthExternal = (tree: TNodeTreeData, uid: TNodeUid): number => {
   let nodeDepth = 0, node = tree[uid]
 
   while (node.uid !== RootNodeUid) {
@@ -245,7 +256,6 @@ export const copyNode = (tree: TNodeTreeData, targetUid: TNodeUid, isBetween: bo
   _uids.map((uid) => {
     const node = tree[uid]
     const orgSubNodeUids = getSubNodeUidsByBfs(uid, tree)
-
     // copy root node
     const newUid = String(++_nodeMaxUid) as TNodeUid
 
@@ -307,7 +317,6 @@ export const copyNode = (tree: TNodeTreeData, targetUid: TNodeUid, isBetween: bo
 
         return newChildUid
       })
-
       tree[subNode.uid] = subNode
     }
 
@@ -315,13 +324,99 @@ export const copyNode = (tree: TNodeTreeData, targetUid: TNodeUid, isBetween: bo
     if (treeType === 'html') {
       addFormatTextBeforeNode(tree, newNode, String(++_nodeMaxUid) as TNodeUid, osType, tabSize)
       addFormatTextAfterNode(tree, newNode, String(++_nodeMaxUid) as TNodeUid, osType, tabSize)
+      targetNodeDepth !== parentNodeDepth && indentNode(tree, newNode, (targetNodeDepth - parentNodeDepth) * tabSize, osType)
+    }
+  })
+  return { tree, nodeMaxUid: String(_nodeMaxUid) as TNodeUid, addedUidMap }
+}
 
+export const copyNodeExternal = (tree: TNodeTreeData, targetUid: TNodeUid, isBetween: boolean, position: number, nodes: TNode[], treeType: TNodeTreeContext, nodeMaxUid: TNodeUid, osType: TOsType, tabSize: number, prevTree: TNodeTreeData): TNodeApiResponse => {
+  let _nodeMaxUid = Number(nodeMaxUid)
+
+  const targetNode = tree[targetUid]
+  const targetNodeDepth = getNodeDepth(tree, targetUid)
+
+  const addedUidMap = new Map<TNodeUid, TNodeUid>()
+
+  const _nodes = [...nodes]
+  _nodes.reverse()
+  _nodes.map((_node) => {
+    const node = prevTree[_node.uid] as TNode
+    const orgSubNodeUids = getSubNodeUidsByBfs(node.uid, prevTree)
+
+    // copy root node
+    const newUid = String(++_nodeMaxUid) as TNodeUid
+
+    const newNode = JSON.parse(JSON.stringify(node)) as TNode
+    
+
+    newNode.uid = newUid
+    newNode.parentUid = targetUid
+
+    if (treeType === 'html') {
+      setHtmlNodeInAppAttribName(newNode, newUid)
+    } else {
+      // do nothing
+    }
+
+    // add root node
+    if (isBetween) {
+      let inserted = false, index = -1
+
+      targetNode.children = targetNode.children.reduce((prev, cur) => {
+        tree[cur].data.valid && index++
+        if (index === position && !inserted) {
+          inserted = true
+          prev.push(newUid)
+        }
+
+        prev.push(cur)
+        return prev
+      }, [] as TNodeUid[])
+
+      !inserted && targetNode.children.push(newUid)
+    } else {
+      targetNode.children.push(newUid)
+    }
+
+    // copy sub nodes
+    const subNodes = [newNode]
+    let index = -1
+    while (subNodes.length) {
+      let subNode = subNodes.shift() as TNode
+
+      addedUidMap.set(orgSubNodeUids[++index], subNode.uid)
+      
+      subNode.children = subNode.children.map((childUid) => {
+        const newChildUid = String(++_nodeMaxUid) as string
+
+        const childNode = JSON.parse(JSON.stringify(prevTree[childUid])) as TNode
+
+        childNode.uid = newChildUid
+        childNode.parentUid = subNode.uid
+        if (treeType === 'html') {
+          setHtmlNodeInAppAttribName(childNode, newChildUid)
+        } else {
+          // do nothing
+        }
+        subNodes.push(childNode)
+        
+        return newChildUid
+      })
+      tree[subNode.uid] = subNode
+    }
+    // format node
+    if (treeType === 'html') {
+      addFormatTextBeforeNode(tree, newNode, String(++_nodeMaxUid) as TNodeUid, osType, tabSize)
+      addFormatTextAfterNode(tree, newNode, String(++_nodeMaxUid) as TNodeUid, osType, tabSize)
+      const parentNodeDepth = getNodeDepthExternal(tree, newNode.parentUid as TNodeUid)
       targetNodeDepth !== parentNodeDepth && indentNode(tree, newNode, (targetNodeDepth - parentNodeDepth) * tabSize, osType)
     }
   })
 
   return { tree, nodeMaxUid: String(_nodeMaxUid) as TNodeUid, addedUidMap }
 }
+
 export const moveNode = (tree: TNodeTreeData, targetUid: TNodeUid, isBetween: boolean, position: number, uids: TNodeUid[], treeType: TNodeTreeContext, nodeMaxUid: TNodeUid, osType: TOsType, tabSize: number): TNodeApiResponse => {
   let _nodeMaxUid = Number(nodeMaxUid)
 

@@ -37,6 +37,7 @@ import {
 import { getCommandKey } from '@_services/global';
 import { TCmdkKeyMap } from '@_types/main';
 
+import { jss } from './js';
 import { styles } from './styles';
 import { IFrameProps } from './types';
 
@@ -57,7 +58,7 @@ export const IFrame = (props: IFrameProps) => {
     activePanel, setActivePanel,
     clipboardData, setClipboardData,
     event, setEvent,
-    setNavigatorDropDownType,
+    navigatorDropDownType, setNavigatorDropDownType,
     // file tree view
     fsPending, setFSPending,
     ffTree, setFFTree, setFFNode,
@@ -233,10 +234,11 @@ export const IFrame = (props: IFrameProps) => {
       const targetElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"]`)
       newElement && targetElement?.parentElement?.insertBefore(newElement, targetElement.nextElementSibling)
     }
-
     // view state
-    dispatch(focusFNNode(node.uid))
-    dispatch(selectFNNode([node.uid]))
+    setTimeout(() => {
+      dispatch(focusFNNode(node.uid))
+      dispatch(selectFNNode([node.uid]))
+    }, 100)
     removeRunningActions(['stageView-viewState'])
   }, [removeRunningActions, contentRef])
   const removeElements = useCallback((uids: TNodeUid[], deletedUids: TNodeUid[]) => {
@@ -270,8 +272,10 @@ export const IFrame = (props: IFrameProps) => {
     })
 
     // view state
-    dispatch(focusFNNode(uids[uids.length - 1]))
-    dispatch(selectFNNode(uids))
+    setTimeout(() => {
+      dispatch(focusFNNode(uids[uids.length - 1]))
+      dispatch(selectFNNode(uids))
+    }, 100)
     removeRunningActions(['stageView-viewState'])
   }, [removeRunningActions, contentRef])
   const copyElements = useCallback((uids: TNodeUid[], targetUid: TNodeUid, isBetween: boolean, position: number, addedUidMap: Map<TNodeUid, TNodeUid>) => {
@@ -305,10 +309,53 @@ export const IFrame = (props: IFrameProps) => {
 
     // view state
     const newUids = uids.map((uid) => addedUidMap.get(uid)).filter(uid => uid) as TNodeUid[]
-    dispatch(focusFNNode(newUids[newUids.length - 1]))
-    dispatch(selectFNNode(newUids))
+    setTimeout(() => {
+      dispatch(focusFNNode(newUids[newUids.length - 1]))
+      dispatch(selectFNNode(newUids))
+    }, 100)
     removeRunningActions(['stageView-viewState'])
   }, [removeRunningActions, contentRef])
+  const copyElementsExternal = useCallback((nodes: TNode[], targetUid: TNodeUid, isBetween: boolean, position: number, addedUidMap: Map<TNodeUid, TNodeUid>) => {
+    const targetElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"]`)
+    const refElement = isBetween ? contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"] > :nth-child(${position + 1})`) : null
+
+    nodes.map((node) => {
+      let _ele: HTMLElement
+      // clone
+      const ele = (clipboardData.prevNodeTree[node.uid].data as THtmlNodeData).htmlInApp
+      var div = document.createElement('div');
+      div.innerHTML = ele.trim();
+
+      // Change this to div.childNodes to support multiple top-level nodes.
+
+      _ele = div.firstChild as HTMLElement
+      // reset nest's uid
+      const newUid = addedUidMap.get(node.uid)
+      newUid && _ele.setAttribute(NodeInAppAttribName, newUid)
+
+      // reset descendant uids
+      const childElementList = _ele.querySelectorAll('*')
+      childElementList.forEach(childElement => {
+        const childUid = childElement.getAttribute(NodeInAppAttribName)
+        if (childUid) {
+          const newChildUid = addedUidMap.get(childUid)
+          if (newChildUid) {
+            childElement.setAttribute(NodeInAppAttribName, newChildUid)
+          }
+        }
+      })
+      // update
+      targetElement?.insertBefore(_ele, refElement || null)
+    })
+
+    // view state
+    const newUids = nodes.map((node) => addedUidMap.get(node.uid)).filter(_nd => _nd) as TNodeUid[]
+    setTimeout(() => {
+      dispatch(focusFNNode(newUids[newUids.length - 1]))
+      dispatch(selectFNNode(newUids))
+    }, 100)
+    removeRunningActions(['stageView-viewState'])
+  }, [removeRunningActions, contentRef, clipboardData, file.uid])
   const duplicateElements = useCallback((uids: TNodeUid[], addedUidMap: Map<TNodeUid, TNodeUid>) => {
     uids.map((uid) => {
       // clone
@@ -337,8 +384,10 @@ export const IFrame = (props: IFrameProps) => {
 
     // view state
     const newUids = uids.map((uid) => addedUidMap.get(uid)).filter(uid => uid) as TNodeUid[]
-    dispatch(focusFNNode(newUids[newUids.length - 1]))
-    dispatch(selectFNNode(newUids))
+    setTimeout(() => {
+      dispatch(focusFNNode(newUids[newUids.length - 1]))
+      dispatch(selectFNNode(newUids))
+    }, 100)
     removeRunningActions(['stageView-viewState'])
   }, [removeRunningActions, contentRef])
   // -------------------------------------------------------------- iframe event handlers --------------------------------------------------------------
@@ -436,7 +485,9 @@ export const IFrame = (props: IFrameProps) => {
     }
 
     setActivePanel('stage')
-  }, [osType, focusedItem, setFocusedSelectedItems, nodeTree, parseFileFlag])
+
+    navigatorDropDownType !== null && setNavigatorDropDownType(null)
+  }, [osType, focusedItem, setFocusedSelectedItems, nodeTree, parseFileFlag, navigatorDropDownType])
 
   // text editing
   const contentEditableUidRef = useRef('')
@@ -496,7 +547,7 @@ export const IFrame = (props: IFrameProps) => {
       const node = validNodeTree[uid]
       if (!node) return
       const nodeData = node.data as THtmlNodeData
-      if (nodeData.name === 'html' || nodeData.name === 'head' || nodeData.name === 'body') return
+      if (nodeData.name === 'html' || nodeData.name === 'head' || nodeData.name === 'body' || nodeData.name === 'img') return
 
       const cleanedUpCode = ele.outerHTML.replace(/rnbwdev-rnbw-element-hover=""|rnbwdev-rnbw-element-select=""|contenteditable="true"|contenteditable="false"/g, '')
       setOuterHtml(cleanedUpCode)
@@ -572,6 +623,12 @@ export const IFrame = (props: IFrameProps) => {
           style.textContent = styles
           headNode.appendChild(style)
 
+          // add js
+          const js = _document.createElement('script')
+          js.setAttribute('image-validator', 'true')
+          js.textContent = jss
+          headNode.appendChild(js)
+
           // define event handlers
           htmlNode.addEventListener('mouseenter', (e: MouseEvent) => {
             setIframeEvent(e)
@@ -641,6 +698,9 @@ export const IFrame = (props: IFrameProps) => {
           break
         case 'copy-node':
           copyElements(...param as [TNodeUid[], TNodeUid, boolean, number, Map<TNodeUid, TNodeUid>])
+          break
+        case 'copy-node-external':
+          copyElementsExternal(...param as [TNode[], TNodeUid, boolean, number, Map<TNodeUid, TNodeUid>])
           break
         case 'duplicate-node':
           duplicateElements(...param as [TNodeUid[], Map<TNodeUid, TNodeUid>])

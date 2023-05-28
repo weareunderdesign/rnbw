@@ -25,6 +25,7 @@ import {
   THtmlReferenceData,
 } from './types';
 
+const emptyImage = window.location.origin + "/images/empty-image.svg"
 export const setHtmlNodeInAppAttribName = (node: TNode, newUid: TNodeUid) => {
   const nodeData = node.data as THtmlNodeData
   nodeData.attribs[NodeInAppAttribName] = newUid
@@ -289,11 +290,15 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
         const attrContent = nodeData.attribs[attr] as string
         return attrContent === '' ? ` ${attr}` : ` ${attr}="${attrContent}"`
       }).join('')
-    const attribsHtmlInApp = nodeData.attribs === undefined ? '' :
+    let attribsHtmlInApp = nodeData.attribs === undefined ? '' :
       Object.keys(nodeData.attribs).map(attr => {
         const attrContent = nodeData.attribs[attr]
         return attrContent === '' ? ` ${attr}` : ` ${attr}="${attrContent}"`
       }).join('')
+
+    if (nodeData.type === 'tag' && nodeData.name === 'img') {
+      attribsHtmlInApp += attribsHtmlInApp + ` onerror="this.onerror=null; this.src='${emptyImage}'"`
+    }
     // wrap with the current node
     if (nodeData.type === 'directive') {
       nodeHtml = `<${nodeData.data}>`
@@ -353,18 +358,18 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
   uids.map((uid) => {
     const node = tree[uid]
     if (!node.data.valid) return
-
+    
     const { html } = node.data as THtmlNodeData
     const htmlArr = formattedContent.split(html)
-
+    
     const detectedCount = detected.get(html) || 0
     const beforeHtml = htmlArr.slice(0, detectedCount + 1).join(html)
     detected.set(html, detectedCount + 1)
-
+    
     const beforeHtmlArr = beforeHtml.split(getLineBreaker(osType))
     const startLineNumber = beforeHtmlArr.length - Number(uid === RootNodeUid)
     const startColumn = (beforeHtmlArr.pop()?.length || 0) + 1 - Number(uid === RootNodeUid)
-
+    
     const contentArr = html.split(getLineBreaker(osType))
     const endLineNumber = startLineNumber + contentArr.length - 1 + Number(uid === RootNodeUid)
     const endColumn = (contentArr.length === 1 ? startColumn : 1) + (contentArr.pop()?.length || 0) + Number(uid === RootNodeUid)

@@ -87,6 +87,7 @@ import {
 
 import { WorkspaceTreeViewProps } from './types';
 
+const AutoExpandDelay = 1 * 1000
 export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   const dispatch = useDispatch()
   // -------------------------------------------------------------- global state --------------------------------------------------------------
@@ -147,7 +148,8 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     addMessage, removeMessage,
 
     // non-parse file
-    parseFileFlag, setParseFile
+    parseFileFlag, setParseFile,
+    prevFileUid, setPrevFileUid
   } = useContext(MainContext)
   // -------------------------------------------------------------- node status --------------------------------------------------------------
   //  invalid - can't do any actions on the nodes
@@ -175,6 +177,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     _setTemporaryNodes(_temporaryNodes)
   }, [temporaryNodes])
   // -------------------------------------------------------------- project load cb for side effect --------------------------------------------------------------
+  const ffTreeRef = useRef<TNodeTreeData>({})
   const cb_reloadProject = useCallback(async (_uid?: TNodeUid) => {
     const treeViewData: TNodeTreeData = {}
     const ffHandlerObj: TFileHandlerCollection = {}
@@ -274,7 +277,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       setCurrentFileUid('')
       dispatch(removeCurrentFile())
     }
-
+    ffTreeRef.current = treeViewData
     setFFTree(treeViewData)
     setFFHandlers(ffHandlerObj)
   }, [project.context, ffHandlers, ffTree, osType])
@@ -660,7 +663,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   useEffect(() => {
     if (initialFileToOpen !== '' && ffTree[initialFileToOpen] !== undefined) {
       setInitialFileToOpen('')
-
       // focus/select/read the initial file
       addRunningActions(['fileTreeView-focus', 'fileTreeView-select', 'fileTreeView-read'])
       cb_focusNode(initialFileToOpen)
@@ -823,39 +825,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     }
   }
 
-  const createTmpFFNode = useCallback((ffNodeType: TFileNodeType) => {
-    const tmpTree = JSON.parse(JSON.stringify(ffTree)) as TNodeTreeData
-
-    // validate
-    let node = tmpTree[focusedItem]
-    if (node === undefined) return
-    if (node.isEntity) {
-      node = tmpTree[node.parentUid as TNodeUid]
-    }
-
-    // expand the focusedItem
-    node.uid !== RootNodeUid && expandedItemsObj[node.uid] === undefined && dispatch(expandFFNode([node.uid]))
-
-    // add tmp node
-    const tmpNode: TNode = {
-      uid: `${node.uid}/${TmpNodeUid}`,
-      parentUid: node.uid,
-      name: ffNodeType === '*folder' ? 'Untitled' : ffNodeType === 'html' ? 'Untitled' : 'Untitled',
-      isEntity: ffNodeType !== '*folder',
-      children: [],
-      data: {
-        valid: false,
-        type: ffNodeType,
-      },
-    }
-
-    node.children.unshift(tmpNode.uid)
-    tmpTree[tmpNode.uid] = tmpNode
-    setFFTree(tmpTree)
-
-    setInvalidNodes(tmpNode.uid)
-    openFile(tmpNode.uid)
-  }, [ffTree, focusedItem, expandedItemsObj])
   const createFFNode = useCallback(async (parentUid: TNodeUid, ffType: TFileNodeType, ffName: string) => {
     addRunningActions(['fileTreeView-create'])
 
@@ -1016,7 +985,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
         // create the file with generated name
         try {
-          await writeFile(`${parentNodeData.path}/${fileName}`, '')
+          await writeFile(`${parentNodeData.path}/${fileName}`, '')   
         } catch (err) {
           addMessage({
             type: 'error',
@@ -1039,6 +1008,52 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     removeRunningActions(['fileTreeView-create'])
   }, [addRunningActions, removeRunningActions, project.context, ffHandlers, cb_reloadProject])
 
+  const openFileUid = useRef<TNodeUid>('')
+  const createTmpFFNode = useCallback(async (ffNodeType: TFileNodeType) => {
+    const tmpTree = JSON.parse(JSON.stringify(ffTree)) as TNodeTreeData
+
+    // validate
+    let node = tmpTree[focusedItem]
+    if (node === undefined) return
+    if (node.isEntity) {
+      node = tmpTree[node.parentUid as TNodeUid]
+    }
+
+    // expand the focusedItem
+    node.uid !== RootNodeUid && expandedItemsObj[node.uid] === undefined && dispatch(expandFFNode([node.uid]))
+
+    // add tmp node
+    const tmpNode: TNode = {
+      uid: `${node.uid}/${TmpNodeUid}`,
+      parentUid: node.uid,
+      name: ffNodeType === '*folder' ? 'Untitled' : ffNodeType === 'html' ? 'Untitled' : 'Untitled',
+      isEntity: ffNodeType !== '*folder',
+      children: [],
+      data: {
+        valid: false,
+        type: ffNodeType,
+      },
+    }
+
+    node.children.unshift(tmpNode.uid)
+    tmpTree[tmpNode.uid] = tmpNode
+    // setFFTree(tmpTree)
+
+    setInvalidNodes(tmpNode.uid)
+    await createFFNode(node.uid as TNodeUid, tmpNode.data.type, tmpNode.name)
+    removeInvalidNodes(tmpNode.uid)
+    setNavigatorDropDownType('project')
+    
+    if (ffNodeType !== '*folder'){
+      openFileUid.current = `${node.uid}/${tmpNode.name}.${ffNodeType}`
+      // openCreatedFile(`${node.uid}/${tmpNode.name}.${ffNodeType}`)
+    }
+  }, [ffTree, focusedItem, expandedItemsObj, setInvalidNodes, createFFNode, setNavigatorDropDownType, removeInvalidNodes, setFFTree])
+  useEffect(() => {
+    if (ffTree[openFileUid.current] !== undefined) {
+      openFile(openFileUid.current)
+    }
+  }, [ffTree])
   const cb_startRenamingNode = useCallback((uid: TNodeUid) => {
     // validate
     if (invalidNodes[uid]) {
@@ -1136,7 +1151,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   const cb_renameNode = useCallback(async (item: TreeItem, newName: string) => {
     const node = item.data as TNode
     const nodeData = node.data as TNormalNodeData
-
     if (!invalidNodes[node.uid]) return
 
     if (nodeData.valid) {
@@ -1757,6 +1771,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       removeRunningActions(['fileTreeView-read'], false)
       return
     }
+    setPrevFileUid(file.uid)
     const nodeData = node.data as TFileNodeData
     if (nodeData.type === 'unknown') {
       dispatch(setCurrentFile({ uid, parentUid: node.parentUid as TNodeUid, name: nodeData.name, content: nodeData.content }))
@@ -1771,6 +1786,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta charset="UTF-8">
+<link rel="icon" href="https://rnbw.company/images/favicon.png">
+  <meta charset="UTF-8">
 <link rel="icon" href="https://rnbw.company/images/favicon.png">
 </head>
 <body>
@@ -1784,18 +1802,19 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
      setUpdateOpt({ parse: true, from: 'file' })
      setParseFile(true)
      removeRunningActions(['fileTreeView-read'])
-
+     setPrevFileUid(uid)
     }
   }, [addRunningActions, removeRunningActions, invalidNodes, ffTree, file.uid])
 
   // handlle links-open
   const openFile = useCallback((uid: TNodeUid) => {
+    if (file.uid === uid) return
     // focus/select/read the file
     addRunningActions(['fileTreeView-focus', 'fileTreeView-select', 'fileTreeView-read'])
     cb_focusNode(uid)
     cb_selectNode([uid])
     cb_readNode(uid)
-  }, [addRunningActions, cb_focusNode, cb_selectNode, cb_readNode])
+  }, [ffTree, addRunningActions, cb_focusNode, cb_selectNode, cb_readNode])
   useEffect(() => {
     if (linkToOpen === '') return
 
@@ -1845,11 +1864,11 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     cb_deleteNode()
   }, [cb_deleteNode])
   const onCut = useCallback(() => {
-    setClipboardData({ panel: 'file', type: 'cut', uids: selectedItems, fileType: ffTree[file.uid].data.type, data: {} })
-  }, [selectedItems, ffTree[file.uid]])
+    setClipboardData({ panel: 'file', type: 'cut', uids: selectedItems, fileType: ffTree[file.uid].data.type, data: [], fileUid: file.uid, prevNodeTree: nodeTree })
+  }, [selectedItems, ffTree[file.uid], nodeTree])
   const onCopy = useCallback(() => {
-    setClipboardData({ panel: 'file', type: 'copy', uids: selectedItems, fileType: ffTree[file.uid].data.type, data: {} })
-  }, [selectedItems, ffTree[file.uid]])
+    setClipboardData({ panel: 'file', type: 'copy', uids: selectedItems, fileType: ffTree[file.uid].data.type, data: [], fileUid: file.uid, prevNodeTree: nodeTree })
+  }, [selectedItems, ffTree[file.uid], nodeTree])
   const onPaste = useCallback(() => {
     if (clipboardData.panel !== 'file') return
 
@@ -1859,7 +1878,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     if (uids.length === 0) return
 
     if (clipboardData.type === 'cut') {
-      setClipboardData({ panel: 'file', type: 'cut', uids: [], fileType: 'html', data: {} })
+      setClipboardData({ panel: 'file', type: 'cut', uids: [], fileType: 'html', data: [], fileUid: '', prevNodeTree: {} })
       cb_moveNode(uids, focusedItem)
     } else if (clipboardData.type === 'copy') {
       cb_moveNode(uids, focusedItem, true)
@@ -1885,7 +1904,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       <div
         id="FileTreeView"
         style={{
-          position: 'absolute',
+          // position: 'absolute',
           top: navigatorDropDownType ? 41 : 0,
           left: 0,
           width: '100%',
@@ -1976,7 +1995,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                     {...props.context.interactiveElementProps}
                     onClick={(e) => {
                       e.stopPropagation()
-
+                      openFileUid.current = props.item.data.uid
                       // skip click-event from an inline rename input
                       const targetId = e.target && (e.target as HTMLElement).id
                       if (targetId === 'FileTreeView-RenameInput') {
@@ -2006,6 +2025,12 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                       const target = e.target as HTMLElement
                       e.dataTransfer.setDragImage(target, window.outerWidth, window.outerHeight)
                       props.context.startDragging()
+                      console.log(props.item)
+                    }}
+                    onDragEnter={() => {
+                      if (!props.context.isExpanded) {
+                        setTimeout(() => cb_expandNode(props.item.index as TNodeUid), AutoExpandDelay)
+                      }
                     }}
                   >
                     <div
@@ -2017,8 +2042,8 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                       {props.arrow}
 
                       {fileReferenceData ?
-                        <SVGIconI {...{ "class": "icon-xs" }}>{props.item.data?.data.kind === 'file' && props.item.data?.data.name === 'index' && props.item.data?.data.type === 'html' ? 'home' :  fileReferenceData['Icon'] ? fileReferenceData['Icon'] : 'page'}</SVGIconI>
-                        : <div className='icon-xs'><SVGIconI {...{ "class": "icon-xs" }}>{props.item.data?.data.kind === 'file' ? fileReferenceData['Icon'] : 'folder'}</SVGIconI></div>}
+                        <SVGIconI {...{ "class": "icon-xs" }}>{props.item.data?.data.kind === 'file' && props.item.data?.data.name === 'index' && props.item.data?.data.type === 'html' ? 'home' :  fileReferenceData && fileReferenceData['Icon'] ? fileReferenceData['Icon'] : 'page'}</SVGIconI>
+                        : <div className='icon-xs'><SVGIconI {...{ "class": "icon-xs" }}>{props.item.data?.data.kind === 'file' ? 'page' : 'folder'}</SVGIconI></div>}
                     </div>
 
                     {props.title}
@@ -2101,7 +2126,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           callbacks={{
             onStartRenamingItem: (item) => {
               cb_startRenamingNode(item.index as TNodeUid)
-              cb_abortRenamingNode(item)
             },
             onAbortRenamingItem: (item) => {
               cb_abortRenamingNode(item)
@@ -2146,6 +2170,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     focusedItem, selectedItems, expandedItems,
     addRunningActions, removeRunningActions,
     cb_startRenamingNode, cb_abortRenamingNode, cb_renameNode,
-    cb_selectNode, cb_focusNode, cb_expandNode, cb_collapseNode, cb_readNode, cb_moveNode, parseFileFlag, setParseFile
+    cb_selectNode, cb_focusNode, cb_expandNode, cb_collapseNode, cb_readNode, cb_moveNode, parseFileFlag, setParseFile, prevFileUid, SVGIconI
   ])
 }

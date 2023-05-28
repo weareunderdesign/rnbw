@@ -164,6 +164,7 @@ export default function Process(props: ProcessProps) {
           for (const change of codeChanges) {
             const { uid } = change
             const node = _nodeTree[uid]
+            if (node === undefined) continue
             if (uid === RootNodeUid || node.name === 'html' || node.name === 'head' || node.name === 'body') {
               seedNodeChanged = true
             }
@@ -204,6 +205,7 @@ export default function Process(props: ProcessProps) {
               _nodeMaxUid = Number(newNodeMaxUid)
               // remove org nodes
               const o_node = _nodeTree[codeChange.uid]
+              if (o_node === undefined) return
               const o_parentNode = _nodeTree[o_node.parentUid as TNodeUid]
               o_parentNode.children = o_parentNode.children.reduce((prev, cur) => {
                 if (cur === codeChange.uid) {
@@ -240,11 +242,12 @@ export default function Process(props: ProcessProps) {
                 const node = nodes.shift() as Node
                 if (node === undefined) continue
                 if (node.nodeName === '#text') continue
-
-                (node as HTMLElement).setAttribute(NodeInAppAttribName, nodeUids[++nodeUidIndex])
-                node.childNodes.forEach((childNode) => {
-                  nodes.push(childNode)
-                })
+                if ((node as HTMLElement).tagName) {
+                  (node as HTMLElement).setAttribute(NodeInAppAttribName, nodeUids[++nodeUidIndex])
+                  node.childNodes.forEach((childNode) => {
+                    nodes.push(childNode)
+                  })
+                }
               }
               // replace element to iframe
               const element = document.querySelector('iframe')?.contentWindow?.window.document.querySelector(`[${NodeInAppAttribName}="${codeChange.uid}"]`)
@@ -449,14 +452,12 @@ export default function Process(props: ProcessProps) {
       setUpdateOpt({ parse: null, from: null })
     } else if (updateOpt.parse === false) {
       // serialize node tree data
-      let _nodeTree: TNodeTreeData = JSON.parse(JSON.stringify(nodeTree))
-
+      const _nodeTree: TNodeTreeData = JSON.parse(JSON.stringify(nodeTree))
       const _file = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode
       const fileData = _file.data as TFileNodeData
 
       if (updateOpt.from === 'node') {
-        const serializedRes = serializeFile(fileData.type, _nodeTree, getReferenceData(fileData.type), osType)
-
+        const serializedRes = serializeFile(fileData.type, nodeTree, getReferenceData(fileData.type), osType)
         if (fileData.type === 'html') {
           const { html, htmlInApp } = serializedRes as THtmlNodeData
           // update ffTree

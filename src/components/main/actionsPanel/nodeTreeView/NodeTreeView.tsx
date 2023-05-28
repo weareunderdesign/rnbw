@@ -26,11 +26,13 @@ import {
 import {
   addNode,
   copyNode,
+  copyNodeExternal,
   duplicateNode,
   getNodeChildIndex,
   getValidNodeUids,
   moveNode,
   removeNode,
+  TFileNodeData,
   THtmlElementsReference,
   THtmlNodeData,
 } from '@_node/index';
@@ -47,15 +49,18 @@ import {
   MainContext,
   navigatorSelector,
   selectFNNode,
+  setCurrentFile,
 } from '@_redux/main';
 import { getCommandKey } from '@_services/global';
 import {
   addClass,
   removeClass,
 } from '@_services/main';
+import { TCodeChange } from '@_types/main';
 
 import { NodeTreeViewProps } from './types';
 
+const AutoExpandDelay = 1 * 1000
 export default function NodeTreeView(props: NodeTreeViewProps) {
   const dispatch = useDispatch()
   // -------------------------------------------------------------- global state --------------------------------------------------------------
@@ -67,6 +72,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     // node actions
     activePanel, setActivePanel,
     clipboardData, setClipboardData,
+    navigatorDropDownType, setNavigatorDropDownType,
     event, setEvent,
     // actions panel
     showActionsPanel,
@@ -106,7 +112,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     theme: _theme,
     // toasts
     addMessage, removeMessage,
-    parseFileFlag, setParseFile
+    parseFileFlag, setParseFile,
+    prevFileUid, setPrevFileUid,
   } = useContext(MainContext)
   // -------------------------------------------------------------- sync --------------------------------------------------------------
   // outline the hovered item
@@ -187,6 +194,9 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
         let temp = ""
         Attributes.split(' ').map(attr => {
           temp = temp + ' ' + attr
+          if (attr === 'controls') {
+            newNodeData.attribs['controls'] = ''
+          }
           if ((temp.match(/”/g) || [])?.length > 1 || (temp.match(/"/g) || [])?.length > 1) {
             const parseAttr = temp.split('=')
             newNodeData.attribs[parseAttr[0].trim()] = parseAttr[1].replace('”', '').replace('”', '').replace('"', '').replace('"', '')
@@ -195,6 +205,9 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
         })
       }
       if (Content) {
+        // let parserRes = parseHtmlCodePart(Content, htmlReferenceData, osType, String(nodeMaxUid) as TNodeUid)
+        // const { formattedContent, tree, nodeMaxUid: newNodeMaxUid } = parserRes
+        // console.log(formattedContent, tree, newNodeMaxUid)
         newNode.isEntity = false
         newNode.children = [String(nodeMaxUid + 2) as TNodeUid]
         contentNode = {
@@ -221,6 +234,10 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
             endColumn: 0,
           } as THtmlNodeData
         } as TNode
+        let codeChange: TCodeChange[] = [{uid: '', content: ''}]
+        codeChange[0].uid = String(nodeMaxUid + 2) as TNodeUid
+        codeChange[0].content = Content
+        // setCodeChanges(codeChange)
       }
     }
 
@@ -235,6 +252,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     // view state
     addRunningActions(['stageView-viewState'])
+    setUpdateOpt({ parse: true, from: 'code' })
 
     // side effect
     setNodeMaxUid(Number(res.nodeMaxUid))
@@ -255,12 +273,14 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     setNodeTree(res.tree)
 
     // view state
-    if (res.lastNodeUid && res.lastNodeUid !== '') {
-      dispatch(focusFNNode(res.lastNodeUid))
-      dispatch(selectFNNode([res.lastNodeUid]))
-    }
     addRunningActions(['stageView-viewState'])
-
+    setUpdateOpt({ parse: true, from: 'code' })
+    setTimeout(() => {
+      if (res.lastNodeUid && res.lastNodeUid !== '') {
+        dispatch(focusFNNode(res.lastNodeUid))
+        dispatch(selectFNNode([res.lastNodeUid]))
+      }
+    }, 100)
     // side effect
     setEvent({ type: 'remove-node', param: [uids, res.deletedUids] })
 
@@ -280,7 +300,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     // view state
     addRunningActions(['stageView-viewState'])
-
+    setUpdateOpt({ parse: true, from: 'code' })
     // side effect
     setNodeMaxUid(Number(res.nodeMaxUid))
     setEvent({ type: 'duplicate-node', param: [uids, res.addedUidMap] })
@@ -299,13 +319,33 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     setUpdateOpt({ parse: false, from: 'node' })
     setNodeTree(res.tree)
 
+    setUpdateOpt({ parse: true, from: 'code' })
     // view state
     addRunningActions(['stageView-viewState'])
-
     // side effect
     setNodeMaxUid(Number(res.nodeMaxUid))
+    
     setEvent({ type: 'copy-node', param: [uids, targetUid, isBetween, position, res.addedUidMap] })
 
+    removeRunningActions(['nodeTreeView-copy'])
+  }, [addRunningActions, removeRunningActions, nodeTree, nodeMaxUid, osType, tabSize])
+  const cb_copyNodeExternal = useCallback((nodes: TNode[], targetUid: TNodeUid, isBetween: boolean, position: number) => {
+    addRunningActions(['nodeTreeView-copy'])
+
+    // call api
+    const tree = JSON.parse(JSON.stringify(nodeTree)) as TNodeTreeData
+    const res = copyNodeExternal(tree, targetUid, isBetween, position, nodes, 'html', String(nodeMaxUid) as TNodeUid, osType, tabSize, clipboardData.prevNodeTree)
+
+    // processor
+    addRunningActions(['processor-updateOpt'])
+    setUpdateOpt({ parse: false, from: 'node' })
+    setNodeTree(res.tree)
+    // view state
+    addRunningActions(['stageView-viewState'])
+    setUpdateOpt({ parse: true, from: 'code' })
+    // side effect
+    setNodeMaxUid(Number(res.nodeMaxUid))
+    setEvent({ type: 'copy-node-external', param: [nodes, targetUid, isBetween, position, res.addedUidMap] })
     removeRunningActions(['nodeTreeView-copy'])
   }, [addRunningActions, removeRunningActions, nodeTree, nodeMaxUid, osType, tabSize])
   const cb_moveNode = useCallback((_uids: TNodeUid[], targetUid: TNodeUid, isBetween: boolean, position: number) => {
@@ -326,7 +366,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     // view state
     addRunningActions(['stageView-viewState'])
-
+    setUpdateOpt({ parse: true, from: 'code' })
     // side effect
     setNodeMaxUid(Number(res.nodeMaxUid))
     setEvent({ type: 'move-node', param: [uids, targetUid, isBetween, res.position] })
@@ -369,6 +409,14 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     dispatch(selectFNNode(_uids))
 
+    if (!parseFileFlag) {
+      const node = ffTree[prevFileUid]
+      const uid = prevFileUid
+      const nodeData = node.data as TFileNodeData
+      setParseFile(true)
+      dispatch(setCurrentFile({ uid, parentUid: node.parentUid as TNodeUid, name: nodeData.name, content: nodeData.content }))
+      setCurrentFileUid(uid)
+    }
     removeRunningActions(['nodeTreeView-select'])
   }, [addRunningActions, removeRunningActions, validNodeTree, selectedItems, selectedItemsObj])
   const cb_expandNode = useCallback((uid: TNodeUid) => {
@@ -428,29 +476,53 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
   const onCut = useCallback(() => {
     if (selectedItems.length === 0) return
-    setClipboardData({ panel: 'node', type: 'cut', uids: selectedItems, fileType: ffTree[file.uid].data.type, data: {} })
-  }, [selectedItems, ffTree[file.uid]])
+    let data: TNode[] = []
+    for (let x in selectedItems) {
+      if (validNodeTree[selectedItems[x]]) {
+        data.push(validNodeTree[selectedItems[x]])
+      }
+    }
+    setClipboardData({ panel: 'node', type: 'cut', uids: selectedItems, fileType: ffTree[file.uid].data.type, data: data, fileUid: file.uid, prevNodeTree: nodeTree })
+  }, [selectedItems, ffTree[file.uid], nodeTree])
   const onCopy = useCallback(() => {
-    console.log(selectedItems, ffTree, ffTree[file.uid].data)
     if (selectedItems.length === 0) return
-    setClipboardData({ panel: 'node', type: 'copy', uids: selectedItems, fileType: ffTree[file.uid].data.type, data: {} })
-  }, [selectedItems, ffTree[file.uid]])
+    let data: TNode[] = []
+    for (let x in selectedItems) {
+      if (validNodeTree[selectedItems[x]]) {
+        data.push(validNodeTree[selectedItems[x]])
+      }
+    }
+    setClipboardData({ panel: 'node', type: 'copy', uids: selectedItems, fileType: ffTree[file.uid].data.type, data: data, fileUid: file.uid, prevNodeTree: nodeTree })
+  }, [selectedItems, ffTree[file.uid], nodeTree])
   const onPaste = useCallback(() => {
     if (clipboardData.panel !== 'node') return
 
     const uids = clipboardData.uids.filter(uid => !!validNodeTree[uid])
+    const datas = clipboardData.data.filter(data => data.data.valid)
     const focusedNode = validNodeTree[focusedItem]
     const parentNode = validNodeTree[focusedNode.parentUid as TNodeUid]
+
+    if (parentNode === undefined) return
 
     const childIndex = getNodeChildIndex(parentNode, focusedNode)
 
     if (clipboardData.type === 'cut') {
-      setClipboardData({ panel: 'unknown', type: null, uids: [], fileType: 'html', data: {} })
-      cb_moveNode(uids, parentNode.uid, true, childIndex + 1)
+      setClipboardData({ panel: 'unknown', type: null, uids: [], fileType: 'html', data: [], fileUid: '', prevNodeTree: {} })
+      if (file.uid === clipboardData.fileUid) {
+        cb_moveNode(uids, parentNode.uid, true, childIndex + 1)
+      }
+      else{
+        cb_copyNodeExternal(datas, parentNode.uid, true, childIndex + 1)
+      }
     } else {
-      cb_copyNode(uids, parentNode.uid, true, childIndex + 1)
+      if (file.uid === clipboardData.fileUid) {
+        cb_copyNode(uids, parentNode.uid, true, childIndex + 1)
+      }
+      else{
+        cb_copyNodeExternal(datas, parentNode.uid, true, childIndex + 1)
+      }
     }
-  }, [clipboardData, validNodeTree, focusedItem, cb_moveNode, cb_copyNode])
+  }, [clipboardData, validNodeTree, focusedItem, cb_moveNode, cb_copyNode, file.uid, cb_copyNodeExternal])
   const onDelete = useCallback(() => {
     if (selectedItems.length === 0) return
     cb_removeNode(selectedItems)
@@ -474,14 +546,18 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   // -------------------------------------------------------------- own --------------------------------------------------------------
   const onPanelClick = useCallback(() => {
     setActivePanel('node')
-  }, [])
+
+    navigatorDropDownType !== null && setNavigatorDropDownType(null)
+  }, [navigatorDropDownType])
+
+  const isDragging = useRef<boolean>(false)
 
   return useMemo(() => {
-    return file.uid !== '' && parseFileFlag ? <>
+    return file.uid !== '' ? <>
       <div
         id="NodeTreeView"
         style={{
-          position: 'absolute',
+          // position: 'absolute',
           top: 41,
           left: 0,
           width: '100%',
@@ -569,14 +645,35 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                           (props.context.selectItem())
 
                       setActivePanel('node')
+
+                      navigatorDropDownType !== null && setNavigatorDropDownType(null)
                     }}
                     onFocus={() => { }}
-                    onMouseEnter={() => setFNHoveredItem(props.item.index as TNodeUid)}
-                    onMouseLeave={() => setFNHoveredItem('' as TNodeUid)}
                     onDragStart={(e: React.DragEvent) => {
                       const target = e.target as HTMLElement
+                      target.style.cursor = 'default !important'
+                      target.style.cursor = 'default'
                       e.dataTransfer.setDragImage(target, window.outerWidth, window.outerHeight)
                       props.context.startDragging()
+
+                      isDragging.current = true
+
+                      let body = (document.body as HTMLElement)
+                      body.classList.add('inheritCursors');
+                      body.style.cursor = 'default'
+                      const className = 'dragging-tree';
+                      const html = document.getElementsByTagName('html').item(0);
+                      if (html && new RegExp(className).test(html.className) === false) {
+                          html.className += ' ' + className; // use a space in case there are other classNames
+                      }
+                    }}
+                    onDragEnter={(e) => {
+                      if (!props.context.isExpanded) {
+                        setTimeout(() => cb_expandNode(props.item.index as TNodeUid), AutoExpandDelay)
+                      }
+                      const target = e.target as HTMLElement
+                      target.style.cursor = 'default'
+                      
                     }}
                   >
                     <div className="gap-s padding-xs" style={{ width: "100%" }}>
@@ -584,7 +681,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
                       {htmlElementReferenceData ?
                         <SVGIconI {...{ "class": "icon-xs" }}>{htmlElementReferenceData['Icon']}</SVGIconI>
-                        : <div className='icon-xs'><SVGIconI {...{ "class": "icon-xs" }}>component</SVGIconI></div>}
+                        : props.item.data.name === "!--...--" || props.item.data.name === 'comment' ? <div className='icon-xs'><SVGIconI {...{ "class": "icon-xs" }}>help</SVGIconI></div> : <div className='icon-xs'><SVGIconI {...{ "class": "icon-xs" }}>component</SVGIconI></div>}
 
                       {htmlElementReferenceData ? <>
                         <span
@@ -598,7 +695,17 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                         >
                           {htmlElementReferenceData['Name']}
                         </span>
-                      </> : props.title}
+                      </> : props.item.data.name === "!--...--" ? <span
+                          className='text-s justify-stretch'
+                          style={{
+                            width: "calc(100% - 32px)",
+                            textOverflow: 'ellipsis',
+                            overflow: 'hidden',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          comment
+                        </span> : props.title}
                     </div>
                   </div>
 
@@ -695,6 +802,24 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
               const position = isBetween ? target.childIndex : 0
 
               cb_moveNode(uids, targetUid, isBetween, position)
+
+              isDragging.current = false
+
+              const className = 'dragging-tree';
+              const html = document.getElementsByTagName('html').item(0);
+              let body = (document.body as HTMLElement)
+              body.classList.remove('inheritCursors');
+              body.style.cursor = 'unset'
+              if (html && new RegExp(className).test(html.className) === true) {
+                  // Remove className with the added space (from setClassToHTMLElement)
+                  
+                  html.className = html.className.replace(
+                      new RegExp(' ' + className),
+                      ''
+                  );
+                  // Remove className without added space (just in case)
+                  html.className = html.className.replace(new RegExp(className), '');
+              }
             },
           }}
         />
@@ -705,6 +830,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     nodeTreeViewData, file,
     focusedItem, selectedItems, expandedItems,
     addRunningActions, removeRunningActions,
-    cb_selectNode, cb_focusNode, cb_expandNode, cb_collapseNode, cb_moveNode, parseFileFlag, setParseFile
+    cb_selectNode, cb_focusNode, cb_expandNode, cb_collapseNode, cb_moveNode, parseFileFlag, setParseFile, navigatorDropDownType
   ])
 }
