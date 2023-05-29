@@ -210,8 +210,31 @@ export const IFrame = (props: IFrameProps) => {
 
     focusedItemRef.current = uid
 
+    const newFocusedElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${uid}"]`)
+    const elementRect = (newFocusedElement as HTMLElement)?.getBoundingClientRect()
+    setTimeout(() => newFocusedElement?.scrollIntoView({ block: 'nearest', inline: 'start', behavior: 'smooth' }), 50)
+    console.log(elementRect, uid)
+    if (elementRect) {
+      if (elementRect.y < 0) {
+        setCodeViewOffsetTop('66')
+      }
+      else {
+        const innerHeight = contentRef?.contentWindow?.document.documentElement.clientHeight
+        const elePosition = elementRect.y + elementRect.height / 2
+        if (innerHeight) {
+          if (elementRect.height < innerHeight / 2) {
+            if (elePosition / innerHeight * 100 > 66) {
+              setCodeViewOffsetTop('1')
+            }
+            if (elePosition / innerHeight * 100 < 33) {
+              setCodeViewOffsetTop('66')
+            }
+          }
+        }
+      }
+    }
     removeRunningActions(['stageView-focus'])
-  }, [addRunningActions, removeRunningActions, nodeTree])
+  }, [addRunningActions, removeRunningActions, nodeTree, contentRef])
   // -------------------------------------------------------------- side effect handlers --------------------------------------------------------------
   const addElement = useCallback((targetUid: TNodeUid, node: TNode, contentNode: TNode | null) => {
     // build new element
