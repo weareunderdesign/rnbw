@@ -164,7 +164,7 @@ export default function MainPage(props: MainPageProps) {
   }, [noRunningAction, file.content])
   // navigator
   const [workspace, setWorkspace] = useState<TWorkspace>({ name: 'local', projects: [] })
-  const [project, setProject] = useState<TProject>({ context: 'idb', name: 'welcome', handler: null, favicon: null })
+  const [project, setProject] = useState<TProject>({ context: 'idb', name: 'untitled', handler: null, favicon: null })
   const [navigatorDropDownType, setNavigatorDropDownType] = useState<TNavigatorDropDownType>(null)
   // node actions
   const [activePanel, setActivePanel] = useState<TPanelContext>('unknown')
@@ -662,7 +662,7 @@ export default function MainPage(props: MainPageProps) {
         })
         setFFTree(treeViewData)
         setFFHandlers(ffHandlerObj)
-        setProject({ context: 'idb', name: 'welcome', handler: null, favicon: null })
+        setProject({ context: 'idb', name: 'untitled', handler: null, favicon: null })
         
         // store last edit session
         // const _recentProjectContext = [...recentProjectContext]
@@ -682,14 +682,14 @@ export default function MainPage(props: MainPageProps) {
         //   _recentProjectHandler.pop()
         // }
         // _recentProjectContext.unshift(fsType)
-        // _recentProjectName.unshift('welcome')
+        // _recentProjectName.unshift('untitled')
         // _recentProjectHandler.unshift(null)
         // setRecentProjectContext(_recentProjectContext)
         // setRecentProjectName(_recentProjectName)
         // setRecentProjectHandler(_recentProjectHandler)
         // await setMany([['recent-project-context', _recentProjectContext], ['recent-project-name', _recentProjectName], ['recent-project-handler', _recentProjectHandler]])
       } catch (err) {
-        LogAllow && console.log('failed to load welcome project')
+        LogAllow && console.log('failed to load untitled project')
       }
       setFSPending(false)
     }
@@ -729,12 +729,12 @@ export default function MainPage(props: MainPageProps) {
   const onNew = useCallback(async () => {
     setFSPending(true)
 
-    // init/open welcome project
+    // init/open untitled project
     try {
       await initIDBProject(DefaultProjectPath)
       await onImportProject('idb')
     } catch (err) {
-      LogAllow && console.log('failed to init/load welcome project')
+      LogAllow && console.log('failed to init/load untitled project')
     }
 
     setFSPending(false)
@@ -833,7 +833,7 @@ export default function MainPage(props: MainPageProps) {
   const [codeViewHeight, setCodeViewHeight] = useState("33.33")
   const [codeViewDragging, setCodeViewDragging] = useState(false)
   // -------------------------------------------------------------- other --------------------------------------------------------------
-  // detect OS & fetch reference - html. Jumpstart.csv, Actions.csv - restore recent project session - open welcome project and jumpstart menu ons tartup
+  // detect OS & fetch reference - html. Jumpstart.csv, Actions.csv - restore recent project session - open untitled project and jumpstart menu ons tartup
   useEffect(() => {
     (async () => {
       addRunningActions(['detect-os', 'reference-files', 'reference-html-elements', 'reference-cmdk-jumpstart', 'reference-cmdk-actions'])
@@ -1071,15 +1071,15 @@ export default function MainPage(props: MainPageProps) {
     LogAllow && console.log('isNewbie: ', isNewbie === null ? true : false)
     if (!isNewbie) {
       localStorage.setItem("newbie", 'false');
-      // init/open welcome project
+      // init/open untitled project
       (async () => {
         setFSPending(true)
         try {
           await initIDBProject(DefaultProjectPath)
           await onImportProject('idb')
-          LogAllow && console.log('inited/loaded welcome project')
+          LogAllow && console.log('inited/loaded untitled project')
         } catch (err) {
-          LogAllow && console.log('failed to init/load welcome project')
+          LogAllow && console.log('failed to init/load untitled project')
         }
         setFSPending(false)
       })()
@@ -1459,7 +1459,6 @@ export default function MainPage(props: MainPageProps) {
                           onSelect={() => {
                             // keep modal open when toogling theme or go "Add" menu from "Actions" menu
                             command.Name !== 'Theme' && command.Name !== 'Add' && setCmdkOpen(false)
-                            console.log(command)
                             if (command.Name === 'Guide') {
                               guideRef.current?.click()
                             } else if (command.Group === 'Add') {
