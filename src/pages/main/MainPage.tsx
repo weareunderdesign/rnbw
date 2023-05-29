@@ -219,6 +219,9 @@ export default function MainPage(props: MainPageProps) {
   const [currentCommand, setCurrentCommand] = useState<TCommand>({ action: '' })
   const [cmdkOpen, setCmdkOpen] = useState<boolean>(false)
   const [cmdkPages, setCmdkPages] = useState<string[]>([])
+
+  // guide ref
+  const guideRef = useRef<HTMLAnchorElement>(null)
   const cmdkPage = useMemo(() => {
     return cmdkPages.length == 0 ? '' : cmdkPages[cmdkPages.length - 1]
   }, [cmdkPages])
@@ -481,6 +484,9 @@ export default function MainPage(props: MainPageProps) {
         break
       case 'Design':
         toogleActionsPanel()
+        break
+      case 'Guide':
+        openGuidePage()
         break
       case 'Download':
         onDownload()
@@ -812,6 +818,10 @@ export default function MainPage(props: MainPageProps) {
   const toogleActionsPanel = useCallback(() => {
     setShowActionsPanel(!showActionsPanel)
   }, [showActionsPanel])
+  // open guide page
+  const openGuidePage = useCallback(() => {
+    window.open('https://guide.rnbw.dev', '_blank', 'noreferrer');
+  }, [currentCommand])
   // -------------------------------------------------------------- pos/size for panels --------------------------------------------------------------
   const [actionsPanelOffsetTop, setActionsPanelOffsetTop] = useState(10)
   const [actionsPanelOffsetLeft, setActionsPanelOffsetLeft] = useState(10)
@@ -1449,8 +1459,10 @@ export default function MainPage(props: MainPageProps) {
                           onSelect={() => {
                             // keep modal open when toogling theme or go "Add" menu from "Actions" menu
                             command.Name !== 'Theme' && command.Name !== 'Add' && setCmdkOpen(false)
-
-                            if (command.Group === 'Add') {
+                            console.log(command)
+                            if (command.Name === 'Guide') {
+                              guideRef.current?.click()
+                            } else if (command.Group === 'Add') {
                               setCurrentCommand({ action: `${AddActionPrefix}-${command.Context}` })
                             } else if (cmdkPage === 'Jumpstart' && command.Group === 'Recent') {
                               const index = Number(command.Context)
@@ -1504,7 +1516,8 @@ export default function MainPage(props: MainPageProps) {
               </Command.List>
             </div>
           </div>
-
+          {/* Guide link */}
+          <a style={{'display' : 'none'}} href='https://guide.rnbw.dev' target='_blank' ref={guideRef}></a>
           {/* description - right panel */}
           {(cmdkPage === 'Add' || cmdkPage === 'Jumpstart') &&
             <div className={cx(
