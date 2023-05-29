@@ -9,26 +9,26 @@ export const jss = `
        const imgs = document.getElementsByTagName('img');
        for (let i = 0 ; i < imgs.length ; i ++) {
         if (imgs[i].src === '' || imgs[i].src === null) {
-            imgs[i].src = '${emptyImage}'
+            // imgs[i].src = '${emptyImage}'
         }
         else {
-            imgs[i].setAttribute('onerror', "this.onerror=null; this.src='${emptyImage}'")
+            // imgs[i].setAttribute('onerror', "this.onerror=null; this.src='${emptyImage}'")
         }
        }
     }
-    const audioValidate = function() {
-        const audios = document.getElementsByTagName('audio');
-        for (let i = 0 ; i < audios.length ; i ++) {
-         if (audios[i].src === '' || audios[i].src === null) {
-            audios[i].src = '${emptyAudio}'
-         }
-         else {
-            audios[i].setAttribute('onerror', "this.onerror=null; this.src='${emptyAudio}'")
-         }
-        }
-     }
+   //  const audioValidate = function() {
+   //      const audios = document.getElementsByTagName('audio');
+   //      for (let i = 0 ; i < audios.length ; i ++) {
+   //       if (audios[i].src === '' || audios[i].src === null) {
+   //          audios[i].src = '${emptyAudio}'
+   //       }
+   //       else {
+   //          audios[i].setAttribute('onerror', "this.onerror=null; this.src='${emptyAudio}'")
+   //       }
+   //      }
+   //   }
     // The page is fully loaded
-    setInterval(() => {imageValidate(); audioValidate()}, 100)
+    setInterval(() => imageValidate(), 100)
  
  })();
 

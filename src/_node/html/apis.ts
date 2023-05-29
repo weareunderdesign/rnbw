@@ -296,9 +296,9 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
         return attrContent === '' ? ` ${attr}` : ` ${attr}="${attrContent}"`
       }).join('')
 
-    if (nodeData.type === 'tag' && nodeData.name === 'img') {
-      attribsHtmlInApp += attribsHtmlInApp + ` onerror="this.onerror=null; this.src='${emptyImage}'"`
-    }
+    // if (nodeData.type === 'tag' && nodeData.name === 'img') {
+    //   attribsHtmlInApp += attribsHtmlInApp + ` onerror="this.onerror=null; this.src='${emptyImage}'"`
+    // }
     // wrap with the current node
     if (nodeData.type === 'directive') {
       nodeHtml = `<${nodeData.data}>`
