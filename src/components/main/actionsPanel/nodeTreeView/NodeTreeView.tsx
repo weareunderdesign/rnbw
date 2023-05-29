@@ -649,6 +649,29 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
                       navigatorDropDownType !== null && setNavigatorDropDownType(null)
                     }}
+                    onMouseEnter={(e) => {
+                      const ele = e.target as HTMLElement
+                      let _uid: TNodeUid | null = ele.getAttribute('id')
+                      // for the elements which are created by js. (ex: Web Component)
+                      let newHoveredElement: HTMLElement = ele
+                      if (_uid === null || _uid === undefined) return
+                      _uid = _uid?.substring(13, _uid.length)
+                      while (!_uid) {
+                        const parentEle = newHoveredElement.parentElement
+                        if (!parentEle) break
+                        
+                        _uid = parentEle.getAttribute(NodeInAppAttribName)
+                        !_uid ? newHoveredElement = parentEle : null
+                      }
+                      
+                      // set hovered item
+                      if (_uid && _uid !== fnHoveredItem) {
+                        setFNHoveredItem(_uid)
+                      }
+                    }}
+                    onMouseLeave={() => {
+                      setFNHoveredItem('')
+                    }}
                     onFocus={() => { }}
                     onDragStart={(e: React.DragEvent) => {
                       const target = e.target as HTMLElement
