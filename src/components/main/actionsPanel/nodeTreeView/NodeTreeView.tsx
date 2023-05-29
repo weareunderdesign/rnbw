@@ -414,6 +414,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       const uid = prevFileUid
       const nodeData = node.data as TFileNodeData
       setParseFile(true)
+      setNavigatorDropDownType('project')
       dispatch(setCurrentFile({ uid, parentUid: node.parentUid as TNodeUid, name: nodeData.name, content: nodeData.content }))
       setCurrentFileUid(uid)
     }

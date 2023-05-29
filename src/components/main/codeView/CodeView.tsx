@@ -221,6 +221,7 @@ export default function CodeView(props: CodeViewProps) {
   // detect node of current selection
   const [focusedNode, setFocusedNode] = useState<TNode>()
   useEffect(() => {
+    if (!parseFileFlag) return
     if (!selection) return
 
     const _file = ffTree[file.uid]
@@ -261,7 +262,7 @@ export default function CodeView(props: CodeViewProps) {
         setFocusedNode(JSON.parse(JSON.stringify(node)))
       }
     }
-  }, [selection])
+  }, [selection, parseFileFlag])
   useEffect(() => {
     if (focusedNode) {
       if (focusedNode.uid === focusedItemRef.current) return
@@ -369,9 +370,6 @@ export default function CodeView(props: CodeViewProps) {
       else {
         reduxTimeout.current !== null && clearTimeout(reduxTimeout.current)
         delay = 500
-        if (!parseFileFlag) {
-          delay = 1000
-        }
       }
       const o_rowCount = o_range.endLineNumber - o_range.startLineNumber + 1
   

@@ -573,6 +573,7 @@ export default function Process(props: ProcessProps) {
               await writableStream.write(nodeData.content)
               await writableStream.close()
               nodeData.changed = false
+              nodeData.orgContent = nodeData.content
             } else if (project.context === 'idb') {
               await writeFile(nodeData.path, nodeData.content)
               nodeData.changed = false
@@ -584,6 +585,11 @@ export default function Process(props: ProcessProps) {
               content: 'error occurred while saving',
             })
           }
+        }
+        const fileData = ffTree[file.uid].data as TFileNodeData
+        if (fileData.ext !== '.html') {
+          
+          setNeedToReloadIFrame(true)
         }
       }
     }))
