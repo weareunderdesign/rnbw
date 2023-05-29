@@ -992,9 +992,9 @@ export default function MainPage(props: MainPageProps) {
         _cmdkReferenceData[_command['Name']] = _command
       }))
 
-      if (_cmdkRefJumpstartData['Recent'].length === 0) {
-        delete _cmdkRefJumpstartData['Recent']
-      }
+      // if (_cmdkRefJumpstartData['Recent'].length === 0) {
+      //   delete _cmdkRefJumpstartData['Recent']
+      // }
       setCmdkReferenceJumpstart(_cmdkRefJumpstartData)
       LogAllow && console.log('cmdk jumpstart reference data: ', _cmdkRefJumpstartData)
 
