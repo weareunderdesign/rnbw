@@ -1463,7 +1463,7 @@ export default function MainPage(props: MainPageProps) {
                             }
                           }}
                         >
-                          <div className='justify-stretch padding-s'>
+                          <div className='justify-stretch padding-s align-center'>
                             <div className="gap-s align-center">
                               {/* detect Theme Group and render check boxes */}
                               {cmdkPage === 'Jumpstart' && command.Name === 'Theme' ?
