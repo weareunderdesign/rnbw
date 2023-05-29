@@ -1381,9 +1381,9 @@ export default function MainPage(props: MainPageProps) {
           }}
         >
           {/* menu list - left panel */}
-          <div className="padding-m">
+          <div className="padding-m box">
             <div className="direction-row align-stretch">
-              <Command.List style={{ maxHeight: "600px", overflow: "auto" }}>
+              <Command.List style={{ maxHeight: "600px", overflow: "auto", width: '100%' }}>
                 {/* <Command.Loading>Fetching commands reference data...</Command.Loading> */}
 
                 {/* <Command.Empty>No results found for "{cmdkSearch}".</Command.Empty> */}
@@ -1518,7 +1518,7 @@ export default function MainPage(props: MainPageProps) {
           {/* Guide link */}
           <a style={{'display' : 'none'}} href='https://guide.rnbw.dev' target='_blank' ref={guideRef}></a>
           {/* description - right panel */}
-          {(cmdkPage === 'Add' || cmdkPage === 'Jumpstart') &&
+          {(cmdkPage === 'Add' || cmdkPage === 'Jumpstart') && false &&
             <div className={cx(
               "box align-center border-left padding-l text-l",
               !!hoveredMenuItemDescription ? '' : 'opacity-m',
