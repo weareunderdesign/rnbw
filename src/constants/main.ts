@@ -20,6 +20,6 @@ export const LogAllow: boolean = true
 export const AddActionPrefix = 'AddAction'
 export const AddFileActionPrefix = `${AddActionPrefix}-File`
 export const AddNodeActionPrefix = `${AddActionPrefix}-Node`
-export const DefaultProjectPath = '/_rnbw_default_project'
+export const DefaultProjectPath = '/untitled'
 export const StagePreviewPathPrefix = 'rnbw-stage-preview-'
 export const RecentProjectCount = 10
