@@ -48,6 +48,7 @@ import {
   focusFNNode,
   MainContext,
   navigatorSelector,
+  selectFFNode,
   selectFNNode,
   setCurrentFile,
 } from '@_redux/main';
@@ -417,6 +418,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       setNavigatorDropDownType('project')
       dispatch(setCurrentFile({ uid, parentUid: node.parentUid as TNodeUid, name: nodeData.name, content: nodeData.content }))
       setCurrentFileUid(uid)
+      dispatch(selectFFNode([prevFileUid]))
     }
     removeRunningActions(['nodeTreeView-select'])
   }, [addRunningActions, removeRunningActions, validNodeTree, selectedItems, selectedItemsObj])

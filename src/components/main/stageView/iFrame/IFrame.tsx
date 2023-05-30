@@ -30,6 +30,7 @@ import {
   focusFNNode,
   MainContext,
   navigatorSelector,
+  selectFFNode,
   selectFNNode,
   setCurrentFile,
   updateFNTreeViewState,
@@ -445,6 +446,7 @@ export const IFrame = (props: IFrameProps) => {
       setParseFile(true)
       dispatch(setCurrentFile({ uid, parentUid: node.parentUid as TNodeUid, name: nodeData.name, content: nodeData.content }))
       setCurrentFileUid(uid)
+      dispatch(selectFFNode([prevFileUid]))
     }
     else {
       const ele = e.target as HTMLElement
@@ -735,10 +737,11 @@ export const IFrame = (props: IFrameProps) => {
   // reload when script changes
   useEffect(() => {
     if (needToReloadIFrame) {
+      contentRef?.contentWindow?.location.reload()
       setNeedToReloadIFrame(false)
       linkTagUid.current = ''
     }
-  }, [needToReloadIFrame])
+  }, [needToReloadIFrame, contentRef])
 
   return useMemo(() => {
     return <>
