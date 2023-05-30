@@ -1771,8 +1771,10 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       removeRunningActions(['fileTreeView-read'], false)
       return
     }
-    setPrevFileUid(file.uid)
     const nodeData = node.data as TFileNodeData
+    if (nodeData.type === 'html') {
+      setPrevFileUid(file.uid)
+    }
     if (nodeData.type === 'unknown') {
       dispatch(setCurrentFile({ uid, parentUid: node.parentUid as TNodeUid, name: nodeData.name, content: nodeData.content }))
       removeRunningActions(['fileTreeView-read'])
