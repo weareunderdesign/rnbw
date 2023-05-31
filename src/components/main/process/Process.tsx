@@ -122,7 +122,7 @@ export default function Process(props: ProcessProps) {
       const fileData = _file.data as TFileNodeData
       window.document.title = `${fileData.name}${fileData.ext}`
     }
-  }, [fileInfo])
+  }, [file.uid])
   // processor-updateOpt
   useEffect(() => {
     if (updateOpt.parse === true) {
