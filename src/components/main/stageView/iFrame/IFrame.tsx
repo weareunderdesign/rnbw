@@ -413,6 +413,27 @@ export const IFrame = (props: IFrameProps) => {
     }, 100)
     removeRunningActions(['stageView-viewState'])
   }, [removeRunningActions, contentRef])
+
+  // change iframe theme
+  useEffect(() => {
+    let uid = '-1'
+    for(let x in validNodeTree) {
+      if (validNodeTree[x].data.name === 'html' && validNodeTree[x].data.type === 'tag') {
+        uid = validNodeTree[x].uid
+        break;
+      }
+    }
+    const ele = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${uid}"]`)
+    if (contentRef) {
+      if (
+        theme !== 'Light'
+      ) {
+        ele?.setAttribute("data-theme", "dark")
+      } else {
+        ele?.setAttribute("data-theme", "light")
+      }
+    }
+  }, [contentRef, theme, validNodeTree])
   // -------------------------------------------------------------- iframe event handlers --------------------------------------------------------------
   // mouse events
   const onMouseEnter = useCallback((e: MouseEvent) => { }, [])
