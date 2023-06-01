@@ -24,6 +24,7 @@ import {
 } from '@_node/apis';
 import {
   parseFile,
+  reloadLocalProject,
   serializeFile,
   TFileNodeData,
   writeFile,
@@ -587,8 +588,8 @@ export default function Process(props: ProcessProps) {
           }
         }
         const fileData = ffTree[file.uid].data as TFileNodeData
-        if (fileData.ext !== '.html') {
-          
+        if (fileData.ext === '.css' || fileData.ext === '.js') {
+          reloadLocalProject(ffHandlers[RootNodeUid] as FileSystemDirectoryHandle, ffTree, osType, [file.uid])
           setNeedToReloadIFrame(true)
         }
       }
@@ -597,7 +598,7 @@ export default function Process(props: ProcessProps) {
     setFFTree(_ffTree)
 
     removeRunningActions(['process-save'], false)
-  }, [ffTree, ffHandlers])
+  }, [ffTree, ffHandlers, reloadLocalProject])
 
   return useMemo(() => {
     return <></>
