@@ -348,7 +348,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     setNodeMaxUid(Number(res.nodeMaxUid))
     setEvent({ type: 'copy-node-external', param: [nodes, targetUid, isBetween, position, res.addedUidMap] })
     removeRunningActions(['nodeTreeView-copy'])
-  }, [addRunningActions, removeRunningActions, nodeTree, nodeMaxUid, osType, tabSize])
+  }, [addRunningActions, removeRunningActions, nodeTree, nodeMaxUid, osType, tabSize, clipboardData])
   const cb_moveNode = useCallback((_uids: TNodeUid[], targetUid: TNodeUid, isBetween: boolean, position: number) => {
     // validate
     const uids = getValidNodeUids(nodeTree, _uids, targetUid, 'html', htmlReferenceData)
@@ -519,7 +519,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       }
     } else {
       if (file.uid === clipboardData.fileUid) {
-        cb_copyNode(uids, parentNode.uid, true, childIndex + 1)
+        cb_copyNodeExternal(datas, parentNode.uid, true, childIndex + 1)
       }
       else{
         cb_copyNodeExternal(datas, parentNode.uid, true, childIndex + 1)
@@ -707,7 +707,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
                       {htmlElementReferenceData ?
                         <SVGIconI {...{ "class": "icon-xs" }}>{htmlElementReferenceData['Icon']}</SVGIconI>
-                        : props.item.data.name === "!--...--" || props.item.data.name === 'comment' ? <div className='icon-xs'><SVGIconI {...{ "class": "icon-xs" }}>help</SVGIconI></div> : <div className='icon-xs'><SVGIconI {...{ "class": "icon-xs" }}>component</SVGIconI></div>}
+                        : props.item.data.name === "!--...--" || props.item.data.name === 'comment' ? <div className='icon-xs'><SVGIconI {...{ "class": "icon-xs" }}>bubble</SVGIconI></div> : <div className='icon-xs'><SVGIconI {...{ "class": "icon-xs" }}>component</SVGIconI></div>}
 
                       {htmlElementReferenceData ? <>
                         <span
@@ -721,7 +721,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                         >
                           {htmlElementReferenceData['Name']}
                         </span>
-                      </> : props.item.data.name === "!--...--" ? <span
+                      </> : props.item.data.name === "!--...--" || props.item.data.name === 'comment' ? <span
                           className='text-s justify-stretch'
                           style={{
                             width: "calc(100% - 32px)",
