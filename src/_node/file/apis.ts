@@ -367,7 +367,7 @@ export const loadLocalProject = async (projectHandle: FileSystemDirectoryHandle,
     res(handlerObj)
   })
 }
-export const reloadLocalProject = async (projectHandle: FileSystemDirectoryHandle, ffTree: TNodeTreeData, osType: TOsType): Promise<{ handlerObj: TFileHandlerInfoObj, deletedUids: TNodeUid[] }> => {
+export const reloadLocalProject = async (projectHandle: FileSystemDirectoryHandle, ffTree: TNodeTreeData, osType: TOsType, files: TNodeUid[] = []): Promise<{ handlerObj: TFileHandlerInfoObj, deletedUids: TNodeUid[] }> => {
   return new Promise(async (res, rej) => {
     // verify project-handler permission
     if (!(await verifyFileHandlerPermission(projectHandle))) rej('project handler permission error')
@@ -430,8 +430,15 @@ export const reloadLocalProject = async (projectHandle: FileSystemDirectoryHandl
           // update handler-arr, handler-obj
           handlerObj[uid].children.push(c_uid)
           handlerObj[c_uid] = handlerInfo
-          if (!ffTree[c_uid]) {
-            handlerArr.push(handlerInfo)
+          if (files.length === 0) {
+            if (!ffTree[c_uid]) {
+              handlerArr.push(handlerInfo)
+            }
+          }
+          else {
+            if (files.filter(file => file === c_uid).length > 0) {
+              handlerArr.push(handlerInfo)
+            }
           }
 
           c_kind === 'directory' && dirHandlers.push(handlerInfo)
