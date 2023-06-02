@@ -770,7 +770,7 @@ export const IFrame = (props: IFrameProps) => {
         <iframe
           ref={setContentRef}
           src={iframeSrc}
-          style={parseFileFlag ? { position: "absolute", width: "100%", height: "100%" } : { position: "absolute", width: "100%", height: "100%", overflow: 'hidden', opacity: 0.2 }}
+          style={parseFileFlag ? { position: "absolute", width: "100%", height: "100vh" } : { position: "absolute", width: "100%", height: "100vh", overflow: 'hidden', opacity: 0.2 }}
         />}
     </>
   }, [iframeSrc, needToReloadIFrame, parseFileFlag, prevFileUid, setParseFile])
