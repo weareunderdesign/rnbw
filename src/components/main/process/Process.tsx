@@ -135,7 +135,7 @@ export default function Process(props: ProcessProps) {
       let _fileInfo: TFileInfo
       let _needToReloadIFrame = false
       let _newFocusedNodeUid = ''
-
+      let refuse = false
       // origin state
       if (!ffTree[file.uid]) {
         return
@@ -206,6 +206,7 @@ export default function Process(props: ProcessProps) {
               _nodeMaxUid = Number(newNodeMaxUid)
               // remove org nodes
               const o_node = _nodeTree[codeChange.uid]
+              // if (codeChange.content !== formattedContent) refuse = true
               if (o_node === undefined) return
               const o_parentNode = _nodeTree[o_node.parentUid as TNodeUid]
               o_parentNode.children = o_parentNode.children.reduce((prev, cur) => {
@@ -346,6 +347,11 @@ export default function Process(props: ProcessProps) {
       } else {
         // do nothing
       }
+
+      // if (refuse) {
+      //   removeRunningActions(['processor-updateOpt'])
+      //   return;
+      // }
 
       // get file info from node tree
       if (fileData.type === 'html') {
@@ -523,7 +529,7 @@ export default function Process(props: ProcessProps) {
       dispatch(clearFNState())
       const uids = Object.keys(validNodeTree)
       dispatch(expandFNNode(uids.slice(0, 50)))
-      removeRunningActions(['processor-validNodeTree'])
+      removeRunningActions(['processor-validNodeTree'], false)
     } else if (updateOpt.parse === null && updateOpt.from === 'code') {
       const _focusedItem = newFocusedNodeUid
       const _expandedItems = expandedItems.filter((uid) => {
@@ -536,9 +542,9 @@ export default function Process(props: ProcessProps) {
       dispatch(focusFNNode(_focusedItem))
       dispatch(expandFNNode([..._expandedItems]))
       dispatch(selectFNNode([..._selectedItems, _focusedItem]))
-      removeRunningActions(['processor-validNodeTree'])
+      removeRunningActions(['processor-validNodeTree'], false)
     } else if (updateOpt.parse === null && updateOpt.from === 'node') {
-      removeRunningActions(['processor-validNodeTree'])
+      removeRunningActions(['processor-validNodeTree'], false)
     } else {
       removeRunningActions(['processor-validNodeTree'], false)
     }
