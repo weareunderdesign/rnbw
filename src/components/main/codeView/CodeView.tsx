@@ -104,6 +104,7 @@ export default function CodeView(props: CodeViewProps) {
   const monacoRef = useRef<monaco.editor.IEditor | null>(null)
   const editorWrapperRef = useRef<HTMLDivElement>(null)
   const codeContent = useRef<string>('')
+  const previewDiv = useRef(null)
   const decorationCollectionRef = useRef<monaco.editor.IEditorDecorationsCollection>()
   const codeChangeDecorationRef = useRef<Map<TNodeUid, monaco.editor.IModelDeltaDecoration[]>>(new Map<TNodeUid, monaco.editor.IModelDeltaDecoration[]>())
   const validNodeTreeRef = useRef<TNodeTreeData>({})
@@ -326,6 +327,25 @@ export default function CodeView(props: CodeViewProps) {
         // console.log(validNodeTree[uid].data, (validNodeTree[uid].data as THtmlNodeData).html, content)
         codeChanges.push({ uid, content })
       }
+      // const preview = document.getElementById('codeview_change_preview')
+      // let dom = new DOMParser().parseFromString(codeContent.current, 'text/html');
+      // let flag = true
+      // if (preview) {
+      //   preview.innerHTML = ''
+      //   for (let x in codeChanges){
+      //     preview.innerHTML = ''
+      //     let prev_content = ''
+      //     if (validNodeTree[codeChanges[0].uid].name === 'body' || validNodeTree[codeChanges[0].uid].name === 'head' || validNodeTree[codeChanges[0].uid].name === 'html') {
+      //       continue
+      //     }
+      //     preview.innerHTML = codeChanges[x].content
+      //     if (codeChanges[x].content !== preview.innerHTML) {
+      //       flag = false 
+      //     }
+      //   }
+      //   console.log(codeChanges[0].content, preview.innerHTML, flag)
+      // }
+      // if (!flag) return
       // check attr editing
       setCodeChanges(codeChanges)
       
@@ -602,6 +622,13 @@ export default function CodeView(props: CodeViewProps) {
             automaticLayout: false,
           }}
         />
+      </div>
+      <div
+        ref={previewDiv}
+        id='codeview_change_preview'
+        style={{'display' : 'none'}}
+      >
+
       </div>
     </>
   }, [
