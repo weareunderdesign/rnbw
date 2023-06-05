@@ -66,6 +66,9 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   setFFAction: (action: TFileAction) => { },
   currentFileUid: 'TNodeUid',
   setCurrentFileUid: (uid: TNodeUid) => { },
+  // code view
+  showCodeView: false,
+  setShowCodeView: (show: boolean) => {},
   // node tree view
   fnHoveredItem: '',
   setFNHoveredItem: (uid: TNodeUid) => { },

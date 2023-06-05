@@ -1253,6 +1253,8 @@ export default function MainPage(props: MainPageProps) {
         isHms, setIsHms,
         ffAction, setFFAction,
         currentFileUid, setCurrentFileUid,
+        // code view
+        showCodeView, setShowCodeView,
         // node tree view
         fnHoveredItem, setFNHoveredItem,
         nodeTree, setNodeTree,

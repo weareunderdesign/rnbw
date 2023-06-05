@@ -133,6 +133,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     codeChanges, setCodeChanges,
     tabSize, setTabSize,
     newFocusedNodeUid, setNewFocusedNodeUid,
+    showCodeView, setShowCodeView,
     // processor
     updateOpt, setUpdateOpt,
     // references
@@ -1779,6 +1780,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       dispatch(setCurrentFile({ uid, parentUid: node.parentUid as TNodeUid, name: nodeData.name, content: nodeData.content }))
       removeRunningActions(['fileTreeView-read'])
       setParseFile(false)
+      setShowCodeView(true)
     }
     else {
       // set initial content of the html

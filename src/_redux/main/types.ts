@@ -75,6 +75,9 @@ export type TMainContext = {
   setFFAction: (action: TFileAction) => void,
   currentFileUid: TNodeUid,
   setCurrentFileUid: (uid: TNodeUid) => void,
+  // code view
+  showCodeView: boolean,
+  setShowCodeView: (show: boolean) => void,
   // node tree view
   fnHoveredItem: TNodeUid,
   setFNHoveredItem: (uid: TNodeUid) => void,
