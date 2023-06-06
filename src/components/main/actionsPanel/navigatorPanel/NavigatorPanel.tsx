@@ -20,11 +20,8 @@ import {
 import { RootNodeUid } from '@_constants/main';
 import { TFileNodeData } from '@_node/file';
 import { THtmlNodeData } from '@_node/html';
-import { TNodeUid } from '@_node/types';
 import {
-  expandFNNode,
   ffSelector,
-  focusFNNode,
   globalSelector,
   MainContext,
   navigatorSelector,
@@ -34,10 +31,10 @@ import { TProject } from '@_types/main';
 
 import { NavigatorPanelProps } from './types';
 
-const unsavedProjectImg = './images/rnbw-unsaved.png'
-const unsavedProjectSvg = './images/rnbw-unsaved.svg'
-const projectImg = './images/rnbw.png'
-const projectSvg = './images/rnbw.svg'
+const unsavedDarkProjectImg = './images/unsaved-dark.png'
+const unsavedLightProjectImg = './images/unsaved-light.png'
+const projectDarkImg = './images/dark-rnbw.png'
+const projectLightImg = './images/light-rnbw.png'
 // const unsavedProjectImg = "https://private-user-images.githubusercontent.com/13418616/240330904-3b1aa8a3-50d8-44ce-bfac-da7db56f73c9.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiJrZXkxIiwiZXhwIjoxNjg1MzE5NzM0LCJuYmYiOjE2ODUzMTk0MzQsInBhdGgiOiIvMTM0MTg2MTYvMjQwMzMwOTA0LTNiMWFhOGEzLTUwZDgtNDRjZS1iZmFjLWRhN2RiNTZmNzNjOS5wbmc_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBSVdOSllBWDRDU1ZFSDUzQSUyRjIwMjMwNTI5JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDIzMDUyOVQwMDE3MTRaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT0xZGQ1NTU1ZTYzNDQ1MGI0OGE0Y2ZlNTgwZGVkYTU1NDg2Y2EzMDE1OTNlODczYTJjZjdhZjlmMGQzNjFkNzQwJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.dzHziHUg7KTW93v7NlgUPZ68W-SkkKzqmy6z0Aq0D4M"
 // const unsavedProjectSvg = "https://private-user-images.githubusercontent.com/13418616/240330887-4632d52b-5b54-4811-b81b-277eb42a1f81.svg?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiJrZXkxIiwiZXhwIjoxNjg1MzE5NzM0LCJuYmYiOjE2ODUzMTk0MzQsInBhdGgiOiIvMTM0MTg2MTYvMjQwMzMwODg3LTQ2MzJkNTJiLTViNTQtNDgxMS1iODFiLTI3N2ViNDJhMWY4MS5zdmc_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBSVdOSllBWDRDU1ZFSDUzQSUyRjIwMjMwNTI5JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDIzMDUyOVQwMDE3MTRaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT04MzJmYjRjNzUyMmUzMzE0ODFlMjQ5ODc3MDZjYTljMDA2MWUyMzAxNjkwMzE3N2UzNTIyYmNhNzk2MmRhMzNiJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.dXubeBFRLhZ-GUp037Y64kJoj9SgbPA0WkQ30eoTP58"
 // const projectImg = "https://private-user-images.githubusercontent.com/13418616/240330897-82460c16-fd60-455b-9620-de5ec0dec94d.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiJrZXkxIiwiZXhwIjoxNjg1MzE5NzM0LCJuYmYiOjE2ODUzMTk0MzQsInBhdGgiOiIvMTM0MTg2MTYvMjQwMzMwODk3LTgyNDYwYzE2LWZkNjAtNDU1Yi05NjIwLWRlNWVjMGRlYzk0ZC5wbmc_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBSVdOSllBWDRDU1ZFSDUzQSUyRjIwMjMwNTI5JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDIzMDUyOVQwMDE3MTRaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT1mYTk3YWIyODliOTQ4MzlmOTIzYzhhODk1M2U4MTRkZmI3MjFjOGQ3ZmMwZDEyZGI0MmJjOTRlZjU1ZjdlZDRjJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.7h9x270eJxYjMKtJEqtGvpERapYinAuW8ycYLm3GUaM"
@@ -101,7 +98,9 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
     addMessage, removeMessage,
     // open project
     loadProject,
-    parseFileFlag, setParseFile
+    parseFileFlag, setParseFile,
+    // switching project
+    switching,
   } = useContext(MainContext)
   // -------------------------------------------------------------- favicon --------------------------------------------------------------
   const [favicon, setFavicon] = useState('')
@@ -173,19 +172,19 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
           }
         }
         if (firstNodeId !== '0') {
-          addRunningActions(['stageView-focus'])
+          // addRunningActions(['stageView-focus'])
           // expand path to the uid
-          const _expandedItems: TNodeUid[] = []
-          let node = nodeTree[firstNodeId]
-          while (node.uid !== RootNodeUid) {
-            _expandedItems.push(node.uid)
-            node = nodeTree[node.parentUid as TNodeUid]
-          }
-          _expandedItems.shift()
-          dispatch(expandFNNode(_expandedItems))
-          dispatch(focusFNNode(firstNodeId))
+          // const _expandedItems: TNodeUid[] = []
+          // let node = nodeTree[firstNodeId]
+          // while (node.uid !== RootNodeUid) {
+          //   _expandedItems.push(node.uid)
+          //   node = nodeTree[node.parentUid as TNodeUid]
+          // }
+          // _expandedItems.shift()
+          // dispatch(expandFNNode(_expandedItems))
+          // dispatch(focusFNNode(firstNodeId))
           dispatch(selectFNNode([firstNodeId]))
-          removeRunningActions(['stageView-focus'])
+          // removeRunningActions(['stageView-focus'])
           isFirst.current = false
         }
       }
@@ -210,9 +209,9 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
   useEffect(() => {
     let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement
     if (link) {
-      link.href = unsavedProject ? unsavedProjectImg : projectImg
+      link.href = unsavedProject ? (theme === 'Light' ? unsavedLightProjectImg : unsavedDarkProjectImg) : (theme === 'Light' ? projectLightImg : projectDarkImg)
     }
-  }, [unsavedProject]);
+  }, [unsavedProject, theme]);
   // -------------------------------------------------------------- dropdown --------------------------------------------------------------
   const navigatorPanelRef = useRef<HTMLDivElement | null>(null)
   const navigatorDropDownRef = useRef<HTMLDivElement | null>(null)
@@ -243,7 +242,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
       <div
         id="NavigatorPanel"
         style={{
-          // position: 'absolute',
+          position: 'relative',
           top: 0,
           left: 0,
           width: '100%',
@@ -260,8 +259,8 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
         {!navigatorDropDownType ? <>
           {/* workspace */}
           <>
-            <div style={{'minWidth': '24px'}} className="radius-m icon-s align-center background-secondary" onClick={onWorkspaceClick}>
-              <img className='icon-s' src={unsavedProject ? unsavedProjectSvg : projectSvg}></img>
+            <div style={{'minWidth': '24px'}} className="radius-m icon-s align-center " onClick={onWorkspaceClick}>
+              <img className='icon-s' src={unsavedProject ? (theme === 'Light' ? unsavedLightProjectImg : unsavedDarkProjectImg) : (theme === 'Light' ? projectLightImg : projectDarkImg)}></img>
             </div>
           </>
           <span className="text-s opacity-m">/</span>
@@ -297,16 +296,16 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
           navigatorDropDownType === 'workspace' ? <>
             {/* workspace */}
             <>
-              <div  style={{'minWidth': '24px'}} className="radius-m icon-s align-center background-secondary" onClick={onWorkspaceClick}>
-                <img className='icon-s' src={unsavedProject ? unsavedProjectSvg : projectSvg}></img>
+              <div  style={{'minWidth': '24px'}} className="radius-m icon-s align-center " onClick={onWorkspaceClick}>
+                <img className='icon-s' src={unsavedProject ? (theme === 'Light' ? unsavedLightProjectImg : unsavedDarkProjectImg) : (theme === 'Light' ? projectLightImg : projectDarkImg)}></img>
               </div>
             </>
           </> :
             navigatorDropDownType === 'project' ? <>
               {/* workspace */}
               <>
-                <div className="radius-m icon-s align-center background-secondary" onClick={onWorkspaceClick}>
-                  <img className='icon-s' src={unsavedProject ? unsavedProjectSvg : projectSvg}></img>
+                <div className="radius-m icon-s align-center " onClick={onWorkspaceClick}>
+                  <img className='icon-s' src={unsavedProject ? (theme === 'Light' ? unsavedLightProjectImg : unsavedDarkProjectImg) : (theme === 'Light' ? projectLightImg : projectDarkImg)}></img>
                 </div>
               </>
               <span className="text-s opacity-m">/</span>
@@ -382,6 +381,6 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
     filesReferenceData, ffTree,
     onWorkspaceClick, onProjectClick, onFileClick,
     navigatorDropDownType, onCloseDropDown,
-    onOpenProject, loadProject, favicon, unsavedProject, setParseFile
+    onOpenProject, loadProject, favicon, unsavedProject, setParseFile, theme
   ])
 }
