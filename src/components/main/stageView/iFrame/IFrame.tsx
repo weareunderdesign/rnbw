@@ -46,7 +46,7 @@ import { IFrameProps } from './types';
 const defaultImage = "https://user-images.githubusercontent.com/13418616/234660226-dc0cb352-3735-478c-bcc0-d47f73eb3e31.svg"
 const defaultAudio = "https://user-images.githubusercontent.com/13418616/234660225-7195abb2-91e7-402f-aa7d-902bbf7d66f8.svg"
 const defaultVideo = "https://user-images.githubusercontent.com/13418616/234660227-aeb91595-1ed6-4b46-8197-c6feb7af3718.svg"
-
+const firstClickEditableTags = ['p', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']
 export const IFrame = (props: IFrameProps) => {
   const dispatch = useDispatch()
   const { file } = useSelector(navigatorSelector)
@@ -527,6 +527,14 @@ export const IFrame = (props: IFrameProps) => {
           }
         }
       }
+
+      // allow to edit content by one clicking for the text element
+      // if (firstClickEditableTags.filter(_ele => _ele === ele.tagName.toLowerCase()).length > 0){
+      //   setTimeout(() => {
+      //     onDblClick(e)
+      //     ele.focus()
+      //   }, 10)
+      // }
     }
 
     setActivePanel('stage')
@@ -586,7 +594,23 @@ export const IFrame = (props: IFrameProps) => {
     }
   }, [focusedItem, validNodeTree, contentRef])
   const onDblClick = useCallback((e: MouseEvent) => {
+    // open new page with <a> tag in iframe
     const ele = e.target as HTMLElement
+    let _ele = ele
+    while(_ele.tagName !== 'A') {
+      if (_ele.tagName === 'BODY' || _ele.tagName === 'HEAD' || _ele.tagName === 'HTML') {
+        break
+      }
+      if (_ele.parentElement) {
+        _ele = _ele.parentElement
+      }
+      else{
+        break
+      }
+    }
+    if (_ele.tagName === 'A' && (_ele as HTMLAnchorElement).href) {
+      window.open((_ele as HTMLAnchorElement).href, '_blank', 'noreferrer');
+    }
     let uid: TNodeUid | null = ele.getAttribute(NodeInAppAttribName)
     if (uid) {
       const node = validNodeTree[uid]
