@@ -98,9 +98,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
     addMessage, removeMessage,
     // open project
     loadProject,
-    parseFileFlag, setParseFile,
-    // switching project
-    switching,
+    parseFileFlag, setParseFile
   } = useContext(MainContext)
   // -------------------------------------------------------------- favicon --------------------------------------------------------------
   const [favicon, setFavicon] = useState('')
@@ -172,19 +170,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
           }
         }
         if (firstNodeId !== '0') {
-          // addRunningActions(['stageView-focus'])
-          // expand path to the uid
-          // const _expandedItems: TNodeUid[] = []
-          // let node = nodeTree[firstNodeId]
-          // while (node.uid !== RootNodeUid) {
-          //   _expandedItems.push(node.uid)
-          //   node = nodeTree[node.parentUid as TNodeUid]
-          // }
-          // _expandedItems.shift()
-          // dispatch(expandFNNode(_expandedItems))
-          // dispatch(focusFNNode(firstNodeId))
           dispatch(selectFNNode([firstNodeId]))
-          // removeRunningActions(['stageView-focus'])
           isFirst.current = false
         }
       }
