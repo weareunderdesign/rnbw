@@ -130,8 +130,34 @@ export const IFrame = (props: IFrameProps) => {
 
     fnHoveredItemRef.current = fnHoveredItem
   }, [fnHoveredItem])
-  // mark&scroll to the focused item
+  // iframe scroll event
   const focusedItemRef = useRef<TNodeUid>(focusedItem)
+  const onIframeScroll = useCallback((e: Event) => {
+    if (contentRef && focusedItemRef.current) {
+      const newFocusedElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${focusedItemRef.current}"]`)
+      const elementRect = (newFocusedElement as HTMLElement)?.getBoundingClientRect()
+      if (elementRect) {
+        if (elementRect.y < 0) {
+          setCodeViewOffsetTop('66')
+        }
+        else {
+          const innerHeight = contentRef?.contentWindow?.document.documentElement.clientHeight
+          const elePosition = elementRect.y + elementRect.height / 2
+          if (innerHeight) {
+            if (elementRect.height < innerHeight / 2) {
+              if (elePosition / innerHeight * 100 > 66) {
+                setCodeViewOffsetTop('1')
+              }
+              if (elePosition / innerHeight * 100 < 33) {
+                setCodeViewOffsetTop('66')
+              }
+            }
+          }
+        }
+      }
+    }
+  }, [contentRef])
+  // mark&scroll to the focused item
   useEffect(() => {
     if (focusedItemRef.current === focusedItem) return
 
@@ -721,6 +747,9 @@ export const IFrame = (props: IFrameProps) => {
           })
           _document.addEventListener('contextmenu', (e: MouseEvent) => {
             e.preventDefault()
+          })
+          _document.addEventListener('scroll', (e: Event) => {
+            onIframeScroll(e)
           })
         }
 
