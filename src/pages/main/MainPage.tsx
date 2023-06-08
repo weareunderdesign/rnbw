@@ -503,107 +503,109 @@ export default function MainPage(props: MainPageProps) {
   const loadProject = useCallback(async (fsType: TProjectContext, projectHandle?: FileSystemHandle | null, internal?: boolean | true) => {
     if (fsType === 'local') {
       setFSPending(true)
-      clearSession()
       try {
         // configure idb on nohost
         const handlerObj = await loadLocalProject(projectHandle as FileSystemDirectoryHandle, osType)
+        clearSession() /* file treeview error fix when the switching project by navigator */
 
-        // sort by ASC directory/file
-        Object.keys(handlerObj).map(uid => {
-          const handler = handlerObj[uid]
-          handler.children = handler.children.sort((a, b) => {
-            return handlerObj[a].kind === 'file' && handlerObj[b].kind === 'directory' ? 1 :
-              handlerObj[a].kind === 'directory' && handlerObj[b].kind === 'file' ? -1 :
-                handlerObj[a].name > handlerObj[b].name ? 1 : -1
+        setTimeout(async () => {
+          // sort by ASC directory/file
+          Object.keys(handlerObj).map(uid => {
+            const handler = handlerObj[uid]
+            handler.children = handler.children.sort((a, b) => {
+              return handlerObj[a].kind === 'file' && handlerObj[b].kind === 'directory' ? 1 :
+                handlerObj[a].kind === 'directory' && handlerObj[b].kind === 'file' ? -1 :
+                  handlerObj[a].name > handlerObj[b].name ? 1 : -1
+            })
           })
-        })
 
-        // get/set the index/first html to be opened by default
-        let firstHtmlUid: TNodeUid = '', indexHtmlUid: TNodeUid = ''
-        handlerObj[RootNodeUid].children.map(uid => {
-          const handler = handlerObj[uid]
-          if (handler.kind === 'file' && handler.ext === '.html') {
-            firstHtmlUid === '' ? firstHtmlUid = uid : null
-            handler.name === 'index' ? indexHtmlUid = uid : null
-          }
-        })
-
-        // set default background
-        setIFrameSrc(null)
-        setNodeTree({})
-        setValidNodeTree({})
-        setCurrentFileUid('')
-        dispatch(removeCurrentFile())
-
-        let initialFile = indexHtmlUid !== '' ? indexHtmlUid : firstHtmlUid !== '' ? firstHtmlUid : ''
-        
-        // hide element panel when there is no index.html
-        if (initialFile === '' ){
-            setShowActionsPanel(false)
-            setNavigatorDropDownType(null)
-        }
-
-        setInitialFileToOpen(initialFile)
-
-        // set ff-tree, ff-handlers
-        const treeViewData: TNodeTreeData = {}
-        const ffHandlerObj: TFileHandlerCollection = {}
-        Object.keys(handlerObj).map(uid => {
-          const { parentUid, children, path, kind, name, ext, content, handler } = handlerObj[uid]
-          const type = ParsableFileTypes[ext || ''] ? ext?.slice(1) : 'unknown'
-          treeViewData[uid] = {
-            uid,
-            parentUid: parentUid,
-            name: name,
-            isEntity: kind === 'file',
-            children: [...children],
-            data: {
-              valid: true,
-              path: path,
-              kind: kind,
-              name: name,
-              ext: ext,
-              type,
-              orgContent:  content?.toString(),
-              content: content?.toString(),
-              changed: false,
-            } as TFileNodeData,
-          } as TNode
-
-          ffHandlerObj[uid] = handler
-        })
-
-        setFFTree(treeViewData)
-        setFFHandlers(ffHandlerObj)
-
-        setProject({ context: 'local', name: (projectHandle as FileSystemDirectoryHandle).name, handler: projectHandle as FileSystemDirectoryHandle, favicon: null })
-        setNavigatorDropDownType(null)
-        if (internal) {
-          // store last edit session
-          const _recentProjectContext = [...recentProjectContext]
-          const _recentProjectName = [...recentProjectName]
-          const _recentProjectHandler = [...recentProjectHandler]
-          for (let index = 0; index < _recentProjectContext.length; ++index) {
-            if (_recentProjectContext[index] === fsType && projectHandle?.name === _recentProjectName[index]) {
-              _recentProjectContext.splice(index, 1)
-              _recentProjectName.splice(index, 1)
-              _recentProjectHandler.splice(index, 1)
-              break
+          // get/set the index/first html to be opened by default
+          let firstHtmlUid: TNodeUid = '', indexHtmlUid: TNodeUid = ''
+          handlerObj[RootNodeUid].children.map(uid => {
+            const handler = handlerObj[uid]
+            if (handler.kind === 'file' && handler.ext === '.html') {
+              firstHtmlUid === '' ? firstHtmlUid = uid : null
+              handler.name === 'index' ? indexHtmlUid = uid : null
             }
+          })
+
+          // set default background
+          setIFrameSrc(null)
+          setNodeTree({})
+          setValidNodeTree({})
+          setCurrentFileUid('')
+          dispatch(removeCurrentFile())
+
+          let initialFile = indexHtmlUid !== '' ? indexHtmlUid : firstHtmlUid !== '' ? firstHtmlUid : ''
+          
+          // hide element panel when there is no index.html
+          if (initialFile === '' ){
+              setShowActionsPanel(false)
+              setNavigatorDropDownType(null)
           }
-          if (_recentProjectContext.length === RecentProjectCount) {
-            _recentProjectContext.pop()
-            _recentProjectName.pop()
-            _recentProjectHandler.pop()
+
+          setInitialFileToOpen(initialFile)
+
+          // set ff-tree, ff-handlers
+          const treeViewData: TNodeTreeData = {}
+          const ffHandlerObj: TFileHandlerCollection = {}
+          Object.keys(handlerObj).map(uid => {
+            const { parentUid, children, path, kind, name, ext, content, handler } = handlerObj[uid]
+            const type = ParsableFileTypes[ext || ''] ? ext?.slice(1) : 'unknown'
+            treeViewData[uid] = {
+              uid,
+              parentUid: parentUid,
+              name: name,
+              isEntity: kind === 'file',
+              children: [...children],
+              data: {
+                valid: true,
+                path: path,
+                kind: kind,
+                name: name,
+                ext: ext,
+                type,
+                orgContent:  content?.toString(),
+                content: content?.toString(),
+                changed: false,
+              } as TFileNodeData,
+            } as TNode
+
+            ffHandlerObj[uid] = handler
+          })
+
+          setFFTree(treeViewData)
+          setFFHandlers(ffHandlerObj)
+
+          setProject({ context: 'local', name: (projectHandle as FileSystemDirectoryHandle).name, handler: projectHandle as FileSystemDirectoryHandle, favicon: null })
+          setNavigatorDropDownType(null)
+          if (internal) {
+            // store last edit session
+            const _recentProjectContext = [...recentProjectContext]
+            const _recentProjectName = [...recentProjectName]
+            const _recentProjectHandler = [...recentProjectHandler]
+            for (let index = 0; index < _recentProjectContext.length; ++index) {
+              if (_recentProjectContext[index] === fsType && projectHandle?.name === _recentProjectName[index]) {
+                _recentProjectContext.splice(index, 1)
+                _recentProjectName.splice(index, 1)
+                _recentProjectHandler.splice(index, 1)
+                break
+              }
+            }
+            if (_recentProjectContext.length === RecentProjectCount) {
+              _recentProjectContext.pop()
+              _recentProjectName.pop()
+              _recentProjectHandler.pop()
+            }
+            _recentProjectContext.unshift(fsType)
+            _recentProjectName.unshift((projectHandle as FileSystemDirectoryHandle).name)
+            _recentProjectHandler.unshift(projectHandle as FileSystemDirectoryHandle)
+            setRecentProjectContext(_recentProjectContext)
+            setRecentProjectName(_recentProjectName)
+            setRecentProjectHandler(_recentProjectHandler)
+            await setMany([['recent-project-context', _recentProjectContext], ['recent-project-name', _recentProjectName], ['recent-project-handler', _recentProjectHandler]])
           }
-          _recentProjectContext.unshift(fsType)
-          _recentProjectName.unshift((projectHandle as FileSystemDirectoryHandle).name)
-          _recentProjectHandler.unshift(projectHandle as FileSystemDirectoryHandle)
-          setRecentProjectContext(_recentProjectContext)
-          setRecentProjectName(_recentProjectName)
-          setRecentProjectHandler(_recentProjectHandler)
-          await setMany([['recent-project-context', _recentProjectContext], ['recent-project-name', _recentProjectName], ['recent-project-handler', _recentProjectHandler]])
-        }
+        }, 50)
       } catch (err) {
         LogAllow && console.log('failed to load local project')
       }
