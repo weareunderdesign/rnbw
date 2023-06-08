@@ -512,6 +512,7 @@ export const IFrame = (props: IFrameProps) => {
       }
   
       // set focused/selected items
+      let multiple = false
       if (_uid) {
         if (e.shiftKey) {
           let found = false
@@ -521,20 +522,20 @@ export const IFrame = (props: IFrameProps) => {
           })
           !found ? _selectedItems.push(_uid) : null
           setFocusedSelectedItems(_uid, getValidNodeUids(nodeTree, _selectedItems))
+          if(_selectedItems.length > 1) multiple = true
         } else {
           if (_uid !== focusedItem) {
             setFocusedSelectedItems(_uid)
           }
         }
       }
-
       // allow to edit content by one clicking for the text element
-      // if (firstClickEditableTags.filter(_ele => _ele === ele.tagName.toLowerCase()).length > 0){
-      //   setTimeout(() => {
-      //     onDblClick(e)
-      //     ele.focus()
-      //   }, 10)
-      // }
+      if (firstClickEditableTags.filter(_ele => _ele === ele.tagName.toLowerCase()).length > 0 && !multiple){
+        setTimeout(() => {
+          onDblClick(e)
+          ele.focus()
+        }, 10)
+      }
     }
 
     setActivePanel('stage')
