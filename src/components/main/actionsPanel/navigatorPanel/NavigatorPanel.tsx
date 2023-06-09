@@ -216,8 +216,25 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
   // -------------------------------------------------------------- handlers --------------------------------------------------------------
   const onOpenProject = useCallback((project: TProject) => {
     console.log('open project', { project })
+    if (ffTree) {
+      // confirm files' changes
+      let hasChangedFile = false
+      for (let x in ffTree) {
+        const _file = ffTree[x]
+        const _fileData = _file.data as TFileNodeData
+        if (_file && _fileData.changed) {
+          hasChangedFile = true
+        }
+      }
+      if (hasChangedFile) {
+        const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`
+        if (!window.confirm(message)) {
+          return
+        }
+      }
+    } 
     loadProject(project.context, project.handler, false)
-  }, [])
+  }, [ffTree])
   // -------------------------------------------------------------- own --------------------------------------------------------------
   const onPanelClick = useCallback((e: React.MouseEvent) => {
     setActivePanel('file')
