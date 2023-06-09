@@ -576,7 +576,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     if (focusedItemRef.current === focusedItem) return
 
     const focusedElement = document.querySelector(`#FileTreeView-${generateQuerySelector(focusedItem)}`)
-    setTimeout(() => focusedElement?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'auto' }), 0)
+    setTimeout(() => focusedElement?.scrollIntoView({ block: 'nearest', inline: 'start', behavior: 'smooth' }), 0)
 
     focusedItemRef.current = focusedItem
   }, [focusedItem])
@@ -1809,6 +1809,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
   // handlle links-open
   const openFile = useCallback((uid: TNodeUid) => {
     if (file.uid === uid) return
+    dispatch({ type: HmsClearActionType })
     // focus/select/read the file
     addRunningActions(['fileTreeView-focus', 'fileTreeView-select', 'fileTreeView-read'])
     cb_focusNode(uid)
@@ -1904,8 +1905,8 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       <div
         id="FileTreeView"
         style={{
-          // position: 'absolute',
-          top: navigatorDropDownType ? 41 : 0,
+          position: 'relative',
+          top: 0,
           left: 0,
           width: '100%',
           maxHeight: '200px',
