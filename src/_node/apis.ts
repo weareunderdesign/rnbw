@@ -26,8 +26,10 @@ export const getSubNodeUidsByBfs = (uid: TNodeUid, tree: TNodeTreeData, withItSe
   while (uids.length) {
     const subUid = uids.shift() as TNodeUid
     const subNode = tree[subUid]
-    subUids.push(subUid)
-    uids.push(...subNode.children)
+    if (subNode) {
+      subUids.push(subUid)
+      uids.push(...subNode.children)
+    }
   }
 
   !withItSelf && subUids.shift()
