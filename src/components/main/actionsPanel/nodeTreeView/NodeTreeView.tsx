@@ -20,6 +20,7 @@ import {
 import { TreeViewData } from '@_components/common/treeView/types';
 import {
   AddNodeActionPrefix,
+  HmsClearActionType,
   NodeInAppAttribName,
   RootNodeUid,
 } from '@_constants/main';
@@ -68,6 +69,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   const { file } = useSelector(navigatorSelector)
   const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
   const {
+    project,
     // global action
     addRunningActions, removeRunningActions,
     // node actions
@@ -416,7 +418,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       const nodeData = node.data as TFileNodeData
       setParseFile(true)
       setNavigatorDropDownType('project')
-      dispatch(setCurrentFile({ uid, parentUid: node.parentUid as TNodeUid, name: nodeData.name, content: nodeData.content }))
+      dispatch({ type: HmsClearActionType })
+      dispatch(setCurrentFile({ uid, parentUid: node.parentUid as TNodeUid, name: nodeData.name, content: nodeData.contentInApp ? nodeData.contentInApp : '' }))
       setCurrentFileUid(uid)
       dispatch(selectFFNode([prevFileUid]))
     }
@@ -676,29 +679,18 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                     }}
                     onFocus={() => { }}
                     onDragStart={(e: React.DragEvent) => {
-                      const target = e.target as HTMLElement
-                      target.style.cursor = 'default !important'
-                      target.style.cursor = 'default'
-                      e.dataTransfer.setDragImage(target, window.outerWidth, window.outerHeight)
+                      const img = new Image();
+                      e.dataTransfer.effectAllowed = 'move'
+                      e.dataTransfer.setDragImage(img, window.outerWidth, window.outerHeight)
                       props.context.startDragging()
 
                       isDragging.current = true
-
-                      let body = (document.body as HTMLElement)
-                      body.classList.add('inheritCursors');
-                      body.style.cursor = 'default'
-                      const className = 'dragging-tree';
-                      const html = document.getElementsByTagName('html').item(0);
-                      if (html && new RegExp(className).test(html.className) === false) {
-                          html.className += ' ' + className; // use a space in case there are other classNames
-                      }
                     }}
                     onDragEnter={(e) => {
                       if (!props.context.isExpanded) {
                         setTimeout(() => cb_expandNode(props.item.index as TNodeUid), AutoExpandDelay)
                       }
-                      const target = e.target as HTMLElement
-                      target.style.cursor = 'default'
+                      // e.dataTransfer.effectAllowed = 'move'
                       
                     }}
                   >
