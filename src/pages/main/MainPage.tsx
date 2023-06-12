@@ -154,7 +154,7 @@ export default function MainPage(props: MainPageProps) {
     }
     if (!found) return
 
-    LogAllow && console.log('remove running actions', actionNames, effect)
+    LogAllow && console.log('remove running actions', actionNames, effect, noRunningAction())
 
     if (noRunningAction()) {
       LogAllow && effect && console.log('hms added')
@@ -164,7 +164,7 @@ export default function MainPage(props: MainPageProps) {
   }, [noRunningAction, file.content])
   // navigator
   const [workspace, setWorkspace] = useState<TWorkspace>({ name: 'local', projects: [] })
-  const [project, setProject] = useState<TProject>({ context: 'idb', name: 'untitled', handler: null, favicon: null })
+  const [project, setProject] = useState<TProject>({ context: 'idb', name: 'Untitled', handler: null, favicon: null })
   const [navigatorDropDownType, setNavigatorDropDownType] = useState<TNavigatorDropDownType>(null)
   // node actions
   const [activePanel, setActivePanel] = useState<TPanelContext>('unknown')
@@ -260,59 +260,86 @@ export default function MainPage(props: MainPageProps) {
     }
 
     // Elements
+    let flag = true
+    for (let x in nodeTree) {
+      if (nodeTree[x].name === "html") {
+        flag = false
+      }
+    }
     const htmlNode = nodeTree[fnFocusedItem]
-    if (htmlNode && htmlNode.parentUid && htmlNode.parentUid !== RootNodeUid) {
-      const parentNode = nodeTree[htmlNode.parentUid as TNodeUid]
-      const refData = htmlReferenceData.elements[parentNode.name]
-      if (refData) {
-        if (refData.Contain === 'All') {
-          Object.keys(htmlReferenceData.elements).map((tag: string) => {
-            const tagRef = htmlReferenceData.elements[tag]
-            if (tagRef !== undefined) {
-              data['Elements'].push({
-                "Featured": tagRef && tagRef.Featured === 'Yes' ? true : false,
-                "Name": tagRef.Name,
-                "Icon": tagRef.Icon,
-                "Description": tagRef.Description,
-                "Keyboard Shortcut": {
-                  cmd: false,
-                  shift: false,
-                  alt: false,
-                  key: '',
-                  click: false,
-                },
-                "Group": 'Add',
-                "Context": `Node-${tagRef.Tag}`,
-              })
-            }
-          })
-        } else if (refData.Contain === 'None') {
-          // do nothing
-        } else {
-          const tagList = refData.Contain.replace(/ /g, '').split(',')
-          tagList.map((tag: string) => {
-            const pureTag = tag.slice(1, tag.length - 1)
-            const tagRef = htmlReferenceData.elements[pureTag]
-            if (tagRef !== undefined) {
-              data['Elements'].push({
-                "Featured": tagRef && tagRef.Featured === 'Yes' ? true : false,
-                "Name": tagRef.Name,
-                "Icon": tagRef.Icon,
-                "Description": tagRef.Description,
-                "Keyboard Shortcut": {
-                  cmd: false,
-                  shift: false,
-                  alt: false,
-                  key: '',
-                  click: false,
-                },
-                "Group": 'Add',
-                "Context": `Node-${tagRef.Tag}`,
-              })
-            }
-          })
+    if (!flag) {
+      if (htmlNode && htmlNode.parentUid && htmlNode.parentUid !== RootNodeUid) {
+        const parentNode = nodeTree[htmlNode.parentUid as TNodeUid]
+        const refData = htmlReferenceData.elements[parentNode.name]
+        if (refData) {
+          if (refData.Contain === 'All') {
+            Object.keys(htmlReferenceData.elements).map((tag: string) => {
+              const tagRef = htmlReferenceData.elements[tag]
+              if (tagRef !== undefined) {
+                data['Elements'].push({
+                  "Featured": tagRef && tagRef.Featured === 'Yes' ? true : false,
+                  "Name": tagRef.Name,
+                  "Icon": tagRef.Icon,
+                  "Description": tagRef.Description,
+                  "Keyboard Shortcut": {
+                    cmd: false,
+                    shift: false,
+                    alt: false,
+                    key: '',
+                    click: false,
+                  },
+                  "Group": 'Add',
+                  "Context": `Node-${tagRef.Tag}`,
+                })
+              }
+            })
+          } else if (refData.Contain === 'None') {
+            // do nothing
+          } else {
+            const tagList = refData.Contain.replace(/ /g, '').split(',')
+            tagList.map((tag: string) => {
+              const pureTag = tag.slice(1, tag.length - 1)
+              const tagRef = htmlReferenceData.elements[pureTag]
+              if (tagRef !== undefined) {
+                data['Elements'].push({
+                  "Featured": tagRef && tagRef.Featured === 'Yes' ? true : false,
+                  "Name": tagRef.Name,
+                  "Icon": tagRef.Icon,
+                  "Description": tagRef.Description,
+                  "Keyboard Shortcut": {
+                    cmd: false,
+                    shift: false,
+                    alt: false,
+                    key: '',
+                    click: false,
+                  },
+                  "Group": 'Add',
+                  "Context": `Node-${tagRef.Tag}`,
+                })
+              }
+            })
+          }
         }
       }
+    }
+    else{
+      data['Elements'] = []
+      let tagRef = htmlReferenceData.elements['html']
+      tagRef && data['Elements'].push({
+        "Featured": tagRef && tagRef.Featured === 'Yes' ? true : false,
+        "Name": tagRef.Name.toUpperCase(),
+        "Icon": tagRef.Icon,
+        "Description": tagRef.Description,
+        "Keyboard Shortcut": {
+          cmd: false,
+          shift: false,
+          alt: false,
+          key: '',
+          click: false,
+        },
+        "Group": 'Add',
+        "Context": `Node-${tagRef.Tag}`,
+      })
     }
     if (data['Elements'].length > 0 && data['Elements'].filter((element) => element.Featured || !!cmdkSearch).length > 0) {
       data['Elements'] = data['Elements'].filter((element) => element.Featured || !!cmdkSearch)
@@ -664,7 +691,7 @@ export default function MainPage(props: MainPageProps) {
         })
         setFFTree(treeViewData)
         setFFHandlers(ffHandlerObj)
-        setProject({ context: 'idb', name: 'untitled', handler: null, favicon: null })
+        setProject({ context: 'idb', name: 'Untitled', handler: null, favicon: null })
         
         // store last edit session
         // const _recentProjectContext = [...recentProjectContext]
@@ -684,18 +711,18 @@ export default function MainPage(props: MainPageProps) {
         //   _recentProjectHandler.pop()
         // }
         // _recentProjectContext.unshift(fsType)
-        // _recentProjectName.unshift('untitled')
+        // _recentProjectName.unshift('Untitled')
         // _recentProjectHandler.unshift(null)
         // setRecentProjectContext(_recentProjectContext)
         // setRecentProjectName(_recentProjectName)
         // setRecentProjectHandler(_recentProjectHandler)
         // await setMany([['recent-project-context', _recentProjectContext], ['recent-project-name', _recentProjectName], ['recent-project-handler', _recentProjectHandler]])
       } catch (err) {
-        LogAllow && console.log('failed to load untitled project')
+        LogAllow && console.log('failed to load Untitled project')
       }
       setFSPending(false)
-    }
-  }, [clearSession, osType, recentProjectContext, recentProjectName, recentProjectHandler])
+    }    
+  }, [clearSession, osType, recentProjectContext, recentProjectName, recentProjectHandler, ffTree])
   const onImportProject = useCallback(async (fsType: TProjectContext = 'local'): Promise<void> => {
     return new Promise<void>(async (resolve, reject) => {
       if (fsType === 'local') {
@@ -717,6 +744,23 @@ export default function MainPage(props: MainPageProps) {
   }, [loadProject])
   // open
   const onOpen = useCallback(async () => {
+    if (ffTree) {
+      // confirm files' changes
+      let hasChangedFile = false
+      for (let x in ffTree) {
+        const _file = ffTree[x]
+        const _fileData = _file.data as TFileNodeData
+        if (_file && _fileData.changed) {
+          hasChangedFile = true
+        }
+      }
+      if (hasChangedFile) {
+        const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`
+        if (!window.confirm(message)) {
+          return
+        }
+      }
+    } 
     setFSPending(true)
 
     try {
@@ -726,17 +770,17 @@ export default function MainPage(props: MainPageProps) {
     }
 
     setFSPending(false)
-  }, [onImportProject])
+  }, [onImportProject, ffTree])
   // new
   const onNew = useCallback(async () => {
     setFSPending(true)
 
-    // init/open untitled project
+    // init/open Untitled project
     try {
       await initIDBProject(DefaultProjectPath)
       await onImportProject('idb')
     } catch (err) {
-      LogAllow && console.log('failed to init/load untitled project')
+      LogAllow && console.log('failed to init/load Untitled project')
     }
 
     setFSPending(false)
@@ -773,6 +817,17 @@ export default function MainPage(props: MainPageProps) {
     if (cmdkOpen) return
     setCmdkPages(['Jumpstart'])
     setCmdkOpen(true)
+  }, [cmdkOpen])
+
+  // open navigator when close the menu
+  useEffect(() => {
+    if (cmdkPage === 'Actions' || cmdkPage === 'Add') return
+    if (!cmdkOpen){
+      setShowActionsPanel(true)
+    }
+    else{
+      setShowActionsPanel(false)
+    }
   }, [cmdkOpen])
 
   // close all panel
@@ -835,7 +890,7 @@ export default function MainPage(props: MainPageProps) {
   const [codeViewHeight, setCodeViewHeight] = useState("33.33")
   const [codeViewDragging, setCodeViewDragging] = useState(false)
   // -------------------------------------------------------------- other --------------------------------------------------------------
-  // detect OS & fetch reference - html. Jumpstart.csv, Actions.csv - restore recent project session - open untitled project and jumpstart menu ons tartup
+  // detect OS & fetch reference - html. Jumpstart.csv, Actions.csv - restore recent project session - open Untitled project and jumpstart menu ons tartup
   useEffect(() => {
     (async () => {
       addRunningActions(['detect-os', 'reference-files', 'reference-html-elements', 'reference-cmdk-jumpstart', 'reference-cmdk-actions'])
@@ -1073,15 +1128,15 @@ export default function MainPage(props: MainPageProps) {
     LogAllow && console.log('isNewbie: ', isNewbie === null ? true : false)
     if (!isNewbie) {
       localStorage.setItem("newbie", 'false');
-      // init/open untitled project
+      // init/open Untitled project
       (async () => {
         setFSPending(true)
         try {
           await initIDBProject(DefaultProjectPath)
           await onImportProject('idb')
-          LogAllow && console.log('inited/loaded untitled project')
+          LogAllow && console.log('inited/loaded Untitled project')
         } catch (err) {
-          LogAllow && console.log('failed to init/load untitled project')
+          LogAllow && console.log('failed to init/load Untitled project')
         }
         setFSPending(false)
       })()
@@ -1435,7 +1490,7 @@ export default function MainPage(props: MainPageProps) {
                     {(cmdkPage === 'Jumpstart' ? (groupName !== 'Recent' ? cmdkReferenceJumpstart[groupName] : cmdkReferneceRecentProject) :
                       cmdkPage === 'Actions' ? cmdkReferenceActions[groupName] :
                         cmdkPage === 'Add' ? cmdkReferenceAdd[groupName] : []
-                    ).map((command: TCmdkReference) => {
+                    ).map((command: TCmdkReference, index) => {
                       const context: TCmdkContext = (command.Context as TCmdkContext)
                       const show: boolean = (
                         (cmdkPage === 'Jumpstart') ||
@@ -1456,8 +1511,8 @@ export default function MainPage(props: MainPageProps) {
 
                       return show ?
                         <Command.Item
-                          key={`${command.Name}-${command.Context}`}
-                          value={command.Name}
+                          key={`${command.Name}-${command.Context}-${index}`}
+                          value={command.Name + index}
                           className='rnbw-cmdk-menu-item'
                           {...{ 'rnbw-cmdk-menu-item-description': command.Description }}
                           onSelect={() => {
@@ -1471,6 +1526,23 @@ export default function MainPage(props: MainPageProps) {
                               const index = Number(command.Context)
                               const projectContext = recentProjectContext[index]
                               const projectHandler = recentProjectHandler[index]
+                              if (ffTree) {
+                                // confirm files' changes
+                                let hasChangedFile = false
+                                for (let x in ffTree) {
+                                  const _file = ffTree[x]
+                                  const _fileData = _file.data as TFileNodeData
+                                  if (_file && _fileData.changed) {
+                                    hasChangedFile = true
+                                  }
+                                }
+                                if (hasChangedFile) {
+                                  const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`
+                                  if (!window.confirm(message)) {
+                                    return
+                                  }
+                                }
+                              }
                               loadProject(projectContext, projectHandler, true)
                             } else if (cmdkPage === 'Add' && command.Group === 'Recent') {
                             } else {
