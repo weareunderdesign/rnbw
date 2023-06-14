@@ -259,14 +259,15 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
         onClick={onPanelClick}
         ref={navigatorPanelRef}
       >
-        {!navigatorDropDownType ? <>
+        {!navigatorDropDownType ? 
+        <>
           {/* workspace */}
-          <>
+          {/* <>
             <div style={{'minWidth': '24px'}} className="radius-m icon-s align-center " onClick={onWorkspaceClick}>
               <img className='icon-s' src={unsavedProject ? (theme === 'Light' ? unsavedLightProjectImg : unsavedDarkProjectImg) : (theme === 'Light' ? projectLightImg : projectDarkImg)}></img>
             </div>
-          </>
-          <span className="text-s opacity-m">/</span>
+          </> */}
+          {/* <span className="text-s opacity-m">/</span> */}
 
           {/* project */}
           <>
@@ -293,25 +294,29 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
             <div className="gap-s align-center" onClick={onFileClick}>
               <SVGIconI {...{ "class": "icon-xs" }}>{ffTree[file.uid].data.type == 'html' && ffTree[file.uid].data.name == 'index' ? 'home' : filesReferenceData[(ffTree[file.uid].data as TFileNodeData).ext.substring(1, (ffTree[file.uid].data as TFileNodeData).ext.length)] ? filesReferenceData[(ffTree[file.uid].data as TFileNodeData).ext.substring(1, (ffTree[file.uid].data as TFileNodeData).ext.length)].Icon : 'page'}</SVGIconI>
               <span className="text-s">{file.name}</span>
+              {ffTree[file.uid] && (ffTree[file.uid].data as TFileNodeData).changed &&
+                    <div className="radius-s foreground-primary" style={{ width: "6px", height: "6px" }}></div>}
             </div>
           </>}
         </> :
-          navigatorDropDownType === 'workspace' ? <>
+          navigatorDropDownType === 'workspace' ? 
+          <>
             {/* workspace */}
-            <>
+            {/* <>
               <div  style={{'minWidth': '24px'}} className="radius-m icon-s align-center " onClick={onWorkspaceClick}>
                 <img className='icon-s' src={unsavedProject ? (theme === 'Light' ? unsavedLightProjectImg : unsavedDarkProjectImg) : (theme === 'Light' ? projectLightImg : projectDarkImg)}></img>
               </div>
-            </>
+            </> */}
           </> :
-            navigatorDropDownType === 'project' ? <>
+            navigatorDropDownType === 'project' ? 
+            <>
               {/* workspace */}
-              <>
+              {/* <>
                 <div className="radius-m icon-s align-center " onClick={onWorkspaceClick}>
                   <img className='icon-s' src={unsavedProject ? (theme === 'Light' ? unsavedLightProjectImg : unsavedDarkProjectImg) : (theme === 'Light' ? projectLightImg : projectDarkImg)}></img>
                 </div>
               </>
-              <span className="text-s opacity-m">/</span>
+              <span className="text-s opacity-m">/</span> */}
 
               {/* project */}
               <>
