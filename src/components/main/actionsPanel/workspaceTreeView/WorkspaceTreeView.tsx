@@ -632,7 +632,20 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         return
       }
     }
-
+    if (project && file) {
+      // remove exist script
+      const exist = document.head.querySelector('#custom-plausible')
+      if (exist !== null) {
+        document.head.removeChild(exist)
+      }
+      // plausible analytics 
+      var script = document.createElement('script')
+      script.id = 'custom-plausible'
+      script.textContent = `
+        plausible('pageview', { u: '` + "rnbw.dev/" + project.name + "/" + file.uid.replace('ROOT/', '') +`' + window.location.search });
+      `
+      document.head.appendChild(script)
+    }
     addRunningActions(['fileTreeView-select'])
     dispatch(selectFFNode(_uids))
     removeRunningActions(['fileTreeView-select'])
@@ -669,6 +682,20 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       cb_focusNode(initialFileToOpen)
       cb_selectNode([initialFileToOpen])
       cb_readNode(initialFileToOpen)
+      if (project && file) {
+        // remove exist script
+        const exist = document.head.querySelector('#custom-plausible')
+        if (exist !== null) {
+          document.head.removeChild(exist)
+        }
+        // plausible analytics 
+        var script = document.createElement('script')
+        script.id = 'custom-plausible'
+        script.textContent = `
+          plausible('pageview', { u: '` + "rnbw.dev/" + project.name + "/" + file.uid.replace('ROOT/', '') +`' + window.location.search });
+        `
+        document.head.appendChild(script)
+      }
     }
   }, [initialFileToOpen])
   // -------------------------------------------------------------- node actions handlers --------------------------------------------------------------
@@ -1780,7 +1807,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       dispatch(setCurrentFile({ uid, parentUid: node.parentUid as TNodeUid, name: nodeData.name, content: nodeData.content }))
       removeRunningActions(['fileTreeView-read'])
       setParseFile(false)
-      setShowCodeView(true)
+      showCodeView === false && setShowCodeView(true)
     }
     else {
       // set initial content of the html
