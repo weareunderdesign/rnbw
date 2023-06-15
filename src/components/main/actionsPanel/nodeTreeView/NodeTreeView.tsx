@@ -32,6 +32,7 @@ import {
   getNodeChildIndex,
   getValidNodeUids,
   moveNode,
+  parseHtmlCodePart,
   removeNode,
   TFileNodeData,
   THtmlElementsReference,
@@ -47,6 +48,7 @@ import {
   expandFNNode,
   fnSelector,
   focusFNNode,
+  increaseActionGroupIndex,
   MainContext,
   navigatorSelector,
   selectFFNode,
@@ -58,7 +60,6 @@ import {
   addClass,
   removeClass,
 } from '@_services/main';
-import { TCodeChange } from '@_types/main';
 
 import { NodeTreeViewProps } from './types';
 
@@ -189,6 +190,9 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       } as THtmlNodeData
     }
     let contentNode: TNode | null = null
+    let tempTree 
+    let _tree: TNodeTreeData | null = null
+    let tmpMaxUid: TNodeUid = String(nodeMaxUid)
     const refData = htmlReferenceData.elements[nodeType]
     if (refData) {
       const { Attributes, Content } = refData
@@ -208,8 +212,10 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
         })
       }
       if (Content) {
-        // let parserRes = parseHtmlCodePart(Content, htmlReferenceData, osType, String(nodeMaxUid) as TNodeUid)
-        // const { formattedContent, tree, nodeMaxUid: newNodeMaxUid } = parserRes
+        let parserRes = parseHtmlCodePart(Content, htmlReferenceData, osType, String(nodeMaxUid) as TNodeUid)
+        const { formattedContent, tree, nodeMaxUid: newNodeMaxUid } = parserRes
+        tmpMaxUid = newNodeMaxUid
+        _tree = tree
         // console.log(formattedContent, tree, newNodeMaxUid)
         newNode.isEntity = false
         newNode.children = [String(nodeMaxUid + 2) as TNodeUid]
@@ -237,31 +243,61 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
             endColumn: 0,
           } as THtmlNodeData
         } as TNode
-        let codeChange: TCodeChange[] = [{uid: '', content: ''}]
-        codeChange[0].uid = String(nodeMaxUid + 2) as TNodeUid
-        codeChange[0].content = Content
+        // let codeChange: TCodeChange[] = [{uid: '', content: ''}]
+        // codeChange[0].uid = String(nodeMaxUid + 2) as TNodeUid
+        // codeChange[0].content = Content
         // setCodeChanges(codeChange)
       }
     }
 
     // call api
     const tree = JSON.parse(JSON.stringify(nodeTree))
-    const res = addNode(tree, focusedItem, newNode, contentNode, 'html', String(contentNode ? nodeMaxUid + 2 : nodeMaxUid + 1) as TNodeUid, osType, tabSize)
-
+    if (_tree) {
+      let _parent = tree[nodeTree[focusedItem].parentUid as TNodeUid]
+      for (let x in _tree) {
+        if (x === 'text') continue
+        if (x === 'ROOT') {
+          _tree[x].uid = String(Number(tmpMaxUid) + 1)
+          _tree[x].parentUid = nodeTree[focusedItem].parentUid
+          _tree[x].name = newNode.name
+          _tree[x].data.type = 'tag'
+          _tree[x].data.name = newNode.name
+          _tree[x].data.valid = true;
+          (_tree[x].data as THtmlNodeData).attribs = { [NodeInAppAttribName]: String(Number(tmpMaxUid) + 1) as TNodeUid }
+          newNode.uid = String(Number(tmpMaxUid) + 1)
+          tree[String(Number(tmpMaxUid) + 1)] = _tree[x]
+          _parent.children.push(String(Number(tmpMaxUid) + 1))
+        }
+        else{
+          if (_tree[x].parentUid === 'ROOT') {
+            _tree[x].parentUid = String(Number(tmpMaxUid) + 1)
+          }
+          tree[x] = _tree[x]
+        }
+      }
+      // const res = addNode(tree, focusedItem, newNode, contentNode, 'html', String(contentNode ? nodeMaxUid + 2 : nodeMaxUid + 1) as TNodeUid, osType, tabSize)
+    }
+    else{
+      const res = addNode(tree, focusedItem, newNode, contentNode, 'html', String(contentNode ? nodeMaxUid + 2 : nodeMaxUid + 1) as TNodeUid, osType, tabSize)
+      tempTree = res.tree
+      tmpMaxUid = res.nodeMaxUid as TNodeUid
+    }
     // processor
     addRunningActions(['processor-updateOpt'])
     setUpdateOpt({ parse: false, from: 'node' })
-    setNodeTree(res.tree)
+    setNodeTree(tree)
 
     // view state
     addRunningActions(['stageView-viewState'])
     setUpdateOpt({ parse: true, from: 'code' })
 
     // side effect
-    setNodeMaxUid(Number(res.nodeMaxUid))
-    setEvent({ type: 'add-node', param: [focusedItem, newNode, contentNode] })
+    setNodeMaxUid(Number(tmpMaxUid) + 1)
+    setEvent({ type: 'add-node', param: [focusedItem, newNode, tree[newNode.uid]] })
 
     removeRunningActions(['nodeTreeView-add'])
+    console.log('hms added')
+    dispatch(increaseActionGroupIndex())
   }, [addRunningActions, removeRunningActions, nodeTree, focusedItem, nodeMaxUid, osType, tabSize, htmlReferenceData])
   const cb_removeNode = useCallback((uids: TNodeUid[]) => {
     addRunningActions(['nodeTreeView-remove'])
@@ -288,6 +324,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     setEvent({ type: 'remove-node', param: [uids, res.deletedUids] })
 
     removeRunningActions(['nodeTreeView-remove'])
+    console.log('hms added')
+    dispatch(increaseActionGroupIndex())
   }, [addRunningActions, removeRunningActions, nodeTree])
   const cb_duplicateNode = useCallback((uids: TNodeUid[]) => {
     addRunningActions(['nodeTreeView-duplicate'])
@@ -309,6 +347,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     setEvent({ type: 'duplicate-node', param: [uids, res.addedUidMap] })
 
     removeRunningActions(['nodeTreeView-duplicate'])
+    console.log('hms added')
+    dispatch(increaseActionGroupIndex())
   }, [addRunningActions, removeRunningActions, nodeTree, nodeMaxUid, osType, tabSize])
   const cb_copyNode = useCallback((uids: TNodeUid[], targetUid: TNodeUid, isBetween: boolean, position: number) => {
     addRunningActions(['nodeTreeView-copy'])
@@ -350,6 +390,9 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     setNodeMaxUid(Number(res.nodeMaxUid))
     setEvent({ type: 'copy-node-external', param: [nodes, targetUid, isBetween, position, res.addedUidMap] })
     removeRunningActions(['nodeTreeView-copy'])
+
+    console.log('hms added')
+    dispatch(increaseActionGroupIndex())
   }, [addRunningActions, removeRunningActions, nodeTree, nodeMaxUid, osType, tabSize, clipboardData])
   const cb_moveNode = useCallback((_uids: TNodeUid[], targetUid: TNodeUid, isBetween: boolean, position: number) => {
     // validate
@@ -375,6 +418,9 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     setEvent({ type: 'move-node', param: [uids, targetUid, isBetween, res.position] })
 
     removeRunningActions(['nodeTreeView-move'])
+
+    console.log('hms added')
+    dispatch(increaseActionGroupIndex())
   }, [addRunningActions, removeRunningActions, nodeTree, htmlReferenceData, nodeMaxUid, osType, tabSize])
   // -------------------------------------------------------------- node view state handlers --------------------------------------------------------------
   const cb_focusNode = useCallback((uid: TNodeUid) => {
