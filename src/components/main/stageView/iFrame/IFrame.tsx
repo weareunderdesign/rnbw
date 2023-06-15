@@ -13,6 +13,7 @@ import {
 } from 'react-redux';
 
 import {
+  HmsClearActionType,
   LogAllow,
   NodeInAppAttribName,
   RootNodeUid,
@@ -65,6 +66,7 @@ export const IFrame = (props: IFrameProps) => {
     ffTree, setFFTree, setFFNode,
     ffHandlers, setFFHandlers,
     ffHoveredItem, setFFHoveredItem,
+    setInitialFileToOpen,
     isHms, setIsHms,
     ffAction, setFFAction,
     currentFileUid, setCurrentFileUid,
@@ -198,25 +200,27 @@ export const IFrame = (props: IFrameProps) => {
       if (same) return
     }
 
-    // remove org selcted effect
-    selectedItemsRef.current.map(uid => {
-      // for the elements which are created by js. (ex: Web Component)
-      let curselectedElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${uid}"]`)
-      const isValid: null | string = curselectedElement?.firstElementChild ? curselectedElement?.firstElementChild.getAttribute(NodeInAppAttribName) : ''
-      isValid === null ? curselectedElement = curselectedElement?.firstElementChild : null
-      curselectedElement?.removeAttribute('rnbwdev-rnbw-element-select')
-    })
+    
+    setTimeout(() => {
+      // remove org selcted effect
+      selectedItemsRef.current.map(uid => {
+        // for the elements which are created by js. (ex: Web Component)
+        let curselectedElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${uid}"]`)
+        const isValid: null | string = curselectedElement?.firstElementChild ? curselectedElement?.firstElementChild.getAttribute(NodeInAppAttribName) : ''
+        isValid === null ? curselectedElement = curselectedElement?.firstElementChild : null
+        curselectedElement?.removeAttribute('rnbwdev-rnbw-element-select')
+      })
+      // mark new selected items
+      selectedItems.map(uid => {
+        // for the elements which are created by js. (ex: Web Component)
+        let newSelectedElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${uid}"]`)
+        const isValid: null | string = newSelectedElement?.firstElementChild ? newSelectedElement?.firstElementChild.getAttribute(NodeInAppAttribName) : ''
+        isValid === null ? newSelectedElement = newSelectedElement?.firstElementChild : null
+        newSelectedElement?.setAttribute('rnbwdev-rnbw-element-select', '')
+      })
+      selectedItemsRef.current = [...selectedItems]
+    }, 150);
 
-    // mark new selected items
-    selectedItems.map(uid => {
-      // for the elements which are created by js. (ex: Web Component)
-      let newSelectedElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${uid}"]`)
-      const isValid: null | string = newSelectedElement?.firstElementChild ? newSelectedElement?.firstElementChild.getAttribute(NodeInAppAttribName) : ''
-      isValid === null ? newSelectedElement = newSelectedElement?.firstElementChild : null
-      newSelectedElement?.setAttribute('rnbwdev-rnbw-element-select', '')
-    })
-
-    selectedItemsRef.current = [...selectedItems]
   }, [selectedItems])
   // set/select item
   const setFocusedSelectedItems = useCallback((uid: TNodeUid, _selectedItems?: TNodeUid[]) => {
@@ -277,7 +281,7 @@ export const IFrame = (props: IFrameProps) => {
       }
       if (contentNode && newElement) {
         const contentNodeData = contentNode.data as THtmlNodeData
-        newElement.innerHTML = contentNodeData.data
+        newElement.innerHTML = contentNodeData.htmlInApp
       }
       // add after target
       const targetElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"]`)
@@ -491,7 +495,8 @@ export const IFrame = (props: IFrameProps) => {
       const nodeData = node.data as TFileNodeData
       setNavigatorDropDownType('project')
       setParseFile(true)
-      dispatch(setCurrentFile({ uid, parentUid: node.parentUid as TNodeUid, name: nodeData.name, content: nodeData.content }))
+      dispatch({ type: HmsClearActionType })
+      dispatch(setCurrentFile({ uid, parentUid: node.parentUid as TNodeUid, name: nodeData.name, content: nodeData.contentInApp ? nodeData.contentInApp : '' }))
       setCurrentFileUid(uid)
       dispatch(selectFFNode([prevFileUid]))
     }
@@ -653,7 +658,32 @@ export const IFrame = (props: IFrameProps) => {
       ele.setAttribute('contenteditable', 'true')
       contentEditableUidRef.current = uid
     }
-  }, [validNodeTree])
+    else {
+      // check if it's a web component and open its js file
+      let _ele = ele
+      let flag = true
+      while(flag) {
+        if (_ele.getAttribute(NodeInAppAttribName) !== null) {
+          for (let x in ffTree) {
+            // check web component
+            if (x.search('/' + _ele.tagName.toLowerCase() + '.js') !== -1) {
+              setInitialFileToOpen(ffTree[x].uid)
+              setNavigatorDropDownType('project')
+              flag = false
+              break
+            }
+          }
+          flag = false
+        }
+        else if (_ele.parentElement) {
+          _ele = _ele.parentElement
+        }
+        else{
+          flag = false
+        }
+      }
+    }
+  }, [validNodeTree, ffTree])
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
   const onKeyDown = useCallback((e: KeyboardEvent) => {
     if (contentEditableUidRef.current !== '') return
