@@ -78,27 +78,7 @@ body.inheritCursors * {
   top: 50vh;
   left: 50vw;
   transform: translate(-50%, -50%);
-
-  display: flex;
-  flex-direction: column;
-
-  width: auto;
-  height: auto;
-  width: 50vw;
-  max-width: 744px;
   max-height: 100vh;
-
-  overflow: auto;
-  outline: none;
-
-  /* rene.css -> .shadow */
-  box-shadow: 0 2px 8px 0 rgb(0 0 0 / 10%);
-  /* rene.css -> .radius-s */
-  border-radius: 8px;
-  /* rene.css -> .background-primary */
-  background-color: var(--color-primary-background);
-  border-color: var(--color-primary-background);
-  color: var(--color-primary-foreground)
 }
 
 /* rene.css -> .hidden-on-mobile */
@@ -109,7 +89,7 @@ body.inheritCursors * {
 }
 
 [cmdk-root] {
-  width: 100%;
+  width: 50vw;
 }
 
 [cmdk-input] {

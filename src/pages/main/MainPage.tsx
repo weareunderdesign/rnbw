@@ -1388,6 +1388,7 @@ export default function MainPage(props: MainPageProps) {
       {/* cmdk modal */}
       <Command.Dialog
         open={cmdkOpen}
+        className='background-primary radius-s shadow border'
         onOpenChange={setCmdkOpen}
         onKeyDown={(e: React.KeyboardEvent) => {
           // cmdk obj for the current command
