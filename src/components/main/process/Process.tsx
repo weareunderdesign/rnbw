@@ -136,6 +136,7 @@ export default function Process(props: ProcessProps) {
       let _needToReloadIFrame = false
       let _newFocusedNodeUid = ''
       let refuse = false
+      let tempFocusedItem = focusedItem
       // origin state
       if (!ffTree[file.uid]) {
         return
@@ -286,7 +287,10 @@ export default function Process(props: ProcessProps) {
           fileData.content = formattedContent
           fileData.contentInApp = contentInApp
           fileData.changed = fileData.content !== fileData.orgContent
-
+          while(!_nodeTree[tempFocusedItem]) {
+            if (_nodeTree[tempFocusedItem] == undefined) break
+            tempFocusedItem = _nodeTree[tempFocusedItem].parentUid as TNodeUid
+          }
           if (file.uid !== currentFileUid) {
             _needToReloadIFrame = true
           } else {
@@ -341,9 +345,14 @@ export default function Process(props: ProcessProps) {
               })
             }
           }
+          // onlyRenderViewState = true
         }
-
-        _newFocusedNodeUid = focusedItem
+        if (tempFocusedItem !== focusedItem) {
+          _newFocusedNodeUid = tempFocusedItem
+        }
+        else{
+          _newFocusedNodeUid = focusedItem
+        }
       } else {
         // do nothing
       }
@@ -455,8 +464,8 @@ export default function Process(props: ProcessProps) {
       // select new focused node in code view
       setNewFocusedNodeUid(_newFocusedNodeUid)
 
-      // setUpdateOpt({ parse: null, from: updateOpt.from !== 'hms' && _needToReloadIFrame ? null : updateOpt.from })
-      setUpdateOpt({ parse: null, from: null })
+      setUpdateOpt({ parse: null, from: updateOpt.from !== 'hms' ? null : updateOpt.from })
+      // setUpdateOpt({ parse: null, from: null })
     } else if (updateOpt.parse === false) {
       // serialize node tree data
       const _nodeTree: TNodeTreeData = JSON.parse(JSON.stringify(nodeTree))
