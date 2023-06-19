@@ -165,7 +165,7 @@ export const IFrame = (props: IFrameProps) => {
 
     const newFocusedElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${focusedItem}"]`)
     const elementRect = (newFocusedElement as HTMLElement)?.getBoundingClientRect()
-    setTimeout(() => newFocusedElement?.scrollIntoView({ block: 'nearest', inline: 'start', behavior: 'smooth' }), 50)
+    // setTimeout(() => newFocusedElement?.scrollIntoView({ block: 'nearest', inline: 'start', behavior: 'smooth' }), 50)
     if (elementRect) {
       if (elementRect.y < 0) {
         setCodeViewOffsetTop('66')
@@ -494,6 +494,9 @@ export const IFrame = (props: IFrameProps) => {
       const uid = prevFileUid
       const nodeData = node.data as TFileNodeData
       setNavigatorDropDownType('project')
+      setTimeout(() => {
+        setNavigatorDropDownType(null)
+      }, 100);
       setParseFile(true)
       dispatch({ type: HmsClearActionType })
       dispatch(setCurrentFile({ uid, parentUid: node.parentUid as TNodeUid, name: nodeData.name, content: nodeData.contentInApp ? nodeData.contentInApp : '' }))
@@ -561,7 +564,7 @@ export const IFrame = (props: IFrameProps) => {
         }
       }
       // allow to edit content by one clicking for the text element
-      if (firstClickEditableTags.filter(_ele => _ele === ele.tagName.toLowerCase()).length > 0 && !multiple){
+      if (firstClickEditableTags.filter(_ele => _ele === ele.tagName.toLowerCase()).length > 0 && !multiple && _uid === focusedItem){
         setTimeout(() => {
           onDblClick(e)
           ele.focus()
@@ -602,6 +605,13 @@ export const IFrame = (props: IFrameProps) => {
     setCodeChanges([{ uid: node.uid, content: _outerHtml }])
     addRunningActions(['processor-updateOpt'])
     setUpdateOpt({ parse: true, from: 'stage' })
+    // expand path to the uid
+
+    setTimeout(() => {
+      dispatch(focusFNNode(node.uid))
+    }, 100);
+    console.log(node.uid)
+    // node.uid ? dispatch(selectFNNode([node.uid])) : dispatch(selectFNNode([node.uid]))
   }, [outerHtml])
   const onCmdEnter = useCallback((e: KeyboardEvent) => {
     // cmdk obj for the current command
@@ -670,6 +680,9 @@ export const IFrame = (props: IFrameProps) => {
               setInitialFileToOpen(ffTree[x].uid)
               setNavigatorDropDownType('project')
               flag = false
+              setTimeout(() => {
+                setNavigatorDropDownType(null)
+              }, 100);
               break
             }
           }
