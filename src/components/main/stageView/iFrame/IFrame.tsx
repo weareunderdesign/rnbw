@@ -291,7 +291,7 @@ export const IFrame = (props: IFrameProps) => {
     setTimeout(() => {
       dispatch(focusFNNode(node.uid))
       dispatch(selectFNNode([node.uid]))
-    }, 100)
+    }, 10)
     removeRunningActions(['stageView-viewState'])
   }, [removeRunningActions, contentRef])
   const removeElements = useCallback((uids: TNodeUid[], deletedUids: TNodeUid[]) => {
@@ -609,7 +609,7 @@ export const IFrame = (props: IFrameProps) => {
 
     setTimeout(() => {
       dispatch(focusFNNode(node.uid))
-    }, 100);
+    }, 10);
     console.log(node.uid)
     // node.uid ? dispatch(selectFNNode([node.uid])) : dispatch(selectFNNode([node.uid]))
   }, [outerHtml])
