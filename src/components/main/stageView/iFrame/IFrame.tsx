@@ -47,7 +47,7 @@ import { IFrameProps } from './types';
 const defaultImage = "https://user-images.githubusercontent.com/13418616/234660226-dc0cb352-3735-478c-bcc0-d47f73eb3e31.svg"
 const defaultAudio = "https://user-images.githubusercontent.com/13418616/234660225-7195abb2-91e7-402f-aa7d-902bbf7d66f8.svg"
 const defaultVideo = "https://user-images.githubusercontent.com/13418616/234660227-aeb91595-1ed6-4b46-8197-c6feb7af3718.svg"
-const firstClickEditableTags = ['p', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']
+const firstClickEditableTags = ['p', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'label']
 export const IFrame = (props: IFrameProps) => {
   const dispatch = useDispatch()
   const { file } = useSelector(navigatorSelector)
@@ -165,7 +165,7 @@ export const IFrame = (props: IFrameProps) => {
 
     const newFocusedElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${focusedItem}"]`)
     const elementRect = (newFocusedElement as HTMLElement)?.getBoundingClientRect()
-    // setTimeout(() => newFocusedElement?.scrollIntoView({ block: 'nearest', inline: 'start', behavior: 'smooth' }), 50)
+    setTimeout(() => newFocusedElement?.scrollIntoView({ block: 'nearest', inline: 'start', behavior: 'smooth' }), 50)
     if (elementRect) {
       if (elementRect.y < 0) {
         setCodeViewOffsetTop('66')
@@ -274,6 +274,22 @@ export const IFrame = (props: IFrameProps) => {
       const targetElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"]`)
       // targetElement?.append('<!--...-->')
     }
+    else if(nodeData.name === 'html') {
+      newElement = contentRef?.contentWindow?.document?.createElement(nodeData.name)
+      for (const attrName in nodeData.attribs) {
+        newElement && newElement?.setAttribute(attrName, nodeData.attribs[attrName])
+      }
+      if (contentNode && newElement) {
+        const contentNodeData = contentNode.data as THtmlNodeData
+        newElement.innerHTML = contentNodeData.htmlInApp
+      }
+      let existHTML = contentRef?.contentWindow?.document?.querySelector('html') as Node
+      if (existHTML) {
+        contentRef?.contentWindow?.document?.removeChild(existHTML)
+      }
+      newElement && contentRef?.contentWindow?.document?.appendChild(newElement)
+      setNeedToReloadIFrame(true)
+    }
     else{
       newElement = contentRef?.contentWindow?.document?.createElement(nodeData.name)
       for (const attrName in nodeData.attribs) {
@@ -291,7 +307,7 @@ export const IFrame = (props: IFrameProps) => {
     setTimeout(() => {
       dispatch(focusFNNode(node.uid))
       dispatch(selectFNNode([node.uid]))
-    }, 10)
+    }, 70)
     removeRunningActions(['stageView-viewState'])
   }, [removeRunningActions, contentRef])
   const removeElements = useCallback((uids: TNodeUid[], deletedUids: TNodeUid[]) => {
