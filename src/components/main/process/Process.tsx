@@ -204,6 +204,9 @@ export default function Process(props: ProcessProps) {
               // parse code part
               const parserRes = parseHtmlCodePart(codeChange.content, htmlReferenceData, osType, String(_nodeMaxUid) as TNodeUid)
               const { formattedContent, tree, nodeMaxUid: newNodeMaxUid } = parserRes
+              if (formattedContent == '') {
+                return
+              }
               _nodeMaxUid = Number(newNodeMaxUid)
               // remove org nodes
               const o_node = _nodeTree[codeChange.uid]
