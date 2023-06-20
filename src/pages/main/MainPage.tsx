@@ -220,6 +220,8 @@ export default function MainPage(props: MainPageProps) {
   const [cmdkOpen, setCmdkOpen] = useState<boolean>(false)
   const [cmdkPages, setCmdkPages] = useState<string[]>([])
 
+  // first loaded
+  const firstLoaded = useRef<boolean>(false)
   // guide ref
   const guideRef = useRef<HTMLAnchorElement>(null)
   const cmdkPage = useMemo(() => {
@@ -484,6 +486,8 @@ export default function MainPage(props: MainPageProps) {
         break
       case 'New':
         onNew()
+        // show actions panel by default
+        !showActionsPanel && setShowActionsPanel(true)
         break
       case 'Open':
         onOpen()
@@ -632,6 +636,9 @@ export default function MainPage(props: MainPageProps) {
             setRecentProjectHandler(_recentProjectHandler)
             await setMany([['recent-project-context', _recentProjectContext], ['recent-project-name', _recentProjectName], ['recent-project-handler', _recentProjectHandler]])
           }
+
+          // show actions panel by default
+          !showActionsPanel && setShowActionsPanel(true)
         }, 50)
       } catch (err) {
         LogAllow && console.log('failed to load local project')
@@ -821,12 +828,11 @@ export default function MainPage(props: MainPageProps) {
 
   // open navigator when close the menu
   useEffect(() => {
-    if (cmdkPage === 'Actions' || cmdkPage === 'Add') return
-    if (!cmdkOpen){
+    if (!cmdkOpen && firstLoaded.current && !showActionsPanel){
       setShowActionsPanel(true)
     }
-    else{
-      setShowActionsPanel(false)
+    if (!firstLoaded.current){
+      firstLoaded.current = true
     }
   }, [cmdkOpen])
 
