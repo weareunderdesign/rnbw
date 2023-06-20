@@ -292,7 +292,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
           {/* file */}
           {ffTree[file.uid] && <>
             <div className="gap-s align-center" onClick={onFileClick}>
-              <SVGIconI {...{ "class": "icon-xs" }}>{ffTree[file.uid].data.type == 'html' && ffTree[file.uid].data.name == 'index' ? 'home' : filesReferenceData[(ffTree[file.uid].data as TFileNodeData).ext.substring(1, (ffTree[file.uid].data as TFileNodeData).ext.length)] ? filesReferenceData[(ffTree[file.uid].data as TFileNodeData).ext.substring(1, (ffTree[file.uid].data as TFileNodeData).ext.length)].Icon : 'page'}</SVGIconI>
+              <SVGIconI {...{ "class": "icon-xs" }}>{ffTree[file.uid].data.type == 'html' && ffTree[file.uid].data.name == 'index' ? 'home' : filesReferenceData[(ffTree[file.uid].data as TFileNodeData).ext.substring(1, (ffTree[file.uid].data as TFileNodeData).ext.length)] && (ffTree[file.uid].data as TFileNodeData).ext.substring(1, (ffTree[file.uid].data as TFileNodeData).ext.length) !== 'md' ? filesReferenceData[(ffTree[file.uid].data as TFileNodeData).ext.substring(1, (ffTree[file.uid].data as TFileNodeData).ext.length)].Icon : 'page'}</SVGIconI>
               <span className="text-s">{file.name}</span>
               {ffTree[file.uid] && (ffTree[file.uid].data as TFileNodeData).changed &&
                     <div className="radius-s foreground-primary" style={{ width: "6px", height: "6px" }}></div>}
