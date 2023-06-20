@@ -196,6 +196,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     let tempTree 
     let _tree: TNodeTreeData | null = null
     let tmpMaxUid: TNodeUid = String(nodeMaxUid)
+    let newNodeFlag = false
     const refData = htmlReferenceData.elements[nodeType]
     if (refData) {
       const { Attributes, Content } = refData
@@ -215,11 +216,11 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
         })
       }
       if (Content) {
+        newNodeFlag = true
         let parserRes = parseHtmlCodePart(Content, htmlReferenceData, osType, String(nodeMaxUid) as TNodeUid)
         const { formattedContent, tree, nodeMaxUid: newNodeMaxUid } = parserRes
         tmpMaxUid = newNodeMaxUid
         _tree = tree
-        // console.log(formattedContent, tree, newNodeMaxUid)
         newNode.isEntity = false
         newNode.children = [String(nodeMaxUid + 2) as TNodeUid]
         contentNode = {
@@ -235,7 +236,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
             type: 'text',
             name: 'text',
             data: Content,
-            attribs: { [NodeInAppAttribName]: String(nodeMaxUid + 2) as TNodeUid },
+            attribs: { [NodeInAppAttribName]: tmpMaxUid as TNodeUid },
 
             html: '',
             htmlInApp: '',
@@ -246,10 +247,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
             endColumn: 0,
           } as THtmlNodeData
         } as TNode
-        // let codeChange: TCodeChange[] = [{uid: '', content: ''}]
-        // codeChange[0].uid = String(nodeMaxUid + 2) as TNodeUid
-        // codeChange[0].content = Content
-        // setCodeChanges(codeChange)
       }
     }
 
@@ -261,7 +258,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
         if (x === 'text') continue
         if (x === 'ROOT') {
           _tree[x].uid = String(Number(tmpMaxUid) + 1)
-          _tree[x].parentUid = nodeTree[focusedItem].parentUid
+          _tree[x].parentUid = focusedItem !== 'ROOT' && _parent !== undefined ? nodeTree[focusedItem].parentUid : 'ROOT'
           _tree[x].name = newNode.name
           _tree[x].data.type = 'tag'
           _tree[x].data.name = newNode.name
@@ -269,7 +266,34 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
           (_tree[x].data as THtmlNodeData).attribs = { [NodeInAppAttribName]: String(Number(tmpMaxUid) + 1) as TNodeUid }
           newNode.uid = String(Number(tmpMaxUid) + 1)
           tree[String(Number(tmpMaxUid) + 1)] = _tree[x]
-          _parent.children.push(String(Number(tmpMaxUid) + 1))
+          if (focusedItem !== 'ROOT' && _parent !== undefined) {
+            _parent.children.push(String(Number(tmpMaxUid) + 1))
+          }
+          else{
+            tree['ROOT'].children.push(String(Number(tmpMaxUid) + 1))
+          }
+          // const node = _tree[x]
+          // if (node) {
+          //   const nodeData = node.data as THtmlNodeData
+          //   const attribsHtml = nodeData.attribs === undefined ? '' :
+          //   Object.keys(nodeData.attribs).map(attr => {
+          //     if (attr === NodeInAppAttribName) return
+          //     if (attr === 'class') {
+          //       const className = (nodeData.attribs['class'] as string).split(' ').filter(className => !!className).join(' ')
+          //       if (className === '') return
+          //       return ` class="${className}"`
+          //     }
+  
+          //     const attrContent = nodeData.attribs[attr] as string
+          //     return attrContent === '' ? ` ${attr}` : ` ${attr}="${attrContent}"`
+          //   }).join('')
+  
+          //   const attribsHtmlInApp = nodeData.attribs === undefined ? '' :
+          //   Object.keys(nodeData.attribs).map(attr => {
+          //     const attrContent = nodeData.attribs[attr]
+          //     return attrContent === '' ? ` ${attr}` : ` ${attr}="${attrContent}"`
+          //   }).join('')
+          // }
         }
         else{
           if (_tree[x].parentUid === 'ROOT') {
@@ -296,7 +320,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     // side effect
     setNodeMaxUid(Number(tmpMaxUid) + 1)
-    setEvent({ type: 'add-node', param: [focusedItem, newNode, tree[newNode.uid]] })
+    setEvent({ type: 'add-node', param: [focusedItem, newNodeFlag ? tree[Number(tmpMaxUid) + 1] : newNode, tree[newNode.uid]] })
 
     removeRunningActions(['nodeTreeView-add'])
     console.log('hms added')
