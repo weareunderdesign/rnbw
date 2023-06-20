@@ -154,7 +154,6 @@ export default function Process(props: ProcessProps) {
 
         fileData.content = formattedContent
         fileData.contentInApp = contentInApp
-        // console.log(fileData.content.slice(600, 700),  fileData.orgContent.slice(600, 700), fileData.content.slice(0, 600) !== fileData.orgContent.slice(0, 600))
         fileData.changed = fileData.content !== fileData.orgContent
 
         // reload iframe
@@ -187,7 +186,6 @@ export default function Process(props: ProcessProps) {
 
             const parserRes = parseFile(fileData.type, fileContent, htmlReferenceData, osType, null, String(_nodeMaxUid) as TNodeUid)
             const { formattedContent, contentInApp, tree, nodeMaxUid: newNodeMaxUid } = parserRes
-            console.log(formattedContent)
 
             _nodeTree = tree
             _nodeMaxUid = Number(newNodeMaxUid)
@@ -205,7 +203,6 @@ export default function Process(props: ProcessProps) {
               // parse code part
               const parserRes = parseHtmlCodePart(codeChange.content, htmlReferenceData, osType, String(_nodeMaxUid) as TNodeUid)
               const { formattedContent, tree, nodeMaxUid: newNodeMaxUid } = parserRes
-            console.log(formattedContent)
 
               if (formattedContent == '') {
                 return
