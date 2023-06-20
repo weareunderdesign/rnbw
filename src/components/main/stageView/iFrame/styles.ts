@@ -17,10 +17,10 @@ html {
   outline-offset: -1px;
 }
 [data-rnbwdev-rnbw-node]:empty:not(svg-icon):not(.icon-xs):not(.icon-s):not(.icon-m):not(.icon-l):not(.icon-xl):not([style*="width"]):not([style*="height"]):not(.direction-column):not(.direction-row) {
-  min-width: 80px;
-  min-height: 80px;
+  // min-width: 80px;
+  // min-height: 80px;
 }
-body {
+body, body:first-child {
   min-width: 80px;
   min-height: 80px;
 }
