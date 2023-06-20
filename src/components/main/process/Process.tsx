@@ -187,6 +187,7 @@ export default function Process(props: ProcessProps) {
 
             const parserRes = parseFile(fileData.type, fileContent, htmlReferenceData, osType, null, String(_nodeMaxUid) as TNodeUid)
             const { formattedContent, contentInApp, tree, nodeMaxUid: newNodeMaxUid } = parserRes
+            console.log(formattedContent)
 
             _nodeTree = tree
             _nodeMaxUid = Number(newNodeMaxUid)
@@ -204,6 +205,8 @@ export default function Process(props: ProcessProps) {
               // parse code part
               const parserRes = parseHtmlCodePart(codeChange.content, htmlReferenceData, osType, String(_nodeMaxUid) as TNodeUid)
               const { formattedContent, tree, nodeMaxUid: newNodeMaxUid } = parserRes
+            console.log(formattedContent)
+
               if (formattedContent == '') {
                 return
               }
@@ -344,7 +347,12 @@ export default function Process(props: ProcessProps) {
                 const n_nodeData = n_node.data as THtmlNodeData
                 // replace html in iframe
                 const element = document.querySelector('iframe')?.contentWindow?.window.document.querySelector(`[${NodeInAppAttribName}="${uid}"]`)
-                element ? element.outerHTML = n_nodeData.htmlInApp : null
+                if (element?.tagName === 'HTML') {
+                  element.innerHTML = n_nodeData.htmlInApp
+                }
+                else {
+                  element ? element.outerHTML = n_nodeData.htmlInApp : null
+                }
               })
             }
           }
