@@ -491,13 +491,16 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       const nodeData = node.data as TFileNodeData
       setParseFile(true)
       setNavigatorDropDownType('project')
+      setTimeout(() => {
+        setNavigatorDropDownType(null)
+      }, 100);
       dispatch({ type: HmsClearActionType })
       dispatch(setCurrentFile({ uid, parentUid: node.parentUid as TNodeUid, name: nodeData.name, content: nodeData.contentInApp ? nodeData.contentInApp : '' }))
       setCurrentFileUid(uid)
       dispatch(selectFFNode([prevFileUid]))
     }
     removeRunningActions(['nodeTreeView-select'])
-  }, [addRunningActions, removeRunningActions, validNodeTree, selectedItems, selectedItemsObj])
+  }, [addRunningActions, removeRunningActions, validNodeTree, selectedItems, selectedItemsObj, parseFileFlag])
   const cb_expandNode = useCallback((uid: TNodeUid) => {
     addRunningActions(['nodeTreeView-arrow'])
 
