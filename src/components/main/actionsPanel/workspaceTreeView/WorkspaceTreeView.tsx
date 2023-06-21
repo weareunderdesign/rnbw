@@ -1831,7 +1831,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
      removeRunningActions(['fileTreeView-read'])
      setPrevFileUid(uid)
     }
-  }, [addRunningActions, removeRunningActions, invalidNodes, ffTree, file.uid])
+  }, [addRunningActions, removeRunningActions, invalidNodes, ffTree, file.uid, showCodeView])
 
   // handlle links-open
   const openFile = useCallback((uid: TNodeUid) => {
