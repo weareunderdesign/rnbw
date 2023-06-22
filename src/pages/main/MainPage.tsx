@@ -126,6 +126,7 @@ export default function MainPage(props: MainPageProps) {
   const { focusedItem: fnFocusedItem, expandedItems: fnExpandedItems, selectedItems: fnSelectedItems, expandedItemsObj: fnExpandedItemsObj, selectedItemsObj: fnSelectedItemsObj } = useSelector(fnSelector)
   const { futureLength, pastLength } = useSelector(hmsInfoSelector)
   // -------------------------------------------------------------- main context --------------------------------------------------------------
+  const [favicon, setFavicon] = useState<string>('')
   // global action
   const [pending, setPending] = useState<boolean>(false)
   const runningActions = useRef<{ [actionName: string]: boolean }>({})
@@ -532,6 +533,7 @@ export default function MainPage(props: MainPageProps) {
     dispatch({ type: HmsClearActionType })
   }, [])
   const loadProject = useCallback(async (fsType: TProjectContext, projectHandle?: FileSystemHandle | null, internal?: boolean | true) => {
+    setFavicon('')
     if (fsType === 'local') {
       setFSPending(true)
       try {
@@ -891,7 +893,7 @@ export default function MainPage(props: MainPageProps) {
   const [actionsPanelWidth, setActionsPanelWidth] = useState(240)
 
   const [codeViewOffsetBottom, setCodeViewOffsetBottom] = useState('10')
-  const [codeViewOffsetTop, setCodeViewOffsetTop] = useState('66')
+  const [codeViewOffsetTop, setCodeViewOffsetTop] = useState('calc(66.67vh - 10px)')
   const [codeViewOffsetLeft, setCodeViewOffsetLeft] = useState(10)
   const [codeViewHeight, setCodeViewHeight] = useState("33.33")
   const [codeViewDragging, setCodeViewDragging] = useState(false)
@@ -1305,6 +1307,7 @@ export default function MainPage(props: MainPageProps) {
         activePanel, setActivePanel,
         clipboardData, setClipboardData,
         event, setEvent,
+        favicon, setFavicon,
         // actions panel
         showActionsPanel,
         // file tree view
@@ -1379,7 +1382,7 @@ export default function MainPage(props: MainPageProps) {
         />
         {showCodeView && !needToReloadCodeView ?
           <CodeView
-            offsetTop={`${codeViewOffsetTop}vh`}
+            offsetTop={`${codeViewOffsetTop}`}
             offsetBottom={codeViewOffsetBottom}
             offsetLeft={showActionsPanel ? actionsPanelOffsetLeft * 2 + actionsPanelWidth : codeViewOffsetLeft}
             width={`calc(100vw - ${(showActionsPanel ? actionsPanelWidth + actionsPanelOffsetLeft * 2 : codeViewOffsetLeft) + codeViewOffsetLeft}px)`}
