@@ -710,7 +710,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                     )}
                     style={{
                       flexWrap: "nowrap",
-                      paddingLeft: `${props.depth * 10}px`,
+                      paddingLeft: `${props.depth * 18}px`,
                     }}
                     {...props.context.itemContainerWithoutChildrenProps}
                     {...props.context.interactiveElementProps}
