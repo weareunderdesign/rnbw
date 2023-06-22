@@ -308,7 +308,7 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
       nodeHtmlInApp = ``
     } else if (nodeData.type === 'text') {
       // replace "<" or ">" to "&lt;" and "&gt;", only in app
-      nodeHtml = nodeData.data
+      nodeHtml = nodeData.data.replace(/</g, `&lt;`).replace(/>/g, `&gt;`)
       nodeHtmlInApp = nodeData.data.replace(/</g, `&lt;`).replace(/>/g, `&gt;`)
     } else if (nodeData.type === 'script' || nodeData.type === 'style') {
       nodeHtml = `<${nodeData.type}${attribsHtml}>${childrenHtml}</${nodeData.type}>`
