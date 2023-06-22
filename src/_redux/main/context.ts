@@ -45,6 +45,9 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   clipboardData: { panel: 'unknown', type: null, uids: [], fileType: 'html', data: [], fileUid: '', prevNodeTree: {} },
   setClipboardData: (data: TClipboardData) => { },
   event: null,
+  // favicon
+  favicon: '',
+  setFavicon: (favicon: string) => {  },
   setEvent: (e: TEvent) => { },
   // actions panel
   showActionsPanel: false,

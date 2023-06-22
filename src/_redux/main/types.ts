@@ -54,6 +54,9 @@ export type TMainContext = {
   clipboardData: TClipboardData,
   setClipboardData: (data: TClipboardData) => void,
   event: TEvent,
+  // favicon
+  favicon: string,
+  setFavicon: (_favicon: string) => void,
   setEvent: (e: TEvent) => void,
   // actions panel
   showActionsPanel: boolean,
