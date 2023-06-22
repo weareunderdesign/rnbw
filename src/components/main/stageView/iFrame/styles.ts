@@ -16,7 +16,7 @@ html {
   outline: 1px solid var(--color-rnbwdev-rainbow-element-foreground);
   outline-offset: -1px;
 }
-[data-rnbwdev-rnbw-node]:empty:not(svg-icon):not(.icon-xs):not(.icon-s):not(.icon-m):not(.icon-l):not(.icon-xl):not([style*="width"]):not([style*="height"]):not(.direction-column):not(.direction-row):not(hr, label, span) {
+[data-rnbwdev-rnbw-node]:empty:not(svg-icon):not(.icon-xs):not(.icon-s):not(.icon-m):not(.icon-l):not(.icon-xl):not([style*="width"]):not([style*="height"]):not(.direction-column):not(.direction-row):not(hr, label, span, br) {
   min-width: 80px;
   min-height: 80px;
 }
