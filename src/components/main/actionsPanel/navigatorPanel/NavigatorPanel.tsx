@@ -95,10 +95,10 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
     addMessage, removeMessage,
     // open project
     loadProject,
-    parseFileFlag, setParseFile
+    parseFileFlag, setParseFile,
+    favicon, setFavicon
   } = useContext(MainContext)
   // -------------------------------------------------------------- favicon --------------------------------------------------------------
-  const [favicon, setFavicon] = useState('')
   const isFirst = useRef(true)
   useEffect(() => {
     isFirst.current = true
@@ -107,26 +107,25 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
   const [projectFavicons, setProjectFavicons] = useState([])
 
   useEffect(() => {
-    if (validNodeTree) {
-      let hasFavicon = false
-      for (const x in validNodeTree) {
-        const nodeData = validNodeTree[x].data as THtmlNodeData
-        if (nodeData && nodeData.type === 'tag' && nodeData.name === 'link' && nodeData.attribs.rel === 'icon') {
-          setFavicon(window.location.origin + '/rnbw/' + project.name + '/' + nodeData.attribs.href)
-          hasFavicon = true
-        }
-      }
-
-      if (!hasFavicon) {
-        setFavicon('')
-      }
-    }
-    else{
-      setFavicon('')
-    }
-
     // set favicons of the workspace
     if (file.uid === `${RootNodeUid}/index.html`) {
+      if (validNodeTree) {
+        let hasFavicon = false
+        for (const x in validNodeTree) {
+          const nodeData = validNodeTree[x].data as THtmlNodeData
+          if (nodeData && nodeData.type === 'tag' && nodeData.name === 'link' && nodeData.attribs.rel === 'icon') {
+            setFavicon(window.location.origin + '/rnbw/' + project.name + '/' + nodeData.attribs.href)
+            hasFavicon = true
+          }
+        }
+  
+        if (!hasFavicon) {
+          setFavicon('')
+        }
+      }
+      else{
+        setFavicon('')
+      }
 
       let hasFavicon = false
       let temp = projectFavicons
@@ -274,8 +273,8 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
             <div className="gap-s align-center" onClick={onProjectClick}>
               <div className="radius-m icon-s align-center">
                 {favicon === null || favicon === "" ? 
-                  <></> : 
-                  <img className='icon-s' style={{'borderRadius': '50%'}} src={project.context === 'idb' ? 'https://rnbw.company/images/favicon.png' : favicon}></img>
+                  <SVGIconI {...{ "class": "icon-xs" }}>folder</SVGIconI> : 
+                  <img className='icon-s' style={{'borderRadius': '50%', 'width': '18px', 'height' : '18px'}} src={project.context === 'idb' ? 'https://rnbw.company/images/favicon.png' : favicon}></img>
                 }
               </div>
               <span className="text-s">{project.name}</span>
@@ -292,8 +291,8 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
           {/* file */}
           {ffTree[file.uid] && <>
             <div className="gap-s align-center" onClick={onFileClick}>
-              <SVGIconI {...{ "class": "icon-xs" }}>{ffTree[file.uid].data.type == 'html' && ffTree[file.uid].data.name == 'index' ? 'home' : filesReferenceData[(ffTree[file.uid].data as TFileNodeData).ext.substring(1, (ffTree[file.uid].data as TFileNodeData).ext.length)] && (ffTree[file.uid].data as TFileNodeData).ext.substring(1, (ffTree[file.uid].data as TFileNodeData).ext.length) !== 'md' ? filesReferenceData[(ffTree[file.uid].data as TFileNodeData).ext.substring(1, (ffTree[file.uid].data as TFileNodeData).ext.length)].Icon : 'page'}</SVGIconI>
-              <span className="text-s">{file.name}</span>
+              <SVGIconI {...{ "class": "icon-xs" }}>{ffTree[file.uid].data.type == 'html' && ffTree[file.uid].data.name == 'index' && ffTree[file.uid].parentUid === 'ROOT' ? 'home' : filesReferenceData[(ffTree[file.uid].data as TFileNodeData).ext.substring(1, (ffTree[file.uid].data as TFileNodeData).ext.length)] && (ffTree[file.uid].data as TFileNodeData).ext.substring(1, (ffTree[file.uid].data as TFileNodeData).ext.length) !== 'md' ? filesReferenceData[(ffTree[file.uid].data as TFileNodeData).ext.substring(1, (ffTree[file.uid].data as TFileNodeData).ext.length)].Icon : 'page'}</SVGIconI>
+              <span className="text-s">{file.uid.split('/')[file.uid.split('/').length - 1]}</span>
               {ffTree[file.uid] && (ffTree[file.uid].data as TFileNodeData).changed &&
                     <div className="radius-s foreground-primary" style={{ width: "6px", height: "6px" }}></div>}
             </div>
@@ -323,8 +322,8 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
                 <div className="gap-s align-center" onClick={onProjectClick}>
                   <div className="radius-m icon-s align-center">
                     {favicon === null || favicon === "" ? 
-                      <></> : 
-                      <img className='icon-s' style={{'borderRadius': '50%'}} src={project.context === 'idb' ? 'https://rnbw.company/images/favicon.png' : favicon}></img>
+                      <SVGIconI {...{ "class": "icon-xs" }}>folder</SVGIconI> : 
+                      <img className='icon-s' style={{'borderRadius': '50%', 'width': '18px', 'height' : '18px'}} src={project.context === 'idb' ? 'https://rnbw.company/images/favicon.png' : favicon}></img>
                     }
                   </div>
                   <span className="text-s">{project.name}</span>
