@@ -374,7 +374,29 @@ export default function MainPage(props: MainPageProps) {
   const params = useParams()
   const location = useLocation()
   // init workspace
+
+  const isChromeOrEdge = () => {
+    const userAgent = navigator.userAgent;
+  
+    if (userAgent.indexOf('Chrome') > -1) {
+      return true; // Current browser is Chrome
+    } else if (userAgent.indexOf('Edg') > -1) {
+      return true; // Current browser is Edge
+    }
+  
+    return false; // Current browser is not Chrome or Edge
+  };
+
   useEffect(() => {
+
+    // check if current broswer is Chrome or Edge
+    if (!isChromeOrEdge()) {
+      const message = `Browser is unsupported. rnbw works in the latest versions of Google Chrome and Microsoft Edge.`
+      if (!window.confirm(message)) {
+        return
+      }
+    }
+
     setWorkspace({ name: 'local', projects: [] })
     document.addEventListener('contextmenu', (e) => {
       e.preventDefault();
