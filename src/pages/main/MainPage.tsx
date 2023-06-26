@@ -1386,7 +1386,7 @@ export default function MainPage(props: MainPageProps) {
       <Process />
 
       {/* spinner */}
-      <Loader show={pending || iframeLoading || fsPending || codeEditing}></Loader>
+      <Loader show={pending}></Loader>
 
       {/* main page */}
       <div
