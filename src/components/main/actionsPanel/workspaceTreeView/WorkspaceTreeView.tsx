@@ -1936,7 +1936,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           top: 0,
           left: 0,
           width: '100%',
-          maxHeight: '200px',
+          maxHeight: 'calc(50vh - 50px)',
           height: 'auto',
 
           overflow: 'auto',
@@ -1986,7 +1986,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                 const refData = filesReferenceData[nodeData.kind === 'directory' ? 'folder' : (nodeData.ext ? nodeData.ext.slice(1) : nodeData.type)]
                 return refData
               }, [])
-
               return <>
                 <li
                   className={cx(
@@ -2017,7 +2016,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                     )}
                     style={{
                       flexWrap: "nowrap",
-                      paddingLeft: `${props.depth * 10}px`,
+                      paddingLeft: `${props.depth * 18}px`,
                     }}
                     {...props.context.itemContainerWithoutChildrenProps}
                     {...props.context.interactiveElementProps}
@@ -2102,7 +2101,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                     overflow: 'hidden',
                     whiteSpace: 'nowrap',
                   }}>
-                  {props.title}
+                  {props.title + props.item?.data?.data?.ext}
                   {ffTree[props.item.data.uid] && (ffTree[props.item.data.uid].data as TFileNodeData).changed &&
                     <div className="radius-s foreground-primary" style={{ width: "6px", height: "6px" }}></div>}
                 </span>
