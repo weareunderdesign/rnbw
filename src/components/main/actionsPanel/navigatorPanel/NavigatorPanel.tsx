@@ -32,10 +32,10 @@ import { TProject } from '@_types/main';
 
 import { NavigatorPanelProps } from './types';
 
-const unsavedDarkProjectImg = './images/unsaved-dark.png'
-const unsavedLightProjectImg = './images/unsaved-light.png'
-const projectDarkImg = './images/dark-rnbw.png'
-const projectLightImg = './images/light-rnbw.png'
+const unsavedDarkProjectImg = 'https://rnbw.company/images/favicon-dark-active.png'
+const unsavedLightProjectImg = 'https://rnbw.company/images/favicon-light-active.png'
+const projectDarkImg = 'https://rnbw.company/images/favicon-dark.png'
+const projectLightImg = 'https://rnbw.company/images/favicon-light.png'
 export default function NavigatorPanel(props: NavigatorPanelProps) {
   const dispatch = useDispatch()
   // -------------------------------------------------------------- global state --------------------------------------------------------------
