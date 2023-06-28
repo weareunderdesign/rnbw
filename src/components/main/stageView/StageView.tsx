@@ -22,6 +22,7 @@ export default function StageView(props: StageViewProps) {
         id="StageView"
         style={{
           height: "100vh",
+          background: "white",
           // background: iframeSrc ? "white" : "",
           position: "relative",
         }}
