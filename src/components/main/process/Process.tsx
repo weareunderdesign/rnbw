@@ -34,6 +34,7 @@ import {
   serializeHtml,
   THtmlNodeData,
   THtmlPageSettings,
+  THtmlParserResponse,
 } from '@_node/html';
 import {
   TNode,
@@ -121,9 +122,25 @@ export default function Process(props: ProcessProps) {
     } else {
       const _file = ffTree[file.uid]
       const fileData = _file.data as TFileNodeData
-      window.document.title = `${fileData.name}${fileData.ext}`
+      if (ffTree[file.uid].data.type === 'html') {
+        let _title = `${fileData.name}${fileData.ext}`
+        Object.keys(nodeTree).map(uid => {
+          const node = nodeTree[uid]
+          const nodeData = node.data as THtmlNodeData
+          if (nodeData.type === 'tag') {
+            if (nodeData.name === 'title') {
+              _title = nodeData.html.replace(/<[^>]*>/g, "")
+              return;
+            }
+          }
+        })
+        window.document.title = _title
+      }
+      else { 
+        window.document.title = `${fileData.name}${fileData.ext}`
+      }
     }
-  }, [file.uid])
+  }, [file.uid, nodeTree])
   // processor-updateOpt
   useEffect(() => {
     if (updateOpt.parse === true) {
@@ -183,7 +200,6 @@ export default function Process(props: ProcessProps) {
               const { html: formattedContent } = serializeHtml(_nodeTree, htmlReferenceData, osType)
               fileContent = formattedContent
             }
-
             const parserRes = parseFile(fileData.type, fileContent, htmlReferenceData, osType, null, String(_nodeMaxUid) as TNodeUid)
             const { formattedContent, contentInApp, tree, nodeMaxUid: newNodeMaxUid } = parserRes
 
@@ -201,15 +217,17 @@ export default function Process(props: ProcessProps) {
             codeChanges.map(codeChange => {
               // ---------------------- node tree side effect ----------------------
               // parse code part
-              const parserRes = parseHtmlCodePart(codeChange.content, htmlReferenceData, osType, String(_nodeMaxUid) as TNodeUid)
+              // remove org nodes
+              const o_node = _nodeTree[codeChange.uid]
+              let parserRes: THtmlParserResponse
+              parserRes = parseHtmlCodePart(codeChange.content, htmlReferenceData, osType, String(_nodeMaxUid) as TNodeUid)
               const { formattedContent, tree, nodeMaxUid: newNodeMaxUid } = parserRes
 
               if (formattedContent == '') {
                 return
               }
               _nodeMaxUid = Number(newNodeMaxUid)
-              // remove org nodes
-              const o_node = _nodeTree[codeChange.uid]
+            
               // if (codeChange.content !== formattedContent) refuse = true
               if (o_node === undefined) return
               const o_parentNode = _nodeTree[o_node.parentUid as TNodeUid]
@@ -242,23 +260,34 @@ export default function Process(props: ProcessProps) {
               // build element to replace
               let nodeUidIndex = -1
               const divElement = document.createElement('div')
-              divElement.innerHTML = formattedContent
-              const nodes: Node[] = [divElement.childNodes[0]]
-              while (nodes.length) {
-                const node = nodes.shift() as Node
-                if (node === undefined) continue
-                if (node.nodeName === '#text') continue
-                if ((node as HTMLElement).tagName) {
-                  (node as HTMLElement).setAttribute(NodeInAppAttribName, nodeUids[++nodeUidIndex])
-                  node.childNodes.forEach((childNode) => {
-                    nodes.push(childNode)
-                  })
+              if (o_node.name !== 'code' && o_node.name !== 'pre') {
+                divElement.innerHTML = formattedContent
+                const nodes: Node[] = [divElement.childNodes[0]]
+                while (nodes.length) {
+                  const node = nodes.shift() as Node
+                  if (node === undefined) continue
+                  if (node.nodeName === '#text') {
+                    continue
+                  }
+                  if ((node as HTMLElement).tagName) {
+                    (node as HTMLElement).setAttribute(NodeInAppAttribName, nodeUids[++nodeUidIndex])
+                    node.childNodes.forEach((childNode) => {
+                      nodes.push(childNode)
+                    })
+                  }
+                }
+                // replace element to iframe
+                const element = document.querySelector('iframe')?.contentWindow?.window.document.querySelector(`[${NodeInAppAttribName}="${codeChange.uid}"]`)
+                element?.parentElement?.insertBefore(divElement.childNodes[0], element.nextSibling)
+                element?.remove()
+              }
+              else{
+                let element = document.querySelector('iframe')?.contentWindow?.window.document.querySelector(`[${NodeInAppAttribName}="${codeChange.uid}"]`)
+                if (element && tree['ROOT'].data) {
+                  element?.setAttribute(NodeInAppAttribName, tree['ROOT'].children[0])
+                  element.outerHTML = (tree['ROOT'].data as THtmlNodeData).htmlInApp
                 }
               }
-              // replace element to iframe
-              const element = document.querySelector('iframe')?.contentWindow?.window.document.querySelector(`[${NodeInAppAttribName}="${codeChange.uid}"]`)
-              element?.parentElement?.insertBefore(divElement.childNodes[0], element.nextSibling)
-              element?.remove()
             })
             // rebuild from new tree
             const { html: formattedContent, htmlInApp: contentInApp } = serializeHtml(_nodeTree, htmlReferenceData, osType)
