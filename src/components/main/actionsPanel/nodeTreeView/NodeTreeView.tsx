@@ -327,32 +327,56 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     dispatch(increaseActionGroupIndex())
   }, [addRunningActions, removeRunningActions, nodeTree, focusedItem, nodeMaxUid, osType, tabSize, htmlReferenceData])
   const cb_removeNode = useCallback((uids: TNodeUid[]) => {
-    addRunningActions(['nodeTreeView-remove'])
-
-    // call api
-    const tree = JSON.parse(JSON.stringify(nodeTree)) as TNodeTreeData
-    const res = removeNode(tree, uids, 'html')
-
-    // processor
-    addRunningActions(['processor-updateOpt'])
-    setUpdateOpt({ parse: false, from: 'node' })
-    setNodeTree(res.tree)
-
-    // view state
-    addRunningActions(['stageView-viewState'])
-    setUpdateOpt({ parse: true, from: 'code' })
-    setTimeout(() => {
-      if (res.lastNodeUid && res.lastNodeUid !== '') {
-        dispatch(focusFNNode(res.lastNodeUid))
-        dispatch(selectFNNode([res.lastNodeUid]))
+    let allow = true
+    let htmlTagCount = 0, bodyTagCount = 0, headTagCount = 0
+    for( let x in nodeTree ) {
+      (nodeTree[x]?.data as THtmlNodeData).name === 'html' && (nodeTree[x]?.data as THtmlNodeData).type === 'tag' && htmlTagCount ++
+      (nodeTree[x]?.data as THtmlNodeData).name === 'body' && (nodeTree[x]?.data as THtmlNodeData).type === 'tag' && bodyTagCount ++
+      (nodeTree[x]?.data as THtmlNodeData).name === 'head' && (nodeTree[x]?.data as THtmlNodeData).type === 'tag' && headTagCount ++
+    }
+    uids.map(_uid => {
+      const node = nodeTree[_uid]
+      const nodeData = nodeTree[_uid].data as THtmlNodeData
+      if (!node || !nodeData) {
+        allow = false
+        return
       }
-    }, 100)
-    // side effect
-    setEvent({ type: 'remove-node', param: [uids, res.deletedUids] })
+      if ((nodeData.name === 'html' && nodeData.type === 'tag' && htmlTagCount === 1) || (nodeData.name === 'head' && nodeData.type === 'tag' && headTagCount === 1) || (nodeData.name === 'body' && nodeData.type === 'tag' && bodyTagCount === 1)) {
+        allow = false
+        return
+      }
+    })
+    if (allow) {
+      addRunningActions(['nodeTreeView-remove'])
 
-    removeRunningActions(['nodeTreeView-remove'])
-    console.log('hms added')
-    dispatch(increaseActionGroupIndex())
+      // call api
+      const tree = JSON.parse(JSON.stringify(nodeTree)) as TNodeTreeData
+      const res = removeNode(tree, uids, 'html')
+
+      // processor
+      addRunningActions(['processor-updateOpt'])
+      setUpdateOpt({ parse: false, from: 'node' })
+      setNodeTree(res.tree)
+
+      // view state
+      addRunningActions(['stageView-viewState'])
+      setUpdateOpt({ parse: true, from: 'code' })
+      setTimeout(() => {
+        if (res.lastNodeUid && res.lastNodeUid !== '') {
+          dispatch(focusFNNode(res.lastNodeUid))
+          dispatch(selectFNNode([res.lastNodeUid]))
+        }
+      }, 100)
+      // side effect
+      setEvent({ type: 'remove-node', param: [uids, res.deletedUids] })
+
+      removeRunningActions(['nodeTreeView-remove'])
+      console.log('hms added')
+      dispatch(increaseActionGroupIndex())
+    }
+    else{
+      console.log('Can\'t remove this element because it\'s an unique element of this page')
+    }
   }, [addRunningActions, removeRunningActions, nodeTree])
   const cb_duplicateNode = useCallback((uids: TNodeUid[]) => {
     addRunningActions(['nodeTreeView-duplicate'])
@@ -582,6 +606,9 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     const uids = clipboardData.uids.filter(uid => !!validNodeTree[uid])
     const datas = clipboardData.data.filter(data => data.data.valid)
     const focusedNode = validNodeTree[focusedItem]
+    
+    if (focusedNode === undefined) return
+
     const parentNode = validNodeTree[focusedNode.parentUid as TNodeUid]
 
     if (parentNode === undefined) return
