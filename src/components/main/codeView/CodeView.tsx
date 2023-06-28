@@ -313,9 +313,26 @@ export default function CodeView(props: CodeViewProps) {
       const currentCodeArr = currentCode.split(getLineBreaker(osType))
       const codeChanges: TCodeChange[] = []
       for (const codeChange of codeChangeDecorationRef.current.entries()) {
-        const uid = codeChange[0]
-  
-        const { startLineNumber, startColumn, endLineNumber, endColumn } = codeChange[1][0].range
+        let uid = codeChange[0]
+        // check if editing tags are <code> or <pre>
+        let _parent = uid
+        let notParsingFlag = validNodeTree[uid].name === 'code' || validNodeTree[uid].name === 'pre' ? true : false
+        while(_parent !== undefined && _parent !== null && _parent !== 'ROOT') {
+          if (validNodeTree[_parent].name === 'code' || validNodeTree[_parent].name === 'pre') {
+            notParsingFlag = true
+            break;
+          }
+          _parent = validNodeTree[_parent].parentUid as TNodeUid
+        }
+        let { startLineNumber, startColumn, endLineNumber, endColumn } = codeChange[1][0].range
+        if (notParsingFlag) {
+          if (validNodeTree[_parent]) {
+            startLineNumber = (validNodeTree[_parent].data as THtmlNodeData).startLineNumber
+            startColumn = (validNodeTree[_parent].data as THtmlNodeData).startColumn
+            endLineNumber = (validNodeTree[_parent].data as THtmlNodeData).endLineNumber
+            endColumn = (validNodeTree[_parent].data as THtmlNodeData).endColumn
+          }
+        }
         const partCodeArr: string[] = []
         partCodeArr.push(currentCodeArr[startLineNumber !== 0 ? startLineNumber - 1 : 0].slice(startColumn !== 0 ? startColumn - 1 : 0))
         for (let line = startLineNumber - 1 + 1; line < endLineNumber - 1; ++line) {
@@ -325,7 +342,8 @@ export default function CodeView(props: CodeViewProps) {
         const content = partCodeArr.join(getLineBreaker(osType))
   
         // console.log(validNodeTree[uid].data, (validNodeTree[uid].data as THtmlNodeData).html, content)
-        codeChanges.push({ uid, content })
+        uid = notParsingFlag ? _parent : uid
+        codeChanges.push({ uid , content })
       }
       // const preview = document.getElementById('codeview_change_preview')
       // let dom = new DOMParser().parseFromString(codeContent.current, 'text/html');
