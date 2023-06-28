@@ -6,6 +6,8 @@ import {
   RootNodeUid,
   StagePreviewPathPrefix,
 } from '@_constants/main';
+// @ts-ignore
+import htmlRefElements from '@_ref/rfrncs/HTML Elements.csv';
 import { SystemDirectories } from '@_ref/SystemDirectories';
 import { verifyFileHandlerPermission } from '@_services/main';
 import { TOsType } from '@_types/global';
@@ -16,6 +18,8 @@ import {
   parseHtml,
   serializeHtml,
   TFileParserResponse,
+  THtmlElementsReference,
+  THtmlElementsReferenceData,
   THtmlNodeData,
   THtmlReferenceData,
   TNodeReferenceData,
@@ -58,17 +62,17 @@ export const createIDBProject = async (projectPath: string): Promise<void> => {
       // create root directory
       await createDirectory(projectPath)
 
+      const htmlElementsReferenceData: THtmlElementsReferenceData = {}
+      htmlRefElements.map((htmlRefElement: THtmlElementsReference) => {
+        const pureTag = htmlRefElement['Name'] === 'Comment' ? 'comment' : htmlRefElement['Tag']?.slice(1, htmlRefElement['Tag'].length - 1)
+        htmlElementsReferenceData[pureTag] = htmlRefElement
+      })
+      
       // create index.html
       const indexHtmlPath = `${projectPath}/index.html`
-      const indexHtmlContent = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-</head>
-<body>
-  <div></div>
-</body>
-</html>`
+      let doctype = '<!DOCTYPE html>\n';
+      let html = htmlElementsReferenceData['html'].Content ? `<html>\n` + htmlElementsReferenceData['html'].Content + `\n</html>` : '';
+      const indexHtmlContent = doctype + html
       
 //       `<!DOCTYPE html>
 // <html lang="en">
