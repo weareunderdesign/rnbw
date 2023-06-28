@@ -107,6 +107,7 @@ export const IFrame = (props: IFrameProps) => {
   } = useContext(MainContext)
   // -------------------------------------------------------------- sync --------------------------------------------------------------
   const [contentRef, setContentRef] = useState<HTMLIFrameElement | null>(null)
+  const isEditing = useRef<boolean>(false)
   // mark hovered item
   const fnHoveredItemRef = useRef<TNodeUid>(fnHoveredItem)
   useEffect(() => {
@@ -140,7 +141,7 @@ export const IFrame = (props: IFrameProps) => {
       const elementRect = (newFocusedElement as HTMLElement)?.getBoundingClientRect()
       if (elementRect) {
         if (elementRect.y < 0) {
-          setCodeViewOffsetTop('66')
+          setCodeViewOffsetTop('calc(66.67vh - 10px)')
         }
         else {
           const innerHeight = contentRef?.contentWindow?.document.documentElement.clientHeight
@@ -148,10 +149,10 @@ export const IFrame = (props: IFrameProps) => {
           if (innerHeight) {
             if (elementRect.height < innerHeight / 2) {
               if (elePosition / innerHeight * 100 > 66) {
-                setCodeViewOffsetTop('1')
+                setCodeViewOffsetTop('10px')
               }
               if (elePosition / innerHeight * 100 < 33) {
-                setCodeViewOffsetTop('66')
+                setCodeViewOffsetTop('calc(66.67vh - 10px)')
               }
             }
           }
@@ -168,7 +169,7 @@ export const IFrame = (props: IFrameProps) => {
     setTimeout(() => newFocusedElement?.scrollIntoView({ block: 'nearest', inline: 'start', behavior: 'smooth' }), 50)
     if (elementRect) {
       if (elementRect.y < 0) {
-        setCodeViewOffsetTop('66')
+        setCodeViewOffsetTop('calc(66.67vh - 10px)')
       }
       else {
         const innerHeight = contentRef?.contentWindow?.document.documentElement.clientHeight
@@ -176,10 +177,10 @@ export const IFrame = (props: IFrameProps) => {
         if (innerHeight) {
           if (elementRect.height < innerHeight / 2) {
             if (elePosition / innerHeight * 100 > 66) {
-              setCodeViewOffsetTop('1')
+              setCodeViewOffsetTop('10px')
             }
             if (elePosition / innerHeight * 100 < 33) {
-              setCodeViewOffsetTop('66')
+              setCodeViewOffsetTop('calc(66.67vh - 10px)')
             }
           }
         }
@@ -246,7 +247,7 @@ export const IFrame = (props: IFrameProps) => {
     setTimeout(() => newFocusedElement?.scrollIntoView({ block: 'nearest', inline: 'start', behavior: 'smooth' }), 50)
     if (elementRect) {
       if (elementRect.y < 0) {
-        setCodeViewOffsetTop('66')
+        setCodeViewOffsetTop('calc(66.67vh - 10px)')
       }
       else {
         const innerHeight = contentRef?.contentWindow?.document.documentElement.clientHeight
@@ -254,10 +255,10 @@ export const IFrame = (props: IFrameProps) => {
         if (innerHeight) {
           if (elementRect.height < innerHeight / 2) {
             if (elePosition / innerHeight * 100 > 66) {
-              setCodeViewOffsetTop('1')
+              setCodeViewOffsetTop('10px')
             }
             if (elePosition / innerHeight * 100 < 33) {
-              setCodeViewOffsetTop('66')
+              setCodeViewOffsetTop('calc(66.67vh - 10px)')
             }
           }
         }
@@ -505,6 +506,7 @@ export const IFrame = (props: IFrameProps) => {
     setFNHoveredItem('')
   }, [])
   const onClick = useCallback((e: MouseEvent) => {
+    isEditing.current = false
     if (!parseFileFlag) {
       const node = ffTree[prevFileUid]
       const uid = prevFileUid
@@ -598,12 +600,28 @@ export const IFrame = (props: IFrameProps) => {
   const [contentEditableAttr, setContentEditableAttr] = useState<string | null>(null)
   const [outerHtml, setOuterHtml] = useState('')
   useEffect(() => {
-    const node = validNodeTree[contentEditableUidRef.current]
+    let node = validNodeTree[contentEditableUidRef.current]
     if (!node) return
-    const ele = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${contentEditableUidRef.current}"]`)
-    if (!ele) return
+    let ele = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${contentEditableUidRef.current}"]`)
+    // check if editing tags are <code> or <pre>
+    let _parent = node.uid as TNodeUid
+    let notParsingFlag = validNodeTree[node.uid].name === 'code' || validNodeTree[node.uid].name === 'pre' ? true : false
+    while(_parent !== undefined && _parent !== null && _parent !== 'ROOT') {
+      if (validNodeTree[_parent].name === 'code' || validNodeTree[_parent].name === 'pre') {
+        notParsingFlag = true
+        break;
+      }
+      _parent = validNodeTree[_parent].parentUid as TNodeUid
+    }
+    if (notParsingFlag) {
+      ele = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${_parent}"]`)
+      node = validNodeTree[_parent]
+    }
+    if (!node) return
 
+    if (!ele) return
     contentEditableUidRef.current = ''
+    isEditing.current = false
 
     contentEditableAttr ? ele.setAttribute('contenteditable', contentEditableAttr) : ele.removeAttribute('contenteditable')
     const cleanedUpCode = ele.outerHTML.replace(/rnbwdev-rnbw-element-hover=""|rnbwdev-rnbw-element-select=""|contenteditable="true"|contenteditable="false"/g, '')
@@ -616,7 +634,23 @@ export const IFrame = (props: IFrameProps) => {
       if (_outerHtml.search('<div><br></div>') === -1)
         break
     }
-    if (outerHtml === _outerHtml) return
+    // const parser = new DOMParser();
+    // const doc = parser.parseFromString(_outerHtml, 'text/html');
+    // const tags = doc.querySelectorAll(`*`);
+
+    // const contentArr = Array.from(tags).map(tag => {
+    //   if (!tag.hasAttribute('data-rnbwdev-rnbw-node')) {
+    //     return (tag.textContent as string).trim()
+    //   }
+    //   else {
+    //     return tag.outerHTML
+    //   }
+    // });
+    // const content = contentArr.join(" ");
+    // (node.data as THtmlNodeData).htmlInApp
+    
+    // let modifiedHtml = content;
+    // if (outerHtml === modifiedHtml) return
 
     setCodeChanges([{ uid: node.uid, content: _outerHtml }])
     addRunningActions(['processor-updateOpt'])
@@ -626,7 +660,6 @@ export const IFrame = (props: IFrameProps) => {
     setTimeout(() => {
       dispatch(focusFNNode(node.uid))
     }, 10);
-    console.log(node.uid)
     // node.uid ? dispatch(selectFNNode([node.uid])) : dispatch(selectFNNode([node.uid]))
   }, [outerHtml])
   const onCmdEnter = useCallback((e: KeyboardEvent) => {
@@ -651,6 +684,22 @@ export const IFrame = (props: IFrameProps) => {
       setFocusedSelectedItems(focusedItem)
     }
   }, [focusedItem, validNodeTree, contentRef])
+  useEffect(() => {
+    function handleIframeLoad() {
+      console.log('Iframe loaded');
+    }
+
+    const iframe = contentRef;
+    if (iframe) {
+      contentRef?.contentWindow?.document?.addEventListener('load', handleIframeLoad);
+    }
+
+    return () => {
+      if (iframe) {
+        contentRef?.contentWindow?.document?.removeEventListener('load', handleIframeLoad);
+      }
+    };
+  }, []);
   const onDblClick = useCallback((e: MouseEvent) => {
     // open new page with <a> tag in iframe
     const ele = e.target as HTMLElement
@@ -681,10 +730,30 @@ export const IFrame = (props: IFrameProps) => {
       if (ele.hasAttribute('contenteditable')) {
         setContentEditableAttr(ele.getAttribute('contenteditable'))
       }
+      isEditing.current = true
       ele.setAttribute('contenteditable', 'true')
       contentEditableUidRef.current = uid
+      ele.addEventListener('paste', (event) => {
+            event.preventDefault();
+            if (isEditing.current) {
+              // @ts-ignore
+              const pastedText = (event.clipboardData || window.clipboardData).getData('text')
+              const clipboardData = event.clipboardData;
+    
+              // Remove all HTML tags from the pasted text while keeping the content using a regular expression
+              const cleanedText = pastedText.replace(/<\/?([\w\s="/.':;#-\/\?]+)>/gi, (match: any, tagContent: any) => tagContent);
+              cleanedText.replaceAll("\n\r", '<br>')
+              // Insert the cleaned text into the editable div
+              contentRef?.contentWindow?.document.execCommand('insertText', false, cleanedText);
+              isEditing.current = false
+              setTimeout(() => {
+                isEditing.current = true
+              }, 100);
+            }
+      });
     }
     else {
+      isEditing.current = false
       // check if it's a web component and open its js file
       let _ele = ele
       let flag = true
@@ -712,7 +781,7 @@ export const IFrame = (props: IFrameProps) => {
         }
       }
     }
-  }, [validNodeTree, ffTree])
+  }, [validNodeTree, ffTree, focusedItem])
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
   const onKeyDown = useCallback((e: KeyboardEvent) => {
     if (contentEditableUidRef.current !== '') return
