@@ -1813,15 +1813,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       // set initial content of the html
       let initialContent = ''
       if (nodeData.type === 'html' && nodeData.kind === 'file' && nodeData.content === '') {
-        initialContent = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-</head>
-<body>
-  <div></div>
-</body>
-</html>`
+        let doctype = '<!DOCTYPE html>\n';
+        let html = htmlReferenceData['elements']['html'].Content ? `<html>\n` + htmlReferenceData['elements']['html'].Content + `\n</html>` : '';
+        initialContent = doctype + html
        nodeData.content = initialContent
       }
      addRunningActions(['processor-updateOpt'])
