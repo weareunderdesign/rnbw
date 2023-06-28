@@ -2046,7 +2046,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                       const target = e.target as HTMLElement
                       e.dataTransfer.setDragImage(target, window.outerWidth, window.outerHeight)
                       props.context.startDragging()
-                      console.log(props.item)
                     }}
                     onDragEnter={() => {
                       if (!props.context.isExpanded) {
@@ -2063,7 +2062,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                       {props.arrow}
 
                       {fileReferenceData ?
-                        <SVGIconI {...{ "class": "icon-xs" }}>{props.item.data?.data.kind === 'file' && props.item.data?.data.name === 'index' && props.item.data?.data.type === 'html' ? 'home' :  fileReferenceData && fileReferenceData['Icon'] && fileReferenceData['Icon'] !== 'md' ? fileReferenceData['Icon'] : 'page'}</SVGIconI>
+                        <SVGIconI {...{ "class": "icon-xs" }}>{props.item.data?.data.kind === 'file' && props.item.data?.data.name === 'index' && props.item.data?.data.type === 'html' && props.item.data?.parentUid === 'ROOT' ? 'home' :  fileReferenceData && fileReferenceData['Icon'] && fileReferenceData['Icon'] !== 'md' ? fileReferenceData['Icon'] : 'page'}</SVGIconI>
                         : <div className='icon-xs'><SVGIconI {...{ "class": "icon-xs" }}>{props.item.data?.data.kind === 'file' ? 'page' : 'folder'}</SVGIconI></div>}
                     </div>
 
