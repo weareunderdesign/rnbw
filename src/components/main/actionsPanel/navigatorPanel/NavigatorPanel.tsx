@@ -263,7 +263,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
           display: 'flex',
           alignItems: 'center',
         }}
-        className='padding-s border-bottom gap-s'
+        className='padding-m border-bottom gap-s'
         onClick={onPanelClick}
         ref={navigatorPanelRef}
       >
@@ -271,7 +271,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
         <>
           {/* workspace */}
           {/* <>
-            <div style={{'minWidth': '24px'}} className="radius-m icon-s align-center " onClick={onWorkspaceClick}>
+            <div onClick={onWorkspaceClick}>
               <img className='icon-s' src={unsavedProject ? (theme === 'Light' ? unsavedLightProjectImg : unsavedDarkProjectImg) : (theme === 'Light' ? projectLightImg : projectDarkImg)}></img>
             </div>
           </> */}
@@ -280,12 +280,10 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
           {/* project */}
           <>
             <div className="gap-s align-center" onClick={onProjectClick}>
-              <div className="radius-m icon-s align-center">
                 {favicon === null || favicon === "" || faviconFallback ? 
                   <SVGIconI {...{ "class": "icon-xs" }}>folder</SVGIconI> : 
                   <img className='icon-s' onError={handleImageError} style={{'width': '18px', 'height' : '18px'}} src={project.context === 'idb' ? 'https://rnbw.company/images/favicon.png' : favicon}></img>
                 }
-              </div>
               <span className="text-s">{project.name}</span>
             </div>
           </>
@@ -311,7 +309,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
           <>
             {/* workspace */}
             {/* <>
-              <div  style={{'minWidth': '24px'}} className="radius-m icon-s align-center " onClick={onWorkspaceClick}>
+              <div onClick={onWorkspaceClick}>
                 <img className='icon-s' src={unsavedProject ? (theme === 'Light' ? unsavedLightProjectImg : unsavedDarkProjectImg) : (theme === 'Light' ? projectLightImg : projectDarkImg)}></img>
               </div>
             </> */}
@@ -320,7 +318,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
             <>
               {/* workspace */}
               {/* <>
-                <div className="radius-m icon-s align-center " onClick={onWorkspaceClick}>
+                <div onClick={onWorkspaceClick}>
                   <img className='icon-s' src={unsavedProject ? (theme === 'Light' ? unsavedLightProjectImg : unsavedDarkProjectImg) : (theme === 'Light' ? projectLightImg : projectDarkImg)}></img>
                 </div>
               </>
@@ -329,12 +327,12 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
               {/* project */}
               <>
                 <div className="gap-s align-center" onClick={onProjectClick}>
-                  <div className="radius-m icon-s align-center">
+
                     {favicon === null || favicon === "" || faviconFallback ? 
                       <SVGIconI {...{ "class": "icon-xs" }}>folder</SVGIconI> : 
                       <img className='icon-s' onError={handleImageError} style={{'width': '18px', 'height' : '18px'}} src={project.context === 'idb' ? 'https://rnbw.company/images/favicon.png' : favicon}></img>
                     }
-                  </div>
+
                   <span className="text-s">{project.name}</span>
                 </div>
               </>
@@ -381,7 +379,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
                   onOpenProject(_project)
                 }}>
                 <div className="gap-s align-center">
-                  <div className="navigator-project-item-icon radius-m icon-s align-center">
+                  <div className="navigator-project-item-icon">
                     {_project.favicon ? <img className='icon-s' style={{'borderRadius': '50%'}} src={_project.favicon}></img> : <SVGIcon {...{ "class": "icon-xs" }}>folder</SVGIcon>}
                   </div>
                   <span className="navigator-project-item-name text-s">{_project.name}</span>
