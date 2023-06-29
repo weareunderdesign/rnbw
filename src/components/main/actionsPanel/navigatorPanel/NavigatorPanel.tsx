@@ -104,9 +104,14 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
     isFirst.current = true
   }, [file.uid])
 
-  const [projectFavicons, setProjectFavicons] = useState([])
+  const [faviconFallback, setFaviconFallback] = useState(false)
+  const handleImageError = useCallback(() => {
+    console.log('error')
+    setFaviconFallback(true)
+  }, [faviconFallback])
 
   useEffect(() => {
+    setFaviconFallback(false)
     // set favicons of the workspace
     if (file.uid === `${RootNodeUid}/index.html`) {
       if (validNodeTree) {
@@ -114,7 +119,12 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
         for (const x in validNodeTree) {
           const nodeData = validNodeTree[x].data as THtmlNodeData
           if (nodeData && nodeData.type === 'tag' && nodeData.name === 'link' && nodeData.attribs.rel === 'icon') {
-            setFavicon(window.location.origin + '/rnbw/' + project.name + '/' + nodeData.attribs.href)
+            if (nodeData.attribs.href.startsWith('http') || nodeData.attribs.href.startsWith('//')) {
+              setFavicon(nodeData.attribs.href)
+            }
+            else{
+              setFavicon(window.location.origin + '/rnbw/' + project.name + '/' + nodeData.attribs.href)
+            }
             hasFavicon = true
           }
         }
@@ -128,7 +138,6 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
       }
 
       let hasFavicon = false
-      let temp = projectFavicons
       for (const x in validNodeTree) {
         const nodeData = validNodeTree[x].data as THtmlNodeData
         if (nodeData && nodeData.type === 'tag' && nodeData.name === 'link' && nodeData.attribs.rel === 'icon') {
@@ -272,9 +281,9 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
           <>
             <div className="gap-s align-center" onClick={onProjectClick}>
               <div className="radius-m icon-s align-center">
-                {favicon === null || favicon === "" ? 
+                {favicon === null || favicon === "" || faviconFallback ? 
                   <SVGIconI {...{ "class": "icon-xs" }}>folder</SVGIconI> : 
-                  <img className='icon-s' style={{'width': '18px', 'height' : '18px'}} src={project.context === 'idb' ? 'https://rnbw.company/images/favicon.png' : favicon}></img>
+                  <img className='icon-s' onError={handleImageError} style={{'width': '18px', 'height' : '18px'}} src={project.context === 'idb' ? 'https://rnbw.company/images/favicon.png' : favicon}></img>
                 }
               </div>
               <span className="text-s">{project.name}</span>
@@ -321,9 +330,9 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
               <>
                 <div className="gap-s align-center" onClick={onProjectClick}>
                   <div className="radius-m icon-s align-center">
-                    {favicon === null || favicon === "" ? 
+                    {favicon === null || favicon === "" || faviconFallback ? 
                       <SVGIconI {...{ "class": "icon-xs" }}>folder</SVGIconI> : 
-                      <img className='icon-s' style={{'width': '18px', 'height' : '18px'}} src={project.context === 'idb' ? 'https://rnbw.company/images/favicon.png' : favicon}></img>
+                      <img className='icon-s' onError={handleImageError} style={{'width': '18px', 'height' : '18px'}} src={project.context === 'idb' ? 'https://rnbw.company/images/favicon.png' : favicon}></img>
                     }
                   </div>
                   <span className="text-s">{project.name}</span>
@@ -388,6 +397,6 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
     filesReferenceData, ffTree,
     onWorkspaceClick, onProjectClick, onFileClick,
     navigatorDropDownType, onCloseDropDown,
-    onOpenProject, loadProject, favicon, unsavedProject, setParseFile, theme
+    onOpenProject, loadProject, favicon, unsavedProject, setParseFile, theme, faviconFallback
   ])
 }
