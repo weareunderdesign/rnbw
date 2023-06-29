@@ -222,7 +222,7 @@ export default function MainPage(props: MainPageProps) {
   const [cmdkPages, setCmdkPages] = useState<string[]>([])
 
   // first loaded
-  const firstLoaded = useRef<boolean>(false)
+  const firstLoaded = useRef<number>(0)
   // guide ref
   const guideRef = useRef<HTMLAnchorElement>(null)
   const cmdkPage = useMemo(() => {
@@ -852,12 +852,10 @@ export default function MainPage(props: MainPageProps) {
 
   // open navigator when close the menu
   useEffect(() => {
-    if (!cmdkOpen && firstLoaded.current && !showActionsPanel){
+    if (!cmdkOpen && firstLoaded.current == 2 && !showActionsPanel){
       setShowActionsPanel(true)
     }
-    if (!firstLoaded.current){
-      firstLoaded.current = true
-    }
+    firstLoaded.current ++
   }, [cmdkOpen])
 
   // close all panel
