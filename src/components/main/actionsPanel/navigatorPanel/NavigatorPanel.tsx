@@ -274,7 +274,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
               <div className="radius-m icon-s align-center">
                 {favicon === null || favicon === "" ? 
                   <SVGIconI {...{ "class": "icon-xs" }}>folder</SVGIconI> : 
-                  <img className='icon-s' style={{'width': '12px', 'height' : '12px'}} src={project.context === 'idb' ? 'https://rnbw.company/images/favicon.png' : favicon}></img>
+                  <img className='icon-s' style={{'width': '18px', 'height' : '18px'}} src={project.context === 'idb' ? 'https://rnbw.company/images/favicon.png' : favicon}></img>
                 }
               </div>
               <span className="text-s">{project.name}</span>
@@ -323,7 +323,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
                   <div className="radius-m icon-s align-center">
                     {favicon === null || favicon === "" ? 
                       <SVGIconI {...{ "class": "icon-xs" }}>folder</SVGIconI> : 
-                      <img className='icon-s' style={{'width': '12px', 'height' : '12px'}} src={project.context === 'idb' ? 'https://rnbw.company/images/favicon.png' : favicon}></img>
+                      <img className='icon-s' style={{'width': '18px', 'height' : '18px'}} src={project.context === 'idb' ? 'https://rnbw.company/images/favicon.png' : favicon}></img>
                     }
                   </div>
                   <span className="text-s">{project.name}</span>

@@ -515,9 +515,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       const nodeData = node.data as TFileNodeData
       setParseFile(true)
       setNavigatorDropDownType('project')
-      setTimeout(() => {
-        setNavigatorDropDownType(null)
-      }, 100);
       dispatch({ type: HmsClearActionType })
       dispatch(setCurrentFile({ uid, parentUid: node.parentUid as TNodeUid, name: nodeData.name, content: nodeData.contentInApp ? nodeData.contentInApp : '' }))
       setCurrentFileUid(uid)

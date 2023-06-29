@@ -512,9 +512,6 @@ export const IFrame = (props: IFrameProps) => {
       const uid = prevFileUid
       const nodeData = node.data as TFileNodeData
       setNavigatorDropDownType('project')
-      setTimeout(() => {
-        setNavigatorDropDownType(null)
-      }, 100);
       setParseFile(true)
       dispatch({ type: HmsClearActionType })
       dispatch(setCurrentFile({ uid, parentUid: node.parentUid as TNodeUid, name: nodeData.name, content: nodeData.contentInApp ? nodeData.contentInApp : '' }))
@@ -765,9 +762,6 @@ export const IFrame = (props: IFrameProps) => {
               setInitialFileToOpen(ffTree[x].uid)
               setNavigatorDropDownType('project')
               flag = false
-              setTimeout(() => {
-                setNavigatorDropDownType(null)
-              }, 100);
               break
             }
           }
