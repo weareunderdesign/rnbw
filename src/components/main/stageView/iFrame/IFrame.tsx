@@ -141,7 +141,7 @@ export const IFrame = (props: IFrameProps) => {
       const elementRect = (newFocusedElement as HTMLElement)?.getBoundingClientRect()
       if (elementRect) {
         if (elementRect.y < 0) {
-          setCodeViewOffsetTop('calc(66.67vh - 10px)')
+          setCodeViewOffsetTop('calc(66.66vh - 12px)')
         }
         else {
           const innerHeight = contentRef?.contentWindow?.document.documentElement.clientHeight
@@ -149,10 +149,10 @@ export const IFrame = (props: IFrameProps) => {
           if (innerHeight) {
             if (elementRect.height < innerHeight / 2) {
               if (elePosition / innerHeight * 100 > 66) {
-                setCodeViewOffsetTop('10px')
+                setCodeViewOffsetTop('12px')
               }
               if (elePosition / innerHeight * 100 < 33) {
-                setCodeViewOffsetTop('calc(66.67vh - 10px)')
+                setCodeViewOffsetTop('calc(66.66vh - 12px)')
               }
             }
           }
@@ -169,7 +169,7 @@ export const IFrame = (props: IFrameProps) => {
     setTimeout(() => newFocusedElement?.scrollIntoView({ block: 'nearest', inline: 'start', behavior: 'smooth' }), 50)
     if (elementRect) {
       if (elementRect.y < 0) {
-        setCodeViewOffsetTop('calc(66.67vh - 10px)')
+        setCodeViewOffsetTop('calc(66.66vh - 12px)')
       }
       else {
         const innerHeight = contentRef?.contentWindow?.document.documentElement.clientHeight
@@ -177,10 +177,10 @@ export const IFrame = (props: IFrameProps) => {
         if (innerHeight) {
           if (elementRect.height < innerHeight / 2) {
             if (elePosition / innerHeight * 100 > 66) {
-              setCodeViewOffsetTop('10px')
+              setCodeViewOffsetTop('12px')
             }
             if (elePosition / innerHeight * 100 < 33) {
-              setCodeViewOffsetTop('calc(66.67vh - 10px)')
+              setCodeViewOffsetTop('calc(66.66vh - 12px)')
             }
           }
         }
@@ -247,7 +247,7 @@ export const IFrame = (props: IFrameProps) => {
     setTimeout(() => newFocusedElement?.scrollIntoView({ block: 'nearest', inline: 'start', behavior: 'smooth' }), 50)
     if (elementRect) {
       if (elementRect.y < 0) {
-        setCodeViewOffsetTop('calc(66.67vh - 10px)')
+        setCodeViewOffsetTop('calc(66.66vh - 12px)')
       }
       else {
         const innerHeight = contentRef?.contentWindow?.document.documentElement.clientHeight
@@ -255,10 +255,10 @@ export const IFrame = (props: IFrameProps) => {
         if (innerHeight) {
           if (elementRect.height < innerHeight / 2) {
             if (elePosition / innerHeight * 100 > 66) {
-              setCodeViewOffsetTop('10px')
+              setCodeViewOffsetTop('12px')
             }
             if (elePosition / innerHeight * 100 < 33) {
-              setCodeViewOffsetTop('calc(66.67vh - 10px)')
+              setCodeViewOffsetTop('calc(66.66vh - 12px)')
             }
           }
         }

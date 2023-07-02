@@ -613,7 +613,7 @@ export default function CodeView(props: CodeViewProps) {
             height: '23px',
             cursor: 'move',
             paddingTop: '5px',
-            paddingLeft: '10px'
+            paddingLeft: '12px'
           }}
         >
           <SVGIconI {...{ "class": "icon-xs" }}>list</SVGIconI>
