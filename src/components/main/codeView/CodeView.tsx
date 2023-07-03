@@ -9,6 +9,7 @@ import React, {
 
 import { debounce } from 'lodash';
 import * as monaco from 'monaco-editor';
+import ReactHtmlParser from 'react-html-parser';
 import {
   useDispatch,
   useSelector,
@@ -351,30 +352,27 @@ export default function CodeView(props: CodeViewProps) {
         endLineNumber > startLineNumber && partCodeArr.push(currentCodeArr[endLineNumber - 1].slice(0, endColumn - 1))
         const content = partCodeArr.join(getLineBreaker(osType))
   
-        // console.log(validNodeTree[uid].data, (validNodeTree[uid].data as THtmlNodeData).html, content)
         uid = notParsingFlag ? _parent : uid
-        codeChanges.push({ uid , content })
+        const parsedHtml = ReactHtmlParser(codeContent.current);
+        let htmlSkeletonStructureCount = 0
+        console.log(parsedHtml)
+        for(let x in parsedHtml) {
+          if (parsedHtml[x] && parsedHtml[x]?.type === 'html') {
+            if (parsedHtml[x].props.children) {
+              for (let i in parsedHtml[x].props.children) {
+                if (parsedHtml[x].props.children[i].type && (parsedHtml[x].props.children[i].type === 'body' || parsedHtml[x].props.children[i].type === 'head'))
+                  htmlSkeletonStructureCount ++
+              }
+            }
+          }
+        }
+        if (htmlSkeletonStructureCount >= 2) {
+          codeChanges.push({ uid , content })
+        }
+        else{
+          console.log("Can't remove this element because it's an unique element of this page")
+        }
       }
-      // const preview = document.getElementById('codeview_change_preview')
-      // let dom = new DOMParser().parseFromString(codeContent.current, 'text/html');
-      // let flag = true
-      // if (preview) {
-      //   preview.innerHTML = ''
-      //   for (let x in codeChanges){
-      //     preview.innerHTML = ''
-      //     let prev_content = ''
-      //     if (validNodeTree[codeChanges[0].uid].name === 'body' || validNodeTree[codeChanges[0].uid].name === 'head' || validNodeTree[codeChanges[0].uid].name === 'html') {
-      //       continue
-      //     }
-      //     preview.innerHTML = codeChanges[x].content
-      //     if (codeChanges[x].content !== preview.innerHTML) {
-      //       flag = false 
-      //     }
-      //   }
-      //   console.log(codeChanges[0].content, preview.innerHTML, flag)
-      // }
-      // if (!flag) return
-      // check attr editing
       setCodeChanges(codeChanges)
       
       // update
