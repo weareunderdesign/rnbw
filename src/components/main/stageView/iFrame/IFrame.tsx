@@ -697,9 +697,12 @@ export const IFrame = (props: IFrameProps) => {
       }
     };
   }, []);
+  const dblClickTimestamp = useRef(0)
   const onDblClick = useCallback((e: MouseEvent) => {
     // open new page with <a> tag in iframe
     const ele = e.target as HTMLElement
+    if (dblClickTimestamp.current !== 0 && e.timeStamp - dblClickTimestamp.current < 500) return
+    dblClickTimestamp.current = e.timeStamp
     let _ele = ele
     while(_ele.tagName !== 'A') {
       if (_ele.tagName === 'BODY' || _ele.tagName === 'HEAD' || _ele.tagName === 'HTML') {
@@ -754,18 +757,50 @@ export const IFrame = (props: IFrameProps) => {
       // check if it's a web component and open its js file
       let _ele = ele
       let flag = true
+      let exist = false
       while(flag) {
         if (_ele.getAttribute(NodeInAppAttribName) !== null) {
-          for (let x in ffTree) {
-            // check web component
-            if (x.search('/' + _ele.tagName.toLowerCase() + '.js') !== -1) {
-              setInitialFileToOpen(ffTree[x].uid)
-              setNavigatorDropDownType('project')
-              flag = false
-              break
+          let uid: TNodeUid | null = _ele.getAttribute(NodeInAppAttribName)
+          if (uid) {
+            for (let x in ffTree) {
+              const node = validNodeTree[uid]
+              const defineRegex = /customElements\.define\(\s*['"]([\w-]+)['"]/;
+              if ((ffTree[x].data as TFileNodeData).content && (ffTree[x].data as TFileNodeData).ext === '.js') {
+                const match = ((ffTree[x].data as TFileNodeData).content).match(defineRegex);
+                if (match) {
+                  // check web component
+                  if (_ele.tagName.toLowerCase() === match[1].toLowerCase()) {
+                    const fileName = (ffTree[x].data as TFileNodeData).name
+                    let src = ''
+                    for (let i in validNodeTree) {
+                      if ((validNodeTree[i].data as THtmlNodeData).type === 'script' && (validNodeTree[i].data as THtmlNodeData).html.search(fileName + '.js') !== -1) {
+                        src = (validNodeTree[i].data as THtmlNodeData).attribs.src
+                        break
+                      }
+                    }
+                    if (src !== '') {
+                      if (src.startsWith('http') || src.startsWith('//')) {
+                        alert('rnbw couldn\'t find it\'s source file')
+                        flag = false
+                        break
+                      }
+                      else{
+                        setInitialFileToOpen(ffTree[x].uid)
+                        setNavigatorDropDownType('project')
+                        flag = false
+                        exist = true
+                        break
+                      }
+                    }
+                  }
+                }
+              }
             }
+            flag = false
           }
-          flag = false
+          else{
+            flag = false
+          }
         }
         else if (_ele.parentElement) {
           _ele = _ele.parentElement
@@ -774,8 +809,12 @@ export const IFrame = (props: IFrameProps) => {
           flag = false
         }
       }
+
+      if (!exist) {
+        alert('rnbw couldn\'t find it\'s source file')
+      }
     }
-  }, [validNodeTree, ffTree, focusedItem])
+  }, [validNodeTree, ffTree])
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
   const onKeyDown = useCallback((e: KeyboardEvent) => {
     if (contentEditableUidRef.current !== '') return
@@ -825,6 +864,7 @@ export const IFrame = (props: IFrameProps) => {
   };
   useEffect(() => {
     if (contentRef) {
+      dblClickTimestamp.current = 0
       setIFrameLoading(true)
 
       contentRef.onload = () => {
