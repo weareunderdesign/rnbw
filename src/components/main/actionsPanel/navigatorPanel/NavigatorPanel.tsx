@@ -252,17 +252,6 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
     return file.uid !== '' ? <>
       <div
         id="NavigatorPanel"
-        style={{
-          position: 'relative',
-          top: 0,
-          left: 0,
-          width: '100%',
-
-          overflow: 'auto',
-
-          display: 'flex',
-          alignItems: 'center',
-        }}
         className='padding-m border-bottom gap-s'
         onClick={onPanelClick}
         ref={navigatorPanelRef}

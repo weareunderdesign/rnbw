@@ -913,7 +913,7 @@ export default function MainPage(props: MainPageProps) {
   const [actionsPanelWidth, setActionsPanelWidth] = useState(240)
 
   const [codeViewOffsetBottom, setCodeViewOffsetBottom] = useState('10')
-  const [codeViewOffsetTop, setCodeViewOffsetTop] = useState('calc(66.67vh - 10px)')
+  const [codeViewOffsetTop, setCodeViewOffsetTop] = useState('calc(66.66vh - 12px)')
   const [codeViewOffsetLeft, setCodeViewOffsetLeft] = useState(10)
   const [codeViewHeight, setCodeViewHeight] = useState("33.33")
   const [codeViewDragging, setCodeViewDragging] = useState(false)
