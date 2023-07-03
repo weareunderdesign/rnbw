@@ -114,34 +114,44 @@ export default function CodeView(props: CodeViewProps) {
     // setTimeout(function() {
       //   editor?.getAction('editor.action.formatDocument')?.run();
       // }, 300);
-    }, [])
-    // -------------------------------------------------------------- sync --------------------------------------------------------------
-    // build node tree refernece
-    useEffect(() => {
-      validNodeTreeRef.current = JSON.parse(JSON.stringify(validNodeTree))
-      
-      // set new focused node
-      if (newFocusedNodeUid !== '') {
-        setFocusedNode(validNodeTree[newFocusedNodeUid])
-        !isFirst.current ? focusedItemRef.current = newFocusedNodeUid : null
-        setNewFocusedNodeUid('')
-      }
-    }, [validNodeTree])
-    // file content change - set code
-    useEffect(() => {
-      const _file = ffTree[file.uid]
-      if (!_file) return
-      
-      if (updateOpt.from === 'code') return
-      
-      const fileData = _file.data as TFileNodeData
-      setLanguage(fileData.ext === '.html' ? 'html' : fileData.ext === '.md' ? 'markdown' : fileData.ext === '.js' ? 'javascript' : fileData.ext === '.css' ? 'css' : fileData.type)
-      codeContent.current = fileData.content
+  }, [])
+  // -------------------------------------------------------------- sync --------------------------------------------------------------
+  // build node tree refernece
+  useEffect(() => {
+    validNodeTreeRef.current = JSON.parse(JSON.stringify(validNodeTree))
+    
+    // set new focused node
+    if (newFocusedNodeUid !== '') {
+      setFocusedNode(validNodeTree[newFocusedNodeUid])
+      !isFirst.current ? focusedItemRef.current = newFocusedNodeUid : null
+      setNewFocusedNodeUid('')
+    }
+  }, [validNodeTree])
+  // file content change - set code
+  useEffect(() => {
+    const _file = ffTree[file.uid]
+    if (!_file) return
+    
+    if (updateOpt.from === 'code') return
+    
+    const fileData = _file.data as TFileNodeData
+    setLanguage(fileData.ext === '.html' ? 'html' : fileData.ext === '.md' ? 'markdown' : fileData.ext === '.js' ? 'javascript' : fileData.ext === '.css' ? 'css' : fileData.type)
+    codeContent.current = fileData.content
   }, [ffTree[file.uid]])
   // focusedItem - code select
   const focusedItemRef = useRef<TNodeUid>('')
   const revealed = useRef<boolean>(false)
   useEffect(() => {
+    if (!parseFileFlag) {
+      const position: monaco.IPosition = { lineNumber: 1, column: 1 };
+      monacoRef.current?.setSelection({
+        startLineNumber: 1,
+        startColumn: 1,
+        endLineNumber: 1,
+        endColumn: 1
+      })
+      return
+    }
     if (focusedItem === RootNodeUid || focusedItemRef.current === focusedItem) return
     if (!validNodeTree[focusedItem]) return
 
@@ -186,7 +196,7 @@ export default function CodeView(props: CodeViewProps) {
     }
 
     focusedItemRef.current = focusedItem
-  }, [focusedItem])
+  }, [focusedItem, parseFileFlag])
   // watch focus/selection for the editor
   const firstSelection = useRef<CodeSelection | null>(null)
   const [selection, setSelection] = useState<CodeSelection | null>(null)
