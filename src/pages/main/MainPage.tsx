@@ -25,10 +25,7 @@ import {
   useParams,
 } from 'react-router-dom';
 
-import {
-  Loader,
-  SVGIcon,
-} from '@_components/common';
+import { SVGIcon } from '@_components/common';
 import {
   ActionsPanel,
   CodeView,
@@ -1384,7 +1381,7 @@ export default function MainPage(props: MainPageProps) {
       <Process />
 
       {/* spinner */}
-      <Loader show={pending}></Loader>
+      {/* <Loader show={pending}></Loader> */}
 
       {/* main page */}
       <div
