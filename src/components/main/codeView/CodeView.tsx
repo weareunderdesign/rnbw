@@ -144,7 +144,7 @@ export default function CodeView(props: CodeViewProps) {
   const revealed = useRef<boolean>(false)
   useEffect(() => {
     if (!parseFileFlag) {
-      const position: monaco.IPosition = { lineNumber: 1, column: 1 };
+      return
       monacoRef.current?.setSelection({
         startLineNumber: 1,
         startColumn: 1,
@@ -202,6 +202,7 @@ export default function CodeView(props: CodeViewProps) {
   const firstSelection = useRef<CodeSelection | null>(null)
   const [selection, setSelection] = useState<CodeSelection | null>(null)
   const updateSelection = useCallback(() => {
+    if (!parseFileFlag) return
     const _selection = monacoRef.current?.getSelection()
     if (_selection) {
       if (isFirst.current) {
@@ -225,7 +226,7 @@ export default function CodeView(props: CodeViewProps) {
     } else {
       setSelection(null)
     }
-  }, [selection])
+  }, [selection, parseFileFlag])
   useEffect(() => {
     const cursorDetectInterval = setInterval(() => updateSelection(), 0)
     return () => clearInterval(cursorDetectInterval)
@@ -355,12 +356,11 @@ export default function CodeView(props: CodeViewProps) {
         uid = notParsingFlag ? _parent : uid
         const parsedHtml = ReactHtmlParser(codeContent.current);
         let htmlSkeletonStructureCount = 0
-        console.log(parsedHtml)
         for(let x in parsedHtml) {
           if (parsedHtml[x] && parsedHtml[x]?.type === 'html') {
             if (parsedHtml[x].props.children) {
               for (let i in parsedHtml[x].props.children) {
-                if (parsedHtml[x].props.children[i].type && (parsedHtml[x].props.children[i].type === 'body' || parsedHtml[x].props.children[i].type === 'head'))
+                if (parsedHtml[x].props.children[i] && parsedHtml[x].props.children[i].type && (parsedHtml[x].props.children[i].type === 'body' || parsedHtml[x].props.children[i].type === 'head'))
                   htmlSkeletonStructureCount ++
               }
             }
@@ -393,11 +393,12 @@ export default function CodeView(props: CodeViewProps) {
       (ffTree[file.uid].data as TFileNodeData).contentInApp = codeContent.current;
       (ffTree[file.uid].data as TFileNodeData).changed = codeContent.current !== fileData.orgContent;
       setFFTree(ffTree)
-      setUpdateOpt({ parse: true, from: 'code' })
+      dispatch(setCurrentFileContent(codeContent.current))
       codeChangeDecorationRef.current.clear()
       setCodeEditing(false)
+      setFSPending(false)
     }
-  }, [ffTree, file.uid, validNodeTree, osType])
+  }, [ffTree, file.uid, validNodeTree, osType, parseFileFlag])
   const handleEditorChange = useCallback((value: string | undefined, ev: monaco.editor.IModelContentChangedEvent) => {
     let delay = 300
     if (parseFileFlag){
@@ -507,6 +508,7 @@ export default function CodeView(props: CodeViewProps) {
         wholeDecorations.push(...decorations)
       }
       decorationCollectionRef.current?.set(wholeDecorations)
+
     }
     // update redux with debounce
     codeContent.current = value || ''
@@ -514,7 +516,8 @@ export default function CodeView(props: CodeViewProps) {
     reduxTimeout.current = setTimeout(saveFileContentToRedux, delay)
 
     setCodeEditing(true)
-  }, [saveFileContentToRedux, focusedNode, activePanel])
+    
+  }, [saveFileContentToRedux, focusedNode, activePanel, parseFileFlag])
   // -------------------------------------------------------------- monaco-editor options --------------------------------------------------------------
   // tabSize
   const [_tabSize, _setTabSize] = useState<number>(DefaultTabSize)
