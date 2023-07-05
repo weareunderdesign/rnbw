@@ -45,6 +45,7 @@ import {
 } from '@_node/types';
 import {
   collapseFNNode,
+  expandFFNode,
   expandFNNode,
   fnSelector,
   focusFNNode,
@@ -687,6 +688,15 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                 else{
                   setInitialFileToOpen(ffTree[x].uid)
                   setNavigatorDropDownType('project')
+                  // expand path to the uid
+                  const _expandedItems: string[] = []
+                  let _file = ffTree[x]
+                  while (_file && _file.uid !== RootNodeUid) {
+                    _file = ffTree[_file.parentUid as string]
+                    if (_file && !_file.isEntity && (!expandedItemsObj[_file.uid] || expandedItemsObj[_file.uid] === undefined))
+                      _expandedItems.push(_file.uid)
+                  }
+                  dispatch(expandFFNode(_expandedItems))
                   exist = true
                   break
                 }
