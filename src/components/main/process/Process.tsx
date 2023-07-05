@@ -79,6 +79,7 @@ export default function Process(props: ProcessProps) {
     ffHandlers, setFFHandlers,
     ffHoveredItem, setFFHoveredItem,
     isHms, setIsHms,
+    parseFileFlag,
     ffAction, setFFAction,
     currentFileUid, setCurrentFileUid,
     // node tree view
@@ -544,7 +545,7 @@ export default function Process(props: ProcessProps) {
     }
 
     removeRunningActions(['processor-updateOpt'])
-  }, [updateOpt])
+  }, [updateOpt, parseFileFlag])
   // processor-nodeTree
   useEffect(() => {
     if (!nodeTree[RootNodeUid]) return
