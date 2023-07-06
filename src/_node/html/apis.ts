@@ -393,7 +393,12 @@ export const parseHtmlCodePart = (content: string, htmlReferenceData: THtmlRefer
   ReactHtmlParser(content, {
     decodeEntities: true,
     transform: (node, index, transform) => {
-      node.valid = true
+      if ((node as THtmlDomNodeData).type === 'tag' && (htmlReferenceData.elements[(node as THtmlDomNodeData).name] || (node as THtmlDomNodeData).name.indexOf('-') !== -1)) {
+        node.valid = true
+      }
+      else{
+        node.valid = false
+      }
     },
     preprocessNodes: (nodes: THtmlDomNodeData[]) => {
       // build root node
