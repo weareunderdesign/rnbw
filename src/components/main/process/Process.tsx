@@ -247,10 +247,12 @@ export default function Process(props: ProcessProps) {
               // add new nodes / get valid node's uid list for iframe
               const uids = getSubNodeUidsByBfs(RootNodeUid, tree, false)
               const nodeUids: TNodeUid[] = []
+              let _flag = false
               uids.map(uid => {
                 const node = tree[uid]
                 if (node.parentUid === RootNodeUid) {
-                  _newFocusedNodeUid = uid
+                  !_flag && (_newFocusedNodeUid = uid)
+                  _flag = true
                   node.parentUid = o_parentNode.uid
                 }
                 _nodeTree[uid] = JSON.parse(JSON.stringify(node))
@@ -558,7 +560,7 @@ export default function Process(props: ProcessProps) {
     uids.reverse()
     uids.map((uid) => {
       const node = _nodeTree[uid]
-      if (!node.data.valid) return
+      // if (!node.data.valid) return
 
       node.children = node.children.filter((c_uid) => _nodeTree[c_uid].data.valid)
       node.isEntity = node.children.length === 0
