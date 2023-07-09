@@ -38,7 +38,8 @@ import {
 } from '@_redux/main';
 import { getLineBreaker } from '@_services/global';
 import { TCodeChange } from '@_types/main';
-import Editor, {
+import {
+  Editor,
   loader,
   Monaco,
 } from '@monaco-editor/react';
@@ -102,6 +103,7 @@ export default function CodeView(props: CodeViewProps) {
   } = useContext(MainContext)
   // -------------------------------------------------------------- references --------------------------------------------------------------
   const isFirst = useRef<boolean>(true)
+  const currentPosition = useRef<monaco.IPosition | null>(null)
   const monacoRef = useRef<monaco.editor.IEditor | null>(null)
   const editorWrapperRef = useRef<HTMLDivElement>(null)
   const codeContent = useRef<string>('')
@@ -111,6 +113,13 @@ export default function CodeView(props: CodeViewProps) {
   const validNodeTreeRef = useRef<TNodeTreeData>({})
   const handleEditorDidMount = useCallback((editor: monaco.editor.IStandaloneCodeEditor, monaco: Monaco) => {
     monacoRef.current = editor
+    editor.onDidChangeCursorPosition((event) => {
+      setTimeout(() => {
+        if (event.reason === 2) {
+          currentPosition.current && monacoRef.current?.setPosition(currentPosition.current)
+        }
+      }, 0);
+    }) 
     decorationCollectionRef.current = editor.createDecorationsCollection()
     // setTimeout(function() {
       //   editor?.getAction('editor.action.formatDocument')?.run();
@@ -145,14 +154,9 @@ export default function CodeView(props: CodeViewProps) {
   useEffect(() => {
     if (!parseFileFlag) {
       return
-      monacoRef.current?.setSelection({
-        startLineNumber: 1,
-        startColumn: 1,
-        endLineNumber: 1,
-        endColumn: 1
-      })
-      return
     }
+    // console.log(currentPosition.current, focusedItem)
+    // currentPosition.current && !monacoRef.current?.getPosition()?.equals(currentPosition.current) && monacoRef.current?.setPosition(currentPosition.current)
     if (focusedItem === RootNodeUid || focusedItemRef.current === focusedItem) return
     if (!validNodeTree[focusedItem]) return
 
@@ -223,6 +227,14 @@ export default function CodeView(props: CodeViewProps) {
           })
         }
       }
+      // else if(activePanel === 'code' && firstSelection.current && currentPosition.current){
+      //   setSelection({
+      //     startLineNumber: currentPosition.current.lineNumber,
+      //     startColumn: currentPosition.current?.column,
+      //     endLineNumber: currentPosition.current?.lineNumber,
+      //     endColumn: currentPosition.current?.column,
+      //   })
+      // }
     } else {
       setSelection(null)
     }
@@ -305,6 +317,7 @@ export default function CodeView(props: CodeViewProps) {
   const reduxTimeout = useRef<NodeJS.Timeout | null>(null)
   const isAttrEditing = useRef<boolean>(false)
   const saveFileContentToRedux = useCallback(() => {
+    setActivePanel('code')
     if (parseFileFlag) {
       // clear highlight
       decorationCollectionRef.current?.clear()
@@ -383,6 +396,7 @@ export default function CodeView(props: CodeViewProps) {
       codeChangeDecorationRef.current.clear()
       reduxTimeout.current = null
       setFocusedNode(undefined)
+      currentPosition.current && monacoRef.current?.setPosition(currentPosition.current)
     }
     else {
       // non-parse file save
@@ -486,38 +500,44 @@ export default function CodeView(props: CodeViewProps) {
       }
   
       // update decorations
-      const focusedNodeDecorations: monaco.editor.IModelDeltaDecoration[] = []
-      const focusedNodeCodeRange: monaco.IRange = validNodeTreeRef.current[focusedNode.uid].data as THtmlNodeData
-      if (!completelyRemoved) {
-        focusedNodeDecorations.push(
-          {
-            range: focusedNodeCodeRange,
-            options: {
-              isWholeLine: true,
-              className: 'focusedNodeCode',
-            }
-          },
-        )
+      if (validNodeTreeRef.current[focusedNode.uid] ) {
+        const focusedNodeDecorations: monaco.editor.IModelDeltaDecoration[] = []
+        const focusedNodeCodeRange: monaco.IRange = validNodeTreeRef.current[focusedNode.uid].data as THtmlNodeData
+        if (!completelyRemoved) {
+          focusedNodeDecorations.push(
+            {
+              range: focusedNodeCodeRange,
+              options: {
+                isWholeLine: true,
+                className: 'focusedNodeCode',
+              }
+            },
+          )
+        }
+        codeChangeDecorationRef.current.set(focusedNode.uid, focusedNodeDecorations)
+        
+        // render decorations
+        const decorationsList = codeChangeDecorationRef.current.values()
+        const wholeDecorations: monaco.editor.IModelDeltaDecoration[] = []
+        for (const decorations of decorationsList) {
+          wholeDecorations.push(...decorations)
+        }
+        decorationCollectionRef.current?.set(wholeDecorations)
+  
       }
-      codeChangeDecorationRef.current.set(focusedNode.uid, focusedNodeDecorations)
-      
-      // render decorations
-      const decorationsList = codeChangeDecorationRef.current.values()
-      const wholeDecorations: monaco.editor.IModelDeltaDecoration[] = []
-      for (const decorations of decorationsList) {
-        wholeDecorations.push(...decorations)
-      }
-      decorationCollectionRef.current?.set(wholeDecorations)
-
     }
     // update redux with debounce
     codeContent.current = value || ''
+    const newPosition = monacoRef.current?.getPosition();
+    if (newPosition !== undefined) {
+      currentPosition.current = newPosition
+    }
     reduxTimeout.current !== null && clearTimeout(reduxTimeout.current)
     reduxTimeout.current = setTimeout(saveFileContentToRedux, delay)
 
     setCodeEditing(true)
     
-  }, [saveFileContentToRedux, focusedNode, activePanel, parseFileFlag])
+  }, [saveFileContentToRedux, focusedNode, parseFileFlag])
   // -------------------------------------------------------------- monaco-editor options --------------------------------------------------------------
   // tabSize
   const [_tabSize, _setTabSize] = useState<number>(DefaultTabSize)
