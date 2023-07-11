@@ -122,6 +122,7 @@ export default function Process(props: ProcessProps) {
       window.document.title = RainbowAppName
     } else {
       const _file = ffTree[file.uid]
+      if (!_file) return
       const fileData = _file.data as TFileNodeData
       if (ffTree[file.uid].data.type === 'html') {
         let _title = `${fileData.name}${fileData.ext}`
@@ -141,7 +142,7 @@ export default function Process(props: ProcessProps) {
         window.document.title = `${fileData.name}${fileData.ext}`
       }
     }
-  }, [file.uid, nodeTree])
+  }, [file.uid, nodeTree, ffTree])
   // processor-updateOpt
   useEffect(() => {
     if (updateOpt.parse === true) {
@@ -560,7 +561,7 @@ export default function Process(props: ProcessProps) {
     uids.reverse()
     uids.map((uid) => {
       const node = _nodeTree[uid]
-      // if (!node.data.valid) return
+      if (!node.data.valid) return
 
       node.children = node.children.filter((c_uid) => _nodeTree[c_uid].data.valid)
       node.isEntity = node.children.length === 0
