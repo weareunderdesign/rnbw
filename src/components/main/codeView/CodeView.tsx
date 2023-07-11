@@ -20,6 +20,7 @@ import {
   RootNodeUid,
 } from '@_constants/main';
 import {
+  checkValidHtml,
   getSubNodeUidsByBfs,
   TFileNodeData,
   THtmlNodeData,
@@ -111,6 +112,20 @@ export default function CodeView(props: CodeViewProps) {
   const decorationCollectionRef = useRef<monaco.editor.IEditorDecorationsCollection>()
   const codeChangeDecorationRef = useRef<Map<TNodeUid, monaco.editor.IModelDeltaDecoration[]>>(new Map<TNodeUid, monaco.editor.IModelDeltaDecoration[]>())
   const validNodeTreeRef = useRef<TNodeTreeData>({})
+  const noNeedClosingTag = ['area',
+    'base',
+    'br',
+    'col',
+    'embed',
+    'hr',
+    'img',
+    'input',
+    'link',
+    'meta',
+    'param',
+    'source',
+    'track',
+    'wbr']
   const handleEditorDidMount = useCallback((editor: monaco.editor.IStandaloneCodeEditor, monaco: Monaco) => {
     monacoRef.current = editor
     editor.onDidChangeCursorPosition((event) => {
@@ -337,6 +352,8 @@ export default function CodeView(props: CodeViewProps) {
       const currentCode = codeContent.current
       const currentCodeArr = currentCode.split(getLineBreaker(osType))
       const codeChanges: TCodeChange[] = []
+      let hasMismatchedTags = false
+
       for (const codeChange of codeChangeDecorationRef.current.entries()) {
         let uid = codeChange[0]
         // check if editing tags are <code> or <pre>
@@ -380,23 +397,45 @@ export default function CodeView(props: CodeViewProps) {
           }
         }
         if (htmlSkeletonStructureCount >= 2) {
-          codeChanges.push({ uid , content })
+
+          hasMismatchedTags = checkValidHtml(codeContent.current)
+          
+          if (hasMismatchedTags === false) codeChanges.push({ uid , content })
         }
         else{
           console.log("Can't remove this element because it's an unique element of this page")
         }
       }
-      setCodeChanges(codeChanges)
-      
-      // update
-      dispatch(setCurrentFileContent(codeContent.current))
-      addRunningActions(['processor-updateOpt'])
-      setUpdateOpt({ parse: true, from: 'code' })
-  
-      codeChangeDecorationRef.current.clear()
-      reduxTimeout.current = null
-      setFocusedNode(undefined)
-      currentPosition.current && monacoRef.current?.setPosition(currentPosition.current)
+
+      if (hasMismatchedTags === false) {
+        setCodeChanges(codeChanges)
+        
+        // update
+        dispatch(setCurrentFileContent(codeContent.current))
+        addRunningActions(['processor-updateOpt'])
+        setUpdateOpt({ parse: true, from: 'code' })
+    
+        codeChangeDecorationRef.current.clear()
+        reduxTimeout.current = null
+        setFocusedNode(undefined)
+      }
+      else{
+        // update
+        dispatch(setCurrentFileContent(codeContent.current))
+        setFSPending(false)
+        const _file = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode
+        addRunningActions(['processor-updateOpt'])
+        const fileData = _file.data as TFileNodeData
+        (ffTree[file.uid].data as TFileNodeData).content = codeContent.current;
+        (ffTree[file.uid].data as TFileNodeData).contentInApp = codeContent.current;
+        (ffTree[file.uid].data as TFileNodeData).changed = codeContent.current !== fileData.orgContent;
+        setFFTree(ffTree)
+        console.log('non-html')
+        dispatch(setCurrentFileContent(codeContent.current))
+        codeChangeDecorationRef.current.clear()
+        setCodeEditing(false)
+        setFSPending(false)
+      }
     }
     else {
       // non-parse file save
@@ -407,6 +446,7 @@ export default function CodeView(props: CodeViewProps) {
       (ffTree[file.uid].data as TFileNodeData).contentInApp = codeContent.current;
       (ffTree[file.uid].data as TFileNodeData).changed = codeContent.current !== fileData.orgContent;
       setFFTree(ffTree)
+      console.log('non-html')
       dispatch(setCurrentFileContent(codeContent.current))
       codeChangeDecorationRef.current.clear()
       setCodeEditing(false)
