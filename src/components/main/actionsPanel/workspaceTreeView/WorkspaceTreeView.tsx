@@ -1937,7 +1937,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
           ...(navigatorDropDownType ? { zIndex: 2 } : {})
         }}
-        className={navigatorDropDownType ? 'border-left border-right border-bottom shadow background-primary' : ''}
+        className={navigatorDropDownType ? 'border-bottom background-primary' : ''}
         onClick={onPanelClick}
       >
         <TreeView

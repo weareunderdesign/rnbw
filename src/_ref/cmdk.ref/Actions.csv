@@ -1,11 +1,8 @@
 ﻿Name,Icon,Description,Keyboard Shortcut,Group,Context
 Add,plus,Add something,a,Project,all
 Code,code-html,Open Code,c,Project,all
-Run,play,"""Run"" (Preview)",r,Project,all
 Save,data,Save current file,cmd+s,Project,all
 Design,edit,"""Design"" On/Off (hide panels)",\,Project,all
-Publish,cloud-upload,,p,Project,all
-Share,share,,h,Project,all
 Download,download,,cmd+d,Project,all
 Cut,copy,,cmd+x,Basic,"file, html"
 Copy,copy,,cmd+c,Basic,"file, html"
@@ -14,8 +11,6 @@ Delete,cross,,backspace,Basic,"file, html"
 Duplicate,copy,,cmd+j,Basic,"file, html"
 Group,border,,cmd+g,Basic,html
 Ungroup,position,,cmd+shift+g,Basic,html
-Style,brush,Add Style,s,Basic,html
 Text,text,Edit Text,t,Basic,html
 Undo,undo,,cmd+z,Basic,all
 Redo,redo,,cmd+shift+z,Basic,all
-Turn into,sync,,,Other,html

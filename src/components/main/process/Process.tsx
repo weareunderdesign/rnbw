@@ -79,6 +79,7 @@ export default function Process(props: ProcessProps) {
     ffHandlers, setFFHandlers,
     ffHoveredItem, setFFHoveredItem,
     isHms, setIsHms,
+    parseFileFlag,
     ffAction, setFFAction,
     currentFileUid, setCurrentFileUid,
     // node tree view
@@ -121,6 +122,7 @@ export default function Process(props: ProcessProps) {
       window.document.title = RainbowAppName
     } else {
       const _file = ffTree[file.uid]
+      if (!_file) return
       const fileData = _file.data as TFileNodeData
       if (ffTree[file.uid].data.type === 'html') {
         let _title = `${fileData.name}${fileData.ext}`
@@ -140,7 +142,7 @@ export default function Process(props: ProcessProps) {
         window.document.title = `${fileData.name}${fileData.ext}`
       }
     }
-  }, [file.uid, nodeTree])
+  }, [file.uid, nodeTree, ffTree])
   // processor-updateOpt
   useEffect(() => {
     if (updateOpt.parse === true) {
@@ -246,10 +248,12 @@ export default function Process(props: ProcessProps) {
               // add new nodes / get valid node's uid list for iframe
               const uids = getSubNodeUidsByBfs(RootNodeUid, tree, false)
               const nodeUids: TNodeUid[] = []
+              let _flag = false
               uids.map(uid => {
                 const node = tree[uid]
                 if (node.parentUid === RootNodeUid) {
-                  _newFocusedNodeUid = uid
+                  !_flag && (_newFocusedNodeUid = uid)
+                  _flag = true
                   node.parentUid = o_parentNode.uid
                 }
                 _nodeTree[uid] = JSON.parse(JSON.stringify(node))
@@ -544,7 +548,7 @@ export default function Process(props: ProcessProps) {
     }
 
     removeRunningActions(['processor-updateOpt'])
-  }, [updateOpt])
+  }, [updateOpt, parseFileFlag])
   // processor-nodeTree
   useEffect(() => {
     if (!nodeTree[RootNodeUid]) return

@@ -45,6 +45,7 @@ import {
 } from '@_node/types';
 import {
   collapseFNNode,
+  expandFFNode,
   expandFNNode,
   fnSelector,
   focusFNNode,
@@ -86,6 +87,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     ffHandlers, setFFHandlers,
     ffHoveredItem, setFFHoveredItem,
     isHms, setIsHms,
+    setInitialFileToOpen,
     ffAction, setFFAction,
     currentFileUid, setCurrentFileUid,
     // node tree view
@@ -656,6 +658,60 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     navigatorDropDownType !== null && setNavigatorDropDownType(null)
   }, [navigatorDropDownType])
 
+  // ------------------------------------------------------------- open wc -------------------------------------------------------------
+  const openWebComponent = useCallback((item: TNodeUid) => {
+    // check the element is wc
+    const nodeData = validNodeTree[item].data as THtmlNodeData
+    let exist = false
+    if (nodeData && htmlReferenceData.elements[nodeData.name] === undefined && nodeData.type === 'tag') {
+      const wcName = nodeData.name
+      for (let x in ffTree) {
+        const defineRegex = /customElements\.define\(\s*['"]([\w-]+)['"]/;
+        if ((ffTree[x].data as TFileNodeData).content && (ffTree[x].data as TFileNodeData).ext === '.js') {
+          const match = ((ffTree[x].data as TFileNodeData).content).match(defineRegex);
+          if (match) {
+            // check web component
+            if (wcName === match[1].toLowerCase()) {
+              const fileName = (ffTree[x].data as TFileNodeData).name
+              let src = ''
+              for (let i in validNodeTree) {
+                if ((validNodeTree[i].data as THtmlNodeData).type === 'script' && (validNodeTree[i].data as THtmlNodeData).html.search(fileName + '.js') !== -1) {
+                  src = (validNodeTree[i].data as THtmlNodeData).attribs.src
+                  break
+                }
+              }
+              if (src !== '') {
+                if (src.startsWith('http') || src.startsWith('//')) {
+                  alert('rnbw couldn\'t find it\'s source file')
+                  break
+                }
+                else{
+                  setInitialFileToOpen(ffTree[x].uid)
+                  setNavigatorDropDownType('project')
+                  // expand path to the uid
+                  const _expandedItems: string[] = []
+                  let _file = ffTree[x]
+                  while (_file && _file.uid !== RootNodeUid) {
+                    _file = ffTree[_file.parentUid as string]
+                    if (_file && !_file.isEntity && (!expandedItemsObj[_file.uid] || expandedItemsObj[_file.uid] === undefined))
+                      _expandedItems.push(_file.uid)
+                  }
+                  dispatch(expandFFNode(_expandedItems))
+                  exist = true
+                  break
+                }
+              }
+            }
+          }
+        }
+      }
+
+      if (!exist) {
+        alert('rnbw couldn\'t find it\'s source file')
+      }
+    }
+  }, [htmlReferenceData, validNodeTree, ffTree])
+
   const isDragging = useRef<boolean>(false)
 
   return useMemo(() => {
@@ -753,6 +809,10 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                       setActivePanel('node')
 
                       navigatorDropDownType !== null && setNavigatorDropDownType(null)
+                    }}
+                    onDoubleClick={(e: React.MouseEvent) => {
+                      e.stopPropagation()
+                      openWebComponent(props.item.index as TNodeUid)
                     }}
                     onMouseEnter={(e) => {
                       const ele = e.target as HTMLElement

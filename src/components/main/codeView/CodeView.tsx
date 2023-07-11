@@ -9,6 +9,7 @@ import React, {
 
 import { debounce } from 'lodash';
 import * as monaco from 'monaco-editor';
+import ReactHtmlParser from 'react-html-parser';
 import {
   useDispatch,
   useSelector,
@@ -19,6 +20,7 @@ import {
   RootNodeUid,
 } from '@_constants/main';
 import {
+  checkValidHtml,
   getSubNodeUidsByBfs,
   TFileNodeData,
   THtmlNodeData,
@@ -37,7 +39,8 @@ import {
 } from '@_redux/main';
 import { getLineBreaker } from '@_services/global';
 import { TCodeChange } from '@_types/main';
-import Editor, {
+import {
+  Editor,
   loader,
   Monaco,
 } from '@monaco-editor/react';
@@ -101,6 +104,7 @@ export default function CodeView(props: CodeViewProps) {
   } = useContext(MainContext)
   // -------------------------------------------------------------- references --------------------------------------------------------------
   const isFirst = useRef<boolean>(true)
+  const currentPosition = useRef<monaco.IPosition | null>(null)
   const monacoRef = useRef<monaco.editor.IEditor | null>(null)
   const editorWrapperRef = useRef<HTMLDivElement>(null)
   const codeContent = useRef<string>('')
@@ -108,40 +112,66 @@ export default function CodeView(props: CodeViewProps) {
   const decorationCollectionRef = useRef<monaco.editor.IEditorDecorationsCollection>()
   const codeChangeDecorationRef = useRef<Map<TNodeUid, monaco.editor.IModelDeltaDecoration[]>>(new Map<TNodeUid, monaco.editor.IModelDeltaDecoration[]>())
   const validNodeTreeRef = useRef<TNodeTreeData>({})
+  const noNeedClosingTag = ['area',
+    'base',
+    'br',
+    'col',
+    'embed',
+    'hr',
+    'img',
+    'input',
+    'link',
+    'meta',
+    'param',
+    'source',
+    'track',
+    'wbr']
   const handleEditorDidMount = useCallback((editor: monaco.editor.IStandaloneCodeEditor, monaco: Monaco) => {
     monacoRef.current = editor
+    editor.onDidChangeCursorPosition((event) => {
+      setTimeout(() => {
+        if (event.reason === 2) {
+          currentPosition.current && monacoRef.current?.setPosition(currentPosition.current)
+        }
+      }, 0);
+    }) 
     decorationCollectionRef.current = editor.createDecorationsCollection()
     // setTimeout(function() {
       //   editor?.getAction('editor.action.formatDocument')?.run();
       // }, 300);
-    }, [])
-    // -------------------------------------------------------------- sync --------------------------------------------------------------
-    // build node tree refernece
-    useEffect(() => {
-      validNodeTreeRef.current = JSON.parse(JSON.stringify(validNodeTree))
-      
-      // set new focused node
-      if (newFocusedNodeUid !== '') {
-        setFocusedNode(validNodeTree[newFocusedNodeUid])
-        !isFirst.current ? focusedItemRef.current = newFocusedNodeUid : null
-        setNewFocusedNodeUid('')
-      }
-    }, [validNodeTree])
-    // file content change - set code
-    useEffect(() => {
-      const _file = ffTree[file.uid]
-      if (!_file) return
-      
-      if (updateOpt.from === 'code') return
-      
-      const fileData = _file.data as TFileNodeData
-      setLanguage(fileData.ext === '.html' ? 'html' : fileData.ext === '.md' ? 'markdown' : fileData.ext === '.js' ? 'javascript' : fileData.ext === '.css' ? 'css' : fileData.type)
-      codeContent.current = fileData.content
+  }, [])
+  // -------------------------------------------------------------- sync --------------------------------------------------------------
+  // build node tree refernece
+  useEffect(() => {
+    validNodeTreeRef.current = JSON.parse(JSON.stringify(validNodeTree))
+    
+    // set new focused node
+    if (newFocusedNodeUid !== '') {
+      setFocusedNode(validNodeTree[newFocusedNodeUid])
+      !isFirst.current ? focusedItemRef.current = newFocusedNodeUid : null
+      setNewFocusedNodeUid('')
+    }
+  }, [validNodeTree])
+  // file content change - set code
+  useEffect(() => {
+    const _file = ffTree[file.uid]
+    if (!_file) return
+    
+    if (updateOpt.from === 'code') return
+    
+    const fileData = _file.data as TFileNodeData
+    setLanguage(fileData.ext === '.html' ? 'html' : fileData.ext === '.md' ? 'markdown' : fileData.ext === '.js' ? 'javascript' : fileData.ext === '.css' ? 'css' : fileData.type)
+    codeContent.current = fileData.content
   }, [ffTree[file.uid]])
   // focusedItem - code select
   const focusedItemRef = useRef<TNodeUid>('')
   const revealed = useRef<boolean>(false)
   useEffect(() => {
+    if (!parseFileFlag) {
+      return
+    }
+    // console.log(currentPosition.current, focusedItem)
+    // currentPosition.current && !monacoRef.current?.getPosition()?.equals(currentPosition.current) && monacoRef.current?.setPosition(currentPosition.current)
     if (focusedItem === RootNodeUid || focusedItemRef.current === focusedItem) return
     if (!validNodeTree[focusedItem]) return
 
@@ -186,11 +216,12 @@ export default function CodeView(props: CodeViewProps) {
     }
 
     focusedItemRef.current = focusedItem
-  }, [focusedItem])
+  }, [focusedItem, parseFileFlag])
   // watch focus/selection for the editor
   const firstSelection = useRef<CodeSelection | null>(null)
   const [selection, setSelection] = useState<CodeSelection | null>(null)
   const updateSelection = useCallback(() => {
+    if (!parseFileFlag) return
     const _selection = monacoRef.current?.getSelection()
     if (_selection) {
       if (isFirst.current) {
@@ -211,10 +242,18 @@ export default function CodeView(props: CodeViewProps) {
           })
         }
       }
+      // else if(activePanel === 'code' && firstSelection.current && currentPosition.current){
+      //   setSelection({
+      //     startLineNumber: currentPosition.current.lineNumber,
+      //     startColumn: currentPosition.current?.column,
+      //     endLineNumber: currentPosition.current?.lineNumber,
+      //     endColumn: currentPosition.current?.column,
+      //   })
+      // }
     } else {
       setSelection(null)
     }
-  }, [selection])
+  }, [selection, parseFileFlag])
   useEffect(() => {
     const cursorDetectInterval = setInterval(() => updateSelection(), 0)
     return () => clearInterval(cursorDetectInterval)
@@ -293,6 +332,7 @@ export default function CodeView(props: CodeViewProps) {
   const reduxTimeout = useRef<NodeJS.Timeout | null>(null)
   const isAttrEditing = useRef<boolean>(false)
   const saveFileContentToRedux = useCallback(() => {
+    setActivePanel('code')
     if (parseFileFlag) {
       // clear highlight
       decorationCollectionRef.current?.clear()
@@ -312,10 +352,13 @@ export default function CodeView(props: CodeViewProps) {
       const currentCode = codeContent.current
       const currentCodeArr = currentCode.split(getLineBreaker(osType))
       const codeChanges: TCodeChange[] = []
+      let hasMismatchedTags = false
+
       for (const codeChange of codeChangeDecorationRef.current.entries()) {
         let uid = codeChange[0]
         // check if editing tags are <code> or <pre>
         let _parent = uid
+        if (validNodeTree[uid] === undefined) return
         let notParsingFlag = validNodeTree[uid].name === 'code' || validNodeTree[uid].name === 'pre' ? true : false
         while(_parent !== undefined && _parent !== null && _parent !== 'ROOT') {
           if (validNodeTree[_parent].name === 'code' || validNodeTree[_parent].name === 'pre') {
@@ -341,40 +384,58 @@ export default function CodeView(props: CodeViewProps) {
         endLineNumber > startLineNumber && partCodeArr.push(currentCodeArr[endLineNumber - 1].slice(0, endColumn - 1))
         const content = partCodeArr.join(getLineBreaker(osType))
   
-        // console.log(validNodeTree[uid].data, (validNodeTree[uid].data as THtmlNodeData).html, content)
         uid = notParsingFlag ? _parent : uid
-        codeChanges.push({ uid , content })
+        const parsedHtml = ReactHtmlParser(codeContent.current);
+        let htmlSkeletonStructureCount = 0
+        for(let x in parsedHtml) {
+          if (parsedHtml[x] && parsedHtml[x]?.type === 'html') {
+            if (parsedHtml[x].props.children) {
+              for (let i in parsedHtml[x].props.children) {
+                if (parsedHtml[x].props.children[i] && parsedHtml[x].props.children[i].type && (parsedHtml[x].props.children[i].type === 'body' || parsedHtml[x].props.children[i].type === 'head'))
+                  htmlSkeletonStructureCount ++
+              }
+            }
+          }
+        }
+        if (htmlSkeletonStructureCount >= 2) {
+
+          hasMismatchedTags = checkValidHtml(codeContent.current)
+          
+          if (hasMismatchedTags === false) codeChanges.push({ uid , content })
+        }
+        else{
+          console.log("Can't remove this element because it's an unique element of this page")
+        }
       }
-      // const preview = document.getElementById('codeview_change_preview')
-      // let dom = new DOMParser().parseFromString(codeContent.current, 'text/html');
-      // let flag = true
-      // if (preview) {
-      //   preview.innerHTML = ''
-      //   for (let x in codeChanges){
-      //     preview.innerHTML = ''
-      //     let prev_content = ''
-      //     if (validNodeTree[codeChanges[0].uid].name === 'body' || validNodeTree[codeChanges[0].uid].name === 'head' || validNodeTree[codeChanges[0].uid].name === 'html') {
-      //       continue
-      //     }
-      //     preview.innerHTML = codeChanges[x].content
-      //     if (codeChanges[x].content !== preview.innerHTML) {
-      //       flag = false 
-      //     }
-      //   }
-      //   console.log(codeChanges[0].content, preview.innerHTML, flag)
-      // }
-      // if (!flag) return
-      // check attr editing
-      setCodeChanges(codeChanges)
-      
-      // update
-      dispatch(setCurrentFileContent(codeContent.current))
-      addRunningActions(['processor-updateOpt'])
-      setUpdateOpt({ parse: true, from: 'code' })
-  
-      codeChangeDecorationRef.current.clear()
-      reduxTimeout.current = null
-      setFocusedNode(undefined)
+
+      if (hasMismatchedTags === false) {
+        setCodeChanges(codeChanges)
+        
+        // update
+        dispatch(setCurrentFileContent(codeContent.current))
+        addRunningActions(['processor-updateOpt'])
+        setUpdateOpt({ parse: true, from: 'code' })
+    
+        codeChangeDecorationRef.current.clear()
+        reduxTimeout.current = null
+        setFocusedNode(undefined)
+      }
+      else{
+        // update
+        dispatch(setCurrentFileContent(codeContent.current))
+        setFSPending(false)
+        const _file = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode
+        addRunningActions(['processor-updateOpt'])
+        const fileData = _file.data as TFileNodeData
+        (ffTree[file.uid].data as TFileNodeData).content = codeContent.current;
+        (ffTree[file.uid].data as TFileNodeData).contentInApp = codeContent.current;
+        (ffTree[file.uid].data as TFileNodeData).changed = codeContent.current !== fileData.orgContent;
+        setFFTree(ffTree)
+        dispatch(setCurrentFileContent(codeContent.current))
+        codeChangeDecorationRef.current.clear()
+        setCodeEditing(false)
+        setFSPending(false)
+      }
     }
     else {
       // non-parse file save
@@ -385,13 +446,14 @@ export default function CodeView(props: CodeViewProps) {
       (ffTree[file.uid].data as TFileNodeData).contentInApp = codeContent.current;
       (ffTree[file.uid].data as TFileNodeData).changed = codeContent.current !== fileData.orgContent;
       setFFTree(ffTree)
-      setUpdateOpt({ parse: true, from: 'code' })
+      dispatch(setCurrentFileContent(codeContent.current))
       codeChangeDecorationRef.current.clear()
       setCodeEditing(false)
+      setFSPending(false)
     }
-  }, [ffTree, file.uid, validNodeTree, osType])
+  }, [ffTree, file.uid, validNodeTree, osType, parseFileFlag])
   const handleEditorChange = useCallback((value: string | undefined, ev: monaco.editor.IModelContentChangedEvent) => {
-    let delay = 300
+    let delay = 500
     if (parseFileFlag){
       const hasFocus = monacoRef.current?.hasTextFocus()
 
@@ -402,7 +464,7 @@ export default function CodeView(props: CodeViewProps) {
       // get changed part
       const { eol } = ev
       const { range: o_range, text: changedCode } = ev.changes[0]
-      if ((changedCode === "<" || changedCode === " " || changedCode === "=" || changedCode === '"' || changedCode === '""'  || changedCode === "''" || changedCode === "'" || changedCode.search('=""') !== -1) && parseFileFlag) {
+      if ((changedCode === " " || changedCode === "=" || changedCode === '"' || changedCode === '""'  || changedCode === "''" || changedCode === "'" || changedCode.search('=""') !== -1) && parseFileFlag) {
         delay = 5000
       }
       else {
@@ -477,36 +539,44 @@ export default function CodeView(props: CodeViewProps) {
       }
   
       // update decorations
-      const focusedNodeDecorations: monaco.editor.IModelDeltaDecoration[] = []
-      const focusedNodeCodeRange: monaco.IRange = validNodeTreeRef.current[focusedNode.uid].data as THtmlNodeData
-      if (!completelyRemoved) {
-        focusedNodeDecorations.push(
-          {
-            range: focusedNodeCodeRange,
-            options: {
-              isWholeLine: true,
-              className: 'focusedNodeCode',
-            }
-          },
-        )
+      if (validNodeTreeRef.current[focusedNode.uid] ) {
+        const focusedNodeDecorations: monaco.editor.IModelDeltaDecoration[] = []
+        const focusedNodeCodeRange: monaco.IRange = validNodeTreeRef.current[focusedNode.uid].data as THtmlNodeData
+        if (!completelyRemoved) {
+          focusedNodeDecorations.push(
+            {
+              range: focusedNodeCodeRange,
+              options: {
+                isWholeLine: true,
+                className: 'focusedNodeCode',
+              }
+            },
+          )
+        }
+        codeChangeDecorationRef.current.set(focusedNode.uid, focusedNodeDecorations)
+        
+        // render decorations
+        const decorationsList = codeChangeDecorationRef.current.values()
+        const wholeDecorations: monaco.editor.IModelDeltaDecoration[] = []
+        for (const decorations of decorationsList) {
+          wholeDecorations.push(...decorations)
+        }
+        decorationCollectionRef.current?.set(wholeDecorations)
+  
       }
-      codeChangeDecorationRef.current.set(focusedNode.uid, focusedNodeDecorations)
-      
-      // render decorations
-      const decorationsList = codeChangeDecorationRef.current.values()
-      const wholeDecorations: monaco.editor.IModelDeltaDecoration[] = []
-      for (const decorations of decorationsList) {
-        wholeDecorations.push(...decorations)
-      }
-      decorationCollectionRef.current?.set(wholeDecorations)
     }
     // update redux with debounce
     codeContent.current = value || ''
+    const newPosition = monacoRef.current?.getPosition();
+    if (newPosition !== undefined) {
+      currentPosition.current = newPosition
+    }
     reduxTimeout.current !== null && clearTimeout(reduxTimeout.current)
     reduxTimeout.current = setTimeout(saveFileContentToRedux, delay)
 
     setCodeEditing(true)
-  }, [saveFileContentToRedux, focusedNode, activePanel])
+    
+  }, [saveFileContentToRedux, focusedNode, parseFileFlag])
   // -------------------------------------------------------------- monaco-editor options --------------------------------------------------------------
   // tabSize
   const [_tabSize, _setTabSize] = useState<number>(DefaultTabSize)
@@ -613,7 +683,7 @@ export default function CodeView(props: CodeViewProps) {
             height: '23px',
             cursor: 'move',
             paddingTop: '5px',
-            paddingLeft: '10px'
+            paddingLeft: '12px'
           }}
         >
           <SVGIconI {...{ "class": "icon-xs" }}>list</SVGIconI>

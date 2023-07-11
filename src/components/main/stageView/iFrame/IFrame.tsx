@@ -26,7 +26,9 @@ import {
   TNodeUid,
 } from '@_node/types';
 import {
+  expandFFNode,
   expandFNNode,
+  ffSelector,
   fnSelector,
   focusFNNode,
   MainContext,
@@ -52,7 +54,8 @@ export const IFrame = (props: IFrameProps) => {
   const dispatch = useDispatch()
   const { file } = useSelector(navigatorSelector)
   // -------------------------------------------------------------- global state --------------------------------------------------------------
-  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
+  const { focusedItem, expandedItems, selectedItems, selectedItemsObj } = useSelector(fnSelector)
+  const { expandedItemsObj } = useSelector(ffSelector)
   const {
     // global action
     addRunningActions, removeRunningActions,
@@ -141,7 +144,7 @@ export const IFrame = (props: IFrameProps) => {
       const elementRect = (newFocusedElement as HTMLElement)?.getBoundingClientRect()
       if (elementRect) {
         if (elementRect.y < 0) {
-          setCodeViewOffsetTop('calc(66.67vh - 10px)')
+          setCodeViewOffsetTop('calc(66.66vh - 12px)')
         }
         else {
           const innerHeight = contentRef?.contentWindow?.document.documentElement.clientHeight
@@ -149,10 +152,10 @@ export const IFrame = (props: IFrameProps) => {
           if (innerHeight) {
             if (elementRect.height < innerHeight / 2) {
               if (elePosition / innerHeight * 100 > 66) {
-                setCodeViewOffsetTop('10px')
+                setCodeViewOffsetTop('12px')
               }
               if (elePosition / innerHeight * 100 < 33) {
-                setCodeViewOffsetTop('calc(66.67vh - 10px)')
+                setCodeViewOffsetTop('calc(66.66vh - 12px)')
               }
             }
           }
@@ -169,7 +172,7 @@ export const IFrame = (props: IFrameProps) => {
     setTimeout(() => newFocusedElement?.scrollIntoView({ block: 'nearest', inline: 'start', behavior: 'smooth' }), 50)
     if (elementRect) {
       if (elementRect.y < 0) {
-        setCodeViewOffsetTop('calc(66.67vh - 10px)')
+        setCodeViewOffsetTop('calc(66.66vh - 12px)')
       }
       else {
         const innerHeight = contentRef?.contentWindow?.document.documentElement.clientHeight
@@ -177,10 +180,10 @@ export const IFrame = (props: IFrameProps) => {
         if (innerHeight) {
           if (elementRect.height < innerHeight / 2) {
             if (elePosition / innerHeight * 100 > 66) {
-              setCodeViewOffsetTop('10px')
+              setCodeViewOffsetTop('12px')
             }
             if (elePosition / innerHeight * 100 < 33) {
-              setCodeViewOffsetTop('calc(66.67vh - 10px)')
+              setCodeViewOffsetTop('calc(66.66vh - 12px)')
             }
           }
         }
@@ -247,7 +250,7 @@ export const IFrame = (props: IFrameProps) => {
     setTimeout(() => newFocusedElement?.scrollIntoView({ block: 'nearest', inline: 'start', behavior: 'smooth' }), 50)
     if (elementRect) {
       if (elementRect.y < 0) {
-        setCodeViewOffsetTop('calc(66.67vh - 10px)')
+        setCodeViewOffsetTop('calc(66.66vh - 12px)')
       }
       else {
         const innerHeight = contentRef?.contentWindow?.document.documentElement.clientHeight
@@ -255,10 +258,10 @@ export const IFrame = (props: IFrameProps) => {
         if (innerHeight) {
           if (elementRect.height < innerHeight / 2) {
             if (elePosition / innerHeight * 100 > 66) {
-              setCodeViewOffsetTop('10px')
+              setCodeViewOffsetTop('12px')
             }
             if (elePosition / innerHeight * 100 < 33) {
-              setCodeViewOffsetTop('calc(66.67vh - 10px)')
+              setCodeViewOffsetTop('calc(66.66vh - 12px)')
             }
           }
         }
@@ -505,6 +508,7 @@ export const IFrame = (props: IFrameProps) => {
   const onMouseLeave = useCallback((e: MouseEvent) => {
     setFNHoveredItem('')
   }, [])
+  const externalDblclick = useRef<boolean>(false)
   const onClick = useCallback((e: MouseEvent) => {
     isEditing.current = false
     if (!parseFileFlag) {
@@ -521,6 +525,7 @@ export const IFrame = (props: IFrameProps) => {
     else {
       const ele = e.target as HTMLElement
   
+      externalDblclick.current = true
       // handle links
       let isLinkTag = false
       let linkElement = ele
@@ -582,6 +587,7 @@ export const IFrame = (props: IFrameProps) => {
       if (firstClickEditableTags.filter(_ele => _ele === ele.tagName.toLowerCase()).length > 0 && !multiple && _uid === focusedItem){
         setTimeout(() => {
           onDblClick(e)
+          console.log('editable')
           ele.focus()
         }, 10)
       }
@@ -697,9 +703,12 @@ export const IFrame = (props: IFrameProps) => {
       }
     };
   }, []);
+  const dblClickTimestamp = useRef(0)
   const onDblClick = useCallback((e: MouseEvent) => {
     // open new page with <a> tag in iframe
     const ele = e.target as HTMLElement
+    if (dblClickTimestamp.current !== 0 && e.timeStamp - dblClickTimestamp.current < 500) return
+    dblClickTimestamp.current = e.timeStamp
     let _ele = ele
     while(_ele.tagName !== 'A') {
       if (_ele.tagName === 'BODY' || _ele.tagName === 'HEAD' || _ele.tagName === 'HTML') {
@@ -720,7 +729,7 @@ export const IFrame = (props: IFrameProps) => {
       const node = validNodeTree[uid]
       if (!node) return
       const nodeData = node.data as THtmlNodeData
-      if (nodeData.name === 'html' || nodeData.name === 'head' || nodeData.name === 'body' || nodeData.name === 'img') return
+      if (nodeData.name === 'html' || nodeData.name === 'head' || nodeData.name === 'body' || nodeData.name === 'img'  || nodeData.name === 'div') return
 
       const cleanedUpCode = ele.outerHTML.replace(/rnbwdev-rnbw-element-hover=""|rnbwdev-rnbw-element-select=""|contenteditable="true"|contenteditable="false"/g, '')
       setOuterHtml(cleanedUpCode)
@@ -730,6 +739,21 @@ export const IFrame = (props: IFrameProps) => {
       isEditing.current = true
       ele.setAttribute('contenteditable', 'true')
       contentEditableUidRef.current = uid
+      
+      // set focus where you clicked
+      const range = contentRef?.contentWindow?.document.createRange();
+      
+      if (range) {
+        // const selection = contentRef?.contentWindow?.getSelection();
+        // const clickPosition = selection?.getRangeAt(0).startOffset;
+        // console.log(clickPosition)
+        // clickPosition && range.setStart(ele.childNodes[0], 5);
+        // range.collapse(true);
+        // selection?.removeAllRanges();
+        // selection?.addRange(range);
+        // ele.focus();
+      }
+
       ele.addEventListener('paste', (event) => {
             event.preventDefault();
             if (isEditing.current) {
@@ -754,28 +778,79 @@ export const IFrame = (props: IFrameProps) => {
       // check if it's a web component and open its js file
       let _ele = ele
       let flag = true
-      while(flag) {
-        if (_ele.getAttribute(NodeInAppAttribName) !== null) {
-          for (let x in ffTree) {
-            // check web component
-            if (x.search('/' + _ele.tagName.toLowerCase() + '.js') !== -1) {
-              setInitialFileToOpen(ffTree[x].uid)
-              setNavigatorDropDownType('project')
+      let exist = false
+      if (!externalDblclick.current)
+      {
+        while(flag) {
+          if (_ele.getAttribute(NodeInAppAttribName) !== null) {
+            let uid: TNodeUid | null = _ele.getAttribute(NodeInAppAttribName)
+            if (uid) {
+              for (let x in ffTree) {
+                const node = validNodeTree[uid]
+                const defineRegex = /customElements\.define\(\s*['"]([\w-]+)['"]/;
+                if ((ffTree[x].data as TFileNodeData).content && (ffTree[x].data as TFileNodeData).ext === '.js') {
+                  const match = ((ffTree[x].data as TFileNodeData).content).match(defineRegex);
+                  if (match) {
+                    // check web component
+                    if (_ele.tagName.toLowerCase() === match[1].toLowerCase()) {
+                      const fileName = (ffTree[x].data as TFileNodeData).name
+                      let src = ''
+                      for (let i in validNodeTree) {
+                        if ((validNodeTree[i].data as THtmlNodeData).type === 'script' && (validNodeTree[i].data as THtmlNodeData).html.search(fileName + '.js') !== -1) {
+                          src = (validNodeTree[i].data as THtmlNodeData).attribs.src
+                          break
+                        }
+                      }
+                      if (src !== '') {
+                        if (src.startsWith('http') || src.startsWith('//')) {
+                          alert('rnbw couldn\'t find it\'s source file')
+                          flag = false
+                          break
+                        }
+                        else{
+                          setInitialFileToOpen(ffTree[x].uid)
+                          setNavigatorDropDownType('project')
+                          // expand path to the uid
+                          const _expandedItems: string[] = []
+                          let _file = ffTree[x]
+                          while (_file && _file.uid !== RootNodeUid) {
+                            _file = ffTree[_file.parentUid as string]
+                            if (_file && !_file.isEntity && (!expandedItemsObj[_file.uid] || expandedItemsObj[_file.uid] === undefined))
+                              _expandedItems.push(_file.uid)
+                          }
+                          dispatch(expandFFNode(_expandedItems))
+                          flag = false
+                          exist = true
+                          break
+                        }
+                      }
+                    }
+                  }
+                }
+              }
               flag = false
-              break
+            }
+            else{
+              flag = false
             }
           }
-          flag = false
-        }
-        else if (_ele.parentElement) {
-          _ele = _ele.parentElement
-        }
-        else{
-          flag = false
+          else if (_ele.parentElement) {
+            _ele = _ele.parentElement
+          }
+          else{
+            flag = false
+          }
         }
       }
+      else{
+        exist = true
+      }
+
+      if (!exist) {
+        alert('rnbw couldn\'t find it\'s source file')
+      }
     }
-  }, [validNodeTree, ffTree, focusedItem])
+  }, [validNodeTree, ffTree, expandedItemsObj])
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
   const onKeyDown = useCallback((e: KeyboardEvent) => {
     if (contentEditableUidRef.current !== '') return
@@ -825,6 +900,7 @@ export const IFrame = (props: IFrameProps) => {
   };
   useEffect(() => {
     if (contentRef) {
+      dblClickTimestamp.current = 0
       setIFrameLoading(true)
 
       contentRef.onload = () => {
@@ -862,6 +938,7 @@ export const IFrame = (props: IFrameProps) => {
             setIframeEvent(e)
           })
           htmlNode.addEventListener('dblclick', (e: MouseEvent) => {
+            externalDblclick.current = false
             setIframeEvent(e)
           })
           htmlNode.addEventListener('keydown', (e: KeyboardEvent) => {

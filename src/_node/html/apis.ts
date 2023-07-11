@@ -25,6 +25,20 @@ import {
   THtmlReferenceData,
 } from './types';
 
+const noNeedClosingTag = ['area',
+    'base',
+    'br',
+    'col',
+    'embed',
+    'hr',
+    'img',
+    'input',
+    'link',
+    'meta',
+    'param',
+    'source',
+    'track',
+    'wbr']
 const emptyImage = window.location.origin + "/images/empty-image.svg"
 export const setHtmlNodeInAppAttribName = (node: TNode, newUid: TNodeUid) => {
   const nodeData = node.data as THtmlNodeData
@@ -308,7 +322,7 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
       nodeHtmlInApp = ``
     } else if (nodeData.type === 'text') {
       // replace "<" or ">" to "&lt;" and "&gt;", only in app
-      nodeHtml = nodeData.data.replace(/</g, `&lt;`).replace(/>/g, `&gt;`)
+      nodeHtml = nodeData.data
       nodeHtmlInApp = nodeData.data.replace(/</g, `&lt;`).replace(/>/g, `&gt;`)
     } else if (nodeData.type === 'script' || nodeData.type === 'style') {
       nodeHtml = `<${nodeData.type}${attribsHtml}>${childrenHtml}</${nodeData.type}>`
@@ -393,7 +407,12 @@ export const parseHtmlCodePart = (content: string, htmlReferenceData: THtmlRefer
   ReactHtmlParser(content, {
     decodeEntities: true,
     transform: (node, index, transform) => {
-      node.valid = true
+      if ((node as THtmlDomNodeData).type === 'tag' && (htmlReferenceData.elements[(node as THtmlDomNodeData).name] || (node as THtmlDomNodeData).name.indexOf('-') !== -1)) {
+        node.valid = true
+      }
+      else{
+        node.valid = false
+      }
     },
     preprocessNodes: (nodes: THtmlDomNodeData[]) => {
       // build root node
@@ -496,4 +515,43 @@ export const parseHtmlCodePart = (content: string, htmlReferenceData: THtmlRefer
   const { html: formattedContent } = serializeHtml(tree, htmlReferenceData, osType)
 
   return { formattedContent, contentInApp: '', tree, nodeMaxUid: String(_nodeMaxUid) as TNodeUid }
+}
+
+export const checkValidHtml = (content: string): boolean => {
+  // remove code & pre & script tag's content
+  const tmpString = content.replace(/<pre\b[^<]*(?:(?!<\/pre>)<[^<]*)*<\/pre>/gi, '<pre></pre>').replace(/<code\b[^<]*(?:(?!<\/code>)<[^<]*)*<\/code>/gi, '<code></code>').replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '<script></script>').replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '<style></style>');
+  let hasMismatchedTags = false   
+  let openingTags = [];
+  let closingTags = [];
+  let regex = /<\/?[a-zA-Z0-9]+\b[^>]*>/g; // Matches any HTML tag
+  let match = regex.exec(tmpString);
+  while (match) {
+    let tag = match[0];
+    if (tag.startsWith('</')) {
+      let _tag = tag.slice(2, -1).split(' ')[0]
+      if (noNeedClosingTag.find(_item => _tag === _item) === undefined) {
+        closingTags.push(_tag);
+      }
+    } else {
+      let _tag = tag.slice(1, -1).split(' ')[0]
+      if (noNeedClosingTag.find(_item => _tag === _item) === undefined) {
+        openingTags.push(_tag);
+      }
+    }
+    match = regex.exec(tmpString);
+  }
+
+  if (openingTags.length !== closingTags.length) {
+    hasMismatchedTags = true; // Different number of opening and closing tags
+  }
+  else {
+    openingTags.sort()
+    closingTags.sort()
+    for (let i = 0 ; i < openingTags.length ; i ++) {
+      if (openingTags[i] !== closingTags[i])
+        hasMismatchedTags = true
+    }
+  }
+
+  return hasMismatchedTags
 }
