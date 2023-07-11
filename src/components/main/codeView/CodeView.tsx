@@ -358,6 +358,7 @@ export default function CodeView(props: CodeViewProps) {
         let uid = codeChange[0]
         // check if editing tags are <code> or <pre>
         let _parent = uid
+        if (validNodeTree[uid] === undefined) return
         let notParsingFlag = validNodeTree[uid].name === 'code' || validNodeTree[uid].name === 'pre' ? true : false
         while(_parent !== undefined && _parent !== null && _parent !== 'ROOT') {
           if (validNodeTree[_parent].name === 'code' || validNodeTree[_parent].name === 'pre') {
@@ -430,7 +431,6 @@ export default function CodeView(props: CodeViewProps) {
         (ffTree[file.uid].data as TFileNodeData).contentInApp = codeContent.current;
         (ffTree[file.uid].data as TFileNodeData).changed = codeContent.current !== fileData.orgContent;
         setFFTree(ffTree)
-        console.log('non-html')
         dispatch(setCurrentFileContent(codeContent.current))
         codeChangeDecorationRef.current.clear()
         setCodeEditing(false)
@@ -446,7 +446,6 @@ export default function CodeView(props: CodeViewProps) {
       (ffTree[file.uid].data as TFileNodeData).contentInApp = codeContent.current;
       (ffTree[file.uid].data as TFileNodeData).changed = codeContent.current !== fileData.orgContent;
       setFFTree(ffTree)
-      console.log('non-html')
       dispatch(setCurrentFileContent(codeContent.current))
       codeChangeDecorationRef.current.clear()
       setCodeEditing(false)
@@ -454,7 +453,7 @@ export default function CodeView(props: CodeViewProps) {
     }
   }, [ffTree, file.uid, validNodeTree, osType, parseFileFlag])
   const handleEditorChange = useCallback((value: string | undefined, ev: monaco.editor.IModelContentChangedEvent) => {
-    let delay = 300
+    let delay = 500
     if (parseFileFlag){
       const hasFocus = monacoRef.current?.hasTextFocus()
 
@@ -465,7 +464,7 @@ export default function CodeView(props: CodeViewProps) {
       // get changed part
       const { eol } = ev
       const { range: o_range, text: changedCode } = ev.changes[0]
-      if ((changedCode === "<" || changedCode === " " || changedCode === "=" || changedCode === '"' || changedCode === '""'  || changedCode === "''" || changedCode === "'" || changedCode.search('=""') !== -1) && parseFileFlag) {
+      if ((changedCode === " " || changedCode === "=" || changedCode === '"' || changedCode === '""'  || changedCode === "''" || changedCode === "'" || changedCode.search('=""') !== -1) && parseFileFlag) {
         delay = 5000
       }
       else {
