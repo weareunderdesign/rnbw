@@ -454,6 +454,11 @@ export default function MainPage(props: MainPageProps) {
     if (cmdk.shift && cmdk.cmd && cmdk.key === 'KeyR') {
       onClear()
     }
+    if ((cmdk.cmd && cmdk.key === 'KeyG')) {
+      e.preventDefault()
+      e.stopPropagation();
+      // return
+    }
     if (cmdkOpen) return
 
     // skip inline rename input in file-tree-view
