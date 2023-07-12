@@ -30,7 +30,7 @@ export type TSession = {
   'recent-project-handler': (FileSystemDirectoryHandle | null)[],
 }
 export type TEvent = {
-  type: 'add-node' | 'remove-node' | 'move-node' | 'duplicate-node' | 'copy-node' | 'copy-node-external' | 'code-change',
+  type: 'add-node' | 'remove-node' | 'move-node' | 'duplicate-node' | 'copy-node' | 'copy-node-external' | 'code-change' | 'group-node',
   param: any[],
 } | null
 export type TCodeChange = {
