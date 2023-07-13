@@ -49,7 +49,7 @@ import { IFrameProps } from './types';
 const defaultImage = "https://user-images.githubusercontent.com/13418616/234660226-dc0cb352-3735-478c-bcc0-d47f73eb3e31.svg"
 const defaultAudio = "https://user-images.githubusercontent.com/13418616/234660225-7195abb2-91e7-402f-aa7d-902bbf7d66f8.svg"
 const defaultVideo = "https://user-images.githubusercontent.com/13418616/234660227-aeb91595-1ed6-4b46-8197-c6feb7af3718.svg"
-const firstClickEditableTags = ['p', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'label']
+const firstClickEditableTags = ['p', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'label', 'a']
 export const IFrame = (props: IFrameProps) => {
   const dispatch = useDispatch()
   const { file } = useSelector(navigatorSelector)
@@ -274,7 +274,7 @@ export const IFrame = (props: IFrameProps) => {
     // build new element
     const nodeData = node.data as THtmlNodeData
     let newElement
-    if (nodeData.name === "!--...--") {
+    if (nodeData.name === "!--...--" || nodeData.name === "comment") {
       const targetElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"]`)
       // targetElement?.append('<!--...-->')
     }
@@ -311,15 +311,71 @@ export const IFrame = (props: IFrameProps) => {
     setTimeout(() => {
       dispatch(focusFNNode(node.uid))
       dispatch(selectFNNode([node.uid]))
-    }, 70)
+    }, 100)
+    removeRunningActions(['stageView-viewState'])
+  }, [removeRunningActions, contentRef, nodeTree])
+  const groupElement = useCallback((targetUid: TNodeUid, node: TNode, contentNode: TNode | null, deleteUids: TNodeUid[]) => {
+    // build new element
+    const nodeData = node.data as THtmlNodeData
+    let newElement
+    if (nodeData.name === "!--...--" || nodeData.name === "comment") {
+      const targetElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"]`)
+      // targetElement?.append('<!--...-->')
+    }
+    else if(nodeData.name === 'html') {
+      newElement = contentRef?.contentWindow?.document?.createElement(nodeData.name)
+      for (const attrName in nodeData.attribs) {
+        newElement && newElement?.setAttribute(attrName, nodeData.attribs[attrName])
+      }
+      if (contentNode && newElement) {
+        const contentNodeData = contentNode.data as THtmlNodeData
+        newElement.innerHTML = contentNodeData.htmlInApp
+      }
+      let existHTML = contentRef?.contentWindow?.document?.querySelector('html') as Node
+      if (existHTML) {
+        contentRef?.contentWindow?.document?.removeChild(existHTML)
+      }
+      newElement && contentRef?.contentWindow?.document?.appendChild(newElement)
+      setNeedToReloadIFrame(true)
+    }
+    else{
+      newElement = contentRef?.contentWindow?.document?.createElement(nodeData.name)
+      for (const attrName in nodeData.attribs) {
+        newElement?.setAttribute(attrName, nodeData.attribs[attrName])
+      }
+      if (contentNode && newElement) {
+        const contentNodeData = contentNode.data as THtmlNodeData
+        newElement.innerHTML = contentNodeData.htmlInApp
+      }
+      // add after target
+      const targetElement = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${targetUid}"]`)
+      newElement && targetElement?.appendChild(newElement)
+    }
+
+    // remove org elements
+    deleteUids.map((uid) => {
+      const ele = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${uid}"]`)
+      ele?.remove()
+    })
+    // view state
+    setTimeout(() => {
+      dispatch(focusFNNode(node.uid))
+      dispatch(selectFNNode([node.uid]))
+      dispatch(expandFNNode([node.uid]))
+    }, 200)
     removeRunningActions(['stageView-viewState'])
   }, [removeRunningActions, contentRef])
-  const removeElements = useCallback((uids: TNodeUid[], deletedUids: TNodeUid[]) => {
+  const removeElements = useCallback((uids: TNodeUid[], deletedUids: TNodeUid[], lastUid: TNodeUid) => {
     uids.map((uid) => {
       const ele = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${uid}"]`)
       ele?.remove()
     })
-
+    setTimeout(() => {
+      if (lastUid && lastUid !== '') {
+        dispatch(focusFNNode(lastUid))
+        dispatch(selectFNNode([lastUid]))
+      }
+    }, 200)
     // view state
     dispatch(updateFNTreeViewState({ deletedUids }))
     removeRunningActions(['stageView-viewState'])
@@ -510,7 +566,6 @@ export const IFrame = (props: IFrameProps) => {
   }, [])
   const externalDblclick = useRef<boolean>(false)
   const onClick = useCallback((e: MouseEvent) => {
-    isEditing.current = false
     if (!parseFileFlag) {
       const node = ffTree[prevFileUid]
       const uid = prevFileUid
@@ -524,7 +579,6 @@ export const IFrame = (props: IFrameProps) => {
     }
     else {
       const ele = e.target as HTMLElement
-  
       externalDblclick.current = true
       // handle links
       let isLinkTag = false
@@ -585,11 +639,11 @@ export const IFrame = (props: IFrameProps) => {
       }
       // allow to edit content by one clicking for the text element
       if (firstClickEditableTags.filter(_ele => _ele === ele.tagName.toLowerCase()).length > 0 && !multiple && _uid === focusedItem){
-        setTimeout(() => {
-          onDblClick(e)
-          console.log('editable')
-          ele.focus()
-        }, 10)
+          if (contentEditableUidRef.current !== _uid) {
+            isEditing.current = true
+            onDblClick(e)
+            // ele.focus()
+          }
       }
     }
 
@@ -680,6 +734,12 @@ export const IFrame = (props: IFrameProps) => {
       return
     }
 
+    if ((cmdk.cmd && cmdk.key === 'KeyG')) {
+      e.preventDefault()
+      e.stopPropagation();
+      // return
+    }
+
     if (cmdk.cmd && cmdk.key === 'Enter'){
       const ele = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${contentEditableUidRef.current}"]`)
       if (!ele) return
@@ -728,6 +788,9 @@ export const IFrame = (props: IFrameProps) => {
     if (uid) {
       const node = validNodeTree[uid]
       if (!node) return
+
+      if (contentEditableUidRef.current === uid) return
+
       const nodeData = node.data as THtmlNodeData
       if (nodeData.name === 'html' || nodeData.name === 'head' || nodeData.name === 'body' || nodeData.name === 'img'  || nodeData.name === 'div') return
 
@@ -737,7 +800,32 @@ export const IFrame = (props: IFrameProps) => {
         setContentEditableAttr(ele.getAttribute('contenteditable'))
       }
       isEditing.current = true
+      ele.addEventListener('paste', (event) => {
+        event.preventDefault();
+        if (isEditing.current) {
+          // @ts-ignore
+          const pastedText = (event.clipboardData || window.clipboardData).getData('text')
+
+          // Remove all HTML tags from the pasted text while keeping the content using a regular expression
+          const cleanedText = pastedText.replace(/<\/?([\w\s="/.':;#-\/\?]+)>/gi, (match: any, tagContent: any) => tagContent);
+          cleanedText.replaceAll("\n\r", '<br>')
+          // Insert the cleaned text into the editable div
+          contentRef?.contentWindow?.document.execCommand('insertText', false, cleanedText);
+          isEditing.current = false
+          setTimeout(() => {
+            isEditing.current = true
+          }, 50);
+        }
+      });
+      const clickEvent = new MouseEvent('click', {
+        view: contentRef?.contentWindow,
+        bubbles: true,
+        cancelable: true,
+        clientX: e.clientX,
+        clientY: e.clientY
+      });
       ele.setAttribute('contenteditable', 'true')
+
       contentEditableUidRef.current = uid
       
       // set focus where you clicked
@@ -753,25 +841,6 @@ export const IFrame = (props: IFrameProps) => {
         // selection?.addRange(range);
         // ele.focus();
       }
-
-      ele.addEventListener('paste', (event) => {
-            event.preventDefault();
-            if (isEditing.current) {
-              // @ts-ignore
-              const pastedText = (event.clipboardData || window.clipboardData).getData('text')
-              const clipboardData = event.clipboardData;
-    
-              // Remove all HTML tags from the pasted text while keeping the content using a regular expression
-              const cleanedText = pastedText.replace(/<\/?([\w\s="/.':;#-\/\?]+)>/gi, (match: any, tagContent: any) => tagContent);
-              cleanedText.replaceAll("\n\r", '<br>')
-              // Insert the cleaned text into the editable div
-              contentRef?.contentWindow?.document.execCommand('insertText', false, cleanedText);
-              isEditing.current = false
-              setTimeout(() => {
-                isEditing.current = true
-              }, 100);
-            }
-      });
     }
     else {
       isEditing.current = false
@@ -850,7 +919,7 @@ export const IFrame = (props: IFrameProps) => {
         alert('rnbw couldn\'t find it\'s source file')
       }
     }
-  }, [validNodeTree, ffTree, expandedItemsObj])
+  }, [validNodeTree, ffTree, expandedItemsObj, contentRef])
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
   const onKeyDown = useCallback((e: KeyboardEvent) => {
     if (contentEditableUidRef.current !== '') return
@@ -989,7 +1058,7 @@ export const IFrame = (props: IFrameProps) => {
           addElement(...param as [TNodeUid, TNode, TNode | null])
           break
         case 'remove-node':
-          removeElements(...param as [TNodeUid[], TNodeUid[]])
+          removeElements(...param as [TNodeUid[], TNodeUid[], TNodeUid])
           break
         case 'move-node':
           moveElements(...param as [TNodeUid[], TNodeUid, boolean, number])
@@ -1002,6 +1071,9 @@ export const IFrame = (props: IFrameProps) => {
           break
         case 'duplicate-node':
           duplicateElements(...param as [TNodeUid[], Map<TNodeUid, TNodeUid>])
+          break
+        case 'group-node':
+          groupElement(...param as [TNodeUid, TNode, TNode | null, TNodeUid[]])
           break
         default:
           break
