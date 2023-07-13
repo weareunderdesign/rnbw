@@ -47,6 +47,7 @@ import {
   collapseFNNode,
   expandFFNode,
   expandFNNode,
+  ffSelector,
   fnSelector,
   focusFNNode,
   increaseActionGroupIndex,
@@ -69,7 +70,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   const dispatch = useDispatch()
   // -------------------------------------------------------------- global state --------------------------------------------------------------
   const { file } = useSelector(navigatorSelector)
-  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(fnSelector)
+  const { focusedItem, expandedItems, selectedItems, selectedItemsObj } = useSelector(fnSelector)
+  const {expandedItemsObj} = useSelector(ffSelector)
   const {
     project,
     // global action
@@ -363,14 +365,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       // view state
       addRunningActions(['stageView-viewState'])
       setUpdateOpt({ parse: true, from: 'code' })
-      setTimeout(() => {
-        if (res.lastNodeUid && res.lastNodeUid !== '') {
-          dispatch(focusFNNode(res.lastNodeUid))
-          dispatch(selectFNNode([res.lastNodeUid]))
-        }
-      }, 100)
       // side effect
-      setEvent({ type: 'remove-node', param: [uids, res.deletedUids] })
+      setEvent({ type: 'remove-node', param: [uids, res.deletedUids, res.lastNodeUid] })
 
       removeRunningActions(['nodeTreeView-remove'])
       console.log('hms added')
@@ -474,6 +470,196 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     console.log('hms added')
     dispatch(increaseActionGroupIndex())
+  }, [addRunningActions, removeRunningActions, nodeTree, htmlReferenceData, nodeMaxUid, osType, tabSize])
+  const cb_groupNode = useCallback((_uids: TNodeUid[], targetUid: TNodeUid, position: number) => {
+    let Content: string = ''
+
+    let uids: TNodeUid[] = []
+    for (let x in _uids) {
+      if(!(nodeTree[_uids[x]].parentUid === RootNodeUid)) {
+        uids.push(_uids[x])
+        Content += (nodeTree[_uids[x]].data as THtmlNodeData).html as string
+      }
+    }
+    if (uids.length === 0) return
+
+    addRunningActions(['nodeTreeView-group'])
+
+    // add new div
+    const newNode: TNode = {
+      uid: String(nodeMaxUid + 1) as TNodeUid,
+      parentUid: nodeTree[targetUid].parentUid as TNodeUid,
+      name: 'div',
+      isEntity: true,
+      children: [],
+      data: {
+        valid: true,
+        isFormatText: false,
+
+        type: 'tag',
+        name: 'div',
+        data: '',
+        attribs: { [NodeInAppAttribName]: String(nodeMaxUid + 1) as TNodeUid },
+
+        html: '',
+        htmlInApp: '',
+
+        startLineNumber: 0,
+        startColumn: 0,
+        endLineNumber: 0,
+        endColumn: 0,
+      } as THtmlNodeData
+    }
+    let contentNode: TNode | null = null
+    let _tree: TNodeTreeData | null = null
+    let tmpMaxUid: TNodeUid = String(nodeMaxUid)
+    let newNodeFlag = false
+    const refData = htmlReferenceData.elements['div']
+    if (refData) {
+      const { Attributes } = refData
+      if (Attributes) {
+        const newNodeData = newNode.data as THtmlNodeData
+        let temp = ""
+        Attributes.split(' ').map(attr => {
+          temp = temp + ' ' + attr
+          if (attr === 'controls') {
+            newNodeData.attribs['controls'] = ''
+          }
+          if ((temp.match(/”/g) || [])?.length > 1 || (temp.match(/"/g) || [])?.length > 1) {
+            const parseAttr = temp.split('=')
+            newNodeData.attribs[parseAttr[0].trim()] = parseAttr[1].replace('”', '').replace('”', '').replace('"', '').replace('"', '')
+            temp = ""
+          }
+        })
+      }
+      if (Content) {
+        newNodeFlag = true
+        let parserRes = parseHtmlCodePart(Content, htmlReferenceData, osType, String(nodeMaxUid) as TNodeUid)
+        const { formattedContent, tree, nodeMaxUid: newNodeMaxUid } = parserRes
+        tmpMaxUid = newNodeMaxUid
+        _tree = tree
+        newNode.isEntity = false
+        newNode.children = [String(nodeMaxUid + 2) as TNodeUid]
+        contentNode = {
+          uid: String(nodeMaxUid + 2) as TNodeUid,
+          parentUid: String(nodeMaxUid + 1) as TNodeUid,
+          name: 'text',
+          isEntity: true,
+          children: [],
+          data: {
+            valid: false,
+            isFormatText: false,
+
+            type: 'text',
+            name: 'text',
+            data: Content,
+            attribs: { [NodeInAppAttribName]: tmpMaxUid as TNodeUid },
+
+            html: '',
+            htmlInApp: '',
+
+            startLineNumber: 0,
+            startColumn: 0,
+            endLineNumber: 0,
+            endColumn: 0,
+          } as THtmlNodeData
+        } as TNode
+      }
+    }
+
+    // call api
+    const tree = JSON.parse(JSON.stringify(nodeTree))
+    if (_tree) {
+      let _parent = tree[nodeTree[targetUid].parentUid as TNodeUid]
+      for (let x in _tree) {
+        if (x === 'text') continue
+        if (x === 'ROOT') {
+          _tree[x].uid = String(Number(tmpMaxUid) + 1)
+          _tree[x].parentUid = targetUid !== 'ROOT' && _parent !== undefined ? nodeTree[targetUid].parentUid : 'ROOT'
+          _tree[x].name = newNode.name
+          _tree[x].data.type = 'tag'
+          _tree[x].data.name = newNode.name
+          _tree[x].data.valid = true;
+          (_tree[x].data as THtmlNodeData).attribs = { [NodeInAppAttribName]: String(Number(tmpMaxUid) + 1) as TNodeUid }
+          newNode.uid = String(Number(tmpMaxUid) + 1)
+          tree[String(Number(tmpMaxUid) + 1)] = _tree[x]
+          if (targetUid !== 'ROOT' && _parent !== undefined) {
+            _parent.children.push(String(Number(tmpMaxUid) + 1))
+          }
+          else{
+            tree['ROOT'].children.push(String(Number(tmpMaxUid) + 1))
+          }
+        }
+        else{
+          if (_tree[x].parentUid === 'ROOT') {
+            _tree[x].parentUid = String(Number(tmpMaxUid) + 1)
+          }
+          tree[x] = _tree[x]
+        }
+      }
+      // const res = addNode(tree, focusedItem, newNode, contentNode, 'html', String(contentNode ? nodeMaxUid + 2 : nodeMaxUid + 1) as TNodeUid, osType, tabSize)
+    }
+    // remove org elements in nodeTree
+    const res = removeNode(tree, uids, 'html')
+    // processor
+    addRunningActions(['processor-updateOpt'])
+    setUpdateOpt({ parse: false, from: 'node' })
+    setNodeTree(tree)
+
+    // view state
+    addRunningActions(['stageView-viewState'])
+    setUpdateOpt({ parse: true, from: 'code' })
+
+    // side effect
+    setNodeMaxUid(Number(tmpMaxUid) + 1)
+    setEvent({ type: 'group-node', param: [nodeTree[targetUid].parentUid, newNodeFlag ? tree[Number(tmpMaxUid) + 1] : newNode, tree[newNode.uid], uids] })
+
+    removeRunningActions(['nodeTreeView-group'])
+    console.log('hms added')
+    dispatch(increaseActionGroupIndex())
+  }, [addRunningActions, removeRunningActions, nodeTree, htmlReferenceData, nodeMaxUid, osType, tabSize])
+  const cb_unGroupNode = useCallback((_uids: TNodeUid[], targetUid: TNodeUid) => {
+    let uids: TNodeUid[] = []
+    for (let x in _uids) {
+      if(!(nodeTree[_uids[x]].parentUid === RootNodeUid) && (nodeTree[_uids[x]].name !== 'br') && (nodeTree[_uids[x]].name !== 'script') && (nodeTree[_uids[x]].name !== 'style')) {
+        uids.push(_uids[x])
+      }
+    }
+    if (uids.length === 0) return
+
+    // addRunningActions(['nodeTreeView-group'])
+    // let deletedUids = []
+    // let contentNode: TNode | null = null
+    // let _tree: TNodeTreeData | null = null
+    // let tmpMaxUid: TNodeUid = String(nodeMaxUid)
+    // let newNodeFlag = false
+    // let codeChanges: TCodeChange[] = []
+    // uids.map((uid: string) => {
+    //   const node = nodeTree[uid] as TNode
+    //   const _parent = nodeTree[nodeTree[uid].parentUid as TNodeUid]
+    //   const nodeData = nodeTree[uid].data as THtmlNodeData
+    //   if (!node || !_parent || _parent.uid === 'ROOT' || node.children.length === 0) return
+    //   // remove org elements
+    //   deletedUids.push(uid)
+    //   const childIndex = getNodeChildIndex(_parent, node)
+    //   let content: string = (_parent.data as THtmlNodeData).html
+    //   // content.replace
+    //   codeChanges.push({ uid , content })
+    // })
+    
+    // // view state
+    // addRunningActions(['stageView-viewState'])
+    // setCodeChanges(codeChanges)
+    // addRunningActions(['processor-updateOpt'])
+    // setUpdateOpt({ parse: true, from: 'code' })
+
+    // // side effect
+    // setNodeMaxUid(Number(tmpMaxUid) + 1)
+    // // setEvent({ type: 'group-node', param: [nodeTree[targetUid].parentUid, newNodeFlag ? tree[Number(tmpMaxUid) + 1] : newNode, tree[newNode.uid], uids] })
+    
+    // removeRunningActions(['nodeTreeView-ungroup'])
+    // console.log('hms added')
+    // dispatch(increaseActionGroupIndex())
   }, [addRunningActions, removeRunningActions, nodeTree, htmlReferenceData, nodeMaxUid, osType, tabSize])
   // -------------------------------------------------------------- node view state handlers --------------------------------------------------------------
   const cb_focusNode = useCallback((uid: TNodeUid) => {
@@ -641,8 +827,71 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   }, [cb_duplicateNode, selectedItems])
 
   const onTurnInto = useCallback(() => { }, [])
-  const onGroup = useCallback(() => { }, [])
-  const onUngroup = useCallback(() => { }, [])
+  const onGroup = useCallback(() => { 
+    if (selectedItems.length === 0) return
+    let bodyUid: TNodeUid = '0'
+    for (let x in validNodeTree) {
+      const nodeData = validNodeTree[x].data as THtmlNodeData
+      if (nodeData && nodeData.type === 'tag' && nodeData.name === 'body') {
+        let _parent = validNodeTree[validNodeTree[x].parentUid as TNodeUid]
+        while(_parent.parentUid !== 'ROOT') {
+          if ((_parent.data as THtmlNodeData).type === 'tag' && ((_parent.data as THtmlNodeData).name === 'pre' || (_parent.data as THtmlNodeData).name === 'code')) {
+            break
+          }
+          _parent = validNodeTree[validNodeTree[x].parentUid as TNodeUid]
+        }
+        bodyUid = validNodeTree[x].uid
+      }
+    }
+    let _focusedItem: TNodeUid = '0'
+    for (let x in selectedItems) {
+      let _parent = validNodeTree[selectedItems[x]]
+      while (_parent.parentUid !== 'ROOT') {
+        if (_parent.parentUid === bodyUid){
+          _focusedItem = selectedItems[x]
+          break
+        }
+        _parent = validNodeTree[_parent.parentUid as TNodeUid]
+      }
+    }
+    if (_focusedItem === '0') return
+    console.log('Group', selectedItems, _focusedItem)
+
+    const childIndex = getNodeChildIndex(validNodeTree[validNodeTree[_focusedItem].parentUid as TNodeUid], validNodeTree[_focusedItem])
+
+    cb_groupNode(selectedItems, _focusedItem, childIndex + 1)
+  }, [cb_groupNode, selectedItems, validNodeTree])
+  const onUngroup = useCallback(() => {
+    let bodyUid: TNodeUid = '0'
+    for (let x in validNodeTree) {
+      const nodeData = validNodeTree[x].data as THtmlNodeData
+      if (nodeData && nodeData.type === 'tag' && nodeData.name === 'body') {
+        let _parent = validNodeTree[validNodeTree[x].parentUid as TNodeUid]
+        while(_parent.parentUid !== 'ROOT') {
+          if ((_parent.data as THtmlNodeData).type === 'tag' && ((_parent.data as THtmlNodeData).name === 'pre' || (_parent.data as THtmlNodeData).name === 'code')) {
+            break
+          }
+          _parent = validNodeTree[validNodeTree[x].parentUid as TNodeUid]
+        }
+        bodyUid = validNodeTree[x].uid
+      }
+    }
+    let _focusedItem: TNodeUid = '0'
+    for (let x in selectedItems) {
+      let _parent = validNodeTree[selectedItems[x]]
+      while (_parent.parentUid !== 'ROOT') {
+        if (_parent.parentUid === bodyUid){
+          _focusedItem = selectedItems[x]
+          break
+        }
+        _parent = validNodeTree[_parent.parentUid as TNodeUid]
+      }
+    }
+    if (_focusedItem === '0') return
+    console.log('Ungroup', selectedItems, _focusedItem)
+
+    cb_unGroupNode(selectedItems, _focusedItem)
+   }, [cb_unGroupNode, selectedItems, validNodeTree])
 
   const isAddNodeAction = (actionName: string): boolean => {
     return actionName.startsWith(AddNodeActionPrefix) ? true : false
