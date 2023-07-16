@@ -42,6 +42,7 @@ import {
   TNode,
   TNodeTreeData,
   TNodeUid,
+  TNormalNodeData,
 } from '@_node/types';
 import {
   collapseFNNode,
@@ -259,7 +260,9 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     if (_tree) {
       let _parent = tree[nodeTree[focusedItem].parentUid as TNodeUid]
       for (let x in _tree) {
-        if (x === 'text') continue
+        if (x === 'text') {
+          continue
+        }
         if (x === 'ROOT') {
           _tree[x].uid = String(Number(tmpMaxUid) + 1)
           _tree[x].parentUid = focusedItem !== 'ROOT' && _parent !== undefined ? nodeTree[focusedItem].parentUid : 'ROOT'
@@ -302,6 +305,9 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
         else{
           if (_tree[x].parentUid === 'ROOT') {
             _tree[x].parentUid = String(Number(tmpMaxUid) + 1)
+          }
+          if (_tree[x].name === 'text'){
+            (_tree[x].data as TNormalNodeData).isFormatText = false
           }
           tree[x] = _tree[x]
         }
@@ -461,7 +467,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     // view state
     addRunningActions(['stageView-viewState'])
-    setUpdateOpt({ parse: true, from: 'code' })
     // side effect
     setNodeMaxUid(Number(res.nodeMaxUid))
     setEvent({ type: 'move-node', param: [uids, targetUid, isBetween, res.position] })
@@ -514,6 +519,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     let _tree: TNodeTreeData | null = null
     let tmpMaxUid: TNodeUid = String(nodeMaxUid)
     let newNodeFlag = false
+    let uidOffset = 0
     const refData = htmlReferenceData.elements['div']
     if (refData) {
       const { Attributes } = refData
@@ -627,6 +633,39 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     }
     if (uids.length === 0) return
 
+    // addRunningActions(['nodeTreeView-group'])
+    // let deletedUids = []
+    // let contentNode: TNode | null = null
+    // let _tree: TNodeTreeData | null = null
+    // let tmpMaxUid: TNodeUid = String(nodeMaxUid)
+    // let newNodeFlag = false
+    // let codeChanges: TCodeChange[] = []
+    // uids.map((uid: string) => {
+    //   const node = nodeTree[uid] as TNode
+    //   const _parent = nodeTree[nodeTree[uid].parentUid as TNodeUid]
+    //   const nodeData = nodeTree[uid].data as THtmlNodeData
+    //   if (!node || !_parent || _parent.uid === 'ROOT' || node.children.length === 0) return
+    //   // remove org elements
+    //   deletedUids.push(uid)
+    //   const childIndex = getNodeChildIndex(_parent, node)
+    //   let content: string = (_parent.data as THtmlNodeData).html
+    //   // content.replace
+    //   codeChanges.push({ uid , content })
+    // })
+    
+    // // view state
+    // addRunningActions(['stageView-viewState'])
+    // setCodeChanges(codeChanges)
+    // addRunningActions(['processor-updateOpt'])
+    // setUpdateOpt({ parse: true, from: 'code' })
+
+    // // side effect
+    // setNodeMaxUid(Number(tmpMaxUid) + 1)
+    // // setEvent({ type: 'group-node', param: [nodeTree[targetUid].parentUid, newNodeFlag ? tree[Number(tmpMaxUid) + 1] : newNode, tree[newNode.uid], uids] })
+    
+    // removeRunningActions(['nodeTreeView-ungroup'])
+    // console.log('hms added')
+    // dispatch(increaseActionGroupIndex())
   }, [addRunningActions, removeRunningActions, nodeTree, htmlReferenceData, nodeMaxUid, osType, tabSize])
   // -------------------------------------------------------------- node view state handlers --------------------------------------------------------------
   const cb_focusNode = useCallback((uid: TNodeUid) => {
