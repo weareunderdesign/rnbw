@@ -806,6 +806,23 @@ export default function MainPage(props: MainPageProps) {
   }, [onImportProject, ffTree])
   // new
   const onNew = useCallback(async () => {
+    if (ffTree) {
+      // confirm if ffTree is changed
+      let hasChangedFile = false
+      for (let x in ffTree) {
+        const _file = ffTree[x]
+        const _fileData = _file.data as TFileNodeData
+        if (_file && _fileData.changed) {
+          hasChangedFile = true
+        }
+      }
+      if (hasChangedFile) {
+        const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`
+        if (!window.confirm(message)) {
+          return
+        }
+      }
+    }
     setFSPending(true)
 
     // init/open Untitled project
@@ -817,7 +834,7 @@ export default function MainPage(props: MainPageProps) {
     }
 
     setFSPending(false)
-  }, [onImportProject])
+  }, [onImportProject, ffTree])
   // actions
   const onActions = useCallback(() => {
     if (cmdkOpen) return
