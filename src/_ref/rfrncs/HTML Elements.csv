@@ -72,7 +72,7 @@
 <data>,All,Content with Machine-Readable Translation,Data,"<p>The price is <data value=""10.00"">$10.00</data>.</p>",,div,Styles and Semantics,No,
 <!DOCTYPE>,None,Document Type Declaration,Document Type,,,code-html,Basic HTML,No,
 <!--...-->,All,Comment,Comment,<!-- This is a comment -->,,bubble,Basic HTML,No,
-<html>,"<head>, <body>",HTML Document Container,HTML,<head><title>Page Title</title></head><body><h1>Page Heading</h1><p>Page content goes here.</p></body>,,code-html,Basic HTML,No,
+<html>,"<head>, <body>",HTML Document Container,HTML,<head><title>Page Title</title></head><body></body>,,code-html,Basic HTML,No,
 <title>,None,Document Title,Title,Page Title,,text,Basic HTML,No,
 <body>,All,Document Body,Body,<h1>Page Heading</h1><p>Page content goes here.</p>,,div,Basic HTML,No,
 <br>,None,Single Line Break,Line Break,,,div,Basic HTML,No,
