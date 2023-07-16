@@ -2096,7 +2096,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                   }}>
                   {props.title + props.item?.data?.data?.ext}
                   {ffTree[props.item.data.uid] && (ffTree[props.item.data.uid].data as TFileNodeData).changed &&
-                    <div className="radius-s foreground-primary" style={{ width: "6px", height: "6px" }}></div>}
+                    <div className="radius-s foreground-primary" title='unsaved file' style={{ width: "6px", height: "6px" }}></div>}
                 </span>
               </>
             },
