@@ -575,6 +575,14 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     // call api
     const tree = JSON.parse(JSON.stringify(nodeTree))
+    
+    const _parent = nodeTree[nodeTree[targetUid].parentUid as TNodeUid]
+    let validChildIndex = 0
+    for (const childUid of _parent.children) {
+      tree[childUid].data.valid && ++validChildIndex
+    }
+    validChildIndex < position && ++uidOffset
+    const _position = position - uidOffset
     if (_tree) {
       let _parent = tree[nodeTree[targetUid].parentUid as TNodeUid]
       for (let x in _tree) {
@@ -590,7 +598,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
           newNode.uid = String(Number(tmpMaxUid) + 1)
           tree[String(Number(tmpMaxUid) + 1)] = _tree[x]
           if (targetUid !== 'ROOT' && _parent !== undefined) {
-            _parent.children.push(String(Number(tmpMaxUid) + 1))
+            let newUid = String(Number(tmpMaxUid) + 1)
+            _parent.children.splice(_position, 0, newUid)
           }
           else{
             tree['ROOT'].children.push(String(Number(tmpMaxUid) + 1))
