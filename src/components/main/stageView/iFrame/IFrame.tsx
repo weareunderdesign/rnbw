@@ -567,15 +567,35 @@ export const IFrame = (props: IFrameProps) => {
   const externalDblclick = useRef<boolean>(false)
   const onClick = useCallback((e: MouseEvent) => {
     if (!parseFileFlag) {
-      const node = ffTree[prevFileUid]
+      const ele = e.target as HTMLElement
+      const file = ffTree[prevFileUid]
       const uid = prevFileUid
-      const nodeData = node.data as TFileNodeData
+      const fileData = file.data as TFileNodeData
       setNavigatorDropDownType('project')
       setParseFile(true)
       dispatch({ type: HmsClearActionType })
-      dispatch(setCurrentFile({ uid, parentUid: node.parentUid as TNodeUid, name: nodeData.name, content: nodeData.contentInApp ? nodeData.contentInApp : '' }))
+      dispatch(setCurrentFile({ uid, parentUid: file.parentUid as TNodeUid, name: fileData.name, content: fileData.contentInApp ? fileData.contentInApp : '' }))
       setCurrentFileUid(uid)
       dispatch(selectFFNode([prevFileUid]))
+
+      // select clicked item
+      let _uid: TNodeUid | null = ele.getAttribute(NodeInAppAttribName)
+      // for the elements which are created by js. (ex: Web Component)
+      let newFocusedElement: HTMLElement = ele
+      while (!_uid) {
+        const parentEle = newFocusedElement.parentElement
+        if (!parentEle) break
+  
+        _uid = parentEle.getAttribute(NodeInAppAttribName)
+        !_uid ? newFocusedElement = parentEle : null
+      }
+      setTimeout(() => {
+        if (_uid) {
+          dispatch(focusFNNode(_uid))
+          dispatch(selectFNNode([_uid]))
+          dispatch(expandFNNode([_uid]))
+        }
+      }, 100)
     }
     else {
       const ele = e.target as HTMLElement
@@ -611,8 +631,10 @@ export const IFrame = (props: IFrameProps) => {
       let _uid: TNodeUid | null = ele.getAttribute(NodeInAppAttribName)
       // for the elements which are created by js. (ex: Web Component)
       let newFocusedElement: HTMLElement = ele
+      let isWC = false
       while (!_uid) {
         const parentEle = newFocusedElement.parentElement
+        isWC = true
         if (!parentEle) break
   
         _uid = parentEle.getAttribute(NodeInAppAttribName)
@@ -638,9 +660,10 @@ export const IFrame = (props: IFrameProps) => {
         }
       }
       // allow to edit content by one clicking for the text element
-      if (firstClickEditableTags.filter(_ele => _ele === ele.tagName.toLowerCase()).length > 0 && !multiple && _uid === focusedItem){
+      if (firstClickEditableTags.filter(_ele => _ele === ele.tagName.toLowerCase()).length > 0 && !multiple && _uid === focusedItem && !isWC){
           if (contentEditableUidRef.current !== _uid) {
             isEditing.current = true
+            console.log('dblclick')
             onDblClick(e)
             // ele.focus()
           }
