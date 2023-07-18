@@ -528,19 +528,19 @@ export const checkValidHtml = (content: string): boolean => {
   while (match) {
     let tag = match[0];
     if (tag.startsWith('</')) {
-      let _tag = tag.slice(2, -1).split(' ')[0]
+      let _tag = tag.slice(2, -1).split(' ')[0].replace('\n', '')
       if (noNeedClosingTag.find(_item => _tag === _item) === undefined) {
         closingTags.push(_tag);
       }
     } else {
-      let _tag = tag.slice(1, -1).split(' ')[0]
+      let _tag = tag.slice(1, -1).split(' ')[0].replace('\n', '')
       if (noNeedClosingTag.find(_item => _tag === _item) === undefined) {
         openingTags.push(_tag);
       }
     }
     match = regex.exec(tmpString);
   }
-
+  console.log(openingTags, closingTags)
   if (openingTags.length !== closingTags.length) {
     hasMismatchedTags = true; // Different number of opening and closing tags
   }
