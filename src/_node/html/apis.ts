@@ -540,7 +540,6 @@ export const checkValidHtml = (content: string): boolean => {
     }
     match = regex.exec(tmpString);
   }
-  console.log(openingTags, closingTags)
   if (openingTags.length !== closingTags.length) {
     hasMismatchedTags = true; // Different number of opening and closing tags
   }
