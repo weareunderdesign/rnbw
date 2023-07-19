@@ -927,14 +927,14 @@ export default function MainPage(props: MainPageProps) {
     window.open('https://guide.rnbw.dev', '_blank', 'noreferrer');
   }, [currentCommand])
   // -------------------------------------------------------------- pos/size for panels --------------------------------------------------------------
-  const [actionsPanelOffsetTop, setActionsPanelOffsetTop] = useState(10)
-  const [actionsPanelOffsetLeft, setActionsPanelOffsetLeft] = useState(10)
+  const [actionsPanelOffsetTop, setActionsPanelOffsetTop] = useState(12)
+  const [actionsPanelOffsetLeft, setActionsPanelOffsetLeft] = useState(12)
   const [actionsPanelWidth, setActionsPanelWidth] = useState(240)
 
-  const [codeViewOffsetBottom, setCodeViewOffsetBottom] = useState('10')
-  const [codeViewOffsetTop, setCodeViewOffsetTop] = useState('calc(66.66vh - 12px)')
-  const [codeViewOffsetLeft, setCodeViewOffsetLeft] = useState(10)
-  const [codeViewHeight, setCodeViewHeight] = useState("33.33")
+  const [codeViewOffsetBottom, setCodeViewOffsetBottom] = useState('12')
+  const [codeViewOffsetTop, setCodeViewOffsetTop] = useState('calc(60vh - 12px)')
+  const [codeViewOffsetLeft, setCodeViewOffsetLeft] = useState(12)
+  const [codeViewHeight, setCodeViewHeight] = useState("40")
   const [codeViewDragging, setCodeViewDragging] = useState(false)
   // -------------------------------------------------------------- other --------------------------------------------------------------
   // detect OS & fetch reference - html. Jumpstart.csv, Actions.csv - restore recent project session - open Untitled project and jumpstart menu ons tartup
