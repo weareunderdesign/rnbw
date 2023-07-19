@@ -273,7 +273,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
                   <SVGIconI {...{ "class": "icon-xs" }}>folder</SVGIconI>
                   {/* <img className='icon-s' onError={handleImageError} style={{'width': '18px', 'height' : '18px'}} src={project.context === 'idb' ? 'https://rnbw.company/images/favicon.png' : favicon}></img> */}
                 {/* } */}
-              <span className="text-s">{project.name}</span>
+              <span className="text-s" style={{'maxWidth': '60px', 'textOverflow': 'ellipsis', 'whiteSpace': 'nowrap', 'overflow': 'hidden'}}>{project.name}</span>
             </div>
           </>
           <span className="text-s opacity-m">/</span>
@@ -288,9 +288,9 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
           {ffTree[file.uid] && <>
             <div className="gap-s align-center" onClick={onFileClick}>
               <SVGIconI {...{ "class": "icon-xs" }}>{ffTree[file.uid].data.type == 'html' && ffTree[file.uid].data.name == 'index' && ffTree[file.uid].parentUid === 'ROOT' ? 'home' : filesReferenceData[(ffTree[file.uid].data as TFileNodeData).ext.substring(1, (ffTree[file.uid].data as TFileNodeData).ext.length)] && (ffTree[file.uid].data as TFileNodeData).ext.substring(1, (ffTree[file.uid].data as TFileNodeData).ext.length) !== 'md' ? filesReferenceData[(ffTree[file.uid].data as TFileNodeData).ext.substring(1, (ffTree[file.uid].data as TFileNodeData).ext.length)].Icon : 'page'}</SVGIconI>
-              <span className="text-s">{file.uid.split('/')[file.uid.split('/').length - 1]}</span>
+              <span className="text-s" style={{'width': (file.parentUid !== 'ROOT' ? '60px' : '90px'), 'textOverflow': 'ellipsis', 'whiteSpace': 'nowrap', 'overflow': 'hidden'}}>{file.uid.split('/')[file.uid.split('/').length - 1]}</span>
               {ffTree[file.uid] && (ffTree[file.uid].data as TFileNodeData).changed &&
-                    <div className="radius-s foreground-primary" style={{ width: "6px", height: "6px" }}></div>}
+                    <div className="radius-s foreground-primary" title='unsaved file' style={{ width: "6px", height: "6px" }}></div>}
             </div>
           </>}
         </> :
