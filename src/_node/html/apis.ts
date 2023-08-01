@@ -349,7 +349,16 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
         nodeHtmlInApp = `<${tagName}${attribsHtmlInApp}>`
       } else {
         nodeHtml = `<${tagName}${attribsHtml}>${childrenHtml}</${tagName}>`
-        nodeHtmlInApp = `<${tagName}${attribsHtmlInApp}>${childrenHtmlInApp}</${tagName}>`
+        //issue : #238
+        if (tagName === "a") {
+          //console event on click
+          attribsHtmlInApp = attribsHtmlInApp.replace("href", "onclick");
+          nodeHtmlInApp = `<${tagName}${attribsHtmlInApp}
+          >
+          ${childrenHtmlInApp}</${tagName}>`;
+        } else {
+          nodeHtmlInApp = `<${tagName}${attribsHtmlInApp}>${childrenHtmlInApp}</${tagName}>`;
+        }
       }
     } else {
       nodeHtml = childrenHtml

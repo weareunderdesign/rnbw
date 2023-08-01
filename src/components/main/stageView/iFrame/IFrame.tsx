@@ -805,7 +805,7 @@ export const IFrame = (props: IFrameProps) => {
       }
     }
     if (_ele.tagName === 'A' && (_ele as HTMLAnchorElement).href) {
-      window.open((_ele as HTMLAnchorElement).href, '_blank', 'noreferrer');
+      // window.open((_ele as HTMLAnchorElement).href, '_blank', 'noreferrer'); //issue:238
     }
     let uid: TNodeUid | null = ele.getAttribute(NodeInAppAttribName)
     if (uid) {
