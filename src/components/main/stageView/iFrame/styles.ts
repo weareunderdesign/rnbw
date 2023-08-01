@@ -20,13 +20,18 @@ html {
   min-width: 80px;
   min-height: 80px;
 }
+
 body, body:first-child {
   min-width: 80px;
   min-height: 80px;
 }
+body:not(:has([data-rnbwdev-rnbw-node])) {
+  min-height: 100vh;
+}
+
 body > * {
   -webkit-user-select: none; /* Safari */
   -ms-user-select: none; /* IE 10 and IE 11 */
   user-select: none; /* Standard syntax */
 }
-`
+`;
