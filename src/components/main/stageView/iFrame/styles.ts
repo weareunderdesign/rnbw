@@ -21,12 +21,9 @@ html {
   min-height: 80px;
 }
 
-body, body:first-child {
-  min-width: 80px;
-  min-height: 80px;
-}
-body:not(:has([data-rnbwdev-rnbw-node])) {
+body {
   min-height: 100vh;
+  margin:0px;
 }
 
 body > * {
