@@ -233,6 +233,7 @@ export const IFrame = (props: IFrameProps) => {
     // expand path to the uid
     const _expandedItems: TNodeUid[] = []
     let node = nodeTree[uid]
+    if(!node) return
     while (node.uid !== RootNodeUid) {
       _expandedItems.push(node.uid)
       node = nodeTree[node.parentUid as TNodeUid]
@@ -753,6 +754,14 @@ export const IFrame = (props: IFrameProps) => {
     }
     
     if (e.key === 'Escape') {
+      //https://github.com/rnbwdev/rnbw/issues/240
+      if (contentEditableUidRef.current !== '') {
+        const ele = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${contentEditableUidRef.current}"]`)
+        ele?.removeAttribute('contenteditable')
+        contentEditableUidRef.current = ''
+        return
+      }
+      //
       closeAllPanel()
       return
     }
@@ -945,7 +954,30 @@ export const IFrame = (props: IFrameProps) => {
   }, [validNodeTree, ffTree, expandedItemsObj, contentRef])
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
   const onKeyDown = useCallback((e: KeyboardEvent) => {
-    if (contentEditableUidRef.current !== '') return
+    //We are trying to fina a way to get node id with this event
+    if (contentEditableUidRef.current !== '') {
+      let isSaving = e.key === 's' && (e.ctrlKey || e.metaKey)
+      if (!isSaving) {
+        return
+      }
+      type TTarget = HTMLElement & {
+        dataset: {
+          rnbwdevRnbwNode: string
+        }
+      }
+      const target:TTarget|null = e.target as TTarget
+      if (target && 'dataset' in target) {
+        const uid = target.dataset.rnbwdevRnbwNode      
+        // if (uid) {
+        //   setFocusedSelectedItems(uid)
+
+        // }
+
+        //TODO: IN_PROGRESS
+
+      }
+    }
+    
 
     // cmdk obj for the current command
     const cmdk: TCmdkKeyMap = {
@@ -979,7 +1011,7 @@ export const IFrame = (props: IFrameProps) => {
     }
 
     setCurrentCommand({ action })
-  }, [cmdkReferenceData])
+  }, [cmdkReferenceData,nodeTree])
   // -------------------------------------------------------------- own --------------------------------------------------------------
   const linkTagUid = useRef<TNodeUid>('')
 
