@@ -868,18 +868,22 @@ export const IFrame = (props: IFrameProps) => {
 
       contentEditableUidRef.current = uid
       
-      // set focus where you clicked
-      const range = contentRef?.contentWindow?.document.createRange();
+      ele.focus()
+      //select all text
       
+
+      contentEditableUidRef.current = uid
+      
+      // select all text
+      const range = contentRef?.contentWindow?.document.createRange();
+
       if (range) {
-        // const selection = contentRef?.contentWindow?.getSelection();
-        // const clickPosition = selection?.getRangeAt(0).startOffset;
-        // console.log(clickPosition)
-        // clickPosition && range.setStart(ele.childNodes[0], 5);
-        // range.collapse(true);
-        // selection?.removeAllRanges();
-        // selection?.addRange(range);
-        // ele.focus();
+        range.selectNodeContents(ele);
+        const selection = contentRef?.contentWindow?.getSelection();
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+
+
       }
     }
     else {
