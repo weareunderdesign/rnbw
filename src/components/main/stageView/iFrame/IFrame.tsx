@@ -113,6 +113,7 @@ export const IFrame = (props: IFrameProps) => {
   const isEditing = useRef<boolean>(false)
   // mark hovered item
   const fnHoveredItemRef = useRef<TNodeUid>(fnHoveredItem)
+  const mostRecentSelectedNode = useRef<TNode>()
   useEffect(() => {
     if (fnHoveredItemRef.current === fnHoveredItem) return
 
@@ -234,6 +235,7 @@ export const IFrame = (props: IFrameProps) => {
     const _expandedItems: TNodeUid[] = []
     let node = nodeTree[uid]
     if(!node) return
+    mostRecentSelectedNode.current = node
     while (node.uid !== RootNodeUid) {
       _expandedItems.push(node.uid)
       node = nodeTree[node.parentUid as TNodeUid]
@@ -680,34 +682,11 @@ export const IFrame = (props: IFrameProps) => {
   const contentEditableUidRef = useRef('')
   const [contentEditableAttr, setContentEditableAttr] = useState<string | null>(null)
   const [outerHtml, setOuterHtml] = useState('')
+
   useEffect(() => {
-    let node = validNodeTree[contentEditableUidRef.current]
-    if (!node) return
-    let ele = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${contentEditableUidRef.current}"]`)
-    // check if editing tags are <code> or <pre>
-    let _parent = node.uid as TNodeUid
-    let notParsingFlag = validNodeTree[node.uid].name === 'code' || validNodeTree[node.uid].name === 'pre' ? true : false
-    while(_parent !== undefined && _parent !== null && _parent !== 'ROOT') {
-      if (validNodeTree[_parent].name === 'code' || validNodeTree[_parent].name === 'pre') {
-        notParsingFlag = true
-        break;
-      }
-      _parent = validNodeTree[_parent].parentUid as TNodeUid
-    }
-    if (notParsingFlag) {
-      ele = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${_parent}"]`)
-      node = validNodeTree[_parent]
-    }
-    if (!node) return
-
-    if (!ele) return
-    contentEditableUidRef.current = ''
-    isEditing.current = false
-
-    contentEditableAttr ? ele.setAttribute('contenteditable', contentEditableAttr) : ele.removeAttribute('contenteditable')
-    const cleanedUpCode = ele.outerHTML.replace(/rnbwdev-rnbw-element-hover=""|rnbwdev-rnbw-element-select=""|contenteditable="true"|contenteditable="false"/g, '')
-    onTextEdit(node, cleanedUpCode)
+  beforeTextEdit()
   }, [focusedItem])
+
   const onTextEdit = useCallback((node: TNode, _outerHtml: string) => {
     // replace enter to br
     while(true){
@@ -743,6 +722,35 @@ export const IFrame = (props: IFrameProps) => {
     }, 10);
     // node.uid ? dispatch(selectFNNode([node.uid])) : dispatch(selectFNNode([node.uid]))
   }, [outerHtml])
+    const beforeTextEdit = useCallback(() => {
+    
+    let node = validNodeTree[contentEditableUidRef.current]
+    if (!node) return
+    let ele = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${contentEditableUidRef.current}"]`)
+    // check if editing tags are <code> or <pre>
+    let _parent = node.uid as TNodeUid
+    let notParsingFlag = validNodeTree[node.uid].name === 'code' || validNodeTree[node.uid].name === 'pre' ? true : false
+    while(_parent !== undefined && _parent !== null && _parent !== 'ROOT') {
+      if (validNodeTree[_parent].name === 'code' || validNodeTree[_parent].name === 'pre') {
+        notParsingFlag = true
+        break;
+      }
+      _parent = validNodeTree[_parent].parentUid as TNodeUid
+    }
+    if (notParsingFlag) {
+      ele = contentRef?.contentWindow?.document?.querySelector(`[${NodeInAppAttribName}="${_parent}"]`)
+      node = validNodeTree[_parent]
+    }
+    if (!node) return
+
+    if (!ele) return
+    contentEditableUidRef.current = ''
+    isEditing.current = false
+
+    contentEditableAttr ? ele.setAttribute('contenteditable', contentEditableAttr) : ele.removeAttribute('contenteditable')
+    const cleanedUpCode = ele.outerHTML.replace(/rnbwdev-rnbw-element-hover=""|rnbwdev-rnbw-element-select=""|contenteditable="true"|contenteditable="false"/g, '')
+    onTextEdit(node, cleanedUpCode)
+  }, [focusedItem])
   const onCmdEnter = useCallback((e: KeyboardEvent) => {
     // cmdk obj for the current command
     const cmdk: TCmdkKeyMap = {
@@ -968,10 +976,10 @@ export const IFrame = (props: IFrameProps) => {
       const target:TTarget|null = e.target as TTarget
       if (target && 'dataset' in target) {
         const uid = target.dataset.rnbwdevRnbwNode      
-        // if (uid) {
-        //   setFocusedSelectedItems(uid)
-
-        // }
+        if (uid) {
+          let uid = mostRecentSelectedNode.current?.uid as TNodeUid
+          let parentUid = mostRecentSelectedNode.current?.parentUid as TNodeUid
+        }
 
         //TODO: IN_PROGRESS
 
@@ -1016,7 +1024,7 @@ export const IFrame = (props: IFrameProps) => {
   const linkTagUid = useRef<TNodeUid>('')
 
   // iframe event listeners
-  const [iframeEvent, setIframeEvent] = useState<MouseEvent>()
+  const [iframeEvent, setIframeEvent] = useState<MouseEvent | PointerEvent>()
 
   // iframe skeleton
   const Skeleton = () => {
@@ -1026,7 +1034,6 @@ export const IFrame = (props: IFrameProps) => {
     if (contentRef) {
       dblClickTimestamp.current = 0
       setIFrameLoading(true)
-
       contentRef.onload = () => {
         const _document = contentRef?.contentWindow?.document
         const htmlNode = _document?.documentElement
@@ -1061,10 +1068,21 @@ export const IFrame = (props: IFrameProps) => {
             e.preventDefault()
             setIframeEvent(e)
           })
-          htmlNode.addEventListener('dblclick', (e: MouseEvent) => {
-            externalDblclick.current = false
-            setIframeEvent(e)
-          })
+          // htmlNode.addEventListener('dblclick', (e: MouseEvent) => {
+          //   externalDblclick.current = false
+          //   setIframeEvent(e)
+          // })
+          let lastClickTime = 0;
+          htmlNode.addEventListener('pointerdown', (e: PointerEvent) => {
+            const currentTime = e.timeStamp;
+            const timeSinceLastClick = currentTime - lastClickTime;
+            if (timeSinceLastClick < 500) {
+              externalDblclick.current = false
+              setIframeEvent(e)
+            }
+            lastClickTime = currentTime;
+          });
+
           htmlNode.addEventListener('keydown', (e: KeyboardEvent) => {
             onCmdEnter(e)
           })
