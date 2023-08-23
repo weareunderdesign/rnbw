@@ -125,7 +125,6 @@ export default function MainPage(props: MainPageProps) {
 
   //fn is nodeTreeViewState
   const { focusedItem: fnFocusedItem, expandedItems: fnExpandedItems, selectedItems: fnSelectedItems, expandedItemsObj: fnExpandedItemsObj, selectedItemsObj: fnSelectedItemsObj } = useSelector(fnSelector)
-
   const { futureLength, pastLength } = useSelector(hmsInfoSelector)
   // -------------------------------------------------------------- main context --------------------------------------------------------------
   const [favicon, setFavicon] = useState<string>('')

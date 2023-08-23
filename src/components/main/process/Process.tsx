@@ -145,7 +145,6 @@ export default function Process(props: ProcessProps) {
   }, [file.uid, nodeTree, ffTree])
   // processor-updateOpt
   useEffect(() => {
-    debugger
     if (updateOpt.parse === true) {
       let onlyRenderViewState = false
 
@@ -155,7 +154,7 @@ export default function Process(props: ProcessProps) {
       let _fileInfo: TFileInfo
       let _needToReloadIFrame = false
       let _newFocusedNodeUid = ''
-      // let refuse = false
+      let refuse = false
       let tempFocusedItem = focusedItem
       // origin state
       if (!ffTree[file.uid]) {
