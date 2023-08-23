@@ -145,6 +145,7 @@ export default function Process(props: ProcessProps) {
   }, [file.uid, nodeTree, ffTree])
   // processor-updateOpt
   useEffect(() => {
+    debugger
     if (updateOpt.parse === true) {
       let onlyRenderViewState = false
 
@@ -154,7 +155,7 @@ export default function Process(props: ProcessProps) {
       let _fileInfo: TFileInfo
       let _needToReloadIFrame = false
       let _newFocusedNodeUid = ''
-      let refuse = false
+      // let refuse = false
       let tempFocusedItem = focusedItem
       // origin state
       if (!ffTree[file.uid]) {
@@ -220,7 +221,7 @@ export default function Process(props: ProcessProps) {
               // ---------------------- node tree side effect ----------------------
               // parse code part
               // remove org nodes
-              const o_node = _nodeTree[codeChange.uid]
+              const o_node = _nodeTree[codeChange.uid] //original node (the node which was previously focused)
               let parserRes: THtmlParserResponse
               parserRes = parseHtmlCodePart(codeChange.content, htmlReferenceData, osType, String(_nodeMaxUid) as TNodeUid)
               const { formattedContent, tree, nodeMaxUid: newNodeMaxUid } = parserRes
@@ -576,7 +577,7 @@ export default function Process(props: ProcessProps) {
   // processor-validNodeTree
   useEffect(() => {
     if (updateOpt.parse === null && (updateOpt.from === 'file' || updateOpt.from === null)) {
-      dispatch(clearFNState())
+      // dispatch(clearFNState()) //Issue: #228
       const uids = Object.keys(validNodeTree)
       dispatch(expandFNNode(uids.slice(0, 50)))
       removeRunningActions(['processor-validNodeTree'], false)

@@ -119,13 +119,18 @@ export default function MainPage(props: MainPageProps) {
   const actionGroupIndex = useSelector(getActionGroupIndexSelector)
   const { file } = useSelector(navigatorSelector)
   const { fileAction } = useSelector(globalSelector)
+
+  //ff is fileTreeViewState
   const { focusedItem: ffFocusedItem, expandedItems: ffExpandedItems, selectedItems: ffSelectedItems, expandedItemsObj: ffExpandedItemsObj, selectedItemsObj: ffSelectedItemsObj } = useSelector(ffSelector)
+
+  //fn is nodeTreeViewState
   const { focusedItem: fnFocusedItem, expandedItems: fnExpandedItems, selectedItems: fnSelectedItems, expandedItemsObj: fnExpandedItemsObj, selectedItemsObj: fnSelectedItemsObj } = useSelector(fnSelector)
+
   const { futureLength, pastLength } = useSelector(hmsInfoSelector)
   // -------------------------------------------------------------- main context --------------------------------------------------------------
   const [favicon, setFavicon] = useState<string>('')
   // global action
-  const [pending, setPending] = useState<boolean>(false)
+  const [pending, setPending] = useState<boolean>(false) // tells if there are any pending running actions
   const runningActions = useRef<{ [actionName: string]: boolean }>({})
   const noRunningAction = useCallback(() => {
     return Object.keys(runningActions.current).length === 0 ? true : false
