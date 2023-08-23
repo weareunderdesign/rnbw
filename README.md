@@ -29,4 +29,4 @@ non-code contributions are more than welcome! How?
 Join [Rainbow's Discord](https://discord.com/invite/HycXz8TJkd) to chat with other community members, ask questions, voice ideas, and share your projects.
 
 ## License
-…
+[GNU General Public License, version 2](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
