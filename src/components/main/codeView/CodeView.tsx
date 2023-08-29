@@ -105,7 +105,7 @@ export default function CodeView(props: CodeViewProps) {
   // -------------------------------------------------------------- references --------------------------------------------------------------
   const isFirst = useRef<boolean>(true)
   const currentPosition = useRef<monaco.IPosition | null>(null)
-  const monacoRef = useRef<monaco.editor.IEditor | null>(null)
+  const monacoRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null)
   const editorWrapperRef = useRef<HTMLDivElement>(null)
   const codeContent = useRef<string>('')
   const previewDiv = useRef(null)
@@ -178,7 +178,22 @@ export default function CodeView(props: CodeViewProps) {
     if (codeEditing) return
 
     const node = validNodeTree[focusedItem]
-    const { startLineNumber, startColumn, endLineNumber, endColumn } = node.data as THtmlNodeData
+    const { 
+      // startLineNumber, startColumn, endLineNumber, endColumn,
+      startIndex,endIndex } = node.data as THtmlNodeData
+
+    // Convert the indices to positions
+   
+    const editor = monacoRef.current
+    if (!editor) return
+    const position = editor.getModel()?.getPositionAt(startIndex as number)
+    
+    const startLineNumber = position?.lineNumber as number
+    const startColumn = position?.column as number
+
+    const endPosition = editor.getModel()?.getPositionAt(endIndex as number)
+    const endLineNumber = endPosition?.lineNumber as number
+    const endColumn = endPosition?.column as number
 
     if (isFirst.current) {
       const firstTimer = setInterval(() => {

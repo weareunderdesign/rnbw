@@ -22,6 +22,8 @@ export type THtmlNodeData = {
   startColumn: number,
   endLineNumber: number,
   endColumn: number,
+  startIndex?: number,
+  endIndex?: number,
 }
 export type THtmlNodeAttributes = {
   [attrName: string]: any,

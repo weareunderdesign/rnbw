@@ -1,5 +1,6 @@
 import ReactHtmlParser from 'react-html-parser';
-
+import * as htmlparser2 from "htmlparser2_sep";
+import {Document  } from 'domhandler';
 import {
   NodeInAppAttribName,
   RootNodeUid,
@@ -8,6 +9,7 @@ import {
 import htmlAttrs from '@_ref/rfrncs/HTML Attributes.csv';
 import { getLineBreaker } from '@_services/global';
 import { TOsType } from '@_types/global';
+
 
 import {
   getNodeChildIndex,
@@ -155,20 +157,29 @@ export const indentNode = (tree: TNodeTreeData, node: TNode, indentSize: number,
     }
   })
 }
+let htmlContent = ''
+let htmlContentInApp = ''
 
 export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData, osType: TOsType, keepNodeUids: null | boolean = false, nodeMaxUid: TNodeUid = ''): THtmlParserResponse => {
   let _nodeMaxUid = keepNodeUids === false ? 0 : Number(nodeMaxUid)
-
   // parse the html content
+  let dom = htmlparser2.parseDocument(content, {
+    withEndIndices: true,
+    withStartIndices: true,
+  });
+
+  let uidRnbwNode = 0
+
+  
+  htmlContent = content;
+  // parse the html content
+  // const tmpTree: TNodeTreeData = {}
   const tmpTree: TNodeTreeData = {}
-  ReactHtmlParser(content, {
-    decodeEntities: true,
-    transform: (node, index, transform) => {
-      node.valid = true
-    },
-    preprocessNodes: (nodes: THtmlDomNodeData[]) => {
-      // build root node
-      tmpTree[RootNodeUid] = {
+
+  function preprocessNodes(dom:Document){
+    htmlContentInApp = ''
+       // build root node
+       tmpTree[RootNodeUid] = {
         uid: RootNodeUid,
         parentUid: null,
         name: RootNodeUid,
@@ -179,10 +190,25 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
 
       // build depth-1 seed nodes
       const seedNodes: TNode[] = []
-      nodes.map((node) => {
-        const uid = keepNodeUids ?
-          node.attribs ? node.attribs[NodeInAppAttribName] : String(++_nodeMaxUid) as TNodeUid
-          : String(++_nodeMaxUid) as TNodeUid
+      dom.children.forEach((node) => {
+
+            
+        if(node.type === "directive" || node.type === "comment" || node.type === "text"){
+          // generate html
+          htmlContentInApp += node.data;
+          return;
+        }
+        if(node.type === "tag"){
+           // generate html
+          htmlContentInApp += `<${node.name}${Object.keys(node.attribs).map((attr) => {
+            const attrContent = node.attribs[attr];
+            return attrContent === "" ? ` ${attr}` : ` ${attr}="${attrContent}"`;
+            }).join("")}>`;
+        }else{
+          debugger
+        }
+      
+        const uid =String(++_nodeMaxUid) as TNodeUid
 
         tmpTree[RootNodeUid].children.push(uid)
         tmpTree[uid] = {
@@ -191,9 +217,11 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
           name: '',
           isEntity: true,
           children: [],
-          data: node,
-        }
+          data: {...node,valid:node.type==="tag"},
+          }
         seedNodes.push(tmpTree[uid])
+        
+
       })
 
       // build the whole node tree from the seed nodes - BFS
@@ -204,9 +232,8 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
         if (!nodeData.children) continue
 
         nodeData.children.map((child: THtmlDomNodeData) => {
-          const uid = keepNodeUids ?
-            child.attribs ? child.attribs[NodeInAppAttribName] : String(++_nodeMaxUid) as TNodeUid
-            : String(++_nodeMaxUid) as TNodeUid
+  
+          const uid = String(++_nodeMaxUid) as TNodeUid
 
           node.children.push(uid)
           node.isEntity = false
@@ -217,16 +244,104 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
             name: '',
             isEntity: true,
             children: [],
-            data: child,
+            data: {...child,valid:child.type==="tag"},
           }
           seedNodes.push(tmpTree[uid])
+           // generate html
+           
+           if(child.type === "tag"){
+            // generate html
+            htmlContentInApp += `<${child.name}${Object.keys(child.attribs).map((attr) => {
+              const attrContent = child.attribs[attr];
+              return attrContent === "" ? ` ${attr}` : ` ${attr}="${attrContent}"`;
+            }).join("")}>`;
+          }else{
+            debugger
+            if(child.data === "\n" || " " || "\t"){
+              return;       
+            }
+            htmlContentInApp += child.data;
+          }
         })
-      }
 
-      return nodes
-    },
-  })
+        //close tag
+        if(nodeData.type === "tag"){
+          htmlContentInApp += `</${nodeData.name}>`;
+        }
+      }
+      
+  }
+  debugger
+  preprocessNodes(dom)
+  
+  // ReactHtmlParser(content, {
+  //   decodeEntities: true,
+  //   transform: (node, index, transform) => {
+  //     node.valid = true
+  //   },
+  //   preprocessNodes: (nodes: THtmlDomNodeData[]) => {
+  //     // build root node
+  //     tmpTree[RootNodeUid] = {
+  //       uid: RootNodeUid,
+  //       parentUid: null,
+  //       name: RootNodeUid,
+  //       isEntity: false,
+  //       children: [],
+  //       data: { valid: true },
+  //     }
+
+  //     // build depth-1 seed nodes
+  //     const seedNodes: TNode[] = []
+  //     nodes.map((node) => {
+  //       const uid = keepNodeUids ?
+  //         node.attribs ? node.attribs[NodeInAppAttribName] : String(++_nodeMaxUid) as TNodeUid
+  //         : String(++_nodeMaxUid) as TNodeUid
+
+  //       tmpTree[RootNodeUid].children.push(uid)
+  //       tmpTree[uid] = {
+  //         uid,
+  //         parentUid: RootNodeUid,
+  //         name: '',
+  //         isEntity: true,
+  //         children: [],
+  //         data: node,
+  //       }
+  //       seedNodes.push(tmpTree[uid])
+  //     })
+
+  //     // build the whole node tree from the seed nodes - BFS
+  //     while (seedNodes.length) {
+  //       const node = seedNodes.shift() as TNode
+  //       const nodeData = node.data as THtmlDomNodeData
+
+  //       if (!nodeData.children) continue
+
+  //       nodeData.children.map((child: THtmlDomNodeData) => {
+  //         const uid = keepNodeUids ?
+  //           child.attribs ? child.attribs[NodeInAppAttribName] : String(++_nodeMaxUid) as TNodeUid
+  //           : String(++_nodeMaxUid) as TNodeUid
+
+  //         node.children.push(uid)
+  //         node.isEntity = false
+
+  //         tmpTree[uid] = {
+  //           uid,
+  //           parentUid: node.uid,
+  //           name: '',
+  //           isEntity: true,
+  //           children: [],
+  //           data: child,
+  //         }
+  //         seedNodes.push(tmpTree[uid])
+  //       })
+  //     }
+
+  //     return nodes
+  //   },
+  // })
+  
   // build real tree data
+  
   const tree: TNodeTreeData = {}
   let uids: TNodeUid[] = Object.keys(tmpTree)
   uids.map((uid) => {
@@ -251,7 +366,6 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
       // set in-app-attribute to nodes
       if (!nodeData.attribs) nodeData.attribs = {}
       nodeData.attribs[NodeInAppAttribName] = uid
-
       tree[uid] = {
         ...node,
         name: nodeData.name || nodeData.type,
@@ -263,14 +377,17 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
           name: nodeData.name,
           data: nodeData.data,
           attribs: nodeData.attribs,
+          startIndex:nodeData.startIndex,
+          endIndex:nodeData.endIndex,
         },
       }
     }
   })
 
   // set html, htmlInApp, code range to nodes
-  const { html: formattedContent, htmlInApp: contentInApp } = serializeHtml(tree, htmlReferenceData, osType)
-
+  const { html: formattedsContent, htmlInApp: contentInApp } = serializeHtml(tree, htmlReferenceData, osType)
+  const formattedContent = content
+  debugger
   return { formattedContent, contentInApp, tree, nodeMaxUid: String(_nodeMaxUid) as TNodeUid }
 }
 export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlReferenceData, osType: TOsType): THtmlNodeData => {
@@ -279,6 +396,7 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
   uids.reverse()
   uids.map((uid) => {
     const node = tree[uid]
+    
     const nodeData = node.data as THtmlNodeData
 
     // merge children html
@@ -314,6 +432,7 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
     //   attribsHtmlInApp += attribsHtmlInApp + ` onerror="this.onerror=null; this.src='${emptyImage}'"`
     // }
     // wrap with the current node
+    
     if (nodeData.type === 'directive') {
       nodeHtml = `<${nodeData.data}>`
       nodeHtmlInApp = `<${nodeData.data}>`
@@ -374,7 +493,7 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
       nodeData.htmlInApp = nodeHtmlInApp
     }
   })
-  // set code range to nodes
+  // set code range to nodes TODO: find out which part of the code here is responsible for code click to stage sync
   const { html: formattedContent } = tree[RootNodeUid].data as THtmlNodeData
   const detected: Map<string, number> = new Map<string, number>()
   uids = getSubNodeUidsByDfs(RootNodeUid, tree)
@@ -397,6 +516,7 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
     const endLineNumber = startLineNumber + contentArr.length - 1 + Number(uid === RootNodeUid)
     const endColumn = (contentArr.length === 1 ? startColumn : 1) + (contentArr.pop()?.length || 0) + Number(uid === RootNodeUid)
 
+    debugger
     node.data = {
       ...node.data,
       startLineNumber,
@@ -404,7 +524,10 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
       endLineNumber,
       endColumn,
     }
+  
   })
+
+  
 
   return tree[RootNodeUid].data as THtmlNodeData
 }
