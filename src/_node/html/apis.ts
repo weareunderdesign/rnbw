@@ -1,6 +1,7 @@
 import ReactHtmlParser from 'react-html-parser';
 import * as htmlparser2 from "htmlparser2_sep";
 import {Document  } from 'domhandler';
+import * as domutils from 'domutils';
 import {
   NodeInAppAttribName,
   RootNodeUid,
@@ -168,16 +169,13 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
     withStartIndices: true,
   });
 
-  let uidRnbwNode = 0
-
-  
+  let appDom:Document;
   htmlContent = content;
   // parse the html content
-  // const tmpTree: TNodeTreeData = {}
   const tmpTree: TNodeTreeData = {}
-
   function preprocessNodes(dom:Document){
-    htmlContentInApp = ''
+    appDom = dom
+    
        // build root node
        tmpTree[RootNodeUid] = {
         uid: RootNodeUid,
@@ -190,24 +188,7 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
 
       // build depth-1 seed nodes
       const seedNodes: TNode[] = []
-      dom.children.forEach((node) => {
-
-            
-        if(node.type === "directive" || node.type === "comment" || node.type === "text"){
-          // generate html
-          htmlContentInApp += node.data;
-          return;
-        }
-        if(node.type === "tag"){
-           // generate html
-          htmlContentInApp += `<${node.name}${Object.keys(node.attribs).map((attr) => {
-            const attrContent = node.attribs[attr];
-            return attrContent === "" ? ` ${attr}` : ` ${attr}="${attrContent}"`;
-            }).join("")}>`;
-        }else{
-          debugger
-        }
-      
+      appDom.children.forEach((node) => {
         const uid =String(++_nodeMaxUid) as TNodeUid
 
         tmpTree[RootNodeUid].children.push(uid)
@@ -219,9 +200,9 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
           children: [],
           data: {...node,valid:node.type==="tag"},
           }
-        seedNodes.push(tmpTree[uid])
-        
 
+          
+        seedNodes.push(tmpTree[uid]) 
       })
 
       // build the whole node tree from the seed nodes - BFS
@@ -246,102 +227,19 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
             children: [],
             data: {...child,valid:child.type==="tag"},
           }
+
+          //add attribute to node
+          if (!child.attribs) child.attribs = {}
+          child.attribs[NodeInAppAttribName] = uid
+          
           seedNodes.push(tmpTree[uid])
-           // generate html
-           
-           if(child.type === "tag"){
-            // generate html
-            htmlContentInApp += `<${child.name}${Object.keys(child.attribs).map((attr) => {
-              const attrContent = child.attribs[attr];
-              return attrContent === "" ? ` ${attr}` : ` ${attr}="${attrContent}"`;
-            }).join("")}>`;
-          }else{
-            debugger
-            if(child.data === "\n" || " " || "\t"){
-              return;       
-            }
-            htmlContentInApp += child.data;
-          }
         })
-
-        //close tag
-        if(nodeData.type === "tag"){
-          htmlContentInApp += `</${nodeData.name}>`;
-        }
       }
-      
+      htmlContentInApp = domutils.getOuterHTML(appDom)
   }
-  debugger
+
   preprocessNodes(dom)
-  
-  // ReactHtmlParser(content, {
-  //   decodeEntities: true,
-  //   transform: (node, index, transform) => {
-  //     node.valid = true
-  //   },
-  //   preprocessNodes: (nodes: THtmlDomNodeData[]) => {
-  //     // build root node
-  //     tmpTree[RootNodeUid] = {
-  //       uid: RootNodeUid,
-  //       parentUid: null,
-  //       name: RootNodeUid,
-  //       isEntity: false,
-  //       children: [],
-  //       data: { valid: true },
-  //     }
 
-  //     // build depth-1 seed nodes
-  //     const seedNodes: TNode[] = []
-  //     nodes.map((node) => {
-  //       const uid = keepNodeUids ?
-  //         node.attribs ? node.attribs[NodeInAppAttribName] : String(++_nodeMaxUid) as TNodeUid
-  //         : String(++_nodeMaxUid) as TNodeUid
-
-  //       tmpTree[RootNodeUid].children.push(uid)
-  //       tmpTree[uid] = {
-  //         uid,
-  //         parentUid: RootNodeUid,
-  //         name: '',
-  //         isEntity: true,
-  //         children: [],
-  //         data: node,
-  //       }
-  //       seedNodes.push(tmpTree[uid])
-  //     })
-
-  //     // build the whole node tree from the seed nodes - BFS
-  //     while (seedNodes.length) {
-  //       const node = seedNodes.shift() as TNode
-  //       const nodeData = node.data as THtmlDomNodeData
-
-  //       if (!nodeData.children) continue
-
-  //       nodeData.children.map((child: THtmlDomNodeData) => {
-  //         const uid = keepNodeUids ?
-  //           child.attribs ? child.attribs[NodeInAppAttribName] : String(++_nodeMaxUid) as TNodeUid
-  //           : String(++_nodeMaxUid) as TNodeUid
-
-  //         node.children.push(uid)
-  //         node.isEntity = false
-
-  //         tmpTree[uid] = {
-  //           uid,
-  //           parentUid: node.uid,
-  //           name: '',
-  //           isEntity: true,
-  //           children: [],
-  //           data: child,
-  //         }
-  //         seedNodes.push(tmpTree[uid])
-  //       })
-  //     }
-
-  //     return nodes
-  //   },
-  // })
-  
-  // build real tree data
-  
   const tree: TNodeTreeData = {}
   let uids: TNodeUid[] = Object.keys(tmpTree)
   uids.map((uid) => {
@@ -366,13 +264,13 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
       // set in-app-attribute to nodes
       if (!nodeData.attribs) nodeData.attribs = {}
       nodeData.attribs[NodeInAppAttribName] = uid
+      
       tree[uid] = {
         ...node,
         name: nodeData.name || nodeData.type,
         data: {
           valid,
           isFormatText,
-
           type: nodeData.type,
           name: nodeData.name,
           data: nodeData.data,
@@ -385,9 +283,10 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
   })
 
   // set html, htmlInApp, code range to nodes
-  const { html: formattedsContent, htmlInApp: contentInApp } = serializeHtml(tree, htmlReferenceData, osType)
+  serializeHtml(tree, htmlReferenceData, osType)
   const formattedContent = content
-  debugger
+  const contentInApp = htmlContentInApp
+  
   return { formattedContent, contentInApp, tree, nodeMaxUid: String(_nodeMaxUid) as TNodeUid }
 }
 export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlReferenceData, osType: TOsType): THtmlNodeData => {
@@ -396,139 +295,31 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
   uids.reverse()
   uids.map((uid) => {
     const node = tree[uid]
-    
     const nodeData = node.data as THtmlNodeData
+    // set html
+    nodeData.html = ''
 
-    // merge children html
-    let childrenHtml = '', childrenHtmlInApp = ''
-    node.children.map((c_uid) => {
-      const child = tree[c_uid]
-      const childData = child.data as THtmlNodeData
-      childrenHtml += childData.html
-      childrenHtmlInApp += childData.htmlInApp
-    })
-
-    // generate attribs html
-    let nodeHtml = '', nodeHtmlInApp = ''
-    const attribsHtml = nodeData.attribs === undefined ? '' :
-      Object.keys(nodeData.attribs).map(attr => {
-        if (attr === NodeInAppAttribName) return
-        if (attr === 'class') {
-          const className = (nodeData.attribs['class'] as string).split(' ').filter(className => !!className).join(' ')
-          if (className === '') return
-          return ` class="${className}"`
-        }
-
-        const attrContent = nodeData.attribs[attr] as string
-        return attrContent === '' ? ` ${attr}` : ` ${attr}="${attrContent}"`
-      }).join('')
-    let attribsHtmlInApp = nodeData.attribs === undefined ? '' :
-      Object.keys(nodeData.attribs).map(attr => {
-        const attrContent = nodeData.attribs[attr]
-        return attrContent === '' ? ` ${attr}` : ` ${attr}="${attrContent}"`
-      }).join('')
-
-    // if (nodeData.type === 'tag' && nodeData.name === 'img') {
-    //   attribsHtmlInApp += attribsHtmlInApp + ` onerror="this.onerror=null; this.src='${emptyImage}'"`
-    // }
-    // wrap with the current node
-    
-    if (nodeData.type === 'directive') {
-      nodeHtml = `<${nodeData.data}>`
-      nodeHtmlInApp = `<${nodeData.data}>`
-    } else if (nodeData.type === 'comment' || nodeData.type === '!--...--') {
-      nodeHtml = `<!--${nodeData.data}-->`
-      nodeHtmlInApp = ``
-    } else if (nodeData.type === 'text') {
-      // replace "<" or ">" to "&lt;" and "&gt;", only in app
-      nodeHtml = nodeData.data
-      nodeHtmlInApp = nodeData.data.replace(/</g, `&lt;`).replace(/>/g, `&gt;`)
-    } else if (nodeData.type === 'script' || nodeData.type === 'style') {
-      nodeHtml = `<${nodeData.type}${attribsHtml}>${childrenHtml}</${nodeData.type}>`
-      nodeHtmlInApp = `<${nodeData.type}${attribsHtmlInApp}>${childrenHtmlInApp}</${nodeData.type}>`
-    } else if (nodeData.type === 'tag') {
-      const tagName = nodeData.name
-      const htmlElementsReferenceData = htmlReferenceData.elements
-      const refData = htmlElementsReferenceData[tagName]
-
-      let isEmptyTag = refData && refData.Content === 'None'
-      // --------------------- tmp code ---------------------
-      if (!isEmptyTag) {
-        if (tagName === 'meta' || tagName === 'link'
-          || tagName === 'br' || tagName === 'hr'
-          || tagName === 'source' || tagName === 'input'
-          || tagName === 'area' || tagName === 'col' || tagName === 'wbr') {
-          isEmptyTag = true
-        }
-      }
-      // --------------------- tmp code ---------------------
-
-      if (isEmptyTag) {
-        nodeHtml = `<${tagName}${attribsHtml}>`
-        nodeHtmlInApp = `<${tagName}${attribsHtmlInApp}>`
-      } else {
-        nodeHtml = `<${tagName}${attribsHtml}>${childrenHtml}</${tagName}>`
-        //issue : #238
-        if (tagName === "a") {
-          //console event on click
-          attribsHtmlInApp = attribsHtmlInApp.replace("href", "onclick");
-          nodeHtmlInApp = `<${tagName}${attribsHtmlInApp}
-          >
-          ${childrenHtmlInApp}</${tagName}>`;
-        } else {
-          nodeHtmlInApp = `<${tagName}${attribsHtmlInApp}>${childrenHtmlInApp}</${tagName}>`;
-        }
-      }
-    } else {
-      nodeHtml = childrenHtml
-      nodeHtmlInApp = childrenHtmlInApp
-    }
-
-    // set html and htmlInApp
-    nodeData.html = nodeHtml.replace('</!--...-->', '')
-    if (nodeData.type === 'comment' || nodeData.type === '!--...--') {
-      nodeData.htmlInApp = ''
-    }
-    else{
-      nodeData.htmlInApp = nodeHtmlInApp
-    }
   })
-  // set code range to nodes TODO: find out which part of the code here is responsible for code click to stage sync
-  const { html: formattedContent } = tree[RootNodeUid].data as THtmlNodeData
+
   const detected: Map<string, number> = new Map<string, number>()
   uids = getSubNodeUidsByDfs(RootNodeUid, tree)
   uids.map((uid) => {
     const node = tree[uid]
     if (!node.data.valid) return
-    
     const { html } = node.data as THtmlNodeData
-    const htmlArr = formattedContent.split(html)
-    
     const detectedCount = detected.get(html) || 0
-    const beforeHtml = htmlArr.slice(0, detectedCount + 1).join(html)
     detected.set(html, detectedCount + 1)
-    
-    const beforeHtmlArr = beforeHtml.split(getLineBreaker(osType))
-    const startLineNumber = beforeHtmlArr.length - Number(uid === RootNodeUid)
-    const startColumn = (beforeHtmlArr.pop()?.length || 0) + 1 - Number(uid === RootNodeUid)
-    
-    const contentArr = html.split(getLineBreaker(osType))
-    const endLineNumber = startLineNumber + contentArr.length - 1 + Number(uid === RootNodeUid)
-    const endColumn = (contentArr.length === 1 ? startColumn : 1) + (contentArr.pop()?.length || 0) + Number(uid === RootNodeUid)
 
-    debugger
+
     node.data = {
       ...node.data,
-      startLineNumber,
-      startColumn,
-      endLineNumber,
-      endColumn,
+      startLineNumber:0,
+      startColumn:0,
+      endLineNumber:0,
+      endColumn:0,
     }
   
   })
-
-  
-
   return tree[RootNodeUid].data as THtmlNodeData
 }
 export const parseHtmlCodePart = (content: string, htmlReferenceData: THtmlReferenceData, osType: TOsType, nodeMaxUid: TNodeUid = ''): THtmlParserResponse => {
