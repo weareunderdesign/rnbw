@@ -49,6 +49,7 @@ import {
   CodeSelection,
   CodeViewProps,
 } from './types';
+import { getPositionFromIndex } from '@_services/htmlapi';
 
 loader.config({ monaco })
 
@@ -176,24 +177,18 @@ export default function CodeView(props: CodeViewProps) {
     if (!validNodeTree[focusedItem]) return
 
     if (codeEditing) return
-
-    const node = validNodeTree[focusedItem]
-    const { 
-      // startLineNumber, startColumn, endLineNumber, endColumn,
-      startIndex,endIndex } = node.data as THtmlNodeData
-
     // Convert the indices to positions
    
     const editor = monacoRef.current
     if (!editor) return
-    const position = editor.getModel()?.getPositionAt(startIndex as number)
     
-    const startLineNumber = position?.lineNumber as number
-    const startColumn = position?.column as number
+    const node = validNodeTree[focusedItem]
+    const { startIndex,endIndex } = node.data as THtmlNodeData
 
-    const endPosition = editor.getModel()?.getPositionAt(endIndex as number)
-    const endLineNumber = endPosition?.lineNumber as number
-    const endColumn = endPosition?.column as number
+    if(!startIndex || !endIndex)
+      return
+    const { startLineNumber, startColumn, endLineNumber, endColumn} = getPositionFromIndex(editor,startIndex,endIndex)
+      
 
     if (isFirst.current) {
       const firstTimer = setInterval(() => {
@@ -298,7 +293,13 @@ export default function CodeView(props: CodeViewProps) {
       for (const uid of uids) {
         const node = validNodeTreeRef.current[uid]
         const nodeData = node.data as THtmlNodeData
-        const { startLineNumber, startColumn, endLineNumber, endColumn } = nodeData
+        const { startIndex,endIndex } = nodeData
+
+        const editor = monacoRef.current
+        if (!editor) return
+        if(!startIndex || !endIndex)
+        return
+        const { startLineNumber, startColumn, endLineNumber, endColumn} = getPositionFromIndex(editor,startIndex,endIndex)
 
         const containFront = selection.startLineNumber === startLineNumber ?
           selection.startColumn > startColumn
@@ -507,7 +508,12 @@ export default function CodeView(props: CodeViewProps) {
         if (!node) return
   
         const nodeData = node.data as THtmlNodeData
-        const { startLineNumber, startColumn, endLineNumber, endColumn } = nodeData
+        const { startIndex,endIndex } = nodeData
+        const editor = monacoRef.current
+        if (!editor) return
+        if(!startIndex || !endIndex)
+        return
+        const { startLineNumber, startColumn, endLineNumber, endColumn} = getPositionFromIndex(editor,startIndex,endIndex)
 
         const containFront = focusedNodeData.startLineNumber === startLineNumber ?
           focusedNodeData.startColumn >= startColumn
@@ -547,9 +553,11 @@ export default function CodeView(props: CodeViewProps) {
           const node = validNodeTreeRef.current[uid]
           const nodeData = node.data as THtmlNodeData
           nodeData.startLineNumber = 0
-          nodeData.startColumn = 0
-          nodeData.endLineNumber = 0
-          nodeData.endColumn = 0
+          // nodeData.startColumn = 0
+          // nodeData.endLineNumber = 0
+          // nodeData.endColumn = 0
+          nodeData.startIndex = 0
+          nodeData.endIndex = 0
         })
       }
   
