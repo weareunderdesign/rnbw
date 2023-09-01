@@ -382,14 +382,25 @@ export default function CodeView(props: CodeViewProps) {
             break;
           }
           _parent = validNodeTree[_parent].parentUid as TNodeUid
-        }
-        let { startLineNumber, startColumn, endLineNumber, endColumn } = codeChange[1][0].range
+        }        
+        let { startLineNumber, startColumn, endLineNumber, endColumn } = codeChange[1][0].range       
         if (notParsingFlag) {
           if (validNodeTree[_parent]) {
-            startLineNumber = (validNodeTree[_parent].data as THtmlNodeData).startLineNumber
-            startColumn = (validNodeTree[_parent].data as THtmlNodeData).startColumn
-            endLineNumber = (validNodeTree[_parent].data as THtmlNodeData).endLineNumber
-            endColumn = (validNodeTree[_parent].data as THtmlNodeData).endColumn
+            const {
+              startIndex,
+              endIndex,
+            } = validNodeTree[_parent].data as THtmlNodeData
+            const editor = monacoRef.current as monaco.editor.IStandaloneCodeEditor
+            const {
+              startLineNumber:startLine,
+              startColumn:startCol,
+              endLineNumber:endLine,
+              endColumn:endCol
+            } = getPositionFromIndex(editor,startIndex as number,endIndex as number)
+            startLineNumber = startLine
+            startColumn = startCol
+            endLineNumber = endLine
+            endColumn = endCol
           }
         }
         const partCodeArr: string[] = []
@@ -514,19 +525,30 @@ export default function CodeView(props: CodeViewProps) {
         if(!startIndex || !endIndex)
         return
         const { startLineNumber, startColumn, endLineNumber, endColumn} = getPositionFromIndex(editor,startIndex,endIndex)
-
-        const containFront = focusedNodeData.startLineNumber === startLineNumber ?
-          focusedNodeData.startColumn >= startColumn
-          : focusedNodeData.startLineNumber > startLineNumber
-        const containBack = focusedNodeData.endLineNumber === endLineNumber ?
-          focusedNodeData.endColumn <= endColumn
-          : focusedNodeData.endLineNumber < endLineNumber
+        const {
+          startLineNumber:focusedNodeStartLineNumber,
+          startColumn:focusedNodeStartColumn,
+          endLineNumber:focusedNodeEndLineNumber,
+          endColumn:focusedNodeEndColumn
+        } = getPositionFromIndex(editor,focusedNodeData.startIndex as number,focusedNodeData.endIndex as number)
+        const containFront = focusedNodeStartLineNumber === startLineNumber ?
+          focusedNodeStartColumn >= startColumn
+          : focusedNodeStartLineNumber > startLineNumber
+        const containBack = focusedNodeEndLineNumber === endLineNumber ?
+          focusedNodeEndColumn <= endColumn
+          : focusedNodeEndLineNumber < endLineNumber
         
+          let {
+            startLineNumber:nodeDataStartLineNumber,
+            startColumn:nodeDataStartColumn,
+            endLineNumber:nodeDataEndLineNumber,
+            endColumn:nodeDataEndColumn
+          } = getPositionFromIndex(editor,nodeData.startIndex as number,nodeData.endIndex as number)
         if (containFront && containBack) {
-          nodeData.endLineNumber += n_rowCount - o_rowCount
-          nodeData.endColumn += endLineNumber === o_range.endLineNumber ? columnOffset : 0
+          nodeDataEndLineNumber += n_rowCount - o_rowCount
+          nodeDataEndColumn += endLineNumber === o_range.endLineNumber ? columnOffset : 0
   
-          if (nodeData.endLineNumber === nodeData.startLineNumber && nodeData.endColumn === nodeData.startColumn) {
+          if (nodeDataEndLineNumber === nodeDataStartLineNumber && nodeDataEndColumn === nodeDataStartColumn) {
             const parentNode = validNodeTreeRef.current[focusedNode.parentUid as TNodeUid]
             parentNode.children = parentNode.children.filter(c_uid => c_uid !== focusedNode.uid)
   
@@ -539,10 +561,10 @@ export default function CodeView(props: CodeViewProps) {
             completelyRemoved = true
           }
         } else if (containBack) {
-          nodeData.startLineNumber += n_rowCount - o_rowCount
-          nodeData.startColumn += startLineNumber === o_range.endLineNumber ? columnOffset : 0
-          nodeData.endLineNumber += n_rowCount - o_rowCount
-          nodeData.endColumn += endLineNumber === o_range.endLineNumber ? columnOffset : 0
+          nodeDataStartLineNumber += n_rowCount - o_rowCount
+          nodeDataStartColumn += startLineNumber === o_range.endLineNumber ? columnOffset : 0
+          nodeDataEndLineNumber += n_rowCount - o_rowCount
+          nodeDataEndColumn += endLineNumber === o_range.endLineNumber ? columnOffset : 0
         }
       })
       if (!completelyRemoved) {
@@ -552,10 +574,7 @@ export default function CodeView(props: CodeViewProps) {
   
           const node = validNodeTreeRef.current[uid]
           const nodeData = node.data as THtmlNodeData
-          nodeData.startLineNumber = 0
-          // nodeData.startColumn = 0
-          // nodeData.endLineNumber = 0
-          // nodeData.endColumn = 0
+
           nodeData.startIndex = 0
           nodeData.endIndex = 0
         })
@@ -564,7 +583,21 @@ export default function CodeView(props: CodeViewProps) {
       // update decorations
       if (validNodeTreeRef.current[focusedNode.uid] ) {
         const focusedNodeDecorations: monaco.editor.IModelDeltaDecoration[] = []
-        const focusedNodeCodeRange: monaco.IRange = validNodeTreeRef.current[focusedNode.uid].data as THtmlNodeData
+        const {
+          startIndex,
+          endIndex,
+        } = validNodeTreeRef.current[focusedNode.uid].data as THtmlNodeData
+        const editor = monacoRef.current
+        if (!editor) return
+        if(!startIndex || !endIndex)
+        return
+        const { startLineNumber, startColumn, endLineNumber, endColumn} = getPositionFromIndex(editor,startIndex,endIndex)
+        const focusedNodeCodeRange: monaco.IRange  = {
+          startLineNumber,
+          startColumn,
+          endLineNumber,
+          endColumn
+        }
         if (!completelyRemoved) {
           focusedNodeDecorations.push(
             {

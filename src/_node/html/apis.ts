@@ -300,26 +300,8 @@ export const serializeHtml = (tree: TNodeTreeData, htmlReferenceData: THtmlRefer
     nodeData.html = ''
 
   })
-
-  const detected: Map<string, number> = new Map<string, number>()
   uids = getSubNodeUidsByDfs(RootNodeUid, tree)
-  uids.map((uid) => {
-    const node = tree[uid]
-    if (!node.data.valid) return
-    const { html } = node.data as THtmlNodeData
-    const detectedCount = detected.get(html) || 0
-    detected.set(html, detectedCount + 1)
 
-
-    node.data = {
-      ...node.data,
-      startLineNumber:0,
-      startColumn:0,
-      endLineNumber:0,
-      endColumn:0,
-    }
-  
-  })
   return tree[RootNodeUid].data as THtmlNodeData
 }
 export const parseHtmlCodePart = (content: string, htmlReferenceData: THtmlReferenceData, osType: TOsType, nodeMaxUid: TNodeUid = ''): THtmlParserResponse => {
