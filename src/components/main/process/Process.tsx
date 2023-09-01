@@ -131,7 +131,7 @@ export default function Process(props: ProcessProps) {
           const nodeData = node.data as THtmlNodeData
           if (nodeData.type === 'tag') {
             if (nodeData.name === 'title') {
-              _title = nodeData.html.replace(/<[^>]*>/g, "")
+              _title = nodeData.html?.replace(/<[^>]*>/g, "")
               return;
             }
           }
@@ -203,12 +203,12 @@ export default function Process(props: ProcessProps) {
               fileContent = formattedContent
             }
             const parserRes = parseFile(fileData.type, fileContent, htmlReferenceData, osType, null, String(_nodeMaxUid) as TNodeUid)
-            const { formattedContent, contentInApp, tree, nodeMaxUid: newNodeMaxUid } = parserRes
+            const {  contentInApp, tree, nodeMaxUid: newNodeMaxUid } = parserRes
 
             _nodeTree = tree
             _nodeMaxUid = Number(newNodeMaxUid)
 
-            fileData.content = formattedContent
+            fileData.content = fileContent
             fileData.contentInApp = contentInApp
             fileData.changed = fileData.content !== fileData.orgContent
 
@@ -294,8 +294,8 @@ export default function Process(props: ProcessProps) {
               }
             })
             // rebuild from new tree
-            const { html: formattedContent, htmlInApp: contentInApp } = serializeHtml(_nodeTree, htmlReferenceData, osType)
-            fileData.content = formattedContent
+            const { htmlInApp: contentInApp } = serializeHtml(_nodeTree, htmlReferenceData, osType)
+            fileData.content = file.content
             fileData.contentInApp = contentInApp
             fileData.changed = fileData.content !== fileData.orgContent
           }

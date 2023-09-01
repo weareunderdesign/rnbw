@@ -283,7 +283,6 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
   })
 
   // set html, htmlInApp, code range to nodes
-  serializeHtml(tree, htmlReferenceData, osType)
   const formattedContent = content
   const contentInApp = htmlContentInApp
   
