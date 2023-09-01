@@ -129,12 +129,14 @@ export default function Process(props: ProcessProps) {
         Object.keys(nodeTree).map(uid => {
           const node = nodeTree[uid]
           const nodeData = node.data as THtmlNodeData
+          
           if (nodeData.type === 'tag') {
             if (nodeData.name === 'title') {
-              _title = nodeData.html?.replace(/<[^>]*>/g, "")
+              _title = nodeData.data.replace(/<[^>]*>/g, "")
               return;
             }
           }
+         
         })
         window.document.title = _title
       }

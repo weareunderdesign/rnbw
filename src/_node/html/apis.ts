@@ -1,4 +1,3 @@
-import ReactHtmlParser from 'react-html-parser';
 import * as htmlparser2 from "htmlparser2_sep";
 import {Document  } from 'domhandler';
 import * as domutils from 'domutils';
@@ -264,7 +263,14 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
       // set in-app-attribute to nodes
       if (!nodeData.attribs) nodeData.attribs = {}
       nodeData.attribs[NodeInAppAttribName] = uid
-      
+      let data = ""
+      if(nodeData.children){
+        nodeData.children.forEach((child:THtmlDomNodeData)=>{
+          if(child.type==="text"){
+            data += child.data
+          }
+        })
+      }
       tree[uid] = {
         ...node,
         name: nodeData.name || nodeData.type,
@@ -273,10 +279,12 @@ export const parseHtml = (content: string, htmlReferenceData: THtmlReferenceData
           isFormatText,
           type: nodeData.type,
           name: nodeData.name,
-          data: nodeData.data,
+          data: data,
           attribs: nodeData.attribs,
           startIndex:nodeData.startIndex,
           endIndex:nodeData.endIndex,
+          
+          
         },
       }
     }
@@ -308,19 +316,18 @@ export const parseHtmlCodePart = (content: string, htmlReferenceData: THtmlRefer
 
   // parse html
   const tmpTree: TNodeTreeData = {}
-  ReactHtmlParser(content, {
-    decodeEntities: true,
-    transform: (node, index, transform) => {
-      if ((node as THtmlDomNodeData).type === 'tag' && (htmlReferenceData.elements[(node as THtmlDomNodeData).name] || (node as THtmlDomNodeData).name.indexOf('-') !== -1)) {
-        node.valid = true
-      }
-      else{
-        node.valid = false
-      }
-    },
-    preprocessNodes: (nodes: THtmlDomNodeData[]) => {
-      // build root node
-      tmpTree[RootNodeUid] = {
+  const tree: TNodeTreeData = {}
+
+  let dom = htmlparser2.parseDocument(content, {
+    withEndIndices: true,
+    withStartIndices: true,
+  });
+  let appDom:Document;
+  function preprocessNodes(dom:Document){
+    appDom = dom
+    
+       // build root node
+       tmpTree[RootNodeUid] = {
         uid: RootNodeUid,
         parentUid: null,
         name: RootNodeUid,
@@ -331,8 +338,8 @@ export const parseHtmlCodePart = (content: string, htmlReferenceData: THtmlRefer
 
       // build depth-1 seed nodes
       const seedNodes: TNode[] = []
-      nodes.map((node) => {
-        const uid = String(++_nodeMaxUid) as TNodeUid
+      appDom.children.forEach((node) => {
+        const uid =String(++_nodeMaxUid) as TNodeUid
 
         tmpTree[RootNodeUid].children.push(uid)
         tmpTree[uid] = {
@@ -341,9 +348,11 @@ export const parseHtmlCodePart = (content: string, htmlReferenceData: THtmlRefer
           name: '',
           isEntity: true,
           children: [],
-          data: node,
-        }
-        seedNodes.push(tmpTree[uid])
+          data: {...node,valid:node.type==="tag"},
+          }
+
+          
+        seedNodes.push(tmpTree[uid]) 
       })
 
       // build the whole node tree from the seed nodes - BFS
@@ -354,6 +363,7 @@ export const parseHtmlCodePart = (content: string, htmlReferenceData: THtmlRefer
         if (!nodeData.children) continue
 
         nodeData.children.map((child: THtmlDomNodeData) => {
+  
           const uid = String(++_nodeMaxUid) as TNodeUid
 
           node.children.push(uid)
@@ -365,17 +375,21 @@ export const parseHtmlCodePart = (content: string, htmlReferenceData: THtmlRefer
             name: '',
             isEntity: true,
             children: [],
-            data: child,
+            data: {...child,valid:child.type==="tag"},
           }
+
+          //add attribute to node
+          if (!child.attribs) child.attribs = {}
+          child.attribs[NodeInAppAttribName] = uid
+          
           seedNodes.push(tmpTree[uid])
         })
       }
+      htmlContentInApp = domutils.getOuterHTML(appDom)
+  }
 
-      return nodes
-    },
-  })
-  // build real tree data
-  const tree: TNodeTreeData = {}
+  preprocessNodes(dom)
+  
   let uids: TNodeUid[] = Object.keys(tmpTree)
   uids.map((uid) => {
     const node = tmpTree[uid]
@@ -406,19 +420,18 @@ export const parseHtmlCodePart = (content: string, htmlReferenceData: THtmlRefer
         data: {
           valid,
           isFormatText,
-
           type: nodeData.type,
           name: nodeData.name,
           data: nodeData.data,
           attribs: nodeData.attribs,
+          startIndex:nodeData.startIndex,
+          endIndex:nodeData.endIndex,
         },
       }
     }
   })
-  // set html, htmlInApp, code range to nodes
-  const { html: formattedContent } = serializeHtml(tree, htmlReferenceData, osType)
 
-  return { formattedContent, contentInApp: '', tree, nodeMaxUid: String(_nodeMaxUid) as TNodeUid }
+  return { formattedContent:content, contentInApp: '', tree, nodeMaxUid: String(_nodeMaxUid) as TNodeUid }
 }
 
 export const checkValidHtml = (content: string): boolean => {
