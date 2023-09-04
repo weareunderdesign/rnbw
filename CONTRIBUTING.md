@@ -36,8 +36,7 @@ the contributors’ community can be found on [github discussions](), where you 
     2. collaborate. collaborate. collaborate. update where you are. share what you did and what you will do.
 9. commit changes to your branch. (don’t rush to push the latest code to your branch. that’s a waste of time.)
     1. we will review your code and the user experience and provide feedback. always prioritize tasks with existing feedback.
-10. keep your branch always in sync with the main branch.
-11. push changes to your fork.
+10. keep your branch always in sync with the dev branch.
 
 ## prs
 
