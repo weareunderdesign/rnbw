@@ -31,3 +31,7 @@ export type TNodeApiResponse = {
   lastNodeUid?: TNodeUid,
 }
 export type TNodeReferenceData = THtmlReferenceData
+export type TEvent = {
+  type: "add-node" | "remove-node" | "move-node" | "duplicate-node" | "copy-node" | "copy-node-external" | "code-change";
+  param: any[];
+};

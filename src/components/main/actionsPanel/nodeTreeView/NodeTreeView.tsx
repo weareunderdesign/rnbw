@@ -42,6 +42,7 @@ import {
   TNode,
   TNodeTreeData,
   TNodeUid,
+  TEvent
 } from '@_node/types';
 import {
   collapseFNNode,
@@ -549,7 +550,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     switch (currentCommand.action) {
       case 'Cut':
-        onCut()
+        onCut(event)
         break
       case 'Copy':
         onCopy()
@@ -579,7 +580,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     }
   }, [currentCommand])
 
-  const onCut = useCallback(() => {
+  const onCut = useCallback((event: TEvent | null) => {
+
     if (selectedItems.length === 0) return
     let data: TNode[] = []
     for (let x in selectedItems) {
@@ -587,7 +589,19 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
         data.push(validNodeTree[selectedItems[x]])
       }
     }
-    setClipboardData({ panel: 'node', type: 'cut', uids: selectedItems, fileType: ffTree[file.uid].data.type, data: data, fileUid: file.uid, prevNodeTree: nodeTree })
+
+    const updatedNodeTree = Object.keys(nodeTree)
+      .filter((uid) => !selectedItems.includes(uid))
+      .reduce((acc: any, uid) => {
+        acc[uid] = nodeTree[uid];
+        return acc;
+      }, {});
+
+    const newType = event?.type === "copy-node" ? 'cut' : 'copy';
+    setNodeTree(updatedNodeTree);
+    
+
+    setClipboardData({ panel: 'node', type: newType, uids: selectedItems, fileType: ffTree[file.uid].data.type, data: data, fileUid: file.uid, prevNodeTree: nodeTree })
   }, [selectedItems, ffTree[file.uid], nodeTree])
   const onCopy = useCallback(() => {
     if (selectedItems.length === 0) return
