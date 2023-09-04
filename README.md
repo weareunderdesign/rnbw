@@ -12,8 +12,8 @@ to learn rnbw, go to https://guide.rnbw.dev.
 3. visit `http://localhost:8080/`
 
 ## contributing
-
-refer to the [developer's guide](https://www.notion.so/developers-md-905b6a553a66496a901193bdb4cdac05) to build extensions and contribute code to Rainbow.
+quickly start with [CONTRIBUTING.md](https://github.com/rnbwdev/rnbw/blob/dev/CONTRIBUTING.md).
+we're working on a [developer's guide]([https://www.notion.so/developers-md-905b6a553a66496a901193bdb4cdac05](https://underdesign.notion.site/Developers-525132b37357496cb53aa1878c59fe0e)) to build extensions and take advantage of rnbw.
 
 non-code contributions are more than welcome! How?
 
