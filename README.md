@@ -1,10 +1,10 @@
-# rnbw 1.0
+# rnbw 0.1
 
-...
+welcome to rnbw!
 
 ## get started
 
-To learn rnbw, go to https://guide.rnbw.dev.
+to learn rnbw, go to https://guide.rnbw.dev.
 
 ## run it locally:
 1. npm install --force
@@ -17,16 +17,16 @@ refer to the [developer's guide](https://www.notion.so/developers-md-905b6a553a6
 
 non-code contributions are more than welcome! How?
 
-- Invite your teammate!
-- Star this repo and follow us on Twitter, Instagram, and Youtube.
-- Share designs and ideas, ask questions, react to others’ articles or open your conversations in the community
-- Report bugs with our easy guide for bug hunting or GitHub issues.
-- Create and share Libraries & templates that will be helpful for the community
-- Share some feedback directly.
+- invite your teammates!
+- star this repo or follow us on Twitter or Instagram.
+- share designs and ideas, ask questions, react to others’ articles or open your conversations in the community
+- report bugs with GitHub issues.
+- create and share libraries & templates that will be helpful for the community.
+- share some feedback directly.
 
-## Community
+## community
 
-Join [Rainbow's Discord](https://discord.com/invite/HycXz8TJkd) to chat with other community members, ask questions, voice ideas, and share your projects.
+join [rainbow's discord](https://discord.com/invite/HycXz8TJkd) to chat with other community members, ask questions, voice ideas, and share your projects.
 
-## License
+## license
 [GNU General Public License, version 3](https://www.gnu.org/licenses/gpl-3.0.en.html)
