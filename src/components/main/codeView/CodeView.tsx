@@ -423,7 +423,7 @@ export default function CodeView(props: CodeViewProps) {
         const content = partCodeArr.join(getLineBreaker(osType))
   
         uid = notParsingFlag ? _parent : uid
-
+        checkValidHtml(codeContent.current)
         codeChanges.push({ uid , content })
         const parsedHtml = ReactHtmlParser(codeContent.current);
         // let dom = htmlparser2.parseDocument(content, {
@@ -431,26 +431,26 @@ export default function CodeView(props: CodeViewProps) {
         //   withStartIndices: true,
         // });
 
-        let htmlSkeletonStructureCount = 0
-        for(let x in parsedHtml) {
-          if (parsedHtml[x] && parsedHtml[x]?.type === 'html') {
-            if (parsedHtml[x].props.children) {
-              for (let i in parsedHtml[x].props.children) {
-                if (parsedHtml[x].props.children[i] && parsedHtml[x].props.children[i].type && (parsedHtml[x].props.children[i].type === 'body' || parsedHtml[x].props.children[i].type === 'head'))
-                  htmlSkeletonStructureCount ++
-              }
-            }
-          }
-        }
-        if (htmlSkeletonStructureCount >= 2) {
+        // let htmlSkeletonStructureCount = 0
+        // for(let x in parsedHtml) {
+        //   if (parsedHtml[x] && parsedHtml[x]?.type === 'html') {
+        //     if (parsedHtml[x].props.children) {
+        //       for (let i in parsedHtml[x].props.children) {
+        //         if (parsedHtml[x].props.children[i] && parsedHtml[x].props.children[i].type && (parsedHtml[x].props.children[i].type === 'body' || parsedHtml[x].props.children[i].type === 'head'))
+        //           htmlSkeletonStructureCount ++
+        //       }
+        //     }
+        //   }
+        // }
+        // if (htmlSkeletonStructureCount >= 2) {
 
-          hasMismatchedTags = checkValidHtml(codeContent.current)
+        //   hasMismatchedTags = checkValidHtml(codeContent.current)
           
-          if (hasMismatchedTags === false) codeChanges.push({ uid , content })
-        }
-        else{
-          console.log("Can't remove this element because it's an unique element of this page")
-        }
+        //   if (hasMismatchedTags === false) codeChanges.push({ uid , content })
+        // }
+        // else{
+        //   console.log("Can't remove this element because it's an unique element of this page")
+        // }
       }
 
       
