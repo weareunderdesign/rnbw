@@ -6,6 +6,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import * as htmlparser2 from "htmlparser2_sep";
 
 import { debounce } from 'lodash';
 import * as monaco from 'monaco-editor';
@@ -144,6 +145,7 @@ export default function CodeView(props: CodeViewProps) {
   // -------------------------------------------------------------- sync --------------------------------------------------------------
   // build node tree refernece
   useEffect(() => {
+    debugger
     validNodeTreeRef.current = JSON.parse(JSON.stringify(validNodeTree))
     
     // set new focused node
@@ -230,6 +232,8 @@ export default function CodeView(props: CodeViewProps) {
   // watch focus/selection for the editor
   const firstSelection = useRef<CodeSelection | null>(null)
   const [selection, setSelection] = useState<CodeSelection | null>(null)
+
+
   const updateSelection = useCallback(() => {
     if (!parseFileFlag) return
     const _selection = monacoRef.current?.getSelection()
@@ -264,13 +268,17 @@ export default function CodeView(props: CodeViewProps) {
       setSelection(null)
     }
   }, [selection, parseFileFlag])
+
+
   useEffect(() => {
     const cursorDetectInterval = setInterval(() => updateSelection(), 0)
     return () => clearInterval(cursorDetectInterval)
   }, [updateSelection])
   // detect node of current selection
   const [focusedNode, setFocusedNode] = useState<TNode>()
+
   useEffect(() => {
+    debugger
     if (!parseFileFlag) return
     if (!selection) return
 
@@ -297,7 +305,7 @@ export default function CodeView(props: CodeViewProps) {
 
         const editor = monacoRef.current
         if (!editor) return
-        if(!startIndex || !endIndex)
+        if(startIndex===undefined && endIndex === undefined)
         return
         const { startLineNumber, startColumn, endLineNumber, endColumn} = getPositionFromIndex(editor,startIndex,endIndex)
 
@@ -319,7 +327,10 @@ export default function CodeView(props: CodeViewProps) {
       }
     }
   }, [selection, parseFileFlag])
+
+
   useEffect(() => {
+    debugger
     if (focusedNode) {
       if (focusedNode.uid === focusedItemRef.current) return
 
@@ -412,7 +423,14 @@ export default function CodeView(props: CodeViewProps) {
         const content = partCodeArr.join(getLineBreaker(osType))
   
         uid = notParsingFlag ? _parent : uid
+
+        codeChanges.push({ uid , content })
         const parsedHtml = ReactHtmlParser(codeContent.current);
+        // let dom = htmlparser2.parseDocument(content, {
+        //   withEndIndices: true,
+        //   withStartIndices: true,
+        // });
+
         let htmlSkeletonStructureCount = 0
         for(let x in parsedHtml) {
           if (parsedHtml[x] && parsedHtml[x]?.type === 'html') {
@@ -435,6 +453,7 @@ export default function CodeView(props: CodeViewProps) {
         }
       }
 
+      
       if (hasMismatchedTags === false) {
         setCodeChanges(codeChanges)
         
@@ -480,7 +499,8 @@ export default function CodeView(props: CodeViewProps) {
     }
   }, [ffTree, file.uid, validNodeTree, osType, parseFileFlag])
   const handleEditorChange = useCallback((value: string | undefined, ev: monaco.editor.IModelContentChangedEvent) => {
-    let delay = 500
+    
+    let delay = 1
     if (parseFileFlag){
       const hasFocus = monacoRef.current?.hasTextFocus()
 
@@ -492,11 +512,11 @@ export default function CodeView(props: CodeViewProps) {
       const { eol } = ev
       const { range: o_range, text: changedCode } = ev.changes[0]
       if ((changedCode === " " || changedCode === "=" || changedCode === '"' || changedCode === '""'  || changedCode === "''" || changedCode === "'" || changedCode.search('=""') !== -1) && parseFileFlag) {
-        delay = 5000
+        delay = 1
       }
       else {
         reduxTimeout.current !== null && clearTimeout(reduxTimeout.current)
-        delay = 500
+        delay = 1
       }
       const o_rowCount = o_range.endLineNumber - o_range.startLineNumber + 1
   
@@ -514,16 +534,20 @@ export default function CodeView(props: CodeViewProps) {
       const focusedNodeData = focusedNode.data as THtmlNodeData
       const uids = getSubNodeUidsByBfs(RootNodeUid, validNodeTreeRef.current)
       let completelyRemoved = false
+
       uids.map(uid => {
         const node = validNodeTreeRef.current[uid]
+        
         if (!node) return
   
         const nodeData = node.data as THtmlNodeData
         const { startIndex,endIndex } = nodeData
         const editor = monacoRef.current
         if (!editor) return
-        if(!startIndex || !endIndex)
+       
+        if(startIndex===undefined || endIndex===undefined)
         return
+        
         const { startLineNumber, startColumn, endLineNumber, endColumn} = getPositionFromIndex(editor,startIndex,endIndex)
         const {
           startLineNumber:focusedNodeStartLineNumber,
@@ -589,27 +613,30 @@ export default function CodeView(props: CodeViewProps) {
         } = validNodeTreeRef.current[focusedNode.uid].data as THtmlNodeData
         const editor = monacoRef.current
         if (!editor) return
-        if(!startIndex || !endIndex)
-        return
-        const { startLineNumber, startColumn, endLineNumber, endColumn} = getPositionFromIndex(editor,startIndex,endIndex)
-        const focusedNodeCodeRange: monaco.IRange  = {
-          startLineNumber,
-          startColumn,
-          endLineNumber,
-          endColumn
+        if(startIndex && endIndex){
+          
+          const { startLineNumber, startColumn, endLineNumber, endColumn} = getPositionFromIndex(editor,startIndex,endIndex)
+          const focusedNodeCodeRange: monaco.IRange  = {
+            startLineNumber,
+            startColumn,
+            endLineNumber,
+            endColumn
+          }
+          if (!completelyRemoved) {
+            focusedNodeDecorations.push(
+              {
+                range: focusedNodeCodeRange,
+                options: {
+                  isWholeLine: true,
+                  className: 'focusedNodeCode',
+                }
+              },
+            )
+          }
+          codeChangeDecorationRef.current.set(focusedNode.uid, focusedNodeDecorations)
+
         }
-        if (!completelyRemoved) {
-          focusedNodeDecorations.push(
-            {
-              range: focusedNodeCodeRange,
-              options: {
-                isWholeLine: true,
-                className: 'focusedNodeCode',
-              }
-            },
-          )
-        }
-        codeChangeDecorationRef.current.set(focusedNode.uid, focusedNodeDecorations)
+
         
         // render decorations
         const decorationsList = codeChangeDecorationRef.current.values()
@@ -620,6 +647,8 @@ export default function CodeView(props: CodeViewProps) {
         decorationCollectionRef.current?.set(wholeDecorations)
   
       }
+
+      
     }
     // update redux with debounce
     codeContent.current = value || ''
@@ -627,6 +656,7 @@ export default function CodeView(props: CodeViewProps) {
     if (newPosition !== undefined) {
       currentPosition.current = newPosition
     }
+    debugger
     reduxTimeout.current !== null && clearTimeout(reduxTimeout.current)
     reduxTimeout.current = setTimeout(saveFileContentToRedux, delay)
 
