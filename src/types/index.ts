@@ -1,3 +1,3 @@
-export * from './global'
+export * from "./global";
 
-export * from './main'
+export * from "./main";

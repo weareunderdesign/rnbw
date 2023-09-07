@@ -1,109 +1,146 @@
-import React, {
-  useContext,
-  useMemo,
-} from 'react';
+import React, { useContext, useMemo } from "react";
 
-import {
-  useDispatch,
-  useSelector,
-} from 'react-redux';
+import { useDispatch, useSelector } from "react-redux";
 
 import {
   ffSelector,
   globalSelector,
   MainContext,
   navigatorSelector,
-} from '@_redux/main';
+} from "@_redux/main";
 
-import NavigatorPanel from './navigatorPanel';
-import NodeTreeView from './nodeTreeView';
-import SettingsPanel from './settingsPanel';
-import { ActionsPanelProps } from './types';
-import WorkspaceTreeView from './workspaceTreeView';
+import NavigatorPanel from "./navigatorPanel";
+import NodeTreeView from "./nodeTreeView";
+import SettingsPanel from "./settingsPanel";
+import { ActionsPanelProps } from "./types";
+import WorkspaceTreeView from "./workspaceTreeView";
 
 export default function ActionsPanel(props: ActionsPanelProps) {
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
   // -------------------------------------------------------------- global state --------------------------------------------------------------
-  const { file } = useSelector(navigatorSelector)
-  const { fileAction } = useSelector(globalSelector)
-  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
+  const { file } = useSelector(navigatorSelector);
+  const { fileAction } = useSelector(globalSelector);
+  const {
+    focusedItem,
+    expandedItems,
+    expandedItemsObj,
+    selectedItems,
+    selectedItemsObj,
+  } = useSelector(ffSelector);
   const {
     // global action
-    addRunningActions, removeRunningActions,
+    addRunningActions,
+    removeRunningActions,
     // navigator
     workspace,
     project,
-    navigatorDropDownType, setNavigatorDropDownType,
+    navigatorDropDownType,
+    setNavigatorDropDownType,
     // node actions
-    activePanel, setActivePanel,
-    clipboardData, setClipboardData,
-    event, setEvent,
+    activePanel,
+    setActivePanel,
+    clipboardData,
+    setClipboardData,
+    event,
+    setEvent,
     // actions panel
     showActionsPanel,
     // file tree view
-    initialFileToOpen, setInitialFileToOpen,
-    fsPending, setFSPending,
-    ffTree, setFFTree, setFFNode,
-    ffHandlers, setFFHandlers,
-    ffHoveredItem, setFFHoveredItem,
-    isHms, setIsHms,
-    ffAction, setFFAction,
-    currentFileUid, setCurrentFileUid,
+    initialFileToOpen,
+    setInitialFileToOpen,
+    fsPending,
+    setFSPending,
+    ffTree,
+    setFFTree,
+    setFFNode,
+    ffHandlers,
+    setFFHandlers,
+    ffHoveredItem,
+    setFFHoveredItem,
+    isHms,
+    setIsHms,
+    ffAction,
+    setFFAction,
+    currentFileUid,
+    setCurrentFileUid,
     // node tree view
-    fnHoveredItem, setFNHoveredItem,
-    nodeTree, setNodeTree,
-    validNodeTree, setValidNodeTree,
-    nodeMaxUid, setNodeMaxUid,
+    fnHoveredItem,
+    setFNHoveredItem,
+    nodeTree,
+    setNodeTree,
+    validNodeTree,
+    setValidNodeTree,
+    nodeMaxUid,
+    setNodeMaxUid,
     // stage view
-    iframeLoading, setIFrameLoading,
-    iframeSrc, setIFrameSrc,
-    fileInfo, setFileInfo,
-    needToReloadIFrame, setNeedToReloadIFrame,
-    linkToOpen, setLinkToOpen,
+    iframeLoading,
+    setIFrameLoading,
+    iframeSrc,
+    setIFrameSrc,
+    fileInfo,
+    setFileInfo,
+    needToReloadIFrame,
+    setNeedToReloadIFrame,
+    linkToOpen,
+    setLinkToOpen,
     // code view
-    codeEditing, setCodeEditing,
-    codeChanges, setCodeChanges,
-    tabSize, setTabSize,
-    newFocusedNodeUid, setNewFocusedNodeUid,
+    codeEditing,
+    setCodeEditing,
+    codeChanges,
+    setCodeChanges,
+    tabSize,
+    setTabSize,
+    newFocusedNodeUid,
+    setNewFocusedNodeUid,
     // processor
-    updateOpt, setUpdateOpt,
+    updateOpt,
+    setUpdateOpt,
     // references
-    filesReferenceData, htmlReferenceData, cmdkReferenceData,
+    filesReferenceData,
+    htmlReferenceData,
+    cmdkReferenceData,
     // cmdk
-    currentCommand, setCurrentCommand,
-    cmdkOpen, setCmdkOpen,
-    cmdkPages, setCmdkPages, cmdkPage,
+    currentCommand,
+    setCurrentCommand,
+    cmdkOpen,
+    setCmdkOpen,
+    cmdkPages,
+    setCmdkPages,
+    cmdkPage,
     // other
     osType,
     theme,
     // toasts
-    addMessage, removeMessage,
-  } = useContext(MainContext)
+    addMessage,
+    removeMessage,
+  } = useContext(MainContext);
 
   return useMemo(() => {
-    return <>
-      <div
-        id='ActionsPanel'
-        className='border radius-s background-primary shadow'
-        style={{
-          position: 'absolute',
-          top: props.offsetTop,
-          left: props.offsetLeft,
-          width: props.width,
-          height: props.height,
+    return (
+      <>
+        <div
+          id="ActionsPanel"
+          className="border radius-s background-primary shadow"
+          style={{
+            position: "absolute",
+            top: props.offsetTop,
+            left: props.offsetLeft,
+            width: props.width,
+            height: props.height,
 
-          overflow: 'hidden',
+            overflow: "hidden",
 
-          ...(showActionsPanel ? {} : { width: '0', overflow: 'hidden', border: 'none' }),
-        }}
-      >
-        <NavigatorPanel />
-        <WorkspaceTreeView />
-        <NodeTreeView />
-        {false && <SettingsPanel />}
-      </div>
-    </>
-  }, [
-    props, showActionsPanel,
-  ])
+            ...(showActionsPanel
+              ? {}
+              : { width: "0", overflow: "hidden", border: "none" }),
+          }}
+        >
+          <NavigatorPanel />
+          <WorkspaceTreeView />
+          <NodeTreeView />
+          {false && <SettingsPanel />}
+        </div>
+      </>
+    );
+  }, [props, showActionsPanel]);
 }

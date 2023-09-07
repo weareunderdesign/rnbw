@@ -1,26 +1,20 @@
-import React, {
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import React, { useContext, useEffect, useMemo, useState } from "react";
 
-import LoadingBar from 'react-top-loading-bar';
+import LoadingBar from "react-top-loading-bar";
 
-import { MainContext } from '@_redux/main/context';
+import { MainContext } from "@_redux/main/context";
 
-import { LoaderProps } from './types';
+import { LoaderProps } from "./types";
 
 export const Loader = (props: LoaderProps) => {
-  let paceTimer: NodeJS.Timer
-  const [progress, setProgress] = useState(0)
-  const animationName = useMemo(() => `loading-bar-animation`, [])
+  let paceTimer: NodeJS.Timer;
+  const [progress, setProgress] = useState(0);
+  const animationName = useMemo(() => `loading-bar-animation`, []);
 
-  const {
-    theme,
-  } = useContext(MainContext)
+  const { theme } = useContext(MainContext);
 
-  const keyframesStyle = useMemo(() => `
+  const keyframesStyle = useMemo(
+    () => `
     @keyframes ${animationName} {
       0% {
         left: 0%;
@@ -46,35 +40,44 @@ export const Loader = (props: LoaderProps) => {
         width: 0%;
       }
     }
-  `, [animationName])
+  `,
+    [animationName],
+  );
 
   useEffect(() => {
-    const styleElement = document.createElement('style')
-    let styleSheet = null
-    document.head.appendChild(styleElement)
+    const styleElement = document.createElement("style");
+    let styleSheet = null;
+    document.head.appendChild(styleElement);
 
-    styleSheet = styleElement.sheet
-    styleSheet?.insertRule(keyframesStyle, styleSheet?.cssRules.length)
-  }, [])
+    styleSheet = styleElement.sheet;
+    styleSheet?.insertRule(keyframesStyle, styleSheet?.cssRules.length);
+  }, []);
   useEffect(() => {
     if (props.show) {
       paceTimer = setInterval(() => {
-        let temp = progress
-        setProgress(temp + 3) 
-      }, 20)
+        let temp = progress;
+        setProgress(temp + 3);
+      }, 20);
+    } else {
+      setProgress(0);
+      clearInterval(paceTimer);
     }
-    else{
-      setProgress(0)
-      clearInterval(paceTimer)
-    }
-    return () => clearInterval(paceTimer)
-  }, [props.show, progress])
+    return () => clearInterval(paceTimer);
+  }, [props.show, progress]);
   useEffect(() => {
-    if (progress > 97){
-      clearInterval(paceTimer)
+    if (progress > 97) {
+      clearInterval(paceTimer);
     }
-  }, [progress])
-  return <>
-    {props.show && <LoadingBar color={theme === 'Light' ? '#111' : '#fff'} progress={progress} shadow={true} />}
-  </>
-}
+  }, [progress]);
+  return (
+    <>
+      {props.show && (
+        <LoadingBar
+          color={theme === "Light" ? "#111" : "#fff"}
+          progress={progress}
+          shadow={true}
+        />
+      )}
+    </>
+  );
+};

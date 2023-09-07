@@ -1,1 +1,1 @@
-export type MainPageProps = {}
+export type MainPageProps = {};

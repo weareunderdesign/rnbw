@@ -1,1 +1,1 @@
-export type NavigatorPanelProps = {}
+export type NavigatorPanelProps = {};

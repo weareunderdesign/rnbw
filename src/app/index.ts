@@ -1,5 +1,5 @@
-import App from './App';
+import App from "./App";
 
-export default App
+export default App;
 
-export * from './types'
+export * from "./types";

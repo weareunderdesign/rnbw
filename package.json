@@ -5,7 +5,8 @@
   "scripts": {
     "build": "cpx public/svg-icon.config.json dist -C && cpx public/nohost-sw.js dist -C && webpack --progress --mode production",
     "start": "webpack serve --mode development",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "pretty": "prettier --write \"src/**/*.*\""
   },
   "keywords": [],
   "author": "",
@@ -60,6 +61,7 @@
     "gh-pages": "^4.0.0",
     "html-webpack-plugin": "^5.5.0",
     "monaco-editor-webpack-plugin": "^7.0.1",
+    "prettier": "^3.0.3",
     "sass": "^1.55.0",
     "sass-loader": "^13.1.0",
     "source-map-loader": "^4.0.1",

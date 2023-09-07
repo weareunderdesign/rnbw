@@ -1,74 +1,100 @@
-import React, {
-  useCallback,
-  useContext,
-  useMemo,
-} from 'react';
+import React, { useCallback, useContext, useMemo } from "react";
 
-import { useDispatch } from 'react-redux';
+import { useDispatch } from "react-redux";
 
-import { MainContext } from '@_redux/main';
+import { MainContext } from "@_redux/main";
 
-import { SettingsPanelProps } from './types';
+import { SettingsPanelProps } from "./types";
 
 export default function SettingsPanel(props: SettingsPanelProps) {
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
   // -------------------------------------------------------------- global state --------------------------------------------------------------
   const {
     // global action
-    addRunningActions, removeRunningActions,
+    addRunningActions,
+    removeRunningActions,
     // node actions
-    activePanel, setActivePanel,
-    clipboardData, setClipboardData,
-    event, setEvent,
+    activePanel,
+    setActivePanel,
+    clipboardData,
+    setClipboardData,
+    event,
+    setEvent,
     // file tree view
-    fsPending, setFSPending,
-    ffTree, setFFTree, setFFNode,
-    ffHandlers, setFFHandlers,
-    ffHoveredItem, setFFHoveredItem,
-    isHms, setIsHms,
-    ffAction, setFFAction,
-    currentFileUid, setCurrentFileUid,
+    fsPending,
+    setFSPending,
+    ffTree,
+    setFFTree,
+    setFFNode,
+    ffHandlers,
+    setFFHandlers,
+    ffHoveredItem,
+    setFFHoveredItem,
+    isHms,
+    setIsHms,
+    ffAction,
+    setFFAction,
+    currentFileUid,
+    setCurrentFileUid,
     // node tree view
-    fnHoveredItem, setFNHoveredItem,
-    nodeTree, setNodeTree,
-    validNodeTree, setValidNodeTree,
-    nodeMaxUid, setNodeMaxUid,
+    fnHoveredItem,
+    setFNHoveredItem,
+    nodeTree,
+    setNodeTree,
+    validNodeTree,
+    setValidNodeTree,
+    nodeMaxUid,
+    setNodeMaxUid,
     // stage view
-    iframeLoading, setIFrameLoading,
-    iframeSrc, setIFrameSrc,
-    fileInfo, setFileInfo,
-    needToReloadIFrame, setNeedToReloadIFrame,
+    iframeLoading,
+    setIFrameLoading,
+    iframeSrc,
+    setIFrameSrc,
+    fileInfo,
+    setFileInfo,
+    needToReloadIFrame,
+    setNeedToReloadIFrame,
     // code view
-    codeEditing, setCodeEditing,
-    codeChanges, setCodeChanges,
-    tabSize, setTabSize,
-    newFocusedNodeUid, setNewFocusedNodeUid,
+    codeEditing,
+    setCodeEditing,
+    codeChanges,
+    setCodeChanges,
+    tabSize,
+    setTabSize,
+    newFocusedNodeUid,
+    setNewFocusedNodeUid,
     // processor
-    updateOpt, setUpdateOpt,
+    updateOpt,
+    setUpdateOpt,
     // references
-    filesReferenceData, htmlReferenceData, cmdkReferenceData,
+    filesReferenceData,
+    htmlReferenceData,
+    cmdkReferenceData,
     // cmdk
-    currentCommand, setCurrentCommand,
-    cmdkOpen, setCmdkOpen,
-    cmdkPages, setCmdkPages, cmdkPage,
+    currentCommand,
+    setCurrentCommand,
+    cmdkOpen,
+    setCmdkOpen,
+    cmdkPages,
+    setCmdkPages,
+    cmdkPage,
     // other
     osType,
     theme,
     // toasts
-    addMessage, removeMessage,
-  } = useContext(MainContext)
+    addMessage,
+    removeMessage,
+  } = useContext(MainContext);
   // -------------------------------------------------------------- own --------------------------------------------------------------
   const onPanelClick = useCallback((e: React.MouseEvent) => {
-    setActivePanel('settings')
-  }, [])
+    setActivePanel("settings");
+  }, []);
 
   return useMemo(() => {
-    return <>
-      <div
-        id="SettingsPanel"
-        onClick={onPanelClick}
-      >
-      </div>
-    </>
-  }, [onPanelClick])
+    return (
+      <>
+        <div id="SettingsPanel" onClick={onPanelClick}></div>
+      </>
+    );
+  }, [onPanelClick]);
 }
