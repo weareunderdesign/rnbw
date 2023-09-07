@@ -5,46 +5,27 @@ import React, {
   useMemo,
   useRef,
 } from "react";
-
 import cx from "classnames";
 import { useDispatch, useSelector } from "react-redux";
-
 import { SVGIconI, SVGIconII, TreeView } from "@_components/common";
 import { TreeViewData } from "@_components/common/treeView/types";
 import {
   AddNodeActionPrefix,
-  HmsClearActionType,
   NodeInAppAttribName,
   RootNodeUid,
 } from "@_constants/main";
 import {
-  addNode,
-  copyNode,
-  copyNodeExternal,
-  duplicateNode,
-  getNodeChildIndex,
-  getValidNodeUids,
-  moveNode,
-  parseHtmlCodePart,
-  removeNode,
   TFileNodeData,
   THtmlElementsReference,
   THtmlNodeData,
 } from "@_node/index";
-import { TNode, TNodeTreeData, TNodeUid, TNormalNodeData } from "@_node/types";
+import { TNode, TNodeUid } from "@_node/types";
 import {
-  collapseFNNode,
   expandFFNode,
-  expandFNNode,
   ffSelector,
   fnSelector,
-  focusFNNode,
-  increaseActionGroupIndex,
   MainContext,
   navigatorSelector,
-  selectFFNode,
-  selectFNNode,
-  setCurrentFile,
 } from "@_redux/main";
 import { getCommandKey } from "@_services/global";
 import { addClass, removeClass } from "@_services/main";
@@ -56,6 +37,7 @@ import { useNodeActionsHandlers } from "./hooks/useNodeActionsHendlers";
 import { useNodeTreeCallback } from "./hooks/useNodeTreeCallback";
 
 const AutoExpandDelay = 1 * 1000;
+
 export default function NodeTreeView(props: NodeTreeViewProps) {
   const dispatch = useDispatch();
   // -------------------------------------------------------------- global state --------------------------------------------------------------
@@ -64,90 +46,33 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     useSelector(fnSelector);
   const { expandedItemsObj } = useSelector(ffSelector);
   const {
-    project,
     // global action
     addRunningActions,
     removeRunningActions,
     // node actions
     activePanel,
     setActivePanel,
-    clipboardData,
-    setClipboardData,
     navigatorDropDownType,
     setNavigatorDropDownType,
-    event,
-    setEvent,
     // actions panel
     showActionsPanel,
     // file tree view
-    fsPending,
-    setFSPending,
     ffTree,
-    setFFTree,
-    setFFNode,
-    ffHandlers,
-    setFFHandlers,
-    ffHoveredItem,
-    setFFHoveredItem,
-    isHms,
-    setIsHms,
     setInitialFileToOpen,
-    ffAction,
-    setFFAction,
-    currentFileUid,
-    setCurrentFileUid,
     // node tree view
     fnHoveredItem,
     setFNHoveredItem,
-    nodeTree,
-    setNodeTree,
     validNodeTree,
-    setValidNodeTree,
-    nodeMaxUid,
-    setNodeMaxUid,
-    // stage view
-    iframeLoading,
-    setIFrameLoading,
-    iframeSrc,
-    setIFrameSrc,
-    fileInfo,
-    setFileInfo,
-    needToReloadIFrame,
-    setNeedToReloadIFrame,
-    // code view
-    codeEditing,
-    setCodeEditing,
-    codeChanges,
-    setCodeChanges,
-    tabSize,
-    setTabSize,
-    newFocusedNodeUid,
-    setNewFocusedNodeUid,
-    // processor
-    updateOpt,
-    setUpdateOpt,
     // references
-    filesReferenceData,
     htmlReferenceData,
-    cmdkReferenceData,
     // cmdk
     currentCommand,
-    setCurrentCommand,
-    cmdkOpen,
-    setCmdkOpen,
-    cmdkPages,
-    setCmdkPages,
-    cmdkPage,
     // other
     osType,
     theme: _theme,
     // toasts
-    addMessage,
-    removeMessage,
     parseFileFlag,
     setParseFile,
-    prevFileUid,
-    setPrevFileUid,
   } = useContext(MainContext);
   // -------------------------------------------------------------- sync --------------------------------------------------------------
   // outline the hovered item
@@ -223,10 +148,11 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     }
     return data;
   }, [validNodeTree]);
-  // -------------------------------------------------------------- node actions handlers --------------------------------------------------------------
+
+  // node actions handlers
   const { cb_moveNode } = useNodeActions();
 
-  // -------------------------------------------------------------- node view state handlers --------------------------------------------------------------
+  // node view state handlers
   const { cb_focusNode, cb_selectNode, cb_expandNode, cb_collapseNode } =
     useNodeViewState(focusedItemRef);
 
@@ -372,7 +298,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
   const isDragging = useRef<boolean>(false);
 
-  const callbacksObj = useNodeTreeCallback(focusedItemRef, isDragging);
+  const callbacks = useNodeTreeCallback(focusedItemRef, isDragging);
 
   return useMemo(() => {
     return file.uid !== "" ? (
@@ -684,56 +610,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
               canSearchByStartingTyping: false,
               canRename: false,
             }}
-            callbacks={{
-              onSelectItems: (items) => {
-                cb_selectNode(items as TNodeUid[]);
-              },
-              onFocusItem: (item) => {
-                cb_focusNode(item.index as TNodeUid);
-              },
-              onExpandItem: (item) => {
-                cb_expandNode(item.index as TNodeUid);
-              },
-              onCollapseItem: (item) => {
-                cb_collapseNode(item.index as TNodeUid);
-              },
-              onDrop: (items, target) => {
-                const uids: TNodeUid[] = items.map(
-                  (item) => item.index as TNodeUid,
-                );
-                const isBetween = target.targetType === "between-items";
-                const targetUid = (
-                  isBetween ? target.parentItem : target.targetItem
-                ) as TNodeUid;
-                const position = isBetween ? target.childIndex : 0;
-
-                cb_moveNode(uids, targetUid, isBetween, position);
-
-                isDragging.current = false;
-
-                const className = "dragging-tree";
-                const html = document.getElementsByTagName("html").item(0);
-                let body = document.body as HTMLElement;
-                body.classList.remove("inheritCursors");
-                body.style.cursor = "unset";
-                if (
-                  html &&
-                  new RegExp(className).test(html.className) === true
-                ) {
-                  // Remove className with the added space (from setClassToHTMLElement)
-
-                  html.className = html.className.replace(
-                    new RegExp(" " + className),
-                    "",
-                  );
-                  // Remove className without added space (just in case)
-                  html.className = html.className.replace(
-                    new RegExp(className),
-                    "",
-                  );
-                }
-              },
-            }}
+            callbacks={callbacks}
           />
         </div>
       </>

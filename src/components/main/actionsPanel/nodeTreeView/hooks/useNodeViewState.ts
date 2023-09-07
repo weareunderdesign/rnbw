@@ -1,5 +1,8 @@
 import { useCallback, useContext } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { getValidNodeUids } from "@_node/apis";
+import { TNodeUid } from "@_node/types";
+import { TFileNodeData } from "@_node/file";
 
 import {
   collapseFNNode,
@@ -12,98 +15,122 @@ import {
   setCurrentFile,
 } from "@_redux/main";
 
-import { getValidNodeUids } from "@_node/apis";
-import { TNodeUid } from "@_node/types";
 import { HmsClearActionType } from "@_constants/main";
 
-import { TFileNodeData } from "@_node/file";
-
 export function useNodeViewState(focusedItemRef: any) {
-  
   const dispatch = useDispatch();
-  const { focusedItem, selectedItems, selectedItemsObj } = useSelector(fnSelector)
+  const { focusedItem, selectedItems, selectedItemsObj } =
+    useSelector(fnSelector);
   const {
     // global action
-    addRunningActions, removeRunningActions,
+    addRunningActions,
+    removeRunningActions,
     // node actions
     setNavigatorDropDownType,
     // file tree view
-    ffTree, setCurrentFileUid,
+    ffTree,
+    setCurrentFileUid,
     // node tree view
     validNodeTree,
     // other
     theme: _theme,
     // toasts
-    parseFileFlag, setParseFile,
+    parseFileFlag,
+    setParseFile,
     prevFileUid,
-    } = useContext(MainContext)
-  
-  
-  const cb_focusNode = useCallback((uid: TNodeUid) => {
-    addRunningActions(['nodeTreeView-focus'])
+  } = useContext(MainContext);
 
-    // validate
-    if (focusedItem === uid) {
-      removeRunningActions(['nodeTreeView-focus'], false)
-      return
-    }
+  const cb_focusNode = useCallback(
+    (uid: TNodeUid) => {
+      addRunningActions(["nodeTreeView-focus"]);
 
-    dispatch(focusFNNode(uid))
-    focusedItemRef.current = uid
+      // validate
+      if (focusedItem === uid) {
+        removeRunningActions(["nodeTreeView-focus"], false);
+        return;
+      }
 
-    removeRunningActions(['nodeTreeView-focus'])
-  }, [addRunningActions, removeRunningActions, focusedItem])
+      dispatch(focusFNNode(uid));
+      focusedItemRef.current = uid;
 
-  const cb_selectNode = useCallback((uids: TNodeUid[]) => {
-    addRunningActions(['nodeTreeView-select'])
+      removeRunningActions(["nodeTreeView-focus"]);
+    },
+    [addRunningActions, removeRunningActions, focusedItem],
+  );
 
-    // validate
-    const _uids = getValidNodeUids(validNodeTree, uids)
-    if (_uids.length === selectedItems.length) {
-      let same = true
-      for (const _uid of _uids) {
-        if (selectedItemsObj[_uid] === undefined) {
-          same = false
-          break
+  const cb_selectNode = useCallback(
+    (uids: TNodeUid[]) => {
+      addRunningActions(["nodeTreeView-select"]);
+
+      // validate
+      const _uids = getValidNodeUids(validNodeTree, uids);
+      if (_uids.length === selectedItems.length) {
+        let same = true;
+        for (const _uid of _uids) {
+          if (selectedItemsObj[_uid] === undefined) {
+            same = false;
+            break;
+          }
+        }
+        if (same) {
+          removeRunningActions(["nodeTreeView-select"], false);
+          return;
         }
       }
-      if (same) {
-        removeRunningActions(['nodeTreeView-select'], false)
-        return
+
+      dispatch(selectFNNode(_uids));
+
+      if (!parseFileFlag) {
+        const node = ffTree[prevFileUid];
+        const uid = prevFileUid;
+        const nodeData = node.data as TFileNodeData;
+        setParseFile(true);
+        setNavigatorDropDownType("project");
+        dispatch({ type: HmsClearActionType });
+        dispatch(
+          setCurrentFile({
+            uid,
+            parentUid: node.parentUid as TNodeUid,
+            name: nodeData.name,
+            content: nodeData.contentInApp ? nodeData.contentInApp : "",
+          }),
+        );
+        setCurrentFileUid(uid);
+        dispatch(selectFFNode([prevFileUid]));
       }
-    }
+      removeRunningActions(["nodeTreeView-select"]);
+    },
+    [
+      addRunningActions,
+      removeRunningActions,
+      validNodeTree,
+      selectedItems,
+      selectedItemsObj,
+      parseFileFlag,
+    ],
+  );
 
-    dispatch(selectFNNode(_uids))
+  const cb_expandNode = useCallback(
+    (uid: TNodeUid) => {
+      addRunningActions(["nodeTreeView-arrow"]);
 
-    if (!parseFileFlag) {
-      const node = ffTree[prevFileUid]
-      const uid = prevFileUid
-      const nodeData = node.data as TFileNodeData
-      setParseFile(true)
-      setNavigatorDropDownType('project')
-      dispatch({ type: HmsClearActionType })
-      dispatch(setCurrentFile({ uid, parentUid: node.parentUid as TNodeUid, name: nodeData.name, content: nodeData.contentInApp ? nodeData.contentInApp : '' }))
-      setCurrentFileUid(uid)
-      dispatch(selectFFNode([prevFileUid]))
-    }
-    removeRunningActions(['nodeTreeView-select'])
-  }, [addRunningActions, removeRunningActions, validNodeTree, selectedItems, selectedItemsObj, parseFileFlag])
+      dispatch(expandFNNode([uid]));
 
-  const cb_expandNode = useCallback((uid: TNodeUid) => {
-    addRunningActions(['nodeTreeView-arrow'])
+      removeRunningActions(["nodeTreeView-arrow"]);
+    },
+    [addRunningActions, removeRunningActions],
+  );
 
-    dispatch(expandFNNode([uid]))
+  const cb_collapseNode = useCallback(
+    (uid: TNodeUid) => {
+      addRunningActions(["nodeTreeView-arrow"]);
 
-    removeRunningActions(['nodeTreeView-arrow'])
-  }, [addRunningActions, removeRunningActions])
-  
-  const cb_collapseNode = useCallback((uid: TNodeUid) => {
-    addRunningActions(['nodeTreeView-arrow'])
+      dispatch(collapseFNNode([uid]));
 
-    dispatch(collapseFNNode([uid]))
-
-    removeRunningActions(['nodeTreeView-arrow'])
-  }, [addRunningActions, removeRunningActions])
+      removeRunningActions(["nodeTreeView-arrow"]);
+    },
+    [addRunningActions, removeRunningActions],
+  );
 
   return { cb_focusNode, cb_selectNode, cb_expandNode, cb_collapseNode };
 }

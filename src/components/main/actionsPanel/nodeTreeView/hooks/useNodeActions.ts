@@ -1,7 +1,7 @@
-import { useCallback, useContext } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useCallback, useContext } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
-import { NodeInAppAttribName } from '@_constants/main';
+import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import {
   addNode,
   copyNode,
@@ -11,9 +11,7 @@ import {
   moveNode,
   removeNode,
   THtmlNodeData,
-} from '@_node/index';
-
-import { TNode, TNodeTreeData, TNodeUid } from '@_node/types';
+} from "@_node/index";
 
 import {
   fnSelector,
@@ -21,22 +19,26 @@ import {
   increaseActionGroupIndex,
   MainContext,
   selectFNNode,
-} from '@_redux/main';
-import { creatingNode } from '../helpers/creatingNode';
+} from "@_redux/main";
+
+import { NodeInAppAttribName } from "@_constants/main";
+import { creatingNode } from "../helpers/creatingNode";
 
 export function useNodeActions() {
   const dispatch = useDispatch();
-  // -------------------------------------------------------------- global state --------------------------------------------------------------
   const { focusedItem } = useSelector(fnSelector);
-    const {
+  const {
     // global action
-    addRunningActions, removeRunningActions,
+    addRunningActions,
+    removeRunningActions,
     // node actions
     clipboardData,
     setEvent,
     // node tree view
-    nodeTree, setNodeTree,
-    nodeMaxUid, setNodeMaxUid,
+    nodeTree,
+    setNodeTree,
+    nodeMaxUid,
+    setNodeMaxUid,
     // code view
     tabSize,
     // processor
@@ -46,14 +48,14 @@ export function useNodeActions() {
     // other
     osType,
     theme: _theme,
-    } = useContext(MainContext)
-  
+  } = useContext(MainContext);
+
   const cb_addNode = useCallback(
     (nodeType: string) => {
       if (!nodeTree[focusedItem]) return;
       addRunningActions(["nodeTreeView-add"]);
-      
-    let { newNode, _tree, tmpMaxUid, contentNode, newNodeFlag } =
+
+      let { newNode, _tree, tmpMaxUid, contentNode, newNodeFlag } =
         creatingNode(
           nodeMaxUid,
           nodeTree,
@@ -62,7 +64,6 @@ export function useNodeActions() {
           htmlReferenceData,
           osType,
         );
-      
       let tempTree;
 
       // call api
@@ -152,7 +153,6 @@ export function useNodeActions() {
 
   const cb_removeNode = useCallback(
     (uids: TNodeUid[]) => {
-
       let allow = true;
       let htmlTagCount = 0,
         bodyTagCount = 0,
@@ -228,7 +228,6 @@ export function useNodeActions() {
 
   const cb_duplicateNode = useCallback(
     (uids: TNodeUid[]) => {
-
       addRunningActions(["nodeTreeView-duplicate"]);
 
       // call api

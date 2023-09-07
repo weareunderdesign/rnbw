@@ -1,7 +1,7 @@
-import { NodeInAppAttribName } from '@_constants/main';
-import { parseHtmlCodePart, THtmlNodeData } from '@_node/index';
+import { NodeInAppAttribName } from "@_constants/main";
+import { parseHtmlCodePart, THtmlNodeData } from "@_node/index";
 
-import { TNode, TNodeTreeData, TNodeUid } from '@_node/types';
+import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 
 export const creatingNode = (
   nodeMaxUid: number,
@@ -67,7 +67,7 @@ export const creatingNode = (
         }
       });
     }
-    
+
     if (Content) {
       newNodeFlag = true;
       let parserRes = parseHtmlCodePart(
