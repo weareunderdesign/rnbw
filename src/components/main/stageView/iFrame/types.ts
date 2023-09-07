@@ -1,1 +1,1 @@
-export type IFrameProps = {}
+export type IFrameProps = {};

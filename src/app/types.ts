@@ -1,1 +1,1 @@
-export type AppProps = {}
+export type AppProps = {};

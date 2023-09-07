@@ -1,5 +1,5 @@
-const emptyImage = window.location.origin + "/images/empty-image.svg"
-const emptyAudio = window.location.origin + "/images/empty-image.svg"
+const emptyImage = window.location.origin + "/images/empty-image.svg";
+const emptyAudio = window.location.origin + "/images/empty-image.svg";
 export const jss = `
 (function() {
     // your page initialization code here
@@ -32,4 +32,4 @@ export const jss = `
  
  })();
 
-`
+`;

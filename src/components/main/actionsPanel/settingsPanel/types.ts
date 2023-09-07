@@ -1,1 +1,1 @@
-export type SettingsPanelProps = {}
+export type SettingsPanelProps = {};

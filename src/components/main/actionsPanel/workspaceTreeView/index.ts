@@ -1,5 +1,5 @@
-import WorkspaceTreeView from './WorkspaceTreeView';
+import WorkspaceTreeView from "./WorkspaceTreeView";
 
-export default WorkspaceTreeView
+export default WorkspaceTreeView;
 
-export * from './types'
+export * from "./types";

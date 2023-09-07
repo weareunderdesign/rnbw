@@ -1,5 +1,5 @@
-import SettingsPanel from './SettingsPanel';
+import SettingsPanel from "./SettingsPanel";
 
-export default SettingsPanel
+export default SettingsPanel;
 
-export * from './types'
+export * from "./types";

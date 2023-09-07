@@ -1,1 +1,1 @@
-export type NodeTreeViewProps = {}
+export type NodeTreeViewProps = {};

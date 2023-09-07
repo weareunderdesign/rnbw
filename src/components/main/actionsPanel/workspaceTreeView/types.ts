@@ -1,1 +1,1 @@
-export type WorkspaceTreeViewProps = {}
+export type WorkspaceTreeViewProps = {};

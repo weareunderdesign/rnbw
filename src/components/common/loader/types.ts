@@ -1,3 +1,3 @@
 export type LoaderProps = {
-  show: boolean,
-}
+  show: boolean;
+};

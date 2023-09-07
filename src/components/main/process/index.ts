@@ -1,5 +1,5 @@
-import Process from './Process';
+import Process from "./Process";
 
-export default Process
+export default Process;
 
-export * from './types'
+export * from "./types";

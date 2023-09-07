@@ -1,5 +1,4 @@
 /**
  * global reducer state
  */
-export type TGlobalReducerState = {
-}
+export type TGlobalReducerState = {};
