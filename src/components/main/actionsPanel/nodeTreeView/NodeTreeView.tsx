@@ -782,6 +782,8 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
   const onCut = useCallback(() => {
     if (selectedItems.length === 0) return
+    cb_removeNode(selectedItems)
+
     let data: TNode[] = []
     for (let x in selectedItems) {
       if (validNodeTree[selectedItems[x]]) {
@@ -789,7 +791,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
       }
     }
     setClipboardData({ panel: 'node', type: 'cut', uids: selectedItems, fileType: ffTree[file.uid].data.type, data: data, fileUid: file.uid, prevNodeTree: nodeTree })
-  }, [selectedItems, ffTree[file.uid], nodeTree])
+  }, [selectedItems, ffTree[file.uid], nodeTree, cb_removeNode])
   const onCopy = useCallback(() => {
     if (selectedItems.length === 0) return
     let data: TNode[] = []
@@ -815,22 +817,18 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     const childIndex = getNodeChildIndex(parentNode, focusedNode)
 
-    if (clipboardData.type === 'cut') {
-      setClipboardData({ panel: 'unknown', type: null, uids: [], fileType: 'html', data: [], fileUid: '', prevNodeTree: {} })
       if (file.uid === clipboardData.fileUid) {
         cb_moveNode(uids, parentNode.uid, true, childIndex + 1)
       }
       else{
         cb_copyNodeExternal(datas, parentNode.uid, true, childIndex + 1)
       }
-    } else {
       if (file.uid === clipboardData.fileUid) {
         cb_copyNodeExternal(datas, parentNode.uid, true, childIndex + 1)
       }
       else{
         cb_copyNodeExternal(datas, parentNode.uid, true, childIndex + 1)
       }
-    }
   }, [clipboardData, validNodeTree, focusedItem, cb_moveNode, cb_copyNode, file.uid, cb_copyNodeExternal])
   const onDelete = useCallback(() => {
     if (selectedItems.length === 0) return
