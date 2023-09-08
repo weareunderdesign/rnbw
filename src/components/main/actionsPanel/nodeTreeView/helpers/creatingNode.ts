@@ -1,15 +1,17 @@
 import { NodeInAppAttribName } from "@_constants/main";
 import { parseHtmlCodePart, THtmlNodeData } from "@_node/index";
+import { THtmlReferenceData } from "@_node/html";
 
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
+import { TOsType } from "@_types/global";
 
 export const creatingNode = (
   nodeMaxUid: number,
   nodeTree: TNodeTreeData,
   focusedItem: TNodeUid,
   nodeType: string,
-  htmlReferenceData: any,
-  osType: any,
+  htmlReferenceData: THtmlReferenceData,
+  osType: TOsType,
 ) => {
   const newNode: TNode = {
     uid: String(nodeMaxUid + 1) as TNodeUid,
@@ -77,7 +79,7 @@ export const creatingNode = (
         String(nodeMaxUid) as TNodeUid,
       );
 
-      const { formattedContent, tree, nodeMaxUid: newNodeMaxUid } = parserRes;
+      const { tree, nodeMaxUid: newNodeMaxUid } = parserRes;
       tmpMaxUid = newNodeMaxUid;
       _tree = tree;
       newNode.isEntity = false;

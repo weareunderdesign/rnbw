@@ -1,7 +1,7 @@
 import { useCallback, useContext } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
+import { TNode, TNodeUid } from "@_node/types";
 import {
   addNode,
   copyNode,
@@ -10,7 +10,6 @@ import {
   getValidNodeUids,
   moveNode,
   removeNode,
-  THtmlNodeData,
 } from "@_node/index";
 
 import {
@@ -21,8 +20,10 @@ import {
   selectFNNode,
 } from "@_redux/main";
 
-import { NodeInAppAttribName } from "@_constants/main";
 import { creatingNode } from "../helpers/creatingNode";
+import { addNodeToTree } from "../helpers/addNodeToTree";
+import { isRemovingAllowed } from "../helpers/isRemovingAllowed";
+import { getTree } from "../helpers/getTree";
 
 export function useNodeActions() {
   const dispatch = useDispatch();
@@ -67,39 +68,10 @@ export function useNodeActions() {
       let tempTree;
 
       // call api
-      const tree = JSON.parse(JSON.stringify(nodeTree));
+      const tree = getTree(nodeTree);
 
       if (_tree) {
-        let _parent = tree[nodeTree[focusedItem].parentUid as TNodeUid];
-        for (let x in _tree) {
-          if (x === "text") continue;
-          if (x === "ROOT") {
-            _tree[x].uid = String(Number(tmpMaxUid) + 1);
-            _tree[x].parentUid =
-              focusedItem !== "ROOT" && _parent !== undefined
-                ? nodeTree[focusedItem].parentUid
-                : "ROOT";
-            _tree[x].name = newNode.name;
-            _tree[x].data.type = "tag";
-            _tree[x].data.name = newNode.name;
-            _tree[x].data.valid = true;
-            (_tree[x].data as THtmlNodeData).attribs = {
-              [NodeInAppAttribName]: String(Number(tmpMaxUid) + 1) as TNodeUid,
-            };
-            newNode.uid = String(Number(tmpMaxUid) + 1);
-            tree[String(Number(tmpMaxUid) + 1)] = _tree[x];
-            if (focusedItem !== "ROOT" && _parent !== undefined) {
-              _parent.children.push(String(Number(tmpMaxUid) + 1));
-            } else {
-              tree["ROOT"].children.push(String(Number(tmpMaxUid) + 1));
-            }
-          } else {
-            if (_tree[x].parentUid === "ROOT") {
-              _tree[x].parentUid = String(Number(tmpMaxUid) + 1);
-            }
-            tree[x] = _tree[x];
-          }
-        }
+        addNodeToTree(_tree, tree, nodeTree, focusedItem, newNode, tmpMaxUid);
       } else {
         const res = addNode(
           tree,
@@ -153,48 +125,13 @@ export function useNodeActions() {
 
   const cb_removeNode = useCallback(
     (uids: TNodeUid[]) => {
-      let allow = true;
-      let htmlTagCount = 0,
-        bodyTagCount = 0,
-        headTagCount = 0;
-      for (let x in nodeTree) {
-        (nodeTree[x]?.data as THtmlNodeData).name === "html" &&
-          (nodeTree[x]?.data as THtmlNodeData).type === "tag" &&
-          htmlTagCount++;
-        (nodeTree[x]?.data as THtmlNodeData).name === "body" &&
-          (nodeTree[x]?.data as THtmlNodeData).type === "tag" &&
-          bodyTagCount++;
-        (nodeTree[x]?.data as THtmlNodeData).name === "head" &&
-          (nodeTree[x]?.data as THtmlNodeData).type === "tag" &&
-          headTagCount++;
-      }
-      uids.map((_uid) => {
-        const node = nodeTree[_uid];
-        const nodeData = nodeTree[_uid].data as THtmlNodeData;
-        if (!node || !nodeData) {
-          allow = false;
-          return;
-        }
-        if (
-          (nodeData.name === "html" &&
-            nodeData.type === "tag" &&
-            htmlTagCount === 1) ||
-          (nodeData.name === "head" &&
-            nodeData.type === "tag" &&
-            headTagCount === 1) ||
-          (nodeData.name === "body" &&
-            nodeData.type === "tag" &&
-            bodyTagCount === 1)
-        ) {
-          allow = false;
-          return;
-        }
-      });
+      const allow = isRemovingAllowed(nodeTree, uids);
+
       if (allow) {
         addRunningActions(["nodeTreeView-remove"]);
 
         // call api
-        const tree = JSON.parse(JSON.stringify(nodeTree)) as TNodeTreeData;
+        const tree = getTree(nodeTree);
         const res = removeNode(tree, uids, "html");
 
         // processor
@@ -231,7 +168,7 @@ export function useNodeActions() {
       addRunningActions(["nodeTreeView-duplicate"]);
 
       // call api
-      const tree = JSON.parse(JSON.stringify(nodeTree)) as TNodeTreeData;
+      const tree = getTree(nodeTree);
       const res = duplicateNode(
         tree,
         uids,
@@ -277,7 +214,7 @@ export function useNodeActions() {
       addRunningActions(["nodeTreeView-copy"]);
 
       // call api
-      const tree = JSON.parse(JSON.stringify(nodeTree)) as TNodeTreeData;
+      const tree = getTree(nodeTree);
       const res = copyNode(
         tree,
         targetUid,
@@ -328,7 +265,7 @@ export function useNodeActions() {
       addRunningActions(["nodeTreeView-copy"]);
 
       // call api
-      const tree = JSON.parse(JSON.stringify(nodeTree)) as TNodeTreeData;
+      const tree = getTree(nodeTree);
       const res = copyNodeExternal(
         tree,
         targetUid,
@@ -391,7 +328,7 @@ export function useNodeActions() {
       addRunningActions(["nodeTreeView-move"]);
 
       // call api
-      const tree = JSON.parse(JSON.stringify(nodeTree)) as TNodeTreeData;
+      const tree = getTree(nodeTree);
       const res = moveNode(
         tree,
         targetUid,
