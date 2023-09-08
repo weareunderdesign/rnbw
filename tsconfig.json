@@ -6,53 +6,29 @@
     "module": "commonjs",
     "target": "es6",
     "esModuleInterop": true,
-    // 
+    //
     "strict": true,
     "sourceMap": true,
-    "typeRoots": [
-      "node_modules/@types"
-    ],
-    // 
+    "typeRoots": ["node_modules/@types"],
+    //
     "jsx": "react",
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "Node",
     "baseUrl": ".",
     "paths": {
-      "@_node/*": [
-        "src/_node/*",
-      ],
-      "@_redux/*": [
-        "src/_redux/*",
-      ],
-      "@_ref/*": [
-        "src/_ref/*",
-      ],
-      "@_app/*": [
-        "src/app/*",
-      ],
-      "@_components/*": [
-        "src/components/*",
-      ],
-      "@_constants/*": [
-        "src/constants/*",
-      ],
-      "@_pages/*": [
-        "src/pages/*",
-      ],
-      "@_services/*": [
-        "src/services/*",
-      ],
-      "@_types/*": [
-        "src/types/*",
-      ],
-    },
+      "@_node/*": ["src/_node/*"],
+      "@_redux/*": ["src/_redux/*"],
+      "@_ref/*": ["src/_ref/*"],
+      "@_app/*": ["src/app/*"],
+      "@_components/*": ["src/components/*"],
+      "@_constants/*": ["src/constants/*"],
+      "@_hooks/*": ["src/hooks/*"],
+      "@_pages/*": ["src/pages/*"],
+      "@_services/*": ["src/services/*"],
+      "@_types/*": ["src/types/*"]
+    }
   },
-  "include": [
-    "src/**/*",
-  ],
-  "exclude": [
-    "dist",
-    "node_modules",
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["dist", "node_modules"]
 }
