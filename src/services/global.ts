@@ -21,3 +21,14 @@ export const getCommandKey = (
     ? e.ctrlKey
     : false;
 };
+
+export const getSystemTheme = () => {
+  if (
+    window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches
+  ) {
+    return "vs-dark";
+  } else {
+    return "light";
+  }
+};
