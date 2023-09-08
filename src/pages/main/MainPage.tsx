@@ -218,6 +218,14 @@ export default function MainPage(props: MainPageProps) {
   const [cmdkOpen, setCmdkOpen] = useState<boolean>(false)
   const [cmdkPages, setCmdkPages] = useState<string[]>([])
 
+  const [isProjectCreated, setIsProjectCreated] = useState<boolean>(false);
+
+  useEffect(()=>{
+    if(isProjectCreated) {
+      toogleCodeView();
+    }
+  },[fnSelector,isProjectCreated])
+
   // first loaded
   const firstLoaded = useRef<number>(0)
   // guide ref
@@ -505,7 +513,9 @@ export default function MainPage(props: MainPageProps) {
         onJumpstart()
         break
       case 'New':
-        onNew()
+        onNew();
+        setIsProjectCreated(true);
+
         // show actions panel by default
         !showActionsPanel && setShowActionsPanel(true)
         break
