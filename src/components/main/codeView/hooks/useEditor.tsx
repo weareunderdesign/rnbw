@@ -54,13 +54,17 @@ export default function useEditor() {
     setLanguage(language);
   };
 
+  function getCurrentEditorInstance() {
+    return monacoRef.current;
+  }
+
   // tabSize
   useEffect(() => {
     setTabSize(DefaultTabSize);
   }, []);
 
   return {
-    monacoEditor: monacoRef.current,
+    getCurrentEditorInstance,
     decorationCollectionRef,
     currentPosition,
     handleEditorDidMount,
