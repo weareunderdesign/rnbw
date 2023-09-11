@@ -18,9 +18,7 @@ export const useTheme = () => {
   const [theme, setTheme] = useState<"vs-dark" | "light">();
 
   useEffect(() => {
-    return () => {
-      setTheme(getCurrentTheme(_theme));
-    };
+    setTheme(getCurrentTheme(_theme));
   }, [_theme]);
 
   return {
