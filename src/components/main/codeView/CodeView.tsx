@@ -6,11 +6,11 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { debounce } from "lodash";
+
 import * as monaco from "monaco-editor";
 import { useDispatch, useSelector } from "react-redux";
 
-import { DefaultTabSize, RootNodeUid } from "@_constants/main";
+import { RootNodeUid } from "@_constants/main";
 import {
   checkValidHtml,
   getSubNodeUidsByBfs,
@@ -50,8 +50,6 @@ export default function CodeView(props: CodeViewProps) {
     // global action
     addRunningActions,
     // node actions
-    activePanel,
-    setActivePanel,
     setFSPending,
     ffTree,
     setFFTree,
@@ -76,15 +74,18 @@ export default function CodeView(props: CodeViewProps) {
   // ----------------------------------------------------------custom Hooks---------------------------------------------------------------
   const { theme } = useTheme();
   const {
-    monacoRef,
+    getCurrentEditorInstance,
     decorationCollectionRef,
     currentPosition,
     handleEditorDidMount,
     language,
     updateLanguage,
+    editorConfigs,
   } = useEditor();
 
-  const { editorWrapperRef } = useEditorWrapper(monacoRef.current);
+  const { editorWrapperRef, onPanelClick } = useEditorWrapper(
+    getCurrentEditorInstance(),
+  );
   //-----------------------------------------
 
   const isFirst = useRef<boolean>(true);
@@ -120,7 +121,7 @@ export default function CodeView(props: CodeViewProps) {
     if (updateOpt.from === "code") return;
 
     const fileData = _file.data as TFileNodeData;
-    const extension = fileData.type;
+    const extension = fileData.ext;
     extension && updateLanguage(extension);
 
     codeContent.current = fileData.content;
@@ -134,8 +135,7 @@ export default function CodeView(props: CodeViewProps) {
     if (!parseFileFlag) {
       return;
     }
-    // console.log(currentPosition.current, focusedItem)
-    // currentPosition.current && !monacoRef.current?.getPosition()?.equals(currentPosition.current) && monacoRef.current?.setPosition(currentPosition.current)
+
     if (focusedItem === RootNodeUid || focusedItemRef.current === focusedItem)
       return;
     if (!validNodeTree[focusedItem]) return;
@@ -143,26 +143,27 @@ export default function CodeView(props: CodeViewProps) {
     if (codeEditing) return;
     // Convert the indices to positions
 
-    const editor = monacoRef.current;
-    if (!editor) return;
+    const monacoEditor = getCurrentEditorInstance();
+    if (!monacoEditor) return;
 
     const node = validNodeTree[focusedItem];
     const { startIndex, endIndex } = node.data as THtmlNodeData;
 
     if (!startIndex || !endIndex) return;
     const { startLineNumber, startColumn, endLineNumber, endColumn } =
-      getPositionFromIndex(editor, startIndex, endIndex);
+      getPositionFromIndex(monacoEditor, startIndex, endIndex);
 
     if (isFirst.current) {
       const firstTimer = setInterval(() => {
-        if (monacoRef.current) {
-          monacoRef.current.setSelection({
+        const monacoEditor = getCurrentEditorInstance();
+        if (monacoEditor) {
+          monacoEditor.setSelection({
             startLineNumber,
             startColumn,
             endLineNumber,
             endColumn,
           });
-          monacoRef.current.revealRangeInCenter(
+          monacoEditor.revealRangeInCenter(
             {
               startLineNumber,
               startColumn,
@@ -176,13 +177,13 @@ export default function CodeView(props: CodeViewProps) {
         }
       }, 0);
     } else {
-      monacoRef.current?.setSelection({
+      monacoEditor.setSelection({
         startLineNumber,
         startColumn,
         endLineNumber,
         endColumn,
       });
-      monacoRef.current?.revealRangeInCenter(
+      monacoEditor?.revealRangeInCenter(
         {
           startLineNumber,
           startColumn,
@@ -202,8 +203,9 @@ export default function CodeView(props: CodeViewProps) {
   const [selection, setSelection] = useState<CodeSelection | null>(null);
 
   const updateSelection = useCallback(() => {
+    const monacoEditor = getCurrentEditorInstance();
     if (!parseFileFlag) return;
-    const _selection = monacoRef.current?.getSelection();
+    const _selection = monacoEditor?.getSelection();
     if (_selection) {
       if (isFirst.current) {
         firstSelection.current = _selection;
@@ -261,7 +263,7 @@ export default function CodeView(props: CodeViewProps) {
       revealed.current = false;
       return;
     }
-
+    const monacoEditor = getCurrentEditorInstance();
     if (selection) {
       let _uid: TNodeUid = "";
       const uids = getSubNodeUidsByBfs(RootNodeUid, validNodeTreeRef.current);
@@ -271,7 +273,7 @@ export default function CodeView(props: CodeViewProps) {
         const nodeData = node.data as THtmlNodeData;
         const { startIndex, endIndex } = nodeData;
 
-        const editor = monacoRef.current;
+        const editor = monacoEditor;
         if (!editor) return;
         if (startIndex === undefined && endIndex === undefined) return;
         const { startLineNumber, startColumn, endLineNumber, endColumn } =
@@ -328,7 +330,7 @@ export default function CodeView(props: CodeViewProps) {
   const reduxTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const saveFileContentToRedux = useCallback(() => {
-    setActivePanel("code");
+    onPanelClick();
     if (parseFileFlag) {
       // clear highlight
       decorationCollectionRef.current?.clear();
@@ -349,7 +351,7 @@ export default function CodeView(props: CodeViewProps) {
       const currentCodeArr = currentCode.split(getLineBreaker(osType));
       const codeChanges: TCodeChange[] = [];
       let hasMismatchedTags = false;
-
+      const monacoEditor = getCurrentEditorInstance();
       for (const codeChange of codeChangeDecorationRef.current.entries()) {
         let uid = codeChange[0];
         // check if editing tags are <code> or <pre>
@@ -380,8 +382,7 @@ export default function CodeView(props: CodeViewProps) {
           if (validNodeTree[_parent]) {
             const { startIndex, endIndex } = validNodeTree[_parent]
               .data as THtmlNodeData;
-            const editor =
-              monacoRef.current as monaco.editor.IStandaloneCodeEditor;
+            const editor = monacoEditor as monaco.editor.IStandaloneCodeEditor;
             const {
               startLineNumber: startLine,
               startColumn: startCol,
@@ -474,9 +475,10 @@ export default function CodeView(props: CodeViewProps) {
       value: string | undefined,
       ev: monaco.editor.IModelContentChangedEvent,
     ) => {
+      const monacoEditor = getCurrentEditorInstance();
       let delay = 1;
       if (parseFileFlag) {
-        const hasFocus = monacoRef.current?.hasTextFocus();
+        const hasFocus = monacoEditor?.hasTextFocus();
 
         if (!hasFocus) return;
 
@@ -529,7 +531,7 @@ export default function CodeView(props: CodeViewProps) {
 
           const nodeData = node.data as THtmlNodeData;
           const { startIndex, endIndex } = nodeData;
-          const editor = monacoRef.current;
+          const editor = monacoEditor;
           if (!editor) return;
 
           if (startIndex === undefined || endIndex === undefined) return;
@@ -624,7 +626,7 @@ export default function CodeView(props: CodeViewProps) {
           const { startIndex, endIndex } = validNodeTreeRef.current[
             focusedNode.uid
           ].data as THtmlNodeData;
-          const editor = monacoRef.current;
+          const editor = monacoEditor;
           if (!editor) return;
           if (startIndex && endIndex) {
             const { startLineNumber, startColumn, endLineNumber, endColumn } =
@@ -652,6 +654,7 @@ export default function CodeView(props: CodeViewProps) {
 
           // render decorations
           const decorationsList = codeChangeDecorationRef.current.values();
+
           const wholeDecorations: monaco.editor.IModelDeltaDecoration[] = [];
           for (const decorations of decorationsList) {
             wholeDecorations.push(...decorations);
@@ -661,11 +664,11 @@ export default function CodeView(props: CodeViewProps) {
       }
       // update redux with debounce
       codeContent.current = value || "";
-      const newPosition = monacoRef.current?.getPosition();
+      const newPosition = monacoEditor?.getPosition();
       if (newPosition !== undefined) {
         currentPosition.current = newPosition;
       }
-      debugger;
+
       reduxTimeout.current !== null && clearTimeout(reduxTimeout.current);
       reduxTimeout.current = setTimeout(saveFileContentToRedux, delay);
 
@@ -676,28 +679,11 @@ export default function CodeView(props: CodeViewProps) {
 
   // -------------------------------------------------------------- monaco-editor options --------------------------------------------------------------
 
-  // wordWrap
-  const [wordWrap, setWordWrap] = useState<"on" | "off">("off");
-
   // theme
 
   // tabSize
-  useEffect(() => {
-    setTabSize(DefaultTabSize);
-  }, []);
 
   // -------------------------------------------------------------- other --------------------------------------------------------------
-  // panel focus handler
-  const onPanelClick = useCallback((e: React.MouseEvent) => {
-    setActivePanel("code");
-  }, []);
-
-  // hide dragging preview
-  const dragStart = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    const ele = document.getElementById("CodeView");
-    if (ele) {
-    }
-  }, []);
 
   return useMemo(() => {
     return (
@@ -708,9 +694,6 @@ export default function CodeView(props: CodeViewProps) {
           onDrag={props.dragCodeView}
           onDragEnd={props.dragEndCodeView}
           onDrop={props.dropCodeView}
-          onDragStart={(e) => {
-            dragStart(e);
-          }}
           onDragCapture={(e) => {
             e.preventDefault();
           }}
@@ -756,17 +739,7 @@ export default function CodeView(props: CodeViewProps) {
             onMount={handleEditorDidMount}
             onChange={handleEditorChange}
             loading={""}
-            options={{
-              // enableBasicAutocompletion: true,
-              // enableLiveAutocompletion: true,
-              // enableSnippets: true,
-              // showLineNumbers: true,
-              contextmenu: true,
-              tabSize,
-              wordWrap,
-              minimap: { enabled: false },
-              automaticLayout: false,
-            }}
+            options={editorConfigs}
           />
         </div>
         <div
@@ -783,9 +756,6 @@ export default function CodeView(props: CodeViewProps) {
     theme,
     handleEditorDidMount,
     handleEditorChange,
-    tabSize,
-    wordWrap,
     parseFileFlag,
-    activePanel,
   ]);
 }

@@ -1414,7 +1414,6 @@ export const IFrame = (props: IFrameProps) => {
             setIframeEvent(e);
           });
           htmlNode.addEventListener("click", (e: MouseEvent) => {
-            debugger;
             e.preventDefault();
             setIframeEvent(e);
             onClick(e);
