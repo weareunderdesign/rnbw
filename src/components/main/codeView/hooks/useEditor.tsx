@@ -1,6 +1,9 @@
-import { useRef, useState } from "react";
-import * as monaco from "monaco-editor";
+import { useContext, useRef, useState, useEffect } from "react";
+import { IPosition, editor } from "monaco-editor";
 import { Monaco } from "@monaco-editor/react";
+import { MainContext } from "@_redux/main";
+
+import { DefaultTabSize } from "@_constants/main";
 
 function getLanguageFromExtension(extension: string) {
   switch (extension) {
@@ -16,18 +19,24 @@ function getLanguageFromExtension(extension: string) {
       return "plaintext";
   }
 }
+
 export default function useEditor() {
   const [language, setLanguage] = useState("html");
+  const { tabSize, setTabSize } = useContext(MainContext);
+  const wordWrap: editor.IEditorOptions["wordWrap"] = "off";
+  const editorConfigs = {
+    contextmenu: true,
+    tabSize,
+    wordWrap,
+    minimap: { enabled: false },
+    automaticLayout: false,
+  };
 
-  const monacoRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
-  const decorationCollectionRef =
-    useRef<monaco.editor.IEditorDecorationsCollection>();
-  const currentPosition = useRef<monaco.IPosition | null>(null);
+  const monacoRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  const decorationCollectionRef = useRef<editor.IEditorDecorationsCollection>();
+  const currentPosition = useRef<IPosition | null>(null);
 
-  const handleEditorDidMount = (
-    editor: monaco.editor.IStandaloneCodeEditor,
-    monaco: Monaco,
-  ) => {
+  const handleEditorDidMount = (editor: editor.IStandaloneCodeEditor) => {
     monacoRef.current = editor;
     editor.onDidChangeCursorPosition((event) => {
       setTimeout(() => {
@@ -45,12 +54,18 @@ export default function useEditor() {
     setLanguage(language);
   };
 
+  // tabSize
+  useEffect(() => {
+    setTabSize(DefaultTabSize);
+  }, []);
+
   return {
-    monacoRef,
+    monacoEditor: monacoRef.current,
     decorationCollectionRef,
     currentPosition,
     handleEditorDidMount,
     language,
     updateLanguage,
+    editorConfigs,
   };
 }
