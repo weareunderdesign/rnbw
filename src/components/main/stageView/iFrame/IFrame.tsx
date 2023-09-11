@@ -754,7 +754,7 @@ export const IFrame = (props: IFrameProps) => {
   );
 
   // change iframe theme
-  useEffect(() => {
+  const changeIframeTheme = () => {
     let uid = "-1";
     for (let x in validNodeTree) {
       if (
@@ -775,10 +775,12 @@ export const IFrame = (props: IFrameProps) => {
         ele?.setAttribute("data-theme", "light");
       }
     }
-  }, [contentRef, theme, validNodeTree]);
+  };
+
   // -------------------------------------------------------------- iframe event handlers --------------------------------------------------------------
   // mouse events
   const onMouseEnter = useCallback((e: MouseEvent) => {}, []);
+
   const onMouseMove = useCallback(
     (e: MouseEvent) => {
       const ele = e.target as HTMLElement;
@@ -800,10 +802,12 @@ export const IFrame = (props: IFrameProps) => {
     },
     [fnHoveredItem],
   );
-  const onMouseLeave = useCallback((e: MouseEvent) => {
+
+  const onMouseLeave = (e: MouseEvent) => {
     setFNHoveredItem("");
-  }, []);
+  };
   const externalDblclick = useRef<boolean>(false);
+
   const onClick = useCallback(
     (e: MouseEvent) => {
       if (!parseFileFlag) {
@@ -879,6 +883,7 @@ export const IFrame = (props: IFrameProps) => {
         // for the elements which are created by js. (ex: Web Component)
         let newFocusedElement: HTMLElement = ele;
         let isWC = false;
+
         while (!_uid) {
           const parentEle = newFocusedElement.parentElement;
           isWC = true;
@@ -948,10 +953,6 @@ export const IFrame = (props: IFrameProps) => {
   );
   const [outerHtml, setOuterHtml] = useState("");
 
-  useEffect(() => {
-    beforeTextEdit();
-  }, [focusedItem]);
-
   const onTextEdit = useCallback(
     (node: TNode, _outerHtml: string) => {
       // replace enter to br
@@ -959,23 +960,6 @@ export const IFrame = (props: IFrameProps) => {
         _outerHtml = _outerHtml.replace("<div><br></div>", "<br>");
         if (_outerHtml.search("<div><br></div>") === -1) break;
       }
-      // const parser = new DOMParser();
-      // const doc = parser.parseFromString(_outerHtml, 'text/html');
-      // const tags = doc.querySelectorAll(`*`);
-
-      // const contentArr = Array.from(tags).map(tag => {
-      //   if (!tag.hasAttribute('data-rnbwdev-rnbw-node')) {
-      //     return (tag.textContent as string).trim()
-      //   }
-      //   else {
-      //     return tag.outerHTML
-      //   }
-      // });
-      // const content = contentArr.join(" ");
-      // (node.data as THtmlNodeData).htmlInApp
-
-      // let modifiedHtml = content;
-      // if (outerHtml === modifiedHtml) return
 
       setCodeChanges([{ uid: node.uid, content: _outerHtml }]);
       addRunningActions(["processor-updateOpt"]);
@@ -985,10 +969,10 @@ export const IFrame = (props: IFrameProps) => {
       setTimeout(() => {
         dispatch(focusFNNode(node.uid));
       }, 10);
-      // node.uid ? dispatch(selectFNNode([node.uid])) : dispatch(selectFNNode([node.uid]))
     },
     [outerHtml],
   );
+
   const beforeTextEdit = useCallback(() => {
     let node = validNodeTree[contentEditableUidRef.current];
     if (!node) return;
@@ -1033,6 +1017,7 @@ export const IFrame = (props: IFrameProps) => {
     );
     onTextEdit(node, cleanedUpCode);
   }, [focusedItem]);
+
   const onCmdEnter = useCallback(
     (e: KeyboardEvent) => {
       // cmdk obj for the current command
@@ -1076,29 +1061,9 @@ export const IFrame = (props: IFrameProps) => {
     },
     [focusedItem, validNodeTree, contentRef],
   );
-  useEffect(() => {
-    function handleIframeLoad() {
-      console.log("Iframe loaded");
-    }
 
-    const iframe = contentRef;
-    if (iframe) {
-      contentRef?.contentWindow?.document?.addEventListener(
-        "load",
-        handleIframeLoad,
-      );
-    }
-
-    return () => {
-      if (iframe) {
-        contentRef?.contentWindow?.document?.removeEventListener(
-          "load",
-          handleIframeLoad,
-        );
-      }
-    };
-  }, []);
   const dblClickTimestamp = useRef(0);
+
   const onDblClick = useCallback(
     (e: MouseEvent) => {
       // open new page with <a> tag in iframe
@@ -1296,6 +1261,7 @@ export const IFrame = (props: IFrameProps) => {
     },
     [validNodeTree, ffTree, expandedItemsObj, contentRef],
   );
+
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
   const onKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -1384,6 +1350,35 @@ export const IFrame = (props: IFrameProps) => {
   const Skeleton = () => {
     return <div>Cool loading screen</div>;
   };
+
+  useEffect(() => {
+    changeIframeTheme();
+    function handleIframeLoad() {
+      console.log("Iframe loaded");
+    }
+
+    const iframe = contentRef;
+    if (iframe) {
+      contentRef?.contentWindow?.document?.addEventListener(
+        "load",
+        handleIframeLoad,
+      );
+    }
+
+    return () => {
+      if (iframe) {
+        contentRef?.contentWindow?.document?.removeEventListener(
+          "load",
+          handleIframeLoad,
+        );
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    beforeTextEdit();
+  }, [focusedItem]);
+
   useEffect(() => {
     if (contentRef) {
       dblClickTimestamp.current = 0;
@@ -1419,8 +1414,10 @@ export const IFrame = (props: IFrameProps) => {
             setIframeEvent(e);
           });
           htmlNode.addEventListener("click", (e: MouseEvent) => {
+            debugger;
             e.preventDefault();
             setIframeEvent(e);
+            onClick(e);
           });
           // htmlNode.addEventListener('dblclick', (e: MouseEvent) => {
           //   externalDblclick.current = false
@@ -1452,6 +1449,7 @@ export const IFrame = (props: IFrameProps) => {
       };
     }
   }, [contentRef]);
+
   useEffect(() => {
     if (!iframeEvent) return;
 
@@ -1476,6 +1474,7 @@ export const IFrame = (props: IFrameProps) => {
         break;
     }
   }, [iframeEvent]);
+
   // node actions, code change - side effect
   useEffect(() => {
     if (event) {
@@ -1527,6 +1526,7 @@ export const IFrame = (props: IFrameProps) => {
       }
     }
   }, [event]);
+
   // reload when script changes
   useEffect(() => {
     if (needToReloadIFrame) {

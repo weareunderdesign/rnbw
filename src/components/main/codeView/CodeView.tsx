@@ -6,11 +6,8 @@ import React, {
   useRef,
   useState,
 } from "react";
-import * as htmlparser2 from "htmlparser2_sep";
-
 import { debounce } from "lodash";
 import * as monaco from "monaco-editor";
-import ReactHtmlParser from "react-html-parser";
 import { useDispatch, useSelector } from "react-redux";
 
 import { DefaultTabSize, RootNodeUid } from "@_constants/main";
@@ -34,73 +31,34 @@ import {
 } from "@_redux/main";
 import { getLineBreaker } from "@_services/global";
 import { TCodeChange } from "@_types/main";
-import { Editor, loader, Monaco } from "@monaco-editor/react";
+import { Editor, loader } from "@monaco-editor/react";
 
 import { CodeSelection, CodeViewProps } from "./types";
 import { getPositionFromIndex } from "@_services/htmlapi";
+import { useTheme } from "@_hooks/useTheme";
+import { useEditor, useEditorWrapper } from "./hooks";
 
 loader.config({ monaco });
 
 export default function CodeView(props: CodeViewProps) {
   const dispatch = useDispatch();
   // -------------------------------------------------------------- global state --------------------------------------------------------------
+
   const { file } = useSelector(navigatorSelector);
-  const {
-    focusedItem,
-    expandedItems,
-    expandedItemsObj,
-    selectedItems,
-    selectedItemsObj,
-  } = useSelector(fnSelector);
+  const { focusedItem } = useSelector(fnSelector);
   const {
     // global action
     addRunningActions,
-    removeRunningActions,
     // node actions
     activePanel,
     setActivePanel,
-    clipboardData,
-    setClipboardData,
-    event,
-    setEvent,
-    // file tree view
-    fsPending,
     setFSPending,
     ffTree,
     setFFTree,
-    setFFNode,
-    ffHandlers,
-    setFFHandlers,
-    ffHoveredItem,
-    setFFHoveredItem,
-    isHms,
-    setIsHms,
-    ffAction,
-    setFFAction,
-    currentFileUid,
-    setCurrentFileUid,
-    // node tree view
-    fnHoveredItem,
-    setFNHoveredItem,
-    nodeTree,
-    setNodeTree,
     validNodeTree,
-    setValidNodeTree,
-    nodeMaxUid,
-    setNodeMaxUid,
-    // stage view
-    iframeLoading,
-    setIFrameLoading,
-    iframeSrc,
-    setIFrameSrc,
-    fileInfo,
-    setFileInfo,
-    needToReloadIFrame,
-    setNeedToReloadIFrame,
     // code view
     codeEditing,
     setCodeEditing,
-    codeChanges,
     setCodeChanges,
     tabSize,
     setTabSize,
@@ -109,77 +67,41 @@ export default function CodeView(props: CodeViewProps) {
     // processor
     updateOpt,
     setUpdateOpt,
-    // references
-    filesReferenceData,
-    htmlReferenceData,
-    cmdkReferenceData,
-    // cmdk
-    currentCommand,
-    setCurrentCommand,
-    cmdkOpen,
-    setCmdkOpen,
-    cmdkPages,
-    setCmdkPages,
-    cmdkPage,
-    // other
     osType,
     theme: _theme,
-    // toasts
-    addMessage,
-    removeMessage,
     parseFileFlag,
   } = useContext(MainContext);
   // -------------------------------------------------------------- references --------------------------------------------------------------
+
+  // ----------------------------------------------------------custom Hooks---------------------------------------------------------------
+  const { theme } = useTheme();
+  const {
+    monacoRef,
+    decorationCollectionRef,
+    currentPosition,
+    handleEditorDidMount,
+    language,
+    updateLanguage,
+  } = useEditor();
+
+  const { editorWrapperRef } = useEditorWrapper(monacoRef.current);
+  //-----------------------------------------
+
   const isFirst = useRef<boolean>(true);
-  const currentPosition = useRef<monaco.IPosition | null>(null);
-  const monacoRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
-  const editorWrapperRef = useRef<HTMLDivElement>(null);
+
   const codeContent = useRef<string>("");
   const previewDiv = useRef(null);
-  const decorationCollectionRef =
-    useRef<monaco.editor.IEditorDecorationsCollection>();
+
   const codeChangeDecorationRef = useRef<
     Map<TNodeUid, monaco.editor.IModelDeltaDecoration[]>
   >(new Map<TNodeUid, monaco.editor.IModelDeltaDecoration[]>());
+
   const validNodeTreeRef = useRef<TNodeTreeData>({});
-  const noNeedClosingTag = [
-    "area",
-    "base",
-    "br",
-    "col",
-    "embed",
-    "hr",
-    "img",
-    "input",
-    "link",
-    "meta",
-    "param",
-    "source",
-    "track",
-    "wbr",
-  ];
-  const handleEditorDidMount = useCallback(
-    (editor: monaco.editor.IStandaloneCodeEditor, monaco: Monaco) => {
-      monacoRef.current = editor;
-      editor.onDidChangeCursorPosition((event) => {
-        setTimeout(() => {
-          if (event.reason === 2) {
-            currentPosition.current &&
-              monacoRef.current?.setPosition(currentPosition.current);
-          }
-        }, 0);
-      });
-      decorationCollectionRef.current = editor.createDecorationsCollection();
-      // setTimeout(function() {
-      //   editor?.getAction('editor.action.formatDocument')?.run();
-      // }, 300);
-    },
-    [],
-  );
+
   // -------------------------------------------------------------- sync --------------------------------------------------------------
-  // build node tree refernece
+
+  // build node tree reference
   useEffect(() => {
-    debugger;
     validNodeTreeRef.current = JSON.parse(JSON.stringify(validNodeTree));
 
     // set new focused node
@@ -189,6 +111,7 @@ export default function CodeView(props: CodeViewProps) {
       setNewFocusedNodeUid("");
     }
   }, [validNodeTree]);
+
   // file content change - set code
   useEffect(() => {
     const _file = ffTree[file.uid];
@@ -197,22 +120,16 @@ export default function CodeView(props: CodeViewProps) {
     if (updateOpt.from === "code") return;
 
     const fileData = _file.data as TFileNodeData;
-    setLanguage(
-      fileData.ext === ".html"
-        ? "html"
-        : fileData.ext === ".md"
-        ? "markdown"
-        : fileData.ext === ".js"
-        ? "javascript"
-        : fileData.ext === ".css"
-        ? "css"
-        : fileData.type,
-    );
+    const extension = fileData.type;
+    extension && updateLanguage(extension);
+
     codeContent.current = fileData.content;
   }, [ffTree[file.uid]]);
+
   // focusedItem - code select
   const focusedItemRef = useRef<TNodeUid>("");
   const revealed = useRef<boolean>(false);
+
   useEffect(() => {
     if (!parseFileFlag) {
       return;
@@ -279,6 +196,7 @@ export default function CodeView(props: CodeViewProps) {
 
     focusedItemRef.current = focusedItem;
   }, [focusedItem, parseFileFlag]);
+
   // watch focus/selection for the editor
   const firstSelection = useRef<CodeSelection | null>(null);
   const [selection, setSelection] = useState<CodeSelection | null>(null);
@@ -316,14 +234,6 @@ export default function CodeView(props: CodeViewProps) {
           });
         }
       }
-      // else if(activePanel === 'code' && firstSelection.current && currentPosition.current){
-      //   setSelection({
-      //     startLineNumber: currentPosition.current.lineNumber,
-      //     startColumn: currentPosition.current?.column,
-      //     endLineNumber: currentPosition.current?.lineNumber,
-      //     endColumn: currentPosition.current?.column,
-      //   })
-      // }
     } else {
       setSelection(null);
     }
@@ -337,7 +247,6 @@ export default function CodeView(props: CodeViewProps) {
   const [focusedNode, setFocusedNode] = useState<TNode>();
 
   useEffect(() => {
-    debugger;
     if (!parseFileFlag) return;
     if (!selection) return;
 
@@ -390,7 +299,6 @@ export default function CodeView(props: CodeViewProps) {
   }, [selection, parseFileFlag]);
 
   useEffect(() => {
-    debugger;
     if (focusedNode) {
       if (focusedNode.uid === focusedItemRef.current) return;
 
@@ -415,9 +323,10 @@ export default function CodeView(props: CodeViewProps) {
       focusedItemRef.current = focusedNode.uid;
     }
   }, [focusedNode]);
+
   // code edit - highlight/parse
   const reduxTimeout = useRef<NodeJS.Timeout | null>(null);
-  const isAttrEditing = useRef<boolean>(false);
+
   const saveFileContentToRedux = useCallback(() => {
     setActivePanel("code");
     if (parseFileFlag) {
@@ -511,32 +420,6 @@ export default function CodeView(props: CodeViewProps) {
         uid = notParsingFlag ? _parent : uid;
         checkValidHtml(codeContent.current);
         codeChanges.push({ uid, content });
-        const parsedHtml = ReactHtmlParser(codeContent.current);
-        // let dom = htmlparser2.parseDocument(content, {
-        //   withEndIndices: true,
-        //   withStartIndices: true,
-        // });
-
-        // let htmlSkeletonStructureCount = 0
-        // for(let x in parsedHtml) {
-        //   if (parsedHtml[x] && parsedHtml[x]?.type === 'html') {
-        //     if (parsedHtml[x].props.children) {
-        //       for (let i in parsedHtml[x].props.children) {
-        //         if (parsedHtml[x].props.children[i] && parsedHtml[x].props.children[i].type && (parsedHtml[x].props.children[i].type === 'body' || parsedHtml[x].props.children[i].type === 'head'))
-        //           htmlSkeletonStructureCount ++
-        //       }
-        //     }
-        //   }
-        // }
-        // if (htmlSkeletonStructureCount >= 2) {
-
-        //   hasMismatchedTags = checkValidHtml(codeContent.current)
-
-        //   if (hasMismatchedTags === false) codeChanges.push({ uid , content })
-        // }
-        // else{
-        //   console.log("Can't remove this element because it's an unique element of this page")
-        // }
       }
 
       if (hasMismatchedTags === false) {
@@ -585,6 +468,7 @@ export default function CodeView(props: CodeViewProps) {
       setFSPending(false);
     }
   }, [ffTree, file.uid, validNodeTree, osType, parseFileFlag]);
+
   const handleEditorChange = useCallback(
     (
       value: string | undefined,
@@ -789,70 +673,24 @@ export default function CodeView(props: CodeViewProps) {
     },
     [saveFileContentToRedux, focusedNode, parseFileFlag],
   );
+
   // -------------------------------------------------------------- monaco-editor options --------------------------------------------------------------
-  // tabSize
-  const [_tabSize, _setTabSize] = useState<number>(DefaultTabSize);
-  useEffect(() => {
-    setTabSize(_tabSize);
-  }, [_tabSize]);
+
   // wordWrap
   const [wordWrap, setWordWrap] = useState<"on" | "off">("off");
-  const toogleWrap = () => setWordWrap(wordWrap === "on" ? "off" : "on");
-  // language
-  const [language, setLanguage] = useState("html");
-  // theme
-  const [theme, setTheme] = useState<"vs-dark" | "light">();
 
-  // height
-  const [height, setHeight] = useState(localStorage.getItem("codeViewHeight"));
-  const initHeight = useRef(true);
-  const setSystemTheme = useCallback(() => {
-    if (
-      window.matchMedia &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches
-    ) {
-      setTheme("vs-dark");
-    } else {
-      setTheme("light");
-    }
-    setHeight(localStorage.getItem("codeViewHeight"));
-    initHeight.current = true;
-  }, []);
+  // theme
+
+  // tabSize
   useEffect(() => {
-    _theme === "Dark"
-      ? setTheme("vs-dark")
-      : _theme === "Light"
-      ? setTheme("light")
-      : setSystemTheme();
-  }, [_theme]);
+    setTabSize(DefaultTabSize);
+  }, []);
+
   // -------------------------------------------------------------- other --------------------------------------------------------------
   // panel focus handler
   const onPanelClick = useCallback((e: React.MouseEvent) => {
     setActivePanel("code");
   }, []);
-  // editor-resize
-  useEffect(() => {
-    const resetEditorLayout = () => {
-      monacoRef.current?.layout({ width: 0, height: 0 });
-      window.requestAnimationFrame(() => {
-        const wrapperRect = editorWrapperRef.current?.getBoundingClientRect();
-        wrapperRect &&
-          monacoRef.current?.layout({
-            width: wrapperRect.width - 18,
-            height: wrapperRect.height - 18,
-          });
-      });
-    };
-    const debounced = debounce(resetEditorLayout, 100);
-    const resizeObserver = new ResizeObserver(debounced);
-
-    editorWrapperRef.current &&
-      resizeObserver.observe(editorWrapperRef.current);
-    return () => {
-      editorWrapperRef.current &&
-        resizeObserver.unobserve(editorWrapperRef.current);
-    };
-  }, [editorWrapperRef.current]);
 
   // hide dragging preview
   const dragStart = useCallback((e: React.DragEvent<HTMLDivElement>) => {
