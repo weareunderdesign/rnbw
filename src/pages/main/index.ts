@@ -1,5 +1,5 @@
-import MainPage from './MainPage';
+import MainPage from "./MainPage";
 
-export default MainPage
+export default MainPage;
 
-export * from './types'
+export * from "./types";

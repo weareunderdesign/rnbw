@@ -1,1 +1,1 @@
-export const ToastDuration = 3 * 1000
+export const ToastDuration = 3 * 1000;

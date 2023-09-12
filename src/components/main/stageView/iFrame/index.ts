@@ -1,5 +1,5 @@
-import { IFrame } from './IFrame';
+import { IFrame } from "./IFrame";
 
-export default IFrame
+export default IFrame;
 
-export * from './types'
+export * from "./types";

@@ -1,1 +1,1 @@
-export const empty_main_saga = {}
+export const empty_main_saga = {};

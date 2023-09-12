@@ -20,13 +20,15 @@ html {
   min-width: 80px;
   min-height: 80px;
 }
-body, body:first-child {
-  min-width: 80px;
-  min-height: 80px;
+
+body {
+  min-height: 100vh;
+  margin:0px;
 }
+
 body > * {
   -webkit-user-select: none; /* Safari */
   -ms-user-select: none; /* IE 10 and IE 11 */
   user-select: none; /* Standard syntax */
 }
-`
+`;

@@ -1,1 +1,1 @@
-export const empty_global_saga = {}
+export const empty_global_saga = {};

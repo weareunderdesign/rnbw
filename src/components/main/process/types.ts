@@ -1,1 +1,1 @@
-export type ProcessProps = {}
+export type ProcessProps = {};

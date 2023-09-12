@@ -1,24 +1,39 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
 
-<head>
-  <meta charset="UTF-8" />
+    <!-- favi icon -->
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="https://rnbw.company/images/favicon.png"
+    />
+    <!-- rene.css CDN -->
+    <link rel="stylesheet" href="https://unpkg.com/renecss/dist/rene.min.css" />
+    <!-- svg-icon.js CDN -->
+    <script
+      type="module"
+      src="https://unpkg.com/@rainbowapp/svg-icon.js/dist/svg-icon.min.js"
+    ></script>
+    <!-- node like file system -->
+    <script src="https://unpkg.com/filer/dist/filer.min.js"></script>
+    <script
+      defer
+      data-domain="rnbw.dev"
+      src="https://plausible.io/js/script.manual.js"
+    ></script>
+    <script>
+      window.plausible =
+        window.plausible ||
+        function () {
+          (window.plausible.q = window.plausible.q || []).push(arguments);
+        };
+    </script>
+    <title>rnbw</title>
+  </head>
 
-  <!-- favi icon -->
-  <link rel="icon" type="image/x-icon" href="https://rnbw.company/images/favicon.png" />
-  <!-- rene.css CDN -->
-  <link rel="stylesheet" href="https://unpkg.com/renecss/dist/rene.min.css" />
-  <!-- svg-icon.js CDN -->
-  <script type="module" src="https://unpkg.com/@rainbowapp/svg-icon.js/dist/svg-icon.min.js"></script>
-  <!-- node like file system -->
-  <script src="https://unpkg.com/filer/dist/filer.min.js"></script>
-  <script defer data-domain="rnbw.dev" src="https://plausible.io/js/script.manual.js"></script>
-  <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
-  <title>rnbw</title>
-</head>
-
-<body>
-  <div id="root"></div>
-</body>
-
+  <body>
+    <div id="root"></div>
+  </body>
 </html>

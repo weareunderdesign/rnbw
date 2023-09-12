@@ -1,5 +1,5 @@
-import NodeTreeView from './NodeTreeView';
+import NodeTreeView from "./NodeTreeView";
 
-export default NodeTreeView
+export default NodeTreeView;
 
-export * from './types'
+export * from "./types";

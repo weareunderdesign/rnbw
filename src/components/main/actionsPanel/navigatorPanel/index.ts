@@ -1,5 +1,5 @@
-import NavigatorPanel from './NavigatorPanel';
+import NavigatorPanel from "./NavigatorPanel";
 
-export default NavigatorPanel
+export default NavigatorPanel;
 
-export * from './types'
+export * from "./types";

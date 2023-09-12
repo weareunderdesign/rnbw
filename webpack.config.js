@@ -1,9 +1,10 @@
-const path = require('path')
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const MonacoEditorWebpackPlugin = require('monaco-editor-webpack-plugin')
+const path = require("path");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const MonacoEditorWebpackPlugin = require("monaco-editor-webpack-plugin");
 
 module.exports = {
-  entry: { // index entry file
+  entry: {
+    // index entry file
     client: "./src/index.tsx",
   },
   output: {
@@ -13,19 +14,19 @@ module.exports = {
   devServer: {
     port: 8080, // you can change the port
   },
-  resolve:
-  {
-    extensions: ['.csv', '.ts', '.tsx', '.js', '.jsx'],
+  resolve: {
+    extensions: [".csv", ".ts", ".tsx", ".js", ".jsx"],
     alias: {
-      "@_node": path.resolve(__dirname, 'src/_node/'),
-      "@_redux": path.resolve(__dirname, 'src/_redux/'),
-      "@_ref": path.resolve(__dirname, 'src/_ref/'),
-      "@_app": path.resolve(__dirname, 'src/app/'),
-      "@_components": path.resolve(__dirname, 'src/components/'),
-      "@_constants": path.resolve(__dirname, 'src/constants/'),
-      "@_pages": path.resolve(__dirname, 'src/pages/'),
-      "@_services": path.resolve(__dirname, 'src/services/'),
-      "@_types": path.resolve(__dirname, 'src/types/'),
+      "@_node": path.resolve(__dirname, "src/_node/"),
+      "@_redux": path.resolve(__dirname, "src/_redux/"),
+      "@_ref": path.resolve(__dirname, "src/_ref/"),
+      "@_app": path.resolve(__dirname, "src/app/"),
+      "@_components": path.resolve(__dirname, "src/components/"),
+      "@_constants": path.resolve(__dirname, "src/constants/"),
+      "@_hooks": path.resolve(__dirname, "src/hooks/"),
+      "@_pages": path.resolve(__dirname, "src/pages/"),
+      "@_services": path.resolve(__dirname, "src/services/"),
+      "@_types": path.resolve(__dirname, "src/types/"),
     },
   },
   module: {
@@ -50,7 +51,7 @@ module.exports = {
       },
       {
         test: /\.ttf$/,
-        type: 'asset/resource',
+        type: "asset/resource",
       },
       {
         test: /\.(png|woff|woff2|eot)$/, // to import images and fonts
@@ -59,18 +60,18 @@ module.exports = {
       },
       {
         test: /\.svg$/i,
-        type: 'asset',
+        type: "asset",
         resourceQuery: /url/, // *.svg?url
       },
       {
         test: /\.svg$/i,
         issuer: /\.[jt]sx?$/,
         resourceQuery: { not: [/url/] }, // exclude react component if *.svg?url
-        use: ['@svgr/webpack'],
+        use: ["@svgr/webpack"],
       },
       {
         test: /\.csv$/,
-        loader: 'csv-loader',
+        loader: "csv-loader",
         options: {
           dynamicTyping: true,
           header: true,
@@ -80,8 +81,8 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: path.join(__dirname, 'src/index.html'), // index html file
+      template: path.join(__dirname, "src/index.html"), // index html file
     }),
     new MonacoEditorWebpackPlugin(), // code-view - monaco-editor
   ],
-}
+};
