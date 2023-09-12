@@ -352,7 +352,16 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                       ];
                     return refData;
                   }, []);
-
+                  
+                  const treeViewRef = useRef<HTMLHeadingElement|any>(null);
+                  useEffect(() => {
+                  if (props.context.isSelected) {
+                    setTimeout(()=>{
+                      treeViewRef.current.click();
+                    },100)
+                  }
+                  }, []);
+                  
                 return (
                   <>
                     <li
@@ -388,6 +397,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                         }}
                         {...props.context.itemContainerWithoutChildrenProps}
                         {...props.context.interactiveElementProps}
+                        ref={treeViewRef}
                         onClick={(e: React.MouseEvent) => {
                           e.stopPropagation();
 
