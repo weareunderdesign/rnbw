@@ -43,9 +43,6 @@ export const AdditionalPanel: FC<AdditionalPanelProps> = React.memo(
           <div
             className="border-left border-right border-bottom radius-s background-primary shadow"
             style={{
-              // left: Number(navigatorPanel?.getBoundingClientRect().left),
-              // top: Number(navigatorPanel?.getBoundingClientRect().top) + 41,
-
               width: Number(navigatorPanel?.clientWidth),
               maxHeight: "300px",
 

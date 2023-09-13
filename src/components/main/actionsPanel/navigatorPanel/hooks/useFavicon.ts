@@ -38,29 +38,6 @@ export const useFavicon = (
     setFaviconFallback(false);
     // set favicons of the workspace
     if (file.uid === `${RootNodeUid}/index.html`) {
-      // if (validNodeTree) {
-      //   let hasFavicon = false
-      //   for (const x in validNodeTree) {
-      //     const nodeData = validNodeTree[x].data as THtmlNodeData
-      //     if (nodeData && nodeData.type === 'tag' && nodeData.name === 'link' && nodeData.attribs.rel === 'icon') {
-      //       if (nodeData.attribs.href.startsWith('http') || nodeData.attribs.href.startsWith('//')) {
-      //         setFavicon(nodeData.attribs.href)
-      //       }
-      //       else{
-      //         setFavicon(window.location.origin + '/rnbw/' + project.name + '/' + nodeData.attribs.href)
-      //       }
-      //       hasFavicon = true
-      //     }
-      //   }
-
-      //   if (!hasFavicon) {
-      //     setFavicon('')
-      //   }
-      // }
-      // else{
-      //   setFavicon('')
-      // }
-
       for (const x in validNodeTree) {
         const nodeData = validNodeTree[x].data as THtmlNodeData;
         if (
@@ -88,7 +65,6 @@ export const useFavicon = (
               });
             }
           });
-          // projectFavicons[project.name] = window.location.origin + '/rnbw/' + project.name + '/' + nodeData.attribs.href
           setWorkspace({ name: workspace.name, projects: _projects });
         }
       }

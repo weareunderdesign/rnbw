@@ -14,12 +14,7 @@ import {
   projectDarkImg,
 } from "./constants";
 
-import {
-  AdditionalPanel,
-  DefaultPanel,
-  ProjectPanel,
-  WorkspacePanel,
-} from "./components";
+import { AdditionalPanel, DefaultPanel, ProjectPanel } from "./components";
 
 export default function NavigatorPanel(props: NavigatorPanelProps) {
   // -------------------------------------------------------------- global state --------------------------------------------------------------
@@ -98,7 +93,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
           {!navigatorDropDownType ? (
             <DefaultPanel />
           ) : navigatorDropDownType === "workspace" ? (
-            <WorkspacePanel />
+            <></>
           ) : navigatorDropDownType === "project" ? (
             <ProjectPanel />
           ) : (
