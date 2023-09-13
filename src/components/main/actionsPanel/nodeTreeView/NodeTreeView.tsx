@@ -7,13 +7,9 @@ import React, {
 } from "react";
 import cx from "classnames";
 import { useDispatch, useSelector } from "react-redux";
-import { SVGIconI, SVGIconII, TreeView } from "@_components/common";
+import { SVGIconI, TreeView } from "@_components/common";
 import { TreeViewData } from "@_components/common/treeView/types";
-import {
-  AddNodeActionPrefix,
-  NodeInAppAttribName,
-  RootNodeUid,
-} from "@_constants/main";
+import { NodeInAppAttribName, RootNodeUid } from "@_constants/main";
 import {
   TFileNodeData,
   THtmlElementsReference,
@@ -33,24 +29,27 @@ import { addClass, removeClass } from "@_services/main";
 import { NodeTreeViewProps } from "./types";
 import { useNodeActions } from "./hooks/useNodeActions";
 import { useNodeViewState } from "./hooks/useNodeViewState";
-import { useNodeActionsHandlers } from "./hooks/useNodeActionsHendlers";
 import { useNodeTreeCallback } from "./hooks/useNodeTreeCallback";
+import { useCmdk } from "./hooks/useCmdk";
+
+import { Container } from "./nodeTreeComponents/Container";
+import { ItemTitle } from "./nodeTreeComponents/ItemTitle";
+import { DragBetweenLine } from "./nodeTreeComponents/DragBetweenLine";
+import { ItemArrow } from "./nodeTreeComponents/ItemArrow";
 
 const AutoExpandDelay = 1 * 1000;
 
-export default function NodeTreeView(props: NodeTreeViewProps) {
+function NodeTreeView(props: NodeTreeViewProps) {
   const dispatch = useDispatch();
   // -------------------------------------------------------------- global state --------------------------------------------------------------
   const { file } = useSelector(navigatorSelector);
-  const { focusedItem, expandedItems, selectedItems, selectedItemsObj } =
-    useSelector(fnSelector);
+  const { focusedItem, expandedItems, selectedItems } = useSelector(fnSelector);
   const { expandedItemsObj } = useSelector(ffSelector);
   const {
     // global action
     addRunningActions,
     removeRunningActions,
     // node actions
-    activePanel,
     setActivePanel,
     navigatorDropDownType,
     setNavigatorDropDownType,
@@ -65,8 +64,6 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     validNodeTree,
     // references
     htmlReferenceData,
-    // cmdk
-    currentCommand,
     // other
     osType,
     theme: _theme,
@@ -77,6 +74,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
   // -------------------------------------------------------------- sync --------------------------------------------------------------
   // outline the hovered item
   const hoveredItemRef = useRef<TNodeUid>(fnHoveredItem);
+
   useEffect(() => {
     if (hoveredItemRef.current === fnHoveredItem) return;
 
@@ -97,8 +95,10 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     hoveredItemRef.current = fnHoveredItem;
   }, [fnHoveredItem]);
+
   // scroll to the focused item
   const focusedItemRef = useRef<TNodeUid>(focusedItem);
+
   useEffect(() => {
     if (focusedItemRef.current === focusedItem) return;
 
@@ -132,6 +132,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
     focusedItemRef.current = focusedItem;
   }, [focusedItem]);
+
   // build nodeTreeViewData
   const nodeTreeViewData = useMemo(() => {
     const data: TreeViewData = {};
@@ -154,64 +155,10 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
   // node view state handlers
   const { cb_focusNode, cb_selectNode, cb_expandNode, cb_collapseNode } =
-    useNodeViewState(focusedItemRef);
+    useNodeViewState(focusedItemRef.current);
 
-  // -------------------------------------------------------------- cmdk --------------------------------------------------------------
-  useEffect(() => {
-    if (isAddNodeAction(currentCommand.action)) {
-      onAddNode(currentCommand.action);
-      return;
-    }
-
-    if (activePanel !== "node" && activePanel !== "stage") return;
-
-    switch (currentCommand.action) {
-      case "Cut":
-        onCut();
-        break;
-      case "Copy":
-        onCopy();
-        break;
-      case "Paste":
-        onPaste();
-        break;
-      case "Delete":
-        onDelete();
-        break;
-      case "Duplicate":
-        onDuplicate();
-        break;
-
-      case "Turn into":
-        onTurnInto();
-        break;
-      case "Group":
-        onGroup();
-        break;
-      case "Ungroup":
-        onUngroup();
-        break;
-
-      default:
-        break;
-    }
-  }, [currentCommand]);
-
-  const {
-    onCut,
-    onCopy,
-    onPaste,
-    onDelete,
-    onDuplicate,
-    onTurnInto,
-    onGroup,
-    onUngroup,
-    onAddNode,
-  } = useNodeActionsHandlers();
-
-  const isAddNodeAction = (actionName: string): boolean => {
-    return actionName.startsWith(AddNodeActionPrefix) ? true : false;
-  };
+  // cmdk
+  useCmdk();
 
   // -------------------------------------------------------------- own --------------------------------------------------------------
   const onPanelClick = useCallback(() => {
@@ -298,322 +245,255 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
 
   const isDragging = useRef<boolean>(false);
 
-  const callbacks = useNodeTreeCallback(focusedItemRef, isDragging);
+  const callbacks = useNodeTreeCallback(
+    focusedItemRef.current,
+    isDragging.current,
+  );
+
+  const dragAndDropConfig = {
+    canDragAndDrop: true,
+    canDropOnFolder: true,
+    canDropOnNonFolder: true,
+    canReorderItems: true,
+  };
+
+  const searchConfig = {
+    canSearch: false,
+    canSearchByStartingTyping: false,
+    canRename: false,
+  };
 
   return useMemo(() => {
     return file.uid !== "" ? (
-      <>
-        <div
-          id="NodeTreeView"
-          style={{
-            // position: 'absolute',
-            top: 41,
-            left: 0,
-            width: "100%",
-            height: "calc(100% - 41px)",
+      <div
+        id="NodeTreeView"
+        style={{
+          // position: 'absolute',
+          top: 41,
+          left: 0,
+          width: "100%",
+          height: "calc(100% - 41px)",
+          overflow: "auto",
+        }}
+        onClick={onPanelClick}
+      >
+        <TreeView
+          width={"100%"}
+          height={"auto"}
+          info={{ id: "node-tree-view" }}
+          data={nodeTreeViewData}
+          focusedItem={focusedItem}
+          selectedItems={selectedItems}
+          expandedItems={expandedItems}
+          renderers={{
+            renderTreeContainer: (props) => <Container {...props} />,
+            renderItemsContainer: (props) => <Container {...props} />,
 
-            overflow: "auto",
-          }}
-          onClick={onPanelClick}
-        >
-          <TreeView
-            width={"100%"}
-            height={"auto"}
-            info={{ id: "node-tree-view" }}
-            data={nodeTreeViewData}
-            focusedItem={focusedItem}
-            selectedItems={selectedItems}
-            expandedItems={expandedItems}
-            renderers={{
-              renderTreeContainer: (props) => {
-                return (
-                  <>
-                    <ul {...props.containerProps}>{props.children}</ul>
-                  </>
+            renderItem: (props) => {
+              console.log("###RENDER");
+
+              const htmlElementReferenceData =
+                useMemo<THtmlElementsReference>(() => {
+                  const node = props.item.data as TNode;
+                  const nodeData = node.data as THtmlNodeData;
+                  const refData =
+                    htmlReferenceData.elements[
+                      nodeData.name === "!doctype" ? "!DOCTYPE" : nodeData.name
+                    ];
+                  return refData;
+                }, []);
+
+              const spanStyles: React.CSSProperties = {
+                width: "calc(100% - 32px)",
+                textOverflow: "ellipsis",
+                overflow: "hidden",
+                whiteSpace: "nowrap",
+              };
+
+              const onClick = useCallback(
+                (e: React.MouseEvent) => {
+                  e.stopPropagation();
+
+                  !props.context.isFocused &&
+                    addRunningActions(["nodeTreeView-focus"]);
+                  addRunningActions(["nodeTreeView-select"]);
+
+                  !props.context.isFocused && props.context.focusItem();
+
+                  e.shiftKey
+                    ? props.context.selectUpTo()
+                    : getCommandKey(e, osType)
+                    ? props.context.isSelected
+                      ? props.context.unselectItem()
+                      : props.context.addToSelectedItems()
+                    : props.context.selectItem();
+
+                  setActivePanel("node");
+
+                  navigatorDropDownType !== null &&
+                    setNavigatorDropDownType(null);
+                },
+                [props.context, navigatorDropDownType],
+              );
+
+              const onDoubleClick = useCallback(
+                (e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  openWebComponent(props.item.index as TNodeUid);
+                },
+                [props.item],
+              );
+
+              const onMouseEnter = useCallback((e: React.MouseEvent) => {
+                const ele = e.target as HTMLElement;
+                let _uid: TNodeUid | null = ele.getAttribute("id");
+                // for the elements which are created by js. (ex: Web Component)
+                let newHoveredElement: HTMLElement = ele;
+                if (_uid === null || _uid === undefined) return;
+                _uid = _uid?.substring(13, _uid.length);
+                while (!_uid) {
+                  const parentEle = newHoveredElement.parentElement;
+                  if (!parentEle) break;
+
+                  _uid = parentEle.getAttribute(NodeInAppAttribName);
+                  !_uid ? (newHoveredElement = parentEle) : null;
+                }
+
+                // set hovered item
+                if (_uid && _uid !== fnHoveredItem) {
+                  setFNHoveredItem(_uid);
+                }
+              }, []);
+
+              const onMouseLeave = useCallback(() => {
+                setFNHoveredItem("");
+              }, []);
+
+              const onDragStart = (e: React.DragEvent) => {
+                const img = new Image();
+                e.dataTransfer.effectAllowed = "move";
+                e.dataTransfer.setDragImage(
+                  img,
+                  window.outerWidth,
+                  window.outerHeight,
                 );
-              },
-              renderItemsContainer: (props) => {
-                return (
-                  <>
-                    <ul {...props.containerProps}>{props.children}</ul>
-                  </>
-                );
-              },
-              renderItem: (props) => {
-                const htmlElementReferenceData =
-                  useMemo<THtmlElementsReference>(() => {
-                    const node = props.item.data as TNode;
-                    const nodeData = node.data as THtmlNodeData;
-                    const refData =
-                      htmlReferenceData.elements[
-                        nodeData.name === "!doctype"
-                          ? "!DOCTYPE"
-                          : nodeData.name
-                      ];
-                    return refData;
-                  }, []);
+                props.context.startDragging();
 
-                return (
-                  <>
-                    <li
-                      className={cx(
-                        props.context.isSelected && "background-secondary",
+                isDragging.current = true;
+              };
+              const onDragEnter = (e: React.DragEvent) => {
+                if (!props.context.isExpanded) {
+                  setTimeout(
+                    () => cb_expandNode(props.item.index as TNodeUid),
+                    AutoExpandDelay,
+                  );
+                }
+                // e.dataTransfer.effectAllowed = 'move'
+              };
 
-                        props.context.isDraggingOver && "",
-                        props.context.isDraggingOverParent && "",
+              return (
+                <li
+                  className={cx(
+                    props.context.isSelected && "background-secondary",
 
-                        props.context.isFocused && "",
-                      )}
-                      {...props.context.itemContainerWithChildrenProps}
-                    >
-                      <div
-                        id={`NodeTreeView-${props.item.index}`}
-                        className={cx(
-                          "justify-stretch",
-                          "padding-xs",
-                          "outline-default",
+                    props.context.isDraggingOver && "",
+                    props.context.isDraggingOverParent && "",
 
-                          props.context.isSelected &&
-                            "background-tertiary outline-none",
-                          !props.context.isSelected &&
-                            props.context.isFocused &&
-                            "outline",
+                    props.context.isFocused && "",
+                  )}
+                  {...props.context.itemContainerWithChildrenProps}
+                >
+                  <div
+                    id={`NodeTreeView-${props.item.index}`}
+                    className={cx(
+                      "justify-stretch",
+                      "padding-xs",
+                      "outline-default",
 
-                          props.context.isDraggingOver && "outline",
-                          props.context.isDraggingOverParent && "",
-                        )}
-                        style={{
-                          flexWrap: "nowrap",
-                          paddingLeft: `${props.depth * 18}px`,
-                        }}
-                        {...props.context.itemContainerWithoutChildrenProps}
-                        {...props.context.interactiveElementProps}
-                        onClick={(e: React.MouseEvent) => {
-                          e.stopPropagation();
+                      props.context.isSelected &&
+                        "background-tertiary outline-none",
+                      !props.context.isSelected &&
+                        props.context.isFocused &&
+                        "outline",
 
-                          !props.context.isFocused &&
-                            addRunningActions(["nodeTreeView-focus"]);
-                          addRunningActions(["nodeTreeView-select"]);
-
-                          !props.context.isFocused && props.context.focusItem();
-
-                          e.shiftKey
-                            ? props.context.selectUpTo()
-                            : getCommandKey(e, osType)
-                            ? props.context.isSelected
-                              ? props.context.unselectItem()
-                              : props.context.addToSelectedItems()
-                            : props.context.selectItem();
-
-                          setActivePanel("node");
-
-                          navigatorDropDownType !== null &&
-                            setNavigatorDropDownType(null);
-                        }}
-                        onDoubleClick={(e: React.MouseEvent) => {
-                          e.stopPropagation();
-                          openWebComponent(props.item.index as TNodeUid);
-                        }}
-                        onMouseEnter={(e) => {
-                          const ele = e.target as HTMLElement;
-                          let _uid: TNodeUid | null = ele.getAttribute("id");
-                          // for the elements which are created by js. (ex: Web Component)
-                          let newHoveredElement: HTMLElement = ele;
-                          if (_uid === null || _uid === undefined) return;
-                          _uid = _uid?.substring(13, _uid.length);
-                          while (!_uid) {
-                            const parentEle = newHoveredElement.parentElement;
-                            if (!parentEle) break;
-
-                            _uid = parentEle.getAttribute(NodeInAppAttribName);
-                            !_uid ? (newHoveredElement = parentEle) : null;
-                          }
-
-                          // set hovered item
-                          if (_uid && _uid !== fnHoveredItem) {
-                            setFNHoveredItem(_uid);
-                          }
-                        }}
-                        onMouseLeave={() => {
-                          setFNHoveredItem("");
-                        }}
-                        onFocus={() => {}}
-                        onDragStart={(e: React.DragEvent) => {
-                          const img = new Image();
-                          e.dataTransfer.effectAllowed = "move";
-                          e.dataTransfer.setDragImage(
-                            img,
-                            window.outerWidth,
-                            window.outerHeight,
-                          );
-                          props.context.startDragging();
-
-                          isDragging.current = true;
-                        }}
-                        onDragEnter={(e) => {
-                          if (!props.context.isExpanded) {
-                            setTimeout(
-                              () => cb_expandNode(props.item.index as TNodeUid),
-                              AutoExpandDelay,
-                            );
-                          }
-                          // e.dataTransfer.effectAllowed = 'move'
-                        }}
-                      >
-                        <div
-                          className="gap-s padding-xs"
-                          style={{ width: "100%" }}
-                        >
-                          {props.arrow}
-
-                          {htmlElementReferenceData ? (
-                            <SVGIconI {...{ class: "icon-xs" }}>
-                              {htmlElementReferenceData["Icon"]}
-                            </SVGIconI>
-                          ) : props.item.data.name === "!--...--" ||
-                            props.item.data.name === "comment" ? (
-                            <div className="icon-xs">
-                              <SVGIconI {...{ class: "icon-xs" }}>
-                                bubble
-                              </SVGIconI>
-                            </div>
-                          ) : (
-                            <div className="icon-xs">
-                              <SVGIconI {...{ class: "icon-xs" }}>
-                                component
-                              </SVGIconI>
-                            </div>
-                          )}
-
-                          {htmlElementReferenceData ? (
-                            <>
-                              <span
-                                className="text-s justify-stretch"
-                                style={{
-                                  width: "calc(100% - 32px)",
-                                  textOverflow: "ellipsis",
-                                  overflow: "hidden",
-                                  whiteSpace: "nowrap",
-                                }}
-                              >
-                                {htmlElementReferenceData["Name"]}
-                              </span>
-                            </>
-                          ) : props.item.data.name === "!--...--" ||
-                            props.item.data.name === "comment" ? (
-                            <span
-                              className="text-s justify-stretch"
-                              style={{
-                                width: "calc(100% - 32px)",
-                                textOverflow: "ellipsis",
-                                overflow: "hidden",
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              comment
-                            </span>
-                          ) : (
-                            props.title
-                          )}
-                        </div>
-                      </div>
-
-                      {props.context.isExpanded ? (
-                        <>
-                          <div>{props.children}</div>
-                        </>
-                      ) : null}
-                    </li>
-                  </>
-                );
-              },
-              renderItemArrow: (props) => {
-                return (
-                  <>
-                    {props.item.isFolder ? (
-                      props.context.isExpanded ? (
-                        <SVGIconI
-                          {...{
-                            class: "icon-xs",
-                            onClick: (e: MouseEvent) => {
-                              addRunningActions(["nodeTreeView-arrow"]);
-                              props.context.toggleExpandedState();
-                            },
-                          }}
-                        >
-                          down
-                        </SVGIconI>
-                      ) : (
-                        <SVGIconII
-                          {...{
-                            class: "icon-xs",
-                            onClick: (e: MouseEvent) => {
-                              addRunningActions(["nodeTreeView-arrow"]);
-                              props.context.toggleExpandedState();
-                            },
-                          }}
-                        >
-                          right
-                        </SVGIconII>
-                      )
-                    ) : (
-                      <div className="icon-xs"></div>
+                      props.context.isDraggingOver && "outline",
+                      props.context.isDraggingOverParent && "",
                     )}
-                  </>
-                );
-              },
-              renderItemTitle: (props) => {
-                return (
-                  <>
-                    <span
-                      className="text-s justify-stretch"
-                      style={{
-                        width: "calc(100% - 32px)",
-                        textOverflow: "ellipsis",
-                        overflow: "hidden",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {props.title}
-                    </span>
-                  </>
-                );
-              },
-              renderDragBetweenLine: ({ draggingPosition, lineProps }) => (
-                <div
-                  {...lineProps}
-                  className={"foreground-tertiary"}
-                  style={{
-                    position: "absolute",
-                    right: "0",
-                    top:
-                      draggingPosition.targetType === "between-items" &&
-                      draggingPosition.linePosition === "top"
-                        ? "0px"
-                        : draggingPosition.targetType === "between-items" &&
-                          draggingPosition.linePosition === "bottom"
-                        ? "-2px"
-                        : "-2px",
-                    left: `${draggingPosition.depth * 10 + 20}px`,
-                    height: "2px",
-                  }}
-                />
-              ),
-            }}
-            props={{
-              canDragAndDrop: true,
-              canDropOnFolder: true,
-              canDropOnNonFolder: true,
-              canReorderItems: true,
+                    style={{
+                      flexWrap: "nowrap",
+                      paddingLeft: `${props.depth * 18}px`,
+                    }}
+                    {...props.context.itemContainerWithoutChildrenProps}
+                    {...props.context.interactiveElementProps}
+                    onClick={onClick}
+                    onDoubleClick={onDoubleClick}
+                    onMouseEnter={onMouseEnter}
+                    onMouseLeave={onMouseLeave}
+                    onFocus={() => {}}
+                    onDragStart={onDragStart}
+                    onDragEnter={onDragEnter}
+                  >
+                    <div className="gap-s padding-xs" style={{ width: "100%" }}>
+                      {props.arrow}
 
-              canSearch: false,
-              canSearchByStartingTyping: false,
-              canRename: false,
-            }}
-            callbacks={callbacks}
-          />
-        </div>
-      </>
+                      {htmlElementReferenceData ? (
+                        <SVGIconI {...{ class: "icon-xs" }}>
+                          {htmlElementReferenceData["Icon"]}
+                        </SVGIconI>
+                      ) : props.item.data.name === "!--...--" ||
+                        props.item.data.name === "comment" ? (
+                        <div className="icon-xs">
+                          <SVGIconI {...{ class: "icon-xs" }}>bubble</SVGIconI>
+                        </div>
+                      ) : (
+                        <div className="icon-xs">
+                          <SVGIconI {...{ class: "icon-xs" }}>
+                            component
+                          </SVGIconI>
+                        </div>
+                      )}
+
+                      {htmlElementReferenceData ? (
+                        <span
+                          className="text-s justify-stretch"
+                          style={spanStyles}
+                        >
+                          {htmlElementReferenceData["Name"]}
+                        </span>
+                      ) : props.item.data.name === "!--...--" ||
+                        props.item.data.name === "comment" ? (
+                        <span
+                          className="text-s justify-stretch"
+                          style={spanStyles}
+                        >
+                          comment
+                        </span>
+                      ) : (
+                        props.title
+                      )}
+                    </div>
+                  </div>
+
+                  {props.context.isExpanded ? (
+                    <div>{props.children}</div>
+                  ) : null}
+                </li>
+              );
+            },
+
+            renderItemArrow: (props) => (
+              <ItemArrow {...props} addRunningActions={addRunningActions} />
+            ),
+            renderItemTitle: (props) => <ItemTitle {...props} />,
+            renderDragBetweenLine: (props) => <DragBetweenLine {...props} />,
+          }}
+          props={{
+            ...dragAndDropConfig,
+            ...searchConfig,
+          }}
+          callbacks={callbacks}
+        />
+      </div>
     ) : (
       <></>
     );
@@ -637,3 +517,5 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
     navigatorDropDownType,
   ]);
 }
+
+export default React.memo(NodeTreeView);

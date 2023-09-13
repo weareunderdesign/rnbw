@@ -1,4 +1,3 @@
-import { Ref } from "react";
 import { DraggingPosition, TreeItem, TreeItemIndex } from "react-complex-tree";
 
 import { TNodeUid } from "@_node/types";
@@ -7,13 +6,13 @@ import { useNodeActions } from "./useNodeActions";
 import { useNodeViewState } from "./useNodeViewState";
 
 export const useNodeTreeCallback = (
-  focusedItemRef: Ref<TNodeUid> | null,
-  isDragging: React.MutableRefObject<boolean>,
+  focusItemValue: TNodeUid | null,
+  isDragging: boolean,
 ) => {
   const { cb_moveNode } = useNodeActions();
 
   const { cb_focusNode, cb_selectNode, cb_expandNode, cb_collapseNode } =
-    useNodeViewState(focusedItemRef);
+    useNodeViewState(focusItemValue);
 
   const onSelectItems = (items: TreeItemIndex[]) => {
     cb_selectNode(items as TNodeUid[]);
@@ -41,7 +40,7 @@ export const useNodeTreeCallback = (
 
     cb_moveNode(uids, targetUid, isBetween, position);
 
-    isDragging.current = false;
+    isDragging = false;
 
     const className = "dragging-tree";
     const html = document.getElementsByTagName("html").item(0);
