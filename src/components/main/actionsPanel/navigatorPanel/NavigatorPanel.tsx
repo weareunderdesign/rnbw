@@ -5,7 +5,7 @@ import { TFileNodeData } from "@_node/file";
 import { MainContext, navigatorSelector } from "@_redux/main";
 
 import { NavigatorPanelProps } from "./types";
-import { useNavigationPanelHandlers, useFavicon } from "./hooks";
+import { useNavigatorPanelHandlers, useFavicon } from "./hooks";
 
 import {
   unsavedLightProjectImg,
@@ -84,7 +84,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
     onWorkspaceClick,
     onOpenProject,
     onPanelClick,
-  } = useNavigationPanelHandlers();
+  } = useNavigatorPanelHandlers();
 
   return useMemo(() => {
     return file.uid !== "" ? (

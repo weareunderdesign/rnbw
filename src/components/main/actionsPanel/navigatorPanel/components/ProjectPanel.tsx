@@ -2,12 +2,12 @@ import React, { useContext } from "react";
 
 import { SVGIconI } from "@_components/common";
 import { MainContext } from "@_redux/main";
-import { useNavigationPanelHandlers } from "../hooks";
+import { useNavigatorPanelHandlers } from "../hooks";
 
 export const ProjectPanel = React.memo(() => {
   const { project } = useContext(MainContext);
 
-  const { onProjectClick } = useNavigationPanelHandlers();
+  const { onProjectClick } = useNavigatorPanelHandlers();
 
   // const handleImageError = useCallback(() => {
   //   console.log("error");

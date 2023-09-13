@@ -1,2 +1,2 @@
-export { useNavigationPanelHandlers } from "./useNavigationPanelHandlers";
+export { useNavigatorPanelHandlers } from "./useNavigatorPanelHandlers";
 export { useFavicon } from "./useFavicon";

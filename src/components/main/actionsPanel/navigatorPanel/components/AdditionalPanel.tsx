@@ -5,7 +5,7 @@ import { TProject } from "@_types/main";
 import { MainContext } from "@_redux/main";
 import { SVGIcon } from "@_components/common";
 
-import { useNavigationPanelHandlers } from "../hooks";
+import { useNavigatorPanelHandlers } from "../hooks";
 
 interface AdditionalPanelProps {
   navigatorPanel: HTMLDivElement | null;
@@ -18,7 +18,7 @@ export const AdditionalPanel: FC<AdditionalPanelProps> = React.memo(
 
     const navigatorDropDownRef = useRef<HTMLDivElement | null>(null);
 
-    const { onCloseDropDown, onOpenProject } = useNavigationPanelHandlers();
+    const { onCloseDropDown, onOpenProject } = useNavigatorPanelHandlers();
 
     const onClick = useCallback(
       (e: React.MouseEvent<HTMLDivElement, MouseEvent>, project: TProject) => {

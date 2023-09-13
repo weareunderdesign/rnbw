@@ -5,7 +5,7 @@ import { SVGIconI } from "@_components/common";
 import { TFileNodeData } from "@_node/file";
 import { MainContext, navigatorSelector } from "@_redux/main";
 
-import { useNavigationPanelHandlers } from "../hooks";
+import { useNavigatorPanelHandlers } from "../hooks";
 
 export const DefaultPanel = React.memo(() => {
   const { file } = useSelector(navigatorSelector);
@@ -13,7 +13,7 @@ export const DefaultPanel = React.memo(() => {
 
   const node = useMemo(() => ffTree[file.uid], [ffTree, file.uid]);
 
-  const { onProjectClick, onFileClick } = useNavigationPanelHandlers();
+  const { onProjectClick, onFileClick } = useNavigatorPanelHandlers();
 
   return (
     <>

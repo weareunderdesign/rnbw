@@ -4,7 +4,7 @@ import { MainContext } from "@_redux/main";
 import { TFileNodeData } from "@_node/file";
 import { TProject } from "@_types/main";
 
-export const useNavigationPanelHandlers = () => {
+export const useNavigatorPanelHandlers = () => {
   const {
     // navigator
     navigatorDropDownType,
