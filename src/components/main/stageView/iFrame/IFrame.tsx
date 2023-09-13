@@ -1,5 +1,5 @@
 import React, {
-  useCallback,
+    useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -1542,6 +1542,14 @@ export const IFrame = (props: IFrameProps) => {
           <iframe
             ref={setContentRef}
             src={iframeSrc}
+            onLoad={()=>{
+              const iframe:any = document.getElementById('iframeId')
+              const innerDoc = (iframe.contentDocument) ? iframe.contentDocument : iframe.contentWindow.document;
+              const firstElement = innerDoc.children[0].children[1].children[0];
+              firstElement.classList.add('rnbwdev-rnbw-element-select')
+              firstElement.setAttribute('rnbwdev-rnbw-element-select','rnbwdev-rnbw-element-select')
+              }}
+            id={'iframeId'}
             style={
               parseFileFlag
                 ? {

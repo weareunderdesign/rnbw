@@ -310,6 +310,15 @@ function NodeTreeView(props: NodeTreeViewProps) {
                 whiteSpace: "nowrap",
               };
 
+              const treeViewRef = useRef<HTMLHeadingElement|any>(null);
+                  useEffect(() => {
+                  if (props.context.isSelected) {
+                    setTimeout(()=>{
+                      treeViewRef.current.click();
+                    },500)
+                  }
+                  }, []);
+
               const onClick = useCallback(
                 (e: React.MouseEvent) => {
                   e.stopPropagation();
@@ -425,6 +434,7 @@ function NodeTreeView(props: NodeTreeViewProps) {
                     }}
                     {...props.context.itemContainerWithoutChildrenProps}
                     {...props.context.interactiveElementProps}
+                    ref={treeViewRef}
                     onClick={onClick}
                     onDoubleClick={onDoubleClick}
                     onMouseEnter={onMouseEnter}
