@@ -358,7 +358,7 @@ export default function NodeTreeView(props: NodeTreeViewProps) {
                   if (props.context.isSelected) {
                     setTimeout(()=>{
                       treeViewRef.current.click();
-                    },100)
+                    },500)
                   }
                   }, []);
                   
