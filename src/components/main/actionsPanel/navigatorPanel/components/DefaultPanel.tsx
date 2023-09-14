@@ -6,7 +6,7 @@ import { TFileNodeData } from "@_node/file";
 import { MainContext, navigatorSelector } from "@_redux/main";
 
 import { useNavigatorPanelHandlers } from "../hooks";
-import { isHomeIcon, getFileNameFromPath } from "../helpers";
+import { isHomeIcon, getFileNameFromPath, getFileExtension } from "../helpers";
 
 export const DefaultPanel = React.memo(() => {
   const { file } = useSelector(navigatorSelector);
@@ -14,6 +14,7 @@ export const DefaultPanel = React.memo(() => {
 
   const node = useMemo(() => ffTree[file.uid], [ffTree, file.uid]);
   const fileName = useMemo(() => getFileNameFromPath(file), [file]);
+  const fileExtension = useMemo(() => getFileExtension(node), [node]);
 
   const { onProjectClick, onFileClick } = useNavigatorPanelHandlers();
 
@@ -51,22 +52,8 @@ export const DefaultPanel = React.memo(() => {
           <SVGIconI {...{ class: "icon-xs" }}>
             {isHomeIcon(node)
               ? "home"
-              : filesReferenceData[
-                  (node.data as TFileNodeData).ext.substring(
-                    1,
-                    (node.data as TFileNodeData).ext.length,
-                  )
-                ] &&
-                (node.data as TFileNodeData).ext.substring(
-                  1,
-                  (node.data as TFileNodeData).ext.length,
-                ) !== "md"
-              ? filesReferenceData[
-                  (node.data as TFileNodeData).ext.substring(
-                    1,
-                    (node.data as TFileNodeData).ext.length,
-                  )
-                ].Icon
+              : filesReferenceData[fileExtension] && fileExtension !== "md"
+              ? filesReferenceData[fileExtension].Icon
               : "page"}
           </SVGIconI>
           <span
