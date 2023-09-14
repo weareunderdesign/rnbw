@@ -50,7 +50,6 @@ import {
   ffSelector,
   focusFFNode,
   globalSelector,
-  hmsInfoSelector,
   MainContext,
   navigatorSelector,
   removeCurrentFile,
@@ -66,16 +65,22 @@ import {
   verifyFileHandlerPermission,
 } from "@_services/main";
 import { TFileAction, TFileNodeType } from "@_types/main";
-
-import { WorkspaceTreeViewProps } from "./types";
+import { 
+  deletingWarning, 
+  duplicatingWarning, 
+  fileError, 
+  folderError, 
+  invalidDirError, 
+  movingError, 
+  renamingError 
+} from "./errors";
 
 const AutoExpandDelay = 1 * 1000;
-export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
+export default function WorkspaceTreeView() {
   const dispatch = useDispatch();
   // -------------------------------------------------------------- global state --------------------------------------------------------------
   const { file } = useSelector(navigatorSelector);
   const { fileAction } = useSelector(globalSelector);
-  const { futureLength, pastLength } = useSelector(hmsInfoSelector);
   const {
     focusedItem,
     expandedItems,
@@ -88,7 +93,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     addRunningActions,
     removeRunningActions,
     // navigator
-    workspace,
     project,
     navigatorDropDownType,
     setNavigatorDropDownType,
@@ -97,18 +101,13 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     setActivePanel,
     clipboardData,
     setClipboardData,
-    event,
-    setEvent,
     // actions panel
     showActionsPanel,
     // file tree view
     initialFileToOpen,
     setInitialFileToOpen,
-    fsPending,
-    setFSPending,
     ffTree,
     setFFTree,
-    setFFNode,
     ffHandlers,
     setFFHandlers,
     ffHoveredItem,
@@ -116,62 +115,29 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
     isHms,
     setIsHms,
     ffAction,
-    setFFAction,
     currentFileUid,
     setCurrentFileUid,
     // node tree view
-    fnHoveredItem,
-    setFNHoveredItem,
     nodeTree,
     setNodeTree,
-    validNodeTree,
     setValidNodeTree,
-    nodeMaxUid,
-    setNodeMaxUid,
     // stage view
-    iframeLoading,
-    setIFrameLoading,
-    iframeSrc,
     setIFrameSrc,
-    fileInfo,
-    setFileInfo,
-    needToReloadIFrame,
-    setNeedToReloadIFrame,
     linkToOpen,
-    setLinkToOpen,
     // code view
-    codeEditing,
-    setCodeEditing,
-    codeChanges,
-    setCodeChanges,
-    tabSize,
-    setTabSize,
-    newFocusedNodeUid,
-    setNewFocusedNodeUid,
     showCodeView,
     setShowCodeView,
     // processor
-    updateOpt,
     setUpdateOpt,
     // references
     filesReferenceData,
     htmlReferenceData,
-    cmdkReferenceData,
     // cmdk
     currentCommand,
-    setCurrentCommand,
-    cmdkOpen,
-    setCmdkOpen,
-    cmdkPages,
-    setCmdkPages,
-    cmdkPage,
     // other
     osType,
-    theme,
     // toasts
     addMessage,
-    removeMessage,
-
     // non-parse file
     parseFileFlag,
     setParseFile,
@@ -382,7 +348,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       if (type === "create") {
         _delete([param1]);
       } else if (type === "rename") {
-        const { uid, parentUid } = param1;
+        const { parentUid } = param1;
         const { orgName, newName } = param2;
         const currentUid = `${parentUid}/${newName}`;
         (async () => {
@@ -410,7 +376,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
 
         const uids: TNodeUid[] = [];
         _targetUids.map((targetUid, index) => {
-          const { uid, name } = _uids[index];
+          const { name } = _uids[index];
           uids.push(`${targetUid}/${name}`);
         });
         _delete(uids);
@@ -421,8 +387,8 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
       if (type === "create") {
         _create(param2);
       } else if (type === "rename") {
-        const { uid, parentUid } = param1;
-        const { orgName, newName } = param2;
+        const { uid } = param1;
+        const { newName } = param2;
         (async () => {
           setTemporaryNodes(uid);
           await _rename(uid, newName);
@@ -737,7 +703,9 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                 name,
                 true,
               );
-            } catch (err) {}
+            } catch (err) {
+              console.log(err);
+            }
           } else if (project.context === "idb") {
             await moveIDBFF(nodeData, targetNodeData, nodeData.name, true);
           }
@@ -1196,10 +1164,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           parentUid
         ] as FileSystemDirectoryHandle;
         if (!(await verifyFileHandlerPermission(parentHandler))) {
-          addMessage({
-            type: "error",
-            content: `Invalid target directory. Check if you have "write" permission for the directory.`,
-          });
+          addMessage(invalidDirError);
           removeRunningActions(["fileTreeView-create"], false);
           return;
         }
@@ -1239,10 +1204,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
               create: true,
             });
           } catch (err) {
-            addMessage({
-              type: "error",
-              content: "Error occurred while creating a new folder.",
-            });
+            addMessage(folderError);
             removeRunningActions(["fileTreeView-create"], false);
             return;
           }
@@ -1280,10 +1242,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           try {
             await parentHandler.getFileHandle(fileName, { create: true });
           } catch (err) {
-            addMessage({
-              type: "error",
-              content: "Error occurred while creating a new file.",
-            });
+            addMessage(fileError);
             removeRunningActions(["fileTreeView-create"], false);
             return;
           }
@@ -1320,10 +1279,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           try {
             await createDirectory(`${parentNodeData.path}/${folderName}`);
           } catch (err) {
-            addMessage({
-              type: "error",
-              content: "Error occurred while creating a new folder.",
-            });
+            addMessage(folderError);
             removeRunningActions(["fileTreeView-create"], false);
             return;
           }
@@ -1357,10 +1313,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           try {
             await writeFile(`${parentNodeData.path}/${fileName}`, "");
           } catch (err) {
-            addMessage({
-              type: "error",
-              content: "Error occurred while creating a new file.",
-            });
+            addMessage(fileError);
             removeRunningActions(["fileTreeView-create"], false);
             return;
           }
@@ -1532,10 +1485,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           );
           removeInvalidNodes(newUid);
         } catch (err) {
-          addMessage({
-            type: "error",
-            content: "Error occurred while renaming ...",
-          });
+          addMessage(renamingError);
 
           removeInvalidNodes(newUid);
           removeRunningActions(["fileTreeView-rename"], false);
@@ -1548,10 +1498,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           await moveIDBFF(nodeData, parentNodeData, _newName, false, true);
           removeInvalidNodes(newUid);
         } catch (err) {
-          addMessage({
-            type: "error",
-            content: "Error occurred while renaming ...",
-          });
+          addMessage(renamingError);
 
           removeInvalidNodes(newUid);
           removeRunningActions(["fileTreeView-rename"], false);
@@ -1684,10 +1631,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         }),
       );
       if (!allDone) {
-        addMessage({
-          type: "warning",
-          content: "Some directory/file couldn't be deleted.",
-        });
+        addMessage(deletingWarning);
       }
     } else if (project.context === "idb") {
       let allDone = true;
@@ -1710,10 +1654,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         }),
       );
       if (!allDone) {
-        addMessage({
-          type: "warning",
-          content: "Some directory/file couldn't be deleted.",
-        });
+        addMessage(deletingWarning);
       }
     }
 
@@ -1768,11 +1709,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           targetUid
         ] as FileSystemDirectoryHandle;
         if (!(await verifyFileHandlerPermission(targetHandler))) {
-          addMessage({
-            type: "error",
-            content: `Invalid target directory. Check if you have "write" permission for the directory.`,
-          });
-
+          addMessage(invalidDirError);
           removeRunningActions(["fileTreeView-move"], false);
           return;
         }
@@ -1918,10 +1855,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           }),
         );
         if (!allDone) {
-          addMessage({
-            type: "warning",
-            content: "Some directory/file couldn't be moved.",
-          });
+          addMessage(movingError);
         }
       } else if (project.context === "idb") {
         const targetNodeData = targetNode.data as TFileNodeData;
@@ -2037,10 +1971,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
           }),
         );
         if (!allDone) {
-          addMessage({
-            type: "warning",
-            content: "Some directory/file couldn't be moved.",
-          });
+          addMessage(movingError);
         }
       }
 
@@ -2210,10 +2141,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         }),
       );
       if (!allDone) {
-        addMessage({
-          type: "warning",
-          content: "Some directory/file couldn't be duplicated.",
-        });
+        addMessage(duplicatingWarning);
       }
     } else if (project.context === "idb") {
       let allDone = true;
@@ -2310,10 +2238,7 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
         }),
       );
       if (!allDone) {
-        addMessage({
-          type: "warning",
-          content: "Some directory/file couldn't be duplicated.",
-        });
+        addMessage(duplicatingWarning);
       }
     }
 
@@ -2552,7 +2477,6 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
             width: "100%",
             maxHeight: "calc(50vh - 50px)",
             height: "auto",
-
             overflow: "auto",
 
             ...(navigatorDropDownType ? { zIndex: 2 } : {}),
@@ -2606,6 +2530,73 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                     ];
                   return refData;
                 }, []);
+
+                const onClick = useCallback(
+                (e:React.MouseEvent)=>{
+                  e.stopPropagation();
+                  openFileUid.current = props.item.data.uid;
+                  // skip click-event from an inline rename input
+                  const targetId =
+                    e.target && (e.target as HTMLElement).id;
+                  if (targetId === "FileTreeView-RenameInput") {
+                    return;
+                  }
+
+                  addRunningActions(["fileTreeView-select"]);
+                  !props.context.isFocused &&
+                    addRunningActions(["fileTreeView-focus"]);
+                  !e.shiftKey &&
+                    !e.ctrlKey &&
+                    addRunningActions(
+                      props.item.isFolder
+                        ? [
+                            props.context.isExpanded
+                              ? "fileTreeView-collapse"
+                              : "fileTreeView-expand",
+                          ]
+                        : ["fileTreeView-read"],
+                    );
+
+                  if (!props.context.isFocused) {
+                    props.context.focusItem();
+                    focusedItemRef.current = props.item
+                      .index as TNodeUid;
+                  }
+                  e.shiftKey
+                    ? props.context.selectUpTo()
+                    : e.ctrlKey
+                    ? props.context.isSelected
+                      ? props.context.unselectItem()
+                      : props.context.addToSelectedItems()
+                    : [
+                        props.context.selectItem(),
+                        props.item.isFolder
+                          ? props.context.toggleExpandedState()
+                          : props.context.primaryAction(),
+                      ];
+
+                  setActivePanel("file");
+                },[props.item,props.context])
+
+                const onDragStart = (e: React.DragEvent) => {
+                  const target = e.target as HTMLElement;
+                  e.dataTransfer.setDragImage(
+                    target,
+                    window.outerWidth,
+                    window.outerHeight,
+                  );
+                  props.context.startDragging();
+                }
+
+                const onDragEnter = () => {
+                  if (!props.context.isExpanded) {
+                    setTimeout(
+                      () => cb_expandNode(props.item.index as TNodeUid),
+                      AutoExpandDelay,
+                    );
+                  }
+                }
+
                 return (
                   <>
                     <li
@@ -2646,73 +2637,14 @@ export default function WorkspaceTreeView(props: WorkspaceTreeViewProps) {
                         }}
                         {...props.context.itemContainerWithoutChildrenProps}
                         {...props.context.interactiveElementProps}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openFileUid.current = props.item.data.uid;
-                          // skip click-event from an inline rename input
-                          const targetId =
-                            e.target && (e.target as HTMLElement).id;
-                          if (targetId === "FileTreeView-RenameInput") {
-                            return;
-                          }
-
-                          addRunningActions(["fileTreeView-select"]);
-                          !props.context.isFocused &&
-                            addRunningActions(["fileTreeView-focus"]);
-                          !e.shiftKey &&
-                            !e.ctrlKey &&
-                            addRunningActions(
-                              props.item.isFolder
-                                ? [
-                                    props.context.isExpanded
-                                      ? "fileTreeView-collapse"
-                                      : "fileTreeView-expand",
-                                  ]
-                                : ["fileTreeView-read"],
-                            );
-
-                          if (!props.context.isFocused) {
-                            props.context.focusItem();
-                            focusedItemRef.current = props.item
-                              .index as TNodeUid;
-                          }
-                          e.shiftKey
-                            ? props.context.selectUpTo()
-                            : e.ctrlKey
-                            ? props.context.isSelected
-                              ? props.context.unselectItem()
-                              : props.context.addToSelectedItems()
-                            : [
-                                props.context.selectItem(),
-                                props.item.isFolder
-                                  ? props.context.toggleExpandedState()
-                                  : props.context.primaryAction(),
-                              ];
-
-                          setActivePanel("file");
-                        }}
+                        onClick={onClick}
                         onFocus={() => {}}
                         onMouseEnter={() =>
                           setFFHoveredItem(props.item.index as TNodeUid)
                         }
                         onMouseLeave={() => setFFHoveredItem("" as TNodeUid)}
-                        onDragStart={(e: React.DragEvent) => {
-                          const target = e.target as HTMLElement;
-                          e.dataTransfer.setDragImage(
-                            target,
-                            window.outerWidth,
-                            window.outerHeight,
-                          );
-                          props.context.startDragging();
-                        }}
-                        onDragEnter={() => {
-                          if (!props.context.isExpanded) {
-                            setTimeout(
-                              () => cb_expandNode(props.item.index as TNodeUid),
-                              AutoExpandDelay,
-                            );
-                          }
-                        }}
+                        onDragStart={onDragStart}
+                        onDragEnter={onDragEnter}
                       >
                         <div
                           className="gap-s padding-xs"
