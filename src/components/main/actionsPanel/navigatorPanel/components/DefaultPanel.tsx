@@ -6,12 +6,14 @@ import { TFileNodeData } from "@_node/file";
 import { MainContext, navigatorSelector } from "@_redux/main";
 
 import { useNavigatorPanelHandlers } from "../hooks";
+import { isHomeIcon, getFileNameFromPath } from "../helpers";
 
 export const DefaultPanel = React.memo(() => {
   const { file } = useSelector(navigatorSelector);
   const { project, ffTree, filesReferenceData } = useContext(MainContext);
 
   const node = useMemo(() => ffTree[file.uid], [ffTree, file.uid]);
+  const fileName = useMemo(() => getFileNameFromPath(file), [file]);
 
   const { onProjectClick, onFileClick } = useNavigatorPanelHandlers();
 
@@ -47,9 +49,7 @@ export const DefaultPanel = React.memo(() => {
       {node && (
         <div className="gap-s align-center" onClick={onFileClick}>
           <SVGIconI {...{ class: "icon-xs" }}>
-            {node.data.type == "html" &&
-            node.data.name == "index" &&
-            node.parentUid === "ROOT"
+            {isHomeIcon(node)
               ? "home"
               : filesReferenceData[
                   (node.data as TFileNodeData).ext.substring(
@@ -78,7 +78,7 @@ export const DefaultPanel = React.memo(() => {
               overflow: "hidden",
             }}
           >
-            {file.uid.split("/")[file.uid.split("/").length - 1]}
+            {fileName}
           </span>
 
           {node && (node.data as TFileNodeData).changed && (

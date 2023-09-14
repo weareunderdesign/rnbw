@@ -33,17 +33,17 @@ export const useNavigatorPanelHandlers = () => {
     }
   }, [navigatorDropDownType]);
 
-  const onProjectClick = useCallback(() => {
+  const onProjectClick = () => {
     setNavigatorDropDownType("project");
-  }, []);
+  };
 
-  const onFileClick = useCallback(() => {
+  const onFileClick = () => {
     setNavigatorDropDownType("project");
-  }, []);
+  };
 
-  const onCloseDropDown = useCallback(() => {
+  const onCloseDropDown = () => {
     setNavigatorDropDownType(null);
-  }, []);
+  };
 
   const onOpenProject = useCallback(
     (project: TProject) => {
@@ -70,9 +70,9 @@ export const useNavigatorPanelHandlers = () => {
     [ffTree],
   );
 
-  const onPanelClick = useCallback((e: React.MouseEvent) => {
+  const onPanelClick = () => {
     setActivePanel("file");
-  }, []);
+  };
 
   return {
     onProjectClick,

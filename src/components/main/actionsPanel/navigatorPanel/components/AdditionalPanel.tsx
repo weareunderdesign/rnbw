@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useContext, useRef } from "react";
+import React, { FC, useContext, useRef } from "react";
 import cx from "classnames";
 
 import { TProject } from "@_types/main";
@@ -6,6 +6,7 @@ import { MainContext } from "@_redux/main";
 import { SVGIcon } from "@_components/common";
 
 import { useNavigatorPanelHandlers } from "../hooks";
+import { isSelected } from "../helpers";
 
 interface AdditionalPanelProps {
   navigatorPanel: HTMLDivElement | null;
@@ -20,13 +21,13 @@ export const AdditionalPanel: FC<AdditionalPanelProps> = React.memo(
 
     const { onCloseDropDown, onOpenProject } = useNavigatorPanelHandlers();
 
-    const onClick = useCallback(
-      (e: React.MouseEvent<HTMLDivElement, MouseEvent>, project: TProject) => {
-        e.stopPropagation();
-        onOpenProject(project);
-      },
-      [],
-    );
+    const onClick = (
+      e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+      project: TProject,
+    ) => {
+      e.stopPropagation();
+      onOpenProject(project);
+    };
 
     return (
       <div
@@ -61,11 +62,7 @@ export const AdditionalPanel: FC<AdditionalPanelProps> = React.memo(
                   className={cx(
                     "navigator-project-item",
                     "justify-stretch padding-s",
-                    _project.context === project.context &&
-                      _project.name === project.name &&
-                      _project.handler === project.handler
-                      ? "selected"
-                      : "",
+                    isSelected(_project, project),
                   )}
                   onClick={(
                     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
