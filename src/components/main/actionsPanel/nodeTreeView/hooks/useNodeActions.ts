@@ -107,7 +107,7 @@ export function useNodeActions() {
       });
 
       removeRunningActions(["nodeTreeView-add"]);
-      console.log("### hms added");
+      console.log("hms added");
 
       dispatch(increaseActionGroupIndex());
     },

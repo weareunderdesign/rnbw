@@ -290,8 +290,6 @@ function NodeTreeView(props: NodeTreeViewProps) {
             renderItemsContainer: (props) => <Container {...props} />,
 
             renderItem: (props) => {
-              console.log("###RENDER");
-
               const htmlElementReferenceData =
                 useMemo<THtmlElementsReference>(() => {
                   const node = props.item.data as TNode;
