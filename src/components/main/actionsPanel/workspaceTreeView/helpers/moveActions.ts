@@ -43,26 +43,34 @@ export const moveActions = () =>{
 		  }
 	
 		  // move nested handler-dir to targetHandler with the newName - copy (optional)
-		  try {
+		try {
 			const newHandler = await targetHandler.getDirectoryHandle(newName, {
 			  create: true,
 			});
-			const newDirHandlers = [newHandler];
-			const dirHandlers = [handler as FileSystemDirectoryHandle];
-			while (dirHandlers.length) {
-			  const dirHandler = dirHandlers.shift() as FileSystemDirectoryHandle;
-			  const newDirHandler =
-				newDirHandlers.shift() as FileSystemDirectoryHandle;
-			  for await (const entry of dirHandler.values()) {
+			const dirQueue = [
+			  {
+				source: handler as FileSystemDirectoryHandle,
+				destination: newHandler,
+			  },
+			];
+		  
+			while (dirQueue.length) {
+			  const { source, destination } = dirQueue.shift() as {
+				source: FileSystemDirectoryHandle;
+				destination: FileSystemDirectoryHandle;
+			  };
+		  
+			  for await (const entry of source.values()) {
 				if (entry.kind === "directory") {
-				  const newDir = await newDirHandler.getDirectoryHandle(
-					entry.name,
-					{ create: true },
-				  );
-				  dirHandlers.push(entry);
-				  newDirHandlers.push(newDir);
+				  const newDir = await destination.getDirectoryHandle(entry.name, {
+					create: true,
+				  });
+				  dirQueue.push({
+					source: entry as FileSystemDirectoryHandle,
+					destination: newDir,
+				  });
 				} else {
-				  const newFile = await newDirHandler.getFileHandle(entry.name, {
+				  const newFile = await destination.getFileHandle(entry.name, {
 					create: true,
 				  });
 				  const content = await (entry as FileSystemFileHandle).getFile();
@@ -72,13 +80,14 @@ export const moveActions = () =>{
 				}
 			  }
 			}
-	
-			// handle copy(optional)
-			!copy &&
-			  (await parentHandler.removeEntry(handler.name, { recursive: true }));
+		  
+			// Handle copy (optional)
+			!copy && (await parentHandler.removeEntry(handler.name, { recursive: true }));
 		  } catch (err) {
-			throw "error";
+			throw new Error("error");
 		  }
+		  
+
 		} else {
 		  // validate if the new name exists
 		  let exists = true;
