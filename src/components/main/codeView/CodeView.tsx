@@ -55,8 +55,6 @@ export default function CodeView(props: CodeViewProps) {
     setFFTree,
     validNodeTree,
     // code view
-    codeEditing,
-    setCodeEditing,
     setCodeChanges,
     tabSize,
     setTabSize,
@@ -81,6 +79,9 @@ export default function CodeView(props: CodeViewProps) {
     language,
     updateLanguage,
     editorConfigs,
+    findNodeBySelection,
+    codeEditing,
+    setCodeEditing,
   } = useEditor();
 
   const { editorWrapperRef, onPanelClick } = useEditorWrapper(
@@ -154,6 +155,7 @@ export default function CodeView(props: CodeViewProps) {
       getPositionFromIndex(monacoEditor, startIndex, endIndex);
 
     if (isFirst.current) {
+      debugger;
       const firstTimer = setInterval(() => {
         const monacoEditor = getCurrentEditorInstance();
         if (monacoEditor) {
@@ -265,37 +267,13 @@ export default function CodeView(props: CodeViewProps) {
     }
     const monacoEditor = getCurrentEditorInstance();
     if (selection) {
-      let _uid: TNodeUid = "";
-      const uids = getSubNodeUidsByBfs(RootNodeUid, validNodeTreeRef.current);
-      uids.reverse();
-      for (const uid of uids) {
-        const node = validNodeTreeRef.current[uid];
-        const nodeData = node.data as THtmlNodeData;
-        const { startIndex, endIndex } = nodeData;
-
-        const editor = monacoEditor;
-        if (!editor) return;
-        if (startIndex === undefined && endIndex === undefined) return;
-        const { startLineNumber, startColumn, endLineNumber, endColumn } =
-          getPositionFromIndex(editor, startIndex, endIndex);
-
-        const containFront =
-          selection.startLineNumber === startLineNumber
-            ? selection.startColumn > startColumn
-            : selection.startLineNumber > startLineNumber;
-        const containBack =
-          selection.endLineNumber === endLineNumber
-            ? selection.endColumn < endColumn
-            : selection.endLineNumber < endLineNumber;
-
-        if (containFront && containBack) {
-          _uid = uid;
-          break;
-        }
-      }
-      if (_uid !== "") {
-        const node = validNodeTreeRef.current[_uid];
-        setFocusedNode(JSON.parse(JSON.stringify(node)));
+      let focusedNode = findNodeBySelection(
+        selection,
+        validNodeTreeRef.current,
+        monacoEditor,
+      );
+      if (focusedNode) {
+        setFocusedNode(focusedNode);
       }
     }
   }, [selection, parseFileFlag]);
