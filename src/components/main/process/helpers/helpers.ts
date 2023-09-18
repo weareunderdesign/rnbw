@@ -1,14 +1,35 @@
-import { TCodeChange, TProject } from "@_types/main";
+import {
+  TCodeChange,
+  TFile,
+  TFileInfo,
+  TFileType,
+  TProject,
+} from "@_types/main";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
-import { THtmlNodeData, THtmlPageSettings } from "@_node/html";
+import {
+  THtmlNodeData,
+  THtmlPageSettings,
+  THtmlReferenceData,
+  parseHtmlCodePart,
+  serializeHtml,
+} from "@_node/html";
 import {
   NodeInAppAttribName,
   RootNodeUid,
   NodeUidSplitter,
   StagePreviewPathPrefix,
+  LogAllow,
 } from "@_constants/main";
 import { getSubNodeUidsByBfs, getValidNodeUids } from "@_node/apis";
-import { TFileHandlerCollection, TFileNodeData, writeFile } from "@_node/file";
+import {
+  TFileHandlerCollection,
+  TFileNodeData,
+  parseFile,
+  serializeFile,
+  writeFile,
+} from "@_node/file";
+import { TUpdateOptions } from "@_redux/main/types";
+import { TOsType } from "@_types/global";
 
 export const saveFileContent = async (
   project: TProject,
@@ -59,11 +80,11 @@ export const addNewNode = (
   tree: TNodeTreeData,
   o_parentNode: TNode,
   _nodeTree: TNodeTreeData,
+  _newFocusedNodeUid: any,
 ) => {
   const uids = getSubNodeUidsByBfs(RootNodeUid, tree, false);
   const nodeUids: TNodeUid[] = [];
   let _flag = false;
-  let _newFocusedNodeUid = "";
 
   uids.map((uid) => {
     const node = tree[uid];
@@ -301,4 +322,291 @@ export const detectSeedNodeChanges = (
     }
   }
   return seedNodeChanged;
+};
+export const getFileData = (
+  _file: TNode,
+  updateOpt: TUpdateOptions,
+  nodeTree: TNodeTreeData,
+  getReferenceData: (fileType: TFileType) => THtmlReferenceData,
+  osType: TOsType,
+) => {
+  const fileData = _file.data as TFileNodeData;
+
+  if (updateOpt.from === "node") {
+    const serializedRes = serializeFile(
+      fileData.type,
+      nodeTree,
+      getReferenceData(fileData.type),
+      osType,
+    );
+
+    if (fileData.type === "html") {
+      const { html, htmlInApp } = serializedRes as THtmlNodeData;
+
+      // update ffTree
+      fileData.content = html;
+      fileData.contentInApp = htmlInApp;
+      fileData.changed = fileData.content !== fileData.orgContent;
+    }
+  }
+  return fileData;
+};
+
+export const handleFileUpdate = (
+  fileData: TFileNodeData,
+  _nodeTree: TNodeTreeData,
+  _nodeMaxUid: number,
+  file: TFile,
+  getReferenceData: (fileType: TFileType) => THtmlReferenceData,
+  osType: TOsType,
+) => {
+  const {
+    formattedContent,
+    contentInApp,
+    tree,
+    nodeMaxUid: newNodeMaxUid,
+  } = parseFile(
+    fileData.type,
+    file.content,
+    getReferenceData(fileData.type),
+    osType,
+  );
+
+  fileData.content = formattedContent;
+  fileData.contentInApp = contentInApp;
+  fileData.changed = fileData.content !== fileData.orgContent;
+  return { tree, newNodeMaxUid };
+};
+
+export const handleHtmlUpdate = (
+  fileData: TFileNodeData,
+  file: TFile,
+  _nodeTree: TNodeTreeData,
+  _nodeMaxUid: number,
+  osType: TOsType,
+  htmlReferenceData: THtmlReferenceData,
+  codeChanges: TCodeChange[],
+  updateOpt: TUpdateOptions,
+) => {
+  let fileContent = file.content;
+  if (updateOpt.from === "stage") {
+    for (const change of codeChanges) {
+      const { uid, content } = change;
+      const node = _nodeTree[uid];
+      const nodeData = node.data as THtmlNodeData;
+      nodeData.html = content;
+    }
+    // rebuild from new tree
+    const { html: formattedContent } = serializeHtml(
+      _nodeTree,
+      htmlReferenceData,
+      osType,
+    );
+    fileContent = formattedContent;
+  }
+  const {
+    contentInApp,
+    tree,
+    nodeMaxUid: newNodeMaxUid,
+  } = parseFile(
+    fileData.type,
+    fileContent,
+    htmlReferenceData,
+    osType,
+    null,
+    String(_nodeMaxUid) as TNodeUid,
+  );
+
+  fileData.content = fileContent;
+  fileData.contentInApp = contentInApp;
+  fileData.changed = fileData.content !== fileData.orgContent;
+
+  return { tree, newNodeMaxUid };
+};
+export const handleHmsChange = (
+  fileData: TFileNodeData,
+  state: { file: TFile; focusedItem: string },
+  context: {
+    ffTree: TNodeTreeData;
+    nodeTree: TNodeTreeData;
+    osType: TOsType;
+    currentFileUid: string;
+  },
+  updateData: {
+    _nodeTree: TNodeTreeData;
+    _nodeMaxUid: number;
+    _needToReloadIFrame: boolean;
+    _newFocusedNodeUid: string;
+    onlyRenderViewState: boolean;
+    tempFocusedItem: string;
+  },
+  getReferenceData: (fileType: TFileType) => THtmlReferenceData,
+) => {
+  const { file, focusedItem } = state;
+  const { ffTree, nodeTree, osType, currentFileUid } = context;
+  let {
+    _nodeTree,
+    _nodeMaxUid,
+    _needToReloadIFrame,
+    _newFocusedNodeUid,
+    onlyRenderViewState,
+    tempFocusedItem,
+  } = updateData;
+  const _currentFile = ffTree[currentFileUid];
+  const _currentFileData = _currentFile.data as TFileNodeData;
+
+  if (
+    file.uid === currentFileUid &&
+    file.content === _currentFileData.contentInApp
+  ) {
+    LogAllow && console.log("view state changed by hms");
+    // no need to build new node tree
+    onlyRenderViewState = true;
+  } else {
+    LogAllow && console.log("file content changed by hms");
+    // parse hms content keeping node uids
+    const {
+      formattedContent,
+      contentInApp,
+      tree,
+      nodeMaxUid: newNodeMaxUid,
+    } = parseFile(
+      fileData.type,
+      file.content,
+      getReferenceData(fileData.type),
+      osType,
+      true,
+      String(_nodeMaxUid) as TNodeUid,
+    );
+    _nodeTree = tree;
+    _nodeMaxUid = Number(newNodeMaxUid);
+    fileData.content = formattedContent;
+    fileData.contentInApp = contentInApp;
+    fileData.changed = fileData.content !== fileData.orgContent;
+    while (!_nodeTree[tempFocusedItem]) {
+      if (_nodeTree[tempFocusedItem] == undefined) break;
+      tempFocusedItem = _nodeTree[tempFocusedItem].parentUid as TNodeUid;
+    }
+    if (file.uid !== currentFileUid) {
+      _needToReloadIFrame = true;
+    } else {
+      // refresh iframe if it has seed node changes
+      const o_uids = refreshIframeIfSeedNodeChanges(
+        nodeTree,
+        _nodeTree,
+        _needToReloadIFrame,
+      );
+      // --------------------------- iframe side effects ---------------------------
+      if (!_needToReloadIFrame) {
+        getChangedUids(nodeTree, _nodeTree, o_uids);
+      }
+    }
+  }
+  if (tempFocusedItem !== focusedItem) {
+    _newFocusedNodeUid = tempFocusedItem;
+  } else {
+    _newFocusedNodeUid = focusedItem;
+  }
+
+  return {
+    onlyRenderViewState,
+    _newFocusedNodeUid,
+    _nodeTree,
+    _nodeMaxUid,
+  };
+};
+
+export const updateFileInfoFromNodeTree = (
+  _fileInfo: TFileInfo,
+  fileInfo: TFileInfo,
+  _nodeTree: TNodeTreeData,
+  _needToReloadIFrame: boolean,
+) => {
+  _fileInfo = {
+    title: "",
+    scripts: [],
+    favicon: [],
+  } as THtmlPageSettings;
+  getHtmlPageSettings(_nodeTree, _fileInfo);
+
+  // compare new file info with org file info
+  if (!_needToReloadIFrame && fileInfo) {
+    const { curScripts, orgScripts, orgScriptObj } = generateFileInfo(
+      _fileInfo,
+      fileInfo,
+    );
+    if (curScripts.length !== orgScripts.length) {
+      _needToReloadIFrame = true;
+    } else {
+      for (const script of curScripts) {
+        if (!orgScriptObj[script]) {
+          _needToReloadIFrame = true;
+          break;
+        }
+      }
+    }
+  }
+  return { _needToReloadIFrame };
+};
+export const handleCodeChangeEffects = (
+  codeChanges: TCodeChange[],
+  fileData: TFileNodeData,
+  file: TFile,
+  osType: TOsType,
+  htmlReferenceData: THtmlReferenceData,
+  _nodeTree: TNodeTreeData,
+  _nodeMaxUid: number,
+  _newFocusedNodeUid: string,
+) => {
+  // side effects
+  codeChanges.map((codeChange: TCodeChange) => {
+    // ---------------------- node tree side effect ----------------------
+    // parse code part
+    // remove org nodes
+    const o_node = _nodeTree[codeChange.uid]; //original node (the node which was previously focused)
+    const {
+      formattedContent,
+      tree,
+      nodeMaxUid: newNodeMaxUid,
+    } = parseHtmlCodePart(
+      codeChange.content,
+      htmlReferenceData,
+      osType,
+      String(_nodeMaxUid) as TNodeUid,
+    );
+    if (formattedContent == "") {
+      return;
+    }
+    _nodeMaxUid = Number(newNodeMaxUid);
+    if (o_node === undefined) return;
+    const o_parentNode = _nodeTree[o_node.parentUid as TNodeUid];
+    removeOrgNode(o_parentNode, codeChange, tree, _nodeTree);
+    let { nodeUids, _newFocusedNodeUid: newFocusedNode } = addNewNode(
+      tree,
+      o_parentNode,
+      _nodeTree,
+      _newFocusedNodeUid,
+    );
+    _newFocusedNodeUid = newFocusedNode;
+    // ---------------------- iframe side effect ----------------------
+    // build element to replace
+    replaceElementInIframe(
+      o_node,
+      formattedContent,
+      nodeUids,
+      codeChange,
+      tree,
+    );
+  });
+  // rebuild from new tree
+  const { htmlInApp: contentInApp } = serializeHtml(
+    _nodeTree,
+    htmlReferenceData,
+    osType,
+  );
+
+  fileData.content = file.content;
+  fileData.contentInApp = contentInApp;
+  fileData.changed = fileData.content !== fileData.orgContent;
+  return { _nodeMaxUid, _newFocusedNodeUid };
 };
