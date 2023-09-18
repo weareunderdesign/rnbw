@@ -5,10 +5,10 @@ import { MainContext } from '@_redux/main';
 import { TFileNodeType } from '@_types/main';
 import { useReloadProject } from './useReloadProject';
 import { verifyFileHandlerPermission } from '@_services/main';
-import { TFileNodeData, createDirectory, removeFileSystem, writeFile } from '@_node/file';
+import { TFileNodeData } from '@_node/file';
 import { useInvalidNodes } from './useInvalidNodes';
 import { useTemporaryNodes } from './useTemporaryNodes';
-import { moveActions } from '../helpers';
+import { createFileOrFolder, deleteFileOrFolder, moveActions } from '../helpers';
 
 export const useFileOperations = () =>{
 
@@ -41,35 +41,10 @@ export const useFileOperations = () =>{
 	
 		  const { parentUid, name, type } = params;
 		  try {
-			// validate
-			const parentNode = ffTree[parentUid];
-			if (parentNode === undefined) throw "error";
-			const parentNodeData = parentNode.data as TFileNodeData;
-	
-			if (project.context === "local") {
-			  // verify handler permission
-			  const parentHandler = ffHandlers[
-				parentNode.uid
-			  ] as FileSystemDirectoryHandle;
-			  if (!(await verifyFileHandlerPermission(parentHandler)))
-				throw "error";
-	
-			  // create
-			  if (type === "*folder") {
-				await parentHandler.getDirectoryHandle(name, { create: true });
-			  } else {
-				// file
-				await parentHandler.getFileHandle(name, { create: true });
-			  }
-			} else if (project.context === "idb") {
-			  // create
-			  if (type === "*folder") {
-				await createDirectory(`${parentNodeData.path}/${name}`);
-			  } else {
-				await writeFile(`${parentNodeData.path}/${name}`, "");
-			  }
-			}
-		  } catch (err) {}
+			await createFileOrFolder(parentUid, name, type);
+		  } catch (err) {
+			throw new Error("err")
+		  }
 	
 		  await cb_reloadProject();
 		  removeRunningActions(["fileTreeView-create"], false);
@@ -91,41 +66,11 @@ export const useFileOperations = () =>{
 	
 		  await Promise.all(
 			uids.map(async (uid) => {
-			  try {
-				// validate
-				const node = ffTree[uid];
-				if (node === undefined) throw "error";
-				const nodeData = node.data as TFileNodeData;
-				const parentNode = ffTree[node.parentUid as TNodeUid];
-				if (parentNode === undefined) throw "error";
-				const parentNodeData = parentNode.data as TFileNodeData;
-	
-				if (project.context === "local") {
-				  const parentHandler = ffHandlers[
-					parentNode.uid
-				  ] as FileSystemDirectoryHandle;
-				  if (!(await verifyFileHandlerPermission(parentHandler)))
-					throw "error";
-	
-				  // delete
-				  try {
-					const entryName =
-					  nodeData.kind === "directory"
-						? nodeData.name
-						: `${nodeData.name}${nodeData.ext}`;
-					await parentHandler.removeEntry(entryName, { recursive: true });
-				  } catch (err) {}
-				} else if (project.context === "idb") {
-				  // delete
-				  try {
-					const entryName =
-					  nodeData.kind === "directory"
-						? nodeData.name
-						: `${nodeData.name}${nodeData.ext}`;
-					await removeFileSystem(`${parentNodeData.path}/${entryName}`);
-				  } catch (err) {}
-				}
-			  } catch (err) {}
+			  try{
+				await deleteFileOrFolder(uid, ffTree, ffHandlers, project.context);
+			  } catch (err) {
+				console.error(err);
+			  }
 			}),
 		  );
 	
