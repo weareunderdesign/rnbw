@@ -2,14 +2,13 @@ import {useContext} from 'react';
 
 import { 
 	TFileNodeData, 
-	createDirectory, 
 	getStat, 
-	readDir, 
 	readFile, 
 	removeFileSystem, 
 	writeFile 
 } from '@_node/file';
 import { MainContext } from '@_redux/main';
+import { moveFile, copyDirectory, moveDirectory } from '.';
 
 
 export const moveActions = () =>{
@@ -43,85 +42,24 @@ export const moveActions = () =>{
 		  }
 	
 		  // move nested handler-dir to targetHandler with the newName - copy (optional)
-		try {
+		try{
 			const newHandler = await targetHandler.getDirectoryHandle(newName, {
-			  create: true,
-			});
-			const dirQueue = [
-			  {
-				source: handler as FileSystemDirectoryHandle,
-				destination: newHandler,
-			  },
-			];
-		  
-			while (dirQueue.length) {
-			  const { source, destination } = dirQueue.shift() as {
-				source: FileSystemDirectoryHandle;
-				destination: FileSystemDirectoryHandle;
-			  };
-		  
-			  for await (const entry of source.values()) {
-				if (entry.kind === "directory") {
-				  const newDir = await destination.getDirectoryHandle(entry.name, {
-					create: true,
-				  });
-				  dirQueue.push({
-					source: entry as FileSystemDirectoryHandle,
-					destination: newDir,
-				  });
-				} else {
-				  const newFile = await destination.getFileHandle(entry.name, {
-					create: true,
-				  });
-				  const content = await (entry as FileSystemFileHandle).getFile();
-				  const writableStream = await newFile.createWritable();
-				  await writableStream.write(content);
-				  await writableStream.close();
-				}
-			  }
-			}
-		  
-			// Handle copy (optional)
-			!copy && (await parentHandler.removeEntry(handler.name, { recursive: true }));
-		  } catch (err) {
+				create: true,
+			  });
+			  await copyDirectory(handler as FileSystemDirectoryHandle, newHandler, copy);
+		} catch (err) {
 			throw new Error("error");
 		  }
 		  
-
 		} else {
-		  // validate if the new name exists
-		  let exists = true;
-		  try {
-			await targetHandler.getFileHandle(newName, { create: false });
-			exists = true;
-		  } catch (err) {
-			exists = false;
-		  }
-		  if (exists) {
-			showWarning &&
-			  addMessage({
-				type: "error",
-				content: "File with the same name already exists.",
-			  });
-			return;
-		  }
-	
-		  // create a new file with the new name and write the content
-		  try {
-			const newFile = await targetHandler.getFileHandle(newName, {
-			  create: true,
-			});
-			const content = await (handler as FileSystemFileHandle).getFile();
-			const writableStream = await newFile.createWritable();
-			await writableStream.write(content);
-			await writableStream.close();
-	
-			// handle copy(optional)
-			!copy &&
-			  (await parentHandler.removeEntry(handler.name, { recursive: true }));
-		  } catch (err) {
-			throw "error";
-		  }
+			await moveFile(
+				handler,
+				parentHandler,
+				targetHandler,
+				newName,
+				copy,
+				showWarning,
+			  );
 		}
 	};
 	
@@ -151,38 +89,17 @@ export const moveActions = () =>{
 		  }
 	
 		  // move nested handler-dir to targetHandler with the newName - copy (optional)
-		  try {
+		  try{
 			const dirs = [
-			  {
-				orgPath: nodeData.path,
-				newPath: `${targetNodeData.path}/${newName}`,
-			  },
-			];
-			while (dirs.length) {
-			  const { orgPath, newPath } = dirs.shift() as {
-				orgPath: string;
-				newPath: string;
-			  };
-			  await createDirectory(newPath);
-	
-			  const entries = await readDir(orgPath);
-			  await Promise.all(
-				entries.map(async (entry) => {
-				  const c_orgPath = `${orgPath}/${entry}`;
-				  const c_newPath = `${newPath}/${entry}`;
-				  const stats = await getStat(c_orgPath);
-				  const c_kind = stats.type === "DIRECTORY" ? "directory" : "file";
-				  if (c_kind === "directory") {
-					dirs.push({ orgPath: c_orgPath, newPath: c_newPath });
-				  } else {
-					await writeFile(c_newPath, await readFile(c_orgPath));
-				  }
-				}),
-			  );
-			}
-	
-			// handle copy(optional)
-			!copy && (await removeFileSystem(nodeData.path));
+				{
+				  orgPath: nodeData.path,
+				  newPath: `${targetNodeData.path}/${newName}`,
+				},
+			  ];
+			
+			  for (const { orgPath, newPath } of dirs) {
+				await moveDirectory(orgPath, newPath, copy, nodeData);
+			  }
 		  } catch (err) {
 			throw "error";
 		  }

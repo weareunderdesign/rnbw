@@ -9,9 +9,8 @@ import {
 	navigatorSelector, 
 	setCurrentFile, 
 	setFileAction, 
-	updateFFTreeViewState 
 } from "@_redux/main";
-import { TFileNodeData, createDirectory, getStat, removeFileSystem, writeFile } from "@_node/file";
+import { TFileNodeData, createDirectory, writeFile } from "@_node/file";
 import { TNode, TNodeTreeData, TNodeUid, TNormalNodeData } from "@_node/types";
 import { TFileAction, TFileNodeType } from "@_types/main";
 import { verifyFileHandlerPermission } from "@_services/main";
@@ -22,14 +21,19 @@ import {
 	folderError, 
 	invalidDirError, 
 	movingError, 
-	renamingError 
 } from "../errors";
 import { useReloadProject } from "./useReloadProject";
 import { HmsClearActionType, RootNodeUid, TmpNodeUid } from "@_constants/main";
 import { useInvalidNodes } from "./useInvalidNodes";
 import { useTemporaryNodes } from "./useTemporaryNodes";
 import { getValidNodeUids } from "@_node/apis";
-import { moveActions } from "../helpers";
+import { 
+	duplicateNode, 
+	generateNewName, 
+	renameNode, 
+	validateAndDeleteNode, 
+	validateAndMoveNode 
+} from "../helpers";
 
 export const useNodeActionsHandler = (openFileUid: React.MutableRefObject<string>) =>{
 
@@ -77,57 +81,23 @@ export const useNodeActionsHandler = (openFileUid: React.MutableRefObject<string
 
   const { setTemporaryNodes, removeTemporaryNodes } = useTemporaryNodes();
 
-  const { moveIDBFF, moveLocalFF } = moveActions();
-	
 	const createFFNode = useCallback(
 		async (parentUid: TNodeUid, ffType: TFileNodeType, ffName: string) => {
-		  addRunningActions(["fileTreeView-create"]);
-	
-		  let newName: string = "";
-	
-		  if (project.context === "local") {
-			// validate
-			const parentHandler = ffHandlers[
-			  parentUid
-			] as FileSystemDirectoryHandle;
-			if (!(await verifyFileHandlerPermission(parentHandler))) {
-			  addMessage(invalidDirError);
-			  removeRunningActions(["fileTreeView-create"], false);
-			  return;
-			}
-	
-			if (ffType === "*folder") {
-			  // generate new folder name - ex: {aaa - copy}...
-			  let folderName = ffName;
-			  let exists = true;
-			  try {
-				await parentHandler.getDirectoryHandle(ffName, { create: false });
-				exists = true;
-			  } catch (err) {
-				exists = false;
+			let newName: string = "";
+
+			if (project.context === "local") {
+			  const parentHandler = ffHandlers[parentUid] as FileSystemDirectoryHandle;
+			  if (!(await verifyFileHandlerPermission(parentHandler))) {
+				addMessage(invalidDirError);
+				removeRunningActions(["fileTreeView-create"], false);
+				return;
 			  }
-	
-			  if (exists) {
-				let index = 0;
-				while (exists) {
-				  const _folderName = `${ffName} (${++index})`;
-				  try {
-					await parentHandler.getDirectoryHandle(_folderName, {
-					  create: false,
-					});
-					exists = true;
-				  } catch (err) {
-					folderName = _folderName;
-					exists = false;
-				  }
-				}
-			  }
-	
-			  newName = folderName;
-	
+		
+			  newName = await generateNewName(parentHandler, ffType, ffName);
+		
 			  // create the directory with generated name
 			  try {
-				await parentHandler.getDirectoryHandle(folderName, {
+				await parentHandler.getDirectoryHandle(newName, {
 				  create: true,
 				});
 			  } catch (err) {
@@ -135,135 +105,43 @@ export const useNodeActionsHandler = (openFileUid: React.MutableRefObject<string
 				removeRunningActions(["fileTreeView-create"], false);
 				return;
 			  }
-			} else {
-			  // file
-			  // generate new file name - ex: {aaa - copy}...
-			  let fileName = `${ffName}.${ffType}`;
-			  let exists = true;
+			} else if (project.context === "idb") {
+			  const parentNode = ffTree[parentUid];
+			  const parentNodeData = parentNode.data as TFileNodeData;
+		
+			  newName = await generateNewName(undefined, ffType, ffName);
+		
+			  // create the directory or file with generated name
 			  try {
-				await parentHandler.getFileHandle(`${ffName}.${ffType}`, {
-				  create: false,
-				});
-				exists = true;
-			  } catch (err) {
-				exists = false;
-			  }
-	
-			  if (exists) {
-				let index = 0;
-				while (exists) {
-				  const _fileName = `${ffName} (${++index}).${ffType}`;
-				  try {
-					await parentHandler.getFileHandle(_fileName, { create: false });
-					exists = true;
-				  } catch (err) {
-					fileName = _fileName;
-					exists = false;
-				  }
+				if (ffType === "*folder") {
+				  await createDirectory(`${parentNodeData.path}/${newName}`);
+				} else {
+				  await writeFile(`${parentNodeData.path}/${newName}`, "");
 				}
-			  }
-	
-			  newName = fileName;
-	
-			  // create the file with generated name
-			  try {
-				await parentHandler.getFileHandle(fileName, { create: true });
 			  } catch (err) {
-				addMessage(fileError);
+				addMessage(ffType === "*folder" ? folderError : fileError);
 				removeRunningActions(["fileTreeView-create"], false);
 				return;
 			  }
 			}
-		  } else if (project.context === "idb") {
-			const parentNode = ffTree[parentUid];
-			const parentNodeData = parentNode.data as TFileNodeData;
-			if (ffType === "*folder") {
-			  // generate new folder name - ex: {aaa - copy}...
-			  let folderName = "";
-			  let exists = true;
-			  try {
-				folderName = ffName;
-				await getStat(`${parentNodeData.path}/${folderName}`);
-				exists = true;
-			  } catch (err) {
-				exists = false;
-			  }
-			  if (exists) {
-				let index = 0;
-				while (exists) {
-				  try {
-					folderName = `${ffName} (${++index})`;
-					await getStat(`${parentNodeData.path}/${folderName}`);
-					exists = true;
-				  } catch (err) {
-					exists = false;
-				  }
-				}
-			  }
-			  newName = folderName;
-	
-			  // create the directory with generated name
-			  try {
-				await createDirectory(`${parentNodeData.path}/${folderName}`);
-			  } catch (err) {
-				addMessage(folderError);
-				removeRunningActions(["fileTreeView-create"], false);
-				return;
-			  }
-			} else {
-			  // file
-			  // generate new file name - ex: {aaa - copy}...
-			  let fileName = "";
-			  let exists = true;
-			  try {
-				fileName = `${ffName}.${ffType}`;
-				await getStat(`${parentNodeData.path}/${fileName}`);
-				exists = true;
-			  } catch (err) {
-				exists = false;
-			  }
-			  if (exists) {
-				let index = 0;
-				while (exists) {
-				  try {
-					fileName = `${ffName} (${++index}).${ffType}`;
-					await getStat(`${parentNodeData.path}/${fileName}`);
-					exists = true;
-				  } catch (err) {
-					exists = false;
-				  }
-				}
-			  }
-			  newName = fileName;
-	
-			  // create the file with generated name
-			  try {
-				await writeFile(`${parentNodeData.path}/${fileName}`, "");
-			  } catch (err) {
-				addMessage(fileError);
-				removeRunningActions(["fileTreeView-create"], false);
-				return;
-			  }
-			}
-		  }
-	
-		  const action: TFileAction = {
-			type: "create",
-			param1: `${parentUid}/${newName}`,
-			param2: { parentUid, name: newName, type: ffType },
-		  };
-		  dispatch(setFileAction(action));
-	
-		  await cb_reloadProject();
-		  removeRunningActions(["fileTreeView-create"]);
-		},
-		[
-		  addRunningActions,
-		  removeRunningActions,
-		  project.context,
-		  ffHandlers,
-		  cb_reloadProject,
-		],
+		
+			const action: TFileAction = {
+			  type: "create",
+			  param1: `${parentUid}/${newName}`,
+			  param2: { parentUid, name: newName, type: ffType },
+			};
+			dispatch(setFileAction(action));
+		
+			await cb_reloadProject();
+			removeRunningActions(["fileTreeView-create"]);
+		  },
+		  [
+			addRunningActions,
+			removeRunningActions,
+			project.context,
+			ffHandlers,
+			cb_reloadProject,
+		  ]
 	);
 
 	const createTmpFFNode = useCallback(
@@ -367,86 +245,15 @@ export const useNodeActionsHandler = (openFileUid: React.MutableRefObject<string
 	
 		  addRunningActions(["fileTreeView-rename"]);
 	
-		  const _orgName =
-			ext === "*folder"
-			  ? `${nodeData.name}`
-			  : `${nodeData.name}${nodeData.ext}`;
-		  const _newName = ext === "*folder" ? `${newName}` : `${newName}${ext}`;
-		  const newUid = `${parentNode.uid}/${_newName}`;
+		  renameNode(
+			ext,
+			newName,
+			nodeData,
+			parentNode,
+			parentNodeData,
+			uid
+		)
 	
-		  if (project.context === "local") {
-			// verify handler permission
-			const handler = ffHandlers[uid],
-			  parentHandler = ffHandlers[
-				parentNode.uid
-			  ] as FileSystemDirectoryHandle;
-			if (
-			  !(await verifyFileHandlerPermission(handler)) ||
-			  !(await verifyFileHandlerPermission(parentHandler))
-			) {
-			  addMessage({
-				type: "error",
-				content: `Invalid directory/file. Check if you have "write" permission for the directory/file.`,
-			  });
-	
-			  removeRunningActions(["fileTreeView-rename"], false);
-			  return;
-			}
-	
-			setInvalidNodes(newUid);
-	
-			try {
-			  await moveLocalFF(
-				handler,
-				parentHandler,
-				parentHandler,
-				_newName,
-				false,
-				true,
-			  );
-			  removeInvalidNodes(newUid);
-			} catch (err) {
-			  addMessage(renamingError);
-	
-			  removeInvalidNodes(newUid);
-			  removeRunningActions(["fileTreeView-rename"], false);
-			  return;
-			}
-		  } else if (project.context === "idb") {
-			setInvalidNodes(newUid);
-	
-			try {
-			  await moveIDBFF(nodeData, parentNodeData, _newName, false, true);
-			  removeInvalidNodes(newUid);
-			} catch (err) {
-			  addMessage(renamingError);
-	
-			  removeInvalidNodes(newUid);
-			  removeRunningActions(["fileTreeView-rename"], false);
-			  return;
-			}
-		  }
-	
-		  const action: TFileAction = {
-			type: "rename",
-			param1: { uid, parentUid: parentNode.uid },
-			param2: { orgName: _orgName, newName: _newName },
-		  };
-		  dispatch(setFileAction(action));
-	
-		  // update redux
-		  dispatch(
-			setCurrentFile({
-			  uid: newUid,
-			  parentUid: parentNode.uid,
-			  name: nodeData.name,
-			  content: nodeData.contentInApp as string,
-			}),
-		  );
-		  dispatch(updateFFTreeViewState({ convertedUids: [[uid, newUid]] }));
-	
-		  await cb_reloadProject();
-		  removeRunningActions(["fileTreeView-rename"]);
 		},
 		[
 		  addRunningActions,
@@ -507,79 +314,39 @@ export const useNodeActionsHandler = (openFileUid: React.MutableRefObject<string
 	const cb_deleteNode = useCallback(async () => {
 		// validate
 		const uids = selectedItems.filter((uid) => !invalidNodes[uid]);
-		if (uids.length === 0) return;
-	
+
+		if (uids.length === 0) {
+		  return;
+		}
+	  
 		// confirm msgbox
 		const message = `Are you sure you want to delete them? This action cannot be undone!`;
-		if (!window.confirm(message)) return;
-	
+	  
+		if (!window.confirm(message)) {
+		  return;
+		}
+	  
 		addRunningActions(["fileTreeView-delete"]);
 		setInvalidNodes(...uids);
-	
+	  
 		if (project.context === "local") {
-		  let allDone = true;
-		  await Promise.all(
-			uids.map(async (uid) => {
-			  // validate
-			  const node = ffTree[uid];
-			  if (node === undefined) {
-				allDone = false;
-				return;
-			  }
-			  const nodeData = node.data as TFileNodeData;
-			  const parentNode = ffTree[node.parentUid as TNodeUid];
-			  if (parentNode === undefined) {
-				allDone = false;
-				return;
-			  }
-			  const parentHandler = ffHandlers[
-				parentNode.uid
-			  ] as FileSystemDirectoryHandle;
-			  if (!(await verifyFileHandlerPermission(parentHandler))) {
-				allDone = false;
-				return;
-			  }
-	
-			  // delete
-			  try {
-				const entryName =
-				  nodeData.kind === "directory"
-					? nodeData.name
-					: `${nodeData.name}${nodeData.ext}`;
-				await parentHandler.removeEntry(entryName, { recursive: true });
-			  } catch (err) {
-				allDone = false;
-			  }
-			}),
+		  const allDone = await Promise.all(uids.map(validateAndDeleteNode)).then(
+			(results) => results.every(Boolean)
 		  );
+	  
 		  if (!allDone) {
 			addMessage(deletingWarning);
 		  }
 		} else if (project.context === "idb") {
-		  let allDone = true;
-		  await Promise.all(
-			uids.map(async (uid) => {
-			  // validate
-			  const node = ffTree[uid];
-			  if (node === undefined) {
-				allDone = false;
-				return;
-			  }
-			  const nodeData = node.data as TFileNodeData;
-	
-			  // delete
-			  try {
-				await removeFileSystem(nodeData.path);
-			  } catch (err) {
-				allDone = false;
-			  }
-			}),
+		  const allDone = await Promise.all(uids.map(validateAndDeleteNode)).then(
+			(results) => results.every(Boolean)
 		  );
+	  
 		  if (!allDone) {
 			addMessage(deletingWarning);
 		  }
 		}
-	
+	  
 		removeInvalidNodes(...uids);
 		await cb_reloadProject(file.uid);
 		removeRunningActions(["fileTreeView-delete"], false);
@@ -599,314 +366,57 @@ export const useNodeActionsHandler = (openFileUid: React.MutableRefObject<string
 
 	const cb_moveNode = useCallback(
 		async (uids: TNodeUid[], targetUid: TNodeUid, copy: boolean = false) => {
-		  // validate
-		  const targetNode = ffTree[targetUid];
-		  if (targetNode === undefined) return;
-		  const validatedUids = getValidNodeUids(ffTree, uids, targetUid);
-		  if (validatedUids.length === 0) return;
-	
-		  // confirm files' changes
-		  let hasChangedFile = false;
-		  validatedUids.map((uid) => {
-			const _file = ffTree[uid];
-			const _fileData = _file.data as TFileNodeData;
-			if (_file && _fileData.changed) {
-			  hasChangedFile = true;
-			}
-		  });
-		  if (hasChangedFile) {
-			const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`;
-			if (!window.confirm(message)) {
-			  return;
-			}
-		  }
-	
-		  addRunningActions(["fileTreeView-move"]);
-	
-		  const _uids: { uid: TNodeUid; parentUid: TNodeUid; name: string }[] = [];
-		  const _invalidNodes = { ...invalidNodes };
-	
-		  if (project.context === "local") {
-			// verify target handler permission
-			const targetHandler = ffHandlers[
-			  targetUid
-			] as FileSystemDirectoryHandle;
-			if (!(await verifyFileHandlerPermission(targetHandler))) {
-			  addMessage(invalidDirError);
-			  removeRunningActions(["fileTreeView-move"], false);
-			  return;
-			}
-	
-			let allDone = true;
-			await Promise.all(
-			  validatedUids.map(async (uid) => {
-				// validate
-				const node = ffTree[uid];
-				if (node === undefined) {
-				  allDone = false;
-				  return;
-				}
-				const nodeData = node.data as TFileNodeData;
-				const parentNode = ffTree[node.parentUid as TNodeUid];
-				if (parentNode === undefined) {
-				  allDone = false;
-				  return;
-				}
-				const handler = ffHandlers[uid],
-				  parentHandler = ffHandlers[
-					parentNode.uid
-				  ] as FileSystemDirectoryHandle;
-				if (
-				  !(await verifyFileHandlerPermission(handler)) ||
-				  !(await verifyFileHandlerPermission(parentHandler))
-				) {
-				  allDone = false;
-				  return;
-				}
-	
-				// generate new name
-				let newName =
-				  nodeData.kind === "directory"
-					? nodeData.name
-					: `${nodeData.name}${nodeData.ext}`;
-				if (copy) {
-				  if (nodeData.kind === "directory") {
-					let folderName = "";
-					let exists = false;
-					try {
-					  folderName = nodeData.name;
-					  await targetHandler.getDirectoryHandle(folderName, {
-						create: false,
-					  });
-					  exists = true;
-					} catch (err) {
-					  exists = false;
-					}
-					if (exists) {
-					  try {
-						folderName = `${nodeData.name} copy`;
-						await targetHandler.getDirectoryHandle(folderName, {
-						  create: false,
-						});
-						exists = true;
-					  } catch (err) {
-						exists = false;
-					  }
-					  if (exists) {
-						let index = 0;
-						while (exists) {
-						  try {
-							folderName = `${nodeData.name} copy (${++index})`;
-							await targetHandler.getDirectoryHandle(folderName, {
-							  create: false,
-							});
-							exists = true;
-						  } catch (err) {
-							exists = false;
-						  }
-						}
-					  }
-					}
-					newName = folderName;
-				  } else {
-					let fileName = "";
-					let exists = false;
-					try {
-					  fileName = `${nodeData.name}${nodeData.ext}`;
-					  await targetHandler.getFileHandle(fileName, {
-						create: false,
-					  });
-					  exists = true;
-					} catch (err) {
-					  exists = false;
-					}
-					if (exists) {
-					  try {
-						fileName = `${nodeData.name} copy${nodeData.ext}`;
-						await targetHandler.getFileHandle(fileName, {
-						  create: false,
-						});
-						exists = true;
-					  } catch (err) {
-						exists = false;
-					  }
-					  if (exists) {
-						let index = 0;
-						while (exists) {
-						  try {
-							fileName = `${nodeData.name} copy (${++index})${
-							  nodeData.ext
-							}`;
-							await targetHandler.getFileHandle(fileName, {
-							  create: false,
-							});
-							exists = true;
-						  } catch (err) {
-							exists = false;
-						  }
-						}
-					  }
-					  newName = fileName;
-					}
-				  }
-				}
-	
-				// update invalidNodes
-				const newUid = `${targetUid}/${newName}`;
-				_invalidNodes[uid] = true;
-				_invalidNodes[newUid] = true;
-				setInvalidNodes(...Object.keys(_invalidNodes));
-	
-				// move
-				try {
-				  await moveLocalFF(
-					handler,
-					parentHandler,
-					targetHandler,
-					newName,
-					copy,
-				  );
-				  _uids.push({ uid, parentUid: parentNode.uid, name: newName });
-				} catch (err) {
-				  allDone = false;
-				}
-	
-				// update invalidNodes
-				delete _invalidNodes[uid];
-				delete _invalidNodes[newUid];
-				setInvalidNodes(...Object.keys(_invalidNodes));
-			  }),
-			);
-			if (!allDone) {
-			  addMessage(movingError);
-			}
-		  } else if (project.context === "idb") {
-			const targetNodeData = targetNode.data as TFileNodeData;
-	
-			let allDone = true;
-			await Promise.all(
-			  validatedUids.map(async (uid) => {
-				// validate
-				const node = ffTree[uid];
-				if (node === undefined) {
-				  allDone = false;
-				  return;
-				}
-				const nodeData = node.data as TFileNodeData;
-	
-				// generate new name
-				let newName =
-				  nodeData.kind === "directory"
-					? nodeData.name
-					: `${nodeData.name}${nodeData.ext}`;
-				if (copy) {
-				  if (nodeData.kind === "directory") {
-					let folderName = "";
-					let exists = false;
-					try {
-					  folderName = nodeData.name;
-					  await getStat(`${targetNodeData.path}/${folderName}`);
-					  exists = true;
-					} catch (err) {
-					  exists = false;
-					}
-					if (exists) {
-					  try {
-						folderName = `${nodeData.name} copy`;
-						await getStat(`${targetNodeData.path}/${folderName}`);
-						exists = true;
-					  } catch (err) {
-						exists = false;
-					  }
-					  if (exists) {
-						let index = 0;
-						while (exists) {
-						  try {
-							folderName = `${nodeData.name} copy (${++index})`;
-							await getStat(`${targetNodeData.path}/${folderName}`);
-							exists = true;
-						  } catch (err) {
-							exists = false;
-						  }
-						}
-					  }
-					}
-					newName = folderName;
-				  } else {
-					let fileName = "";
-					let exists = false;
-					try {
-					  fileName = `${nodeData.name}${nodeData.ext}`;
-					  await getStat(`${targetNodeData.path}/${fileName}`);
-					  exists = true;
-					} catch (err) {
-					  exists = false;
-					}
-					if (exists) {
-					  try {
-						fileName = `${nodeData.name} copy${nodeData.ext}`;
-						await getStat(`${targetNodeData.path}/${fileName}`);
-						exists = true;
-					  } catch (err) {
-						exists = false;
-					  }
-					  if (exists) {
-						let index = 0;
-						while (exists) {
-						  try {
-							fileName = `${nodeData.name} copy (${++index})${
-							  nodeData.ext
-							}`;
-							await getStat(`${targetNodeData.path}/${fileName}`);
-							exists = true;
-						  } catch (err) {
-							exists = false;
-						  }
-						}
-					  }
-					}
-					newName = fileName;
-				  }
-				}
-	
-				// update invalidNodes
-				const newUid = `${targetUid}/${newName}`;
-				_invalidNodes[uid] = true;
-				_invalidNodes[newUid] = true;
-				setInvalidNodes(...Object.keys(_invalidNodes));
-	
-				// move
-				try {
-				  await moveIDBFF(nodeData, targetNodeData, newName, copy);
-				  _uids.push({
-					uid,
-					parentUid: node.parentUid as TNodeUid,
-					name: newName,
-				  });
-				} catch (err) {
-				  allDone = false;
-				}
-	
-				// update invalidNodes
-				delete _invalidNodes[uid];
-				delete _invalidNodes[newUid];
-				setInvalidNodes(...Object.keys(_invalidNodes));
-			  }),
-			);
-			if (!allDone) {
-			  addMessage(movingError);
-			}
-		  }
-	
-		  const action: TFileAction = {
-			type: copy ? "copy" : "cut",
-			param1: _uids,
-			param2: _uids.map(() => targetUid),
-		  };
-		  dispatch(setFileAction(action));
-	
-		  await cb_reloadProject();
-		  removeRunningActions(["fileTreeView-move"]);
+		   // validate
+		   const targetNode = ffTree[targetUid];
+
+		   if (targetNode === undefined) {
+			 return;
+		   }
+	   
+		   const validatedUids = getValidNodeUids(ffTree, uids, targetUid);
+	   
+		   if (validatedUids.length === 0) {
+			 return;
+		   }
+	   
+		   // confirm files' changes
+		   const hasChangedFile = validatedUids.some((uid) => {
+			 const _file = ffTree[uid];
+			 const _fileData = _file.data as TFileNodeData;
+			 return _file && _fileData.changed;
+		   });
+	   
+		   if (hasChangedFile) {
+			 const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`;
+	   
+			 if (!window.confirm(message)) {
+			   return;
+			 }
+		   }
+	   
+		   addRunningActions(["fileTreeView-move"]);
+	   
+		   const _uids = await Promise.all(
+			 validatedUids.map((uid) => validateAndMoveNode(
+				uid,
+				targetUid, 
+				copy
+			))
+		   );
+	   
+		   if (_uids.some((result) => !result)) {
+			 addMessage(movingError);
+		   }
+	   
+		   const action: TFileAction = {
+			 type: copy ? "copy" : "cut",
+			 param1: _uids,
+			 param2: _uids.map(() => targetUid),
+		   };
+		   dispatch(setFileAction(action));
+	   
+		   await cb_reloadProject();
+		   removeRunningActions(["fileTreeView-move"]);
 		},
 		[
 		  addRunningActions,
@@ -922,257 +432,53 @@ export const useNodeActionsHandler = (openFileUid: React.MutableRefObject<string
 	);
 
 	const cb_duplicateNode = useCallback(async () => {
-		// validate
 		const uids = selectedItems.filter((uid) => !invalidNodes[uid]);
 		if (uids.length === 0) return;
-	
-		// confirm files' changes
+
 		let hasChangedFile = false;
-		uids.map((uid) => {
-		  const _file = ffTree[uid];
-		  const _fileData = _file.data as TFileNodeData;
-		  if (_file && _fileData.changed) {
+		uids.forEach((uid) => {
+			const _file = ffTree[uid];
+			const _fileData = _file.data as TFileNodeData;
+			if (_file && _fileData.changed) {
 			hasChangedFile = true;
-		  }
+			}
 		});
-		if (hasChangedFile) {
-		  const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`;
-		  if (!window.confirm(message)) {
+
+		if (hasChangedFile && !window.confirm("Your changes will be lost if you don't save them. Are you sure you want to continue without saving?")) {
 			return;
-		  }
 		}
-	
+
 		addRunningActions(["fileTreeView-duplicate"]);
-	
+
 		const _uids: { uid: TNodeUid; name: string }[] = [];
 		const _targetUids: TNodeUid[] = [];
 		const _invalidNodes = { ...invalidNodes };
-	
-		if (project.context === "local") {
-		  let allDone = true;
-		  await Promise.all(
+
+		let allDone = true;
+		await Promise.all(
 			uids.map(async (uid) => {
-			  // validate
-			  const node = ffTree[uid];
-			  if (node === undefined) {
+			const result = await duplicateNode(uid, true);
+			if (result) {
+				_uids.push(result);
+				_targetUids.push(ffTree[uid].parentUid as TNodeUid);
+			} else {
 				allDone = false;
-				return;
-			  }
-			  const nodeData = node.data as TFileNodeData;
-			  const parentNode = ffTree[node.parentUid as TNodeUid];
-			  if (parentNode === undefined) {
-				allDone = false;
-				return;
-			  }
-			  const handler = ffHandlers[node.uid],
-				parentHandler = ffHandlers[
-				  parentNode.uid
-				] as FileSystemDirectoryHandle;
-			  if (
-				!(await verifyFileHandlerPermission(handler)) ||
-				!(await verifyFileHandlerPermission(parentHandler))
-			  ) {
-				allDone = false;
-				return;
-			  }
-	
-			  // generate new name
-			  let newName =
-				nodeData.kind === "directory"
-				  ? `${nodeData.name} copy`
-				  : `${nodeData.name} copy${nodeData.ext}`;
-			  if (nodeData.kind === "directory") {
-				let folderName = "";
-				let exists = false;
-				try {
-				  folderName = `${nodeData.name} copy`;
-				  await parentHandler.getDirectoryHandle(folderName, {
-					create: false,
-				  });
-				  exists = true;
-				} catch (err) {
-				  exists = false;
-				}
-				if (exists) {
-				  let index = 0;
-				  while (exists) {
-					try {
-					  folderName = `${nodeData.name} copy (${++index})`;
-					  await parentHandler.getDirectoryHandle(folderName, {
-						create: false,
-					  });
-					  exists = true;
-					} catch (err) {
-					  exists = false;
-					}
-				  }
-				}
-				newName = folderName;
-			  } else {
-				let fileName = "";
-				let exists = true;
-				try {
-				  fileName = `${nodeData.name} copy${nodeData.ext}`;
-				  await parentHandler.getFileHandle(fileName, { create: false });
-				  exists = true;
-				} catch (err) {
-				  exists = false;
-				}
-				if (exists) {
-				  let index = 0;
-				  while (exists) {
-					try {
-					  fileName = `${nodeData.name} copy (${++index})${
-						nodeData.ext
-					  }`;
-					  await parentHandler.getFileHandle(fileName, {
-						create: false,
-					  });
-					  exists = true;
-					} catch (err) {
-					  exists = false;
-					}
-				  }
-				}
-				newName = fileName;
-			  }
-	
-			  // update invalidNodes
-			  const newUid = `${node.parentUid}/${newName}`;
-			  _invalidNodes[uid] = true;
-			  _invalidNodes[newUid] = true;
-			  setInvalidNodes(...Object.keys(_invalidNodes));
-	
-			  // duplicate
-			  try {
-				await moveLocalFF(
-				  handler,
-				  parentHandler,
-				  parentHandler,
-				  newName,
-				  true,
-				);
-				_uids.push({ uid, name: newName });
-				_targetUids.push(parentNode.uid);
-			  } catch (err) {
-				allDone = false;
-			  }
-	
-			  // set invalid nodes
-			  delete _invalidNodes[uid];
-			  delete _invalidNodes[newUid];
-			  setInvalidNodes(...Object.keys(_invalidNodes));
-			}),
-		  );
-		  if (!allDone) {
+			}
+			})
+		);
+
+		if (!allDone) {
 			addMessage(duplicatingWarning);
-		  }
-		} else if (project.context === "idb") {
-		  let allDone = true;
-		  await Promise.all(
-			uids.map(async (uid) => {
-			  // validate
-			  const node = ffTree[uid];
-			  if (node === undefined) {
-				allDone = false;
-				return;
-			  }
-			  const nodeData = node.data as TFileNodeData;
-			  const parentNode = ffTree[node.parentUid as TNodeUid];
-			  if (parentNode === undefined) {
-				allDone = false;
-				return;
-			  }
-			  const parentNodeData = parentNode.data as TFileNodeData;
-	
-			  // generate new name
-			  let newName =
-				nodeData.kind === "directory"
-				  ? `${nodeData.name} copy`
-				  : `${nodeData.name} copy${nodeData.ext}`;
-			  if (nodeData.kind === "directory") {
-				let folderName = "";
-				let exists = false;
-				try {
-				  folderName = `${nodeData.name} copy`;
-				  await getStat(`${parentNodeData.path}/${folderName}`);
-				  exists = true;
-				} catch (err) {
-				  exists = false;
-				}
-				if (exists) {
-				  let index = 0;
-				  while (exists) {
-					try {
-					  folderName = `${nodeData.name} copy (${++index})`;
-					  await getStat(`${parentNodeData.path}/${folderName}`);
-					  exists = true;
-					} catch (err) {
-					  exists = false;
-					}
-				  }
-				}
-				newName = folderName;
-			  } else {
-				let fileName = "";
-				let exists = false;
-				try {
-				  fileName = `${nodeData.name} copy${nodeData.ext}`;
-				  await getStat(`${parentNodeData.path}/${fileName}`);
-				  exists = true;
-				} catch (err) {
-				  exists = false;
-				}
-				if (exists) {
-				  let index = 0;
-				  while (exists) {
-					try {
-					  fileName = `${nodeData.name} copy (${++index})${
-						nodeData.ext
-					  }`;
-					  await getStat(`${parentNodeData.path}/${fileName}`);
-					  exists = true;
-					} catch (err) {
-					  exists = false;
-					}
-				  }
-				}
-				newName = fileName;
-			  }
-	
-			  // update invalidNodes
-			  const newUid = `${node.parentUid}/${newName}`;
-			  _invalidNodes[uid] = true;
-			  _invalidNodes[newUid] = true;
-			  setInvalidNodes(...Object.keys(_invalidNodes));
-	
-			  // duplicate
-			  try {
-				await moveIDBFF(nodeData, parentNodeData, newName, true);
-				_uids.push({ uid, name: newName });
-				_targetUids.push(parentNode.uid);
-			  } catch (err) {
-				allDone = false;
-			  }
-	
-			  // set invalid nodes
-			  delete _invalidNodes[uid];
-			  delete _invalidNodes[newUid];
-			  setInvalidNodes(...Object.keys(_invalidNodes));
-			}),
-		  );
-		  if (!allDone) {
-			addMessage(duplicatingWarning);
-		  }
 		}
-	
+
 		const action: TFileAction = {
-		  type: "copy",
-		  param1: _uids,
-		  param2: _targetUids,
+			type: "copy",
+			param1: _uids,
+			param2: _targetUids,
 		};
+
 		dispatch(setFileAction(action));
-	
+
 		await cb_reloadProject();
 		removeRunningActions(["fileTreeView-duplicate"]);
 	  }, [

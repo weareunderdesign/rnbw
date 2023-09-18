@@ -34,3 +34,8 @@ export const duplicatingWarning:TToast = {
 	type: "warning",
 	content: "Some directory/file couldn't be duplicated.",
 }
+
+export const invalidDirOrFile:TToast = {
+	type: "error",
+	content: `Invalid directory/file. Check if you have "write" permission for the directory/file.`,
+}
