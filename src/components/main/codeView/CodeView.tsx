@@ -11,15 +11,7 @@ import * as monaco from "monaco-editor";
 import { useDispatch, useSelector } from "react-redux";
 
 import { RootNodeUid } from "@_constants/main";
-import {
-  checkValidHtml,
-  getSubNodeUidsByBfs,
-  TFileNodeData,
-  THtmlNodeData,
-  TNode,
-  TNodeTreeData,
-  TNodeUid,
-} from "@_node/index";
+import { TFileNodeData, THtmlNodeData, TNodeUid } from "@_node/index";
 import {
   expandFNNode,
   fnSelector,
@@ -27,10 +19,8 @@ import {
   MainContext,
   navigatorSelector,
   selectFNNode,
-  setCurrentFileContent,
 } from "@_redux/main";
-import { getLineBreaker } from "@_services/global";
-import { TCodeChange } from "@_types/main";
+
 import { Editor, loader } from "@monaco-editor/react";
 
 import { CodeSelection, CodeViewProps } from "./types";
@@ -50,7 +40,6 @@ export default function CodeView(props: CodeViewProps) {
     ffTree,
     validNodeTree,
     // code view
-    setCodeChanges,
     newFocusedNodeUid,
     setNewFocusedNodeUid,
     // processor
@@ -325,36 +314,24 @@ export default function CodeView(props: CodeViewProps) {
           onClick={onPanelClick}
           ref={editorWrapperRef}
         >
-          {/* <div 
-          id="CodeViewHeader"
-          style={{
-            width: '100%',
-            height: '23px',
-            cursor: 'move',
-            paddingTop: '5px',
-            paddingLeft: '12px'
-          }}
-        >
-          <SVGIconI {...{ "class": "icon-xs" }}>list</SVGIconI>
-        </div> */}
           <Editor
             language={language}
             defaultValue={""}
             value={codeContent.current}
             theme={theme}
-            // line={line}
-            // beforeMount={() => {}
             onMount={handleEditorDidMount}
             onChange={handleEditorChange}
             loading={""}
-            options={editorConfigs}
+            options={
+              editorConfigs as monaco.editor.IStandaloneEditorConstructionOptions
+            }
           />
         </div>
         <div
           ref={previewDiv}
           id="codeview_change_preview"
           style={{ display: "none" }}
-        ></div>
+        />
       </>
     );
   }, [
