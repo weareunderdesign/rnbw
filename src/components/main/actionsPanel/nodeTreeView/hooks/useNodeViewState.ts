@@ -17,7 +17,7 @@ import {
 
 import { HmsClearActionType } from "@_constants/main";
 
-export function useNodeViewState(focusedItemRef: any) {
+export function useNodeViewState(focusItemValue: TNodeUid | null) {
   const dispatch = useDispatch();
   const { focusedItem, selectedItems, selectedItemsObj } =
     useSelector(fnSelector);
@@ -51,7 +51,7 @@ export function useNodeViewState(focusedItemRef: any) {
       }
 
       dispatch(focusFNNode(uid));
-      focusedItemRef.current = uid;
+      focusItemValue = uid;
 
       removeRunningActions(["nodeTreeView-focus"]);
     },

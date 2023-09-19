@@ -26,7 +26,7 @@ non-code contributions are more than welcome! How?
 
 ## community
 
-join [rainbow's discord](https://discord.com/invite/HycXz8TJkd) to chat with other community members, ask questions, voice ideas, and share your projects.
+join [rainbow's discord](https://discord.gg/5CEf42mF) to chat with other community members, ask questions, voice ideas, and share your projects.
 
 ## license
 [GNU General Public License, version 3](https://www.gnu.org/licenses/gpl-3.0.en.html)
