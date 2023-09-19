@@ -1,11 +1,10 @@
 import { useCallback, useState, useContext } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { NodeInAppAttribName, RootNodeUid } from "@_constants/main";
+import { NodeInAppAttribName } from "@_constants/main";
 import { TNode, TNodeUid } from "@_node/types";
 import { 
 	MainContext, 
-	expandFFNode, 
 	ffSelector, 
 	fnSelector, 
 	focusFNNode 
@@ -13,8 +12,11 @@ import {
 import { getCommandKey } from "@_services/global";
 import { TCmdkKeyMap } from "@_types/main";
 import { useSetSelectItem } from "./useSetSelectItem";
-import { THtmlNodeData } from "@_node/html";
-import { TFileNodeData } from "@_node/file";
+import { 
+	handleAnchorTagDoubleClick,
+	handleEditableElementDoubleClick, 
+	handleWebComponentDblClick 
+} from "../helpers";
 
 export interface IUseTextEditingProps{
 	contentEditableUidRef: React.MutableRefObject<string>,
@@ -182,200 +184,23 @@ export const useTextEditing = (
 	  );
 	
 	  const onDblClick = useCallback(
-		(e: MouseEvent) => {
-		  // open new page with <a> tag in iframe
-		  const ele = e.target as HTMLElement;
-		  if (
-			dblClickTimestamp.current !== 0 &&
-			e.timeStamp - dblClickTimestamp.current < 500
-		  )
-			return;
-		  dblClickTimestamp.current = e.timeStamp;
-		  let _ele = ele;
-		  while (_ele.tagName !== "A") {
-			if (
-			  _ele.tagName === "BODY" ||
-			  _ele.tagName === "HEAD" ||
-			  _ele.tagName === "HTML"
-			) {
-			  break;
-			}
-			if (_ele.parentElement) {
-			  _ele = _ele.parentElement;
-			} else {
-			  break;
-			}
-		  }
-		  if (_ele.tagName === "A" && (_ele as HTMLAnchorElement).href) {
-			// window.open((_ele as HTMLAnchorElement).href, '_blank', 'noreferrer'); //issue:238
-		  }
-		  let uid: TNodeUid | null = ele.getAttribute(NodeInAppAttribName);
-		  if (uid) {
-			const node = validNodeTree[uid];
-			if (!node) return;
-	
-			if (contentEditableUidRef.current === uid) return;
-	
-			const nodeData = node.data as THtmlNodeData;
-			if (
-			  nodeData.name === "html" ||
-			  nodeData.name === "head" ||
-			  nodeData.name === "body" ||
-			  nodeData.name === "img" ||
-			  nodeData.name === "div"
-			)
-			  return;
-	
-			const cleanedUpCode = ele.outerHTML.replace(
-			  /rnbwdev-rnbw-element-hover=""|rnbwdev-rnbw-element-select=""|contenteditable="true"|contenteditable="false"/g,
-			  "",
+		async (e: MouseEvent) => {
+			const ele = e.target as HTMLElement;
+
+			if (dblClickTimestamp.current !== 0 &&
+			  e.timeStamp - dblClickTimestamp.current < 500) return;
+			
+			dblClickTimestamp.current = e.timeStamp;
+			await handleAnchorTagDoubleClick(ele);
+			await handleEditableElementDoubleClick(
+			  ele,
+			  contentEditableUidRef,
+			  isEditing,
+			  contentRef
 			);
-			setOuterHtml(cleanedUpCode);
-			if (ele.hasAttribute("contenteditable")) {
-			  setContentEditableAttr(ele.getAttribute("contenteditable"));
-			}
-			isEditing.current = true;
-			ele.addEventListener("paste", (event) => {
-			  event.preventDefault();
-			  if (isEditing.current) {
-				const pastedText = // @ts-ignore
-				  (event.clipboardData || window.clipboardData).getData("text");
-	
-				// Remove all HTML tags from the pasted text while keeping the content using a regular expression
-				const cleanedText = pastedText.replace(
-				  /<\/?([\w\s="/.':;#-\/\?]+)>/gi,
-				  (match: any, tagContent: any) => tagContent,
-				);
-				cleanedText.replaceAll("\n\r", "<br>");
-				// Insert the cleaned text into the editable div
-				contentRef?.contentWindow?.document.execCommand(
-				  "insertText",
-				  false,
-				  cleanedText,
-				);
-				isEditing.current = false;
-				setTimeout(() => {
-				  isEditing.current = true;
-				}, 50);
-			  }
-			});
-			const clickEvent = new MouseEvent("click", {
-			  view: contentRef?.contentWindow,
-			  bubbles: true,
-			  cancelable: true,
-			  clientX: e.clientX,
-			  clientY: e.clientY,
-			});
-			ele.setAttribute("contenteditable", "true");
-	
-			contentEditableUidRef.current = uid;
-	
-			ele.focus();
-			//select all text
-	
-			contentEditableUidRef.current = uid;
-	
-			// select all text
-			const range = contentRef?.contentWindow?.document.createRange();
-	
-			if (range) {
-			  range.selectNodeContents(ele);
-			  const selection = contentRef?.contentWindow?.getSelection();
-			  selection?.removeAllRanges();
-			  selection?.addRange(range);
-			}
-		  } else {
-			isEditing.current = false;
-			// check if it's a web component and open its js file
-			let _ele = ele;
-			let flag = true;
-			let exist = false;
-			if (!externalDblclick.current) {
-			  while (flag) {
-				if (_ele.getAttribute(NodeInAppAttribName) !== null) {
-				  let uid: TNodeUid | null = _ele.getAttribute(NodeInAppAttribName);
-				  if (uid) {
-					for (let x in ffTree) {
-					  const node = validNodeTree[uid];
-					  const defineRegex =
-						/customElements\.define\(\s*['"]([\w-]+)['"]/;
-					  if (
-						(ffTree[x].data as TFileNodeData).content &&
-						(ffTree[x].data as TFileNodeData).ext === ".js"
-					  ) {
-						const match = (
-						  ffTree[x].data as TFileNodeData
-						).content.match(defineRegex);
-						if (match) {
-						  // check web component
-						  if (
-							_ele.tagName.toLowerCase() === match[1].toLowerCase()
-						  ) {
-							const fileName = (ffTree[x].data as TFileNodeData).name;
-							let src = "";
-							for (let i in validNodeTree) {
-							  if (
-								(validNodeTree[i].data as THtmlNodeData).type ===
-								  "script" &&
-								(
-								  validNodeTree[i].data as THtmlNodeData
-								).html.search(fileName + ".js") !== -1
-							  ) {
-								src = (validNodeTree[i].data as THtmlNodeData)
-								  .attribs.src;
-								break;
-							  }
-							}
-							if (src !== "") {
-							  if (src.startsWith("http") || src.startsWith("//")) {
-								alert("rnbw couldn't find it's source file");
-								flag = false;
-								break;
-							  } else {
-								setInitialFileToOpen(ffTree[x].uid);
-								setNavigatorDropDownType("project");
-								// expand path to the uid
-								const _expandedItems: string[] = [];
-								let _file = ffTree[x];
-								while (_file && _file.uid !== RootNodeUid) {
-								  _file = ffTree[_file.parentUid as string];
-								  if (
-									_file &&
-									!_file.isEntity &&
-									(!expandedItemsObj[_file.uid] ||
-									  expandedItemsObj[_file.uid] === undefined)
-								  )
-									_expandedItems.push(_file.uid);
-								}
-								dispatch(expandFFNode(_expandedItems));
-								flag = false;
-								exist = true;
-								break;
-							  }
-							}
-						  }
-						}
-					  }
-					}
-					flag = false;
-				  } else {
-					flag = false;
-				  }
-				} else if (_ele.parentElement) {
-				  _ele = _ele.parentElement;
-				} else {
-				  flag = false;
-				}
-			  }
-			} else {
-			  exist = true;
-			}
-	
-			if (!exist) {
-			  alert("rnbw couldn't find it's source file");
-			}
-		  }
-		},
+			await handleWebComponentDblClick(ele,externalDblclick);
+			
+		  },
 		[validNodeTree, ffTree, expandedItemsObj, contentRef],
 	  );
 
