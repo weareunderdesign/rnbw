@@ -58,12 +58,13 @@ export default function useEditor() {
 
   const [focusedNode, setFocusedNode] = useState<TNode>();
   const wordWrap: editor.IEditorOptions["wordWrap"] = "off";
+
   const editorConfigs = {
     contextmenu: true,
     tabSize,
     wordWrap,
     minimap: { enabled: false },
-    automaticLayout: false,
+    automaticLayout: true,
   };
   const codeContent = useRef<string>("");
 
