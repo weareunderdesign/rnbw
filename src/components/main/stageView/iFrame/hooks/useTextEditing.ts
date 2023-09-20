@@ -1,10 +1,11 @@
 import { useCallback, useState, useContext } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { NodeInAppAttribName } from "@_constants/main";
+import { NodeInAppAttribName, RootNodeUid } from "@_constants/main";
 import { TNode, TNodeUid } from "@_node/types";
 import { 
 	MainContext, 
+	expandFFNode, 
 	ffSelector, 
 	fnSelector, 
 	focusFNNode 
@@ -12,11 +13,9 @@ import {
 import { getCommandKey } from "@_services/global";
 import { TCmdkKeyMap } from "@_types/main";
 import { useSetSelectItem } from "./useSetSelectItem";
-import { 
-	handleAnchorTagDoubleClick,
-	handleEditableElementDoubleClick, 
-	handleWebComponentDblClick 
-} from "../helpers";
+import { THtmlNodeData } from "@_node/html";
+import { TFileNodeData } from "@_node/file";
+import { handleElementClick, openNewPage } from "../helpers";
 
 export interface IUseTextEditingProps{
 	contentEditableUidRef: React.MutableRefObject<string>,
@@ -182,25 +181,102 @@ export const useTextEditing = (
 		},
 		[focusedItem, validNodeTree, contentRef],
 	  );
-	
-	  const onDblClick = useCallback(
-		async (e: MouseEvent) => {
-			const ele = e.target as HTMLElement;
 
-			if (dblClickTimestamp.current !== 0 &&
-			  e.timeStamp - dblClickTimestamp.current < 500) return;
-			
-			dblClickTimestamp.current = e.timeStamp;
-			await handleAnchorTagDoubleClick(ele);
-			await handleEditableElementDoubleClick(
-			  ele,
-			  contentEditableUidRef,
-			  isEditing,
-			  contentRef
+	  
+	  const handleWebComponentClick = (ele:HTMLElement) => {
+		let flag = true;
+		let exist = false;
+		if (!externalDblclick.current) {
+		  while (flag) {
+			if (ele.getAttribute(NodeInAppAttribName) !== null) {
+			  const uid = ele.getAttribute(NodeInAppAttribName);
+			  if (uid) {
+				for (let x in ffTree) {
+				  const node = validNodeTree[uid];
+				  const defineRegex = /customElements\.define\(\s*['"]([\w-]+)['"]/;
+				  if ((ffTree[x].data as TFileNodeData).content && (ffTree[x].data as TFileNodeData).ext === ".js") {
+					const match = (ffTree[x].data as TFileNodeData).content.match(defineRegex);
+					if (match) {
+					  if (ele.tagName.toLowerCase() === match[1].toLowerCase()) {
+						const fileName = (ffTree[x].data as TFileNodeData).name;
+						let src = "";
+						for (let i in validNodeTree) {
+						  if ((validNodeTree[i].data as THtmlNodeData).type === "script" && (validNodeTree[i].data as THtmlNodeData).html.search(fileName + ".js") !== -1) {
+							src = (validNodeTree[i].data as THtmlNodeData).attribs.src;
+							break;
+						  }
+						}
+						if (src !== "") {
+						  if (src.startsWith("http") || src.startsWith("//")) {
+							alert("rnbw couldn't find its source file");
+							flag = false;
+							break;
+						  } else {
+							setInitialFileToOpen(ffTree[x].uid);
+							setNavigatorDropDownType("project");
+							const _expandedItems = [];
+							let _file = ffTree[x];
+							while (_file && _file.uid !== RootNodeUid) {
+							  _file = ffTree[_file.parentUid as string];
+							  if (_file && !_file.isEntity && (!expandedItemsObj[_file.uid] || expandedItemsObj[_file.uid] === undefined)) {
+								_expandedItems.push(_file.uid);
+							  }
+							}
+							dispatch(expandFFNode(_expandedItems));
+							flag = false;
+							exist = true;
+							break;
+						  }
+						}
+					  }
+					}
+				  }
+				}
+				flag = false;
+			  } else {
+				flag = false;
+			  }
+			} else if (ele.parentElement) {
+			  ele = ele.parentElement;
+			} else {
+			  flag = false;
+			}
+		  }
+		} else {
+		  exist = true;
+		}
+	  
+		if (!exist) {
+		  alert("rnbw couldn't find its source file");
+		}
+	  };
+	  
+	  const onDblClick = useCallback(
+		(e: MouseEvent) => {
+		  const ele = e.target as HTMLElement;
+		  if (dblClickTimestamp.current !== 0 && e.timeStamp - dblClickTimestamp.current < 500) return;
+		  dblClickTimestamp.current = e.timeStamp;
+		  
+		  openNewPage(ele);
+		  
+		  let uid: TNodeUid | null = ele.getAttribute(NodeInAppAttribName);
+		  if (uid) {
+			handleElementClick(
+				ele, 
+				uid, 
+				contentRef, 
+				contentEditableUidRef, 
+				isEditing,
+				e,
+				setOuterHtml,
+				setContentEditableAttr,
+				validNodeTree
 			);
-			await handleWebComponentDblClick(ele,externalDblclick);
-			
-		  },
+		  } else {
+			isEditing.current = false;
+			handleWebComponentClick(ele);
+		  }
+		},
 		[validNodeTree, ffTree, expandedItemsObj, contentRef],
 	  );
 

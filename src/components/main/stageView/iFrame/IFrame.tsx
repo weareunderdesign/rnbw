@@ -218,6 +218,8 @@ export const IFrame = () => {
 
   const dblClickTimestamp = useRef(0);
 
+  const [isDblClick,setIsDblClick] = useState<boolean>(false)
+
   const {
     onClick,
 		onMouseLeave,
@@ -233,7 +235,8 @@ export const IFrame = () => {
 		  contentRef,
       contentEditableUidRef,
       isEditing,
-      dblClickTimestamp
+      dblClickTimestamp,
+      isDblClick
     })
 
   // text editing
@@ -363,6 +366,7 @@ export const IFrame = () => {
     }
   }, [contentRef]);
 
+
   useEffect(() => {
     if (!iframeEvent) return;
 
@@ -378,9 +382,11 @@ export const IFrame = () => {
         onMouseLeave(iframeEvent);
         break;
       case "click":
+        setIsDblClick(false)
         onClick(iframeEvent);
         break;
-      case "dblclick":
+      case "pointerdown":
+        setIsDblClick(true)
         onDblClick(iframeEvent);
         break;
       default:
