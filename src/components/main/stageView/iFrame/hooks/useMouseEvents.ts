@@ -25,7 +25,8 @@ export interface IUseMouseEventsProps{
 	contentRef: HTMLIFrameElement | null,
 	contentEditableUidRef: React.MutableRefObject<string>,
 	isEditing: React.MutableRefObject<boolean>,
-	dblClickTimestamp: React.MutableRefObject<number>
+	dblClickTimestamp: React.MutableRefObject<number>,
+	isDblClick:boolean
 }
 
 export const useMouseEvents = (
@@ -38,7 +39,8 @@ export const useMouseEvents = (
 		contentRef,
 		contentEditableUidRef,
 		isEditing,
-		dblClickTimestamp
+		dblClickTimestamp,
+		isDblClick
 	}:IUseMouseEventsProps) =>{
 
 	const firstClickEditableTags = [
@@ -123,7 +125,7 @@ export const useMouseEvents = (
 	const onMouseLeave = (e: MouseEvent) => {
 	  setFNHoveredItem("");
 	};
-  
+
 	const onClick = useCallback(
 	  (e: MouseEvent) => {
 		if (!parseFileFlag) {
@@ -237,7 +239,7 @@ export const useMouseEvents = (
 			).length > 0 &&
 			!multiple &&
 			_uid === focusedItem &&
-			!isWC
+			!isWC && isDblClick
 		  ) {
 			if (contentEditableUidRef.current !== _uid) {
 			  isEditing.current = true;
