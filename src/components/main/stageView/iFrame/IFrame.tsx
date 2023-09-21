@@ -25,13 +25,14 @@ import {
   useIframeScroll, 
   useMouseEvents, 
   useSideEffectHandlers, 
-  useTextEditing 
+  useTextEditing, 
+  useZoomEvents
 } from "./hooks";
 
-export const IFrame = () => {
+export const IFrame = () => { 
   // -------------------------------------------------------------- global state --------------------------------------------------------------
   const { focusedItem, selectedItems } =
-    useSelector(fnSelector);
+  useSelector(fnSelector);
   const {
     // node actions
     event,
@@ -197,6 +198,30 @@ export const IFrame = () => {
       selectedItemsRef.current = [...selectedItems];
     }, 150);
   }, [selectedItems]);
+
+  //zoom events
+
+    const [currentZoom,setCurrentZoom] = useState<number>(100);
+  
+    const {handleKeyDown} = useZoomEvents(currentZoom,setCurrentZoom)
+
+    useEffect(() => {
+      window.addEventListener('keydown', handleKeyDown);
+      const IframeElement:any = document.getElementById('iframeId');
+      let innerDoc:any
+
+      
+      if (IframeElement) {
+        innerDoc = (IframeElement.contentDocument) ? IframeElement.contentDocument : IframeElement.contentWindow.document;
+        innerDoc.body.addEventListener('keydown',handleKeyDown);
+      }
+  
+      return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+        innerDoc && innerDoc.body.removeEventListener('keydown', handleKeyDown);
+      };
+    }, [currentZoom]);
+
   // -------------------------------------------------------------- side effect handlers --------------------------------------------------------------
   
   const {
