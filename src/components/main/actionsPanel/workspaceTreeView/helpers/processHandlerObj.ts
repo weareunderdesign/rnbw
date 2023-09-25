@@ -1,13 +1,11 @@
-import { useContext } from "react";
-
 import { ParsableFileTypes } from "@_constants/main";
 import { TFileHandlerCollection, TFileNodeData } from "@_node/file";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
-import { MainContext } from "@_redux/main";
 
-const buildTree = (handlerObj: { [key: string]: any }) => {
-  const { ffTree } = useContext(MainContext);
-
+const buildTree = (
+  handlerObj: { [key: string]: any },
+  ffTree: TNodeTreeData,
+) => {
   const treeViewData: TNodeTreeData = {};
   const ffHandlerObj: TFileHandlerCollection = {};
 
@@ -27,19 +25,9 @@ const buildTree = (handlerObj: { [key: string]: any }) => {
 
   // Set ff-tree and ff-handlers
   Object.keys(handlerObj).forEach((uid) => {
-    const {
-      parentUid,
-      children,
-      path,
-      kind,
-      name,
-      ext,
-      content,
-      handler,
-    } = handlerObj[uid];
-    const type = ParsableFileTypes[ext || ""]
-      ? ext?.slice(1)
-      : "unknown";
+    const { parentUid, children, path, kind, name, ext, content, handler } =
+      handlerObj[uid];
+    const type = ParsableFileTypes[ext || ""] ? ext?.slice(1) : "unknown";
     treeViewData[uid] = {
       uid,
       parentUid: parentUid,
@@ -77,10 +65,13 @@ const buildTree = (handlerObj: { [key: string]: any }) => {
   return { treeViewData, ffHandlerObj };
 };
 
-export const processHandlerObj = (handlerObj: { [key: string]: any }) => {
+export const processHandlerObj = (
+  handlerObj: { [key: string]: any },
+  ffTree: any,
+) => {
   let _deletedUids: TNodeUid[] = [];
 
-  const { treeViewData, ffHandlerObj } = buildTree(handlerObj);
+  const { treeViewData, ffHandlerObj } = buildTree(handlerObj, ffTree);
 
   return { treeViewData, ffHandlerObj, _deletedUids };
 };
