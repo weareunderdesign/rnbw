@@ -117,7 +117,7 @@ export default function useEditor() {
     validNodeTree: TNodeTreeData,
     monacoEditor: editor.IStandaloneCodeEditor | null,
   ): TNode | null {
-    debugger;
+    // debugger;
     let focusedNode: TNode | null = null;
     if (selection) {
       let _uid: TNodeUid = "";
@@ -286,6 +286,7 @@ export default function useEditor() {
       }
     } else {
       // non-parse file save
+
       const _file = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode;
       addRunningActions(["processor-updateOpt"]);
       const fileData = _file.data as TFileNodeData;

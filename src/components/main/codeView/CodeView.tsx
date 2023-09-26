@@ -72,7 +72,8 @@ export default function CodeView(props: CodeViewProps) {
 
   const isFirst = useRef<boolean>(true);
 
-  const codeContent = useRef<string>("");
+  // const codeContent = useRef<string>("");
+  const [codeContent, setCodeContent] = useState<string>("");
   const previewDiv = useRef(null);
 
   // -------------------------------------------------------------- sync --------------------------------------------------------------
@@ -80,7 +81,7 @@ export default function CodeView(props: CodeViewProps) {
   // build node tree reference
   useEffect(() => {
     const validNodeTreeRef = getValidNodeTreeInstance();
-    validNodeTreeRef.current = JSON.parse(JSON.stringify(validNodeTree));
+    validNodeTreeRef.current = structuredClone(validNodeTree);
 
     // set new focused node
     if (newFocusedNodeUid !== "") {
@@ -93,15 +94,19 @@ export default function CodeView(props: CodeViewProps) {
   // file content change - set code
   useEffect(() => {
     const _file = ffTree[file.uid];
+    console.log(_file, "### in start _file");
+
     if (!_file) return;
 
     if (updateOpt.from === "code") return;
 
     const fileData = _file.data as TFileNodeData;
+
     const extension = fileData.ext;
     extension && updateLanguage(extension);
 
-    codeContent.current = fileData.content;
+    // codeContent.current = fileData.content;
+    setCodeContent(fileData.content);
   }, [ffTree[file.uid]]);
 
   // focusedItem - code select
@@ -131,17 +136,17 @@ export default function CodeView(props: CodeViewProps) {
       getPositionFromIndex(monacoEditor, startIndex, endIndex);
 
     if (isFirst.current) {
-      debugger;
+      // debugger;
       const firstTimer = setInterval(() => {
-        const monacoEditor = getCurrentEditorInstance();
-        if (monacoEditor) {
-          monacoEditor.setSelection({
+        const newMonacoEditor = getCurrentEditorInstance();
+        if (newMonacoEditor) {
+          newMonacoEditor.setSelection({
             startLineNumber,
             startColumn,
             endLineNumber,
             endColumn,
           });
-          monacoEditor.revealRangeInCenter(
+          newMonacoEditor.revealRangeInCenter(
             {
               startLineNumber,
               startColumn,
@@ -221,6 +226,7 @@ export default function CodeView(props: CodeViewProps) {
 
   useEffect(() => {
     const cursorDetectInterval = setInterval(() => updateSelection(), 0);
+
     return () => clearInterval(cursorDetectInterval);
   }, [updateSelection]);
   // detect node of current selection
@@ -243,13 +249,13 @@ export default function CodeView(props: CodeViewProps) {
     }
     const monacoEditor = getCurrentEditorInstance();
     if (selection) {
-      let focusedNode = findNodeBySelection(
+      let newFocusedNode = findNodeBySelection(
         selection,
         validNodeTreeRef.current,
         monacoEditor,
       );
-      if (focusedNode) {
-        setFocusedNode(focusedNode);
+      if (newFocusedNode) {
+        setFocusedNode(newFocusedNode);
       }
     }
   }, [selection, parseFileFlag]);
@@ -257,9 +263,7 @@ export default function CodeView(props: CodeViewProps) {
   useEffect(() => {
     if (focusedNode) {
       if (focusedNode.uid === focusedItemRef.current) return;
-
       if (updateOpt.from === "hms") return;
-
       // expand path to the uid
       const _expandedItems: TNodeUid[] = [];
       let node = validNodeTree[focusedNode.uid];
@@ -272,10 +276,8 @@ export default function CodeView(props: CodeViewProps) {
       }
       _expandedItems.shift();
       dispatch(expandFNNode(_expandedItems));
-
       dispatch(focusFNNode(focusedNode.uid));
       dispatch(selectFNNode([focusedNode.uid]));
-
       focusedItemRef.current = focusedNode.uid;
     }
   }, [focusedNode]);
@@ -317,7 +319,8 @@ export default function CodeView(props: CodeViewProps) {
           <Editor
             language={language}
             defaultValue={""}
-            value={codeContent.current}
+            value={codeContent}
+            // value={codeContent.current}
             theme={theme}
             onMount={handleEditorDidMount}
             onChange={handleEditorChange}

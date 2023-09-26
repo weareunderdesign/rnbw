@@ -168,12 +168,14 @@ export const useProcessorUpdateOpt = () => {
       // get file info from node tree
 
       if (fileData.type === "html") {
+        // debugger;
         const result = updateFileInfoFromNodeTree(
           _fileInfo,
           fileInfo,
           _nodeTree,
           _needToReloadIFrame,
         );
+
         _needToReloadIFrame = result._needToReloadIFrame;
       }
       LogAllow && _needToReloadIFrame && console.log("need to refresh iframe");
@@ -191,15 +193,18 @@ export const useProcessorUpdateOpt = () => {
           setFSPending(false);
         })();
         // update context
+
         setFFNode(_file);
+
         addRunningActions(["processor-nodeTree"]);
+
         setNodeTree(_nodeTree);
         setNodeMaxUid(_nodeMaxUid);
         setFileInfo(_fileInfo);
         setNeedToReloadIFrame(_needToReloadIFrame);
         // update redux
         updateOpt.from !== "hms" &&
-          dispatch(setCurrentFileContent(fileData.contentInApp as string));
+          dispatch(setCurrentFileContent(fileData.content as string));
       }
 
       // select new focused node in code view
@@ -233,7 +238,7 @@ export const useProcessorUpdateOpt = () => {
       addRunningActions(["processor-nodeTree"]);
       setNodeTree(_nodeTree);
       // update redux
-      dispatch(setCurrentFileContent(fileData.contentInApp as string));
+      dispatch(setCurrentFileContent(fileData.content as string));
       setUpdateOpt({ parse: null, from: updateOpt.from });
     }
 

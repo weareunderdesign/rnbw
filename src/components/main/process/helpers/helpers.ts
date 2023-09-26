@@ -375,6 +375,7 @@ export const handleFileUpdate = (
   fileData.content = formattedContent;
   fileData.contentInApp = contentInApp;
   fileData.changed = fileData.content !== fileData.orgContent;
+
   return { tree, newNodeMaxUid };
 };
 
@@ -404,10 +405,12 @@ export const handleHtmlUpdate = (
     );
     fileContent = formattedContent;
   }
+
   const {
     contentInApp,
     tree,
     nodeMaxUid: newNodeMaxUid,
+    formattedContent,
   } = parseFile(
     fileData.type,
     fileContent,
@@ -418,6 +421,8 @@ export const handleHtmlUpdate = (
   );
 
   fileData.content = fileContent;
+
+  // fileData.content = formattedContent;
   fileData.contentInApp = contentInApp;
   fileData.changed = fileData.content !== fileData.orgContent;
 
@@ -465,6 +470,7 @@ export const handleHmsChange = (
   } else {
     LogAllow && console.log("file content changed by hms");
     // parse hms content keeping node uids
+
     const {
       formattedContent,
       contentInApp,
