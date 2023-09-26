@@ -16,6 +16,8 @@ import { ActionsPanelProps } from "./types";
 import WorkspaceTreeView from "./workspaceTreeView";
 
 export default function ActionsPanel(props: ActionsPanelProps) {
+  const {showCodeView} = props;
+
   const dispatch = useDispatch();
   // -------------------------------------------------------------- global state --------------------------------------------------------------
   const { file } = useSelector(navigatorSelector);
@@ -137,7 +139,9 @@ export default function ActionsPanel(props: ActionsPanelProps) {
         >
           <NavigatorPanel />
           <WorkspaceTreeView />
-          <NodeTreeView />
+          <NodeTreeView 
+            showCodeView={showCodeView}
+          />
           {false && <SettingsPanel />}
         </div>
       </>

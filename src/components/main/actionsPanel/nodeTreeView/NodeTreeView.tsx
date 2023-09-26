@@ -40,6 +40,7 @@ import { ItemArrow } from "./nodeTreeComponents/ItemArrow";
 const AutoExpandDelay = 1 * 1000;
 
 function NodeTreeView(props: NodeTreeViewProps) {
+  const {showCodeView} = props;
   const dispatch = useDispatch();
   // -------------------------------------------------------------- global state --------------------------------------------------------------
   const { file } = useSelector(navigatorSelector);
@@ -309,18 +310,24 @@ function NodeTreeView(props: NodeTreeViewProps) {
               };
 
               const treeViewRef = useRef<HTMLHeadingElement|any>(null);
+              const fakeElementRef = useRef<HTMLHeadingElement|any>(null);
                   useEffect(() => {
-                  if (props.context.isSelected) {
-                    setTimeout(()=>{
-                      treeViewRef.current.click();
+                  if (props.context.isSelected && showCodeView) {
+                    setTimeout( ()=>{
+                      fakeElementRef.current = document.getElementById('NodeTreeView-3');
+                      fakeElementRef.current.click();
                     },500)
-                  }
-                  }, []);
 
-              const onClick = useCallback(
+                    setTimeout(()=>{
+                      treeViewRef.current.click()
+                    },1000)
+                  }
+                  }, [showCodeView]);
+
+              const onClick = useCallback(                
                 (e: React.MouseEvent) => {
                   e.stopPropagation();
-
+                  
                   !props.context.isFocused &&
                     addRunningActions(["nodeTreeView-focus"]);
                   addRunningActions(["nodeTreeView-select"]);
@@ -523,6 +530,7 @@ function NodeTreeView(props: NodeTreeViewProps) {
     parseFileFlag,
     setParseFile,
     navigatorDropDownType,
+    showCodeView
   ]);
 }
 

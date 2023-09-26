@@ -1716,6 +1716,7 @@ export default function MainPage(props: MainPageProps) {
         >
           <StageView />
           <ActionsPanel
+            showCodeView={showCodeView}
             offsetTop={actionsPanelOffsetTop}
             offsetLeft={actionsPanelOffsetLeft}
             width={`${actionsPanelWidth}px`}

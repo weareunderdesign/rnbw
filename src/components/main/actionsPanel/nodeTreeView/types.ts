@@ -1,1 +1,3 @@
-export type NodeTreeViewProps = {};
+export type NodeTreeViewProps = {
+	showCodeView:boolean;
+};

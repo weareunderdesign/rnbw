@@ -3,4 +3,5 @@ export type ActionsPanelProps = {
   offsetLeft: number | string;
   width: number | string;
   height: number | string;
+  showCodeView:boolean
 };
