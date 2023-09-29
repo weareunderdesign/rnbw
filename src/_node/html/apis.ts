@@ -346,6 +346,7 @@ export const serializeHtml = (
 
   return tree[RootNodeUid].data as THtmlNodeData;
 };
+
 export const parseHtmlCodePart = (
   content: string,
   htmlReferenceData: THtmlReferenceData,

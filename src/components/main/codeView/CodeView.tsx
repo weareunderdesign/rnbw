@@ -84,17 +84,16 @@ export default function CodeView(props: CodeViewProps) {
     validNodeTreeRef.current = structuredClone(validNodeTree);
 
     // set new focused node
-    if (newFocusedNodeUid !== "") {
-      setFocusedNode(validNodeTree[newFocusedNodeUid]);
-      !isFirst.current ? (focusedItemRef.current = newFocusedNodeUid) : null;
-      setNewFocusedNodeUid("");
-    }
+    if (newFocusedNodeUid == "") return;
+
+    setFocusedNode(validNodeTree[newFocusedNodeUid]);
+    !isFirst.current ? (focusedItemRef.current = newFocusedNodeUid) : null;
+    setNewFocusedNodeUid("");
   }, [validNodeTree]);
 
   // file content change - set code
   useEffect(() => {
     const _file = ffTree[file.uid];
-    console.log(_file, "### in start _file");
 
     if (!_file) return;
 
@@ -118,20 +117,24 @@ export default function CodeView(props: CodeViewProps) {
       return;
     }
 
-    if (focusedItem === RootNodeUid || focusedItemRef.current === focusedItem)
-      return;
+    // if (focusedItem === RootNodeUid || focusedItemRef.current === focusedItem)
+    if (focusedItem === RootNodeUid) return;
+
     if (!validNodeTree[focusedItem]) return;
 
     if (codeEditing) return;
+
     // Convert the indices to positions
 
     const monacoEditor = getCurrentEditorInstance();
     if (!monacoEditor) return;
 
     const node = validNodeTree[focusedItem];
+
     const { startIndex, endIndex } = node.data as THtmlNodeData;
 
-    if (!startIndex || !endIndex) return;
+    // if (!startIndex || !endIndex) return;
+
     const { startLineNumber, startColumn, endLineNumber, endColumn } =
       getPositionFromIndex(monacoEditor, startIndex, endIndex);
 
@@ -189,6 +192,7 @@ export default function CodeView(props: CodeViewProps) {
     const monacoEditor = getCurrentEditorInstance();
     if (!parseFileFlag) return;
     const _selection = monacoEditor?.getSelection();
+
     if (_selection) {
       if (isFirst.current) {
         firstSelection.current = _selection;

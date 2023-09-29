@@ -5,12 +5,14 @@ import {
   TFileType,
   TProject,
 } from "@_types/main";
-import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
+import { TNode, TNodeTreeData, TNodeUid, TNormalNodeData } from "@_node/types";
 import {
+  THtmlDomNodeData,
   THtmlNodeData,
   THtmlPageSettings,
+  THtmlParserResponse,
   THtmlReferenceData,
-  parseHtmlCodePart,
+  // parseHtmlCodePart,
   serializeHtml,
 } from "@_node/html";
 import {
@@ -20,7 +22,11 @@ import {
   StagePreviewPathPrefix,
   LogAllow,
 } from "@_constants/main";
-import { getSubNodeUidsByBfs, getValidNodeUids } from "@_node/apis";
+import {
+  getSubNodeUidsByBfs,
+  getSubNodeUidsByDfs,
+  getValidNodeUids,
+} from "@_node/apis";
 import {
   TFileHandlerCollection,
   TFileNodeData,
@@ -30,6 +36,10 @@ import {
 } from "@_node/file";
 import { TUpdateOptions } from "@_redux/main/types";
 import { TOsType } from "@_types/global";
+import * as htmlparser2 from "htmlparser2_sep";
+import { Document } from "domhandler";
+import * as domutils from "domutils";
+import { getLineBreaker } from "@_services/global";
 
 export const saveFileContent = async (
   project: TProject,
@@ -71,6 +81,7 @@ export const removeOrgNode = (
     [] as TNodeUid[],
   );
   const o_uids = getSubNodeUidsByBfs(codeChange.uid, _nodeTree);
+
   o_uids.map((uid) => {
     delete _nodeTree[uid];
   });
@@ -554,6 +565,176 @@ export const updateFileInfoFromNodeTree = (
   }
   return { _needToReloadIFrame };
 };
+
+export const parseHtmlCodePart = (
+  content: string,
+  htmlReferenceData: THtmlReferenceData,
+  osType: TOsType,
+  nodeMaxUid: TNodeUid = "",
+  start: number,
+): THtmlParserResponse => {
+  let htmlContent = "";
+  let htmlContentInApp = "";
+
+  let _nodeMaxUid = Number(nodeMaxUid);
+
+  // parse html
+  const tmpTree: TNodeTreeData = {};
+  const tree: TNodeTreeData = {};
+
+  let dom = htmlparser2.parseDocument(content, {
+    withEndIndices: true,
+    withStartIndices: true,
+  });
+
+  let appDom: Document;
+  function preprocessNodes(dom: Document) {
+    appDom = dom;
+
+    // build root node
+    tmpTree[RootNodeUid] = {
+      uid: RootNodeUid,
+      parentUid: null,
+      name: RootNodeUid,
+      isEntity: false,
+      children: [],
+      data: { valid: true },
+    };
+
+    // build depth-1 seed nodes
+    const seedNodes: TNode[] = [];
+    appDom.children.forEach((node) => {
+      const uid = String(++_nodeMaxUid) as TNodeUid;
+
+      tmpTree[RootNodeUid].children.push(uid);
+      tmpTree[uid] = {
+        uid,
+        parentUid: RootNodeUid,
+        name: "",
+        isEntity: true,
+        children: [],
+        data: { ...node, valid: node.type === "tag" },
+      };
+
+      seedNodes.push(tmpTree[uid]);
+    });
+
+    // build the whole node tree from the seed nodes - BFS
+    while (seedNodes.length) {
+      const node = seedNodes.shift() as TNode;
+      const nodeData = node.data as THtmlDomNodeData;
+
+      if (!nodeData.children) continue;
+
+      nodeData.children.map((child: THtmlDomNodeData) => {
+        const uid = String(++_nodeMaxUid) as TNodeUid;
+
+        node.children.push(uid);
+        node.isEntity = false;
+
+        tmpTree[uid] = {
+          uid,
+          parentUid: node.uid,
+          name: "",
+          isEntity: true,
+          children: [],
+          data: { ...child, valid: child.type === "tag" },
+        };
+
+        //add attribute to node
+        if (!child.attribs) child.attribs = {};
+        child.attribs[NodeInAppAttribName] = uid;
+
+        seedNodes.push(tmpTree[uid]);
+      });
+    }
+    htmlContentInApp = domutils.getOuterHTML(appDom);
+  }
+
+  preprocessNodes(dom);
+
+  let uids: TNodeUid[] = Object.keys(tmpTree);
+
+  uids.map((uid) => {
+    const node = tmpTree[uid];
+
+    // build valid node tree
+    if (uid === RootNodeUid) {
+      tree[uid] = { ...node };
+    } else {
+      const nodeData = node.data as THtmlDomNodeData;
+
+      let isFormatText = false,
+        valid = true;
+      if (!nodeData.valid) {
+        // format text node
+        valid = false;
+        isFormatText = true;
+      } else {
+        // detect general text node
+        valid = nodeData.type !== "text";
+      }
+
+      // set in-app-attribute to nodes
+      if (!nodeData.attribs) nodeData.attribs = {};
+      nodeData.attribs[NodeInAppAttribName] = uid;
+
+      tree[uid] = {
+        ...node,
+        name: nodeData.name || nodeData.type,
+        data: {
+          valid,
+          isFormatText,
+          type: nodeData.type,
+          name: nodeData.name,
+          data: nodeData.data,
+          attribs: nodeData.attribs,
+          startIndex: start,
+          endIndex: start + nodeData.endIndex,
+        },
+      };
+    }
+  });
+
+  return {
+    formattedContent: content,
+    contentInApp: "",
+    tree,
+    nodeMaxUid: String(_nodeMaxUid) as TNodeUid,
+  };
+};
+
+function replaceSubstringByIndices(
+  inputString: string,
+  startIndex: number,
+  endIndex: number,
+  replacement: string,
+) {
+  if (
+    typeof inputString !== "string" ||
+    startIndex < 0 ||
+    endIndex < 0 ||
+    startIndex >= inputString.length ||
+    endIndex >= inputString.length
+  ) {
+    // Check if inputString is a string and indices are valid
+    return inputString;
+  }
+
+  const prefix = inputString.slice(0, startIndex);
+  const suffix = inputString.slice(endIndex + 1);
+
+  const replacedString = prefix + replacement + suffix;
+
+  return replacedString;
+}
+
+function removeAttributeFromElement(htmlString: string, attributeName: string) {
+  const pattern = new RegExp(` ${attributeName}=["'][^"']*["'] `, "g");
+
+  return htmlString.replace(pattern, "");
+}
+
 export const handleCodeChangeEffects = (
   codeChanges: TCodeChange[],
   fileData: TFileNodeData,
@@ -565,35 +746,54 @@ export const handleCodeChangeEffects = (
   _newFocusedNodeUid: string,
 ) => {
   // side effects
+
   codeChanges.map((codeChange: TCodeChange) => {
     // ---------------------- node tree side effect ----------------------
     // parse code part
     // remove org nodes
+
     const o_node = _nodeTree[codeChange.uid]; //original node (the node which was previously focused)
+    const start = (o_node.data as THtmlNodeData).startIndex;
+    const end = (o_node.data as THtmlNodeData).endIndex;
+
+    const formattedContent = removeAttributeFromElement(
+      codeChange.content,
+      NodeInAppAttribName,
+    );
+
     const {
-      formattedContent,
+      // formattedContent,
       tree,
       nodeMaxUid: newNodeMaxUid,
     } = parseHtmlCodePart(
-      codeChange.content,
+      formattedContent,
       htmlReferenceData,
       osType,
       String(_nodeMaxUid) as TNodeUid,
+      start,
     );
+
     if (formattedContent == "") {
       return;
     }
+
     _nodeMaxUid = Number(newNodeMaxUid);
+
     if (o_node === undefined) return;
+
     const o_parentNode = _nodeTree[o_node.parentUid as TNodeUid];
+
     removeOrgNode(o_parentNode, codeChange, tree, _nodeTree);
+
     let { nodeUids, _newFocusedNodeUid: newFocusedNode } = addNewNode(
       tree,
       o_parentNode,
       _nodeTree,
       _newFocusedNodeUid,
     );
+
     _newFocusedNodeUid = newFocusedNode;
+
     // ---------------------- iframe side effect ----------------------
     // build element to replace
     replaceElementInIframe(
@@ -603,7 +803,15 @@ export const handleCodeChangeEffects = (
       codeChange,
       tree,
     );
+
+    fileData.content = replaceSubstringByIndices(
+      file.content,
+      start,
+      end,
+      removeAttributeFromElement(formattedContent, NodeInAppAttribName),
+    );
   });
+
   // rebuild from new tree
   const { htmlInApp: contentInApp } = serializeHtml(
     _nodeTree,
@@ -611,7 +819,8 @@ export const handleCodeChangeEffects = (
     osType,
   );
 
-  fileData.content = file.content;
+  // fileData.content = file.content;
+
   fileData.contentInApp = contentInApp;
   fileData.changed = fileData.content !== fileData.orgContent;
   return { _nodeMaxUid, _newFocusedNodeUid };
