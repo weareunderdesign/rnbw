@@ -199,7 +199,7 @@ export const useProcessorUpdateOpt = () => {
         setNeedToReloadIFrame(_needToReloadIFrame);
         // update redux
         updateOpt.from !== "hms" &&
-          dispatch(setCurrentFileContent(fileData.contentInApp as string));
+          dispatch(setCurrentFileContent(fileData.content as string));
       }
 
       // select new focused node in code view
