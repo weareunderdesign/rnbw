@@ -1,37 +1,25 @@
-import React, {
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import { useSelector } from "react-redux";
 
-import {
-  NodeInAppAttribName,
-} from "@_constants/main";
+import { NodeInAppAttribName } from "@_constants/main";
 import { TNode, TNodeUid } from "@_node/types";
-import {
-  fnSelector,
-  MainContext,
-} from "@_redux/main";
+import { fnSelector, MainContext } from "@_redux/main";
 
 import { jss } from "./js";
 import { styles } from "./styles";
-import { 
-  useChangeIframeTheme, 
-  useCmdk, 
-  useIframeScroll, 
-  useMouseEvents, 
-  useSideEffectHandlers, 
-  useTextEditing 
+import {
+  useChangeIframeTheme,
+  useCmdk,
+  useIframeScroll,
+  useMouseEvents,
+  useSideEffectHandlers,
+  useTextEditing,
 } from "./hooks";
 
 export const IFrame = () => {
   // -------------------------------------------------------------- global state --------------------------------------------------------------
-  const { focusedItem, selectedItems } =
-    useSelector(fnSelector);
+  const { focusedItem, selectedItems } = useSelector(fnSelector);
   const {
     // node actions
     event,
@@ -100,7 +88,7 @@ export const IFrame = () => {
 
   // iframe scroll event
   const focusedItemRef = useRef<TNodeUid>(focusedItem);
-  const { onIframeScroll } = useIframeScroll({focusedItemRef, contentRef})
+  const { onIframeScroll } = useIframeScroll({ focusedItemRef, contentRef });
   // mark&scroll to the focused item
   useEffect(() => {
     if (focusedItemRef.current === focusedItem) return;
@@ -198,19 +186,19 @@ export const IFrame = () => {
     }, 150);
   }, [selectedItems]);
   // -------------------------------------------------------------- side effect handlers --------------------------------------------------------------
-  
+
   const {
     addElement,
-		groupElement,
-		removeElements,
-		moveElements,
-		copyElements,
-		copyElementsExternal,
-		duplicateElements,
-  } = useSideEffectHandlers({contentRef})
+    groupElement,
+    removeElements,
+    moveElements,
+    copyElements,
+    copyElementsExternal,
+    duplicateElements,
+  } = useSideEffectHandlers({ contentRef });
 
   // change iframe theme
-  const {changeIframeTheme} = useChangeIframeTheme({contentRef})
+  const { changeIframeTheme } = useChangeIframeTheme({ contentRef });
   // -------------------------------------------------------------- iframe event handlers --------------------------------------------------------------
   // mouse events
 
@@ -218,46 +206,38 @@ export const IFrame = () => {
 
   const dblClickTimestamp = useRef(0);
 
-  const [isDblClick,setIsDblClick] = useState<boolean>(false)
+  const [isDblClick, setIsDblClick] = useState<boolean>(false);
 
-  const {
-    onClick,
-		onMouseLeave,
-		onMouseMove,
-		onMouseEnter
-  } = useMouseEvents(
-    {
-      externalDblclick, 
-      linkTagUid, 
-      selectedItemsRef,
-      mostRecentSelectedNode,
-		  focusedItemRef,
-		  contentRef,
-      contentEditableUidRef,
-      isEditing,
-      dblClickTimestamp,
-      isDblClick
-    })
+  const { onClick, onMouseLeave, onMouseMove, onMouseEnter } = useMouseEvents({
+    externalDblclick,
+    linkTagUid,
+    selectedItemsRef,
+    mostRecentSelectedNode,
+    focusedItemRef,
+    contentRef,
+    contentEditableUidRef,
+    isEditing,
+    dblClickTimestamp,
+    isDblClick,
+  });
 
   // text editing
 
-  const {
-		beforeTextEdit,
-		onCmdEnter,
-		onDblClick
-  } = useTextEditing(
-    {
-      contentEditableUidRef,
-		contentRef,
-		isEditing,
-		mostRecentSelectedNode,
-		focusedItemRef,
-		dblClickTimestamp,
-		externalDblclick
-    })
+  const { beforeTextEdit, onCmdEnter, onDblClick } = useTextEditing({
+    contentEditableUidRef,
+    contentRef,
+    isEditing,
+    mostRecentSelectedNode,
+    focusedItemRef,
+    dblClickTimestamp,
+    externalDblclick,
+  });
 
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
-  const {onKeyDown} = useCmdk({contentEditableUidRef, mostRecentSelectedNode})
+  const { onKeyDown } = useCmdk({
+    contentEditableUidRef,
+    mostRecentSelectedNode,
+  });
   // -------------------------------------------------------------- own --------------------------------------------------------------
 
   // iframe event listeners
@@ -366,7 +346,6 @@ export const IFrame = () => {
     }
   }, [contentRef]);
 
-
   useEffect(() => {
     if (!iframeEvent) return;
 
@@ -382,11 +361,11 @@ export const IFrame = () => {
         onMouseLeave(iframeEvent);
         break;
       case "click":
-        setIsDblClick(false)
+        setIsDblClick(false);
         onClick(iframeEvent);
         break;
       case "pointerdown":
-        setIsDblClick(true)
+        setIsDblClick(true);
         onDblClick(iframeEvent);
         break;
       default:
@@ -456,14 +435,18 @@ export const IFrame = () => {
   }, [needToReloadIFrame, contentRef]);
 
   return useMemo(() => {
-    
-    const onLoad = ()=>{
-      const iframe:any = document.getElementById('iframeId')
-      const innerDoc = (iframe.contentDocument) ? iframe.contentDocument : iframe.contentWindow.document;
+    const onLoad = () => {
+      const iframe: any = document.getElementById("iframeId");
+      const innerDoc = iframe.contentDocument
+        ? iframe.contentDocument
+        : iframe.contentWindow.document;
       const firstElement = innerDoc.children[0].children[1].children[0];
-      firstElement.classList.add('rnbwdev-rnbw-element-select')
-      firstElement.setAttribute('rnbwdev-rnbw-element-select','rnbwdev-rnbw-element-select')
-      }
+      firstElement.classList.add("rnbwdev-rnbw-element-select");
+      firstElement.setAttribute(
+        "rnbwdev-rnbw-element-select",
+        "rnbwdev-rnbw-element-select",
+      );
+    };
 
     return (
       <>
@@ -472,7 +455,7 @@ export const IFrame = () => {
             ref={setContentRef}
             src={iframeSrc}
             onLoad={onLoad}
-            id={'iframeId'}
+            id={"iframeId"}
             style={
               parseFileFlag
                 ? {

@@ -328,6 +328,7 @@ export const parseHtml = (
     nodeMaxUid: String(_nodeMaxUid) as TNodeUid,
   };
 };
+
 export const serializeHtml = (
   tree: TNodeTreeData,
   htmlReferenceData: THtmlReferenceData,
@@ -346,6 +347,7 @@ export const serializeHtml = (
 
   return tree[RootNodeUid].data as THtmlNodeData;
 };
+
 export const parseHtmlCodePart = (
   content: string,
   htmlReferenceData: THtmlReferenceData,
