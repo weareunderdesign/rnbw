@@ -1,7 +1,8 @@
 import { NodeInAppAttribName } from "@_constants/main";
 import { THtmlNodeData } from "@_node/html";
-import { TNode, TNodeUid } from "@_node/types";
+import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import { TClipboardData } from "@_types/main";
+import { buildHtmlFromNode } from "./buildHtmlFromNode";
 
 export const cloneAndInsertNode = (
   node: TNode,
@@ -10,10 +11,19 @@ export const cloneAndInsertNode = (
   refElement: any,
   clipboardData: TClipboardData,
 ) => {
-  const ele: string = (
-    clipboardData.prevNodeTree[node.uid].data as THtmlNodeData
-  ).htmlInApp;
 
+  const buildHtmlFromClipboard = (clipboardData:TClipboardData) => {
+    if (!clipboardData || !clipboardData.data || clipboardData.data.length === 0) {
+      return ''; 
+    }
+  
+    const rootNode = clipboardData.data[0];
+  
+    return buildHtmlFromNode(rootNode, clipboardData.prevNodeTree);
+  }
+  
+  const ele: string = buildHtmlFromClipboard(clipboardData);
+  
   const div = document.createElement("div");
 
   if (ele) {
