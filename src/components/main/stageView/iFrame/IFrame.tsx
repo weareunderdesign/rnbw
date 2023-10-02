@@ -315,19 +315,18 @@ export const IFrame = () => {
             setIframeEvent(e);
             onClick(e);
           });
-          // htmlNode.addEventListener('dblclick', (e: MouseEvent) => {
-          //   externalDblclick.current = false
-          //   setIframeEvent(e)
-          // })
+
           let lastClickTime = 0;
+          let lastClickTarget: any = null;
           htmlNode.addEventListener("pointerdown", (e: PointerEvent) => {
             const currentTime = e.timeStamp;
             const timeSinceLastClick = currentTime - lastClickTime;
-            if (timeSinceLastClick < 500) {
+            if (timeSinceLastClick < 500 && lastClickTarget === e.target) {
               externalDblclick.current = false;
               setIframeEvent(e);
             }
             lastClickTime = currentTime;
+            lastClickTarget = e.target;
           });
 
           htmlNode.addEventListener("keydown", (e: KeyboardEvent) => {
