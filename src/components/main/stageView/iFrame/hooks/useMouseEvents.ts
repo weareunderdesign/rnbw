@@ -122,10 +122,64 @@ export const useMouseEvents = ({
     setFNHoveredItem("");
   };
 
+  function isOrContainLinkElement(ele: HTMLElement): {
+    isLinkTag: boolean;
+    linkElement: HTMLElement;
+  } {
+    let isLinkTag = false;
+    let linkElement = ele;
+    while (true) {
+      if (linkElement.tagName === "A") {
+        isLinkTag = true;
+        break;
+      }
+      const parentEle = linkElement.parentElement;
+      if (!parentEle) break;
+
+      linkElement = parentEle;
+    }
+    return {
+      isLinkTag,
+      linkElement,
+    };
+  }
+
+  function handleLinkTag(ele: HTMLElement) {
+    const { isLinkTag, linkElement } = isOrContainLinkElement(ele);
+    if (isLinkTag) {
+      const uid: TNodeUid | null =
+        linkElement.getAttribute(NodeInAppAttribName);
+      if (uid !== null) {
+        if (uid === linkTagUid.current) {
+          const href = linkElement.getAttribute("href");
+          href && setLinkToOpen(href);
+          linkTagUid.current = "";
+        } else {
+          linkTagUid.current = uid;
+        }
+      }
+    } else {
+      linkTagUid.current = "";
+    }
+  }
+
+  function findEleOrItsNearestParentWithUid(ele: HTMLElement) {
+    let newFocusedElement: HTMLElement = ele;
+    let _uid: TNodeUid | null =
+      newFocusedElement.getAttribute(NodeInAppAttribName);
+    while (!_uid) {
+      const parentEle = newFocusedElement.parentElement;
+      if (!parentEle) break;
+      _uid = parentEle.getAttribute(NodeInAppAttribName);
+      !_uid ? (newFocusedElement = parentEle) : null;
+    }
+    return newFocusedElement;
+  }
+
   const onClick = useCallback(
     (e: MouseEvent) => {
+      const ele = e.target as HTMLElement;
       if (!parseFileFlag) {
-        const ele = e.target as HTMLElement;
         const file = ffTree[prevFileUid];
         const uid = prevFileUid;
         const fileData = file.data as TFileNodeData;
@@ -162,50 +216,19 @@ export const useMouseEvents = ({
           }
         }, 100);
       } else {
-        const ele = e.target as HTMLElement;
         externalDblclick.current = true;
-        // handle links
-        let isLinkTag = false;
-        let linkElement = ele;
-        while (true) {
-          if (linkElement.tagName === "A") {
-            isLinkTag = true;
-            break;
-          }
-          const parentEle = linkElement.parentElement;
-          if (!parentEle) break;
-
-          linkElement = parentEle;
-        }
-        if (isLinkTag) {
-          const uid: TNodeUid | null =
-            linkElement.getAttribute(NodeInAppAttribName);
-          if (uid !== null) {
-            if (uid === linkTagUid.current) {
-              const href = linkElement.getAttribute("href");
-              href && setLinkToOpen(href);
-              linkTagUid.current = "";
-            } else {
-              linkTagUid.current = uid;
-            }
-          }
-        } else {
-          linkTagUid.current = "";
-        }
+        handleLinkTag(ele);
 
         let _uid: TNodeUid | null = ele.getAttribute(NodeInAppAttribName);
-        // for the elements which are created by js. (ex: Web Component)
-        let newFocusedElement: HTMLElement = ele;
         let isWC = false;
-
-        while (!_uid) {
-          const parentEle = newFocusedElement.parentElement;
+        let newFocusedElement: HTMLElement = ele;
+        if (!_uid) {
+          // for the elements which are created by js. (ex: Web Component)
           isWC = true;
-          if (!parentEle) break;
-
-          _uid = parentEle.getAttribute(NodeInAppAttribName);
-          !_uid ? (newFocusedElement = parentEle) : null;
+          newFocusedElement = findEleOrItsNearestParentWithUid(ele);
+          _uid = newFocusedElement.getAttribute(NodeInAppAttribName);
         }
+        debugger;
 
         // set focused/selected items
         let multiple = false;
