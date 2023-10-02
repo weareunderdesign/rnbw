@@ -94,34 +94,7 @@ export const useMouseEvents = ({
     contentRef,
   });
 
-  const onMouseEnter = useCallback((e: MouseEvent) => {}, []);
-
-  const onMouseMove = useCallback(
-    (e: MouseEvent) => {
-      const ele = e.target as HTMLElement;
-      let _uid: TNodeUid | null = ele.getAttribute(NodeInAppAttribName);
-      // for the elements which are created by js. (ex: Web Component)
-      let newHoveredElement: HTMLElement = ele;
-      while (!_uid) {
-        const parentEle = newHoveredElement.parentElement;
-        if (!parentEle) break;
-
-        _uid = parentEle.getAttribute(NodeInAppAttribName);
-        !_uid ? (newHoveredElement = parentEle) : null;
-      }
-
-      // set hovered item
-      if (_uid && _uid !== fnHoveredItem) {
-        setFNHoveredItem(_uid);
-      }
-    },
-    [fnHoveredItem],
-  );
-
-  const onMouseLeave = (e: MouseEvent) => {
-    setFNHoveredItem("");
-  };
-
+  // MouseEvents Helpers
   function isOrContainLinkElement(ele: HTMLElement): {
     isLinkTag: boolean;
     linkElement: HTMLElement;
@@ -146,7 +119,7 @@ export const useMouseEvents = ({
 
   function handleLinkTag(ele: HTMLElement) {
     const { isLinkTag, linkElement } = isOrContainLinkElement(ele);
-    if (isLinkTag) {
+    if (isLinkTag && linkElement) {
       const uid: TNodeUid | null =
         linkElement.getAttribute(NodeInAppAttribName);
       if (uid !== null) {
@@ -205,19 +178,37 @@ export const useMouseEvents = ({
   }
 
   function isEditableElement(ele: HTMLElement) {
-    let isEditable = false;
-    //break loop if the element is editable
-    let editableElementIndex = 0;
-    while (true && editableElementIndex < firstClickEditableTags.length) {
-      let editableElement = firstClickEditableTags[editableElementIndex];
-      if (editableElement === ele.tagName.toLowerCase()) {
-        isEditable = true;
-        break;
-      }
-    }
-
-    return isEditable;
+    return firstClickEditableTags.includes(ele.tagName.toLowerCase());
   }
+
+  // MouseEvents Handlers
+  const onMouseEnter = useCallback((e: MouseEvent) => {}, []);
+
+  const onMouseMove = useCallback(
+    (e: MouseEvent) => {
+      const ele = e.target as HTMLElement;
+      let _uid: TNodeUid | null = ele.getAttribute(NodeInAppAttribName);
+      // for the elements which are created by js. (ex: Web Component)
+      let newHoveredElement: HTMLElement = ele;
+      while (!_uid) {
+        const parentEle = newHoveredElement.parentElement;
+        if (!parentEle) break;
+
+        _uid = parentEle.getAttribute(NodeInAppAttribName);
+        !_uid ? (newHoveredElement = parentEle) : null;
+      }
+
+      // set hovered item
+      if (_uid && _uid !== fnHoveredItem) {
+        setFNHoveredItem(_uid);
+      }
+    },
+    [fnHoveredItem],
+  );
+
+  const onMouseLeave = (e: MouseEvent) => {
+    setFNHoveredItem("");
+  };
 
   const onClick = useCallback(
     (e: MouseEvent) => {
@@ -269,15 +260,17 @@ export const useMouseEvents = ({
           // for the elements which are created by js. (ex: Web Component)
           isWC = true;
           newFocusedElement = findEleOrItsNearestParentWithUid(ele);
+
           _uid = newFocusedElement.getAttribute(NodeInAppAttribName);
         }
 
         const areMultiple = handleSelectofSingleOrMultipleElements(e, _uid);
 
         const isEditable = isEditableElement(ele);
+
         const canEditOnSingleClickConfig = {
           isSingle: !areMultiple,
-          isEditable: isEditable,
+          isEditable,
           isFocused: _uid === focusedItem,
           isNotAWC: !isWC,
           isNotAlreadyEditingEle: contentEditableUidRef.current !== _uid,
@@ -289,11 +282,9 @@ export const useMouseEvents = ({
         ).every((val) => val === true);
 
         if (canEditOnSingleClick) {
-          // debugger;
-          console.log(isEditing.current, "isEditing.current");
           isEditing.current = true;
           // console.log("dblclick");
-          // onDblClick(e);
+          onDblClick(e);
         }
       }
 
