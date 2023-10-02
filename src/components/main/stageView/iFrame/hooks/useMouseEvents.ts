@@ -38,8 +38,7 @@ export const useMouseEvents = ({
   contentRef,
   contentEditableUidRef,
   isEditing,
-  dblClickTimestamp,
-  isDblClick,
+  dblClickTimestamp, // isDblClick,
 }: IUseMouseEventsProps) => {
   const firstClickEditableTags = [
     "p",
@@ -157,15 +156,19 @@ export const useMouseEvents = ({
     if (uid) {
       if (e.shiftKey) {
         let found = false;
+
         const _selectedItems = selectedItemsRef.current.filter((uid) => {
           uid === uid ? (found = true) : null;
           return uid !== uid;
         });
+
         !found ? _selectedItems.push(uid) : null;
+
         setFocusedSelectedItems(
           uid,
           getValidNodeUids(nodeTree, _selectedItems),
         );
+
         if (_selectedItems.length > 1) multiple = true;
       } else {
         if (uid !== focusedItem) {
@@ -244,6 +247,7 @@ export const useMouseEvents = ({
         }
         setTimeout(() => {
           if (_uid) {
+            debugger;
             dispatch(focusFNNode(_uid));
             dispatch(selectFNNode([_uid]));
             dispatch(expandFNNode([_uid]));

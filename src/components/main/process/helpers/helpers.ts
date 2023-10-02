@@ -89,9 +89,11 @@ export const addNewNode = (
   uids.map((uid) => {
     const node = tree[uid];
     if (node.parentUid === RootNodeUid) {
+      console.log("condition met", node.parentUid, RootNodeUid);
       !_flag && (_newFocusedNodeUid = uid);
       _flag = true;
       node.parentUid = o_parentNode.uid;
+      debugger;
     }
     _nodeTree[uid] = JSON.parse(JSON.stringify(node));
     const nodeData = node.data as THtmlNodeData;
@@ -558,32 +560,31 @@ export const handleCodeChangeEffects = (
   _nodeMaxUid: number,
   _newFocusedNodeUid: string,
 ) => {
+  debugger;
   // side effects
   codeChanges.map((codeChange: TCodeChange) => {
     // ---------------------- node tree side effect ----------------------
     // parse code part
     // remove org nodes
-    const o_node = _nodeTree[codeChange.uid]; //original node (the node which was previously focused)
-    const {
-      formattedContent,
-      tree,
-      nodeMaxUid: newNodeMaxUid,
-    } = parseHtmlCodePart(
-      codeChange.content,
-      htmlReferenceData,
-      osType,
+    const htmlContent = codeChange.content as string;
+    const originalNode = _nodeTree[codeChange.uid]; //original node (the node which was previously focused)
+    if (originalNode === undefined) return;
+
+    const { tree, nodeMaxUid: newNodeMaxUid } = parseHtmlCodePart(
+      htmlContent,
       String(_nodeMaxUid) as TNodeUid,
     );
-    if (formattedContent == "") {
+
+    if (htmlContent == "") {
       return;
     }
     _nodeMaxUid = Number(newNodeMaxUid);
-    if (o_node === undefined) return;
-    const o_parentNode = _nodeTree[o_node.parentUid as TNodeUid];
-    removeOrgNode(o_parentNode, codeChange, tree, _nodeTree);
+
+    const originalParentNode = _nodeTree[originalNode.parentUid as TNodeUid];
+    removeOrgNode(originalParentNode, codeChange, tree, _nodeTree);
     let { nodeUids, _newFocusedNodeUid: newFocusedNode } = addNewNode(
       tree,
-      o_parentNode,
+      originalParentNode,
       _nodeTree,
       _newFocusedNodeUid,
     );
@@ -591,8 +592,8 @@ export const handleCodeChangeEffects = (
     // ---------------------- iframe side effect ----------------------
     // build element to replace
     replaceElementInIframe(
-      o_node,
-      formattedContent,
+      originalNode,
+      htmlContent,
       nodeUids,
       codeChange,
       tree,

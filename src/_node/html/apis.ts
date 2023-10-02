@@ -350,8 +350,6 @@ export const serializeHtml = (
 
 export const parseHtmlCodePart = (
   content: string,
-  htmlReferenceData: THtmlReferenceData,
-  osType: TOsType,
   nodeMaxUid: TNodeUid = "",
 ): THtmlParserResponse => {
   let _nodeMaxUid = Number(nodeMaxUid);
@@ -364,6 +362,7 @@ export const parseHtmlCodePart = (
     withEndIndices: true,
     withStartIndices: true,
   });
+  debugger;
   let appDom: Document;
   function preprocessNodes(dom: Document) {
     appDom = dom;
