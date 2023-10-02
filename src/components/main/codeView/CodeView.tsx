@@ -72,7 +72,6 @@ export default function CodeView(props: CodeViewProps) {
 
   const isFirst = useRef<boolean>(true);
 
-  // const codeContent = useRef<string>("");
   const [codeContent, setCodeContent] = useState<string>("");
   const previewDiv = useRef(null);
 
@@ -104,7 +103,6 @@ export default function CodeView(props: CodeViewProps) {
     const extension = fileData.ext;
     extension && updateLanguage(extension);
 
-    // codeContent.current = fileData.content;
     setCodeContent(fileData.content);
   }, [ffTree[file.uid]]);
 
@@ -133,7 +131,7 @@ export default function CodeView(props: CodeViewProps) {
 
     const { startIndex, endIndex } = node.data as THtmlNodeData;
 
-    // if (!startIndex || !endIndex) return;
+    if (!startIndex || !endIndex) return;
 
     const { startLineNumber, startColumn, endLineNumber, endColumn } =
       getPositionFromIndex(monacoEditor, startIndex, endIndex);
@@ -324,7 +322,6 @@ export default function CodeView(props: CodeViewProps) {
             language={language}
             defaultValue={""}
             value={codeContent}
-            // value={codeContent.current}
             theme={theme}
             onMount={handleEditorDidMount}
             onChange={handleEditorChange}

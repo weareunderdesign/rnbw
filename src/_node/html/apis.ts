@@ -352,6 +352,7 @@ export const parseHtmlCodePart = (
   htmlReferenceData: THtmlReferenceData,
   osType: TOsType,
   nodeMaxUid: TNodeUid = "",
+  start: number = 0,
 ): THtmlParserResponse => {
   let _nodeMaxUid = Number(nodeMaxUid);
 
@@ -464,8 +465,8 @@ export const parseHtmlCodePart = (
           name: nodeData.name,
           data: nodeData.data,
           attribs: nodeData.attribs,
-          startIndex: nodeData.startIndex,
-          endIndex: nodeData.endIndex,
+          startIndex: start + nodeData.startIndex,
+          endIndex: start + nodeData.endIndex,
         },
       };
     }

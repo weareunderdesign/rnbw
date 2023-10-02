@@ -5,13 +5,14 @@ import {
   TFileType,
   TProject,
 } from "@_types/main";
-import { TNode, TNodeTreeData, TNodeUid, TNormalNodeData } from "@_node/types";
+import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import {
   THtmlDomNodeData,
   THtmlNodeData,
   THtmlPageSettings,
   THtmlParserResponse,
   THtmlReferenceData,
+  parseHtmlCodePart,
   // parseHtmlCodePart,
   serializeHtml,
 } from "@_node/html";
@@ -39,7 +40,6 @@ import { TOsType } from "@_types/global";
 import * as htmlparser2 from "htmlparser2_sep";
 import { Document } from "domhandler";
 import * as domutils from "domutils";
-import { getLineBreaker } from "@_services/global";
 
 export const saveFileContent = async (
   project: TProject,
@@ -566,145 +566,7 @@ export const updateFileInfoFromNodeTree = (
   return { _needToReloadIFrame };
 };
 
-export const parseHtmlCodePart = (
-  content: string,
-  htmlReferenceData: THtmlReferenceData,
-  osType: TOsType,
-  nodeMaxUid: TNodeUid = "",
-  start: number,
-): THtmlParserResponse => {
-  let htmlContent = "";
-  let htmlContentInApp = "";
-
-  let _nodeMaxUid = Number(nodeMaxUid);
-
-  // parse html
-  const tmpTree: TNodeTreeData = {};
-  const tree: TNodeTreeData = {};
-
-  let dom = htmlparser2.parseDocument(content, {
-    withEndIndices: true,
-    withStartIndices: true,
-  });
-
-  let appDom: Document;
-  function preprocessNodes(dom: Document) {
-    appDom = dom;
-
-    // build root node
-    tmpTree[RootNodeUid] = {
-      uid: RootNodeUid,
-      parentUid: null,
-      name: RootNodeUid,
-      isEntity: false,
-      children: [],
-      data: { valid: true },
-    };
-
-    // build depth-1 seed nodes
-    const seedNodes: TNode[] = [];
-    appDom.children.forEach((node) => {
-      const uid = String(++_nodeMaxUid) as TNodeUid;
-
-      tmpTree[RootNodeUid].children.push(uid);
-      tmpTree[uid] = {
-        uid,
-        parentUid: RootNodeUid,
-        name: "",
-        isEntity: true,
-        children: [],
-        data: { ...node, valid: node.type === "tag" },
-      };
-
-      seedNodes.push(tmpTree[uid]);
-    });
-
-    // build the whole node tree from the seed nodes - BFS
-    while (seedNodes.length) {
-      const node = seedNodes.shift() as TNode;
-      const nodeData = node.data as THtmlDomNodeData;
-
-      if (!nodeData.children) continue;
-
-      nodeData.children.map((child: THtmlDomNodeData) => {
-        const uid = String(++_nodeMaxUid) as TNodeUid;
-
-        node.children.push(uid);
-        node.isEntity = false;
-
-        tmpTree[uid] = {
-          uid,
-          parentUid: node.uid,
-          name: "",
-          isEntity: true,
-          children: [],
-          data: { ...child, valid: child.type === "tag" },
-        };
-
-        //add attribute to node
-        if (!child.attribs) child.attribs = {};
-        child.attribs[NodeInAppAttribName] = uid;
-
-        seedNodes.push(tmpTree[uid]);
-      });
-    }
-    htmlContentInApp = domutils.getOuterHTML(appDom);
-  }
-
-  preprocessNodes(dom);
-
-  let uids: TNodeUid[] = Object.keys(tmpTree);
-
-  uids.map((uid) => {
-    const node = tmpTree[uid];
-
-    // build valid node tree
-    if (uid === RootNodeUid) {
-      tree[uid] = { ...node };
-    } else {
-      const nodeData = node.data as THtmlDomNodeData;
-
-      let isFormatText = false,
-        valid = true;
-      if (!nodeData.valid) {
-        // format text node
-        valid = false;
-        isFormatText = true;
-      } else {
-        // detect general text node
-        valid = nodeData.type !== "text";
-      }
-
-      // set in-app-attribute to nodes
-      if (!nodeData.attribs) nodeData.attribs = {};
-      nodeData.attribs[NodeInAppAttribName] = uid;
-
-      tree[uid] = {
-        ...node,
-        name: nodeData.name || nodeData.type,
-        data: {
-          valid,
-          isFormatText,
-          type: nodeData.type,
-          name: nodeData.name,
-          data: nodeData.data,
-          attribs: nodeData.attribs,
-          startIndex: start,
-          endIndex: start + nodeData.endIndex,
-        },
-      };
-    }
-  });
-
-  return {
-    formattedContent: content,
-    contentInApp: "",
-    tree,
-    nodeMaxUid: String(_nodeMaxUid) as TNodeUid,
-  };
-};
-
-function replaceSubstringByIndices(
+export function replaceContentByFormatted(
   inputString: string,
   startIndex: number,
   endIndex: number,
@@ -729,11 +591,32 @@ function replaceSubstringByIndices(
   return replacedString;
 }
 
-function removeAttributeFromElement(htmlString: string, attributeName: string) {
-  const pattern = new RegExp(` ${attributeName}=["'][^"']*["'] `, "g");
-
+export function removeAttributeFromElement(
+  htmlString: string,
+  attributeName: string,
+) {
+  const pattern = new RegExp(`\\s*${attributeName}=["'][^"']*["']\\s*`, "g");
   return htmlString.replace(pattern, "");
 }
+
+export const updateExistingTree = (
+  _nodeTree: TNodeTreeData,
+  start: number,
+  end: number,
+  formattedContent: string,
+) => {
+  const diff = formattedContent.length - (end - start) - 1;
+
+  for (const key in _nodeTree) {
+    if ((_nodeTree[key].data as THtmlNodeData).startIndex > start) {
+      (_nodeTree[key].data as THtmlNodeData).startIndex += diff;
+    }
+
+    if ((_nodeTree[key].data as THtmlNodeData).endIndex > end) {
+      (_nodeTree[key].data as THtmlNodeData).endIndex += diff;
+    }
+  }
+};
 
 export const handleCodeChangeEffects = (
   codeChanges: TCodeChange[],
@@ -746,13 +629,12 @@ export const handleCodeChangeEffects = (
   _newFocusedNodeUid: string,
 ) => {
   // side effects
-
   codeChanges.map((codeChange: TCodeChange) => {
     // ---------------------- node tree side effect ----------------------
     // parse code part
-    // remove org nodes
 
     const o_node = _nodeTree[codeChange.uid]; //original node (the node which was previously focused)
+
     const start = (o_node.data as THtmlNodeData).startIndex;
     const end = (o_node.data as THtmlNodeData).endIndex;
 
@@ -761,26 +643,22 @@ export const handleCodeChangeEffects = (
       NodeInAppAttribName,
     );
 
-    const {
-      // formattedContent,
-      tree,
-      nodeMaxUid: newNodeMaxUid,
-    } = parseHtmlCodePart(
+    if (formattedContent == "") {
+      return;
+    }
+
+    const { tree, nodeMaxUid: newNodeMaxUid } = parseHtmlCodePart(
       formattedContent,
       htmlReferenceData,
       osType,
       String(_nodeMaxUid) as TNodeUid,
       start,
     );
-
-    if (formattedContent == "") {
-      return;
-    }
-
     _nodeMaxUid = Number(newNodeMaxUid);
 
-    if (o_node === undefined) return;
+    updateExistingTree(_nodeTree, start, end, formattedContent);
 
+    if (o_node === undefined) return;
     const o_parentNode = _nodeTree[o_node.parentUid as TNodeUid];
 
     removeOrgNode(o_parentNode, codeChange, tree, _nodeTree);
@@ -804,11 +682,11 @@ export const handleCodeChangeEffects = (
       tree,
     );
 
-    fileData.content = replaceSubstringByIndices(
+    fileData.content = replaceContentByFormatted(
       file.content,
       start,
       end,
-      removeAttributeFromElement(formattedContent, NodeInAppAttribName),
+      formattedContent,
     );
   });
 
@@ -818,8 +696,6 @@ export const handleCodeChangeEffects = (
     htmlReferenceData,
     osType,
   );
-
-  // fileData.content = file.content;
 
   fileData.contentInApp = contentInApp;
   fileData.changed = fileData.content !== fileData.orgContent;
