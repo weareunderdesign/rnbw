@@ -117,7 +117,6 @@ export default function useEditor() {
     validNodeTree: TNodeTreeData,
     monacoEditor: editor.IStandaloneCodeEditor | null,
   ): TNode | null {
-    debugger;
     let focusedNode: TNode | null = null;
     if (selection) {
       let _uid: TNodeUid = "";
