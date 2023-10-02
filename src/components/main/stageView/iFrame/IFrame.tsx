@@ -303,15 +303,19 @@ export const IFrame = () => {
           // define event handlers
           htmlNode.addEventListener("mouseenter", (e: MouseEvent) => {
             setIframeEvent(e);
+            onMouseEnter(e);
           });
           htmlNode.addEventListener("mousemove", (e: MouseEvent) => {
             setIframeEvent(e);
+            onMouseMove(e);
           });
           htmlNode.addEventListener("mouseleave", (e: MouseEvent) => {
             setIframeEvent(e);
+            onMouseLeave(e);
           });
           htmlNode.addEventListener("click", (e: MouseEvent) => {
             e.preventDefault();
+            setIsDblClick(false);
             setIframeEvent(e);
             onClick(e);
           });
@@ -322,6 +326,8 @@ export const IFrame = () => {
             const currentTime = e.timeStamp;
             const timeSinceLastClick = currentTime - lastClickTime;
             if (timeSinceLastClick < 500 && lastClickTarget === e.target) {
+              setIsDblClick(true);
+              onDblClick(e);
               externalDblclick.current = false;
               setIframeEvent(e);
             }
@@ -344,33 +350,6 @@ export const IFrame = () => {
       };
     }
   }, [contentRef]);
-
-  useEffect(() => {
-    if (!iframeEvent) return;
-
-    const { type } = iframeEvent;
-    switch (type) {
-      case "mouseenter":
-        onMouseEnter(iframeEvent);
-        break;
-      case "mousemove":
-        onMouseMove(iframeEvent);
-        break;
-      case "mouseleave":
-        onMouseLeave(iframeEvent);
-        break;
-      case "click":
-        setIsDblClick(false);
-        onClick(iframeEvent);
-        break;
-      case "pointerdown":
-        setIsDblClick(true);
-        onDblClick(iframeEvent);
-        break;
-      default:
-        break;
-    }
-  }, [iframeEvent]);
 
   // node actions, code change - side effect
   useEffect(() => {
