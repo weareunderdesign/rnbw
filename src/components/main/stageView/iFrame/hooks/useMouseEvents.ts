@@ -176,6 +176,49 @@ export const useMouseEvents = ({
     return newFocusedElement;
   }
 
+  function handleSelectofSingleOrMultipleElements(
+    e: MouseEvent,
+    uid: TNodeUid | null,
+  ) {
+    let multiple = false;
+    if (uid) {
+      if (e.shiftKey) {
+        let found = false;
+        const _selectedItems = selectedItemsRef.current.filter((uid) => {
+          uid === uid ? (found = true) : null;
+          return uid !== uid;
+        });
+        !found ? _selectedItems.push(uid) : null;
+        setFocusedSelectedItems(
+          uid,
+          getValidNodeUids(nodeTree, _selectedItems),
+        );
+        if (_selectedItems.length > 1) multiple = true;
+      } else {
+        if (uid !== focusedItem) {
+          setFocusedSelectedItems(uid);
+        }
+      }
+    }
+
+    return multiple;
+  }
+
+  function isEditableElement(ele: HTMLElement) {
+    let isEditable = false;
+    //break loop if the element is editable
+    let editableElementIndex = 0;
+    while (true && editableElementIndex < firstClickEditableTags.length) {
+      let editableElement = firstClickEditableTags[editableElementIndex];
+      if (editableElement === ele.tagName.toLowerCase()) {
+        isEditable = true;
+        break;
+      }
+    }
+
+    return isEditable;
+  }
+
   const onClick = useCallback(
     (e: MouseEvent) => {
       const ele = e.target as HTMLElement;
@@ -228,50 +271,33 @@ export const useMouseEvents = ({
           newFocusedElement = findEleOrItsNearestParentWithUid(ele);
           _uid = newFocusedElement.getAttribute(NodeInAppAttribName);
         }
-        debugger;
 
-        // set focused/selected items
-        let multiple = false;
-        if (_uid) {
-          if (e.shiftKey) {
-            let found = false;
-            const _selectedItems = selectedItemsRef.current.filter((uid) => {
-              uid === _uid ? (found = true) : null;
-              return uid !== _uid;
-            });
-            !found ? _selectedItems.push(_uid) : null;
-            setFocusedSelectedItems(
-              _uid,
-              getValidNodeUids(nodeTree, _selectedItems),
-            );
-            if (_selectedItems.length > 1) multiple = true;
-          } else {
-            if (_uid !== focusedItem) {
-              setFocusedSelectedItems(_uid);
-            }
-          }
-        }
-        // allow to edit content by one clicking for the text element
-        if (
-          firstClickEditableTags.filter(
-            (_ele) => _ele === ele.tagName.toLowerCase(),
-          ).length > 0 &&
-          !multiple &&
-          _uid === focusedItem &&
-          !isWC &&
-          isDblClick
-        ) {
-          if (contentEditableUidRef.current !== _uid) {
-            isEditing.current = true;
-            console.log("dblclick");
-            onDblClick(e);
-            // ele.focus()
-          }
+        const areMultiple = handleSelectofSingleOrMultipleElements(e, _uid);
+
+        const isEditable = isEditableElement(ele);
+        const canEditOnSingleClickConfig = {
+          isSingle: !areMultiple,
+          isEditable: isEditable,
+          isFocused: _uid === focusedItem,
+          isNotAWC: !isWC,
+          isNotAlreadyEditingEle: contentEditableUidRef.current !== _uid,
+        };
+
+        //check if all the keys have true value
+        let canEditOnSingleClick = Object.values(
+          canEditOnSingleClickConfig,
+        ).every((val) => val === true);
+
+        if (canEditOnSingleClick) {
+          // debugger;
+          console.log(isEditing.current, "isEditing.current");
+          isEditing.current = true;
+          // console.log("dblclick");
+          // onDblClick(e);
         }
       }
 
       setActivePanel("stage");
-
       navigatorDropDownType !== null && setNavigatorDropDownType(null);
     },
     [
