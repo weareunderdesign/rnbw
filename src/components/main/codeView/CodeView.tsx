@@ -110,6 +110,32 @@ export default function CodeView(props: CodeViewProps) {
   const focusedItemRef = useRef<TNodeUid>("");
   const revealed = useRef<boolean>(false);
 
+  function hightlightFocusedNodeCodeBlock() {
+    const monacoEditor = getCurrentEditorInstance();
+    const node = validNodeTree[focusedItem];
+    const { startIndex, endIndex } = node.data as THtmlNodeData;
+
+    if (!startIndex || !endIndex || !monacoEditor) return;
+
+    const { startLineNumber, startColumn, endLineNumber, endColumn } =
+      getPositionFromIndex(monacoEditor, startIndex, endIndex);
+    monacoEditor.setSelection({
+      startLineNumber,
+      startColumn,
+      endLineNumber,
+      endColumn,
+    });
+    monacoEditor?.revealRangeInCenter(
+      {
+        startLineNumber,
+        startColumn,
+        endLineNumber,
+        endColumn,
+      },
+      1,
+    );
+  }
+
   useEffect(() => {
     if (!parseFileFlag) {
       return;
@@ -121,61 +147,28 @@ export default function CodeView(props: CodeViewProps) {
     if (!validNodeTree[focusedItem]) return;
 
     if (codeEditing) return;
-
     // Convert the indices to positions
 
     const monacoEditor = getCurrentEditorInstance();
-    if (!monacoEditor) return;
-
     const node = validNodeTree[focusedItem];
-
     const { startIndex, endIndex } = node.data as THtmlNodeData;
 
-    if (!startIndex || !endIndex) return;
+    if (!startIndex || !endIndex || !monacoEditor) return;
 
     const { startLineNumber, startColumn, endLineNumber, endColumn } =
       getPositionFromIndex(monacoEditor, startIndex, endIndex);
 
     if (isFirst.current) {
-      // debugger;
       const firstTimer = setInterval(() => {
-        const newMonacoEditor = getCurrentEditorInstance();
-        if (newMonacoEditor) {
-          newMonacoEditor.setSelection({
-            startLineNumber,
-            startColumn,
-            endLineNumber,
-            endColumn,
-          });
-          newMonacoEditor.revealRangeInCenter(
-            {
-              startLineNumber,
-              startColumn,
-              endLineNumber,
-              endColumn,
-            },
-            1,
-          );
+        const monacoEditor = getCurrentEditorInstance();
+        if (monacoEditor) {
+          hightlightFocusedNodeCodeBlock();
           revealed.current = false;
           clearInterval(firstTimer);
         }
       }, 0);
     } else {
-      monacoEditor.setSelection({
-        startLineNumber,
-        startColumn,
-        endLineNumber,
-        endColumn,
-      });
-      monacoEditor?.revealRangeInCenter(
-        {
-          startLineNumber,
-          startColumn,
-          endLineNumber,
-          endColumn,
-        },
-        1,
-      );
+      hightlightFocusedNodeCodeBlock();
       revealed.current = true;
     }
 
