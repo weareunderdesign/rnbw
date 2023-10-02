@@ -282,9 +282,8 @@ export const useMouseEvents = ({
         ).every((val) => val === true);
 
         if (canEditOnSingleClick) {
-          isEditing.current = true;
-          // console.log("dblclick");
-          onDblClick(e);
+          // isEditing.current = true;
+          // onDblClick(e); //TODO: for making a editable element editable on single click once zero-sys is ready
         }
       }
 
