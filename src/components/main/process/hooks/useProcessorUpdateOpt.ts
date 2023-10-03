@@ -233,7 +233,7 @@ export const useProcessorUpdateOpt = () => {
       addRunningActions(["processor-nodeTree"]);
       setNodeTree(_nodeTree);
       // update redux
-      dispatch(setCurrentFileContent(fileData.contentInApp as string));
+      dispatch(setCurrentFileContent(fileData.content as string));
       setUpdateOpt({ parse: null, from: updateOpt.from });
     }
 

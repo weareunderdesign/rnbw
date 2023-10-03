@@ -72,7 +72,7 @@ export default function CodeView(props: CodeViewProps) {
 
   const isFirst = useRef<boolean>(true);
 
-  const codeContent = useRef<string>("");
+  const [codeContent, setCodeContent] = useState<string>("");
   const previewDiv = useRef(null);
 
   // -------------------------------------------------------------- sync --------------------------------------------------------------
@@ -80,19 +80,20 @@ export default function CodeView(props: CodeViewProps) {
   // build node tree reference
   useEffect(() => {
     const validNodeTreeRef = getValidNodeTreeInstance();
-    validNodeTreeRef.current = JSON.parse(JSON.stringify(validNodeTree));
+    validNodeTreeRef.current = structuredClone(validNodeTree);
 
     // set new focused node
-    if (newFocusedNodeUid !== "") {
-      setFocusedNode(validNodeTree[newFocusedNodeUid]);
-      !isFirst.current ? (focusedItemRef.current = newFocusedNodeUid) : null;
-      setNewFocusedNodeUid("");
-    }
+    if (newFocusedNodeUid == "") return;
+
+    setFocusedNode(validNodeTree[newFocusedNodeUid]);
+    !isFirst.current ? (focusedItemRef.current = newFocusedNodeUid) : null;
+    setNewFocusedNodeUid("");
   }, [validNodeTree]);
 
   // file content change - set code
   useEffect(() => {
     const _file = ffTree[file.uid];
+
     if (!_file) return;
 
     if (updateOpt.from === "code") return;
@@ -101,7 +102,7 @@ export default function CodeView(props: CodeViewProps) {
     const extension = fileData.ext;
     extension && updateLanguage(extension);
 
-    codeContent.current = fileData.content;
+    setCodeContent(fileData.content);
   }, [ffTree[file.uid]]);
 
   // focusedItem - code select
@@ -139,12 +140,20 @@ export default function CodeView(props: CodeViewProps) {
       return;
     }
 
-    if (focusedItem === RootNodeUid || focusedItemRef.current === focusedItem)
-      return;
+    if (focusedItem === RootNodeUid) return;
     if (!validNodeTree[focusedItem]) return;
 
     if (codeEditing) return;
     // Convert the indices to positions
+
+    const monacoEditor = getCurrentEditorInstance();
+    const node = validNodeTree[focusedItem];
+    const { startIndex, endIndex } = node.data as THtmlNodeData;
+
+    if (!startIndex || !endIndex || !monacoEditor) return;
+
+    const { startLineNumber, startColumn, endLineNumber, endColumn } =
+      getPositionFromIndex(monacoEditor, startIndex, endIndex);
 
     if (isFirst.current) {
       const firstTimer = setInterval(() => {
@@ -171,6 +180,7 @@ export default function CodeView(props: CodeViewProps) {
     const monacoEditor = getCurrentEditorInstance();
     if (!parseFileFlag) return;
     const _selection = monacoEditor?.getSelection();
+
     if (_selection) {
       if (isFirst.current) {
         firstSelection.current = _selection;
@@ -208,6 +218,7 @@ export default function CodeView(props: CodeViewProps) {
 
   useEffect(() => {
     const cursorDetectInterval = setInterval(() => updateSelection(), 0);
+
     return () => clearInterval(cursorDetectInterval);
   }, [updateSelection]);
   // detect node of current selection
@@ -230,13 +241,13 @@ export default function CodeView(props: CodeViewProps) {
     }
     const monacoEditor = getCurrentEditorInstance();
     if (selection) {
-      let focusedNode = findNodeBySelection(
+      let newFocusedNode = findNodeBySelection(
         selection,
         validNodeTreeRef.current,
         monacoEditor,
       );
-      if (focusedNode) {
-        setFocusedNode(focusedNode);
+      if (newFocusedNode) {
+        setFocusedNode(newFocusedNode);
       }
     }
   }, [selection, parseFileFlag]);
@@ -244,9 +255,7 @@ export default function CodeView(props: CodeViewProps) {
   useEffect(() => {
     if (focusedNode) {
       if (focusedNode.uid === focusedItemRef.current) return;
-
       if (updateOpt.from === "hms") return;
-
       // expand path to the uid
       const _expandedItems: TNodeUid[] = [];
       let node = validNodeTree[focusedNode.uid];
@@ -259,10 +268,8 @@ export default function CodeView(props: CodeViewProps) {
       }
       _expandedItems.shift();
       dispatch(expandFNNode(_expandedItems));
-
       dispatch(focusFNNode(focusedNode.uid));
       dispatch(selectFNNode([focusedNode.uid]));
-
       focusedItemRef.current = focusedNode.uid;
     }
   }, [focusedNode]);
@@ -304,7 +311,7 @@ export default function CodeView(props: CodeViewProps) {
           <Editor
             language={language}
             defaultValue={""}
-            value={codeContent.current}
+            value={codeContent}
             theme={theme}
             onMount={handleEditorDidMount}
             onChange={handleEditorChange}
