@@ -1,6 +1,5 @@
 import { useContext, useRef, useState, useEffect, useCallback } from "react";
 import { IPosition, IRange, editor } from "monaco-editor";
-import { Monaco } from "@monaco-editor/react";
 import {
   MainContext,
   navigatorSelector,
@@ -65,6 +64,7 @@ export default function useEditor() {
     wordWrap,
     minimap: { enabled: false },
     automaticLayout: true,
+    selectionHighlight: false,
   };
   const codeContent = useRef<string>("");
 
@@ -154,7 +154,7 @@ export default function useEditor() {
       }
       if (_uid !== "") {
         const node = validNodeTree[_uid];
-        focusedNode = JSON.parse(JSON.stringify(node));
+        focusedNode = structuredClone(node);
       }
     }
     return focusedNode;
@@ -170,7 +170,7 @@ export default function useEditor() {
       const _file = ffTree[file.uid];
       const fileData = _file.data as TFileNodeData;
       if (fileData.content === codeContent.current) {
-        validNodeTreeRef.current = JSON.parse(JSON.stringify(validNodeTree));
+        validNodeTreeRef.current = structuredClone(validNodeTree);
 
         codeChangeDecorationRef.current.clear();
         setCodeEditing(false);
@@ -269,7 +269,7 @@ export default function useEditor() {
         // update
         dispatch(setCurrentFileContent(codeContent.current));
         setFSPending(false);
-        const _file = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode;
+        const _file = structuredClone(ffTree[file.uid]) as TNode;
         addRunningActions(["processor-updateOpt"]);
         const fileData = _file.data as TFileNodeData;
         (ffTree[file.uid].data as TFileNodeData).content = codeContent.current;
@@ -285,7 +285,7 @@ export default function useEditor() {
       }
     } else {
       // non-parse file save
-      const _file = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode;
+      const _file = structuredClone(ffTree[file.uid]) as TNode;
       addRunningActions(["processor-updateOpt"]);
       const fileData = _file.data as TFileNodeData;
       (ffTree[file.uid].data as TFileNodeData).content = codeContent.current;
