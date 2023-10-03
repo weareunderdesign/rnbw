@@ -7,10 +7,8 @@ import {
 } from "@_types/main";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import {
-  THtmlDomNodeData,
   THtmlNodeData,
   THtmlPageSettings,
-  THtmlParserResponse,
   THtmlReferenceData,
   parseHtmlCodePart,
   // parseHtmlCodePart,
@@ -23,11 +21,7 @@ import {
   StagePreviewPathPrefix,
   LogAllow,
 } from "@_constants/main";
-import {
-  getSubNodeUidsByBfs,
-  getSubNodeUidsByDfs,
-  getValidNodeUids,
-} from "@_node/apis";
+import { getSubNodeUidsByBfs, getValidNodeUids } from "@_node/apis";
 import {
   TFileHandlerCollection,
   TFileNodeData,
@@ -37,9 +31,6 @@ import {
 } from "@_node/file";
 import { TUpdateOptions } from "@_redux/main/types";
 import { TOsType } from "@_types/global";
-import * as htmlparser2 from "htmlparser2_sep";
-import { Document } from "domhandler";
-import * as domutils from "domutils";
 
 export const saveFileContent = async (
   project: TProject,

@@ -152,9 +152,6 @@ export default function CodeView(props: CodeViewProps) {
 
     if (!startIndex || !endIndex || !monacoEditor) return;
 
-    const { startLineNumber, startColumn, endLineNumber, endColumn } =
-      getPositionFromIndex(monacoEditor, startIndex, endIndex);
-
     if (isFirst.current) {
       const firstTimer = setInterval(() => {
         const monacoEditor = getCurrentEditorInstance();
