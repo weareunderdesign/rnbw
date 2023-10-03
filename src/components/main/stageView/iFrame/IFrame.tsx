@@ -321,13 +321,11 @@ export const IFrame = () => {
           });
 
           let lastClickTime = 0;
-          let lastClickTarget: any = null;
+          let lastClickTarget: EventTarget | null = null;
           htmlNode.addEventListener("pointerdown", (e: PointerEvent) => {
             const currentTime = e.timeStamp;
             const timeSinceLastClick = currentTime - lastClickTime;
             if (timeSinceLastClick < 500 && lastClickTarget === e.target) {
-              setIsDblClick(true);
-              onDblClick(e);
               externalDblclick.current = false;
               setIframeEvent(e);
             }
@@ -350,6 +348,33 @@ export const IFrame = () => {
       };
     }
   }, [contentRef]);
+
+  useEffect(() => {
+    if (!iframeEvent) return;
+
+    const { type } = iframeEvent;
+    switch (type) {
+      case "mouseenter":
+        onMouseEnter(iframeEvent);
+        break;
+      case "mousemove":
+        onMouseMove(iframeEvent);
+        break;
+      case "mouseleave":
+        onMouseLeave(iframeEvent);
+        break;
+      case "click":
+        setIsDblClick(false);
+        onClick(iframeEvent);
+        break;
+      case "pointerdown":
+        setIsDblClick(true);
+        onDblClick(iframeEvent);
+        break;
+      default:
+        break;
+    }
+  }, [iframeEvent]);
 
   // node actions, code change - side effect
   useEffect(() => {
