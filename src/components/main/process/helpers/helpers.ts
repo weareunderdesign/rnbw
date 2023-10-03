@@ -99,11 +99,9 @@ export const addNewNode = (
   uids.map((uid) => {
     const node = tree[uid];
     if (node.parentUid === RootNodeUid) {
-      console.log("condition met", node.parentUid, RootNodeUid);
       !_flag && (_newFocusedNodeUid = uid);
       _flag = true;
       node.parentUid = o_parentNode.uid;
-      debugger;
     }
     _nodeTree[uid] = JSON.parse(JSON.stringify(node));
     const nodeData = node.data as THtmlNodeData;

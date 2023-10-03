@@ -363,7 +363,7 @@ export const parseHtmlCodePart = (
     withEndIndices: true,
     withStartIndices: true,
   });
-  debugger;
+
   let appDom: Document;
   function preprocessNodes(dom: Document) {
     appDom = dom;

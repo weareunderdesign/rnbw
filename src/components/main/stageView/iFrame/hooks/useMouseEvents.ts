@@ -247,7 +247,6 @@ export const useMouseEvents = ({
         }
         setTimeout(() => {
           if (_uid) {
-            debugger;
             dispatch(focusFNNode(_uid));
             dispatch(selectFNNode([_uid]));
             dispatch(expandFNNode([_uid]));
@@ -287,7 +286,8 @@ export const useMouseEvents = ({
 
         if (canEditOnSingleClick) {
           // isEditing.current = true;
-          // onDblClick(e); //TODO: for making a editable element editable on single click once zero-sys is ready
+          // onDblClick(e);
+          //TODO: for making a editable element editable on single click once zero-sys is ready
         }
       }
 
