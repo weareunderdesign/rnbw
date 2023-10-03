@@ -308,14 +308,14 @@ function NodeTreeView(props: NodeTreeViewProps) {
                 whiteSpace: "nowrap",
               };
 
-              const treeViewRef = useRef<HTMLHeadingElement|any>(null);
-                  useEffect(() => {
-                  if (props.context.isSelected) {
-                    setTimeout(()=>{
-                      treeViewRef.current.click();
-                    },500)
-                  }
-                  }, []);
+              const treeViewRef = useRef<HTMLHeadingElement | any>(null);
+              useEffect(() => {
+                if (props.context.isSelected) {
+                  setTimeout(() => {
+                    treeViewRef?.current?.click();
+                  }, 500);
+                }
+              }, []);
 
               const onClick = useCallback(
                 (e: React.MouseEvent) => {

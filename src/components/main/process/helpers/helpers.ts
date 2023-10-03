@@ -81,7 +81,6 @@ export const removeOrgNode = (
     [] as TNodeUid[],
   );
   const o_uids = getSubNodeUidsByBfs(codeChange.uid, _nodeTree);
-
   o_uids.map((uid) => {
     delete _nodeTree[uid];
   });
@@ -386,7 +385,6 @@ export const handleFileUpdate = (
   fileData.content = formattedContent;
   fileData.contentInApp = contentInApp;
   fileData.changed = fileData.content !== fileData.orgContent;
-
   return { tree, newNodeMaxUid };
 };
 
@@ -416,12 +414,10 @@ export const handleHtmlUpdate = (
     );
     fileContent = formattedContent;
   }
-
   const {
     contentInApp,
     tree,
     nodeMaxUid: newNodeMaxUid,
-    formattedContent,
   } = parseFile(
     fileData.type,
     fileContent,
@@ -432,8 +428,6 @@ export const handleHtmlUpdate = (
   );
 
   fileData.content = fileContent;
-
-  // fileData.content = formattedContent;
   fileData.contentInApp = contentInApp;
   fileData.changed = fileData.content !== fileData.orgContent;
 
@@ -481,7 +475,6 @@ export const handleHmsChange = (
   } else {
     LogAllow && console.log("file content changed by hms");
     // parse hms content keeping node uids
-
     const {
       formattedContent,
       contentInApp,
@@ -633,10 +626,10 @@ export const handleCodeChangeEffects = (
     // ---------------------- node tree side effect ----------------------
     // parse code part
 
-    const o_node = _nodeTree[codeChange.uid]; //original node (the node which was previously focused)
+    const originalNode = _nodeTree[codeChange.uid]; //original node (the node which was previously focused)
 
-    const start = (o_node.data as THtmlNodeData).startIndex;
-    const end = (o_node.data as THtmlNodeData).endIndex;
+    const start = (originalNode.data as THtmlNodeData).startIndex;
+    const end = (originalNode.data as THtmlNodeData).endIndex;
 
     const formattedContent = removeAttributeFromElement(
       codeChange.content,
@@ -649,8 +642,6 @@ export const handleCodeChangeEffects = (
 
     const { tree, nodeMaxUid: newNodeMaxUid } = parseHtmlCodePart(
       formattedContent,
-      htmlReferenceData,
-      osType,
       String(_nodeMaxUid) as TNodeUid,
       start,
     );
@@ -658,14 +649,14 @@ export const handleCodeChangeEffects = (
 
     updateExistingTree(_nodeTree, start, end, formattedContent);
 
-    if (o_node === undefined) return;
-    const o_parentNode = _nodeTree[o_node.parentUid as TNodeUid];
+    if (originalNode === undefined) return;
+    const originalParentNode = _nodeTree[originalNode.parentUid as TNodeUid];
 
-    removeOrgNode(o_parentNode, codeChange, tree, _nodeTree);
+    removeOrgNode(originalParentNode, codeChange, tree, _nodeTree);
 
     let { nodeUids, _newFocusedNodeUid: newFocusedNode } = addNewNode(
       tree,
-      o_parentNode,
+      originalParentNode,
       _nodeTree,
       _newFocusedNodeUid,
     );
@@ -675,7 +666,7 @@ export const handleCodeChangeEffects = (
     // ---------------------- iframe side effect ----------------------
     // build element to replace
     replaceElementInIframe(
-      o_node,
+      originalNode,
       formattedContent,
       nodeUids,
       codeChange,

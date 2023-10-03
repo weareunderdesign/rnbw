@@ -328,6 +328,7 @@ export const parseHtml = (
     nodeMaxUid: String(_nodeMaxUid) as TNodeUid,
   };
 };
+
 export const serializeHtml = (
   tree: TNodeTreeData,
   htmlReferenceData: THtmlReferenceData,
@@ -349,8 +350,6 @@ export const serializeHtml = (
 
 export const parseHtmlCodePart = (
   content: string,
-  htmlReferenceData: THtmlReferenceData,
-  osType: TOsType,
   nodeMaxUid: TNodeUid = "",
   start: number = 0,
 ): THtmlParserResponse => {
@@ -364,6 +363,7 @@ export const parseHtmlCodePart = (
     withEndIndices: true,
     withStartIndices: true,
   });
+
   let appDom: Document;
   function preprocessNodes(dom: Document) {
     appDom = dom;

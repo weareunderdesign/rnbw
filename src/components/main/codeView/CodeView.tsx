@@ -99,7 +99,6 @@ export default function CodeView(props: CodeViewProps) {
     if (updateOpt.from === "code") return;
 
     const fileData = _file.data as TFileNodeData;
-
     const extension = fileData.ext;
     extension && updateLanguage(extension);
 
@@ -141,9 +140,7 @@ export default function CodeView(props: CodeViewProps) {
       return;
     }
 
-    // if (focusedItem === RootNodeUid || focusedItemRef.current === focusedItem)
     if (focusedItem === RootNodeUid) return;
-
     if (!validNodeTree[focusedItem]) return;
 
     if (codeEditing) return;

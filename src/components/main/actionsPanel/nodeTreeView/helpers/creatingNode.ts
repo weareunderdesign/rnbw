@@ -74,8 +74,6 @@ export const creatingNode = (
       newNodeFlag = true;
       let parserRes = parseHtmlCodePart(
         Content,
-        htmlReferenceData,
-        osType,
         String(nodeMaxUid) as TNodeUid,
       );
 
