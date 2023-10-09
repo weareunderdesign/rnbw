@@ -10,6 +10,7 @@ import {
   getValidNodeUids,
   moveNode,
   removeNode,
+  TFileNodeData,
 } from "@_node/index";
 
 import {
@@ -17,7 +18,9 @@ import {
   focusFNNode,
   increaseActionGroupIndex,
   MainContext,
+  navigatorSelector,
   selectFNNode,
+  setCurrentFileContent,
 } from "@_redux/main";
 
 import { creatingNode } from "../helpers/creatingNode";
@@ -27,6 +30,7 @@ import { getTree } from "../helpers/getTree";
 
 export function useNodeActions() {
   const dispatch = useDispatch();
+  const { file } = useSelector(navigatorSelector);
   const { focusedItem } = useSelector(fnSelector);
   const {
     // global action
@@ -48,6 +52,8 @@ export function useNodeActions() {
     htmlReferenceData,
     // other
     osType,
+    ffTree,
+    setFFNode,
     theme: _theme,
   } = useContext(MainContext);
 
@@ -126,18 +132,23 @@ export function useNodeActions() {
   const cb_removeNode = useCallback(
     (uids: TNodeUid[]) => {
       const allow = isRemovingAllowed(nodeTree, uids);
+      const _file = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode;
+      const fileData = _file.data as TFileNodeData;
 
       if (allow) {
         addRunningActions(["nodeTreeView-remove"]);
 
         // call api
         const tree = getTree(nodeTree);
-        const res = removeNode(tree, uids, "html");
+        const res = removeNode(tree, uids, "html", fileData, file);
 
         // processor
         addRunningActions(["processor-updateOpt"]);
         setUpdateOpt({ parse: false, from: "node" });
         setNodeTree(res.tree);
+
+        setFFNode(_file);
+        dispatch(setCurrentFileContent(fileData.content as string));
 
         // view state
         addRunningActions(["stageView-viewState"]);
