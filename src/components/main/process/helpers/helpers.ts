@@ -21,7 +21,12 @@ import {
   StagePreviewPathPrefix,
   LogAllow,
 } from "@_constants/main";
-import { getSubNodeUidsByBfs, getValidNodeUids } from "@_node/apis";
+import {
+  getSubNodeUidsByBfs,
+  getValidNodeUids,
+  replaceContentByFormatted,
+  updateExistingTree,
+} from "@_node/apis";
 import {
   TFileHandlerCollection,
   TFileNodeData,
@@ -81,7 +86,7 @@ export const addNewNode = (
   tree: TNodeTreeData,
   o_parentNode: TNode,
   _nodeTree: TNodeTreeData,
-  _newFocusedNodeUid: any,
+  _newFocusedNodeUid: string,
 ) => {
   const uids = getSubNodeUidsByBfs(RootNodeUid, tree, false);
   const nodeUids: TNodeUid[] = [];
@@ -549,32 +554,6 @@ export const updateFileInfoFromNodeTree = (
   }
   return { _needToReloadIFrame };
 };
-
-export function replaceContentByFormatted(
-  inputString: string,
-  startIndex: number,
-  endIndex: number,
-  replacement: string,
-) {
-  if (
-    typeof inputString !== "string" ||
-    startIndex < 0 ||
-    endIndex < 0 ||
-    startIndex >= inputString.length ||
-    endIndex >= inputString.length
-  ) {
-    // Check if inputString is a string and indices are valid
-    return inputString;
-  }
-
-  const prefix = inputString.slice(0, startIndex);
-  const suffix = inputString.slice(endIndex + 1);
-
-  const replacedString = prefix + replacement + suffix;
-
-  return replacedString;
-}
-
 export function removeAttributeFromElement(
   htmlString: string,
   attributeName: string,
@@ -582,25 +561,6 @@ export function removeAttributeFromElement(
   const pattern = new RegExp(`\\s*${attributeName}=["'][^"']*["']\\s*`, "g");
   return htmlString.replace(pattern, "");
 }
-
-export const updateExistingTree = (
-  _nodeTree: TNodeTreeData,
-  start: number,
-  end: number,
-  formattedContent: string,
-) => {
-  const diff = formattedContent.length - (end - start) - 1;
-
-  for (const key in _nodeTree) {
-    if ((_nodeTree[key].data as THtmlNodeData).startIndex > start) {
-      (_nodeTree[key].data as THtmlNodeData).startIndex += diff;
-    }
-
-    if ((_nodeTree[key].data as THtmlNodeData).endIndex > end) {
-      (_nodeTree[key].data as THtmlNodeData).endIndex += diff;
-    }
-  }
-};
 
 export const handleCodeChangeEffects = (
   codeChanges: TCodeChange[],
@@ -614,65 +574,20 @@ export const handleCodeChangeEffects = (
 ) => {
   // side effects
   codeChanges.map((codeChange: TCodeChange) => {
-    // ---------------------- node tree side effect ----------------------
-    // parse code part
-
-    const originalNode = _nodeTree[codeChange.uid]; //original node (the node which was previously focused)
-
-    const start = (originalNode.data as THtmlNodeData).startIndex;
-    const end = (originalNode.data as THtmlNodeData).endIndex;
-
-    const formattedContent = removeAttributeFromElement(
-      codeChange.content,
-      NodeInAppAttribName,
-    );
-
-    if (formattedContent == "") {
-      return;
-    }
-
-    const { tree, nodeMaxUid: newNodeMaxUid } = parseHtmlCodePart(
-      formattedContent,
-      String(_nodeMaxUid) as TNodeUid,
-      start,
-    );
-    _nodeMaxUid = Number(newNodeMaxUid);
-
-    updateExistingTree(_nodeTree, start, end, formattedContent);
-
-    if (originalNode === undefined) return;
-    const originalParentNode = _nodeTree[originalNode.parentUid as TNodeUid];
-
-    removeOrgNode(originalParentNode, codeChange, tree, _nodeTree);
-
-    let { nodeUids, _newFocusedNodeUid: newFocusedNode } = addNewNode(
-      tree,
-      originalParentNode,
+    const result = editingTextChanges(
+      codeChange,
+      fileData,
+      file,
       _nodeTree,
+      _nodeMaxUid,
       _newFocusedNodeUid,
     );
-
-    _newFocusedNodeUid = newFocusedNode;
-
-    // ---------------------- iframe side effect ----------------------
-    // build element to replace
-    replaceElementInIframe(
-      originalNode,
-      formattedContent,
-      nodeUids,
-      codeChange,
-      tree,
-    );
-
-    fileData.content = replaceContentByFormatted(
-      file.content,
-      start,
-      end,
-      formattedContent,
-    );
+    _nodeMaxUid = result._nodeMaxUid;
+    _newFocusedNodeUid = result._newFocusedNodeUid;
   });
 
   // rebuild from new tree
+
   const { htmlInApp: contentInApp } = serializeHtml(
     _nodeTree,
     htmlReferenceData,
@@ -681,5 +596,73 @@ export const handleCodeChangeEffects = (
 
   fileData.contentInApp = contentInApp;
   fileData.changed = fileData.content !== fileData.orgContent;
+  return { _nodeMaxUid, _newFocusedNodeUid };
+};
+
+export const editingTextChanges = (
+  codeChange: TCodeChange,
+  fileData: TFileNodeData,
+  file: TFile,
+  _nodeTree: TNodeTreeData,
+  _nodeMaxUid: number,
+  _newFocusedNodeUid: string,
+) => {
+  // ---------------------- node tree side effect ----------------------
+  // parse code part
+
+  let originalNode = _nodeTree[codeChange.uid]; //original node (the node which was previously focused)
+
+  const start = (originalNode.data as THtmlNodeData).startIndex;
+  const end = (originalNode.data as THtmlNodeData).endIndex;
+
+  const formattedContent = removeAttributeFromElement(
+    codeChange.content,
+    NodeInAppAttribName,
+  );
+
+  if (formattedContent == "") {
+    return { _nodeMaxUid, _newFocusedNodeUid };
+  }
+  const { tree, nodeMaxUid } = parseHtmlCodePart(
+    formattedContent,
+    String(_nodeMaxUid) as TNodeUid,
+    start,
+  );
+  _nodeMaxUid = Number(nodeMaxUid);
+
+  updateExistingTree(_nodeTree, start, end, formattedContent);
+
+  if (originalNode === undefined) return { _nodeMaxUid, _newFocusedNodeUid };
+  const originalParentNode = _nodeTree[originalNode.parentUid as TNodeUid];
+
+  removeOrgNode(originalParentNode, codeChange, tree, _nodeTree);
+
+  let { nodeUids, _newFocusedNodeUid: newFocusedNode } = addNewNode(
+    tree,
+    originalParentNode,
+    _nodeTree,
+    _newFocusedNodeUid,
+  );
+
+  _newFocusedNodeUid = newFocusedNode;
+
+  // ---------------------- iframe side effect ----------------------
+  // build element to replace
+
+  replaceElementInIframe(
+    originalNode,
+    formattedContent,
+    nodeUids,
+    codeChange,
+    tree,
+  );
+
+  fileData.content = replaceContentByFormatted(
+    file.content,
+    start,
+    end,
+    formattedContent,
+  );
+
   return { _nodeMaxUid, _newFocusedNodeUid };
 };

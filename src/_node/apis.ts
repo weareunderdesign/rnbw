@@ -18,6 +18,8 @@ import {
   TNodeUid,
   TNormalNodeData,
 } from "./types";
+import { TFile } from "@_types/main";
+import { TFileNodeData } from "./file";
 
 export const getSubNodeUidsByBfs = (
   uid: TNodeUid,
@@ -248,10 +250,12 @@ export const removeNode = (
   tree: TNodeTreeData,
   uids: TNodeUid[],
   treeType: TNodeTreeContext,
+  fileData: TFileNodeData,
+  file: TFile,
 ): TNodeApiResponse => {
   let validPrevNodeUid = "" as TNodeUid;
   const deletedUids: TNodeUid[] = [];
-
+  let prevStartIndex = 0;
   uids.map((uid) => {
     const node = tree[uid];
     const parentNode = tree[node.parentUid as TNodeUid];
@@ -265,6 +269,9 @@ export const removeNode = (
       if (prevNodeUid !== "") {
         const prevNode = tree[prevNodeUid];
         if ((prevNode.data as THtmlNodeData).isFormatText) {
+          prevStartIndex =
+            (prevNode.data as THtmlNodeData).endIndex -
+            (prevNode.data as THtmlNodeData).startIndex;
           delete tree[prevNodeUid];
           parentNode.children = parentNode.children.filter(
             (childUid) => childUid !== prevNodeUid,
@@ -281,6 +288,21 @@ export const removeNode = (
 
     // remove nest nodes
     const subUids = getSubNodeUidsByBfs(uid, tree);
+
+    fileData.content = replaceContentByFormatted(
+      file.content,
+      (tree[uid].data as THtmlNodeData).startIndex - prevStartIndex - 1,
+      (tree[uid].data as THtmlNodeData).endIndex,
+      "",
+    );
+
+    updateExistingTree(
+      tree,
+      (tree[uid].data as THtmlNodeData).startIndex - prevStartIndex - 1,
+      (tree[uid].data as THtmlNodeData).endIndex,
+      "",
+    );
+
     subUids.map((subUid) => {
       delete tree[subUid];
     });
@@ -647,6 +669,7 @@ export const moveNode = (
     position: _position,
   };
 };
+
 export const duplicateNode = (
   tree: TNodeTreeData,
   uids: TNodeUid[],
@@ -723,3 +746,47 @@ export const duplicateNode = (
 
   return { tree, nodeMaxUid: String(_nodeMaxUid) as TNodeUid, addedUidMap };
 };
+
+export const updateExistingTree = (
+  _nodeTree: TNodeTreeData,
+  start: number,
+  end: number,
+  formattedContent: string,
+) => {
+  const diff = formattedContent.length - (end - start) - 1;
+
+  for (const key in _nodeTree) {
+    if ((_nodeTree[key].data as THtmlNodeData).startIndex > start) {
+      (_nodeTree[key].data as THtmlNodeData).startIndex += diff;
+    }
+
+    if ((_nodeTree[key].data as THtmlNodeData).endIndex > end) {
+      (_nodeTree[key].data as THtmlNodeData).endIndex += diff;
+    }
+  }
+};
+
+export function replaceContentByFormatted(
+  inputString: string,
+  startIndex: number,
+  endIndex: number,
+  replacement: string,
+) {
+  if (
+    typeof inputString !== "string" ||
+    startIndex < 0 ||
+    endIndex < 0 ||
+    startIndex >= inputString.length ||
+    endIndex >= inputString.length
+  ) {
+    // Check if inputString is a string and indices are valid
+    return inputString;
+  }
+
+  const prefix = inputString.slice(0, startIndex);
+  const suffix = inputString.slice(endIndex + 1);
+
+  const replacedString = prefix + replacement + suffix;
+
+  return replacedString;
+}

@@ -49,6 +49,7 @@ export const useProcessorUpdateOpt = () => {
     // code view
     setCodeEditing,
     codeChanges,
+    setCodeChanges,
     setNewFocusedNodeUid,
     // processor
     updateOpt,
@@ -133,7 +134,7 @@ export const useProcessorUpdateOpt = () => {
               _nodeMaxUid,
               _newFocusedNodeUid,
             );
-
+            setCodeChanges([]);
             _nodeMaxUid = result._nodeMaxUid;
             _newFocusedNodeUid = result._newFocusedNodeUid;
           }
