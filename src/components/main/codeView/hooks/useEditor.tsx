@@ -236,17 +236,15 @@ export default function useEditor() {
             startColumn !== 0 ? startColumn - 1 : 0,
           ),
         );
-        for (
-          let line = startLineNumber - 1 + 1;
-          line < endLineNumber - 1;
-          ++line
-        ) {
+        for (let line = startLineNumber; line < endLineNumber; ++line) {
           partCodeArr.push(currentCodeArr[line]);
         }
-        endLineNumber > startLineNumber &&
-          partCodeArr.push(
-            currentCodeArr[endLineNumber - 1].slice(0, endColumn - 1),
-          );
+
+        // endLineNumber > startLineNumber &&
+        //   partCodeArr.push(
+        //     currentCodeArr[endLineNumber - 1].slice(0, endColumn),
+        //   );
+
         const content = partCodeArr.join(getLineBreaker(osType));
 
         uid = notParsingFlag ? _parent : uid;
@@ -258,7 +256,7 @@ export default function useEditor() {
         setCodeChanges(codeChanges);
 
         // update
-        dispatch(setCurrentFileContent(codeContent.current));
+        // dispatch(setCurrentFileContent(codeContent.current));
         addRunningActions(["processor-updateOpt"]);
         setUpdateOpt({ parse: true, from: "code" });
 
