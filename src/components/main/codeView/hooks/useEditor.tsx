@@ -17,6 +17,7 @@ import { TCodeChange } from "@_types/main";
 import { TFileNodeData } from "@_node/file";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
+import { detectSeedNodeChanges } from "@_components/main/process/helpers";
 
 function getLanguageFromExtension(extension: string) {
   switch (extension) {
@@ -50,6 +51,7 @@ export default function useEditor() {
     setUpdateOpt,
     setFSPending,
     setFFTree,
+    nodeTree,
   } = useContext(MainContext);
   const { file } = useSelector(navigatorSelector);
 
@@ -256,6 +258,11 @@ export default function useEditor() {
 
       if (hasMismatchedTags === false) {
         setCodeChanges(codeChanges);
+        let _nodeTree: TNodeTreeData = structuredClone(nodeTree);
+
+        if (detectSeedNodeChanges(_nodeTree, codeChanges)) {
+          dispatch(setCurrentFileContent(codeContent.current));
+        }
 
         // update
         // dispatch(setCurrentFileContent(codeContent.current));
