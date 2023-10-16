@@ -185,6 +185,7 @@ export default function useEditor() {
       const monacoEditor = getCurrentEditorInstance();
       for (const codeChange of codeChangeDecorationRef.current.entries()) {
         let uid = codeChange[0];
+
         // check if editing tags are <code> or <pre>
         let _parent = uid;
         if (validNodeTree[uid] === undefined) return;
@@ -209,6 +210,7 @@ export default function useEditor() {
         }
         let { startLineNumber, startColumn, endLineNumber, endColumn } =
           codeChange[1][0].range;
+
         if (notParsingFlag) {
           if (validNodeTree[_parent]) {
             const { startIndex, endIndex } = validNodeTree[_parent]
@@ -236,17 +238,15 @@ export default function useEditor() {
             startColumn !== 0 ? startColumn - 1 : 0,
           ),
         );
-        for (
-          let line = startLineNumber - 1 + 1;
-          line < endLineNumber - 1;
-          ++line
-        ) {
+        for (let line = startLineNumber; line < endLineNumber; ++line) {
           partCodeArr.push(currentCodeArr[line]);
         }
-        endLineNumber > startLineNumber &&
-          partCodeArr.push(
-            currentCodeArr[endLineNumber - 1].slice(0, endColumn - 1),
-          );
+
+        // endLineNumber > startLineNumber &&
+        //   partCodeArr.push(
+        //     currentCodeArr[endLineNumber - 1].slice(0, endColumn),
+        //   );
+
         const content = partCodeArr.join(getLineBreaker(osType));
 
         uid = notParsingFlag ? _parent : uid;
@@ -258,7 +258,7 @@ export default function useEditor() {
         setCodeChanges(codeChanges);
 
         // update
-        dispatch(setCurrentFileContent(codeContent.current));
+        // dispatch(setCurrentFileContent(codeContent.current));
         addRunningActions(["processor-updateOpt"]);
         setUpdateOpt({ parse: true, from: "code" });
 
@@ -308,9 +308,7 @@ export default function useEditor() {
       if (parseFileFlag) {
         const hasFocus = monacoEditor?.hasTextFocus();
 
-        if (!hasFocus) return;
-
-        if (!focusedNode) return;
+        if (!hasFocus || !focusedNode) return;
 
         // get changed part
         const { eol } = ev;
@@ -331,7 +329,6 @@ export default function useEditor() {
           delay = 1;
         }
         const o_rowCount = o_range.endLineNumber - o_range.startLineNumber + 1;
-
         const changedCodeArr = changedCode.split(eol);
         const n_rowCount = changedCodeArr.length;
         const n_range: IRange = {
@@ -341,7 +338,7 @@ export default function useEditor() {
           endColumn:
             n_rowCount === 1
               ? o_range.startColumn + changedCode.length
-              : (changedCodeArr.pop() as string).length + 1,
+              : changedCodeArr[changedCodeArr.length - 1].length + 1,
         };
         const columnOffset =
           (o_rowCount === 1 && n_rowCount > 1 ? -1 : 1) *
@@ -461,8 +458,18 @@ export default function useEditor() {
             const focusedNodeCodeRange: IRange = {
               startLineNumber,
               startColumn,
-              endLineNumber,
-              endColumn,
+              endLineNumber:
+                n_rowCount === 1
+                  ? endLineNumber + n_rowCount - 1
+                  : n_rowCount === 2 && changedCodeArr[0] === ""
+                  ? endLineNumber
+                  : endLineNumber + n_rowCount,
+              endColumn:
+                endLineNumber === n_range.endLineNumber
+                  ? endColumn +
+                    changedCodeArr[changedCodeArr.length - 1].length +
+                    1
+                  : endColumn,
             };
             if (!completelyRemoved) {
               focusedNodeDecorations.push({
