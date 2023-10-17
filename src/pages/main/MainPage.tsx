@@ -10,6 +10,7 @@ import cx from "classnames";
 import { Command } from "cmdk";
 import { CustomDirectoryPickerOptions } from "file-system-access/lib/showDirectoryPicker";
 import { delMany, getMany, setMany } from "idb-keyval";
+import { editor } from "monaco-editor";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useParams } from "react-router-dom";
 
@@ -87,7 +88,6 @@ import {
 
 import { getCommandKey } from "../../services/global";
 import { MainPageProps } from "./types";
-import { editor } from "monaco-editor";
 
 export default function MainPage(props: MainPageProps) {
   // -------------------------------------------------------------- redux  --------------------------------------------------------------
