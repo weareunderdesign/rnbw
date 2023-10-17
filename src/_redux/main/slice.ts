@@ -5,6 +5,7 @@ import {
   HmsClearActionType,
   HmsRedoActionType,
   HmsUndoActionType,
+  RainbowAppName,
   RootNodeUid,
 } from "@_constants/main";
 import { TNodeUid } from "@_node/types";
@@ -64,6 +65,14 @@ const slice = createSlice({
     // navigator
     setCurrentFile(state, action: PayloadAction<TFile>) {
       const payload = action.payload;
+
+      if (payload.uid === "") {
+        document.title = RainbowAppName;
+      } else if (!payload.uid?.endsWith(".html")) {
+        const extension = payload.uid.split(".").pop();
+        document.title = `${payload.name}.${extension}`;
+      }
+
       state.navigator.file = payload;
     },
     removeCurrentFile(state, action: PayloadAction) {

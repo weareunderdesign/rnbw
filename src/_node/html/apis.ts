@@ -241,6 +241,12 @@ export const parseHtml = (
       nodeData.children.map((child: THtmlDomNodeData) => {
         const uid = String(++_nodeMaxUid) as TNodeUid;
 
+        //set html file title as the app title
+        if (child.name === "title") {
+          let titleText = child?.children?.[0]?.data ?? "rnbw";
+          window.document.title = titleText;
+        }
+
         node.children.push(uid);
         node.isEntity = false;
 
