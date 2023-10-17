@@ -50,6 +50,7 @@ export default function useEditor() {
     setUpdateOpt,
     setFSPending,
     setFFTree,
+    monacoEditorRef,
     setMonacoEditorRef,
   } = useContext(MainContext);
   const { file } = useSelector(navigatorSelector);
@@ -69,8 +70,6 @@ export default function useEditor() {
   };
   const codeContent = useRef<string>("");
 
-  const monacoRef = useRef<editor.IStandaloneCodeEditor | null>(null);
-
   const codeChangeDecorationRef = useRef<
     Map<TNodeUid, editor.IModelDeltaDecoration[]>
   >(new Map<TNodeUid, editor.IModelDeltaDecoration[]>());
@@ -80,7 +79,6 @@ export default function useEditor() {
   const currentPosition = useRef<IPosition | null>(null);
 
   const handleEditorDidMount = (editor: editor.IStandaloneCodeEditor) => {
-    monacoRef.current = editor;
     setMonacoEditorRef(editor);
 
     setUpdateOpt({ parse: true, from: "file" });
@@ -88,7 +86,7 @@ export default function useEditor() {
       setTimeout(() => {
         if (event.reason === 2) {
           currentPosition.current &&
-            monacoRef.current?.setPosition(currentPosition.current);
+            monacoEditorRef.current?.setPosition(currentPosition.current);
         }
       }, 0);
     });
@@ -99,10 +97,6 @@ export default function useEditor() {
     const language = getLanguageFromExtension(extension);
     setLanguage(language);
   };
-
-  function getCurrentEditorInstance() {
-    return monacoRef.current;
-  }
 
   function getCodeChangeDecorationInstance() {
     return codeChangeDecorationRef.current;
@@ -186,7 +180,7 @@ export default function useEditor() {
       const currentCodeArr = currentCode.split(getLineBreaker(osType));
       const codeChanges: TCodeChange[] = [];
       let hasMismatchedTags = false;
-      const monacoEditor = getCurrentEditorInstance();
+      const monacoEditor = monacoEditorRef.current;
       for (const codeChange of codeChangeDecorationRef.current.entries()) {
         let uid = codeChange[0];
         // check if editing tags are <code> or <pre>
@@ -307,7 +301,7 @@ export default function useEditor() {
 
   const handleEditorChange = useCallback(
     (value: string | undefined, ev: editor.IModelContentChangedEvent) => {
-      const monacoEditor = getCurrentEditorInstance();
+      const monacoEditor = monacoEditorRef.current;
       let delay = 1;
       if (parseFileFlag) {
         const hasFocus = monacoEditor?.hasTextFocus();
@@ -535,7 +529,6 @@ export default function useEditor() {
   }, []);
 
   return {
-    getCurrentEditorInstance,
     getCodeChangeDecorationInstance,
     getValidNodeTreeInstance,
     decorationCollectionRef,

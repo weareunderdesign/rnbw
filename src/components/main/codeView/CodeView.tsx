@@ -47,13 +47,13 @@ export default function CodeView(props: CodeViewProps) {
     theme: _theme,
     parseFileFlag,
     showCodeView,
+    monacoEditorRef,
   } = useContext(MainContext);
   // -------------------------------------------------------------- references --------------------------------------------------------------
 
   // ----------------------------------------------------------custom Hooks---------------------------------------------------------------
   const { theme } = useTheme();
   const {
-    getCurrentEditorInstance,
     getValidNodeTreeInstance,
     handleEditorDidMount,
     language,
@@ -66,9 +66,7 @@ export default function CodeView(props: CodeViewProps) {
     setFocusedNode,
   } = useEditor();
 
-  const { editorWrapperRef, onPanelClick } = useEditorWrapper(
-    getCurrentEditorInstance(),
-  );
+  const { editorWrapperRef, onPanelClick } = useEditorWrapper();
   //-----------------------------------------
 
   const isFirst = useRef<boolean>(true);
@@ -111,7 +109,7 @@ export default function CodeView(props: CodeViewProps) {
   const revealed = useRef<boolean>(false);
 
   function hightlightFocusedNodeCodeBlock() {
-    const monacoEditor = getCurrentEditorInstance();
+    const monacoEditor = monacoEditorRef.current;
     const node = validNodeTree[focusedItem];
     const { startIndex, endIndex } = node.data as THtmlNodeData;
 
@@ -147,7 +145,7 @@ export default function CodeView(props: CodeViewProps) {
     if (codeEditing) return;
     // Convert the indices to positions
 
-    const monacoEditor = getCurrentEditorInstance();
+    const monacoEditor = monacoEditorRef.current;
     const node = validNodeTree[focusedItem];
     const { startIndex, endIndex } = node.data as THtmlNodeData;
 
@@ -155,7 +153,7 @@ export default function CodeView(props: CodeViewProps) {
 
     if (isFirst.current) {
       const firstTimer = setInterval(() => {
-        const monacoEditor = getCurrentEditorInstance();
+        const monacoEditor = monacoEditorRef.current;
         if (monacoEditor) {
           hightlightFocusedNodeCodeBlock();
           revealed.current = false;
@@ -175,7 +173,7 @@ export default function CodeView(props: CodeViewProps) {
   const [selection, setSelection] = useState<CodeSelection | null>(null);
 
   const updateSelection = useCallback(() => {
-    const monacoEditor = getCurrentEditorInstance();
+    const monacoEditor = monacoEditorRef.current;
     if (!parseFileFlag) return;
     const _selection = monacoEditor?.getSelection();
 
@@ -237,7 +235,7 @@ export default function CodeView(props: CodeViewProps) {
       revealed.current = false;
       return;
     }
-    const monacoEditor = getCurrentEditorInstance();
+    const monacoEditor = monacoEditorRef.current;
     if (selection) {
       let newFocusedNode = findNodeBySelection(
         selection,
