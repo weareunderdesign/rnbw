@@ -1,17 +1,9 @@
-import {
-  TCodeChange,
-  TFile,
-  TFileInfo,
-  TFileType,
-  TProject,
-} from "@_types/main";
+import { TCodeChange, TFile, TFileInfo, TProject } from "@_types/main";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import {
   THtmlNodeData,
   THtmlPageSettings,
-  THtmlReferenceData,
   parseHtmlCodePart,
-  // parseHtmlCodePart,
   serializeHtml,
 } from "@_node/html";
 import {
@@ -549,6 +541,7 @@ export const handleCodeChangeEffects = (
   _nodeTree: TNodeTreeData,
   _nodeMaxUid: number,
   _newFocusedNodeUid: string,
+  monacoEditor: editor.IStandaloneCodeEditor,
 ) => {
   // side effects
   codeChanges.map((codeChange: TCodeChange) => {
@@ -559,6 +552,7 @@ export const handleCodeChangeEffects = (
       _nodeTree,
       _nodeMaxUid,
       _newFocusedNodeUid,
+      monacoEditor,
     );
     _nodeMaxUid = result._nodeMaxUid;
     _newFocusedNodeUid = result._newFocusedNodeUid;
@@ -580,6 +574,7 @@ export const editingTextChanges = (
   _nodeTree: TNodeTreeData,
   _nodeMaxUid: number,
   _newFocusedNodeUid: string,
+  monacoEditor: editor.IStandaloneCodeEditor,
 ) => {
   // ---------------------- node tree side effect ----------------------
   // parse code part
@@ -601,6 +596,7 @@ export const editingTextChanges = (
     formattedContent,
     String(_nodeMaxUid) as TNodeUid,
     start,
+    monacoEditor,
   );
   _nodeMaxUid = Number(nodeMaxUid);
 

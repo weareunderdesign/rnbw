@@ -109,9 +109,8 @@ export const useProcessorUpdateOpt = () => {
             _nodeTree,
             codeChanges,
           );
-
-          if (isSeedNodeChanged) {
-            if (monacoEditor) {
+          if (monacoEditor) {
+            if (isSeedNodeChanged) {
               const { tree, newNodeMaxUid } = handleHtmlUpdate(
                 fileData,
                 file,
@@ -126,20 +125,21 @@ export const useProcessorUpdateOpt = () => {
 
               // reload iframe
               _needToReloadIFrame = true;
-            }
-          } else {
-            const result = handleCodeChangeEffects(
-              codeChanges,
-              fileData,
-              file,
+            } else {
+              const result = handleCodeChangeEffects(
+                codeChanges,
+                fileData,
+                file,
 
-              _nodeTree,
-              _nodeMaxUid,
-              _newFocusedNodeUid,
-            );
-            setCodeChanges([]);
-            _nodeMaxUid = result._nodeMaxUid;
-            _newFocusedNodeUid = result._newFocusedNodeUid;
+                _nodeTree,
+                _nodeMaxUid,
+                _newFocusedNodeUid,
+                monacoEditor,
+              );
+              setCodeChanges([]);
+              _nodeMaxUid = result._nodeMaxUid;
+              _newFocusedNodeUid = result._newFocusedNodeUid;
+            }
           }
         }
         updateOpt.from === "code" && setCodeEditing(false);

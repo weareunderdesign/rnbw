@@ -19,6 +19,7 @@ import {
 } from "../";
 import { THtmlDomNodeData, THtmlParserResponse } from "./types";
 import { editor } from "monaco-editor";
+import { getPositionFromIndex } from "@_services/htmlapi";
 
 const noNeedClosingTag = [
   "area",
@@ -314,6 +315,11 @@ export const parseHtml = (
           attribs: nodeData.attribs,
           startIndex: nodeData.startIndex,
           endIndex: nodeData.endIndex,
+          positions: getPositionFromIndex(
+            monacoEditor,
+            nodeData.startIndex,
+            nodeData.endIndex,
+          ),
         },
       };
     }
@@ -350,6 +356,7 @@ export const parseHtmlCodePart = (
   content: string,
   nodeMaxUid: TNodeUid = "",
   start: number = 0,
+  monacoEditor: editor.IStandaloneCodeEditor,
 ): THtmlParserResponse => {
   let _nodeMaxUid = Number(nodeMaxUid);
 
@@ -465,6 +472,11 @@ export const parseHtmlCodePart = (
           attribs: nodeData.attribs,
           startIndex: start + nodeData.startIndex,
           endIndex: start + nodeData.endIndex,
+          positions: getPositionFromIndex(
+            monacoEditor,
+            start + nodeData.startIndex,
+            start + nodeData.endIndex,
+          ),
         },
       };
     }
