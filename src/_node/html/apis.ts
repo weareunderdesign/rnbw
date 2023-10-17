@@ -1,4 +1,4 @@
-import * as htmlparser2 from "htmlparser2_sep";
+import * as htmlparser2 from "htmlparser2";
 import { Document } from "domhandler";
 import * as domutils from "domutils";
 import { NodeInAppAttribName, RootNodeUid } from "@_constants/main";
