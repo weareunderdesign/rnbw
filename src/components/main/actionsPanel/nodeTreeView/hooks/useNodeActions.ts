@@ -69,7 +69,6 @@ export function useNodeActions() {
           focusedItem,
           nodeType,
           htmlReferenceData,
-          osType,
         );
       let tempTree;
 

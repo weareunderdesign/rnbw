@@ -91,8 +91,6 @@ export const useProcessorUpdateOpt = () => {
           _nodeTree,
           _nodeMaxUid,
           file,
-          getReferenceData,
-          osType,
         );
 
         _nodeTree = tree;
@@ -113,8 +111,6 @@ export const useProcessorUpdateOpt = () => {
               file,
               _nodeTree,
               _nodeMaxUid,
-              osType,
-              htmlReferenceData,
               codeChanges,
               updateOpt,
             );
@@ -128,8 +124,7 @@ export const useProcessorUpdateOpt = () => {
               codeChanges,
               fileData,
               file,
-              osType,
-              htmlReferenceData,
+
               _nodeTree,
               _nodeMaxUid,
               _newFocusedNodeUid,
@@ -213,13 +208,7 @@ export const useProcessorUpdateOpt = () => {
       // serialize node tree data
       const _nodeTree: TNodeTreeData = JSON.parse(JSON.stringify(nodeTree));
       const _file = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode;
-      const fileData = getFileData(
-        _file,
-        updateOpt,
-        nodeTree,
-        getReferenceData,
-        osType,
-      );
+      const fileData = getFileData(_file, updateOpt, nodeTree);
 
       // update idb
       (async () => {

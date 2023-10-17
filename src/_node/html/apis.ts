@@ -186,8 +186,6 @@ let htmlContentInApp = "";
 
 export const parseHtml = (
   content: string,
-  htmlReferenceData: THtmlReferenceData,
-  osType: TOsType,
   keepNodeUids: null | boolean = false,
   nodeMaxUid: TNodeUid = "",
 ): THtmlParserResponse => {
@@ -329,11 +327,7 @@ export const parseHtml = (
   };
 };
 
-export const serializeHtml = (
-  tree: TNodeTreeData,
-  htmlReferenceData: THtmlReferenceData,
-  osType: TOsType,
-): THtmlNodeData => {
+export const serializeHtml = (tree: TNodeTreeData): THtmlNodeData => {
   // build html, htmlInApp
   let uids = getSubNodeUidsByBfs(RootNodeUid, tree);
   uids.reverse();

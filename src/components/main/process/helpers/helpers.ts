@@ -333,18 +333,11 @@ export const getFileData = (
   _file: TNode,
   updateOpt: TUpdateOptions,
   nodeTree: TNodeTreeData,
-  getReferenceData: (fileType: TFileType) => THtmlReferenceData,
-  osType: TOsType,
 ) => {
   const fileData = _file.data as TFileNodeData;
 
   if (updateOpt.from === "node") {
-    const serializedRes = serializeFile(
-      fileData.type,
-      nodeTree,
-      getReferenceData(fileData.type),
-      osType,
-    );
+    const serializedRes = serializeFile(fileData.type, nodeTree);
 
     if (fileData.type === "html") {
       const { html, htmlInApp } = serializedRes as THtmlNodeData;
@@ -363,20 +356,13 @@ export const handleFileUpdate = (
   _nodeTree: TNodeTreeData,
   _nodeMaxUid: number,
   file: TFile,
-  getReferenceData: (fileType: TFileType) => THtmlReferenceData,
-  osType: TOsType,
 ) => {
   const {
     formattedContent,
     contentInApp,
     tree,
     nodeMaxUid: newNodeMaxUid,
-  } = parseFile(
-    fileData.type,
-    file.content,
-    getReferenceData(fileData.type),
-    osType,
-  );
+  } = parseFile(fileData.type, file.content);
 
   fileData.content = formattedContent;
   fileData.contentInApp = contentInApp;
@@ -389,8 +375,6 @@ export const handleHtmlUpdate = (
   file: TFile,
   _nodeTree: TNodeTreeData,
   _nodeMaxUid: number,
-  osType: TOsType,
-  htmlReferenceData: THtmlReferenceData,
   codeChanges: TCodeChange[],
   updateOpt: TUpdateOptions,
 ) => {
@@ -403,11 +387,7 @@ export const handleHtmlUpdate = (
       nodeData.html = content;
     }
     // rebuild from new tree
-    const { html: formattedContent } = serializeHtml(
-      _nodeTree,
-      htmlReferenceData,
-      osType,
-    );
+    const { html: formattedContent } = serializeHtml(_nodeTree);
     fileContent = formattedContent;
   }
   const {
@@ -417,8 +397,6 @@ export const handleHtmlUpdate = (
   } = parseFile(
     fileData.type,
     fileContent,
-    htmlReferenceData,
-    osType,
     null,
     String(_nodeMaxUid) as TNodeUid,
   );
@@ -479,8 +457,6 @@ export const handleHmsChange = (
     } = parseFile(
       fileData.type,
       file.content,
-      getReferenceData(fileData.type),
-      osType,
       true,
       String(_nodeMaxUid) as TNodeUid,
     );
@@ -566,8 +542,6 @@ export const handleCodeChangeEffects = (
   codeChanges: TCodeChange[],
   fileData: TFileNodeData,
   file: TFile,
-  osType: TOsType,
-  htmlReferenceData: THtmlReferenceData,
   _nodeTree: TNodeTreeData,
   _nodeMaxUid: number,
   _newFocusedNodeUid: string,
@@ -588,11 +562,7 @@ export const handleCodeChangeEffects = (
 
   // rebuild from new tree
 
-  const { htmlInApp: contentInApp } = serializeHtml(
-    _nodeTree,
-    htmlReferenceData,
-    osType,
-  );
+  const { htmlInApp: contentInApp } = serializeHtml(_nodeTree);
 
   fileData.contentInApp = contentInApp;
   fileData.changed = fileData.content !== fileData.orgContent;

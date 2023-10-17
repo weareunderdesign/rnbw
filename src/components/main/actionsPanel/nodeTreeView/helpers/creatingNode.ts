@@ -3,7 +3,6 @@ import { parseHtmlCodePart, THtmlNodeData } from "@_node/index";
 import { THtmlReferenceData } from "@_node/html";
 
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
-import { TOsType } from "@_types/global";
 
 export const creatingNode = (
   nodeMaxUid: number,
@@ -11,7 +10,6 @@ export const creatingNode = (
   focusedItem: TNodeUid,
   nodeType: string,
   htmlReferenceData: THtmlReferenceData,
-  osType: TOsType,
 ) => {
   const newNode: TNode = {
     uid: String(nodeMaxUid + 1) as TNodeUid,
