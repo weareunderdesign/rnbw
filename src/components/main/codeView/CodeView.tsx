@@ -111,12 +111,12 @@ export default function CodeView(props: CodeViewProps) {
   function hightlightFocusedNodeCodeBlock() {
     const monacoEditor = monacoEditorRef.current;
     const node = validNodeTree[focusedItem];
-    const { startIndex, endIndex } = node.data as THtmlNodeData;
+    const { startIndex, endIndex, positions } = node.data as THtmlNodeData;
 
-    if (!startIndex || !endIndex || !monacoEditor) return;
+    if (!positions || !monacoEditor) return;
 
     const { startLineNumber, startColumn, endLineNumber, endColumn } =
-      getPositionFromIndex(monacoEditor, startIndex, endIndex);
+      positions;
     monacoEditor.setSelection({
       startLineNumber,
       startColumn,

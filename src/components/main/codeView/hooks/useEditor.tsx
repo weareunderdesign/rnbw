@@ -10,7 +10,7 @@ import { DefaultTabSize, RootNodeUid } from "@_constants/main";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import { getSubNodeUidsByBfs } from "@_node/apis";
 import { THtmlNodeData, checkValidHtml } from "@_node/html";
-import { getPositionFromIndex } from "@_services/htmlapi";
+
 import { CodeSelection } from "../types";
 import { getLineBreaker } from "@_services/global";
 import { TCodeChange } from "@_types/main";
@@ -123,18 +123,14 @@ export default function useEditor() {
       for (const uid of uids) {
         const node = validNodeTree[uid];
         const nodeData = node.data as THtmlNodeData;
-        const { startIndex, endIndex } = nodeData;
+        const { positions } = nodeData;
 
-        if (
-          !monacoEditor ||
-          startIndex === undefined ||
-          endIndex === undefined
-        ) {
+        if (!monacoEditor || !positions) {
           continue;
         }
 
         const { startLineNumber, startColumn, endLineNumber, endColumn } =
-          getPositionFromIndex(monacoEditor, startIndex, endIndex);
+          positions;
 
         const containFront =
           selection.startLineNumber === startLineNumber
@@ -209,19 +205,14 @@ export default function useEditor() {
           codeChange[1][0].range;
         if (notParsingFlag) {
           if (validNodeTree[_parent]) {
-            const { startIndex, endIndex } = validNodeTree[_parent]
-              .data as THtmlNodeData;
-            const editor = monacoEditor as editor.IStandaloneCodeEditor;
+            const { positions } = validNodeTree[_parent].data as THtmlNodeData;
+
             const {
               startLineNumber: startLine,
               startColumn: startCol,
               endLineNumber: endLine,
               endColumn: endCol,
-            } = getPositionFromIndex(
-              editor,
-              startIndex as number,
-              endIndex as number,
-            );
+            } = positions;
             startLineNumber = startLine;
             startColumn = startCol;
             endLineNumber = endLine;
@@ -356,24 +347,22 @@ export default function useEditor() {
           if (!node) return;
 
           const nodeData = node.data as THtmlNodeData;
-          const { startIndex, endIndex } = nodeData;
+          const { positions } = nodeData;
           const editor = monacoEditor;
           if (!editor) return;
 
-          if (startIndex === undefined || endIndex === undefined) return;
+          if (!positions) return;
 
           const { startLineNumber, startColumn, endLineNumber, endColumn } =
-            getPositionFromIndex(editor, startIndex, endIndex);
+            positions;
+
           const {
             startLineNumber: focusedNodeStartLineNumber,
             startColumn: focusedNodeStartColumn,
             endLineNumber: focusedNodeEndLineNumber,
             endColumn: focusedNodeEndColumn,
-          } = getPositionFromIndex(
-            editor,
-            focusedNodeData.startIndex as number,
-            focusedNodeData.endIndex as number,
-          );
+          } = focusedNodeData.positions;
+
           const containFront =
             focusedNodeStartLineNumber === startLineNumber
               ? focusedNodeStartColumn >= startColumn
@@ -388,11 +377,8 @@ export default function useEditor() {
             startColumn: nodeDataStartColumn,
             endLineNumber: nodeDataEndLineNumber,
             endColumn: nodeDataEndColumn,
-          } = getPositionFromIndex(
-            editor,
-            nodeData.startIndex as number,
-            nodeData.endIndex as number,
-          );
+          } = nodeData.positions;
+
           if (containFront && containBack) {
             nodeDataEndLineNumber += n_rowCount - o_rowCount;
             nodeDataEndColumn +=
@@ -448,14 +434,12 @@ export default function useEditor() {
         // update decorations
         if (validNodeTreeRef.current[focusedNode.uid]) {
           const focusedNodeDecorations: editor.IModelDeltaDecoration[] = [];
-          const { startIndex, endIndex } = validNodeTreeRef.current[
-            focusedNode.uid
-          ].data as THtmlNodeData;
-          const editor = monacoEditor;
-          if (!editor) return;
-          if (startIndex && endIndex) {
+          const { positions } = validNodeTreeRef.current[focusedNode.uid]
+            .data as THtmlNodeData;
+
+          if (!!positions) {
             const { startLineNumber, startColumn, endLineNumber, endColumn } =
-              getPositionFromIndex(editor, startIndex, endIndex);
+              positions;
             const focusedNodeCodeRange: IRange = {
               startLineNumber,
               startColumn,
