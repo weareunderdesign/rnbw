@@ -46,6 +46,7 @@ export default function CodeView(props: CodeViewProps) {
     updateOpt,
     theme: _theme,
     parseFileFlag,
+    showCodeView,
   } = useContext(MainContext);
   // -------------------------------------------------------------- references --------------------------------------------------------------
 
@@ -293,10 +294,11 @@ export default function CodeView(props: CodeViewProps) {
             top: props.offsetTop,
             left: props.offsetLeft,
             width: props.width,
-            height: props.height,
+            height: showCodeView ? props.height : "0px",
+            visibility: showCodeView ? "visible" : "hidden",
             zIndex: 999,
             overflow: "hidden",
-            minHeight: "180px",
+            minHeight: showCodeView ? "180px" : "0px",
           }}
           className={
             "border radius-s background-primary shadow" +
