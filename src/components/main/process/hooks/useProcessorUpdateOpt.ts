@@ -58,6 +58,7 @@ export const useProcessorUpdateOpt = () => {
     htmlReferenceData,
     // other
     osType,
+    monacoEditorRef,
   } = useContext(MainContext);
   // -------------------------------------------------------------- sync --------------------------------------------------------------
 
@@ -70,10 +71,11 @@ export const useProcessorUpdateOpt = () => {
   );
 
   useEffect(() => {
+    const monacoEditor = monacoEditorRef.current;
     if (updateOpt.parse === true) {
       let onlyRenderViewState = false;
       // parse file content
-      let _nodeTree: TNodeTreeData = JSON.parse(JSON.stringify(nodeTree));
+      let _nodeTree: TNodeTreeData = structuredClone(nodeTree);
       let _nodeMaxUid = nodeMaxUid;
       let _fileInfo: TFileInfo;
       let _needToReloadIFrame = false;
@@ -83,21 +85,24 @@ export const useProcessorUpdateOpt = () => {
       if (!ffTree[file.uid]) {
         return;
       }
-      const _file = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode;
+      const _file = structuredClone(ffTree[file.uid]) as TNode;
       const fileData = _file.data as TFileNodeData;
       if (updateOpt.from === "file") {
-        const { tree, newNodeMaxUid } = handleFileUpdate(
-          fileData,
-          _nodeTree,
-          _nodeMaxUid,
-          file,
-        );
+        if (monacoEditor) {
+          const { tree, newNodeMaxUid } = handleFileUpdate(
+            fileData,
+            _nodeTree,
+            _nodeMaxUid,
+            file,
+            monacoEditor,
+          );
 
-        _nodeTree = tree;
-        _nodeMaxUid = Number(newNodeMaxUid);
+          _nodeTree = tree;
+          _nodeMaxUid = Number(newNodeMaxUid);
 
-        // reload iframe
-        _needToReloadIFrame = true;
+          // reload iframe
+          _needToReloadIFrame = true;
+        }
       } else if (updateOpt.from === "code" || updateOpt.from === "stage") {
         if (fileData.type === "html") {
           const isSeedNodeChanged = detectSeedNodeChanges(
@@ -106,19 +111,22 @@ export const useProcessorUpdateOpt = () => {
           );
 
           if (isSeedNodeChanged) {
-            const { tree, newNodeMaxUid } = handleHtmlUpdate(
-              fileData,
-              file,
-              _nodeTree,
-              _nodeMaxUid,
-              codeChanges,
-              updateOpt,
-            );
-            _nodeTree = tree;
-            _nodeMaxUid = Number(newNodeMaxUid);
+            if (monacoEditor) {
+              const { tree, newNodeMaxUid } = handleHtmlUpdate(
+                fileData,
+                file,
+                _nodeTree,
+                _nodeMaxUid,
+                codeChanges,
+                updateOpt,
+                monacoEditor,
+              );
+              _nodeTree = tree;
+              _nodeMaxUid = Number(newNodeMaxUid);
 
-            // reload iframe
-            _needToReloadIFrame = true;
+              // reload iframe
+              _needToReloadIFrame = true;
+            }
           } else {
             const result = handleCodeChangeEffects(
               codeChanges,
@@ -136,30 +144,32 @@ export const useProcessorUpdateOpt = () => {
         }
         updateOpt.from === "code" && setCodeEditing(false);
       } else if (updateOpt.from === "hms") {
-        const result = handleHmsChange(
-          fileData,
-          { file, focusedItem },
-          {
-            ffTree,
-            nodeTree,
-            osType,
-            currentFileUid,
-          },
-          {
-            _nodeTree,
-            _nodeMaxUid,
-            _needToReloadIFrame,
-            _newFocusedNodeUid,
-            onlyRenderViewState,
-            tempFocusedItem,
-          },
-          getReferenceData,
-        );
+        if (monacoEditor) {
+          const result = handleHmsChange(
+            fileData,
+            { file, focusedItem },
+            {
+              ffTree,
+              nodeTree,
+              osType,
+              currentFileUid,
+            },
+            {
+              _nodeTree,
+              _nodeMaxUid,
+              _needToReloadIFrame,
+              _newFocusedNodeUid,
+              onlyRenderViewState,
+              tempFocusedItem,
+            },
+            monacoEditor,
+          );
 
-        onlyRenderViewState = result.onlyRenderViewState;
-        _nodeTree = result._nodeTree;
-        _nodeMaxUid = result._nodeMaxUid;
-        _newFocusedNodeUid = result._newFocusedNodeUid;
+          onlyRenderViewState = result.onlyRenderViewState;
+          _nodeTree = result._nodeTree;
+          _nodeMaxUid = result._nodeMaxUid;
+          _newFocusedNodeUid = result._newFocusedNodeUid;
+        }
       }
       // get file info from node tree
 

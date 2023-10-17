@@ -36,6 +36,7 @@ import {
 } from "@_node/file";
 import { TUpdateOptions } from "@_redux/main/types";
 import { TOsType } from "@_types/global";
+import { editor } from "monaco-editor";
 
 export const saveFileContent = async (
   project: TProject,
@@ -356,13 +357,14 @@ export const handleFileUpdate = (
   _nodeTree: TNodeTreeData,
   _nodeMaxUid: number,
   file: TFile,
+  monacoEditor: editor.IStandaloneCodeEditor,
 ) => {
   const {
     formattedContent,
     contentInApp,
     tree,
     nodeMaxUid: newNodeMaxUid,
-  } = parseFile(fileData.type, file.content);
+  } = parseFile({ type: fileData.type, content: file.content, monacoEditor });
 
   fileData.content = formattedContent;
   fileData.contentInApp = contentInApp;
@@ -377,6 +379,7 @@ export const handleHtmlUpdate = (
   _nodeMaxUid: number,
   codeChanges: TCodeChange[],
   updateOpt: TUpdateOptions,
+  monacoEditor: editor.IStandaloneCodeEditor,
 ) => {
   let fileContent = file.content;
   if (updateOpt.from === "stage") {
@@ -394,12 +397,12 @@ export const handleHtmlUpdate = (
     contentInApp,
     tree,
     nodeMaxUid: newNodeMaxUid,
-  } = parseFile(
-    fileData.type,
-    fileContent,
-    null,
-    String(_nodeMaxUid) as TNodeUid,
-  );
+  } = parseFile({
+    type: fileData.type,
+    content: fileContent,
+    nodeMaxUid: String(_nodeMaxUid) as TNodeUid,
+    monacoEditor,
+  });
 
   fileData.content = fileContent;
   fileData.contentInApp = contentInApp;
@@ -424,7 +427,7 @@ export const handleHmsChange = (
     onlyRenderViewState: boolean;
     tempFocusedItem: string;
   },
-  getReferenceData: (fileType: TFileType) => THtmlReferenceData,
+  monacoEditor: editor.IStandaloneCodeEditor,
 ) => {
   const { file, focusedItem } = state;
   const { ffTree, nodeTree, osType, currentFileUid } = context;
@@ -454,12 +457,13 @@ export const handleHmsChange = (
       contentInApp,
       tree,
       nodeMaxUid: newNodeMaxUid,
-    } = parseFile(
-      fileData.type,
-      file.content,
-      true,
-      String(_nodeMaxUid) as TNodeUid,
-    );
+    } = parseFile({
+      type: fileData.type,
+      content: file.content,
+      keepNodeUids: true,
+      nodeMaxUid: String(_nodeMaxUid) as TNodeUid,
+      monacoEditor,
+    });
     _nodeTree = tree;
     _nodeMaxUid = Number(newNodeMaxUid);
     fileData.content = formattedContent;

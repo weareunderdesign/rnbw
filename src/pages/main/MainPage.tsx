@@ -87,6 +87,7 @@ import {
 
 import { getCommandKey } from "../../services/global";
 import { MainPageProps } from "./types";
+import { editor } from "monaco-editor";
 
 export default function MainPage(props: MainPageProps) {
   // -------------------------------------------------------------- redux  --------------------------------------------------------------
@@ -220,6 +221,13 @@ export default function MainPage(props: MainPageProps) {
   const [codeChanges, setCodeChanges] = useState<TCodeChange[]>([]);
   const [tabSize, setTabSize] = useState<number>(DefaultTabSize);
   const [newFocusedNodeUid, setNewFocusedNodeUid] = useState<TNodeUid>("");
+  const monacoEditorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  const setMonacoEditorRef = (
+    editorInstance: editor.IStandaloneCodeEditor | null,
+  ) => {
+    monacoEditorRef.current = editorInstance;
+  };
+
   // processor
   const [updateOpt, setUpdateOpt] = useState<TUpdateOptions>({
     parse: null,
@@ -1699,6 +1707,8 @@ export default function MainPage(props: MainPageProps) {
           setPrevFileUid,
           // close all panel
           closeAllPanel,
+          monacoEditorRef,
+          setMonacoEditorRef,
         }}
       >
         {/* process */}

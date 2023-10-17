@@ -50,6 +50,7 @@ export default function useEditor() {
     setUpdateOpt,
     setFSPending,
     setFFTree,
+    setMonacoEditorRef,
   } = useContext(MainContext);
   const { file } = useSelector(navigatorSelector);
 
@@ -80,6 +81,9 @@ export default function useEditor() {
 
   const handleEditorDidMount = (editor: editor.IStandaloneCodeEditor) => {
     monacoRef.current = editor;
+    setMonacoEditorRef(editor);
+
+    setUpdateOpt({ parse: true, from: "file" });
     editor.onDidChangeCursorPosition((event) => {
       setTimeout(() => {
         if (event.reason === 2) {

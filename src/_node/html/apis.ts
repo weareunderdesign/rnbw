@@ -17,11 +17,8 @@ import {
   TNodeTreeData,
   TNodeUid,
 } from "../";
-import {
-  THtmlDomNodeData,
-  THtmlParserResponse,
-  THtmlReferenceData,
-} from "./types";
+import { THtmlDomNodeData, THtmlParserResponse } from "./types";
+import { editor } from "monaco-editor";
 
 const noNeedClosingTag = [
   "area",
@@ -188,6 +185,7 @@ export const parseHtml = (
   content: string,
   keepNodeUids: null | boolean = false,
   nodeMaxUid: TNodeUid = "",
+  monacoEditor: editor.IStandaloneCodeEditor,
 ): THtmlParserResponse => {
   let _nodeMaxUid = keepNodeUids === false ? 0 : Number(nodeMaxUid);
   // parse the html content
