@@ -10,7 +10,7 @@ import { DefaultTabSize, RootNodeUid } from "@_constants/main";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import { getSubNodeUidsByBfs } from "@_node/apis";
 import { THtmlNodeData, checkValidHtml } from "@_node/html";
-
+import { getPositionFromIndex } from "@_services/htmlapi";
 import { CodeSelection } from "../types";
 import { getLineBreaker } from "@_services/global";
 import { TCodeChange } from "@_types/main";
@@ -70,6 +70,8 @@ export default function useEditor() {
   };
   const codeContent = useRef<string>("");
 
+  const monacoRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+
   const codeChangeDecorationRef = useRef<
     Map<TNodeUid, editor.IModelDeltaDecoration[]>
   >(new Map<TNodeUid, editor.IModelDeltaDecoration[]>());
@@ -79,6 +81,7 @@ export default function useEditor() {
   const currentPosition = useRef<IPosition | null>(null);
 
   const handleEditorDidMount = (editor: editor.IStandaloneCodeEditor) => {
+    monacoRef.current = editor;
     setMonacoEditorRef(editor);
 
     setUpdateOpt({ parse: true, from: "file" });
@@ -86,7 +89,7 @@ export default function useEditor() {
       setTimeout(() => {
         if (event.reason === 2) {
           currentPosition.current &&
-            monacoEditorRef.current?.setPosition(currentPosition.current);
+            monacoRef.current?.setPosition(currentPosition.current);
         }
       }, 0);
     });
@@ -97,6 +100,10 @@ export default function useEditor() {
     const language = getLanguageFromExtension(extension);
     setLanguage(language);
   };
+
+  function getCurrentEditorInstance() {
+    return monacoRef.current;
+  }
 
   function getCodeChangeDecorationInstance() {
     return codeChangeDecorationRef.current;
@@ -123,14 +130,18 @@ export default function useEditor() {
       for (const uid of uids) {
         const node = validNodeTree[uid];
         const nodeData = node.data as THtmlNodeData;
-        const { positions } = nodeData;
+        const { startIndex, endIndex } = nodeData;
 
-        if (!monacoEditor || !positions) {
+        if (
+          !monacoEditor ||
+          startIndex === undefined ||
+          endIndex === undefined
+        ) {
           continue;
         }
 
         const { startLineNumber, startColumn, endLineNumber, endColumn } =
-          positions;
+          getPositionFromIndex(monacoEditor, startIndex, endIndex);
 
         const containFront =
           selection.startLineNumber === startLineNumber
@@ -176,7 +187,7 @@ export default function useEditor() {
       const currentCodeArr = currentCode.split(getLineBreaker(osType));
       const codeChanges: TCodeChange[] = [];
       let hasMismatchedTags = false;
-      const monacoEditor = monacoEditorRef.current;
+      const monacoEditor = getCurrentEditorInstance();
       for (const codeChange of codeChangeDecorationRef.current.entries()) {
         let uid = codeChange[0];
 
@@ -207,14 +218,19 @@ export default function useEditor() {
 
         if (notParsingFlag) {
           if (validNodeTree[_parent]) {
-            const { positions } = validNodeTree[_parent].data as THtmlNodeData;
-
+            const { startIndex, endIndex } = validNodeTree[_parent]
+              .data as THtmlNodeData;
+            const editor = monacoEditor as editor.IStandaloneCodeEditor;
             const {
               startLineNumber: startLine,
               startColumn: startCol,
               endLineNumber: endLine,
               endColumn: endCol,
-            } = positions;
+            } = getPositionFromIndex(
+              editor,
+              startIndex as number,
+              endIndex as number,
+            );
             startLineNumber = startLine;
             startColumn = startCol;
             endLineNumber = endLine;
@@ -292,7 +308,7 @@ export default function useEditor() {
 
   const handleEditorChange = useCallback(
     (value: string | undefined, ev: editor.IModelContentChangedEvent) => {
-      const monacoEditor = monacoEditorRef.current;
+      const monacoEditor = getCurrentEditorInstance();
       let delay = 1;
       if (parseFileFlag) {
         const hasFocus = monacoEditor?.hasTextFocus();
@@ -344,22 +360,24 @@ export default function useEditor() {
           if (!node) return;
 
           const nodeData = node.data as THtmlNodeData;
-          const { positions } = nodeData;
+          const { startIndex, endIndex } = nodeData;
           const editor = monacoEditor;
           if (!editor) return;
 
-          if (!positions) return;
+          if (startIndex === undefined || endIndex === undefined) return;
 
           const { startLineNumber, startColumn, endLineNumber, endColumn } =
-            positions;
-
+            getPositionFromIndex(editor, startIndex, endIndex);
           const {
             startLineNumber: focusedNodeStartLineNumber,
             startColumn: focusedNodeStartColumn,
             endLineNumber: focusedNodeEndLineNumber,
             endColumn: focusedNodeEndColumn,
-          } = focusedNodeData.positions;
-
+          } = getPositionFromIndex(
+            editor,
+            focusedNodeData.startIndex as number,
+            focusedNodeData.endIndex as number,
+          );
           const containFront =
             focusedNodeStartLineNumber === startLineNumber
               ? focusedNodeStartColumn >= startColumn
@@ -374,8 +392,11 @@ export default function useEditor() {
             startColumn: nodeDataStartColumn,
             endLineNumber: nodeDataEndLineNumber,
             endColumn: nodeDataEndColumn,
-          } = nodeData.positions;
-
+          } = getPositionFromIndex(
+            editor,
+            nodeData.startIndex as number,
+            nodeData.endIndex as number,
+          );
           if (containFront && containBack) {
             nodeDataEndLineNumber += n_rowCount - o_rowCount;
             nodeDataEndColumn +=
@@ -431,12 +452,14 @@ export default function useEditor() {
         // update decorations
         if (validNodeTreeRef.current[focusedNode.uid]) {
           const focusedNodeDecorations: editor.IModelDeltaDecoration[] = [];
-          const { positions } = validNodeTreeRef.current[focusedNode.uid]
-            .data as THtmlNodeData;
-
-          if (!!positions) {
+          const { startIndex, endIndex } = validNodeTreeRef.current[
+            focusedNode.uid
+          ].data as THtmlNodeData;
+          const editor = monacoEditor;
+          if (!editor) return;
+          if (startIndex && endIndex) {
             const { startLineNumber, startColumn, endLineNumber, endColumn } =
-              positions;
+              getPositionFromIndex(editor, startIndex, endIndex);
             const focusedNodeCodeRange: IRange = {
               startLineNumber,
               startColumn,
@@ -520,6 +543,7 @@ export default function useEditor() {
   }, []);
 
   return {
+    getCurrentEditorInstance,
     getCodeChangeDecorationInstance,
     getValidNodeTreeInstance,
     decorationCollectionRef,
