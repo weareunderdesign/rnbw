@@ -16,11 +16,13 @@ import {
 } from "@_types/main";
 
 import {
+  IEditorRef,
   TCommand,
   TMainContext,
   TNavigatorDropDownType,
   TUpdateOptions,
 } from "./types";
+import { editor } from "monaco-editor";
 
 export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   // global action
@@ -140,4 +142,6 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   setParseFile: (parseFile: boolean) => {},
   prevFileUid: "",
   setPrevFileUid: (uid: string) => {},
+  monacoEditorRef: { current: null } as IEditorRef,
+  setMonacoEditorRef: (editor: editor.IStandaloneCodeEditor | null) => {},
 });

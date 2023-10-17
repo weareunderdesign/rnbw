@@ -20,6 +20,12 @@ export type THtmlNodeData = {
   endColumn?: number;
   startIndex: number;
   endIndex: number;
+  positions: {
+    startLineNumber: number;
+    startColumn: number;
+    endLineNumber: number;
+    endColumn: number;
+  };
 };
 export type THtmlNodeAttributes = {
   [attrName: string]: any;

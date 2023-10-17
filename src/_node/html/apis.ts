@@ -1,4 +1,4 @@
-import * as htmlparser2 from "htmlparser2_sep";
+import * as htmlparser2 from "htmlparser2";
 import { Document } from "domhandler";
 import * as domutils from "domutils";
 import { NodeInAppAttribName, RootNodeUid } from "@_constants/main";
@@ -17,11 +17,9 @@ import {
   TNodeTreeData,
   TNodeUid,
 } from "../";
-import {
-  THtmlDomNodeData,
-  THtmlParserResponse,
-  THtmlReferenceData,
-} from "./types";
+import { THtmlDomNodeData, THtmlParserResponse } from "./types";
+import { editor } from "monaco-editor";
+import { getPositionFromIndex } from "@_services/htmlapi";
 
 const noNeedClosingTag = [
   "area",
@@ -186,10 +184,9 @@ let htmlContentInApp = "";
 
 export const parseHtml = (
   content: string,
-  htmlReferenceData: THtmlReferenceData,
-  osType: TOsType,
   keepNodeUids: null | boolean = false,
   nodeMaxUid: TNodeUid = "",
+  monacoEditor: editor.IStandaloneCodeEditor,
 ): THtmlParserResponse => {
   let _nodeMaxUid = keepNodeUids === false ? 0 : Number(nodeMaxUid);
   // parse the html content
@@ -242,6 +239,12 @@ export const parseHtml = (
 
       nodeData.children.map((child: THtmlDomNodeData) => {
         const uid = String(++_nodeMaxUid) as TNodeUid;
+
+        //set html file title as the app title
+        if (child.name === "title") {
+          let titleText = child?.children?.[0]?.data ?? "rnbw";
+          window.document.title = titleText;
+        }
 
         node.children.push(uid);
         node.isEntity = false;
@@ -312,6 +315,11 @@ export const parseHtml = (
           attribs: nodeData.attribs,
           startIndex: nodeData.startIndex,
           endIndex: nodeData.endIndex,
+          positions: getPositionFromIndex(
+            monacoEditor,
+            nodeData.startIndex,
+            nodeData.endIndex,
+          ),
         },
       };
     }
@@ -329,11 +337,7 @@ export const parseHtml = (
   };
 };
 
-export const serializeHtml = (
-  tree: TNodeTreeData,
-  htmlReferenceData: THtmlReferenceData,
-  osType: TOsType,
-): THtmlNodeData => {
+export const serializeHtml = (tree: TNodeTreeData): THtmlNodeData => {
   // build html, htmlInApp
   let uids = getSubNodeUidsByBfs(RootNodeUid, tree);
   uids.reverse();
@@ -352,6 +356,7 @@ export const parseHtmlCodePart = (
   content: string,
   nodeMaxUid: TNodeUid = "",
   start: number = 0,
+  monacoEditor: editor.IStandaloneCodeEditor,
 ): THtmlParserResponse => {
   let _nodeMaxUid = Number(nodeMaxUid);
 
@@ -467,6 +472,11 @@ export const parseHtmlCodePart = (
           attribs: nodeData.attribs,
           startIndex: start + nodeData.startIndex,
           endIndex: start + nodeData.endIndex,
+          positions: getPositionFromIndex(
+            monacoEditor,
+            start + nodeData.startIndex,
+            start + nodeData.endIndex,
+          ),
         },
       };
     }

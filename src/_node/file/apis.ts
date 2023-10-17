@@ -30,6 +30,7 @@ import {
   TIDBFileInfoObj,
   TZipFileInfo,
 } from "./types";
+import { editor } from "monaco-editor";
 
 export const _fs = window.Filer.fs;
 export const _path = window.Filer.path;
@@ -605,22 +606,22 @@ export const getStat = async (path: string): Promise<any> => {
   });
 };
 
-export const parseFile = (
-  type: TFileType,
-  content: string,
-  referenceData: TNodeReferenceData,
-  osType: TOsType,
-  keepNodeUids: null | boolean = false,
-  nodeMaxUid: TNodeUid = "",
-): TFileParserResponse => {
+export const parseFile = (params: {
+  type: TFileType;
+  content: string;
+  keepNodeUids?: null | boolean;
+  nodeMaxUid?: TNodeUid;
+  monacoEditor: editor.IStandaloneCodeEditor;
+}): TFileParserResponse => {
+  const {
+    type,
+    content,
+    keepNodeUids = false,
+    nodeMaxUid = "",
+    monacoEditor,
+  } = params;
   if (type === "html") {
-    return parseHtml(
-      content,
-      referenceData as THtmlReferenceData,
-      osType,
-      keepNodeUids,
-      nodeMaxUid,
-    );
+    return parseHtml(content, keepNodeUids, nodeMaxUid, monacoEditor);
   } else {
     return {
       formattedContent: "",
@@ -633,11 +634,9 @@ export const parseFile = (
 export const serializeFile = (
   type: TFileType,
   tree: TNodeTreeData,
-  referenceData: TNodeReferenceData,
-  osType: TOsType,
 ): THtmlNodeData | string => {
   if (type === "html") {
-    return serializeHtml(tree, referenceData as THtmlReferenceData, osType);
+    return serializeHtml(tree);
   }
   return "";
 };

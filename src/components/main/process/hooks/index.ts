@@ -1,4 +1,3 @@
-export { useAppTitle } from "./useAppTitle";
 export { useProcessorNodeTree } from "./useProcessorNodeTree";
 export { useProcessorUpdateOpt } from "./useProcessorUpdateOpt";
 export { useProcessorValidNodeTree } from "./useProcessorValidNodeTree";
