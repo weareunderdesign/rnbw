@@ -252,7 +252,7 @@ export default function useEditor() {
         const content = partCodeArr.join(getLineBreaker(osType));
 
         uid = notParsingFlag ? _parent : uid;
-        checkValidHtml(codeContent.current);
+        hasMismatchedTags = checkValidHtml(codeContent.current);
         codeChanges.push({ uid, content });
       }
 
@@ -462,21 +462,22 @@ export default function useEditor() {
           if (startIndex && endIndex) {
             const { startLineNumber, startColumn, endLineNumber, endColumn } =
               getPositionFromIndex(editor, startIndex, endIndex);
+
+            let newEndLineNumber =
+              n_rowCount === 1
+                ? endLineNumber + n_rowCount - 1
+                : n_rowCount === 2 && changedCodeArr[0] === ""
+                ? endLineNumber
+                : endLineNumber + n_rowCount;
+            if (value === undefined) {
+              value = "";
+            }
+            const currentCodeArr = value?.split(getLineBreaker(osType));
             const focusedNodeCodeRange: IRange = {
               startLineNumber,
               startColumn,
-              endLineNumber:
-                n_rowCount === 1
-                  ? endLineNumber + n_rowCount - 1
-                  : n_rowCount === 2 && changedCodeArr[0] === ""
-                  ? endLineNumber
-                  : endLineNumber + n_rowCount,
-              endColumn:
-                endLineNumber === n_range.endLineNumber
-                  ? endColumn +
-                    changedCodeArr[changedCodeArr.length - 1].length +
-                    1
-                  : endColumn,
+              endLineNumber: newEndLineNumber,
+              endColumn: currentCodeArr[newEndLineNumber - 1].length + 3,
             };
             if (!completelyRemoved) {
               focusedNodeDecorations.push({
