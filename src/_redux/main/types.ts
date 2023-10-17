@@ -15,6 +15,7 @@ import {
   TProjectContext,
   TWorkspace,
 } from "@_types/main";
+import { editor } from "monaco-editor";
 
 export type TMainReducerState = {
   actionGroupIndex: number;
@@ -132,6 +133,10 @@ export type TMainContext = {
   setParseFile: (parseFile: boolean) => void;
   prevFileUid: string;
   setPrevFileUid: (uid: string) => void;
+  monacoEditorRef: IEditorRef;
+  setMonacoEditorRef: (
+    editorInstance: editor.IStandaloneCodeEditor | null,
+  ) => void;
 };
 export type TUpdateOptions = {
   parse: boolean | null;
@@ -166,3 +171,5 @@ export type TUpdateTreeViewStatePayload = {
   deletedUids?: TNodeUid[];
   convertedUids?: [TNodeUid, TNodeUid][];
 };
+
+export type IEditorRef = React.RefObject<editor.IStandaloneCodeEditor | null>;

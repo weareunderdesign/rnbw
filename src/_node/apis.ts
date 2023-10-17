@@ -338,7 +338,7 @@ export const copyNode = (
     // copy root node
     const newUid = String(++_nodeMaxUid) as TNodeUid;
 
-    const newNode = JSON.parse(JSON.stringify(node)) as TNode;
+    const newNode = structuredClone(node) as TNode;
     const parentNodeDepth = getNodeDepth(tree, newNode.parentUid as TNodeUid);
 
     newNode.uid = newUid;
@@ -382,7 +382,7 @@ export const copyNode = (
       subNode.children = subNode.children.map((childUid) => {
         const newChildUid = String(++_nodeMaxUid) as string;
 
-        const childNode = JSON.parse(JSON.stringify(tree[childUid])) as TNode;
+        const childNode = structuredClone(tree[childUid]) as TNode;
 
         childNode.uid = newChildUid;
         childNode.parentUid = subNode.uid;
@@ -456,7 +456,7 @@ export const copyNodeExternal = (
     // copy root node
     const newUid = String(++_nodeMaxUid) as TNodeUid;
 
-    const newNode = JSON.parse(JSON.stringify(node)) as TNode;
+    const newNode = structuredClone(node) as TNode;
 
     newNode.uid = newUid;
     newNode.parentUid = targetUid;
@@ -499,9 +499,7 @@ export const copyNodeExternal = (
       subNode.children = subNode.children.map((childUid) => {
         const newChildUid = String(++_nodeMaxUid) as string;
 
-        const childNode = JSON.parse(
-          JSON.stringify(prevTree[childUid]),
-        ) as TNode;
+        const childNode = structuredClone(prevTree[childUid]) as TNode;
 
         childNode.uid = newChildUid;
         childNode.parentUid = subNode.uid;
@@ -689,7 +687,7 @@ export const duplicateNode = (
 
     // duplicate root node
     const newUid = String(++_nodeMaxUid) as TNodeUid;
-    const newNode = JSON.parse(JSON.stringify(tree[uid])) as TNode;
+    const newNode = structuredClone(tree[uid]) as TNode;
     newNode.uid = newUid;
 
     if (treeType === "html") {
@@ -713,7 +711,7 @@ export const duplicateNode = (
       subNode.children = subNode.children.map((childUid) => {
         const newChildUid = String(++_nodeMaxUid) as string;
 
-        const childNode = JSON.parse(JSON.stringify(tree[childUid])) as TNode;
+        const childNode = structuredClone(tree[childUid]) as TNode;
 
         childNode.uid = newChildUid;
         childNode.parentUid = subNode.uid;

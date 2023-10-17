@@ -4,8 +4,8 @@ import { debounce } from "lodash";
 import { MainContext } from "@_redux/main";
 
 const resetEditorLayout = (
-  monacoEditor: editor.IStandaloneCodeEditor | null,
   editorWrapper: HTMLDivElement | null,
+  monacoEditor: editor.IStandaloneCodeEditor | null,
 ) => {
   if (!monacoEditor) return;
   monacoEditor.layout({ width: 0, height: 0 });
@@ -19,12 +19,10 @@ const resetEditorLayout = (
   });
 };
 
-export default function useEditorWrapper(
-  monacoEditor: editor.IStandaloneCodeEditor | null,
-) {
-  const { setActivePanel } = useContext(MainContext);
+export default function useEditorWrapper() {
+  const { setActivePanel, monacoEditorRef } = useContext(MainContext);
   const editorWrapperRef = useRef<HTMLDivElement>(null);
-
+  const monacoEditor = monacoEditorRef.current;
   // panel focus handler
   function onPanelClick() {
     setActivePanel("code");
@@ -32,7 +30,7 @@ export default function useEditorWrapper(
 
   useEffect(() => {
     const debounced = debounce(
-      () => resetEditorLayout(monacoEditor, editorWrapperRef.current),
+      () => resetEditorLayout(editorWrapperRef.current, monacoEditor),
       100,
     );
     const resizeObserver = new ResizeObserver(debounced);

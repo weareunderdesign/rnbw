@@ -87,6 +87,7 @@ import {
 
 import { getCommandKey } from "../../services/global";
 import { MainPageProps } from "./types";
+import { editor } from "monaco-editor";
 
 export default function MainPage(props: MainPageProps) {
   // -------------------------------------------------------------- redux  --------------------------------------------------------------
@@ -220,6 +221,13 @@ export default function MainPage(props: MainPageProps) {
   const [codeChanges, setCodeChanges] = useState<TCodeChange[]>([]);
   const [tabSize, setTabSize] = useState<number>(DefaultTabSize);
   const [newFocusedNodeUid, setNewFocusedNodeUid] = useState<TNodeUid>("");
+  const monacoEditorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  const setMonacoEditorRef = (
+    editorInstance: editor.IStandaloneCodeEditor | null,
+  ) => {
+    monacoEditorRef.current = editorInstance;
+  };
+
   // processor
   const [updateOpt, setUpdateOpt] = useState<TUpdateOptions>({
     parse: null,
@@ -589,13 +597,13 @@ export default function MainPage(props: MainPageProps) {
         break;
       case "New":
         onNew();
-        toogleCodeView()
+        toogleCodeView();
         // show actions panel by default
         !showActionsPanel && setShowActionsPanel(true);
         break;
       case "Open":
         onOpen();
-        toogleCodeView()
+        toogleCodeView();
         break;
       case "Theme":
         onToggleTheme();
@@ -754,7 +762,7 @@ export default function MainPage(props: MainPageProps) {
             setNavigatorDropDownType(null);
             if (internal) {
               // store last edit session
-              toogleCodeView()
+              toogleCodeView();
               const _recentProjectContext = [...recentProjectContext];
               const _recentProjectName = [...recentProjectName];
               const _recentProjectHandler = [...recentProjectHandler];
@@ -1699,6 +1707,8 @@ export default function MainPage(props: MainPageProps) {
           setPrevFileUid,
           // close all panel
           closeAllPanel,
+          monacoEditorRef,
+          setMonacoEditorRef,
         }}
       >
         {/* process */}
@@ -1721,7 +1731,7 @@ export default function MainPage(props: MainPageProps) {
             width={`${actionsPanelWidth}px`}
             height={`calc(100vh - ${actionsPanelOffsetTop * 2}px)`}
           />
-          {showCodeView && !needToReloadCodeView ? (
+          {!needToReloadCodeView ? (
             <CodeView
               offsetTop={`${codeViewOffsetTop}`}
               offsetBottom={codeViewOffsetBottom}

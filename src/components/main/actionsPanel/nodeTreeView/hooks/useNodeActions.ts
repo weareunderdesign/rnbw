@@ -55,10 +55,13 @@ export function useNodeActions() {
     ffTree,
     setFFNode,
     theme: _theme,
+    monacoEditorRef,
   } = useContext(MainContext);
 
   const cb_addNode = useCallback(
     (nodeType: string) => {
+      const monacoEditor = monacoEditorRef.current;
+      if (!monacoEditor) return;
       if (!nodeTree[focusedItem]) return;
       addRunningActions(["nodeTreeView-add"]);
 
@@ -69,7 +72,7 @@ export function useNodeActions() {
           focusedItem,
           nodeType,
           htmlReferenceData,
-          osType,
+          monacoEditor,
         );
       let tempTree;
 
@@ -132,7 +135,7 @@ export function useNodeActions() {
   const cb_removeNode = useCallback(
     (uids: TNodeUid[]) => {
       const allow = isRemovingAllowed(nodeTree, uids);
-      const _file = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode;
+      const _file = structuredClone(ffTree[file.uid]) as TNode;
       const fileData = _file.data as TFileNodeData;
 
       if (allow) {

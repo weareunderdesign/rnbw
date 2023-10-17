@@ -1,17 +1,9 @@
-import {
-  TCodeChange,
-  TFile,
-  TFileInfo,
-  TFileType,
-  TProject,
-} from "@_types/main";
+import { TCodeChange, TFile, TFileInfo, TProject } from "@_types/main";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import {
   THtmlNodeData,
   THtmlPageSettings,
-  THtmlReferenceData,
   parseHtmlCodePart,
-  // parseHtmlCodePart,
   serializeHtml,
 } from "@_node/html";
 import {
@@ -36,6 +28,7 @@ import {
 } from "@_node/file";
 import { TUpdateOptions } from "@_redux/main/types";
 import { TOsType } from "@_types/global";
+import { editor } from "monaco-editor";
 
 export const saveFileContent = async (
   project: TProject,
@@ -333,18 +326,11 @@ export const getFileData = (
   _file: TNode,
   updateOpt: TUpdateOptions,
   nodeTree: TNodeTreeData,
-  getReferenceData: (fileType: TFileType) => THtmlReferenceData,
-  osType: TOsType,
 ) => {
   const fileData = _file.data as TFileNodeData;
 
   if (updateOpt.from === "node") {
-    const serializedRes = serializeFile(
-      fileData.type,
-      nodeTree,
-      getReferenceData(fileData.type),
-      osType,
-    );
+    const serializedRes = serializeFile(fileData.type, nodeTree);
 
     if (fileData.type === "html") {
       const { html, htmlInApp } = serializedRes as THtmlNodeData;
@@ -363,20 +349,14 @@ export const handleFileUpdate = (
   _nodeTree: TNodeTreeData,
   _nodeMaxUid: number,
   file: TFile,
-  getReferenceData: (fileType: TFileType) => THtmlReferenceData,
-  osType: TOsType,
+  monacoEditor: editor.IStandaloneCodeEditor,
 ) => {
   const {
     formattedContent,
     contentInApp,
     tree,
     nodeMaxUid: newNodeMaxUid,
-  } = parseFile(
-    fileData.type,
-    file.content,
-    getReferenceData(fileData.type),
-    osType,
-  );
+  } = parseFile({ type: fileData.type, content: file.content, monacoEditor });
 
   fileData.content = formattedContent;
   fileData.contentInApp = contentInApp;
@@ -389,10 +369,9 @@ export const handleHtmlUpdate = (
   file: TFile,
   _nodeTree: TNodeTreeData,
   _nodeMaxUid: number,
-  osType: TOsType,
-  htmlReferenceData: THtmlReferenceData,
   codeChanges: TCodeChange[],
   updateOpt: TUpdateOptions,
+  monacoEditor: editor.IStandaloneCodeEditor,
 ) => {
   let fileContent = file.content;
   if (updateOpt.from === "stage") {
@@ -403,25 +382,19 @@ export const handleHtmlUpdate = (
       nodeData.html = content;
     }
     // rebuild from new tree
-    const { html: formattedContent } = serializeHtml(
-      _nodeTree,
-      htmlReferenceData,
-      osType,
-    );
+    const { html: formattedContent } = serializeHtml(_nodeTree);
     fileContent = formattedContent;
   }
   const {
     contentInApp,
     tree,
     nodeMaxUid: newNodeMaxUid,
-  } = parseFile(
-    fileData.type,
-    fileContent,
-    htmlReferenceData,
-    osType,
-    null,
-    String(_nodeMaxUid) as TNodeUid,
-  );
+  } = parseFile({
+    type: fileData.type,
+    content: fileContent,
+    nodeMaxUid: String(_nodeMaxUid) as TNodeUid,
+    monacoEditor,
+  });
 
   fileData.content = fileContent;
   fileData.contentInApp = contentInApp;
@@ -446,7 +419,7 @@ export const handleHmsChange = (
     onlyRenderViewState: boolean;
     tempFocusedItem: string;
   },
-  getReferenceData: (fileType: TFileType) => THtmlReferenceData,
+  monacoEditor: editor.IStandaloneCodeEditor,
 ) => {
   const { file, focusedItem } = state;
   const { ffTree, nodeTree, osType, currentFileUid } = context;
@@ -476,14 +449,13 @@ export const handleHmsChange = (
       contentInApp,
       tree,
       nodeMaxUid: newNodeMaxUid,
-    } = parseFile(
-      fileData.type,
-      file.content,
-      getReferenceData(fileData.type),
-      osType,
-      true,
-      String(_nodeMaxUid) as TNodeUid,
-    );
+    } = parseFile({
+      type: fileData.type,
+      content: file.content,
+      keepNodeUids: true,
+      nodeMaxUid: String(_nodeMaxUid) as TNodeUid,
+      monacoEditor,
+    });
     _nodeTree = tree;
     _nodeMaxUid = Number(newNodeMaxUid);
     fileData.content = formattedContent;
@@ -566,11 +538,10 @@ export const handleCodeChangeEffects = (
   codeChanges: TCodeChange[],
   fileData: TFileNodeData,
   file: TFile,
-  osType: TOsType,
-  htmlReferenceData: THtmlReferenceData,
   _nodeTree: TNodeTreeData,
   _nodeMaxUid: number,
   _newFocusedNodeUid: string,
+  monacoEditor: editor.IStandaloneCodeEditor,
 ) => {
   // side effects
   codeChanges.map((codeChange: TCodeChange) => {
@@ -581,6 +552,7 @@ export const handleCodeChangeEffects = (
       _nodeTree,
       _nodeMaxUid,
       _newFocusedNodeUid,
+      monacoEditor,
     );
     _nodeMaxUid = result._nodeMaxUid;
     _newFocusedNodeUid = result._newFocusedNodeUid;
@@ -588,11 +560,7 @@ export const handleCodeChangeEffects = (
 
   // rebuild from new tree
 
-  const { htmlInApp: contentInApp } = serializeHtml(
-    _nodeTree,
-    htmlReferenceData,
-    osType,
-  );
+  const { htmlInApp: contentInApp } = serializeHtml(_nodeTree);
 
   fileData.contentInApp = contentInApp;
   fileData.changed = fileData.content !== fileData.orgContent;
@@ -606,6 +574,7 @@ export const editingTextChanges = (
   _nodeTree: TNodeTreeData,
   _nodeMaxUid: number,
   _newFocusedNodeUid: string,
+  monacoEditor: editor.IStandaloneCodeEditor,
 ) => {
   // ---------------------- node tree side effect ----------------------
   // parse code part
@@ -627,6 +596,7 @@ export const editingTextChanges = (
     formattedContent,
     String(_nodeMaxUid) as TNodeUid,
     start,
+    monacoEditor,
   );
   _nodeMaxUid = Number(nodeMaxUid);
 

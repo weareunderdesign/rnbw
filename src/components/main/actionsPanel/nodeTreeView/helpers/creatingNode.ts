@@ -3,7 +3,7 @@ import { parseHtmlCodePart, THtmlNodeData } from "@_node/index";
 import { THtmlReferenceData } from "@_node/html";
 
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
-import { TOsType } from "@_types/global";
+import { editor } from "monaco-editor";
 
 export const creatingNode = (
   nodeMaxUid: number,
@@ -11,7 +11,7 @@ export const creatingNode = (
   focusedItem: TNodeUid,
   nodeType: string,
   htmlReferenceData: THtmlReferenceData,
-  osType: TOsType,
+  monacoEditor: editor.IStandaloneCodeEditor,
 ) => {
   const newNode: TNode = {
     uid: String(nodeMaxUid + 1) as TNodeUid,
@@ -75,6 +75,8 @@ export const creatingNode = (
       let parserRes = parseHtmlCodePart(
         Content,
         String(nodeMaxUid) as TNodeUid,
+        0,
+        monacoEditor,
       );
 
       const { tree, nodeMaxUid: newNodeMaxUid } = parserRes;

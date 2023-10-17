@@ -3,7 +3,6 @@ import React, { useMemo } from "react";
 import { ProcessProps } from "./types";
 
 import {
-  useAppTitle,
   useProcessorUpdateOpt,
   useProcessorNodeTree,
   useProcessorValidNodeTree,
@@ -11,9 +10,6 @@ import {
 } from "./hooks";
 
 export default function Process(props: ProcessProps) {
-  // set app title
-  useAppTitle();
-
   // processor-updateOpt
   useProcessorUpdateOpt();
 
