@@ -1535,7 +1535,7 @@ export default function MainPage(props: MainPageProps) {
   >();
   const [validMenuItemCount, setValidMenuItemCount] = useState<number>();
   useEffect(() => {
-    let hoveredMenuItemDetecter: NodeJS.Timer;
+    let hoveredMenuItemDetecter: NodeJS.Timeout;
     if (cmdkOpen) {
       // detect hovered menu item in cmdk modal if its open
       hoveredMenuItemDetecter = setInterval(() => {

@@ -7,7 +7,7 @@ import { MainContext } from "@_redux/main/context";
 import { LoaderProps } from "./types";
 
 export const Loader = (props: LoaderProps) => {
-  let paceTimer: NodeJS.Timer;
+  let paceTimer: NodeJS.Timeout;
   const [progress, setProgress] = useState(0);
   const animationName = useMemo(() => `loading-bar-animation`, []);
 
