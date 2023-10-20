@@ -52,7 +52,6 @@ export default function useEditor() {
     setFSPending,
     setFFTree,
     nodeTree,
-    monacoEditorRef,
     setMonacoEditorRef,
   } = useContext(MainContext);
   const { file } = useSelector(navigatorSelector);
@@ -118,6 +117,34 @@ export default function useEditor() {
   function onPanelClick() {
     setActivePanel("code");
   }
+
+  const getFocusedNodePosition = (
+    startIndex: number,
+    endIndex: number,
+    ev: editor.IModelContentChangedEvent,
+    monacoEditor: editor.IStandaloneCodeEditor,
+  ) => {
+    let newStartIndex = startIndex;
+    let newEndIndex = endIndex;
+
+    if (ev.changes[0].rangeOffset <= newStartIndex) {
+      newStartIndex += ev.changes[0].text.length - ev.changes[0].rangeLength;
+    }
+
+    if (ev.changes[0].rangeOffset + ev.changes[0].rangeLength <= newEndIndex) {
+      newEndIndex += ev.changes[0].text.length - ev.changes[0].rangeLength;
+    }
+
+    const { startLineNumber, startColumn, endLineNumber, endColumn } =
+      getPositionFromIndex(monacoEditor, newStartIndex, newEndIndex - 1);
+
+    return {
+      startLineNumber,
+      startColumn,
+      endLineNumber,
+      endColumn,
+    };
+  };
 
   function findNodeBySelection(
     selection: CodeSelection,
@@ -245,14 +272,14 @@ export default function useEditor() {
             startColumn !== 0 ? startColumn - 1 : 0,
           ),
         );
-        for (let line = startLineNumber; line < endLineNumber; ++line) {
+        for (let line = startLineNumber; line < endLineNumber - 1; ++line) {
           partCodeArr.push(currentCodeArr[line]);
         }
 
-        // endLineNumber > startLineNumber &&
-        //   partCodeArr.push(
-        //     currentCodeArr[endLineNumber - 1].slice(0, endColumn),
-        //   );
+        endLineNumber > startLineNumber &&
+          partCodeArr.push(
+            currentCodeArr[endLineNumber - 1].slice(0, endColumn),
+          );
 
         const content = partCodeArr.join(getLineBreaker(osType));
 
@@ -316,6 +343,7 @@ export default function useEditor() {
   const handleEditorChange = useCallback(
     (value: string | undefined, ev: editor.IModelContentChangedEvent) => {
       const monacoEditor = getCurrentEditorInstance();
+
       let delay = 1;
       if (parseFileFlag) {
         const hasFocus = monacoEditor?.hasTextFocus();
@@ -325,6 +353,7 @@ export default function useEditor() {
         // get changed part
         const { eol } = ev;
         const { range: o_range, text: changedCode } = ev.changes[0];
+
         if (
           (changedCode === " " ||
             changedCode === "=" ||
@@ -342,6 +371,7 @@ export default function useEditor() {
         }
         const o_rowCount = o_range.endLineNumber - o_range.startLineNumber + 1;
         const changedCodeArr = changedCode.split(eol);
+
         const n_rowCount = changedCodeArr.length;
         const n_range: IRange = {
           startLineNumber: o_range.startLineNumber,
@@ -439,6 +469,7 @@ export default function useEditor() {
               endLineNumber === o_range.endLineNumber ? columnOffset : 0;
           }
         });
+
         if (!completelyRemoved) {
           const subNodeUids = getSubNodeUidsByBfs(
             focusedNode.uid,
@@ -462,29 +493,18 @@ export default function useEditor() {
           const { startIndex, endIndex } = validNodeTreeRef.current[
             focusedNode.uid
           ].data as THtmlNodeData;
+
           const editor = monacoEditor;
           if (!editor) return;
+
           if (startIndex && endIndex) {
-            const { startLineNumber, startColumn, endLineNumber, endColumn } =
-              getPositionFromIndex(editor, startIndex, endIndex);
-            const focusedNodeCodeRange: IRange = {
-              startLineNumber,
-              startColumn,
-              endLineNumber:
-                n_rowCount === 1
-                  ? endLineNumber + n_rowCount - 1
-                  : n_rowCount === 2 && changedCodeArr[0] === ""
-                  ? endLineNumber
-                  : endLineNumber + n_rowCount,
-              endColumn:
-                endLineNumber === n_range.endLineNumber
-                  ? endColumn +
-                    changedCodeArr[changedCodeArr.length - 1].length +
-                    1
-                  : endColumn,
-              // endLineNumber: newEndLineNumber,
-              // endColumn: currentCodeArr[newEndLineNumber - 1].length + 3,
-            };
+            const focusedNodeCodeRange: IRange = getFocusedNodePosition(
+              startIndex,
+              endIndex,
+              ev,
+              monacoEditor,
+            );
+
             if (!completelyRemoved) {
               focusedNodeDecorations.push({
                 range: focusedNodeCodeRange,
