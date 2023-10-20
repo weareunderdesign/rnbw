@@ -19,6 +19,7 @@ import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { DomUtils } from "htmlparser2";
 import { styles } from "@_components/main/stageView/iFrame/styles";
+import { debounce } from "lodash";
 
 function getLanguageFromExtension(extension: string) {
   switch (extension) {
@@ -312,36 +313,42 @@ export default function useEditor() {
     }
   }, [ffTree, file.uid, validNodeTree, osType, parseFileFlag]);
 
+  const debouncedEditorUpdate = useCallback(
+    debounce((value: string) => {
+      const monacoEditor = getCurrentEditorInstance();
+      if (!monacoEditor) return;
+      const iframe: any = document.getElementById("iframeId");
+      const iframeDoc = iframe.contentDocument;
+      const iframeHtml = iframeDoc.getElementsByTagName("html")[0];
+      const { htmlDom, tree } = parseHtml(value, false, "", monacoEditor);
+
+      let bodyEle = null;
+      if (!htmlDom) return;
+      bodyEle = DomUtils.getInnerHTML(htmlDom);
+      if (!iframeHtml || !bodyEle) return;
+
+      try {
+        morphdom(iframeHtml, bodyEle);
+
+        setNodeTree(tree);
+      } catch (e) {
+        console.log(e);
+      }
+      const headNode = iframeDoc?.head;
+
+      // add rnbw css
+      const style = iframeDoc.createElement("style");
+      style.textContent = styles;
+      headNode.appendChild(style);
+    }, 1000),
+    [],
+  );
   const handleEditorChange = (
     value: string | undefined,
     ev: editor.IModelContentChangedEvent,
   ) => {
-    const monacoEditor = getCurrentEditorInstance();
-    if (!value || !monacoEditor) return;
-    const iframe: any = document.getElementById("iframeId");
-    const iframeDoc = iframe.contentDocument;
-    const iframeHtml = iframeDoc.getElementsByTagName("html")[0];
-    const { htmlDom, tree } = parseHtml(value, false, "", monacoEditor);
-
-    let bodyEle = null;
-    if (!htmlDom) return;
-    bodyEle = DomUtils.getInnerHTML(htmlDom);
-    if (!iframeHtml || !bodyEle) return;
-
-    try {
-      morphdom(iframeHtml, bodyEle);
-
-      setNodeTree(tree);
-    } catch (e) {
-      console.log(e);
-    }
-    const headNode = iframeDoc?.head;
-
-    // add rnbw css
-    const style = iframeDoc.createElement("style");
-    style.textContent = styles;
-    headNode.appendChild(style);
-
+    if (!value) return;
+    debouncedEditorUpdate(value);
     // setCodeEditing(true);
   };
   function updateFileContentOnRedux(
