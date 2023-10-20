@@ -340,6 +340,7 @@ export default function useEditor() {
       const style = iframeDoc.createElement("style");
       style.textContent = styles;
       headNode.appendChild(style);
+      setCodeEditing(false);
     }, 1000),
     [],
   );
@@ -349,6 +350,7 @@ export default function useEditor() {
   ) => {
     if (!value) return;
     debouncedEditorUpdate(value);
+    setCodeEditing(true);
     // setCodeEditing(true);
   };
   function updateFileContentOnRedux(
