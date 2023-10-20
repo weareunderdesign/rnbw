@@ -64,6 +64,8 @@ export default function CodeView(props: CodeViewProps) {
     handleEditorChange,
     focusedNode,
     setFocusedNode,
+    codeContent,
+    setCodeContent,
   } = useEditor();
 
   const { editorWrapperRef, onPanelClick } = useEditorWrapper();
@@ -71,7 +73,6 @@ export default function CodeView(props: CodeViewProps) {
 
   const isFirst = useRef<boolean>(true);
 
-  const [codeContent, setCodeContent] = useState<string>("");
   const previewDiv = useRef(null);
 
   // -------------------------------------------------------------- sync --------------------------------------------------------------
