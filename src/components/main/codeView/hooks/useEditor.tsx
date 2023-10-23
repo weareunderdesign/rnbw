@@ -328,7 +328,29 @@ export default function useEditor() {
       if (!iframeHtml || !bodyEle) return;
 
       try {
-        morphdom(iframeHtml, bodyEle);
+        morphdom(iframeHtml, bodyEle, {
+          onBeforeElUpdated: function (fromEl, toEl) {
+            if (fromEl.isEqualNode(toEl)) {
+              return false;
+            } else {
+              //check if the node is a custom element
+              if (toEl.nodeName.includes("-")) {
+                return false;
+              }
+              //check if the node is html
+              if (toEl.nodeName === "HTML") {
+                //copy the attributes
+                for (let i = 0; i < fromEl.attributes.length; i++) {
+                  toEl.setAttribute(
+                    fromEl.attributes[i].name,
+                    fromEl.attributes[i].value,
+                  );
+                }
+              }
+            }
+            return true;
+          },
+        });
 
         setNodeTree(tree);
       } catch (e) {
