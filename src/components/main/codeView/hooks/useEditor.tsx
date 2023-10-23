@@ -335,7 +335,8 @@ export default function useEditor() {
             } else {
               //check if the node is a custom element
               if (toEl.nodeName.includes("-")) {
-                return false;
+                //copy the content or template of the custom element
+                toEl.innerHTML = fromEl.innerHTML;
               }
               //check if the node is html
               if (toEl.nodeName === "HTML") {
@@ -351,8 +352,25 @@ export default function useEditor() {
             return true;
           },
         });
-
+        codeContentRef.current = value;
         setNodeTree(tree);
+
+        dispatch(setCurrentFileContent(codeContentRef.current));
+        setFSPending(false);
+        const _file = structuredClone(ffTree[file.uid]) as TNode;
+        addRunningActions(["processor-updateOpt"]);
+        const fileData = _file.data as TFileNodeData;
+        (ffTree[file.uid].data as TFileNodeData).content =
+          codeContentRef.current;
+        (ffTree[file.uid].data as TFileNodeData).contentInApp =
+          codeContentRef.current;
+        (ffTree[file.uid].data as TFileNodeData).changed =
+          codeContentRef.current !== fileData.orgContent;
+        setFFTree(ffTree);
+        dispatch(setCurrentFileContent(codeContentRef.current));
+        codeChangeDecorationRef.current.clear();
+        setCodeEditing(false);
+        setFSPending(false);
       } catch (e) {
         console.log(e);
       }
@@ -373,7 +391,6 @@ export default function useEditor() {
     if (!value) return;
     debouncedEditorUpdate(value);
     setCodeEditing(true);
-    // setCodeEditing(true);
   };
   function updateFileContentOnRedux(
     value: string | undefined,
