@@ -14,13 +14,6 @@ export type THtmlNodeData = {
 
   html: string;
   htmlInApp: string;
-
-  startLineNumber?: number;
-  startColumn?: number;
-  endLineNumber?: number;
-  endColumn?: number;
-  startIndex: number;
-  endIndex: number;
   positions: {
     startLineNumber: number;
     startColumn: number;

@@ -270,8 +270,8 @@ export const removeNode = (
         const prevNode = tree[prevNodeUid];
         if ((prevNode.data as THtmlNodeData).isFormatText) {
           prevStartIndex =
-            (prevNode.data as THtmlNodeData).endIndex -
-            (prevNode.data as THtmlNodeData).startIndex;
+            prevNode.sourceCodeLocation.endOffset -
+            prevNode.sourceCodeLocation.startOffset;
           delete tree[prevNodeUid];
           parentNode.children = parentNode.children.filter(
             (childUid) => childUid !== prevNodeUid,
@@ -291,15 +291,15 @@ export const removeNode = (
 
     fileData.content = replaceContentByFormatted(
       file.content,
-      (tree[uid].data as THtmlNodeData).startIndex - prevStartIndex - 1,
-      (tree[uid].data as THtmlNodeData).endIndex,
+      tree[uid].sourceCodeLocation.startOffset - prevStartIndex - 1,
+      tree[uid].sourceCodeLocation.endOffset,
       "",
     );
 
     updateExistingTree(
       tree,
-      (tree[uid].data as THtmlNodeData).startIndex - prevStartIndex - 1,
-      (tree[uid].data as THtmlNodeData).endIndex,
+      tree[uid].sourceCodeLocation.startOffset - prevStartIndex - 1,
+      tree[uid].sourceCodeLocation.endOffset,
       "",
     );
 
@@ -754,12 +754,12 @@ export const updateExistingTree = (
   const diff = formattedContent.length - (end - start) - 1;
 
   for (const key in _nodeTree) {
-    if ((_nodeTree[key].data as THtmlNodeData).startIndex > start) {
-      (_nodeTree[key].data as THtmlNodeData).startIndex += diff;
+    if (_nodeTree[key].sourceCodeLocation.startOffset > start) {
+      _nodeTree[key].sourceCodeLocation.startOffset += diff;
     }
 
-    if ((_nodeTree[key].data as THtmlNodeData).endIndex > end) {
-      (_nodeTree[key].data as THtmlNodeData).endIndex += diff;
+    if (_nodeTree[key].sourceCodeLocation.endOffset > end) {
+      _nodeTree[key].sourceCodeLocation.endOffset += diff;
     }
   }
 };
@@ -781,7 +781,7 @@ export function replaceContentByFormatted(
     return inputString;
   }
 
-  const prefix = inputString.slice(0, startIndex);
+  const prefix = inputString.slice(0, startIndex + 1);
   const suffix = inputString.slice(endIndex + 1);
 
   const replacedString = prefix + replacement + suffix;

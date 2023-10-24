@@ -1,5 +1,5 @@
 import * as parse5 from "parse5";
-import { Document } from "parse5/dist/tree-adapters/default";
+import { Document, DocumentFragment } from "parse5/dist/tree-adapters/default";
 import { NodeInAppAttribName, RootNodeUid } from "@_constants/main";
 // @ts-ignore
 import { getLineBreaker } from "@_services/global";
@@ -69,11 +69,6 @@ export const addFormatTextBeforeNode = (
 
       html: "",
       htmlInApp: "",
-
-      startLineNumber: 0,
-      startColumn: 0,
-      endLineNumber: 0,
-      endColumn: 0,
     } as THtmlNodeData,
     sourceCodeLocation: {
       startLine: 0,
@@ -137,11 +132,6 @@ export const addFormatTextAfterNode = (
 
       html: "",
       htmlInApp: "",
-
-      startLineNumber: 0,
-      startColumn: 0,
-      endLineNumber: 0,
-      endColumn: 0,
     } as THtmlNodeData,
     sourceCodeLocation: {
       startLine: 0,
@@ -248,6 +238,7 @@ export const parseHtml = (
         endCol = 0,
         endOffset = 0,
       } = node.sourceCodeLocation || {};
+
       tmpTree[RootNodeUid].children.push(uid);
       tmpTree[uid] = {
         uid,
@@ -261,7 +252,7 @@ export const parseHtml = (
           startCol,
           startOffset,
           endLine,
-          endCol,
+          endCol: endCol - 1,
           endOffset,
         },
       };
@@ -354,7 +345,7 @@ export const parseHtml = (
         data: {
           valid,
           isFormatText,
-          type: nodeData.type,
+          type: nodeData.nodeName,
           name: node.name,
           // data: data,
           attribs: nodeData.attrs ?? [],
@@ -397,7 +388,6 @@ export const parseHtmlCodePart = (
   content: string,
   nodeMaxUid: TNodeUid = "",
   start: number = 0,
-  monacoEditor: editor.IStandaloneCodeEditor,
 ): THtmlParserResponse => {
   let _nodeMaxUid = Number(nodeMaxUid);
 
@@ -405,14 +395,14 @@ export const parseHtmlCodePart = (
   const tmpTree: TNodeTreeData = {};
   const tree: TNodeTreeData = {};
 
-  const dom = parse5.parse(content, {
+  const dom = parse5.parseFragment(content, {
     sourceCodeLocationInfo: true,
     scriptingEnabled: true,
     onParseError: (err) => {},
   });
 
-  let appDom: Document;
-  function preprocessNodes(dom: Document) {
+  let appDom: DocumentFragment;
+  function preprocessNodes(dom: DocumentFragment) {
     appDom = dom;
 
     // build root node
@@ -449,7 +439,7 @@ export const parseHtmlCodePart = (
       tmpTree[uid] = {
         uid,
         parentUid: RootNodeUid,
-        name: "",
+        name: node.nodeName,
         isEntity: true,
         children: [],
         data: { ...node, valid: node.nodeName !== "#text" },
@@ -543,12 +533,8 @@ export const parseHtmlCodePart = (
         isFormatText = true;
       } else {
         // detect general text node
-        valid = nodeData.type !== "text";
+        valid = nodeData.nodeName !== "#text";
       }
-
-      // set in-app-attribute to nodes
-      if (!nodeData.attribs) nodeData.attribs = {};
-      nodeData.attribs[NodeInAppAttribName] = uid;
 
       tree[uid] = {
         ...node,
@@ -556,17 +542,15 @@ export const parseHtmlCodePart = (
         data: {
           valid,
           isFormatText,
-          type: nodeData.type,
-          name: nodeData.name,
-          data: nodeData.data,
-          attribs: nodeData.attribs,
-          startIndex: start + nodeData.startIndex,
-          endIndex: start + nodeData.endIndex,
-          positions: getPositionFromIndex(
-            monacoEditor,
-            start + nodeData.startIndex,
-            start + nodeData.endIndex,
-          ),
+          type: node.name,
+          name: node.name,
+          // data: nodeData.data,
+          attribs: nodeData.attrs ?? [],
+          sourceCodeLocation: {
+            ...node.sourceCodeLocation,
+            startOffset: start + node.sourceCodeLocation.startOffset,
+            endOffset: start + node.sourceCodeLocation.endOffset,
+          },
         },
       };
     }

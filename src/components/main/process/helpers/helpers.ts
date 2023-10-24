@@ -550,7 +550,6 @@ export const handleCodeChangeEffects = (
       _nodeTree,
       _nodeMaxUid,
       _newFocusedNodeUid,
-      monacoEditor,
     );
     _nodeMaxUid = result._nodeMaxUid;
     _newFocusedNodeUid = result._newFocusedNodeUid;
@@ -572,15 +571,14 @@ export const editingTextChanges = (
   _nodeTree: TNodeTreeData,
   _nodeMaxUid: number,
   _newFocusedNodeUid: string,
-  monacoEditor: editor.IStandaloneCodeEditor,
 ) => {
   // ---------------------- node tree side effect ----------------------
   // parse code part
 
   let originalNode = _nodeTree[codeChange.uid]; //original node (the node which was previously focused)
 
-  const start = (originalNode.data as THtmlNodeData).startIndex;
-  const end = (originalNode.data as THtmlNodeData).endIndex;
+  const start = originalNode.sourceCodeLocation.startOffset;
+  const end = originalNode.sourceCodeLocation.endOffset;
 
   const formattedContent = removeAttributeFromElement(
     codeChange.content,
@@ -594,7 +592,6 @@ export const editingTextChanges = (
     formattedContent,
     String(_nodeMaxUid) as TNodeUid,
     start,
-    monacoEditor,
   );
   _nodeMaxUid = Number(nodeMaxUid);
 

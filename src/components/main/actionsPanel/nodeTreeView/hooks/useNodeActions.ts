@@ -72,7 +72,6 @@ export function useNodeActions() {
           focusedItem,
           nodeType,
           htmlReferenceData,
-          monacoEditor,
         );
       let tempTree;
 

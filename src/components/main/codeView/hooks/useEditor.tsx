@@ -135,19 +135,18 @@ export default function useEditor() {
       uids.reverse();
       for (const uid of uids) {
         const node = validNodeTree[uid];
-        const nodeData = node.data as THtmlNodeData;
-        const { startIndex, endIndex } = nodeData;
+        const sourceCodeLocation = node.sourceCodeLocation;
 
-        if (
-          !monacoEditor ||
-          startIndex === undefined ||
-          endIndex === undefined
-        ) {
+        if (!sourceCodeLocation) {
           continue;
         }
 
-        const { startLineNumber, startColumn, endLineNumber, endColumn } =
-          getPositionFromIndex(monacoEditor, startIndex, endIndex);
+        let {
+          startLine: startLineNumber,
+          startCol: startColumn,
+          endCol: endColumn,
+          endLine: endLineNumber,
+        } = sourceCodeLocation;
 
         const containFront =
           selection.startLineNumber === startLineNumber
@@ -171,148 +170,6 @@ export default function useEditor() {
     return focusedNode;
   }
 
-  const saveFileContentToRedux = useCallback(() => {
-    onPanelClick();
-    if (parseFileFlag) {
-      // clear highlight
-      decorationCollectionRef.current?.clear();
-
-      // skip same content
-      const _file = ffTree[file.uid];
-      const fileData = _file.data as TFileNodeData;
-      if (fileData.content === codeContentRef.current) {
-        validNodeTreeRef.current = structuredClone(validNodeTree);
-
-        codeChangeDecorationRef.current.clear();
-        setCodeEditing(false);
-        return;
-      }
-
-      // get code changes
-      const currentCode = codeContentRef.current;
-      const currentCodeArr = currentCode.split(getLineBreaker(osType));
-      const codeChanges: TCodeChange[] = [];
-      let hasMismatchedTags = false;
-      const monacoEditor = getCurrentEditorInstance();
-      for (const codeChange of codeChangeDecorationRef.current.entries()) {
-        let uid = codeChange[0];
-
-        // check if editing tags are <code> or <pre>
-        let _parent = uid;
-        if (validNodeTree[uid] === undefined) return;
-        let notParsingFlag =
-          validNodeTree[uid].name === "code" ||
-          validNodeTree[uid].name === "pre"
-            ? true
-            : false;
-        while (
-          _parent !== undefined &&
-          _parent !== null &&
-          _parent !== "ROOT"
-        ) {
-          if (
-            validNodeTree[_parent].name === "code" ||
-            validNodeTree[_parent].name === "pre"
-          ) {
-            notParsingFlag = true;
-            break;
-          }
-          _parent = validNodeTree[_parent].parentUid as TNodeUid;
-        }
-        let { startLineNumber, startColumn, endLineNumber, endColumn } =
-          codeChange[1][0].range;
-
-        if (notParsingFlag) {
-          if (validNodeTree[_parent]) {
-            const { startIndex, endIndex } = validNodeTree[_parent]
-              .data as THtmlNodeData;
-            const editor = monacoEditor as editor.IStandaloneCodeEditor;
-            const {
-              startLineNumber: startLine,
-              startColumn: startCol,
-              endLineNumber: endLine,
-              endColumn: endCol,
-            } = getPositionFromIndex(
-              editor,
-              startIndex as number,
-              endIndex as number,
-            );
-            startLineNumber = startLine;
-            startColumn = startCol;
-            endLineNumber = endLine;
-            endColumn = endCol;
-          }
-        }
-        const partCodeArr: string[] = [];
-        partCodeArr.push(
-          currentCodeArr[startLineNumber !== 0 ? startLineNumber - 1 : 0].slice(
-            startColumn !== 0 ? startColumn - 1 : 0,
-          ),
-        );
-        for (let line = startLineNumber; line < endLineNumber; ++line) {
-          partCodeArr.push(currentCodeArr[line]);
-        }
-
-        // endLineNumber > startLineNumber &&
-        //   partCodeArr.push(
-        //     currentCodeArr[endLineNumber - 1].slice(0, endColumn),
-        //   );
-
-        const content = partCodeArr.join(getLineBreaker(osType));
-
-        uid = notParsingFlag ? _parent : uid;
-        checkValidHtml(codeContentRef.current);
-        codeChanges.push({ uid, content });
-      }
-
-      if (hasMismatchedTags === false) {
-        setCodeChanges(codeChanges);
-
-        // update
-        // dispatch(setCurrentFileContent(codeContent.current));
-        addRunningActions(["processor-updateOpt"]);
-        setUpdateOpt({ parse: true, from: "code" });
-
-        codeChangeDecorationRef.current.clear();
-        reduxTimeout.current = null;
-        setFocusedNode(undefined);
-      } else {
-        // update
-        dispatch(setCurrentFileContent(codeContentRef.current));
-        setFSPending(false);
-        const _file = structuredClone(ffTree[file.uid]) as TNode;
-        addRunningActions(["processor-updateOpt"]);
-        const fileData = _file.data as TFileNodeData;
-        (ffTree[file.uid].data as TFileNodeData).content =
-          codeContentRef.current;
-        (ffTree[file.uid].data as TFileNodeData).contentInApp =
-          codeContentRef.current;
-        (ffTree[file.uid].data as TFileNodeData).changed =
-          codeContentRef.current !== fileData.orgContent;
-        setFFTree(ffTree);
-        dispatch(setCurrentFileContent(codeContentRef.current));
-        codeChangeDecorationRef.current.clear();
-        setCodeEditing(false);
-        setFSPending(false);
-      }
-    } else {
-      // non-parse file save
-      const _file = structuredClone(ffTree[file.uid]) as TNode;
-      addRunningActions(["processor-updateOpt"]);
-      const fileData = _file.data as TFileNodeData;
-      (ffTree[file.uid].data as TFileNodeData).content = codeContentRef.current;
-      (ffTree[file.uid].data as TFileNodeData).contentInApp =
-        codeContentRef.current;
-      (ffTree[file.uid].data as TFileNodeData).changed =
-        codeContentRef.current !== fileData.orgContent;
-      setFFTree(ffTree);
-      dispatch(setCurrentFileContent(codeContentRef.current));
-      codeChangeDecorationRef.current.clear();
-      setCodeEditing(false);
-      setFSPending(false);
-    }
-  }, [ffTree, file.uid, validNodeTree, osType, parseFileFlag]);
-
   const debouncedEditorUpdate = useCallback(
     debounce((value: string) => {
       const monacoEditor = getCurrentEditorInstance();
@@ -330,7 +187,7 @@ export default function useEditor() {
       const bodyNode = defaultTreeAdapter
         .getChildNodes(htmlDom)
         .filter(defaultTreeAdapter.isElementNode)[0];
-      debugger;
+
       if (bodyNode) {
         bodyEle = parse5.serialize(bodyNode);
       }
@@ -393,6 +250,7 @@ export default function useEditor() {
     }, 1000),
     [],
   );
+
   const handleEditorChange = (
     value: string | undefined,
     ev: editor.IModelContentChangedEvent,
@@ -401,6 +259,7 @@ export default function useEditor() {
     debouncedEditorUpdate(value);
     setCodeEditing(true);
   };
+
   function updateFileContentOnRedux(
     value: string | undefined,
     monacoEditor: editor.IStandaloneCodeEditor | undefined,
