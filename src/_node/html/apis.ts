@@ -3,7 +3,6 @@ import { Document } from "domhandler";
 import * as domserializer from "dom-serializer";
 import { NodeInAppAttribName, RootNodeUid } from "@_constants/main";
 // @ts-ignore
-import htmlAttrs from "@_ref/rfrncs/HTML Attributes.csv";
 import { getLineBreaker } from "@_services/global";
 import { TOsType } from "@_types/global";
 
@@ -334,6 +333,7 @@ export const parseHtml = (
     contentInApp,
     tree,
     nodeMaxUid: String(_nodeMaxUid) as TNodeUid,
+    htmlDom: dom,
   };
 };
 
