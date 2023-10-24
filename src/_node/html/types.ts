@@ -1,6 +1,7 @@
 import { DOMElement } from "react";
 
 import { TNode, TNodeTreeData, TNodeUid } from "../";
+import { Document } from "domhandler";
 
 export type THtmlNodeData = {
   valid: boolean;
@@ -39,6 +40,7 @@ export type THtmlParserResponse = {
   contentInApp: string;
   tree: TNodeTreeData;
   nodeMaxUid: TNodeUid;
+  htmlDom?: Document;
 };
 export type THtmlElementsReference = {
   Featured: string;
