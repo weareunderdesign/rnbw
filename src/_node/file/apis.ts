@@ -611,17 +611,10 @@ export const parseFile = (params: {
   content: string;
   keepNodeUids?: null | boolean;
   nodeMaxUid?: TNodeUid;
-  monacoEditor: editor.IStandaloneCodeEditor;
 }): TFileParserResponse => {
-  const {
-    type,
-    content,
-    keepNodeUids = false,
-    nodeMaxUid = "",
-    monacoEditor,
-  } = params;
+  const { type, content, keepNodeUids = false, nodeMaxUid = "" } = params;
   if (type === "html") {
-    return parseHtml(content, keepNodeUids, nodeMaxUid, monacoEditor);
+    return parseHtml(content, keepNodeUids, nodeMaxUid);
   } else {
     return {
       formattedContent: "",

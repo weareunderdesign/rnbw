@@ -356,7 +356,7 @@ export const handleFileUpdate = (
     contentInApp,
     tree,
     nodeMaxUid: newNodeMaxUid,
-  } = parseFile({ type: fileData.type, content: file.content, monacoEditor });
+  } = parseFile({ type: fileData.type, content: file.content });
 
   fileData.content = formattedContent;
   fileData.contentInApp = contentInApp;
@@ -393,7 +393,6 @@ export const handleHtmlUpdate = (
     type: fileData.type,
     content: fileContent,
     nodeMaxUid: String(_nodeMaxUid) as TNodeUid,
-    monacoEditor,
   });
 
   fileData.content = fileContent;
@@ -454,7 +453,6 @@ export const handleHmsChange = (
       content: file.content,
       keepNodeUids: true,
       nodeMaxUid: String(_nodeMaxUid) as TNodeUid,
-      monacoEditor,
     });
     _nodeTree = tree;
     _nodeMaxUid = Number(newNodeMaxUid);

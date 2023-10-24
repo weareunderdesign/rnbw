@@ -1,7 +1,7 @@
 import { DOMElement } from "react";
 
 import { TNode, TNodeTreeData, TNodeUid } from "../";
-import { Document } from "domhandler";
+import { Document } from "parse5/dist/tree-adapters/default";
 
 export type THtmlNodeData = {
   valid: boolean;

@@ -1,3 +1,4 @@
+import * as parse5 from "parse5";
 import { useContext, useRef, useState, useEffect, useCallback } from "react";
 import { IPosition, editor } from "monaco-editor";
 import {
@@ -17,7 +18,6 @@ import { TCodeChange } from "@_types/main";
 import { TFileNodeData } from "@_node/file";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
-import { DomUtils } from "htmlparser2";
 import { styles } from "@_components/main/stageView/iFrame/styles";
 import { debounce } from "lodash";
 
@@ -320,11 +320,20 @@ export default function useEditor() {
       const iframe: any = document.getElementById("iframeId");
       const iframeDoc = iframe.contentDocument;
       const iframeHtml = iframeDoc.getElementsByTagName("html")[0];
-      const { htmlDom, tree } = parseHtml(value, false, "", monacoEditor);
+      const { htmlDom, tree } = parseHtml(value, false, "");
 
       let bodyEle = null;
       if (!htmlDom) return;
-      bodyEle = DomUtils.getInnerHTML(htmlDom);
+      const defaultTreeAdapter = parse5.defaultTreeAdapter;
+      // bodyEle = DomUtils.getInnerHTML(htmlDom);
+
+      const bodyNode = defaultTreeAdapter
+        .getChildNodes(htmlDom)
+        .filter(defaultTreeAdapter.isElementNode)[0];
+      debugger;
+      if (bodyNode) {
+        bodyEle = parse5.serialize(bodyNode);
+      }
       if (!iframeHtml || !bodyEle) return;
 
       try {

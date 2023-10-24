@@ -1,6 +1,5 @@
-import * as htmlparser2 from "htmlparser2";
-import { Document } from "domhandler";
-import * as domutils from "domutils";
+import * as parse5 from "parse5";
+import { Document } from "parse5/dist/tree-adapters/default";
 import { NodeInAppAttribName, RootNodeUid } from "@_constants/main";
 // @ts-ignore
 import { getLineBreaker } from "@_services/global";
@@ -76,6 +75,14 @@ export const addFormatTextBeforeNode = (
       endLineNumber: 0,
       endColumn: 0,
     } as THtmlNodeData,
+    sourceCodeLocation: {
+      startLine: 0,
+      startCol: 0,
+      startOffset: 0,
+      endLine: 0,
+      endCol: 0,
+      endOffset: 0,
+    },
   };
 
   // add text node
@@ -136,6 +143,14 @@ export const addFormatTextAfterNode = (
       endLineNumber: 0,
       endColumn: 0,
     } as THtmlNodeData,
+    sourceCodeLocation: {
+      startLine: 0,
+      startCol: 0,
+      startOffset: 0,
+      endLine: 0,
+      endCol: 0,
+      endOffset: 0,
+    },
   };
 
   // add text node
@@ -185,16 +200,18 @@ export const parseHtml = (
   content: string,
   keepNodeUids: null | boolean = false,
   nodeMaxUid: TNodeUid = "",
-  monacoEditor: editor.IStandaloneCodeEditor,
 ): THtmlParserResponse => {
   let _nodeMaxUid = keepNodeUids === false ? 0 : Number(nodeMaxUid);
   // parse the html content
-  let dom = htmlparser2.parseDocument(content, {
-    withEndIndices: true,
-    withStartIndices: true,
+
+  const dom = parse5.parse(content, {
+    sourceCodeLocationInfo: true,
+    scriptingEnabled: true,
+    onParseError: (err) => {},
   });
 
   let appDom: Document;
+
   htmlContent = content;
   // parse the html content
   const tmpTree: TNodeTreeData = {};
@@ -209,62 +226,101 @@ export const parseHtml = (
       isEntity: false,
       children: [],
       data: { valid: true },
+      sourceCodeLocation: {
+        startLine: 0,
+        startCol: 0,
+        startOffset: 0,
+        endLine: 0,
+        endCol: 0,
+        endOffset: 0,
+      },
     };
 
     // build depth-1 seed nodes
     const seedNodes: TNode[] = [];
-    appDom.children.forEach((node) => {
+    appDom.childNodes.forEach((node) => {
       const uid = String(++_nodeMaxUid) as TNodeUid;
-
+      const {
+        startLine = 0,
+        startCol = 0,
+        startOffset = 0,
+        endLine = 0,
+        endCol = 0,
+        endOffset = 0,
+      } = node.sourceCodeLocation || {};
       tmpTree[RootNodeUid].children.push(uid);
       tmpTree[uid] = {
         uid,
         parentUid: RootNodeUid,
-        name: "",
+        name: node.nodeName,
         isEntity: true,
         children: [],
-        data: { ...node, valid: node.type === "tag" },
+        data: { ...node, valid: node.nodeName !== "#text" },
+        sourceCodeLocation: {
+          startLine,
+          startCol,
+          startOffset,
+          endLine,
+          endCol,
+          endOffset,
+        },
       };
-
       seedNodes.push(tmpTree[uid]);
     });
 
     // build the whole node tree from the seed nodes - BFS
     while (seedNodes.length) {
       const node = seedNodes.shift() as TNode;
+      if (!node) continue;
       const nodeData = node.data as THtmlDomNodeData;
 
-      if (!nodeData.children) continue;
+      if (!nodeData.childNodes) continue;
 
-      nodeData.children.map((child: THtmlDomNodeData) => {
+      nodeData.childNodes.map((child: THtmlDomNodeData) => {
         const uid = String(++_nodeMaxUid) as TNodeUid;
 
         //set html file title as the app title
-        if (child.name === "title") {
-          let titleText = child?.children?.[0]?.data ?? "rnbw";
+
+        if (child.nodeName === "title") {
+          let titleText = child?.childNodes?.[0]?.value ?? "rnbw";
           window.document.title = titleText;
         }
-
+        const {
+          startLine = 0,
+          startCol = 0,
+          startOffset = 0,
+          endLine = 0,
+          endCol = 0,
+          endOffset = 0,
+        } = child.sourceCodeLocation || {};
         node.children.push(uid);
         node.isEntity = false;
 
         tmpTree[uid] = {
           uid,
           parentUid: node.uid,
-          name: "",
+          name: child.nodeName,
           isEntity: true,
           children: [],
-          data: { ...child, valid: child.type === "tag" },
+          data: { ...child, valid: child.nodeName !== "#text" },
+          sourceCodeLocation: {
+            startLine,
+            startCol,
+            startOffset,
+            endLine,
+            endCol,
+            endOffset,
+          },
         };
 
         //add attribute to node
-        if (!child.attribs) child.attribs = {};
-        child.attribs[NodeInAppAttribName] = uid;
+        if (!child.attrs) child.attrs = [];
+        child.attrs.push({ name: NodeInAppAttribName, value: uid });
 
         seedNodes.push(tmpTree[uid]);
       });
     }
-    htmlContentInApp = domutils.getOuterHTML(appDom);
+    htmlContentInApp = parse5.serialize(appDom);
   }
 
   preprocessNodes(dom);
@@ -282,43 +338,28 @@ export const parseHtml = (
 
       let isFormatText = false,
         valid = true;
+
       if (!nodeData.valid) {
         // format text node
         valid = false;
         isFormatText = true;
       } else {
         // detect general text node
-        valid = nodeData.type !== "text";
+        valid = nodeData.nodeName !== "#text";
       }
 
-      // set in-app-attribute to nodes
-      if (!nodeData.attribs) nodeData.attribs = {};
-      nodeData.attribs[NodeInAppAttribName] = uid;
-      let data = "";
-      if (nodeData.children) {
-        nodeData.children.forEach((child: THtmlDomNodeData) => {
-          if (child.type === "text") {
-            data += child.data;
-          }
-        });
-      }
       tree[uid] = {
         ...node,
-        name: nodeData.name || nodeData.type,
+        name: nodeData.name || nodeData.type || node.name,
         data: {
           valid,
           isFormatText,
           type: nodeData.type,
-          name: nodeData.name,
-          data: data,
-          attribs: nodeData.attribs,
-          startIndex: nodeData.startIndex,
-          endIndex: nodeData.endIndex,
-          positions: getPositionFromIndex(
-            monacoEditor,
-            nodeData.startIndex,
-            nodeData.endIndex,
-          ),
+          name: node.name,
+          // data: data,
+          attribs: nodeData.attrs ?? [],
+          startIndex: node.sourceCodeLocation.startOffset,
+          endIndex: node.sourceCodeLocation.endOffset,
         },
       };
     }
@@ -364,9 +405,10 @@ export const parseHtmlCodePart = (
   const tmpTree: TNodeTreeData = {};
   const tree: TNodeTreeData = {};
 
-  let dom = htmlparser2.parseDocument(content, {
-    withEndIndices: true,
-    withStartIndices: true,
+  const dom = parse5.parse(content, {
+    sourceCodeLocationInfo: true,
+    scriptingEnabled: true,
+    onParseError: (err) => {},
   });
 
   let appDom: Document;
@@ -381,13 +423,28 @@ export const parseHtmlCodePart = (
       isEntity: false,
       children: [],
       data: { valid: true },
+      sourceCodeLocation: {
+        startLine: 0,
+        startCol: 0,
+        startOffset: 0,
+        endLine: 0,
+        endCol: 0,
+        endOffset: 0,
+      },
     };
 
     // build depth-1 seed nodes
     const seedNodes: TNode[] = [];
-    appDom.children.forEach((node) => {
+    appDom.childNodes.forEach((node) => {
       const uid = String(++_nodeMaxUid) as TNodeUid;
-
+      const {
+        startLine = 0,
+        startCol = 0,
+        startOffset = 0,
+        endLine = 0,
+        endCol = 0,
+        endOffset = 0,
+      } = node.sourceCodeLocation || {};
       tmpTree[RootNodeUid].children.push(uid);
       tmpTree[uid] = {
         uid,
@@ -395,7 +452,15 @@ export const parseHtmlCodePart = (
         name: "",
         isEntity: true,
         children: [],
-        data: { ...node, valid: node.type === "tag" },
+        data: { ...node, valid: node.nodeName !== "#text" },
+        sourceCodeLocation: {
+          startLine,
+          startCol,
+          startOffset,
+          endLine,
+          endCol,
+          endOffset,
+        },
       };
 
       seedNodes.push(tmpTree[uid]);
@@ -404,12 +469,29 @@ export const parseHtmlCodePart = (
     // build the whole node tree from the seed nodes - BFS
     while (seedNodes.length) {
       const node = seedNodes.shift() as TNode;
+      if (!node) continue;
       const nodeData = node.data as THtmlDomNodeData;
 
       if (!nodeData.children) continue;
 
-      nodeData.children.map((child: THtmlDomNodeData) => {
+      nodeData.childNodes.map((child: THtmlDomNodeData) => {
         const uid = String(++_nodeMaxUid) as TNodeUid;
+
+        //set html file title as the app title
+
+        if (child.nodeName === "title") {
+          let titleText = child?.childNodes?.[0]?.value ?? "rnbw";
+          window.document.title = titleText;
+        }
+
+        const {
+          startLine = 0,
+          startCol = 0,
+          startOffset = 0,
+          endLine = 0,
+          endCol = 0,
+          endOffset = 0,
+        } = child.sourceCodeLocation || {};
 
         node.children.push(uid);
         node.isEntity = false;
@@ -421,16 +503,24 @@ export const parseHtmlCodePart = (
           isEntity: true,
           children: [],
           data: { ...child, valid: child.type === "tag" },
+          sourceCodeLocation: {
+            startLine,
+            startCol,
+            startOffset,
+            endLine,
+            endCol,
+            endOffset,
+          },
         };
 
         //add attribute to node
-        if (!child.attribs) child.attribs = {};
-        child.attribs[NodeInAppAttribName] = uid;
+        if (!child.attr) child.attrs = [];
+        child.attrs.push({ name: NodeInAppAttribName, value: uid });
 
         seedNodes.push(tmpTree[uid]);
       });
     }
-    htmlContentInApp = domutils.getOuterHTML(appDom);
+    htmlContentInApp = parse5.serialize(appDom);
   }
 
   preprocessNodes(dom);

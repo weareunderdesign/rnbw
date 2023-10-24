@@ -36,6 +36,14 @@ export const creatingNode = (
       endLineNumber: 0,
       endColumn: 0,
     } as THtmlNodeData,
+    sourceCodeLocation: {
+      startCol: 0,
+      endCol: 0,
+      endLine: 0,
+      startLine: 0,
+      endOffset: 0,
+      startOffset: 0,
+    },
   };
 
   let contentNode: TNode | null = null;
@@ -109,6 +117,14 @@ export const creatingNode = (
           endLineNumber: 0,
           endColumn: 0,
         } as THtmlNodeData,
+        sourceCodeLocation: {
+          startCol: 0,
+          endCol: 0,
+          endLine: 0,
+          startLine: 0,
+          endOffset: 0,
+          startOffset: 0,
+        },
       } as TNode;
     }
   }
