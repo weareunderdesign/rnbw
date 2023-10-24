@@ -10,6 +10,7 @@ import cx from "classnames";
 import { Command } from "cmdk";
 import { CustomDirectoryPickerOptions } from "file-system-access/lib/showDirectoryPicker";
 import { delMany, getMany, setMany } from "idb-keyval";
+import { editor } from "monaco-editor";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useParams } from "react-router-dom";
 
@@ -87,7 +88,6 @@ import {
 
 import { getCommandKey } from "../../services/global";
 import { MainPageProps } from "./types";
-import { editor } from "monaco-editor";
 
 export default function MainPage(props: MainPageProps) {
   // -------------------------------------------------------------- redux  --------------------------------------------------------------
@@ -114,12 +114,13 @@ export default function MainPage(props: MainPageProps) {
     selectedItemsObj: fnSelectedItemsObj,
   } = useSelector(fnSelector);
   const { futureLength, pastLength } = useSelector(hmsInfoSelector);
+
   // -------------------------------------------------------------- main context --------------------------------------------------------------
   const [favicon, setFavicon] = useState<string>("");
   // global action
   const [pending, setPending] = useState<boolean>(false); // tells if there are any pending running actions
   const runningActions = useRef<{ [actionName: string]: boolean }>({});
-  const noRunningAction = useCallback(() => {
+  const hasNoRunningAction = useCallback(() => {
     return Object.keys(runningActions.current).length === 0 ? true : false;
   }, []);
   const addRunningActions = useCallback((actionNames: string[]) => {
@@ -150,16 +151,16 @@ export default function MainPage(props: MainPageProps) {
           "remove running actions",
           actionNames,
           effect,
-          noRunningAction(),
+          hasNoRunningAction(),
         );
 
-      if (noRunningAction()) {
+      if (hasNoRunningAction()) {
         LogAllow && effect && console.log("hms added");
         setPending(false);
         effect && dispatch(increaseActionGroupIndex());
       }
     },
-    [noRunningAction, file.content],
+    [hasNoRunningAction, file.content],
   );
   // navigator
   const [workspace, setWorkspace] = useState<TWorkspace>({
@@ -648,7 +649,7 @@ export default function MainPage(props: MainPageProps) {
     async (
       fsType: TProjectContext,
       projectHandle?: FileSystemHandle | null,
-      internal?: boolean | true,
+      internal?: boolean,
     ) => {
       setFavicon("");
       if (fsType === "local") {
@@ -1534,7 +1535,7 @@ export default function MainPage(props: MainPageProps) {
   >();
   const [validMenuItemCount, setValidMenuItemCount] = useState<number>();
   useEffect(() => {
-    let hoveredMenuItemDetecter: NodeJS.Timer;
+    let hoveredMenuItemDetecter: NodeJS.Timeout;
     if (cmdkOpen) {
       // detect hovered menu item in cmdk modal if its open
       hoveredMenuItemDetecter = setInterval(() => {

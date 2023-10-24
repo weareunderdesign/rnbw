@@ -1,6 +1,6 @@
 import * as htmlparser2 from "htmlparser2";
 import { Document } from "domhandler";
-import * as domutils from "domutils";
+import * as domserializer from "dom-serializer";
 import { NodeInAppAttribName, RootNodeUid } from "@_constants/main";
 // @ts-ignore
 import { getLineBreaker } from "@_services/global";
@@ -264,7 +264,7 @@ export const parseHtml = (
         seedNodes.push(tmpTree[uid]);
       });
     }
-    htmlContentInApp = domutils.getOuterHTML(appDom);
+    htmlContentInApp = domserializer.render(appDom);
   }
 
   preprocessNodes(dom);
@@ -430,7 +430,7 @@ export const parseHtmlCodePart = (
         seedNodes.push(tmpTree[uid]);
       });
     }
-    htmlContentInApp = domutils.getOuterHTML(appDom);
+    htmlContentInApp = domserializer.render(appDom);
   }
 
   preprocessNodes(dom);
