@@ -177,6 +177,14 @@ export const useNodeActionsHandler = (
           valid: false,
           type: ffNodeType,
         },
+        sourceCodeLocation: {
+          startCol: 0,
+          endCol: 0,
+          endLine: 0,
+          startLine: 0,
+          endOffset: 0,
+          startOffset: 0,
+        },
       };
 
       node.children.unshift(tmpNode.uid);

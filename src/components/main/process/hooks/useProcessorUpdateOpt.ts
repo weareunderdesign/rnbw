@@ -62,14 +62,6 @@ export const useProcessorUpdateOpt = () => {
   } = useContext(MainContext);
   // -------------------------------------------------------------- sync --------------------------------------------------------------
 
-  // service - get reference data for current file type
-  const getReferenceData = useCallback(
-    (fileType: TFileType) => {
-      return fileType === "html" ? htmlReferenceData : htmlReferenceData;
-    },
-    [htmlReferenceData],
-  );
-
   useEffect(() => {
     const monacoEditor = monacoEditorRef.current;
     if (updateOpt.parse === true) {

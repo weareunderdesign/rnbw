@@ -9,6 +9,14 @@ export type TNode = {
   isEntity: boolean;
   children: TNodeUid[];
   data: TNormalNodeData | TFileNodeData | THtmlNodeData | THtmlDomNodeData;
+  sourceCodeLocation: {
+    startLine: number;
+    startCol: number;
+    startOffset: number;
+    endLine: number;
+    endCol: number;
+    endOffset: number;
+  };
 };
 export type TNormalNodeData = {
   valid: boolean;

@@ -1,7 +1,7 @@
 import { DOMElement } from "react";
 
 import { TNode, TNodeTreeData, TNodeUid } from "../";
-import { Document } from "domhandler";
+import { Document } from "parse5/dist/tree-adapters/default";
 
 export type THtmlNodeData = {
   valid: boolean;
@@ -14,13 +14,6 @@ export type THtmlNodeData = {
 
   html: string;
   htmlInApp: string;
-
-  startLineNumber?: number;
-  startColumn?: number;
-  endLineNumber?: number;
-  endColumn?: number;
-  startIndex: number;
-  endIndex: number;
   positions: {
     startLineNumber: number;
     startColumn: number;
