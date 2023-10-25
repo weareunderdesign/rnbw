@@ -156,8 +156,6 @@ export default function CodeView(props: CodeViewProps) {
     // Convert the indices to positions
 
     const monacoEditor = getCurrentEditorInstance();
-    const node = validNodeTree[focusedItem];
-
     if (!monacoEditor) return;
 
     if (isFirst.current) {
@@ -249,7 +247,6 @@ export default function CodeView(props: CodeViewProps) {
       let newFocusedNode = findNodeBySelection(
         selection,
         validNodeTreeRef.current,
-        monacoEditor,
       );
       if (newFocusedNode) {
         setFocusedNode(newFocusedNode);
