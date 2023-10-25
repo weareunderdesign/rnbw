@@ -156,11 +156,12 @@ export const useMouseEvents = ({
     if (uid) {
       if (e.shiftKey) {
         let found = false;
-
-        const _selectedItems = selectedItemsRef.current.filter((uid) => {
-          uid === uid ? (found = true) : null;
-          return uid !== uid;
-        });
+        const _selectedItems = selectedItemsRef.current.filter(
+          (selectedUid) => {
+            selectedUid === uid ? (found = true) : null;
+            return selectedUid !== uid;
+          },
+        );
 
         !found ? _selectedItems.push(uid) : null;
 
