@@ -126,7 +126,6 @@ export default function useEditor() {
   function findNodeBySelection(
     selection: CodeSelection,
     validNodeTree: TNodeTreeData,
-    monacoEditor: editor.IStandaloneCodeEditor | null,
   ): TNode | null {
     let focusedNode: TNode | null = null;
     if (selection) {
@@ -251,10 +250,7 @@ export default function useEditor() {
     [],
   );
 
-  const handleEditorChange = (
-    value: string | undefined,
-    ev: editor.IModelContentChangedEvent,
-  ) => {
+  const handleEditorChange = (value: string | undefined) => {
     if (!value) return;
     debouncedEditorUpdate(value);
     setCodeEditing(true);
