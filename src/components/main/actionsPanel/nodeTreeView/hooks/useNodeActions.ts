@@ -1,6 +1,6 @@
 import { useCallback, useContext } from "react";
 import { useDispatch, useSelector } from "react-redux";
-
+import { Range } from "monaco-editor";
 import { TNode, TNodeUid } from "@_node/types";
 import {
   addNode,
@@ -9,24 +9,19 @@ import {
   duplicateNode,
   getValidNodeUids,
   moveNode,
-  removeNode,
-  TFileNodeData,
 } from "@_node/index";
 
 import {
   fnSelector,
-  focusFNNode,
   increaseActionGroupIndex,
   MainContext,
   navigatorSelector,
-  selectFNNode,
-  setCurrentFileContent,
 } from "@_redux/main";
 
 import { creatingNode } from "../helpers/creatingNode";
 import { addNodeToTree } from "../helpers/addNodeToTree";
-import { isRemovingAllowed } from "../helpers/isRemovingAllowed";
 import { getTree } from "../helpers/getTree";
+import { useEditor } from "@_components/main/codeView/hooks";
 
 export function useNodeActions() {
   const dispatch = useDispatch();
@@ -52,12 +47,11 @@ export function useNodeActions() {
     htmlReferenceData,
     // other
     osType,
-    ffTree,
-    setFFNode,
     theme: _theme,
     monacoEditorRef,
+    validNodeTree,
   } = useContext(MainContext);
-
+  const { handleEditorChange } = useEditor();
   const cb_addNode = useCallback(
     (nodeType: string) => {
       const monacoEditor = monacoEditorRef.current;
@@ -133,45 +127,39 @@ export function useNodeActions() {
 
   const cb_removeNode = useCallback(
     (uids: TNodeUid[]) => {
-      const allow = isRemovingAllowed(nodeTree, uids);
-      const _file = structuredClone(ffTree[file.uid]) as TNode;
-      const fileData = _file.data as TFileNodeData;
+      // const allow = isRemovingAllowed(nodeTree, uids);//Commenting this for now as it doesn't makes sense because the user can always delete this from codeview
+      const model = monacoEditorRef.current?.getModel();
+      if (!model) return;
+      let focusLineNumber = 0;
 
-      if (allow) {
-        addRunningActions(["nodeTreeView-remove"]);
+      uids.forEach((uid) => {
+        let node = validNodeTree[uid];
+        if (node) {
+          const {
+            endCol: endColumn,
+            endLine: endLineNumber,
+            startCol: startColumn,
+            startLine: startLineNumber,
+          } = node.sourceCodeLocation;
 
-        // call api
-        const tree = getTree(nodeTree);
-        const res = removeNode(tree, uids, "html", fileData, file);
+          const range = new Range(
+            startLineNumber,
+            startColumn,
+            endLineNumber,
+            endColumn,
+          );
+          let edit = {
+            range: range,
+            text: "",
+          };
+          model.applyEdits([edit]);
+          focusLineNumber = startLineNumber;
+        }
+      });
 
-        // processor
-        addRunningActions(["processor-updateOpt"]);
-        setUpdateOpt({ parse: false, from: "node" });
-        setNodeTree(res.tree);
-
-        setFFNode(_file);
-        dispatch(setCurrentFileContent(fileData.content as string));
-
-        // view state
-        addRunningActions(["stageView-viewState"]);
-        setUpdateOpt({ parse: true, from: "code" });
-        setTimeout(() => {
-          if (res.lastNodeUid && res.lastNodeUid !== "") {
-            dispatch(focusFNNode(res.lastNodeUid));
-            dispatch(selectFNNode([res.lastNodeUid]));
-          }
-        }, 100);
-        // side effect
-        setEvent({ type: "remove-node", param: [uids, res.deletedUids] });
-
-        removeRunningActions(["nodeTreeView-remove"]);
-        console.log("hms added");
-        dispatch(increaseActionGroupIndex());
-      } else {
-        console.log(
-          "Can't remove this element because it's an unique element of this page",
-        );
-      }
+      const content = model.getValue();
+      handleEditorChange(content);
+      monacoEditorRef.current?.revealLineInCenter(focusLineNumber);
     },
     [addRunningActions, removeRunningActions, nodeTree],
   );
