@@ -459,22 +459,13 @@ export const IFrame = () => {
             src={iframeSrc}
             onLoad={onLoad}
             id={"iframeId"}
-            style={
-              parseFileFlag
-                ? {
-                    background: "white",
-                    position: "absolute",
-                    width: "100%",
-                    height: "100vh",
-                  }
-                : {
-                    background: "white",
-                    position: "absolute",
-                    width: "100%",
-                    height: "100vh",
-                    overflow: "hidden",
-                  }
-            }
+            style={{
+              background: "white",
+              position: "absolute",
+              width: "100%",
+              height: "100vh",
+              ...(!parseFileFlag && { overflow: "hidden" }),
+            }}
           />
         )}
       </>
