@@ -295,8 +295,9 @@ function NodeTreeView(props: NodeTreeViewProps) {
                   const node = props.item.data as TNode;
                   const refData =
                     htmlReferenceData.elements[
-                      node.name === "!doctype" ? "!DOCTYPE" : node.name
+                      node.name === "#documentType" ? "!DOCTYPE" : node.name
                     ];
+
                   return refData;
                 }, []);
 

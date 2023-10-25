@@ -341,7 +341,7 @@ export const parseHtml = (
 
       tree[uid] = {
         ...node,
-        name: nodeData.name || nodeData.type || node.name,
+        name: nodeData.nodeName || node.name,
         data: {
           valid,
           isFormatText,
