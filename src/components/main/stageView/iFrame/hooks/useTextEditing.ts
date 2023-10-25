@@ -8,7 +8,6 @@ import {
   expandFFNode,
   ffSelector,
   fnSelector,
-  focusFNNode,
 } from "@_redux/main";
 import { getCommandKey } from "@_services/global";
 import { TCmdkKeyMap } from "@_types/main";
@@ -16,6 +15,7 @@ import { useSetSelectItem } from "./useSetSelectItem";
 import { THtmlNodeData } from "@_node/html";
 import { TFileNodeData } from "@_node/file";
 import { handleElementClick, openNewPage } from "../helpers";
+import { useEditor } from "@_components/main/codeView/hooks";
 
 export interface IUseTextEditingProps {
   contentEditableUidRef: React.MutableRefObject<string>;
@@ -39,9 +39,8 @@ export const useTextEditing = ({
   const dispatch = useDispatch();
   const { focusedItem } = useSelector(fnSelector);
   const { expandedItemsObj } = useSelector(ffSelector);
+  const { handleEditorChange } = useEditor();
   const {
-    // global action
-    addRunningActions,
     // node actions
     setNavigatorDropDownType,
     // file tree view
@@ -49,14 +48,11 @@ export const useTextEditing = ({
     setInitialFileToOpen,
     // node tree view
     validNodeTree,
-    // code view
-    setCodeChanges,
-    // processor
-    setUpdateOpt,
     // other
     osType,
     // close all panel
     closeAllPanel,
+    monacoEditorRef,
   } = useContext(MainContext);
 
   const [contentEditableAttr, setContentEditableAttr] = useState<string | null>(
@@ -70,70 +66,50 @@ export const useTextEditing = ({
     contentRef,
   });
 
-  const onTextEdit = useCallback(
-    (node: TNode, _outerHtml: string) => {
-      // replace enter to br
-      while (true) {
-        _outerHtml = _outerHtml.replace("<div><br></div>", "<br>");
-        if (_outerHtml.search("<div><br></div>") === -1) break;
-      }
-
-      setCodeChanges([{ uid: node.uid, content: _outerHtml }]);
-      addRunningActions(["processor-updateOpt"]);
-
-      setUpdateOpt({ parse: true, from: "stage" });
-      // expand path to the uid
-
-      setTimeout(() => {
-        dispatch(focusFNNode(node.uid));
-      }, 10);
-    },
-    [outerHtml],
-  );
-
   const beforeTextEdit = useCallback(() => {
     let node = validNodeTree[contentEditableUidRef.current];
     if (!node) return;
     let ele = contentRef?.contentWindow?.document?.querySelector(
       `[${NodeInAppAttribName}="${contentEditableUidRef.current}"]`,
     );
-    // check if editing tags are <code> or <pre>
-    let _parent = node.uid as TNodeUid;
-    let notParsingFlag =
-      validNodeTree[node.uid].name === "code" ||
-      validNodeTree[node.uid].name === "pre"
-        ? true
-        : false;
-    while (_parent !== undefined && _parent !== null && _parent !== "ROOT") {
-      if (
-        validNodeTree[_parent].name === "code" ||
-        validNodeTree[_parent].name === "pre"
-      ) {
-        notParsingFlag = true;
-        break;
-      }
-      _parent = validNodeTree[_parent].parentUid as TNodeUid;
-    }
-    if (notParsingFlag) {
-      ele = contentRef?.contentWindow?.document?.querySelector(
-        `[${NodeInAppAttribName}="${_parent}"]`,
-      );
-      node = validNodeTree[_parent];
-    }
-    if (!node) return;
+    ele?.removeAttribute("contenteditable");
+    ele?.removeAttribute("rnbwdev-rnbw-element-hover");
+    ele?.removeAttribute("rnbwdev-rnbw-element-select");
+    ele?.removeAttribute("data-rnbwdev-rnbw-node");
+    const cleanedUpCode = ele?.outerHTML;
+    if (!cleanedUpCode) return;
 
-    if (!ele) return;
+    //current code range in monaco editor
+    const {
+      endCol: endColumn,
+      endLine: endLineNumber,
+      startCol: startColumn,
+      startLine: startLineNumber,
+    } = node.sourceCodeLocation;
+
+    //replace the content in this range with the cleaned up code
+    const model = monacoEditorRef.current?.getModel();
+    if (!model) return;
+    const range = {
+      endColumn,
+      endLineNumber,
+      startColumn,
+      startLineNumber,
+    };
+    const id = model.getValueInRange(range);
+    const newModelValue = model.getValue().replace(id, cleanedUpCode);
+    model.setValue(newModelValue);
+    monacoEditorRef.current?.setModel(model);
+    monacoEditorRef.current?.focus();
+    monacoEditorRef.current?.setPosition({
+      column: startColumn,
+      lineNumber: startLineNumber,
+    });
+    monacoEditorRef.current?.revealLineInCenter(startLineNumber);
+    //give all the content inside the editor
+    const content = model.getValue();
+    handleEditorChange(content);
     contentEditableUidRef.current = "";
-    isEditing.current = false;
-
-    contentEditableAttr
-      ? ele.setAttribute("contenteditable", contentEditableAttr)
-      : ele.removeAttribute("contenteditable");
-    const cleanedUpCode = ele.outerHTML.replace(
-      /rnbwdev-rnbw-element-hover=""|rnbwdev-rnbw-element-select=""|contenteditable="true"|contenteditable="false"/g,
-      "",
-    );
-    onTextEdit(node, cleanedUpCode);
   }, [focusedItem]);
 
   const onCmdEnter = useCallback(
@@ -286,8 +262,6 @@ export const useTextEditing = ({
           contentEditableUidRef,
           isEditing,
           e,
-          setOuterHtml,
-          setContentEditableAttr,
           validNodeTree,
         );
       } else {
