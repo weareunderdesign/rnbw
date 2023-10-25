@@ -16,12 +16,10 @@ export default function App(props: AppProps) {
       const wb = new Workbox("/nohost-sw.js?route=rnbw");
       wb.register().then(() => {
         setNohostReady(true);
+        LogAllow && console.log("nohost ready");
       });
     }
   }, []);
-  useEffect(() => {
-    LogAllow && nohostReady && console.log("nohost ready");
-  }, [nohostReady]);
 
   return useMemo(() => {
     return (
@@ -44,5 +42,4 @@ declare global {
     Filer: any;
   }
 }
-
 window.Filer = window.Filer;

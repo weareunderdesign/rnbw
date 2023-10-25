@@ -29,18 +29,14 @@ import {
   MainContext,
   navigatorSelector,
 } from "@_redux/main";
+import { addClass, generateQuerySelector, removeClass } from "@_services/main";
 import {
-  addClass,
-  generateQuerySelector,
-  removeClass,
-} from "@_services/main";
-import { 
-  useFileOperations, 
-  useInvalidNodes, 
-  useNodeActionsHandler, 
-  useNodeViewState, 
+  useFileOperations,
+  useInvalidNodes,
+  useNodeActionsHandler,
+  useNodeViewState,
   useTemporaryNodes,
-  useCmdk
+  useCmdk,
 } from "./hooks";
 import { Container, ItemArrow } from "./workSpaceTreeComponents";
 
@@ -50,11 +46,7 @@ export default function WorkspaceTreeView() {
   // -------------------------------------------------------------- global state --------------------------------------------------------------
   const { file } = useSelector(navigatorSelector);
   const { fileAction } = useSelector(globalSelector);
-  const {
-    focusedItem,
-    expandedItems,
-    selectedItems,
-  } = useSelector(ffSelector);
+  const { focusedItem, expandedItems, selectedItems } = useSelector(ffSelector);
   const {
     // global action
     addRunningActions,
@@ -90,12 +82,12 @@ export default function WorkspaceTreeView() {
   } = useContext(MainContext);
   // -------------------------------------------------------------- node status --------------------------------------------------------------
   //  invalid - can't do any actions on the nodes
-  const {invalidNodes} = useInvalidNodes()
+  const { invalidNodes } = useInvalidNodes();
   // temporary - don't display the nodes
-  const {setTemporaryNodes, removeTemporaryNodes} = useTemporaryNodes()
+  const { setTemporaryNodes, removeTemporaryNodes } = useTemporaryNodes();
   // -------------------------------------------------------------- hms --------------------------------------------------------------
-	const { _copy, _create, _cut, _delete, _rename } = useFileOperations()
-  
+  const { _copy, _create, _cut, _delete, _rename } = useFileOperations();
+
   useEffect(() => {
     if (isHms === null) return;
 
@@ -234,12 +226,8 @@ export default function WorkspaceTreeView() {
     return data;
   }, [ffTree]);
   // -------------------------------------------------------------- node view state handlers --------------------------------------------------------------
-  const {
-    cb_collapseNode,
-    cb_expandNode,
-    cb_focusNode,
-    cb_selectNode,
-  } = useNodeViewState()
+  const { cb_collapseNode, cb_expandNode, cb_focusNode, cb_selectNode } =
+    useNodeViewState();
   // -------------------------------------------------------------- project --------------------------------------------------------------
   // open default initial html file
   useEffect(() => {
@@ -277,17 +265,17 @@ export default function WorkspaceTreeView() {
     }
   }, [initialFileToOpen]);
   // -------------------------------------------------------------- node actions handlers --------------------------------------------------------------
-  
+
   const openFileUid = useRef<TNodeUid>("");
 
   const {
-		cb_startRenamingNode,
-		cb_abortRenamingNode,
-		cb_renameNode,
-		cb_moveNode,
-		cb_readNode
-  } = useNodeActionsHandler(openFileUid)
-  
+    cb_startRenamingNode,
+    cb_abortRenamingNode,
+    cb_renameNode,
+    cb_moveNode,
+    cb_readNode,
+  } = useNodeActionsHandler(openFileUid);
+
   useEffect(() => {
     if (
       ffTree[openFileUid.current] !== undefined &&
@@ -331,15 +319,9 @@ export default function WorkspaceTreeView() {
     }
   }, [linkToOpen]);
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
-  const {
-    onDelete,
-		onCut,
-		onCopy,
-		onPaste,
-		onDuplicate,
-		onAddNode
-  } = useCmdk(openFileUid)
-  
+  const { onDelete, onCut, onCopy, onPaste, onDuplicate, onAddNode } =
+    useCmdk(openFileUid);
+
   useEffect(() => {
     if (isAddFileAction(currentCommand.action)) {
       onAddNode(currentCommand.action);
@@ -372,7 +354,7 @@ export default function WorkspaceTreeView() {
   const isAddFileAction = (actionName: string): boolean => {
     return actionName.startsWith(AddFileActionPrefix) ? true : false;
   };
- 
+
   // -------------------------------------------------------------- own --------------------------------------------------------------
   const onPanelClick = useCallback((e: React.MouseEvent) => {
     setActivePanel("file");
@@ -435,51 +417,51 @@ export default function WorkspaceTreeView() {
                 }, []);
 
                 const onClick = useCallback(
-                (e:React.MouseEvent)=>{
-                  e.stopPropagation();
-                  openFileUid.current = props.item.data.uid;
-                  // skip click-event from an inline rename input
-                  const targetId =
-                    e.target && (e.target as HTMLElement).id;
-                  if (targetId === "FileTreeView-RenameInput") {
-                    return;
-                  }
+                  (e: React.MouseEvent) => {
+                    e.stopPropagation();
+                    openFileUid.current = props.item.data.uid;
+                    // skip click-event from an inline rename input
+                    const targetId = e.target && (e.target as HTMLElement).id;
+                    if (targetId === "FileTreeView-RenameInput") {
+                      return;
+                    }
 
-                  addRunningActions(["fileTreeView-select"]);
-                  !props.context.isFocused &&
-                    addRunningActions(["fileTreeView-focus"]);
-                  !e.shiftKey &&
-                    !e.ctrlKey &&
-                    addRunningActions(
-                      props.item.isFolder
-                        ? [
-                            props.context.isExpanded
-                              ? "fileTreeView-collapse"
-                              : "fileTreeView-expand",
-                          ]
-                        : ["fileTreeView-read"],
-                    );
-
-                  if (!props.context.isFocused) {
-                    props.context.focusItem();
-                    focusedItemRef.current = props.item
-                      .index as TNodeUid;
-                  }
-                  e.shiftKey
-                    ? props.context.selectUpTo()
-                    : e.ctrlKey
-                    ? props.context.isSelected
-                      ? props.context.unselectItem()
-                      : props.context.addToSelectedItems()
-                    : [
-                        props.context.selectItem(),
+                    addRunningActions(["fileTreeView-select"]);
+                    !props.context.isFocused &&
+                      addRunningActions(["fileTreeView-focus"]);
+                    !e.shiftKey &&
+                      !e.ctrlKey &&
+                      addRunningActions(
                         props.item.isFolder
-                          ? props.context.toggleExpandedState()
-                          : props.context.primaryAction(),
-                      ];
+                          ? [
+                              props.context.isExpanded
+                                ? "fileTreeView-collapse"
+                                : "fileTreeView-expand",
+                            ]
+                          : ["fileTreeView-read"],
+                      );
 
-                  setActivePanel("file");
-                },[props.item,props.context])
+                    if (!props.context.isFocused) {
+                      props.context.focusItem();
+                      focusedItemRef.current = props.item.index as TNodeUid;
+                    }
+                    e.shiftKey
+                      ? props.context.selectUpTo()
+                      : e.ctrlKey
+                      ? props.context.isSelected
+                        ? props.context.unselectItem()
+                        : props.context.addToSelectedItems()
+                      : [
+                          props.context.selectItem(),
+                          props.item.isFolder
+                            ? props.context.toggleExpandedState()
+                            : props.context.primaryAction(),
+                        ];
+
+                    setActivePanel("file");
+                  },
+                  [props.item, props.context],
+                );
 
                 const onDragStart = (e: React.DragEvent) => {
                   const target = e.target as HTMLElement;
@@ -489,7 +471,7 @@ export default function WorkspaceTreeView() {
                     window.outerHeight,
                   );
                   props.context.startDragging();
-                }
+                };
 
                 const onDragEnter = () => {
                   if (!props.context.isExpanded) {
@@ -498,12 +480,13 @@ export default function WorkspaceTreeView() {
                       AutoExpandDelay,
                     );
                   }
-                }
+                };
 
-                const onMouseEnter = () => setFFHoveredItem(props.item.index as TNodeUid)
+                const onMouseEnter = () =>
+                  setFFHoveredItem(props.item.index as TNodeUid);
 
-                const onMouseLeave = () => setFFHoveredItem("" as TNodeUid)
-                
+                const onMouseLeave = () => setFFHoveredItem("" as TNodeUid);
+
                 return (
                   <>
                     <li
@@ -596,7 +579,7 @@ export default function WorkspaceTreeView() {
                   </>
                 );
               },
-              renderItemArrow: (props) => <ItemArrow {...props}/>,
+              renderItemArrow: (props) => <ItemArrow {...props} />,
               renderItemTitle: (props) => {
                 return (
                   <>
@@ -624,13 +607,12 @@ export default function WorkspaceTreeView() {
                 );
               },
               renderRenameInput: (props) => {
-
-                const onChange = useCallback( 
-                    (e: React.ChangeEvent<HTMLInputElement>) => {
-                    props.inputProps.onChange &&
-                      props.inputProps.onChange(e);
-                  },[props.inputProps]
-                )
+                const onChange = useCallback(
+                  (e: React.ChangeEvent<HTMLInputElement>) => {
+                    props.inputProps.onChange && props.inputProps.onChange(e);
+                  },
+                  [props.inputProps],
+                );
 
                 const onBlur = useCallback(
                   (e: React.FocusEvent<HTMLInputElement, Element>) => {
@@ -641,8 +623,9 @@ export default function WorkspaceTreeView() {
                           "",
                         ) as unknown as React.FormEvent<HTMLFormElement>,
                       );
-                  },[props.inputProps, props.formProps]
-                )
+                  },
+                  [props.inputProps, props.formProps],
+                );
 
                 return (
                   <>
