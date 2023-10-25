@@ -43,17 +43,12 @@ export default function useEditor() {
     setTabSize,
     codeEditing,
     setCodeEditing,
-    parseFileFlag,
-    validNodeTree,
     ffTree,
     setActivePanel,
-    osType,
-    setCodeChanges,
     addRunningActions,
     setUpdateOpt,
     setFSPending,
     setFFTree,
-    monacoEditorRef,
     setMonacoEditorRef,
     setNodeTree,
   } = useContext(MainContext);
@@ -82,7 +77,6 @@ export default function useEditor() {
     Map<TNodeUid, editor.IModelDeltaDecoration[]>
   >(new Map<TNodeUid, editor.IModelDeltaDecoration[]>());
   const validNodeTreeRef = useRef<TNodeTreeData>({});
-  const reduxTimeout = useRef<NodeJS.Timeout | null>(null);
   const decorationCollectionRef = useRef<editor.IEditorDecorationsCollection>();
   const currentPosition = useRef<IPosition | null>(null);
 
