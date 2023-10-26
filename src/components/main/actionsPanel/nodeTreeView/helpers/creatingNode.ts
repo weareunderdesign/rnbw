@@ -1,7 +1,6 @@
-import { NodeInAppAttribName } from "@_constants/main";
-import { parseHtmlCodePart, THtmlNodeData } from "@_node/index";
+import { NodeUidAttribNameInApp } from "@_constants/main";
 import { THtmlReferenceData } from "@_node/html";
-
+import { parseHtmlCodePart, THtmlNodeData } from "@_node/index";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 
 export const creatingNode = (
@@ -24,7 +23,7 @@ export const creatingNode = (
       type: "tag",
       name: nodeType,
       data: "",
-      attribs: { [NodeInAppAttribName]: String(nodeMaxUid + 1) as TNodeUid },
+      attribs: { [NodeUidAttribNameInApp]: String(nodeMaxUid + 1) as TNodeUid },
 
       html: "",
       htmlInApp: "",
@@ -99,7 +98,7 @@ export const creatingNode = (
           type: "text",
           name: "text",
           data: Content,
-          attribs: { [NodeInAppAttribName]: tmpMaxUid as TNodeUid },
+          attribs: { [NodeUidAttribNameInApp]: tmpMaxUid as TNodeUid },
 
           html: "",
           htmlInApp: "",
