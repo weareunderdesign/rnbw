@@ -1,14 +1,15 @@
 import { Context, createContext } from "react";
 
+import { editor } from "monaco-editor";
+
 import { DefaultTabSize } from "@_constants/main";
-import { TFileHandlerCollection } from "@_node/file";
+import { TFileAction, TFileHandlerCollection } from "@_node/file";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import { TToast } from "@_types/global";
 import {
   TClipboardData,
   TCodeChange,
   TEvent,
-  TFileAction,
   TFileInfo,
   TPanelContext,
   TProjectContext,
@@ -22,12 +23,8 @@ import {
   TNavigatorDropDownType,
   TUpdateOptions,
 } from "./types";
-import { editor } from "monaco-editor";
 
 export const MainContext: Context<TMainContext> = createContext<TMainContext>({
-  // global action
-  addRunningActions: (actionNames: string[]) => {},
-  removeRunningActions: (actionNames: string[], effect?: boolean) => {},
   // navigator
   workspace: { name: "local", projects: [] },
   setWorkspace: (ws: TWorkspace) => {},

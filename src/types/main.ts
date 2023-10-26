@@ -16,13 +16,6 @@ export type TProject = {
   handler: FileSystemDirectoryHandle | null;
   favicon: string | null;
 };
-export type TFile = {
-  uid: TNodeUid;
-  parentUid: TNodeUid;
-  name: string;
-  content: string;
-};
-export type TFileType = "html" | "unknown";
 export type TFileInfo = THtmlPageSettings | null | undefined;
 export type TSession = {
   "recent-project-context": TProjectContext[];
@@ -47,20 +40,7 @@ export type TCodeChange = {
   content: string;
 };
 export type TFileNodeType = "*folder" | "html" | "";
-export type TFileAction = {
-  type: TFileActionType;
-  param1?: any;
-  param2?: any;
-};
-export type TFileActionType =
-  | "create"
-  | "delete"
-  | "move"
-  | "rename"
-  | "duplicate"
-  | "cut"
-  | "copy"
-  | null;
+
 export type TPanelContext =
   | "file"
   | "node"

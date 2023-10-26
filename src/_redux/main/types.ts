@@ -1,4 +1,10 @@
-import { TFileHandlerCollection, TFilesReferenceData } from "@_node/file";
+import { editor } from "monaco-editor";
+
+import {
+  TFileAction,
+  TFileHandlerCollection,
+  TFilesReferenceData,
+} from "@_node/file";
 import { THtmlReferenceData } from "@_node/html";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import { TOsType, TTheme, TToast } from "@_types/global";
@@ -7,31 +13,35 @@ import {
   TCmdkReferenceData,
   TCodeChange,
   TEvent,
-  TFile,
-  TFileAction,
   TFileInfo,
   TPanelContext,
   TProject,
   TProjectContext,
   TWorkspace,
 } from "@_types/main";
-import { editor } from "monaco-editor";
 
-export type TMainReducerState = {
-  actionGroupIndex: number;
-  navigator: {
-    file: TFile;
-  };
-  global: {
-    fileAction: TFileAction;
-  };
-  fileTreeViewState: TTreeViewState;
-  nodeTreeViewState: TTreeViewState;
+export type TFileTreeReducerState = {
+  fileAction: TFileAction;
 };
+
+export type TNodeTreeReducerState = {
+  fileContent: string;
+  selectedItems: TNodeUid[];
+};
+
+export type TEventHistoryInfo = {
+  fileTree: {
+    future: number;
+    past: number;
+  };
+  nodeTree: {
+    future: number;
+    past: number;
+  };
+};
+
+// --------------------
 export type TMainContext = {
-  // global action
-  addRunningActions: (actionNames: string[]) => void;
-  removeRunningActions: (actionNames: string[], effect?: boolean) => void;
   // navigator
   workspace: TWorkspace;
   setWorkspace: (ws: TWorkspace) => void;
@@ -140,6 +150,7 @@ export type TMainContext = {
     editorInstance: editor.IStandaloneCodeEditor | null,
   ) => void;
 };
+
 export type TUpdateOptions = {
   parse: boolean | null;
   from:
@@ -158,17 +169,7 @@ export type TCommand = {
   action: string;
 };
 export type TNavigatorDropDownType = "workspace" | "project" | null;
-export type TTreeViewState = {
-  focusedItem: TNodeUid;
-  expandedItems: TNodeUid[];
-  expandedItemsObj: {
-    [uid: TNodeUid]: boolean;
-  };
-  selectedItems: TNodeUid[];
-  selectedItemsObj: {
-    [uid: TNodeUid]: boolean;
-  };
-};
+
 export type TUpdateTreeViewStatePayload = {
   deletedUids?: TNodeUid[];
   convertedUids?: [TNodeUid, TNodeUid][];
