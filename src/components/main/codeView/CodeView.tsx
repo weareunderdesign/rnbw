@@ -47,6 +47,7 @@ export default function CodeView(props: CodeViewProps) {
     theme: _theme,
     parseFileFlag,
     showCodeView,
+    isContentProgrammaticallyChanged,
   } = useContext(MainContext);
   // -------------------------------------------------------------- references --------------------------------------------------------------
 
@@ -171,7 +172,6 @@ export default function CodeView(props: CodeViewProps) {
       hightlightFocusedNodeCodeBlock();
       revealed.current = true;
     }
-
     focusedItemRef.current = focusedItem;
   }, [focusedItem, parseFileFlag]);
 
@@ -242,7 +242,7 @@ export default function CodeView(props: CodeViewProps) {
       revealed.current = false;
       return;
     }
-    const monacoEditor = getCurrentEditorInstance();
+
     if (selection) {
       let newFocusedNode = findNodeBySelection(
         selection,
@@ -317,7 +317,10 @@ export default function CodeView(props: CodeViewProps) {
             value={codeContent}
             theme={theme}
             onMount={handleEditorDidMount}
-            onChange={handleEditorChange}
+            onChange={(value) => {
+              if (isContentProgrammaticallyChanged.current) return;
+              handleEditorChange(value);
+            }}
             loading={""}
             options={
               editorConfigs as monaco.editor.IStandaloneEditorConstructionOptions

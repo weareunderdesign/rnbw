@@ -207,6 +207,10 @@ export default function MainPage() {
   const [linkToOpen, setLinkToOpen] = useState<string>("");
   // code view
   const [codeEditing, setCodeEditing] = useState<boolean>(false);
+  const isContentProgrammaticallyChanged = useRef<boolean>(false);
+  function setIsContentProgrammaticallyChanged(value: boolean) {
+    isContentProgrammaticallyChanged.current = value;
+  }
   const [codeChanges, setCodeChanges] = useState<TCodeChange[]>([]);
   const [tabSize, setTabSize] = useState<number>(DefaultTabSize);
   const [newFocusedNodeUid, setNewFocusedNodeUid] = useState<TNodeUid>("");
@@ -1659,6 +1663,8 @@ export default function MainPage() {
           // code view
           codeEditing,
           setCodeEditing,
+          isContentProgrammaticallyChanged,
+          setIsContentProgrammaticallyChanged,
           codeChanges,
           setCodeChanges,
           tabSize,

@@ -94,6 +94,8 @@ export type TMainContext = {
   // code view
   codeEditing: boolean;
   setCodeEditing: (editing: boolean) => void;
+  isContentProgrammaticallyChanged: React.RefObject<boolean>;
+  setIsContentProgrammaticallyChanged: (changed: boolean) => void;
   codeChanges: TCodeChange[];
   setCodeChanges: (changes: TCodeChange[]) => void;
   tabSize: number;

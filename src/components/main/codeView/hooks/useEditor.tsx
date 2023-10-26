@@ -7,19 +7,20 @@ import {
   setCurrentFileContent,
 } from "@_redux/main";
 import morphdom from "morphdom";
-import { DefaultTabSize, RootNodeUid } from "@_constants/main";
+import {
+  DefaultTabSize,
+  NodeInAppAttribName,
+  RootNodeUid,
+} from "@_constants/main";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import { getSubNodeUidsByBfs } from "@_node/apis";
-import { THtmlNodeData, checkValidHtml, parseHtml } from "@_node/html";
-import { getPositionFromIndex } from "@_services/htmlapi";
+import { parseHtml } from "@_node/html";
 import { CodeSelection } from "../types";
-import { getLineBreaker } from "@_services/global";
-import { TCodeChange } from "@_types/main";
 import { TFileNodeData } from "@_node/file";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { styles } from "@_components/main/stageView/iFrame/styles";
-import { debounce } from "lodash";
+import { debounce, set } from "lodash";
 
 function getLanguageFromExtension(extension: string) {
   switch (extension) {
@@ -44,13 +45,15 @@ export default function useEditor() {
     codeEditing,
     setCodeEditing,
     ffTree,
-    setActivePanel,
     addRunningActions,
     setUpdateOpt,
     setFSPending,
     setFFTree,
     setMonacoEditorRef,
     setNodeTree,
+    isContentProgrammaticallyChanged,
+    setIsContentProgrammaticallyChanged,
+    monacoEditorRef,
   } = useContext(MainContext);
   const { file } = useSelector(navigatorSelector);
 
@@ -112,10 +115,6 @@ export default function useEditor() {
   function getValidNodeTreeInstance() {
     return validNodeTreeRef;
   }
-  // panel focus handler
-  function onPanelClick() {
-    setActivePanel("code");
-  }
 
   function findNodeBySelection(
     selection: CodeSelection,
@@ -164,8 +163,8 @@ export default function useEditor() {
   }
 
   const debouncedEditorUpdate = useCallback(
-    debounce((value: string) => {
-      const monacoEditor = getCurrentEditorInstance();
+    debounce((value: string, configs) => {
+      const monacoEditor = monacoEditorRef.current;
       if (!monacoEditor) return;
       const iframe: any = document.getElementById("iframeId");
       const iframeDoc = iframe.contentDocument;
@@ -175,36 +174,43 @@ export default function useEditor() {
       let bodyEle = null;
       if (!htmlDom) return;
       const defaultTreeAdapter = parse5.defaultTreeAdapter;
-      // bodyEle = DomUtils.getInnerHTML(htmlDom);
-
-      const bodyNode = defaultTreeAdapter
+      const htmlNode = defaultTreeAdapter
         .getChildNodes(htmlDom)
         .filter(defaultTreeAdapter.isElementNode)[0];
 
-      if (bodyNode) {
-        bodyEle = parse5.serialize(bodyNode);
+      if (htmlNode) {
+        bodyEle = parse5.serialize(htmlNode);
       }
       if (!iframeHtml || !bodyEle) return;
 
       try {
         morphdom(iframeHtml, bodyEle, {
           onBeforeElUpdated: function (fromEl, toEl) {
-            if (fromEl.isEqualNode(toEl)) {
-              return false;
-            } else {
-              //check if the node is a custom element
-              if (toEl.nodeName.includes("-")) {
-                //copy the content or template of the custom element
-                toEl.innerHTML = fromEl.innerHTML;
+            if (configs?.matchIds) {
+              const toElRnbwId = toEl.getAttribute(NodeInAppAttribName);
+              if (!!toElRnbwId && configs.matchIds.includes(toElRnbwId)) {
+                return true;
+              } else {
+                return false;
               }
-              //check if the node is html
-              if (toEl.nodeName === "HTML") {
-                //copy the attributes
-                for (let i = 0; i < fromEl.attributes.length; i++) {
-                  toEl.setAttribute(
-                    fromEl.attributes[i].name,
-                    fromEl.attributes[i].value,
-                  );
+            } else {
+              if (fromEl.isEqualNode(toEl)) {
+                return false;
+              } else {
+                //check if the node is a custom element
+                if (toEl.nodeName.includes("-")) {
+                  //copy the content or template of the custom element
+                  // toEl.innerHTML = fromEl.innerHTML;
+                }
+                //check if the node is html
+                if (toEl.nodeName === "HTML") {
+                  //copy the attributes
+                  for (let i = 0; i < fromEl.attributes.length; i++) {
+                    toEl.setAttribute(
+                      fromEl.attributes[i].name,
+                      fromEl.attributes[i].value,
+                    );
+                  }
                 }
               }
             }
@@ -239,37 +245,22 @@ export default function useEditor() {
       const style = iframeDoc.createElement("style");
       style.textContent = styles;
       headNode.appendChild(style);
+
       setCodeEditing(false);
     }, 1000),
     [],
   );
 
-  const handleEditorChange = (value: string | undefined) => {
-    if (!value) return;
-    debouncedEditorUpdate(value);
-    setCodeEditing(true);
-  };
-
-  function updateFileContentOnRedux(
+  const handleEditorChange = (
     value: string | undefined,
-    monacoEditor: editor.IStandaloneCodeEditor | undefined,
-    reduxTimeout: NodeJS.Timeout | null,
-    saveFileContentToRedux: () => void,
-    currentPosition: React.MutableRefObject<IPosition | null>,
-    delay: number,
-    setCodeEditing: React.Dispatch<React.SetStateAction<boolean>>,
-  ) {
-    codeContentRef.current = value || "";
-    const newPosition = monacoEditor?.getPosition();
-    if (newPosition !== undefined) {
-      currentPosition.current = newPosition;
-    }
-
-    reduxTimeout !== null && clearTimeout(reduxTimeout);
-    let updatedTimeout = setTimeout(saveFileContentToRedux, delay);
-    setCodeEditing(true);
-    return updatedTimeout;
-  }
+    configs?: {
+      matchIds?: string[] | null;
+    },
+  ) => {
+    if (!value) return;
+    debouncedEditorUpdate(value, configs);
+    setIsContentProgrammaticallyChanged(false);
+  };
 
   // tabSize
   useEffect(() => {
@@ -290,7 +281,6 @@ export default function useEditor() {
     codeEditing,
     setCodeEditing,
     handleEditorChange,
-    updateFileContentOnRedux,
     focusedNode,
     setFocusedNode,
     codeContent,
