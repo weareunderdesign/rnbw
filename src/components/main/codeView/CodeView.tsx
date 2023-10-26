@@ -11,22 +11,13 @@ import * as monaco from "monaco-editor";
 import { useDispatch, useSelector } from "react-redux";
 
 import { RootNodeUid } from "@_constants/main";
-import { TFileNodeData, THtmlNodeData, TNodeUid } from "@_node/index";
-import {
-  expandFNNode,
-  fnSelector,
-  focusFNNode,
-  MainContext,
-  navigatorSelector,
-  selectFNNode,
-} from "@_redux/main";
-
+import { useTheme } from "@_hooks/useTheme";
+import { TFileNodeData, TNodeUid } from "@_node/index";
+import { MainContext } from "@_redux/main";
 import { Editor, loader } from "@monaco-editor/react";
 
-import { CodeSelection, CodeViewProps } from "./types";
-import { getPositionFromIndex } from "@_services/htmlapi";
-import { useTheme } from "@_hooks/useTheme";
 import { useEditor, useEditorWrapper } from "./hooks";
+import { CodeSelection, CodeViewProps } from "./types";
 
 loader.config({ monaco });
 
@@ -115,7 +106,7 @@ export default function CodeView(props: CodeViewProps) {
     if (!monacoEditor) return;
     const node = validNodeTree[focusedItem];
 
-    const sourceCodeLocation = node.sourceCodeLocation;
+    const sourceCodeLocation = node.data.codeRange;
 
     if (!sourceCodeLocation) {
       return;

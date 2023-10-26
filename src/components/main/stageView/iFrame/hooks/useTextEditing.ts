@@ -93,7 +93,7 @@ export const useTextEditing = ({
       endLine: endLineNumber,
       startCol: startColumn,
       startLine: startLineNumber,
-    } = node.sourceCodeLocation;
+    } = node.data.codeRange;
 
     //replace the content in this range with the cleaned up code
     const model = monacoEditorRef.current?.getModel();

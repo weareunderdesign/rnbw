@@ -1,6 +1,5 @@
 export const RootNodeUid = "ROOT";
 
-
 export const CodeViewSyncDelay = 1 * 1000;
 export const StagePreviewPathPrefix = "rnbw-stage-preview-";
 

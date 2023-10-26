@@ -1,7 +1,9 @@
 import { useCallback, useContext } from "react";
-import { useDispatch, useSelector } from "react-redux";
+
 import { Range } from "monaco-editor";
-import { TNode, TNodeUid } from "@_node/types";
+import { useDispatch, useSelector } from "react-redux";
+
+import { useEditor } from "@_components/main/codeView/hooks";
 import {
   addNode,
   copyNode,
@@ -10,7 +12,7 @@ import {
   getValidNodeUids,
   moveNode,
 } from "@_node/index";
-
+import { TNode, TNodeUid } from "@_node/types";
 import {
   fnSelector,
   increaseActionGroupIndex,
@@ -18,10 +20,9 @@ import {
   navigatorSelector,
 } from "@_redux/main";
 
-import { creatingNode } from "../helpers/creatingNode";
 import { addNodeToTree } from "../helpers/addNodeToTree";
+import { creatingNode } from "../helpers/creatingNode";
 import { getTree } from "../helpers/getTree";
-import { useEditor } from "@_components/main/codeView/hooks";
 
 export function useNodeActions() {
   const dispatch = useDispatch();
@@ -140,7 +141,7 @@ export function useNodeActions() {
             endLine: endLineNumber,
             startCol: startColumn,
             startLine: startLineNumber,
-          } = node.sourceCodeLocation;
+          } = node.data.codeRange;
 
           const range = new Range(
             startLineNumber,
