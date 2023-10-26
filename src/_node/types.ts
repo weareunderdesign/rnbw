@@ -1,30 +1,40 @@
-import { TFileNodeData } from "./file";
-import { THtmlDomNodeData, THtmlNodeData, THtmlReferenceData } from "./html";
+import { THtmlReferenceData } from "./html";
 
-export type TNodeUid = string;
 export type TNode = {
   uid: TNodeUid;
   parentUid: TNodeUid | null;
-  name: string;
+
+  displayName: string;
+
   isEntity: boolean;
   children: TNodeUid[];
-  data: TNormalNodeData | TFileNodeData | THtmlNodeData | THtmlDomNodeData;
-  sourceCodeLocation: {
-    startLine: number;
-    startCol: number;
-    startOffset: number;
-    endLine: number;
-    endCol: number;
-    endOffset: number;
-  };
+
+  data: TNodeData;
 };
-export type TNormalNodeData = {
+
+export type TNodeUid = string;
+
+export type TNodeData = TBasicNodeData & { [propName: string]: any };
+
+export type TBasicNodeData = {
   valid: boolean;
-  [propName: string]: any;
 };
+
 export type TNodeTreeData = {
   [uid: TNodeUid]: TNode;
 };
+
+export type TNodeCodeRange = {
+  startLine: number;
+  startCol: number;
+  startOffset: number;
+  endLine: number;
+  endCol: number;
+  endOffset: number;
+};
+
+// --------------------
+
 export type TNodeTreeContext = "file" | "html";
 export type TNodeApiResponse = {
   tree: TNodeTreeData;

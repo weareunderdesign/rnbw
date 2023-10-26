@@ -1,14 +1,8 @@
 import { RootNodeUid } from "@_constants/main";
 import { TOsType } from "@_types/global";
 
-import {
-  addFormatTextAfterNode,
-  addFormatTextBeforeNode,
-  indentNode,
-  setHtmlNodeInAppAttribName,
-  THtmlNodeData,
-  THtmlReferenceData,
-} from "./html";
+import { TFileNodeData } from "./file";
+import { THtmlNodeData, THtmlReferenceData } from "./html";
 import {
   TNode,
   TNodeApiResponse,
@@ -16,10 +10,7 @@ import {
   TNodeTreeContext,
   TNodeTreeData,
   TNodeUid,
-  TNormalNodeData,
 } from "./types";
-import { TFile } from "@_types/main";
-import { TFileNodeData } from "./file";
 
 export const getSubNodeUidsByBfs = (
   uid: TNodeUid,
@@ -345,7 +336,7 @@ export const copyNode = (
     newNode.parentUid = targetUid;
 
     if (treeType === "html") {
-      setHtmlNodeInAppAttribName(newNode, newUid);
+      setHtmlNodeUidAttribNameInApp(newNode, newUid);
     } else {
       // do nothing
     }
@@ -388,7 +379,7 @@ export const copyNode = (
         childNode.parentUid = subNode.uid;
 
         if (treeType === "html") {
-          setHtmlNodeInAppAttribName(childNode, newChildUid);
+          setHtmlNodeUidAttribNameInApp(childNode, newChildUid);
         } else {
           // do nothing
         }
@@ -462,7 +453,7 @@ export const copyNodeExternal = (
     newNode.parentUid = targetUid;
 
     if (treeType === "html") {
-      setHtmlNodeInAppAttribName(newNode, newUid);
+      setHtmlNodeUidAttribNameInApp(newNode, newUid);
     } else {
       // do nothing
     }
@@ -504,7 +495,7 @@ export const copyNodeExternal = (
         childNode.uid = newChildUid;
         childNode.parentUid = subNode.uid;
         if (treeType === "html") {
-          setHtmlNodeInAppAttribName(childNode, newChildUid);
+          setHtmlNodeUidAttribNameInApp(childNode, newChildUid);
         } else {
           // do nothing
         }
@@ -691,7 +682,7 @@ export const duplicateNode = (
     newNode.uid = newUid;
 
     if (treeType === "html") {
-      setHtmlNodeInAppAttribName(newNode, newUid);
+      setHtmlNodeUidAttribNameInApp(newNode, newUid);
     } else {
       // do nothing
     }
@@ -717,7 +708,7 @@ export const duplicateNode = (
         childNode.parentUid = subNode.uid;
 
         if (treeType === "html") {
-          setHtmlNodeInAppAttribName(childNode, newChildUid);
+          setHtmlNodeUidAttribNameInApp(childNode, newChildUid);
         } else {
           // do nothing
         }
