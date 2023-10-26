@@ -192,7 +192,7 @@ export default function useEditor() {
               const toElRnbwId = toEl.getAttribute(NodeUidAttribNameInApp);
               if (!!toElRnbwId && configs.matchIds.includes(toElRnbwId)) {
                 return true;
-              } else {
+              } else if (fromEl.isEqualNode(toEl)) {
                 return false;
               }
             } else {

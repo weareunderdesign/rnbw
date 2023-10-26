@@ -1,19 +1,18 @@
 import { useCallback, useContext } from "react";
 import { useSelector } from "react-redux";
-
-import { getNodeChildIndex } from "@_node/index";
 import { TNode, TNodeUid } from "@_node/types";
 import { fnSelector, MainContext, navigatorSelector } from "@_redux/main";
-import { AddNodeActionPrefix } from "@_constants/main";
+import { AddNodeActionPrefix, NodeInAppAttribName } from "@_constants/main";
 
 import { useNodeActions } from "./useNodeActions";
+import { Range } from "monaco-editor";
+import { useEditor } from "@_components/main/codeView/hooks";
 
 export const useNodeActionsHandlers = () => {
   const { file } = useSelector(navigatorSelector);
   const { focusedItem, selectedItems } = useSelector(fnSelector);
   const {
     // node actions
-    clipboardData,
     setClipboardData,
     // file tree view
     ffTree,
@@ -22,6 +21,7 @@ export const useNodeActionsHandlers = () => {
     validNodeTree,
     // other
     theme: _theme,
+    monacoEditorRef,
   } = useContext(MainContext);
 
   const {
@@ -33,6 +33,7 @@ export const useNodeActionsHandlers = () => {
     cb_moveNode,
   } = useNodeActions();
 
+  const { handleEditorChange } = useEditor();
   const onCut = useCallback(() => {
     if (selectedItems.length === 0) return;
     cb_removeNode(selectedItems);
@@ -56,69 +57,77 @@ export const useNodeActionsHandlers = () => {
 
   const onCopy = useCallback(() => {
     if (selectedItems.length === 0) return;
-    let data: TNode[] = [];
-    for (let x in selectedItems) {
-      if (validNodeTree[selectedItems[x]]) {
-        data.push(validNodeTree[selectedItems[x]]);
-      }
-    }
-    setClipboardData({
-      panel: "node",
-      type: "copy",
-      uids: selectedItems,
-      fileType: ffTree[file.uid].data.type,
-      data: data,
-      fileUid: file.uid,
-      prevNodeTree: nodeTree,
+    const iframe: any = document.getElementById("iframeId");
+    let copiedCode = "";
+    selectedItems.forEach((uid) => {
+      const ele = iframe?.contentWindow?.document?.querySelector(
+        `[${NodeInAppAttribName}="${uid}"]`,
+      );
+
+      //create a copy of ele
+      const eleCopy = ele?.cloneNode(true) as HTMLElement;
+      eleCopy?.removeAttribute("contenteditable");
+      eleCopy?.removeAttribute("rnbwdev-rnbw-element-hover");
+      eleCopy?.removeAttribute("rnbwdev-rnbw-element-select");
+      eleCopy?.removeAttribute("data-rnbwdev-rnbw-node");
+      const cleanedUpCode = eleCopy?.outerHTML;
+      //delete the copy
+      eleCopy?.remove();
+      if (!cleanedUpCode) return;
+      copiedCode += cleanedUpCode + "\n";
     });
+    //copy the cleaned up code to clipboard
+    window.navigator.clipboard.writeText(copiedCode);
   }, [selectedItems, ffTree[file.uid], nodeTree]);
 
   const onPaste = useCallback(() => {
-    if (clipboardData.panel !== "node") return;
-
-    const uids = clipboardData.uids.filter((uid) => !!validNodeTree[uid]);
-    const datas = clipboardData.data.filter((data) => data.data.valid);
     const focusedNode = validNodeTree[focusedItem];
 
-    if (focusedNode === undefined) return;
-
-    const parentNode = validNodeTree[focusedNode.parentUid as TNodeUid];
-
-    if (parentNode === undefined) return;
-
-    const childIndex = getNodeChildIndex(parentNode, focusedNode);
-
-    // if (clipboardData.type === "cut") {
-    //   setClipboardData({
-    //     panel: "unknown",
-    //     type: null,
-    //     uids: [],
-    //     fileType: "html",
-    //     data: [],
-    //     fileUid: "",
-    //     prevNodeTree: {},
-    //   });
-    if (file.uid === clipboardData.fileUid) {
-      cb_moveNode(uids, parentNode.uid, true, childIndex + 1);
-    } else {
-      cb_copyNodeExternal(datas, parentNode.uid, true, childIndex + 1);
+    if (!focusedNode?.uid) {
+      console.error("Focused node is undefined");
+      return;
     }
-    // } else {
-    if (file.uid === clipboardData.fileUid) {
-      cb_copyNodeExternal(datas, parentNode.uid, true, childIndex + 1);
-    } else {
-      cb_copyNodeExternal(datas, parentNode.uid, true, childIndex + 1);
+
+    const selectedNode = validNodeTree[focusedNode.uid];
+    if (!selectedNode || !selectedNode.sourceCodeLocation) {
+      console.error("Parent node or source code location is undefined");
+      return;
     }
-    // }
-  }, [
-    clipboardData,
-    validNodeTree,
-    focusedItem,
-    cb_moveNode,
-    cb_copyNode,
-    file.uid,
-    cb_copyNodeExternal,
-  ]);
+
+    const { endLine, endCol } = selectedNode.sourceCodeLocation;
+    const model = monacoEditorRef.current?.getModel();
+
+    if (!model) {
+      console.error("Monaco Editor model is undefined");
+      return;
+    }
+
+    window.navigator.clipboard
+      .readText()
+      .then((copiedCode) => {
+        const position = { lineNumber: endLine, column: endCol + 1 };
+        const range = new Range(
+          position.lineNumber,
+          position.column,
+          position.lineNumber,
+          position.column,
+        );
+        const editOperation = { range, text: "\n" + copiedCode };
+
+        model.pushEditOperations([], [editOperation], () => null);
+        monacoEditorRef.current?.setPosition({
+          lineNumber: position.lineNumber + 1,
+          column: 1,
+        });
+        const content = model.getValue();
+        handleEditorChange(content, {
+          matchIds: [focusedNode.parentUid as TNodeUid],
+        });
+      })
+      .catch((error) => {
+        console.error("Error reading from clipboard:", error);
+      });
+  }, [validNodeTree, focusedItem]);
 
   const onDelete = useCallback(() => {
     if (selectedItems.length === 0) return;
