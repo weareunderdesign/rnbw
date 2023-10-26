@@ -89,7 +89,7 @@ import {
 import { getCommandKey } from "../../services/global";
 import { MainPageProps } from "./types";
 
-export default function MainPage(props: MainPageProps) {
+export default function MainPage() {
   // -------------------------------------------------------------- redux  --------------------------------------------------------------
   const dispatch = useDispatch();
   const actionGroupIndex = useSelector(getActionGroupIndexSelector);
@@ -97,22 +97,10 @@ export default function MainPage(props: MainPageProps) {
   const { fileAction } = useSelector(globalSelector);
 
   //ff is fileTreeViewState
-  const {
-    focusedItem: ffFocusedItem,
-    expandedItems: ffExpandedItems,
-    selectedItems: ffSelectedItems,
-    expandedItemsObj: ffExpandedItemsObj,
-    selectedItemsObj: ffSelectedItemsObj,
-  } = useSelector(ffSelector);
+  const { focusedItem: ffFocusedItem } = useSelector(ffSelector);
 
   //fn is nodeTreeViewState
-  const {
-    focusedItem: fnFocusedItem,
-    expandedItems: fnExpandedItems,
-    selectedItems: fnSelectedItems,
-    expandedItemsObj: fnExpandedItemsObj,
-    selectedItemsObj: fnSelectedItemsObj,
-  } = useSelector(fnSelector);
+  const { focusedItem: fnFocusedItem } = useSelector(fnSelector);
   const { futureLength, pastLength } = useSelector(hmsInfoSelector);
 
   // -------------------------------------------------------------- main context --------------------------------------------------------------
@@ -219,6 +207,10 @@ export default function MainPage(props: MainPageProps) {
   const [linkToOpen, setLinkToOpen] = useState<string>("");
   // code view
   const [codeEditing, setCodeEditing] = useState<boolean>(false);
+  const isContentProgrammaticallyChanged = useRef<boolean>(false);
+  function setIsContentProgrammaticallyChanged(value: boolean) {
+    isContentProgrammaticallyChanged.current = value;
+  }
   const [codeChanges, setCodeChanges] = useState<TCodeChange[]>([]);
   const [tabSize, setTabSize] = useState<number>(DefaultTabSize);
   const [newFocusedNodeUid, setNewFocusedNodeUid] = useState<TNodeUid>("");
@@ -1671,6 +1663,8 @@ export default function MainPage(props: MainPageProps) {
           // code view
           codeEditing,
           setCodeEditing,
+          isContentProgrammaticallyChanged,
+          setIsContentProgrammaticallyChanged,
           codeChanges,
           setCodeChanges,
           tabSize,

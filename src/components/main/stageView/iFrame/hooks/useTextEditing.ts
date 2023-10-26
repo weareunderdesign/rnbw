@@ -53,12 +53,8 @@ export const useTextEditing = ({
     // close all panel
     closeAllPanel,
     monacoEditorRef,
+    setIsContentProgrammaticallyChanged,
   } = useContext(MainContext);
-
-  const [contentEditableAttr, setContentEditableAttr] = useState<string | null>(
-    null,
-  );
-  const [outerHtml, setOuterHtml] = useState("");
 
   const { setFocusedSelectedItems } = useSetSelectItem({
     mostRecentSelectedNode,
@@ -67,16 +63,26 @@ export const useTextEditing = ({
   });
 
   const beforeTextEdit = useCallback(() => {
+    setIsContentProgrammaticallyChanged(true);
     let node = validNodeTree[contentEditableUidRef.current];
     if (!node) return;
+
+    let editableId = contentEditableUidRef.current;
+    contentEditableUidRef.current = "";
+
     let ele = contentRef?.contentWindow?.document?.querySelector(
-      `[${NodeInAppAttribName}="${contentEditableUidRef.current}"]`,
+      `[${NodeInAppAttribName}="${editableId}"]`,
     );
+    //create a copy of ele
+    const eleCopy = ele?.cloneNode(true) as HTMLElement;
     ele?.removeAttribute("contenteditable");
-    ele?.removeAttribute("rnbwdev-rnbw-element-hover");
-    ele?.removeAttribute("rnbwdev-rnbw-element-select");
-    ele?.removeAttribute("data-rnbwdev-rnbw-node");
-    const cleanedUpCode = ele?.outerHTML;
+    eleCopy?.removeAttribute("contenteditable");
+    eleCopy?.removeAttribute("rnbwdev-rnbw-element-hover");
+    eleCopy?.removeAttribute("rnbwdev-rnbw-element-select");
+    eleCopy?.removeAttribute("data-rnbwdev-rnbw-node");
+    const cleanedUpCode = eleCopy?.outerHTML;
+    //delete the copy
+    eleCopy?.remove();
     if (!cleanedUpCode) return;
 
     //current code range in monaco editor
@@ -108,8 +114,10 @@ export const useTextEditing = ({
     monacoEditorRef.current?.revealLineInCenter(startLineNumber);
     //give all the content inside the editor
     const content = model.getValue();
-    handleEditorChange(content);
-    contentEditableUidRef.current = "";
+
+    handleEditorChange(content, {
+      matchIds: [editableId],
+    });
   }, [focusedItem]);
 
   const onCmdEnter = useCallback(
@@ -266,7 +274,7 @@ export const useTextEditing = ({
         );
       } else {
         isEditing.current = false;
-        handleWebComponentClick(ele);
+        // handleWebComponentClick(ele);
       }
     },
     [validNodeTree, ffTree, expandedItemsObj, contentRef],

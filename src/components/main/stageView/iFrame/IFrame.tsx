@@ -132,6 +132,7 @@ export const IFrame = () => {
   }, [focusedItem]);
   // mark selected items
   const selectedItemsRef = useRef<TNodeUid[]>(selectedItems);
+
   useEffect(() => {
     if (selectedItemsRef.current.length === selectedItems.length) {
       let same = true;

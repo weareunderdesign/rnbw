@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect } from "react";
+import { useContext, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { LogAllow } from "@_constants/main";
@@ -10,15 +10,12 @@ import {
   navigatorSelector,
   setCurrentFileContent,
 } from "@_redux/main";
-import { TFileInfo, TFileType } from "@_types/main";
+import { TFileInfo } from "@_types/main";
 import {
-  detectSeedNodeChanges,
   getFileData,
   getPreViewPath,
-  handleCodeChangeEffects,
   handleFileUpdate,
   handleHmsChange,
-  handleHtmlUpdate,
   updateFileInfoFromNodeTree,
 } from "../helpers";
 
@@ -46,16 +43,10 @@ export const useProcessorUpdateOpt = () => {
     fileInfo,
     setFileInfo,
     setNeedToReloadIFrame,
-    // code view
-    setCodeEditing,
-    codeChanges,
-    setCodeChanges,
     setNewFocusedNodeUid,
     // processor
     updateOpt,
     setUpdateOpt,
-    // references
-    htmlReferenceData,
     // other
     osType,
     monacoEditorRef,
@@ -95,46 +86,6 @@ export const useProcessorUpdateOpt = () => {
           // reload iframe
           _needToReloadIFrame = true;
         }
-      } else if (updateOpt.from === "code" || updateOpt.from === "stage") {
-        if (fileData.type === "html") {
-          const isSeedNodeChanged = detectSeedNodeChanges(
-            _nodeTree,
-            codeChanges,
-          );
-          if (monacoEditor) {
-            if (isSeedNodeChanged) {
-              const { tree, newNodeMaxUid } = handleHtmlUpdate(
-                fileData,
-                file,
-                _nodeTree,
-                _nodeMaxUid,
-                codeChanges,
-                updateOpt,
-                monacoEditor,
-              );
-              _nodeTree = tree;
-              _nodeMaxUid = Number(newNodeMaxUid);
-
-              // reload iframe
-              _needToReloadIFrame = true;
-            } else {
-              const result = handleCodeChangeEffects(
-                codeChanges,
-                fileData,
-                file,
-
-                _nodeTree,
-                _nodeMaxUid,
-                _newFocusedNodeUid,
-                monacoEditor,
-              );
-              setCodeChanges([]);
-              _nodeMaxUid = result._nodeMaxUid;
-              _newFocusedNodeUid = result._newFocusedNodeUid;
-            }
-          }
-        }
-        updateOpt.from === "code" && setCodeEditing(false);
       } else if (updateOpt.from === "hms") {
         if (monacoEditor) {
           const result = handleHmsChange(

@@ -98,6 +98,10 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   // code view
   codeEditing: false,
   setCodeEditing: (editing: boolean) => {},
+  isContentProgrammaticallyChanged: {
+    current: false,
+  },
+  setIsContentProgrammaticallyChanged: (changed: boolean) => {},
   codeChanges: [],
   setCodeChanges: (changes: TCodeChange[]) => {},
   tabSize: DefaultTabSize,
