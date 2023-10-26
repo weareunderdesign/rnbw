@@ -1,12 +1,13 @@
 import { useCallback, useContext } from "react";
+
 import { useDispatch } from "react-redux";
 
-import { NodeInAppAttribName, RootNodeUid } from "@_constants/main";
+import { NodeUidAttribNameInApp, RootNodeUid } from "@_constants/main";
 import { TNode, TNodeUid } from "@_node/types";
 import {
-  MainContext,
   expandFNNode,
   focusFNNode,
+  MainContext,
   selectFNNode,
 } from "@_redux/main";
 
@@ -57,7 +58,7 @@ export const useSetSelectItem = ({
 
       const newFocusedElement =
         contentRef?.contentWindow?.document?.querySelector(
-          `[${NodeInAppAttribName}="${uid}"]`,
+          `[${NodeUidAttribNameInApp}="${uid}"]`,
         );
       const elementRect = (
         newFocusedElement as HTMLElement

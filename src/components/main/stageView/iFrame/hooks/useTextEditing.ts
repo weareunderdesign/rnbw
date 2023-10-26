@@ -1,21 +1,23 @@
-import { useCallback, useState, useContext } from "react";
+import { useCallback, useContext } from "react";
+
 import { useDispatch, useSelector } from "react-redux";
 
-import { NodeInAppAttribName, RootNodeUid } from "@_constants/main";
+import { useEditor } from "@_components/main/codeView/hooks";
+import { NodeUidAttribNameInApp, RootNodeUid } from "@_constants/main";
+import { TFileNodeData } from "@_node/file";
+import { THtmlNodeData } from "@_node/html";
 import { TNode, TNodeUid } from "@_node/types";
 import {
-  MainContext,
   expandFFNode,
   ffSelector,
   fnSelector,
+  MainContext,
 } from "@_redux/main";
 import { getCommandKey } from "@_services/global";
 import { TCmdkKeyMap } from "@_types/main";
-import { useSetSelectItem } from "./useSetSelectItem";
-import { THtmlNodeData } from "@_node/html";
-import { TFileNodeData } from "@_node/file";
+
 import { handleElementClick, openNewPage } from "../helpers";
-import { useEditor } from "@_components/main/codeView/hooks";
+import { useSetSelectItem } from "./useSetSelectItem";
 
 export interface IUseTextEditingProps {
   contentEditableUidRef: React.MutableRefObject<string>;
@@ -71,7 +73,7 @@ export const useTextEditing = ({
     contentEditableUidRef.current = "";
 
     let ele = contentRef?.contentWindow?.document?.querySelector(
-      `[${NodeInAppAttribName}="${editableId}"]`,
+      `[${NodeUidAttribNameInApp}="${editableId}"]`,
     );
     //create a copy of ele
     const eleCopy = ele?.cloneNode(true) as HTMLElement;
@@ -135,7 +137,7 @@ export const useTextEditing = ({
         //https://github.com/rnbwdev/rnbw/issues/240
         if (contentEditableUidRef.current !== "") {
           const ele = contentRef?.contentWindow?.document?.querySelector(
-            `[${NodeInAppAttribName}="${contentEditableUidRef.current}"]`,
+            `[${NodeUidAttribNameInApp}="${contentEditableUidRef.current}"]`,
           );
           ele?.removeAttribute("contenteditable");
           contentEditableUidRef.current = "";
@@ -154,7 +156,7 @@ export const useTextEditing = ({
 
       if (cmdk.cmd && cmdk.key === "Enter") {
         const ele = contentRef?.contentWindow?.document?.querySelector(
-          `[${NodeInAppAttribName}="${contentEditableUidRef.current}"]`,
+          `[${NodeUidAttribNameInApp}="${contentEditableUidRef.current}"]`,
         );
         if (!ele) return;
         (ele as HTMLElement).blur();
@@ -169,8 +171,8 @@ export const useTextEditing = ({
     let exist = false;
     if (!externalDblclick.current) {
       while (flag) {
-        if (ele.getAttribute(NodeInAppAttribName) !== null) {
-          const uid = ele.getAttribute(NodeInAppAttribName);
+        if (ele.getAttribute(NodeUidAttribNameInApp) !== null) {
+          const uid = ele.getAttribute(NodeUidAttribNameInApp);
           if (uid) {
             for (let x in ffTree) {
               const node = validNodeTree[uid];
@@ -261,7 +263,7 @@ export const useTextEditing = ({
 
       openNewPage(ele);
 
-      let uid: TNodeUid | null = ele.getAttribute(NodeInAppAttribName);
+      let uid: TNodeUid | null = ele.getAttribute(NodeUidAttribNameInApp);
       if (uid) {
         handleElementClick(
           ele,

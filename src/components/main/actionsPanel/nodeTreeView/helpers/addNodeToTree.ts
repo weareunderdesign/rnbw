@@ -1,6 +1,6 @@
-import { TNodeTreeData, TNodeUid, TNode } from "@_node/types";
+import { NodeUidAttribNameInApp } from "@_constants/main";
 import { THtmlNodeData } from "@_node/index";
-import { NodeInAppAttribName } from "@_constants/main";
+import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 
 export const addNodeToTree = (
   _tree: TNodeTreeData | null,
@@ -24,7 +24,7 @@ export const addNodeToTree = (
       _tree[x].data.name = newNode.name;
       _tree[x].data.valid = true;
       (_tree[x].data as THtmlNodeData).attribs = {
-        [NodeInAppAttribName]: String(Number(tmpMaxUid) + 1) as TNodeUid,
+        [NodeUidAttribNameInApp]: String(Number(tmpMaxUid) + 1) as TNodeUid,
       };
       newNode.uid = String(Number(tmpMaxUid) + 1);
       tree[String(Number(tmpMaxUid) + 1)] = _tree[x];

@@ -2,12 +2,10 @@ import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import { useSelector } from "react-redux";
 
-import { NodeInAppAttribName } from "@_constants/main";
+import { NodeUidAttribNameInApp } from "@_constants/main";
 import { TNode, TNodeUid } from "@_node/types";
 import { fnSelector, MainContext } from "@_redux/main";
 
-import { jss } from "./js";
-import { styles } from "./styles";
 import {
   useChangeIframeTheme,
   useCmdk,
@@ -16,6 +14,8 @@ import {
   useSideEffectHandlers,
   useTextEditing,
 } from "./hooks";
+import { jss } from "./js";
+import { styles } from "./styles";
 
 export const IFrame = () => {
   // -------------------------------------------------------------- global state --------------------------------------------------------------
@@ -56,10 +56,12 @@ export const IFrame = () => {
       // for the elements which are created by js. (ex: Web Component)
       let curHoveredElement =
         contentRef?.contentWindow?.document?.querySelector(
-          `[${NodeInAppAttribName}="${fnHoveredItemRef.current}"]`,
+          `[${NodeUidAttribNameInApp}="${fnHoveredItemRef.current}"]`,
         );
       const isValid: null | string = curHoveredElement?.firstElementChild
-        ? curHoveredElement?.firstElementChild.getAttribute(NodeInAppAttribName)
+        ? curHoveredElement?.firstElementChild.getAttribute(
+            NodeUidAttribNameInApp,
+          )
         : "";
       isValid === null
         ? (curHoveredElement = curHoveredElement?.firstElementChild)
@@ -72,10 +74,12 @@ export const IFrame = () => {
       // for the elements which are created by js. (ex: Web Component)
       let newHoveredElement =
         contentRef?.contentWindow?.document?.querySelector(
-          `[${NodeInAppAttribName}="${fnHoveredItem}"]`,
+          `[${NodeUidAttribNameInApp}="${fnHoveredItem}"]`,
         );
       const isValid: null | string = newHoveredElement?.firstElementChild
-        ? newHoveredElement?.firstElementChild.getAttribute(NodeInAppAttribName)
+        ? newHoveredElement?.firstElementChild.getAttribute(
+            NodeUidAttribNameInApp,
+          )
         : "";
       isValid === null
         ? (newHoveredElement = newHoveredElement?.firstElementChild)
@@ -95,7 +99,7 @@ export const IFrame = () => {
 
     const newFocusedElement =
       contentRef?.contentWindow?.document?.querySelector(
-        `[${NodeInAppAttribName}="${focusedItem}"]`,
+        `[${NodeUidAttribNameInApp}="${focusedItem}"]`,
       );
     const elementRect = (
       newFocusedElement as HTMLElement
@@ -154,11 +158,11 @@ export const IFrame = () => {
         // for the elements which are created by js. (ex: Web Component)
         let curselectedElement =
           contentRef?.contentWindow?.document?.querySelector(
-            `[${NodeInAppAttribName}="${uid}"]`,
+            `[${NodeUidAttribNameInApp}="${uid}"]`,
           );
         const isValid: null | string = curselectedElement?.firstElementChild
           ? curselectedElement?.firstElementChild.getAttribute(
-              NodeInAppAttribName,
+              NodeUidAttribNameInApp,
             )
           : "";
         isValid === null
@@ -171,11 +175,11 @@ export const IFrame = () => {
         // for the elements which are created by js. (ex: Web Component)
         let newSelectedElement =
           contentRef?.contentWindow?.document?.querySelector(
-            `[${NodeInAppAttribName}="${uid}"]`,
+            `[${NodeUidAttribNameInApp}="${uid}"]`,
           );
         const isValid: null | string = newSelectedElement?.firstElementChild
           ? newSelectedElement?.firstElementChild.getAttribute(
-              NodeInAppAttribName,
+              NodeUidAttribNameInApp,
             )
           : "";
         isValid === null

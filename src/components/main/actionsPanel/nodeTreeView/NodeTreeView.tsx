@@ -5,11 +5,13 @@ import React, {
   useMemo,
   useRef,
 } from "react";
+
 import cx from "classnames";
 import { useDispatch, useSelector } from "react-redux";
+
 import { SVGIconI, TreeView } from "@_components/common";
 import { TreeViewData } from "@_components/common/treeView/types";
-import { NodeInAppAttribName, RootNodeUid } from "@_constants/main";
+import { NodeUidAttribNameInApp, RootNodeUid } from "@_constants/main";
 import {
   TFileNodeData,
   THtmlElementsReference,
@@ -26,16 +28,15 @@ import {
 import { getCommandKey } from "@_services/global";
 import { addClass, removeClass } from "@_services/main";
 
-import { NodeTreeViewProps } from "./types";
-import { useNodeActions } from "./hooks/useNodeActions";
-import { useNodeViewState } from "./hooks/useNodeViewState";
-import { useNodeTreeCallback } from "./hooks/useNodeTreeCallback";
 import { useCmdk } from "./hooks/useCmdk";
-
+import { useNodeActions } from "./hooks/useNodeActions";
+import { useNodeTreeCallback } from "./hooks/useNodeTreeCallback";
+import { useNodeViewState } from "./hooks/useNodeViewState";
 import { Container } from "./nodeTreeComponents/Container";
-import { ItemTitle } from "./nodeTreeComponents/ItemTitle";
 import { DragBetweenLine } from "./nodeTreeComponents/DragBetweenLine";
 import { ItemArrow } from "./nodeTreeComponents/ItemArrow";
+import { ItemTitle } from "./nodeTreeComponents/ItemTitle";
+import { NodeTreeViewProps } from "./types";
 
 const AutoExpandDelay = 1 * 1000;
 
@@ -118,7 +119,7 @@ function NodeTreeView(props: NodeTreeViewProps) {
     const newFocusedElement = document
       .getElementsByTagName("iframe")[0]
       ?.contentWindow?.document?.querySelector(
-        `[${NodeInAppAttribName}="${focusedItem}"]`,
+        `[${NodeUidAttribNameInApp}="${focusedItem}"]`,
       );
     setTimeout(
       () =>
@@ -362,7 +363,7 @@ function NodeTreeView(props: NodeTreeViewProps) {
                   const parentEle = newHoveredElement.parentElement;
                   if (!parentEle) break;
 
-                  _uid = parentEle.getAttribute(NodeInAppAttribName);
+                  _uid = parentEle.getAttribute(NodeUidAttribNameInApp);
                   !_uid ? (newHoveredElement = parentEle) : null;
                 }
 

@@ -1,20 +1,22 @@
 import { useCallback, useContext } from "react";
+
 import { useDispatch, useSelector } from "react-redux";
 
-import { HmsClearActionType, NodeInAppAttribName } from "@_constants/main";
+import { HmsClearActionType, NodeUidAttribNameInApp } from "@_constants/main";
 import { getValidNodeUids } from "@_node/apis";
 import { TFileNodeData } from "@_node/file";
 import { TNode, TNodeUid } from "@_node/types";
 import {
-  MainContext,
   expandFNNode,
   fnSelector,
   focusFNNode,
+  MainContext,
   selectFFNode,
   selectFNNode,
   setCurrentFile,
 } from "@_redux/main";
-import { useSetSelectItem, useTextEditing } from ".";
+
+import { useSetSelectItem, useTextEditing } from "./";
 
 export interface IUseMouseEventsProps {
   externalDblclick: React.MutableRefObject<boolean>;
@@ -119,8 +121,9 @@ export const useMouseEvents = ({
   function handleLinkTag(ele: HTMLElement) {
     const { isLinkTag, linkElement } = isOrContainLinkElement(ele);
     if (isLinkTag && linkElement) {
-      const uid: TNodeUid | null =
-        linkElement.getAttribute(NodeInAppAttribName);
+      const uid: TNodeUid | null = linkElement.getAttribute(
+        NodeUidAttribNameInApp,
+      );
       if (uid !== null) {
         if (uid === linkTagUid.current) {
           const href = linkElement.getAttribute("href");
@@ -137,12 +140,13 @@ export const useMouseEvents = ({
 
   function findEleOrItsNearestParentWithUid(ele: HTMLElement) {
     let newFocusedElement: HTMLElement = ele;
-    let _uid: TNodeUid | null =
-      newFocusedElement.getAttribute(NodeInAppAttribName);
+    let _uid: TNodeUid | null = newFocusedElement.getAttribute(
+      NodeUidAttribNameInApp,
+    );
     while (!_uid) {
       const parentEle = newFocusedElement.parentElement;
       if (!parentEle) break;
-      _uid = parentEle.getAttribute(NodeInAppAttribName);
+      _uid = parentEle.getAttribute(NodeUidAttribNameInApp);
       !_uid ? (newFocusedElement = parentEle) : null;
     }
     return newFocusedElement;
@@ -191,14 +195,14 @@ export const useMouseEvents = ({
   const onMouseMove = useCallback(
     (e: MouseEvent) => {
       const ele = e.target as HTMLElement;
-      let _uid: TNodeUid | null = ele.getAttribute(NodeInAppAttribName);
+      let _uid: TNodeUid | null = ele.getAttribute(NodeUidAttribNameInApp);
       // for the elements which are created by js. (ex: Web Component)
       let newHoveredElement: HTMLElement = ele;
       while (!_uid) {
         const parentEle = newHoveredElement.parentElement;
         if (!parentEle) break;
 
-        _uid = parentEle.getAttribute(NodeInAppAttribName);
+        _uid = parentEle.getAttribute(NodeUidAttribNameInApp);
         !_uid ? (newHoveredElement = parentEle) : null;
       }
 
@@ -236,14 +240,14 @@ export const useMouseEvents = ({
         dispatch(selectFFNode([prevFileUid]));
 
         // select clicked item
-        let _uid: TNodeUid | null = ele.getAttribute(NodeInAppAttribName);
+        let _uid: TNodeUid | null = ele.getAttribute(NodeUidAttribNameInApp);
         // for the elements which are created by js. (ex: Web Component)
         let newFocusedElement: HTMLElement = ele;
         while (!_uid) {
           const parentEle = newFocusedElement.parentElement;
           if (!parentEle) break;
 
-          _uid = parentEle.getAttribute(NodeInAppAttribName);
+          _uid = parentEle.getAttribute(NodeUidAttribNameInApp);
           !_uid ? (newFocusedElement = parentEle) : null;
         }
         setTimeout(() => {
@@ -257,7 +261,7 @@ export const useMouseEvents = ({
         externalDblclick.current = true;
         handleLinkTag(ele);
 
-        let _uid: TNodeUid | null = ele.getAttribute(NodeInAppAttribName);
+        let _uid: TNodeUid | null = ele.getAttribute(NodeUidAttribNameInApp);
         let isWC = false;
         let newFocusedElement: HTMLElement = ele;
         if (!_uid) {
@@ -265,7 +269,7 @@ export const useMouseEvents = ({
           isWC = true;
           newFocusedElement = findEleOrItsNearestParentWithUid(ele);
 
-          _uid = newFocusedElement.getAttribute(NodeInAppAttribName);
+          _uid = newFocusedElement.getAttribute(NodeUidAttribNameInApp);
         }
 
         const areMultiple = handleSelectofSingleOrMultipleElements(e, _uid);

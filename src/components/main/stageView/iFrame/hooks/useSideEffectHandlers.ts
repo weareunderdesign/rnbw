@@ -1,16 +1,19 @@
+import { useCallback, useContext } from "react";
+
+import { useDispatch, useSelector } from "react-redux";
+
+import { NodeUidAttribNameInApp } from "@_constants/main";
 import { TNode, TNodeUid } from "@_node/types";
 import {
-  MainContext,
   expandFNNode,
   focusFNNode,
+  MainContext,
   navigatorSelector,
   selectFNNode,
   updateFNTreeViewState,
 } from "@_redux/main";
-import { useCallback, useContext } from "react";
-import { useDispatch, useSelector } from "react-redux";
+
 import { cloneAndInsertNode, createAndInsertElement } from "../helpers";
-import { NodeInAppAttribName } from "@_constants/main";
 
 export interface IUseSideEffectHandlersProps {
   contentRef: any;
@@ -65,7 +68,7 @@ export const useSideEffectHandlers = ({
 
       deleteUids.map((uid) => {
         const ele = contentRef?.current?.contentWindow?.document?.querySelector(
-          `[${NodeInAppAttribName}="${uid}"]`,
+          `[${NodeUidAttribNameInApp}="${uid}"]`,
         );
         ele?.remove();
       });
@@ -85,7 +88,7 @@ export const useSideEffectHandlers = ({
     (uids: TNodeUid[], deletedUids: TNodeUid[], lastUid: TNodeUid) => {
       uids.map((uid) => {
         const ele = contentRef?.contentWindow?.document?.querySelector(
-          `[${NodeInAppAttribName}="${uid}"]`,
+          `[${NodeUidAttribNameInApp}="${uid}"]`,
         );
         ele?.remove();
       });
@@ -110,7 +113,7 @@ export const useSideEffectHandlers = ({
       position: number,
     ) => {
       const targetElement = contentRef?.contentWindow?.document?.querySelector(
-        `[${NodeInAppAttribName}="${targetUid}"]`,
+        `[${NodeUidAttribNameInApp}="${targetUid}"]`,
       );
       const _elements: (Node | undefined)[] = [];
 
@@ -120,7 +123,7 @@ export const useSideEffectHandlers = ({
       _uids.map((uid) => {
         // clone
         const ele = contentRef?.contentWindow?.document?.querySelector(
-          `[${NodeInAppAttribName}="${uid}"]`,
+          `[${NodeUidAttribNameInApp}="${uid}"]`,
         );
         _elements.push(ele?.cloneNode(true));
         ele?.remove();
@@ -130,7 +133,7 @@ export const useSideEffectHandlers = ({
       _elements.map((_ele) => {
         const refElement = isBetween
           ? contentRef?.contentWindow?.document?.querySelector(
-              `[${NodeInAppAttribName}="${targetUid}"] > :nth-child(${
+              `[${NodeUidAttribNameInApp}="${targetUid}"] > :nth-child(${
                 position + 1
               })`,
             )
@@ -157,11 +160,11 @@ export const useSideEffectHandlers = ({
       addedUidMap: Map<TNodeUid, TNodeUid>,
     ) => {
       const targetElement = contentRef?.contentWindow?.document?.querySelector(
-        `[${NodeInAppAttribName}="${targetUid}"]`,
+        `[${NodeUidAttribNameInApp}="${targetUid}"]`,
       );
       const refElement = isBetween
         ? contentRef?.contentWindow?.document?.querySelector(
-            `[${NodeInAppAttribName}="${targetUid}"] > :nth-child(${
+            `[${NodeUidAttribNameInApp}="${targetUid}"] > :nth-child(${
               position + 1
             })`,
           )
@@ -170,22 +173,22 @@ export const useSideEffectHandlers = ({
       uids.map((uid) => {
         // clone
         const ele = contentRef?.contentWindow?.document?.querySelector(
-          `[${NodeInAppAttribName}="${uid}"]`,
+          `[${NodeUidAttribNameInApp}="${uid}"]`,
         );
         const _ele = ele?.cloneNode(true) as HTMLElement;
 
         // reset nest's uid
         const newUid = addedUidMap.get(uid);
-        newUid && _ele.setAttribute(NodeInAppAttribName, newUid);
+        newUid && _ele.setAttribute(NodeUidAttribNameInApp, newUid);
 
         // reset descendant uids
         const childElementList = _ele.querySelectorAll("*");
         childElementList.forEach((childElement) => {
-          const childUid = childElement.getAttribute(NodeInAppAttribName);
+          const childUid = childElement.getAttribute(NodeUidAttribNameInApp);
           if (childUid) {
             const newChildUid = addedUidMap.get(childUid);
             if (newChildUid) {
-              childElement.setAttribute(NodeInAppAttribName, newChildUid);
+              childElement.setAttribute(NodeUidAttribNameInApp, newChildUid);
             }
           }
         });
@@ -216,11 +219,11 @@ export const useSideEffectHandlers = ({
       addedUidMap: Map<TNodeUid, TNodeUid>,
     ) => {
       const targetElement = contentRef?.contentWindow?.document?.querySelector(
-        `[${NodeInAppAttribName}="${targetUid}"]`,
+        `[${NodeUidAttribNameInApp}="${targetUid}"]`,
       );
       const refElement = isBetween
         ? contentRef?.contentWindow?.document?.querySelector(
-            `[${NodeInAppAttribName}="${targetUid}"] > :nth-child(${
+            `[${NodeUidAttribNameInApp}="${targetUid}"] > :nth-child(${
               position + 1
             })`,
           )
@@ -257,22 +260,22 @@ export const useSideEffectHandlers = ({
       uids.map((uid) => {
         // clone
         const ele = contentRef?.contentWindow?.document?.querySelector(
-          `[${NodeInAppAttribName}="${uid}"]`,
+          `[${NodeUidAttribNameInApp}="${uid}"]`,
         );
         const _ele = ele?.cloneNode(true) as HTMLElement;
 
         // reset nest's uid
         const newUid = addedUidMap.get(uid);
-        newUid && _ele.setAttribute(NodeInAppAttribName, newUid);
+        newUid && _ele.setAttribute(NodeUidAttribNameInApp, newUid);
 
         // reset descendant uids
         const childElementList = _ele.querySelectorAll("*");
         childElementList.forEach((childElement) => {
-          const childUid = childElement.getAttribute(NodeInAppAttribName);
+          const childUid = childElement.getAttribute(NodeUidAttribNameInApp);
           if (childUid) {
             const newChildUid = addedUidMap.get(childUid);
             if (newChildUid) {
-              childElement.setAttribute(NodeInAppAttribName, newChildUid);
+              childElement.setAttribute(NodeUidAttribNameInApp, newChildUid);
             }
           }
         });

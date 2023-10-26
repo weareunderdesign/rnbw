@@ -1,17 +1,11 @@
-import { TCodeChange, TFile, TFileInfo, TProject } from "@_types/main";
-import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
+import { editor } from "monaco-editor";
+
 import {
-  THtmlNodeData,
-  THtmlPageSettings,
-  parseHtmlCodePart,
-  serializeHtml,
-} from "@_node/html";
-import {
-  NodeInAppAttribName,
-  RootNodeUid,
-  NodeUidSplitter,
-  StagePreviewPathPrefix,
   LogAllow,
+  NodeUidAttribNameInApp,
+  NodeUidSplitter,
+  RootNodeUid,
+  StagePreviewPathPrefix,
 } from "@_constants/main";
 import {
   getSubNodeUidsByBfs,
@@ -20,15 +14,22 @@ import {
   updateExistingTree,
 } from "@_node/apis";
 import {
-  TFileHandlerCollection,
-  TFileNodeData,
   parseFile,
   serializeFile,
+  TFileHandlerCollection,
+  TFileNodeData,
   writeFile,
 } from "@_node/file";
+import {
+  parseHtmlCodePart,
+  serializeHtml,
+  THtmlNodeData,
+  THtmlPageSettings,
+} from "@_node/html";
+import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import { TUpdateOptions } from "@_redux/main/types";
 import { TOsType } from "@_types/global";
-import { editor } from "monaco-editor";
+import { TCodeChange, TFile, TFileInfo, TProject } from "@_types/main";
 
 export const saveFileContent = async (
   project: TProject,
@@ -122,7 +123,7 @@ export const replaceElementInIframe = (
       }
       if ((node as HTMLElement).tagName) {
         (node as HTMLElement).setAttribute(
-          NodeInAppAttribName,
+          NodeUidAttribNameInApp,
           nodeUids[++nodeUidIndex],
         );
         node.childNodes.forEach((childNode) => {
@@ -134,7 +135,7 @@ export const replaceElementInIframe = (
     const element = document
       .querySelector("iframe")
       ?.contentWindow?.window.document.querySelector(
-        `[${NodeInAppAttribName}="${codeChange.uid}"]`,
+        `[${NodeUidAttribNameInApp}="${codeChange.uid}"]`,
       );
     element?.parentElement?.insertBefore(
       divElement.childNodes[0],
@@ -145,11 +146,11 @@ export const replaceElementInIframe = (
     let element = document
       .querySelector("iframe")
       ?.contentWindow?.window.document.querySelector(
-        `[${NodeInAppAttribName}="${codeChange.uid}"]`,
+        `[${NodeUidAttribNameInApp}="${codeChange.uid}"]`,
       );
 
     if (element && tree["ROOT"].data) {
-      element?.setAttribute(NodeInAppAttribName, tree["ROOT"].children[0]);
+      element?.setAttribute(NodeUidAttribNameInApp, tree["ROOT"].children[0]);
       element.outerHTML = (tree["ROOT"].data as THtmlNodeData).htmlInApp;
     }
   }
@@ -166,7 +167,7 @@ export const generateFileInfo = (
   _curScripts.map((script: any) => {
     const attribs = (script.data as THtmlNodeData).attribs;
     const uniqueStr = Object.keys(attribs)
-      .filter((attrName) => attrName !== NodeInAppAttribName)
+      .filter((attrName) => attrName !== NodeUidAttribNameInApp)
       .sort((a, b) => (a > b ? 1 : -1))
       .map((attrName) => {
         return `${attrName}${NodeUidSplitter}${attribs[attrName]}`;
@@ -181,7 +182,7 @@ export const generateFileInfo = (
   _orgScripts.map((script: any) => {
     const attribs = (script.data as THtmlNodeData).attribs;
     const uniqueStr = Object.keys(attribs)
-      .filter((attrName) => attrName !== NodeInAppAttribName)
+      .filter((attrName) => attrName !== NodeUidAttribNameInApp)
       .sort((a, b) => (a > b ? 1 : -1))
       .map((attrName) => {
         return `${attrName}${NodeUidSplitter}${attribs[attrName]}`;
@@ -261,7 +262,7 @@ export const getChangedUids = (
     const element = document
       .querySelector("iframe")
       ?.contentWindow?.window.document.querySelector(
-        `[${NodeInAppAttribName}="${uid}"]`,
+        `[${NodeUidAttribNameInApp}="${uid}"]`,
       );
     if (element?.tagName === "HTML") {
       element.innerHTML = n_nodeData.htmlInApp;
@@ -550,7 +551,7 @@ export const editingTextChanges = (
 
   const formattedContent = removeAttributeFromElement(
     codeChange.content,
-    NodeInAppAttribName,
+    NodeUidAttribNameInApp,
   );
 
   if (formattedContent == "") {

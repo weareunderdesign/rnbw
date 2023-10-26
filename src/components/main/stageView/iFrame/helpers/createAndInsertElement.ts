@@ -1,6 +1,6 @@
 import { RefObject } from "react";
 
-import { NodeInAppAttribName } from "@_constants/main";
+import { NodeUidAttribNameInApp } from "@_constants/main";
 import { THtmlNodeData } from "@_node/html";
 import { TNode, TNodeUid } from "@_node/types";
 import { focusFNNode, selectFNNode } from "@_redux/main";
@@ -24,7 +24,7 @@ export const createAndInsertElement = (
   if (nodeData.name === "!--...--" || nodeData.name === "comment") {
     const targetElement =
       contentRef?.current?.contentWindow?.document?.querySelector(
-        `[${NodeInAppAttribName}="${targetUid}"]`,
+        `[${NodeUidAttribNameInApp}="${targetUid}"]`,
       );
     // targetElement?.append('<!--...-->')
   } else {
@@ -53,7 +53,7 @@ export const createAndInsertElement = (
     } else {
       const targetElement =
         contentRef?.current?.contentWindow?.document?.querySelector(
-          `[${NodeInAppAttribName}="${targetUid}"]`,
+          `[${NodeUidAttribNameInApp}="${targetUid}"]`,
         );
       newElement &&
         targetElement?.parentElement?.insertBefore(

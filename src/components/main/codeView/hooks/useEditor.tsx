@@ -1,26 +1,28 @@
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
+
+import { debounce } from "lodash";
+import { editor, IPosition } from "monaco-editor";
+import morphdom from "morphdom";
 import * as parse5 from "parse5";
-import { useContext, useRef, useState, useEffect, useCallback } from "react";
-import { IPosition, editor } from "monaco-editor";
+import { useDispatch, useSelector } from "react-redux";
+
+import { styles } from "@_components/main/stageView/iFrame/styles";
+import {
+  DefaultTabSize,
+  NodeUidAttribNameInApp,
+  RootNodeUid,
+} from "@_constants/main";
+import { getSubNodeUidsByBfs } from "@_node/apis";
+import { TFileNodeData } from "@_node/file";
+import { parseHtml } from "@_node/html";
+import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import {
   MainContext,
   navigatorSelector,
   setCurrentFileContent,
 } from "@_redux/main";
-import morphdom from "morphdom";
-import {
-  DefaultTabSize,
-  NodeInAppAttribName,
-  RootNodeUid,
-} from "@_constants/main";
-import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
-import { getSubNodeUidsByBfs } from "@_node/apis";
-import { parseHtml } from "@_node/html";
+
 import { CodeSelection } from "../types";
-import { TFileNodeData } from "@_node/file";
-import { useSelector } from "react-redux";
-import { useDispatch } from "react-redux";
-import { styles } from "@_components/main/stageView/iFrame/styles";
-import { debounce, set } from "lodash";
 
 function getLanguageFromExtension(extension: string) {
   switch (extension) {
@@ -187,7 +189,7 @@ export default function useEditor() {
         morphdom(iframeHtml, bodyEle, {
           onBeforeElUpdated: function (fromEl, toEl) {
             if (configs?.matchIds) {
-              const toElRnbwId = toEl.getAttribute(NodeInAppAttribName);
+              const toElRnbwId = toEl.getAttribute(NodeUidAttribNameInApp);
               if (!!toElRnbwId && configs.matchIds.includes(toElRnbwId)) {
                 return true;
               } else {
