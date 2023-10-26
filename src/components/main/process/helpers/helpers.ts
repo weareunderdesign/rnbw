@@ -532,38 +532,6 @@ export function removeAttributeFromElement(
   return htmlString.replace(pattern, "");
 }
 
-export const handleCodeChangeEffects = (
-  codeChanges: TCodeChange[],
-  fileData: TFileNodeData,
-  file: TFile,
-  _nodeTree: TNodeTreeData,
-  _nodeMaxUid: number,
-  _newFocusedNodeUid: string,
-  monacoEditor: editor.IStandaloneCodeEditor,
-) => {
-  // side effects
-  codeChanges.map((codeChange: TCodeChange) => {
-    const result = editingTextChanges(
-      codeChange,
-      fileData,
-      file,
-      _nodeTree,
-      _nodeMaxUid,
-      _newFocusedNodeUid,
-    );
-    _nodeMaxUid = result._nodeMaxUid;
-    _newFocusedNodeUid = result._newFocusedNodeUid;
-  });
-
-  // rebuild from new tree
-
-  const { htmlInApp: contentInApp } = serializeHtml(_nodeTree);
-
-  fileData.contentInApp = contentInApp;
-  fileData.changed = fileData.content !== fileData.orgContent;
-  return { _nodeMaxUid, _newFocusedNodeUid };
-};
-
 export const editingTextChanges = (
   codeChange: TCodeChange,
   fileData: TFileNodeData,
