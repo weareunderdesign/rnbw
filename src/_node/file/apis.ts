@@ -8,18 +8,13 @@ import htmlRefElements from "@_ref/rfrncs/HTML Elements.csv";
 import { SystemDirectories } from "@_ref/SystemDirectories";
 import { verifyFileHandlerPermission } from "@_services/main";
 import { TOsType } from "@_types/global";
-import { TFileType } from "@_types/main";
 
 import {
   getSubNodeUidsByBfs,
   parseHtml,
-  serializeHtml,
   TFileParserResponse,
   THtmlElementsReference,
   THtmlElementsReferenceData,
-  THtmlNodeData,
-  THtmlReferenceData,
-  TNodeReferenceData,
   TNodeTreeData,
   TNodeUid,
 } from "../";
@@ -30,7 +25,6 @@ import {
   TIDBFileInfoObj,
   TZipFileInfo,
 } from "./types";
-import { editor } from "monaco-editor";
 
 export const _fs = window.Filer.fs;
 export const _path = window.Filer.path;
@@ -298,7 +292,6 @@ export const reloadIDBProject = async (
     },
   );
 };
-
 export const loadLocalProject = async (
   projectHandle: FileSystemDirectoryHandle,
   osType: TOsType,
@@ -502,7 +495,6 @@ export const reloadLocalProject = async (
     res({ handlerObj, deletedUids: Object.keys(orgUids) });
   });
 };
-
 export const downloadProject = async (projectPath: string): Promise<void> => {
   return new Promise<void>(async (resolve, reject) => {
     try {
@@ -559,7 +551,6 @@ export const downloadProject = async (projectPath: string): Promise<void> => {
     }
   });
 };
-
 export const createDirectory = async (path: string): Promise<void> => {
   return new Promise<void>((resolve, reject) => {
     _fs.mkdir(path, (err: any) => {
@@ -606,34 +597,6 @@ export const getStat = async (path: string): Promise<any> => {
   });
 };
 
-export const parseFile = (params: {
-  type: TFileType;
-  content: string;
-  keepNodeUids?: null | boolean;
-  nodeMaxUid?: TNodeUid;
-}): TFileParserResponse => {
-  const { type, content, keepNodeUids = false, nodeMaxUid = "" } = params;
-  if (type === "html") {
-    return parseHtml(content, keepNodeUids, nodeMaxUid);
-  } else {
-    return {
-      formattedContent: "",
-      contentInApp: "",
-      tree: {},
-      nodeMaxUid: "0",
-    };
-  }
-};
-export const serializeFile = (
-  type: TFileType,
-  tree: TNodeTreeData,
-): THtmlNodeData | string => {
-  if (type === "html") {
-    return serializeHtml(tree);
-  }
-  return "";
-};
-
 export const getNormalizedPath = (
   path: string,
 ): { isAbsolutePath: boolean; normalizedPath: string } => {
@@ -643,4 +606,18 @@ export const getNormalizedPath = (
   const isAbsolutePath = _path.isAbsolute(path);
   const normalizedPath = _path.normalize(path);
   return { isAbsolutePath, normalizedPath };
+};
+
+export const parseFile = (
+  ext: string,
+  content: string,
+): TFileParserResponse => {
+  if (ext === "html") {
+    return parseHtml(content);
+  } else {
+    return {
+      contentInApp: "",
+      nodeTree: {},
+    };
+  }
 };

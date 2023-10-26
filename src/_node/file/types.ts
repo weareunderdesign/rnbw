@@ -1,8 +1,54 @@
 import JSZip from "jszip";
 
-import { TFileInfo, TFileType } from "@_types/main";
+import { TBasicNodeData, TNode, TNodeTreeData, TNodeUid } from "../";
 
-import { TNodeTreeData, TNodeUid } from "../";
+export type TFileNode = TNode & {
+  data: TFileNodeData;
+};
+
+export type TFileNodeData = TBasicNodeData & {
+  path: string;
+
+  kind: "file" | "directory";
+  name: string;
+  ext: string;
+
+  orgContent: string;
+  content: string;
+  contentInApp?: string;
+
+  changed: boolean;
+};
+
+export type TFileNodeTreeData = {
+  [uid: TNodeUid]: TFileNode;
+};
+
+export type TFileParserResponse = {
+  contentInApp: string;
+  nodeTree: TNodeTreeData;
+  [any: string]: any;
+};
+
+// --------------------
+export type TFile = {
+  uid: TNodeUid;
+  content: string;
+};
+export type TFileAction = {
+  type: TFileActionType;
+  param1?: any;
+  param2?: any;
+};
+export type TFileActionType =
+  | "create"
+  | "delete"
+  | "move"
+  | "rename"
+  | "duplicate"
+  | "cut"
+  | "copy"
+  | null;
 
 export type TZipFileInfo = {
   path: string;
@@ -51,25 +97,4 @@ export type TFilesReference = {
 };
 export type TFilesReferenceData = {
   [name: string]: TFilesReference;
-};
-export type TFileNodeData = {
-  valid: boolean;
-
-  path: string;
-  kind: "file" | "directory";
-  name: string;
-  ext: string;
-  type: TFileType;
-
-  orgContent: string;
-  content: string;
-  contentInApp?: string;
-  changed: boolean;
-};
-export type TFileParserResponse = {
-  formattedContent: string;
-  contentInApp: string;
-  tree: TNodeTreeData;
-  nodeMaxUid: TNodeUid;
-  info?: TFileInfo;
 };
