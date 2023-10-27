@@ -2,7 +2,13 @@ import { DOMElement } from "react";
 
 import { Document } from "parse5/dist/tree-adapters/default";
 
-import { TNode, TNodeCodeRange, TNodeData, TNodeTreeData, TNodeUid } from "../";
+import {
+  TNode,
+  TNodeData,
+  TNodeSourceCodeLocation,
+  TNodeTreeData,
+  TNodeUid,
+} from "../";
 
 export type THtmlNode = TNode & {
   data: THtmlNodeData;
@@ -15,7 +21,7 @@ export type THtmlNodeData = TNodeData & {
 
   attribs: THtmlNodeAttributes;
 
-  codeRange: TNodeCodeRange;
+  sourceCodeLocation: TNodeSourceCodeLocation;
 };
 
 export type THtmlNodeAttributes = {

@@ -24,7 +24,7 @@ export type TNodeTreeData = {
   [uid: TNodeUid]: TNode;
 };
 
-export type TNodeCodeRange = {
+export type TNodeSourceCodeLocation = {
   startLine: number;
   startCol: number;
   startOffset: number;

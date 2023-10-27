@@ -42,7 +42,7 @@ export const parseHtml = (content: string): THtmlParserResponse => {
 
         attribs: {},
 
-        codeRange: {
+        sourceCodeLocation: {
           startLine: 0,
           startCol: 0,
           startOffset: 0,
@@ -80,7 +80,7 @@ export const parseHtml = (content: string): THtmlParserResponse => {
         endLine = 0,
         endCol = 0,
         endOffset = 0,
-      } = node.data.codeRange || {};
+      } = node.data.sourceCodeLocation || {};
 
       nodeTree[parentUid].children.push(uid);
       nodeTree[parentUid].isEntity = false;
@@ -105,7 +105,7 @@ export const parseHtml = (content: string): THtmlParserResponse => {
 
           attribs: getHtmlNodeAttribs(uid, node.attrs || []),
 
-          codeRange: {
+          sourceCodeLocation: {
             startLine,
             startCol,
             startOffset,

@@ -129,7 +129,7 @@ export default function useEditor() {
       uids.reverse();
       for (const uid of uids) {
         const node = validNodeTree[uid];
-        const sourceCodeLocation = node.data.codeRange;
+        const sourceCodeLocation = node.data.sourceCodeLocation;
 
         if (!sourceCodeLocation) {
           continue;

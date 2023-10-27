@@ -106,7 +106,7 @@ export default function CodeView(props: CodeViewProps) {
     if (!monacoEditor) return;
     const node = validNodeTree[focusedItem];
 
-    const sourceCodeLocation = node.data.codeRange;
+    const sourceCodeLocation = node.data.sourceCodeLocation;
 
     if (!sourceCodeLocation) {
       return;

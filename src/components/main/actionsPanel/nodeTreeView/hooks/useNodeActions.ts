@@ -141,7 +141,7 @@ export function useNodeActions() {
             endLine: endLineNumber,
             startCol: startColumn,
             startLine: startLineNumber,
-          } = node.data.codeRange;
+          } = node.data.sourceCodeLocation;
 
           const range = new Range(
             startLineNumber,
