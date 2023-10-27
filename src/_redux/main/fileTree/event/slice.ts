@@ -16,7 +16,7 @@ const fileTreeEventReducerInitialState: TFileTreeEventReducerState = {
   },
 };
 const fileTreeEventSlice = createSlice({
-  name: "event",
+  name: "fileTreeEvent",
   initialState: fileTreeEventReducerInitialState,
   reducers: {
     setFileAction(state, action: PayloadAction<TFileAction>) {
