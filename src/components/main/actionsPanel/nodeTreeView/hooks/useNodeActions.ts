@@ -4,7 +4,6 @@ import { Range } from "monaco-editor";
 import { TNode, TNodeUid } from "@_node/types";
 import {
   addNode,
-  copyNode,
   copyNodeExternal,
   duplicateNode,
   getValidNodeUids,
@@ -15,17 +14,16 @@ import {
   fnSelector,
   increaseActionGroupIndex,
   MainContext,
-  navigatorSelector,
 } from "@_redux/main";
 
 import { creatingNode } from "../helpers/creatingNode";
 import { addNodeToTree } from "../helpers/addNodeToTree";
 import { getTree } from "../helpers/getTree";
 import { useEditor } from "@_components/main/codeView/hooks";
+import { NodeInAppAttribName } from "@_constants/main";
 
 export function useNodeActions() {
   const dispatch = useDispatch();
-  const { file } = useSelector(navigatorSelector);
   const { focusedItem } = useSelector(fnSelector);
   const {
     // global action
@@ -51,7 +49,9 @@ export function useNodeActions() {
     monacoEditorRef,
     validNodeTree,
   } = useContext(MainContext);
+
   const { handleEditorChange } = useEditor();
+
   const cb_addNode = useCallback(
     (nodeType: string) => {
       const monacoEditor = monacoEditorRef.current;
@@ -205,56 +205,42 @@ export function useNodeActions() {
     ],
   );
 
-  const cb_copyNode = useCallback(
-    (
-      uids: TNodeUid[],
-      targetUid: TNodeUid,
-      isBetween: boolean,
-      position: number,
-    ) => {
-      addRunningActions(["nodeTreeView-copy"]);
+  const cb_copyNode = (uids: TNodeUid[]) => {
+    const iframe: any = document.getElementById("iframeId");
+    let copiedCode = "";
 
-      // call api
-      const tree = getTree(nodeTree);
-      const res = copyNode(
-        tree,
-        targetUid,
-        isBetween,
-        position,
-        uids,
-        "html",
-        String(nodeMaxUid) as TNodeUid,
-        osType,
-        tabSize,
+    uids.forEach((uid) => {
+      const ele = iframe?.contentWindow?.document?.querySelector(
+        `[${NodeInAppAttribName}="${uid}"]`,
       );
 
-      // processor
-      addRunningActions(["processor-updateOpt"]);
-      setUpdateOpt({ parse: false, from: "node" });
-      setNodeTree(res.tree);
+      //create a copy of ele
+      const eleCopy = ele?.cloneNode(true) as HTMLElement;
+      const innerElements = eleCopy.querySelectorAll(
+        `[${NodeInAppAttribName}]`,
+      );
 
-      setUpdateOpt({ parse: true, from: "code" });
-      // view state
-      addRunningActions(["stageView-viewState"]);
-      // side effect
-      setNodeMaxUid(Number(res.nodeMaxUid));
-
-      setEvent({
-        type: "copy-node",
-        param: [uids, targetUid, isBetween, position, res.addedUidMap],
+      innerElements.forEach((element) => {
+        if (element.hasAttribute(NodeInAppAttribName)) {
+          element.removeAttribute(NodeInAppAttribName);
+        }
       });
 
-      removeRunningActions(["nodeTreeView-copy"]);
-    },
-    [
-      addRunningActions,
-      removeRunningActions,
-      nodeTree,
-      nodeMaxUid,
-      osType,
-      tabSize,
-    ],
-  );
+      eleCopy?.removeAttribute("contenteditable");
+      eleCopy?.removeAttribute("rnbwdev-rnbw-element-hover");
+      eleCopy?.removeAttribute("rnbwdev-rnbw-element-select");
+      eleCopy?.removeAttribute(NodeInAppAttribName);
+      const cleanedUpCode = eleCopy?.outerHTML;
+
+      //delete the copy
+      eleCopy?.remove();
+      if (!cleanedUpCode) return;
+
+      copiedCode += cleanedUpCode + "\n";
+    });
+    //copy the cleaned up code to clipboard
+    window.navigator.clipboard.writeText(copiedCode);
+  };
 
   const cb_copyNodeExternal = useCallback(
     (
