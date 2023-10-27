@@ -336,7 +336,7 @@ export const copyNode = (
     newNode.parentUid = targetUid;
 
     if (treeType === "html") {
-      setHtmlNodeUidAttribNameInApp(newNode, newUid);
+      setStageNodeIdAttr(newNode, newUid);
     } else {
       // do nothing
     }
@@ -379,7 +379,7 @@ export const copyNode = (
         childNode.parentUid = subNode.uid;
 
         if (treeType === "html") {
-          setHtmlNodeUidAttribNameInApp(childNode, newChildUid);
+          setStageNodeIdAttr(childNode, newChildUid);
         } else {
           // do nothing
         }
@@ -453,7 +453,7 @@ export const copyNodeExternal = (
     newNode.parentUid = targetUid;
 
     if (treeType === "html") {
-      setHtmlNodeUidAttribNameInApp(newNode, newUid);
+      setStageNodeIdAttr(newNode, newUid);
     } else {
       // do nothing
     }
@@ -495,7 +495,7 @@ export const copyNodeExternal = (
         childNode.uid = newChildUid;
         childNode.parentUid = subNode.uid;
         if (treeType === "html") {
-          setHtmlNodeUidAttribNameInApp(childNode, newChildUid);
+          setStageNodeIdAttr(childNode, newChildUid);
         } else {
           // do nothing
         }
@@ -682,7 +682,7 @@ export const duplicateNode = (
     newNode.uid = newUid;
 
     if (treeType === "html") {
-      setHtmlNodeUidAttribNameInApp(newNode, newUid);
+      setStageNodeIdAttr(newNode, newUid);
     } else {
       // do nothing
     }
@@ -708,7 +708,7 @@ export const duplicateNode = (
         childNode.parentUid = subNode.uid;
 
         if (treeType === "html") {
-          setHtmlNodeUidAttribNameInApp(childNode, newChildUid);
+          setStageNodeIdAttr(childNode, newChildUid);
         } else {
           // do nothing
         }

@@ -12,7 +12,7 @@ import {
   THtmlParserResponse,
 } from "./types";
 
-export const HtmlNodeUidAttribNameInApp = "data-rnbwdev-rnbw-node-uid";
+export const StageNodeIdAttr = "data-rnbw-stage-node-id";
 export const parseHtml = (content: string): THtmlParserResponse => {
   const htmlDom = parse5.parse(content, {
     scriptingEnabled: true,
@@ -60,7 +60,7 @@ export const parseHtml = (content: string): THtmlParserResponse => {
       attrs: { name: string; value: string }[],
     ): THtmlNodeAttributes => {
       const attribs: THtmlNodeAttributes = {
-        [HtmlNodeUidAttribNameInApp]: uid,
+        [StageNodeIdAttr]: uid,
       };
       attrs.map((attr) => {
         attribs[attr.name] = attr.value;
@@ -117,7 +117,7 @@ export const parseHtml = (content: string): THtmlParserResponse => {
       };
 
       if (!node.attrs) node.attrs = [];
-      node.attrs.push({ name: HtmlNodeUidAttribNameInApp, value: uid });
+      node.attrs.push({ name: StageNodeIdAttr, value: uid });
     };
 
     while (seedNodes.length) {
