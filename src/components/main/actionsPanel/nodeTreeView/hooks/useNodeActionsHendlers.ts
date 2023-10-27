@@ -1,8 +1,8 @@
 import { useCallback, useContext } from "react";
 import { useSelector } from "react-redux";
-import { TNode, TNodeUid } from "@_node/types";
+import { TNodeUid } from "@_node/types";
 import { fnSelector, MainContext, navigatorSelector } from "@_redux/main";
-import { AddNodeActionPrefix, NodeInAppAttribName } from "@_constants/main";
+import { AddNodeActionPrefix } from "@_constants/main";
 
 import { useNodeActions } from "./useNodeActions";
 import { Range } from "monaco-editor";
@@ -12,8 +12,6 @@ export const useNodeActionsHandlers = () => {
   const { file } = useSelector(navigatorSelector);
   const { focusedItem, selectedItems } = useSelector(fnSelector);
   const {
-    // node actions
-    setClipboardData,
     // file tree view
     ffTree,
     // node tree view
@@ -24,61 +22,21 @@ export const useNodeActionsHandlers = () => {
     monacoEditorRef,
   } = useContext(MainContext);
 
-  const {
-    cb_addNode,
-    cb_removeNode,
-    cb_duplicateNode,
-    cb_copyNode,
-    cb_copyNodeExternal,
-    cb_moveNode,
-  } = useNodeActions();
+  const { cb_addNode, cb_removeNode, cb_duplicateNode, cb_copyNode } =
+    useNodeActions();
 
   const { handleEditorChange } = useEditor();
+
   const onCut = useCallback(() => {
     if (selectedItems.length === 0) return;
+    cb_copyNode(selectedItems);
     cb_removeNode(selectedItems);
-
-    let data: TNode[] = [];
-    for (let x in selectedItems) {
-      if (validNodeTree[selectedItems[x]]) {
-        data.push(validNodeTree[selectedItems[x]]);
-      }
-    }
-    setClipboardData({
-      panel: "node",
-      type: "cut",
-      uids: selectedItems,
-      fileType: ffTree[file.uid].data.type,
-      data: data,
-      fileUid: file.uid,
-      prevNodeTree: nodeTree,
-    });
-  }, [selectedItems, ffTree[file.uid], nodeTree, cb_removeNode]);
+  }, [selectedItems, ffTree[file.uid], nodeTree, cb_removeNode, cb_copyNode]);
 
   const onCopy = useCallback(() => {
     if (selectedItems.length === 0) return;
-    const iframe: any = document.getElementById("iframeId");
-    let copiedCode = "";
-    selectedItems.forEach((uid) => {
-      const ele = iframe?.contentWindow?.document?.querySelector(
-        `[${NodeInAppAttribName}="${uid}"]`,
-      );
-
-      //create a copy of ele
-      const eleCopy = ele?.cloneNode(true) as HTMLElement;
-      eleCopy?.removeAttribute("contenteditable");
-      eleCopy?.removeAttribute("rnbwdev-rnbw-element-hover");
-      eleCopy?.removeAttribute("rnbwdev-rnbw-element-select");
-      eleCopy?.removeAttribute("data-rnbwdev-rnbw-node");
-      const cleanedUpCode = eleCopy?.outerHTML;
-      //delete the copy
-      eleCopy?.remove();
-      if (!cleanedUpCode) return;
-      copiedCode += cleanedUpCode + "\n";
-    });
-    //copy the cleaned up code to clipboard
-    window.navigator.clipboard.writeText(copiedCode);
-  }, [selectedItems, ffTree[file.uid], nodeTree]);
+    cb_copyNode(selectedItems);
+  }, [selectedItems, ffTree[file.uid], nodeTree, cb_copyNode]);
 
   const onPaste = useCallback(() => {
     const focusedNode = validNodeTree[focusedItem];
