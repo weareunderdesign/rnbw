@@ -1,63 +1,18 @@
-import {
-  THtmlPageSettings,
-  TNode,
-  TNodeTreeData,
-  TNodeUid,
-} from "@_node/index";
+import { THtmlPageSettings, TNodeUid } from "@_node/index";
+import { TProjectContext } from "@_redux/main/fileTree";
 
-export type TProjectContext = "local" | "idb";
-export type TWorkspace = {
-  name: string;
-  projects: TProject[];
-};
-export type TProject = {
-  context: TProjectContext;
-  name: string;
-  handler: FileSystemDirectoryHandle | null;
-  favicon: string | null;
-};
 export type TFileInfo = THtmlPageSettings | null | undefined;
 export type TSession = {
   "recent-project-context": TProjectContext[];
   "recent-project-name": string[];
   "recent-project-handler": (FileSystemDirectoryHandle | null)[];
 };
-export type TEvent = {
-  type:
-    | "add-node"
-    | "remove-node"
-    | "move-node"
-    | "duplicate-node"
-    | "copy-node"
-    | "copy-node-external"
-    | "code-change"
-    | "group-node"
-    | "ungroup-node";
-  param: any[];
-} | null;
 export type TCodeChange = {
   uid: TNodeUid;
   content: string;
 };
 export type TFileNodeType = "*folder" | "html" | "";
 
-export type TPanelContext =
-  | "file"
-  | "node"
-  | "settings"
-  | "stage"
-  | "code"
-  | "cmdk"
-  | "unknown";
-export type TClipboardData = {
-  panel: TPanelContext;
-  type: "cut" | "copy" | null;
-  uids: TNodeUid[];
-  fileType: "html" | "unknown";
-  data: TNode[];
-  fileUid: TNodeUid;
-  prevNodeTree: TNodeTreeData;
-};
 export type TCmdkReference = {
   Featured?: boolean;
   Name: string;

@@ -1,6 +1,11 @@
-import JSZip from "jszip";
+import JSZip from 'jszip';
 
-import { TBasicNodeData, TNode, TNodeTreeData, TNodeUid } from "../";
+import {
+  TBasicNodeData,
+  TNode,
+  TNodeTreeData,
+  TNodeUid,
+} from '../';
 
 export type TFileNode = TNode & {
   data: TFileNodeData;
@@ -35,20 +40,7 @@ export type TFile = {
   uid: TNodeUid;
   content: string;
 };
-export type TFileAction = {
-  type: TFileActionType;
-  param1?: any;
-  param2?: any;
-};
-export type TFileActionType =
-  | "create"
-  | "delete"
-  | "move"
-  | "rename"
-  | "duplicate"
-  | "cut"
-  | "copy"
-  | null;
+
 
 export type TZipFileInfo = {
   path: string;

@@ -4,18 +4,35 @@ import React, {
   useMemo,
   useRef,
   useState,
-} from "react";
+} from 'react';
 
-import cx from "classnames";
-import { Command } from "cmdk";
-import { CustomDirectoryPickerOptions } from "file-system-access/lib/showDirectoryPicker";
-import { delMany, getMany, setMany } from "idb-keyval";
-import { editor } from "monaco-editor";
-import { useDispatch, useSelector } from "react-redux";
-import { useLocation, useParams } from "react-router-dom";
+import cx from 'classnames';
+import { Command } from 'cmdk';
+import {
+  CustomDirectoryPickerOptions,
+} from 'file-system-access/lib/showDirectoryPicker';
+import {
+  delMany,
+  getMany,
+  setMany,
+} from 'idb-keyval';
+import { editor } from 'monaco-editor';
+import {
+  useDispatch,
+  useSelector,
+} from 'react-redux';
+import {
+  useLocation,
+  useParams,
+} from 'react-router-dom';
 
-import { SVGIcon } from "@_components/common";
-import { ActionsPanel, CodeView, Process, StageView } from "@_components/main";
+import { SVGIcon } from '@_components/common';
+import {
+  ActionsPanel,
+  CodeView,
+  Process,
+  StageView,
+} from '@_components/main';
 import {
   AddActionPrefix,
   DefaultProjectPath,
@@ -25,7 +42,7 @@ import {
   ParsableFileTypes,
   RecentProjectCount,
   RootNodeUid,
-} from "@_constants/main";
+} from '@_constants/main';
 import {
   downloadProject,
   initIDBProject,
@@ -35,13 +52,17 @@ import {
   TFileNodeData,
   TFilesReference,
   TFilesReferenceData,
-} from "@_node/file";
+} from '@_node/file';
 import {
   THtmlElementsReference,
   THtmlElementsReferenceData,
   THtmlReferenceData,
-} from "@_node/html";
-import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
+} from '@_node/html';
+import {
+  TNode,
+  TNodeTreeData,
+  TNodeUid,
+} from '@_node/types';
 import {
   clearMainState,
   ffSelector,
@@ -57,16 +78,20 @@ import {
   TCommand,
   TNavigatorDropDownType,
   TUpdateOptions,
-} from "@_redux/main";
+} from '@_redux/main';
 // @ts-ignore
-import cmdkRefActions from "@_ref/cmdk.ref/Actions.csv";
+import cmdkRefActions from '@_ref/cmdk.ref/Actions.csv';
 // @ts-ignore
-import cmdkRefJumpstart from "@_ref/cmdk.ref/Jumpstart.csv";
+import cmdkRefJumpstart from '@_ref/cmdk.ref/Jumpstart.csv';
 // @ts-ignore
-import filesRef from "@_ref/rfrncs/Files.csv";
+import filesRef from '@_ref/rfrncs/Files.csv';
 // @ts-ignore
-import htmlRefElements from "@_ref/rfrncs/HTML Elements.csv";
-import { TOsType, TTheme, TToast } from "@_types/global";
+import htmlRefElements from '@_ref/rfrncs/HTML Elements.csv';
+import {
+  TOsType,
+  TTheme,
+  TToast,
+} from '@_types/global';
 import {
   TClipboardData,
   TCmdkContext,
@@ -84,10 +109,9 @@ import {
   TProjectContext,
   TSession,
   TWorkspace,
-} from "@_types/main";
+} from '@_types/main';
 
-import { getCommandKey } from "../../services/global";
-import { MainPageProps } from "./types";
+import { getCommandKey } from '../../services/global';
 
 export default function MainPage() {
   // -------------------------------------------------------------- redux  --------------------------------------------------------------
@@ -178,6 +202,71 @@ export default function MainPage() {
   // actions panel
   const [showActionsPanel, setShowActionsPanel] = useState(false);
   // file tree view
+
+  const focusFFNode = (state, action: PayloadAction<TNodeUid>) => {
+    const uid = action.payload;
+    state.fileTreeViewState.focusedItem = uid;
+  },
+  expandFFNode(state, action: PayloadAction<TNodeUid[]>) {
+    const uids = action.payload;
+    for (const uid of uids) {
+      state.fileTreeViewState.expandedItemsObj[uid] = true;
+    }
+    state.fileTreeViewState.expandedItems = Object.keys(
+      state.fileTreeViewState.expandedItemsObj,
+    );
+  },
+  collapseFFNode(state, action: PayloadAction<TNodeUid[]>) {
+    const uids = action.payload;
+    for (const uid of uids) {
+      delete state.fileTreeViewState.expandedItemsObj[uid];
+    }
+    state.fileTreeViewState.expandedItems = Object.keys(
+      state.fileTreeViewState.expandedItemsObj,
+    );
+  },
+  selectFFNode(state, action: PayloadAction<TNodeUid[]>) {
+    const uids = action.payload;
+    state.fileTreeViewState.selectedItems = uids;
+    state.fileTreeViewState.selectedItemsObj = {};
+    for (const uid of uids) {
+      state.fileTreeViewState.selectedItemsObj[uid] = true;
+    }
+  },
+  updateFFTreeViewState(
+    state,
+    action: PayloadAction<TUpdateTreeViewStatePayload>,
+  ) {
+    const { deletedUids, convertedUids } = action.payload;
+    if (deletedUids) {
+      for (const uid of deletedUids) {
+        if (state.fileTreeViewState.focusedItem === uid) {
+          state.fileTreeViewState.focusedItem = "";
+        }
+        delete state.fileTreeViewState.expandedItemsObj[uid];
+        delete state.fileTreeViewState.selectedItemsObj[uid];
+      }
+    }
+    if (convertedUids) {
+      for (const [prev, cur] of convertedUids) {
+        if (state.fileTreeViewState.expandedItemsObj[prev]) {
+          delete state.fileTreeViewState.expandedItemsObj[prev];
+          state.fileTreeViewState.expandedItemsObj[cur] = true;
+        }
+        if (state.fileTreeViewState.selectedItemsObj[prev]) {
+          delete state.fileTreeViewState.selectedItemsObj[prev];
+          state.fileTreeViewState.selectedItemsObj[cur] = true;
+        }
+      }
+    }
+    state.fileTreeViewState.expandedItems = Object.keys(
+      state.fileTreeViewState.expandedItemsObj,
+    );
+    state.fileTreeViewState.selectedItems = Object.keys(
+      state.fileTreeViewState.selectedItemsObj,
+    );
+  },
+
   const [initialFileToOpen, setInitialFileToOpen] = useState<TNodeUid>("");
   const [fsPending, setFSPending] = useState<boolean>(false);
   const [ffTree, setFFTree] = useState<TNodeTreeData>({});
@@ -195,6 +284,95 @@ export default function MainPage() {
   const [ffAction, setFFAction] = useState<TFileAction>({ type: null });
   const [currentFileUid, setCurrentFileUid] = useState<TNodeUid>("");
   // node tree view
+  focusFNNode(state, action: PayloadAction<TNodeUid>) {
+    const uid = action.payload;
+    state.nodeTreeViewState.focusedItem = uid;
+  },
+  expandFNNode(state, action: PayloadAction<TNodeUid[]>) {
+    const uids = action.payload;
+    for (const uid of uids) {
+      state.nodeTreeViewState.expandedItemsObj[uid] = true;
+    }
+    state.nodeTreeViewState.expandedItems = Object.keys(
+      state.nodeTreeViewState.expandedItemsObj,
+    );
+  },
+  collapseFNNode(state, action: PayloadAction<TNodeUid[]>) {
+    const uids = action.payload;
+    for (const uid of uids) {
+      delete state.nodeTreeViewState.expandedItemsObj[uid];
+    }
+    state.nodeTreeViewState.expandedItems = Object.keys(
+      state.nodeTreeViewState.expandedItemsObj,
+    );
+  },
+  selectFNNode(state, action: PayloadAction<TNodeUid[]>) {
+    const uids = action.payload;
+    state.nodeTreeViewState.selectedItems = uids;
+    state.nodeTreeViewState.selectedItemsObj = {};
+    for (const uid of uids) {
+      state.nodeTreeViewState.selectedItemsObj[uid] = true;
+    }
+  },
+  updateFNTreeViewState(
+    state,
+    action: PayloadAction<TUpdateTreeViewStatePayload>,
+  ) {
+    const { deletedUids, convertedUids } = action.payload;
+    if (deletedUids) {
+      deletedUids.map((uid) => {
+        if (state.nodeTreeViewState.focusedItem === uid) {
+          state.nodeTreeViewState.focusedItem = "";
+        }
+        delete state.nodeTreeViewState.expandedItemsObj[uid];
+        delete state.nodeTreeViewState.selectedItemsObj[uid];
+      });
+    }
+    if (convertedUids) {
+      let f_uid: TNodeUid = "";
+      const e_deletedUids: TNodeUid[] = [],
+        e_addedUids: TNodeUid[] = [];
+      const s_deletedUids: TNodeUid[] = [],
+        s_addedUids: TNodeUid[] = [];
+
+      for (const [prev, cur] of convertedUids) {
+        if (state.nodeTreeViewState.focusedItem === prev) {
+          f_uid = cur;
+        }
+        if (state.nodeTreeViewState.expandedItemsObj[prev]) {
+          e_deletedUids.push(prev);
+          e_addedUids.push(cur);
+        }
+        if (state.nodeTreeViewState.selectedItemsObj[prev]) {
+          s_deletedUids.push(prev);
+          s_addedUids.push(cur);
+        }
+      }
+
+      state.nodeTreeViewState.focusedItem =
+        f_uid !== "" ? f_uid : state.nodeTreeViewState.focusedItem;
+      e_deletedUids.map((_deletedUid) => {
+        delete state.nodeTreeViewState.expandedItemsObj[_deletedUid];
+      });
+      e_addedUids.map((_addedUid) => {
+        state.nodeTreeViewState.expandedItemsObj[_addedUid] = true;
+      });
+      s_deletedUids.map((_deletedUid) => {
+        delete state.nodeTreeViewState.selectedItemsObj[_deletedUid];
+      });
+      s_addedUids.map((_addedUid) => {
+        state.nodeTreeViewState.selectedItemsObj[_addedUid] = true;
+      });
+    }
+
+    state.nodeTreeViewState.expandedItems = Object.keys(
+      state.nodeTreeViewState.expandedItemsObj,
+    );
+    state.nodeTreeViewState.selectedItems = Object.keys(
+      state.nodeTreeViewState.selectedItemsObj,
+    );
+  },
+
   const [fnHoveredItem, setFNHoveredItem] = useState<TNodeUid>("");
   const [nodeTree, setNodeTree] = useState<TNodeTreeData>({});
   const [validNodeTree, setValidNodeTree] = useState<TNodeTreeData>({});
