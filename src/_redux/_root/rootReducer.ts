@@ -1,9 +1,9 @@
 import { GlobalReducer } from "@_redux/global";
-import { FileTreeReducer, NodeTreeReducer } from "@_redux/main";
+import { MainReducer } from "@_redux/main";
 import { combineReducers } from "@reduxjs/toolkit";
 
 const global = { global: GlobalReducer };
-const main = { fileTree: FileTreeReducer, nodeTree: NodeTreeReducer };
+const main = { main: MainReducer };
 
 let rootReducer = combineReducers({
   ...global,
@@ -11,7 +11,7 @@ let rootReducer = combineReducers({
 });
 
 export default function createReducer(injectedReducers = {}) {
-  rootReducer = combineReducers({
+  const rootReducer = combineReducers({
     ...global,
     ...main,
     ...injectedReducers,
