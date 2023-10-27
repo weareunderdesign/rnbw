@@ -1,3 +1,3 @@
-import TreeView from "./TreeView";
+import TreeView from './TreeView';
 
 export default TreeView;
