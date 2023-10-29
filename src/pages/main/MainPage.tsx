@@ -33,12 +33,10 @@ import {
   Process,
   StageView,
 } from '@_components/main';
+import { LogAllow } from '@_constants/global';
 import {
   AddActionPrefix,
   DefaultProjectPath,
-  DefaultTabSize,
-  HmsClearActionType,
-  LogAllow,
   ParsableFileTypes,
   RecentProjectCount,
   RootNodeUid,
@@ -64,21 +62,64 @@ import {
   TNodeUid,
 } from '@_node/types';
 import {
-  clearMainState,
-  ffSelector,
-  fnSelector,
-  getActionGroupIndexSelector,
-  globalSelector,
-  hmsInfoSelector,
-  increaseActionGroupIndex,
-  MainContext,
-  navigatorSelector,
-  removeCurrentFile,
-  setFileAction,
-  TCommand,
-  TNavigatorDropDownType,
-  TUpdateOptions,
-} from '@_redux/main';
+  osTypeSelector,
+  setOsType,
+  setTheme,
+  themeSelector,
+} from '@_redux/global';
+import { MainContext } from '@_redux/main';
+import {
+  cmdkOpenSelector,
+  cmdkPagesSelector,
+  currentCmdkPageSelector,
+  currentCommandSelector,
+  setCmdkOpen,
+  setCmdkPages,
+  setCurrentCommand,
+} from '@_redux/main/cmdk';
+import { codeViewTabSizeSelector } from '@_redux/main/codeView';
+import {
+  currentFileUidSelector,
+  fileTreeSelector,
+  fileTreeViewStateSelector,
+  projectSelector,
+  setCurrentFileUid,
+  setFileTree,
+  setInitialFileUidToOpen,
+  setProject,
+  setWorkspace,
+  TProject,
+  TProjectContext,
+  workspaceSelector,
+} from '@_redux/main/fileTree';
+import {
+  fileActionSelector,
+  FileTree_Event_ClearActionType,
+  fileTreeEventHistoryInfoSelector,
+} from '@_redux/main/fileTree/event';
+import {
+  nodeTreeSelector,
+  nodeTreeViewStateSelector,
+  setNodeTree,
+  setValidNodeTree,
+  validNodeTreeSelector,
+} from '@_redux/main/nodeTree';
+import {
+  currentFileContentSelector,
+  NodeTree_Event_ClearActionType,
+  nodeTreeEventHistoryInfoSelector,
+} from '@_redux/main/nodeTree/event';
+import {
+  activePanelSelector,
+  navigatorDropdownTypeSelector,
+  setNavigatorDropdownType,
+  setShowActionsPanel,
+  showActionsPanelSelector,
+} from '@_redux/main/processor';
+import {
+  iframeLoadingSelector,
+  setIframeSrc,
+} from '@_redux/main/stageView';
 // @ts-ignore
 import cmdkRefActions from '@_ref/cmdk.ref/Actions.csv';
 // @ts-ignore
@@ -87,13 +128,8 @@ import cmdkRefJumpstart from '@_ref/cmdk.ref/Jumpstart.csv';
 import filesRef from '@_ref/rfrncs/Files.csv';
 // @ts-ignore
 import htmlRefElements from '@_ref/rfrncs/HTML Elements.csv';
+import { TToast } from '@_types/global';
 import {
-  TOsType,
-  TTheme,
-  TToast,
-} from '@_types/global';
-import {
-  TClipboardData,
   TCmdkContext,
   TCmdkContextScope,
   TCmdkGroupData,
@@ -101,34 +137,51 @@ import {
   TCmdkReference,
   TCmdkReferenceData,
   TCodeChange,
-  TEvent,
-  TFileAction,
-  TFileInfo,
-  TPanelContext,
-  TProject,
-  TProjectContext,
   TSession,
-  TWorkspace,
 } from '@_types/main';
 
 import { getCommandKey } from '../../services/global';
 
 export default function MainPage() {
-  // -------------------------------------------------------------- redux  --------------------------------------------------------------
   const dispatch = useDispatch();
-  const actionGroupIndex = useSelector(getActionGroupIndexSelector);
-  const { file } = useSelector(navigatorSelector);
-  const { fileAction } = useSelector(globalSelector);
+
+  const workspace = useSelector(workspaceSelector);
+  const project = useSelector(projectSelector);
+  const fileTree = useSelector(fileTreeSelector);
+  const currentFileUid = useSelector(currentFileUidSelector);
+
+  const currentFileContent = useSelector(currentFileContentSelector);
+  const nodeTree = useSelector(nodeTreeSelector);
+  const validNodeTree = useSelector(validNodeTreeSelector);
+
+  const fileAction = useSelector(fileActionSelector);
+
+  const cmdkOpen = useSelector(cmdkOpenSelector);
+  const cmdkPages = useSelector(cmdkPagesSelector);
+  const currentCmdkPage = useSelector(currentCmdkPageSelector);
+  const currentCommand = useSelector(currentCommandSelector);
+
+  const showActionsPanel = useSelector(showActionsPanelSelector);
+
+  const codeViewTabeSize = useSelector(codeViewTabSizeSelector);
 
   //ff is fileTreeViewState
-  const { focusedItem: ffFocusedItem } = useSelector(ffSelector);
+  const { focusedItem: ffFocusedItem } = useSelector(fileTreeViewStateSelector);
 
   //fn is nodeTreeViewState
-  const { focusedItem: fnFocusedItem } = useSelector(fnSelector);
-  const { futureLength, pastLength } = useSelector(hmsInfoSelector);
+  const { focusedItem: fnFocusedItem } = useSelector(nodeTreeViewStateSelector);
+  const { future: nodeEventFutureLength, past: nodeEventPastLength } =
+    useSelector(nodeTreeEventHistoryInfoSelector);
+  const { future: fileEventFutureLength, past: fileEventPastLength } =
+    useSelector(fileTreeEventHistoryInfoSelector);
 
-  // -------------------------------------------------------------- main context --------------------------------------------------------------
-  const [favicon, setFavicon] = useState<string>("");
+  const osType = useSelector(osTypeSelector);
+  const theme = useSelector(themeSelector);
+
+  const activePanel = useSelector(activePanelSelector);
+  const navigatorDropdownType = useSelector(navigatorDropdownTypeSelector);
+  const iframeLoading = useSelector(iframeLoadingSelector);
+
   // global action
   const [pending, setPending] = useState<boolean>(false); // tells if there are any pending running actions
   const runningActions = useRef<{ [actionName: string]: boolean }>({});
@@ -169,228 +222,21 @@ export default function MainPage() {
       if (hasNoRunningAction()) {
         LogAllow && effect && console.log("hms added");
         setPending(false);
-        effect && dispatch(increaseActionGroupIndex());
+        // effect && dispatch(increaseActionGroupIndex());
       }
     },
-    [hasNoRunningAction, file.content],
+    [hasNoRunningAction, currentFileContent],
   );
-  // navigator
-  const [workspace, setWorkspace] = useState<TWorkspace>({
-    name: "local",
-    projects: [],
-  });
-  const [project, setProject] = useState<TProject>({
-    context: "idb",
-    name: "Untitled",
-    handler: null,
-    favicon: null,
-  });
-  const [navigatorDropDownType, setNavigatorDropDownType] =
-    useState<TNavigatorDropDownType>(null);
-  // node actions
-  const [activePanel, setActivePanel] = useState<TPanelContext>("unknown");
-  const [clipboardData, setClipboardData] = useState<TClipboardData>({
-    panel: "unknown",
-    type: null,
-    uids: [],
-    fileType: "html",
-    data: [],
-    fileUid: "",
-    prevNodeTree: {},
-  });
-  const [event, setEvent] = useState<TEvent>(null);
+
   // actions panel
-  const [showActionsPanel, setShowActionsPanel] = useState(false);
-  // file tree view
-
-  const focusFFNode = (state, action: PayloadAction<TNodeUid>) => {
-    const uid = action.payload;
-    state.fileTreeViewState.focusedItem = uid;
-  },
-  expandFFNode(state, action: PayloadAction<TNodeUid[]>) {
-    const uids = action.payload;
-    for (const uid of uids) {
-      state.fileTreeViewState.expandedItemsObj[uid] = true;
-    }
-    state.fileTreeViewState.expandedItems = Object.keys(
-      state.fileTreeViewState.expandedItemsObj,
-    );
-  },
-  collapseFFNode(state, action: PayloadAction<TNodeUid[]>) {
-    const uids = action.payload;
-    for (const uid of uids) {
-      delete state.fileTreeViewState.expandedItemsObj[uid];
-    }
-    state.fileTreeViewState.expandedItems = Object.keys(
-      state.fileTreeViewState.expandedItemsObj,
-    );
-  },
-  selectFFNode(state, action: PayloadAction<TNodeUid[]>) {
-    const uids = action.payload;
-    state.fileTreeViewState.selectedItems = uids;
-    state.fileTreeViewState.selectedItemsObj = {};
-    for (const uid of uids) {
-      state.fileTreeViewState.selectedItemsObj[uid] = true;
-    }
-  },
-  updateFFTreeViewState(
-    state,
-    action: PayloadAction<TUpdateTreeViewStatePayload>,
-  ) {
-    const { deletedUids, convertedUids } = action.payload;
-    if (deletedUids) {
-      for (const uid of deletedUids) {
-        if (state.fileTreeViewState.focusedItem === uid) {
-          state.fileTreeViewState.focusedItem = "";
-        }
-        delete state.fileTreeViewState.expandedItemsObj[uid];
-        delete state.fileTreeViewState.selectedItemsObj[uid];
-      }
-    }
-    if (convertedUids) {
-      for (const [prev, cur] of convertedUids) {
-        if (state.fileTreeViewState.expandedItemsObj[prev]) {
-          delete state.fileTreeViewState.expandedItemsObj[prev];
-          state.fileTreeViewState.expandedItemsObj[cur] = true;
-        }
-        if (state.fileTreeViewState.selectedItemsObj[prev]) {
-          delete state.fileTreeViewState.selectedItemsObj[prev];
-          state.fileTreeViewState.selectedItemsObj[cur] = true;
-        }
-      }
-    }
-    state.fileTreeViewState.expandedItems = Object.keys(
-      state.fileTreeViewState.expandedItemsObj,
-    );
-    state.fileTreeViewState.selectedItems = Object.keys(
-      state.fileTreeViewState.selectedItemsObj,
-    );
-  },
-
-  const [initialFileToOpen, setInitialFileToOpen] = useState<TNodeUid>("");
   const [fsPending, setFSPending] = useState<boolean>(false);
-  const [ffTree, setFFTree] = useState<TNodeTreeData>({});
-  const setFFNode = useCallback(
-    (ffNode: TNode) => {
-      const _ffTree = JSON.parse(JSON.stringify(ffTree));
-      _ffTree[ffNode.uid] = JSON.parse(JSON.stringify(ffNode));
-      setFFTree(_ffTree);
-    },
-    [ffTree],
-  );
   const [ffHandlers, setFFHandlers] = useState<TFileHandlerCollection>({});
-  const [ffHoveredItem, setFFHoveredItem] = useState<TNodeUid>("");
-  const [isHms, setIsHms] = useState<boolean | null>(null);
-  const [ffAction, setFFAction] = useState<TFileAction>({ type: null });
-  const [currentFileUid, setCurrentFileUid] = useState<TNodeUid>("");
-  // node tree view
-  focusFNNode(state, action: PayloadAction<TNodeUid>) {
-    const uid = action.payload;
-    state.nodeTreeViewState.focusedItem = uid;
-  },
-  expandFNNode(state, action: PayloadAction<TNodeUid[]>) {
-    const uids = action.payload;
-    for (const uid of uids) {
-      state.nodeTreeViewState.expandedItemsObj[uid] = true;
-    }
-    state.nodeTreeViewState.expandedItems = Object.keys(
-      state.nodeTreeViewState.expandedItemsObj,
-    );
-  },
-  collapseFNNode(state, action: PayloadAction<TNodeUid[]>) {
-    const uids = action.payload;
-    for (const uid of uids) {
-      delete state.nodeTreeViewState.expandedItemsObj[uid];
-    }
-    state.nodeTreeViewState.expandedItems = Object.keys(
-      state.nodeTreeViewState.expandedItemsObj,
-    );
-  },
-  selectFNNode(state, action: PayloadAction<TNodeUid[]>) {
-    const uids = action.payload;
-    state.nodeTreeViewState.selectedItems = uids;
-    state.nodeTreeViewState.selectedItemsObj = {};
-    for (const uid of uids) {
-      state.nodeTreeViewState.selectedItemsObj[uid] = true;
-    }
-  },
-  updateFNTreeViewState(
-    state,
-    action: PayloadAction<TUpdateTreeViewStatePayload>,
-  ) {
-    const { deletedUids, convertedUids } = action.payload;
-    if (deletedUids) {
-      deletedUids.map((uid) => {
-        if (state.nodeTreeViewState.focusedItem === uid) {
-          state.nodeTreeViewState.focusedItem = "";
-        }
-        delete state.nodeTreeViewState.expandedItemsObj[uid];
-        delete state.nodeTreeViewState.selectedItemsObj[uid];
-      });
-    }
-    if (convertedUids) {
-      let f_uid: TNodeUid = "";
-      const e_deletedUids: TNodeUid[] = [],
-        e_addedUids: TNodeUid[] = [];
-      const s_deletedUids: TNodeUid[] = [],
-        s_addedUids: TNodeUid[] = [];
-
-      for (const [prev, cur] of convertedUids) {
-        if (state.nodeTreeViewState.focusedItem === prev) {
-          f_uid = cur;
-        }
-        if (state.nodeTreeViewState.expandedItemsObj[prev]) {
-          e_deletedUids.push(prev);
-          e_addedUids.push(cur);
-        }
-        if (state.nodeTreeViewState.selectedItemsObj[prev]) {
-          s_deletedUids.push(prev);
-          s_addedUids.push(cur);
-        }
-      }
-
-      state.nodeTreeViewState.focusedItem =
-        f_uid !== "" ? f_uid : state.nodeTreeViewState.focusedItem;
-      e_deletedUids.map((_deletedUid) => {
-        delete state.nodeTreeViewState.expandedItemsObj[_deletedUid];
-      });
-      e_addedUids.map((_addedUid) => {
-        state.nodeTreeViewState.expandedItemsObj[_addedUid] = true;
-      });
-      s_deletedUids.map((_deletedUid) => {
-        delete state.nodeTreeViewState.selectedItemsObj[_deletedUid];
-      });
-      s_addedUids.map((_addedUid) => {
-        state.nodeTreeViewState.selectedItemsObj[_addedUid] = true;
-      });
-    }
-
-    state.nodeTreeViewState.expandedItems = Object.keys(
-      state.nodeTreeViewState.expandedItemsObj,
-    );
-    state.nodeTreeViewState.selectedItems = Object.keys(
-      state.nodeTreeViewState.selectedItemsObj,
-    );
-  },
-
-  const [fnHoveredItem, setFNHoveredItem] = useState<TNodeUid>("");
-  const [nodeTree, setNodeTree] = useState<TNodeTreeData>({});
-  const [validNodeTree, setValidNodeTree] = useState<TNodeTreeData>({});
-  const [nodeMaxUid, setNodeMaxUid] = useState<number>(0);
-  // stage-view
-  const [iframeLoading, setIFrameLoading] = useState<boolean>(false);
-  const [iframeSrc, setIFrameSrc] = useState<string | null>(null);
-  const [fileInfo, setFileInfo] = useState<TFileInfo>(null);
-  const [needToReloadIFrame, setNeedToReloadIFrame] = useState<boolean>(true);
-  const [linkToOpen, setLinkToOpen] = useState<string>("");
   // code view
-  const [codeEditing, setCodeEditing] = useState<boolean>(false);
   const isContentProgrammaticallyChanged = useRef<boolean>(false);
   function setIsContentProgrammaticallyChanged(value: boolean) {
     isContentProgrammaticallyChanged.current = value;
   }
   const [codeChanges, setCodeChanges] = useState<TCodeChange[]>([]);
-  const [tabSize, setTabSize] = useState<number>(DefaultTabSize);
   const [newFocusedNodeUid, setNewFocusedNodeUid] = useState<TNodeUid>("");
   const monacoEditorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const setMonacoEditorRef = (
@@ -399,11 +245,6 @@ export default function MainPage() {
     monacoEditorRef.current = editorInstance;
   };
 
-  // processor
-  const [updateOpt, setUpdateOpt] = useState<TUpdateOptions>({
-    parse: null,
-    from: null,
-  });
   // references
   const [filesReferenceData, setFilesReferenceData] =
     useState<TFilesReferenceData>({});
@@ -420,13 +261,6 @@ export default function MainPage() {
   // non-parse file editable
   const [parseFileFlag, setParseFile] = useState<boolean>(true);
   const [prevFileUid, setPrevFileUid] = useState<string>("");
-  // cmdk
-  const [currentCommand, setCurrentCommand] = useState<TCommand>({
-    action: "",
-  });
-  const [cmdkOpen, setCmdkOpen] = useState<boolean>(false);
-  const [cmdkPages, setCmdkPages] = useState<string[]>([]);
-
   // first loaded
   const firstLoaded = useRef<number>(0);
   // guide ref
@@ -443,7 +277,7 @@ export default function MainPage() {
     };
 
     // Files
-    const fileNode = ffTree[ffFocusedItem];
+    const fileNode = fileTree[ffFocusedItem];
     if (fileNode) {
       filesRef.map((fileRef: TFilesReference) => {
         fileRef.Name &&
@@ -474,7 +308,7 @@ export default function MainPage() {
     // Elements
     let flag = true;
     for (let x in nodeTree) {
-      if (nodeTree[x].name === "html") {
+      if (nodeTree[x].displayName === "html") {
         flag = false;
       }
     }
@@ -486,7 +320,7 @@ export default function MainPage() {
         htmlNode.parentUid !== RootNodeUid
       ) {
         const parentNode = nodeTree[htmlNode.parentUid as TNodeUid];
-        const refData = htmlReferenceData.elements[parentNode.name];
+        const refData = htmlReferenceData.elements[parentNode.displayName];
         if (refData) {
           if (refData.Contain === "All") {
             Object.keys(htmlReferenceData.elements).map((tag: string) => {
@@ -582,9 +416,6 @@ export default function MainPage() {
     htmlReferenceData,
     cmdkSearch,
   ]);
-  // other
-  const [osType, setOsType] = useState<TOsType>("Windows");
-  const [theme, setTheme] = useState<TTheme>("System");
   // toasts
   const [messages, setMessages] = useState<TToast[]>([]);
   const addMessage = useCallback(
@@ -628,7 +459,7 @@ export default function MainPage() {
       }
     }
 
-    setWorkspace({ name: "local", projects: [] });
+    dispatch(setWorkspace({ name: "local", projects: [] }));
     document.addEventListener("contextmenu", (e) => {
       e.preventDefault();
     });
@@ -751,7 +582,7 @@ export default function MainPage() {
         e.preventDefault();
       }
 
-      setCurrentCommand({ action });
+      dispatch(setCurrentCommand({ action }));
     },
     [cmdkOpen, cmdkReferenceData, activePanel, osType],
   );
@@ -762,6 +593,8 @@ export default function MainPage() {
   }, [cb_onKeyDown]);
   // command detect & do actions
   useEffect(() => {
+    if (!currentCommand) return;
+
     switch (currentCommand.action) {
       case "Jumpstart":
         onJumpstart();
@@ -770,7 +603,7 @@ export default function MainPage() {
         onNew();
         toogleCodeView();
         // show actions panel by default
-        !showActionsPanel && setShowActionsPanel(true);
+        !showActionsPanel && dispatch(setShowActionsPanel(true));
         break;
       case "Open":
         onOpen();
@@ -813,7 +646,8 @@ export default function MainPage() {
   // -------------------------------------------------------------- handlers --------------------------------------------------------------
   const clearSession = useCallback(() => {
     dispatch(clearMainState());
-    dispatch({ type: HmsClearActionType });
+    dispatch({ type: FileTree_Event_ClearActionType });
+    dispatch({ type: NodeTree_Event_ClearActionType });
   }, []);
   const loadProject = useCallback(
     async (
@@ -861,11 +695,10 @@ export default function MainPage() {
             });
 
             // set default background
-            setIFrameSrc(null);
-            setNodeTree({});
-            setValidNodeTree({});
-            setCurrentFileUid("");
-            dispatch(removeCurrentFile());
+            dispatch(setIframeSrc(null));
+            dispatch(setNodeTree({}));
+            dispatch(setValidNodeTree({}));
+            dispatch(setCurrentFileUid(""));
 
             let initialFile =
               indexHtmlUid !== ""
@@ -877,10 +710,10 @@ export default function MainPage() {
             // hide element panel when there is no index.html
             if (initialFile === "") {
               setShowActionsPanel(false);
-              setNavigatorDropDownType(null);
+              dispatch(setNavigatorDropdownType(null));
             }
 
-            setInitialFileToOpen(initialFile);
+            dispatch(setInitialFileUidToOpen(initialFile));
 
             // set ff-tree, ff-handlers
             const treeViewData: TNodeTreeData = {};
@@ -902,7 +735,7 @@ export default function MainPage() {
               treeViewData[uid] = {
                 uid,
                 parentUid: parentUid,
-                name: name,
+                displayName: name,
                 isEntity: kind === "file",
                 children: [...children],
                 data: {
@@ -921,16 +754,18 @@ export default function MainPage() {
               ffHandlerObj[uid] = handler;
             });
 
-            setFFTree(treeViewData);
+            dispatch(setFileTree(treeViewData));
             setFFHandlers(ffHandlerObj);
 
-            setProject({
-              context: "local",
-              name: (projectHandle as FileSystemDirectoryHandle).name,
-              handler: projectHandle as FileSystemDirectoryHandle,
-              favicon: null,
-            });
-            setNavigatorDropDownType(null);
+            dispatch(
+              setProject({
+                context: "local",
+                name: (projectHandle as FileSystemDirectoryHandle).name,
+                handler: projectHandle as FileSystemDirectoryHandle,
+                favicon: null,
+              }),
+            );
+            dispatch(setNavigatorDropdownType(null));
             if (internal) {
               // store last edit session
               toogleCodeView();
@@ -1013,12 +848,14 @@ export default function MainPage() {
               handler.name === "index" ? (indexHtmlUid = uid) : null;
             }
           });
-          setInitialFileToOpen(
-            indexHtmlUid !== ""
-              ? indexHtmlUid
-              : firstHtmlUid !== ""
-              ? firstHtmlUid
-              : "",
+          dispatch(
+            setInitialFileUidToOpen(
+              indexHtmlUid !== ""
+                ? indexHtmlUid
+                : firstHtmlUid !== ""
+                ? firstHtmlUid
+                : "",
+            ),
           );
 
           // set ff-tree, ff-handlers
@@ -1033,7 +870,7 @@ export default function MainPage() {
             treeViewData[uid] = {
               uid,
               parentUid: parentUid,
-              name: name,
+              displayName: name,
               isEntity: kind === "file",
               children: [...children],
               data: {
@@ -1049,7 +886,7 @@ export default function MainPage() {
               } as TFileNodeData,
             } as TNode;
           });
-          setFFTree(treeViewData);
+          dispatch(setFileTree(treeViewData));
           setFFHandlers(ffHandlerObj);
           setProject({
             context: "idb",
@@ -1094,7 +931,7 @@ export default function MainPage() {
       recentProjectContext,
       recentProjectName,
       recentProjectHandler,
-      ffTree,
+      fileTree,
     ],
   );
   const onImportProject = useCallback(
@@ -1124,11 +961,11 @@ export default function MainPage() {
   );
   // open
   const onOpen = useCallback(async () => {
-    if (ffTree) {
+    if (fileTree) {
       // confirm files' changes
       let hasChangedFile = false;
-      for (let x in ffTree) {
-        const _file = ffTree[x];
+      for (let x in fileTree) {
+        const _file = fileTree[x];
         const _fileData = _file.data as TFileNodeData;
         if (_file && _fileData.changed) {
           hasChangedFile = true;
@@ -1150,14 +987,14 @@ export default function MainPage() {
     }
 
     setFSPending(false);
-  }, [onImportProject, ffTree]);
+  }, [onImportProject, fileTree]);
   // new
   const onNew = useCallback(async () => {
-    if (ffTree) {
+    if (fileTree) {
       // confirm if ffTree is changed
       let hasChangedFile = false;
-      for (let x in ffTree) {
-        const _file = ffTree[x];
+      for (let x in fileTree) {
+        const _file = fileTree[x];
         const _fileData = _file.data as TFileNodeData;
         if (_file && _fileData.changed) {
           hasChangedFile = true;
@@ -1181,12 +1018,12 @@ export default function MainPage() {
     }
 
     setFSPending(false);
-  }, [onImportProject, ffTree]);
+  }, [onImportProject, fileTree]);
   // actions
   const onActions = useCallback(() => {
     if (cmdkOpen) return;
-    setCmdkPages(["Actions"]);
-    setCmdkOpen(true);
+    dispatch(setCmdkPages(["Actions"]));
+    dispatch(setCmdkOpen(true));
   }, [cmdkOpen]);
   // add
   const onAdd = useCallback(() => {
@@ -1317,11 +1154,11 @@ export default function MainPage() {
       // detect os
       LogAllow && console.log("navigator: ", navigator.userAgent);
       if (navigator.userAgent.indexOf("Mac OS X") !== -1) {
-        setOsType("Mac");
+        dispatch(setOsType("Mac"));
       } else if (navigator.userAgent.indexOf("Linux") !== -1) {
-        setOsType("Linux");
+        dispatch(setOsType("Linux"));
       } else {
-        setOsType("Windows");
+        dispatch(setOsType("Windows"));
       }
 
       // reference-files
@@ -1625,7 +1462,7 @@ export default function MainPage() {
   }, []);
   // theme
   const setSystemTheme = useCallback(() => {
-    setTheme("System");
+    dispatch(setTheme("System"));
     if (
       window.matchMedia &&
       window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -1678,9 +1515,9 @@ export default function MainPage() {
   useEffect(() => {
     let changed = false;
 
-    const uids = Object.keys(ffTree);
+    const uids = Object.keys(fileTree);
     for (const uid of uids) {
-      const node = ffTree[uid];
+      const node = fileTree[uid];
       const nodeData = node.data as TFileNodeData;
 
       if (nodeData.changed) {
@@ -1698,7 +1535,7 @@ export default function MainPage() {
     return () => {
       window.onbeforeunload = null;
     };
-  }, [ffTree]);
+  }, [fileTree]);
   // cmdk modal handle
   const [hoveredMenuItemDescription, setHoverMenuItemDescription] = useState<
     string | null | undefined
@@ -1733,7 +1570,7 @@ export default function MainPage() {
   const [needToReloadCodeView, setNeedToReloadCodeView] = useState(false);
   useEffect(() => {
     setNeedToReloadCodeView(true);
-  }, [file.uid]);
+  }, [currentFileUid]);
   useEffect(() => {
     setNeedToReloadCodeView(false);
   }, [needToReloadCodeView]);
@@ -1769,8 +1606,8 @@ export default function MainPage() {
   }, []);
   // close navigator
   const onCloseDropDown = useCallback(() => {
-    navigatorDropDownType !== null && setNavigatorDropDownType(null);
-  }, [navigatorDropDownType]);
+    navigatorDropdownType !== null && dispatch(setNavigatorDropdownType(null));
+  }, [navigatorDropdownType]);
 
   return (
     <>
@@ -1780,94 +1617,22 @@ export default function MainPage() {
           // global action
           addRunningActions,
           removeRunningActions,
-          // navigator
-          workspace,
-          setWorkspace,
-          project,
-          navigatorDropDownType,
-          setNavigatorDropDownType,
-          // node actions
-          activePanel,
-          setActivePanel,
-          clipboardData,
-          setClipboardData,
-          event,
-          setEvent,
-          favicon,
-          setFavicon,
-          // actions panel
-          showActionsPanel,
+
           // file tree view
-          initialFileToOpen,
-          setInitialFileToOpen,
-          fsPending,
-          setFSPending,
-          ffTree,
-          setFFTree,
-          setFFNode,
           ffHandlers,
           setFFHandlers,
-          ffHoveredItem,
-          setFFHoveredItem,
-          isHms,
-          setIsHms,
-          ffAction,
-          setFFAction,
-          currentFileUid,
-          setCurrentFileUid,
           // code view
-          showCodeView,
-          setShowCodeView,
-          // node tree view
-          fnHoveredItem,
-          setFNHoveredItem,
-          nodeTree,
-          setNodeTree,
-          validNodeTree,
-          setValidNodeTree,
-          nodeMaxUid,
-          setNodeMaxUid,
-          // stage view
-          iframeLoading,
-          setIFrameLoading,
-          iframeSrc,
-          setIFrameSrc,
-          fileInfo,
-          setFileInfo,
-          needToReloadIFrame,
-          setNeedToReloadIFrame,
-          linkToOpen,
-          setLinkToOpen,
-          // code view
-          codeEditing,
-          setCodeEditing,
           isContentProgrammaticallyChanged,
           setIsContentProgrammaticallyChanged,
           codeChanges,
           setCodeChanges,
-          tabSize,
-          setTabSize,
           newFocusedNodeUid,
           setNewFocusedNodeUid,
           setCodeViewOffsetTop,
-          // processor
-          updateOpt,
-          setUpdateOpt,
           // references
           filesReferenceData,
           htmlReferenceData,
           cmdkReferenceData,
-          // cmdk
-          currentCommand,
-          setCurrentCommand,
-          cmdkOpen,
-          setCmdkOpen,
-          cmdkPages,
-          setCmdkPages,
-          cmdkPage,
-          // other
-          osType,
-          theme,
           // toasts
           addMessage,
           removeMessage,
@@ -1899,8 +1664,8 @@ export default function MainPage() {
         >
           <StageView />
           <ActionsPanel
-            offsetTop={actionsPanelOffsetTop}
-            offsetLeft={actionsPanelOffsetLeft}
+            top={actionsPanelOffsetTop}
+            left={actionsPanelOffsetLeft}
             width={`${actionsPanelWidth}px`}
             height={`calc(100vh - ${actionsPanelOffsetTop * 2}px)`}
           />
@@ -2048,9 +1813,9 @@ export default function MainPage() {
                               (context["file"] === true || false)) ||
                             ((activePanel === "node" ||
                               activePanel === "stage") &&
-                              ((ffTree[file.uid] &&
-                                (ffTree[file.uid].data as TFileNodeData)
-                                  .type === "html" &&
+                              ((fileTree[currentFileUid] &&
+                                (fileTree[currentFileUid].data as TFileNodeData)
+                                  .ext === "html" &&
                                 context["html"] === true) ||
                                 false)))) ||
                         cmdkPage === "Add";
@@ -2093,9 +1858,11 @@ export default function MainPage() {
                                   (context["file"] === true || false)) ||
                                 ((activePanel === "node" ||
                                   activePanel === "stage") &&
-                                  ((ffTree[file.uid] &&
-                                    (ffTree[file.uid].data as TFileNodeData)
-                                      .type === "html" &&
+                                  ((fileTree[currentFileUid] &&
+                                    (
+                                      fileTree[currentFileUid]
+                                        .data as TFileNodeData
+                                    ).ext === "html" &&
                                     context["html"] === true) ||
                                     false)))) ||
                             cmdkPage === "Add";
@@ -2129,11 +1896,11 @@ export default function MainPage() {
                                     recentProjectContext[index];
                                   const projectHandler =
                                     recentProjectHandler[index];
-                                  if (ffTree) {
+                                  if (fileTree) {
                                     // confirm files' changes
                                     let hasChangedFile = false;
-                                    for (let x in ffTree) {
-                                      const _file = ffTree[x];
+                                    for (let x in fileTree) {
+                                      const _file = fileTree[x];
                                       const _fileData =
                                         _file.data as TFileNodeData;
                                       if (_file && _fileData.changed) {

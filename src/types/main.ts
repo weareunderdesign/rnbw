@@ -1,5 +1,8 @@
-import { THtmlPageSettings, TNodeUid } from "@_node/index";
-import { TProjectContext } from "@_redux/main/fileTree";
+import {
+  THtmlPageSettings,
+  TNodeUid,
+} from '@_node/index';
+import { TProjectContext } from '@_redux/main/fileTree';
 
 export type TFileInfo = THtmlPageSettings | null | undefined;
 export type TSession = {

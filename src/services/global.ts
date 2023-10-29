@@ -1,4 +1,4 @@
-import { TOsType } from "@_types/global";
+import { TOsType } from '@_redux/global';
 
 export const getLineBreaker = (osType: TOsType): string => {
   return osType === "Windows"
@@ -9,6 +9,7 @@ export const getLineBreaker = (osType: TOsType): string => {
     ? "\n"
     : "";
 };
+
 export const getCommandKey = (
   e: KeyboardEvent | MouseEvent | React.MouseEvent,
   osType: TOsType,

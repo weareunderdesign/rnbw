@@ -1,13 +1,13 @@
-import "./rnbw.css";
+import './rnbw.css';
 
-import React from "react";
+import React from 'react';
 
-import * as ReactDOMClient from "react-dom/client";
-import { Provider } from "react-redux";
+import * as ReactDOMClient from 'react-dom/client';
+import { Provider } from 'react-redux';
 
-import configureStore from "@_redux/_root";
+import configureStore from '@_redux/_root';
 
-import App from "./app";
+import App from './app';
 
 // configure store
 const initialState = {};
