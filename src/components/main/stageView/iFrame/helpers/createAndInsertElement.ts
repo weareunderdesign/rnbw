@@ -1,10 +1,19 @@
-import { RefObject } from "react";
+import { RefObject } from 'react';
 
-import { NodeUidAttribNameInApp } from "@_constants/main";
-import { THtmlNodeData } from "@_node/html";
-import { TNode, TNodeUid } from "@_node/types";
-import { focusFNNode, selectFNNode } from "@_redux/main";
-import { AnyAction, Dispatch } from "@reduxjs/toolkit";
+import { NodeUidAttribNameInApp } from '@_constants/main';
+import { THtmlNodeData } from '@_node/html';
+import {
+  TNode,
+  TNodeUid,
+} from '@_node/types';
+import {
+  focusFNNode,
+  selectFNNode,
+} from '@_redux/main';
+import {
+  AnyAction,
+  Dispatch,
+} from '@reduxjs/toolkit';
 
 export const createAndInsertElement = (
   targetUid: TNodeUid,
@@ -16,7 +25,7 @@ export const createAndInsertElement = (
     actionNames: string[],
     effect?: boolean | undefined,
   ) => void,
-  setNeedToReloadIFrame: (_needToReloadIFrame: boolean) => void,
+  setNeedToReloadIframe: (_needToReloadIFrame: boolean) => void,
 ) => {
   const nodeData = node.data as THtmlNodeData;
   let newElement;
@@ -49,7 +58,7 @@ export const createAndInsertElement = (
       }
       newElement &&
         contentRef?.current?.contentWindow?.document?.appendChild(newElement);
-      setNeedToReloadIFrame(true);
+      setNeedToReloadIframe(true);
     } else {
       const targetElement =
         contentRef?.current?.contentWindow?.document?.querySelector(

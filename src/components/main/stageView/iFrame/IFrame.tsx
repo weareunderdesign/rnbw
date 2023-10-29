@@ -1,10 +1,22 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
-import { useSelector } from "react-redux";
+import { useSelector } from 'react-redux';
 
-import { NodeUidAttribNameInApp } from "@_constants/main";
-import { TNode, TNodeUid } from "@_node/types";
-import { fnSelector, MainContext } from "@_redux/main";
+import { NodeUidAttribNameInApp } from '@_constants/main';
+import {
+  TNode,
+  TNodeUid,
+} from '@_node/types';
+import {
+  fnSelector,
+  MainContext,
+} from '@_redux/main';
 
 import {
   useChangeIframeTheme,
@@ -13,9 +25,9 @@ import {
   useMouseEvents,
   useSideEffectHandlers,
   useTextEditing,
-} from "./hooks";
-import { jss } from "./js";
-import { styles } from "./styles";
+} from './hooks';
+import { jss } from './js';
+import { styles } from './styles';
 
 export const IFrame = () => {
   // -------------------------------------------------------------- global state --------------------------------------------------------------
@@ -29,7 +41,7 @@ export const IFrame = () => {
     setIFrameLoading,
     iframeSrc,
     needToReloadIFrame,
-    setNeedToReloadIFrame,
+    setNeedToReloadIframe,
     // code view
     setCodeViewOffsetTop,
     // toasts
@@ -437,7 +449,7 @@ export const IFrame = () => {
   useEffect(() => {
     if (needToReloadIFrame) {
       contentRef?.contentWindow?.location.reload();
-      setNeedToReloadIFrame(false);
+      setNeedToReloadIframe(false);
       linkTagUid.current = "";
     }
   }, [needToReloadIFrame, contentRef]);

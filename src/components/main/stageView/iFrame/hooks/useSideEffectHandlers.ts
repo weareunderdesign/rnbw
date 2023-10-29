@@ -1,9 +1,18 @@
-import { useCallback, useContext } from "react";
+import {
+  useCallback,
+  useContext,
+} from 'react';
 
-import { useDispatch, useSelector } from "react-redux";
+import {
+  useDispatch,
+  useSelector,
+} from 'react-redux';
 
-import { NodeUidAttribNameInApp } from "@_constants/main";
-import { TNode, TNodeUid } from "@_node/types";
+import { NodeUidAttribNameInApp } from '@_constants/main';
+import {
+  TNode,
+  TNodeUid,
+} from '@_node/types';
 import {
   expandFNNode,
   focusFNNode,
@@ -11,9 +20,12 @@ import {
   navigatorSelector,
   selectFNNode,
   updateFNTreeViewState,
-} from "@_redux/main";
+} from '@_redux/main';
 
-import { cloneAndInsertNode, createAndInsertElement } from "../helpers";
+import {
+  cloneAndInsertNode,
+  createAndInsertElement,
+} from '../helpers';
 
 export interface IUseSideEffectHandlersProps {
   contentRef: any;
@@ -31,7 +43,7 @@ export const useSideEffectHandlers = ({
     clipboardData,
     // node tree view
     nodeTree,
-    setNeedToReloadIFrame,
+    setNeedToReloadIframe,
   } = useContext(MainContext);
 
   const addElement = useCallback(
@@ -43,7 +55,7 @@ export const useSideEffectHandlers = ({
         contentRef,
         dispatch,
         removeRunningActions,
-        setNeedToReloadIFrame,
+        setNeedToReloadIframe,
       );
     },
     [removeRunningActions, contentRef, nodeTree],
@@ -63,7 +75,7 @@ export const useSideEffectHandlers = ({
         contentRef,
         dispatch,
         removeRunningActions,
-        setNeedToReloadIFrame,
+        setNeedToReloadIframe,
       );
 
       deleteUids.map((uid) => {
