@@ -19,7 +19,7 @@ import { creatingNode } from "../helpers/creatingNode";
 import { addNodeToTree } from "../helpers/addNodeToTree";
 import { getTree } from "../helpers/getTree";
 import { useEditor } from "@_components/main/codeView/hooks";
-import { NodeInAppAttribName } from "@_constants/main";
+import { getCopiedContent, sortUidsByMaxEndIndex } from "../helpers";
 
 export function useNodeActions() {
   const dispatch = useDispatch();
@@ -175,53 +175,11 @@ export function useNodeActions() {
     }
     let content = model.getValue();
 
-    const sortedUids = uids.slice().sort((uid1, uid2) => {
-      const selectedNode1 = validNodeTree[uid1];
-      const selectedNode2 = validNodeTree[uid2];
-
-      if (
-        !selectedNode1 ||
-        !selectedNode1.sourceCodeLocation ||
-        !selectedNode2 ||
-        !selectedNode2.sourceCodeLocation
-      ) {
-        console.error(
-          "Parent node or source code location is undefined for uid1",
-        );
-        return 0;
-      }
-
-      const { endLine: endLine1 } = selectedNode1.sourceCodeLocation;
-      const { endLine: endLine2 } = selectedNode2.sourceCodeLocation;
-
-      return endLine2 - endLine1; // Sort in descending order
-    });
+    const sortedUids = sortUidsByMaxEndIndex(uids, validNodeTree);
 
     sortedUids.forEach(async (uid) => {
-      const ele = iframe?.contentWindow?.document?.querySelector(
-        `[${NodeInAppAttribName}="${uid}"]`,
-      );
+      const cleanedUpCode = getCopiedContent(uid, iframe);
 
-      //create a copy of ele
-      const eleCopy = ele?.cloneNode(true) as HTMLElement;
-      const innerElements = eleCopy.querySelectorAll(
-        `[${NodeInAppAttribName}]`,
-      );
-
-      innerElements.forEach((element) => {
-        if (element.hasAttribute(NodeInAppAttribName)) {
-          element.removeAttribute(NodeInAppAttribName);
-        }
-      });
-
-      eleCopy?.removeAttribute("contenteditable");
-      eleCopy?.removeAttribute("rnbwdev-rnbw-element-hover");
-      eleCopy?.removeAttribute("rnbwdev-rnbw-element-select");
-      eleCopy?.removeAttribute(NodeInAppAttribName);
-      const cleanedUpCode = eleCopy?.outerHTML;
-
-      //delete the copy
-      eleCopy?.remove();
       if (!cleanedUpCode) return;
 
       const selectedNode = validNodeTree[uid];
@@ -258,30 +216,8 @@ export function useNodeActions() {
     let copiedCode = "";
 
     uids.forEach((uid) => {
-      const ele = iframe?.contentWindow?.document?.querySelector(
-        `[${NodeInAppAttribName}="${uid}"]`,
-      );
+      const cleanedUpCode = getCopiedContent(uid, iframe);
 
-      //create a copy of ele
-      const eleCopy = ele?.cloneNode(true) as HTMLElement;
-      const innerElements = eleCopy.querySelectorAll(
-        `[${NodeInAppAttribName}]`,
-      );
-
-      innerElements.forEach((element) => {
-        if (element.hasAttribute(NodeInAppAttribName)) {
-          element.removeAttribute(NodeInAppAttribName);
-        }
-      });
-
-      eleCopy?.removeAttribute("contenteditable");
-      eleCopy?.removeAttribute("rnbwdev-rnbw-element-hover");
-      eleCopy?.removeAttribute("rnbwdev-rnbw-element-select");
-      eleCopy?.removeAttribute(NodeInAppAttribName);
-      const cleanedUpCode = eleCopy?.outerHTML;
-
-      //delete the copy
-      eleCopy?.remove();
       if (!cleanedUpCode) return;
 
       copiedCode += cleanedUpCode + "\n";
