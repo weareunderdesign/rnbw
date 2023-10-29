@@ -13,7 +13,6 @@ import { useEditor } from '@_components/main/codeView/hooks';
 import {
   addNode,
   copyNodeExternal,
-  duplicateNode,
   getValidNodeUids,
   moveNode,
 } from '@_node/index';
@@ -45,6 +44,7 @@ export function useNodeActions() {
     htmlReferenceData,
     // other
     monacoEditorRef,
+    setIsContentProgrammaticallyChanged,
   } = useContext(MainContext);
 
   const { handleEditorChange } = useEditor();
@@ -161,46 +161,94 @@ export function useNodeActions() {
     [addRunningActions, removeRunningActions, nodeTree],
   );
 
-  const cb_duplicateNode = useCallback(
-    (uids: TNodeUid[]) => {
-      addRunningActions(["nodeTreeView-duplicate"]);
+  const cb_duplicateNode = (uids: TNodeUid[]) => {
+    setIsContentProgrammaticallyChanged(true);
 
-      // call api
-      const tree = getTree(nodeTree);
-      const res = duplicateNode(
-        tree,
-        uids,
-        "html",
-        String(nodeMaxUid) as TNodeUid,
-        osType,
-        tabSize,
+    const iframe: any = document.getElementById("iframeId");
+    const model = monacoEditorRef.current?.getModel();
+    if (!model) {
+      console.error("Monaco Editor model is undefined");
+      return;
+    }
+    let content = model.getValue();
+
+    const sortedUids = uids.slice().sort((uid1, uid2) => {
+      const selectedNode1 = validNodeTree[uid1];
+      const selectedNode2 = validNodeTree[uid2];
+
+      if (
+        !selectedNode1 ||
+        !selectedNode1.sourceCodeLocation ||
+        !selectedNode2 ||
+        !selectedNode2.sourceCodeLocation
+      ) {
+        console.error(
+          "Parent node or source code location is undefined for uid1",
+        );
+        return 0;
+      }
+
+      const { endLine: endLine1 } = selectedNode1.sourceCodeLocation;
+      const { endLine: endLine2 } = selectedNode2.sourceCodeLocation;
+
+      return endLine2 - endLine1; // Sort in descending order
+    });
+
+    sortedUids.forEach(async (uid) => {
+      const ele = iframe?.contentWindow?.document?.querySelector(
+        `[${NodeInAppAttribName}="${uid}"]`,
       );
 
-      // processor
-      addRunningActions(["processor-updateOpt"]);
-      setUpdateOpt({ parse: false, from: "node" });
-      setNodeTree(res.tree);
+      //create a copy of ele
+      const eleCopy = ele?.cloneNode(true) as HTMLElement;
+      const innerElements = eleCopy.querySelectorAll(
+        `[${NodeInAppAttribName}]`,
+      );
 
-      // view state
-      addRunningActions(["stageView-viewState"]);
-      setUpdateOpt({ parse: true, from: "code" });
-      // side effect
-      setNodeMaxUid(Number(res.nodeMaxUid));
-      setEvent({ type: "duplicate-node", param: [uids, res.addedUidMap] });
+      innerElements.forEach((element) => {
+        if (element.hasAttribute(NodeInAppAttribName)) {
+          element.removeAttribute(NodeInAppAttribName);
+        }
+      });
 
-      removeRunningActions(["nodeTreeView-duplicate"]);
-      console.log("hms added");
-      dispatch(increaseActionGroupIndex());
-    },
-    [
-      addRunningActions,
-      removeRunningActions,
-      nodeTree,
-      nodeMaxUid,
-      osType,
-      tabSize,
-    ],
-  );
+      eleCopy?.removeAttribute("contenteditable");
+      eleCopy?.removeAttribute("rnbwdev-rnbw-element-hover");
+      eleCopy?.removeAttribute("rnbwdev-rnbw-element-select");
+      eleCopy?.removeAttribute(NodeInAppAttribName);
+      const cleanedUpCode = eleCopy?.outerHTML;
+
+      //delete the copy
+      eleCopy?.remove();
+      if (!cleanedUpCode) return;
+
+      const selectedNode = validNodeTree[uid];
+      if (!selectedNode || !selectedNode.sourceCodeLocation) {
+        console.error("Parent node or source code location is undefined");
+        return;
+      }
+      const { endLine, endCol } = selectedNode.sourceCodeLocation;
+
+      const position = { lineNumber: endLine, column: endCol + 1 };
+
+      const range = new Range(
+        position.lineNumber,
+        position.column,
+        position.lineNumber,
+        position.column,
+      );
+      const editOperation = { range, text: "\n" + cleanedUpCode };
+
+      model.pushEditOperations([], [editOperation], () => null);
+      monacoEditorRef.current?.setPosition({
+        lineNumber: position.lineNumber + 1,
+        column: 1,
+      });
+
+      content = model.getValue();
+    });
+
+    handleEditorChange(content);
+  };
 
   const cb_copyNode = (uids: TNodeUid[]) => {
     const iframe: any = document.getElementById("iframeId");
