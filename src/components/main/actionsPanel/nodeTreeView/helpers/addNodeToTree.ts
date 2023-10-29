@@ -1,6 +1,12 @@
-import { NodeUidAttribNameInApp } from "@_constants/main";
-import { THtmlNodeData } from "@_node/index";
-import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
+import {
+  StageNodeIdAttr,
+  THtmlNodeData,
+} from '@_node/index';
+import {
+  TNode,
+  TNodeTreeData,
+  TNodeUid,
+} from '@_node/types';
 
 export const addNodeToTree = (
   _tree: TNodeTreeData | null,
@@ -19,12 +25,12 @@ export const addNodeToTree = (
         focusedItem !== "ROOT" && _parent !== undefined
           ? nodeTree[focusedItem].parentUid
           : "ROOT";
-      _tree[x].name = newNode.name;
+      _tree[x].displayName = newNode.displayName;
       _tree[x].data.type = "tag";
-      _tree[x].data.name = newNode.name;
+      _tree[x].data.name = newNode.displayName;
       _tree[x].data.valid = true;
       (_tree[x].data as THtmlNodeData).attribs = {
-        [NodeUidAttribNameInApp]: String(Number(tmpMaxUid) + 1) as TNodeUid,
+        [StageNodeIdAttr]: String(Number(tmpMaxUid) + 1) as TNodeUid,
       };
       newNode.uid = String(Number(tmpMaxUid) + 1);
       tree[String(Number(tmpMaxUid) + 1)] = _tree[x];

@@ -1,55 +1,50 @@
-import { useCallback, useContext } from "react";
+import {
+  useCallback,
+  useContext,
+} from 'react';
 
-import { Range } from "monaco-editor";
-import { useDispatch, useSelector } from "react-redux";
+import { Range } from 'monaco-editor';
+import {
+  useDispatch,
+  useSelector,
+} from 'react-redux';
 
-import { useEditor } from "@_components/main/codeView/hooks";
+import { useEditor } from '@_components/main/codeView/hooks';
 import {
   addNode,
   copyNodeExternal,
   duplicateNode,
   getValidNodeUids,
   moveNode,
-} from "@_node/index";
-import { TNode, TNodeUid } from "@_node/types";
+} from '@_node/index';
 import {
-  fnSelector,
-  increaseActionGroupIndex,
-  MainContext,
-} from "@_redux/main";
+  TNode,
+  TNodeUid,
+} from '@_node/types';
+import { MainContext } from '@_redux/main';
+import {
+  nodeTreeSelector,
+  nodeTreeViewStateSelector,
+  validNodeTreeSelector,
+} from '@_redux/main/nodeTree';
 
-import { addNodeToTree } from "../helpers/addNodeToTree";
-import { creatingNode } from "../helpers/creatingNode";
-import { getTree } from "../helpers/getTree";
-import { useEditor } from "@_components/main/codeView/hooks";
-import { NodeInAppAttribName } from "@_constants/main";
+import { addNodeToTree } from '../helpers/addNodeToTree';
+import { getTree } from '../helpers/getTree';
 
 export function useNodeActions() {
   const dispatch = useDispatch();
-  const { focusedItem } = useSelector(fnSelector);
+
+  const nodeTree = useSelector(nodeTreeSelector);
+  const validNodeTree = useSelector(validNodeTreeSelector);
+
+  const { focusedItem } = useSelector(nodeTreeViewStateSelector);
   const {
-    // global action
-    addRunningActions,
-    removeRunningActions,
-    // node actions
-    clipboardData,
-    setEvent,
-    // node tree view
-    nodeTree,
-    setNodeTree,
-    nodeMaxUid,
-    setNodeMaxUid,
     // code view
     tabSize,
-    // processor
-    setUpdateOpt,
     // references
     htmlReferenceData,
     // other
-    osType,
-    theme: _theme,
     monacoEditorRef,
-    validNodeTree,
   } = useContext(MainContext);
 
   const { handleEditorChange } = useEditor();
@@ -213,25 +208,23 @@ export function useNodeActions() {
 
     uids.forEach((uid) => {
       const ele = iframe?.contentWindow?.document?.querySelector(
-        `[${NodeInAppAttribName}="${uid}"]`,
+        `[${StageNodeIdAttr}="${uid}"]`,
       );
 
       //create a copy of ele
       const eleCopy = ele?.cloneNode(true) as HTMLElement;
-      const innerElements = eleCopy.querySelectorAll(
-        `[${NodeInAppAttribName}]`,
-      );
+      const innerElements = eleCopy.querySelectorAll(`[${StageNodeIdAttr}]`);
 
       innerElements.forEach((element) => {
-        if (element.hasAttribute(NodeInAppAttribName)) {
-          element.removeAttribute(NodeInAppAttribName);
+        if (element.hasAttribute(StageNodeIdAttr)) {
+          element.removeAttribute(StageNodeIdAttr);
         }
       });
 
       eleCopy?.removeAttribute("contenteditable");
       eleCopy?.removeAttribute("rnbwdev-rnbw-element-hover");
       eleCopy?.removeAttribute("rnbwdev-rnbw-element-select");
-      eleCopy?.removeAttribute(NodeInAppAttribName);
+      eleCopy?.removeAttribute(StageNodeIdAttr);
       const cleanedUpCode = eleCopy?.outerHTML;
 
       //delete the copy
