@@ -1,7 +1,7 @@
-import { TNodeUid } from "@_node/types";
+import { TNodeUid } from '@_node/types';
 
 export type TNodeTreeEventReducerState = {
-  fileContent: string;
+  currentFileContent: string;
   selectedNodeUids: TNodeUid[];
   nodeEvent: TNodeEvent;
 };

@@ -1,6 +1,6 @@
 export type TStageViewReducerState = {
   iframeSrc: string | null;
   iframeLoading: boolean;
-  needToReloadIFrame: boolean;
+  needToReloadIframe: boolean;
   linkToOpen: string | null;
 };

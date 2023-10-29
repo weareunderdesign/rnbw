@@ -1,6 +1,13 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import {
+  createSlice,
+  PayloadAction,
+} from '@reduxjs/toolkit';
 
-import { TGlobalReducerState, TOsType, TTheme } from "./types";
+import {
+  TGlobalReducerState,
+  TOsType,
+  TTheme,
+} from './types';
 
 const globalReducerInitialState: TGlobalReducerState = {
   osType: "Windows",
@@ -21,5 +28,5 @@ const slice = createSlice({
     },
   },
 });
-export const { setOsType } = slice.actions;
+export const { setOsType, setTheme } = slice.actions;
 export const GlobalReducer = slice.reducer;

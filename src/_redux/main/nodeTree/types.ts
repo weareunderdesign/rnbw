@@ -1,6 +1,9 @@
-import { TNodeTreeData, TNodeUid } from "@_node/types";
+import {
+  TNodeTreeData,
+  TNodeUid,
+} from '@_node/types';
 
-import { TTreeViewState } from "../types";
+import { TTreeViewState } from '../types';
 
 export type TNodeTreeReducerState = {
   nodeTree: TNodeTreeData;

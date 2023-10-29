@@ -1,18 +1,24 @@
-import undoable from "redux-undo";
+import undoable from 'redux-undo';
 
-import { TNodeUid } from "@_node/types";
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { TNodeUid } from '@_node/types';
+import {
+  createSlice,
+  PayloadAction,
+} from '@reduxjs/toolkit';
 
 import {
   NodeTree_Event_ClearActionType,
   NodeTree_Event_RedoActionType,
   NodeTree_Event_StoreLimit,
   NodeTree_Event_UndoActionType,
-} from "./constants";
-import { TNodeEvent, TNodeTreeEventReducerState } from "./types";
+} from './constants';
+import {
+  TNodeEvent,
+  TNodeTreeEventReducerState,
+} from './types';
 
 const nodeTreeEventReducerInitialState: TNodeTreeEventReducerState = {
-  fileContent: "",
+  currentFileContent: "",
   selectedNodeUids: [],
   nodeEvent: null,
 };
@@ -20,9 +26,9 @@ const nodeTreeEventSlice = createSlice({
   name: "nodeTreeEvent",
   initialState: nodeTreeEventReducerInitialState,
   reducers: {
-    setFileContent(state, action: PayloadAction<string>) {
-      const fileContent = action.payload;
-      state.fileContent = fileContent;
+    setCurrentFileContent(state, action: PayloadAction<string>) {
+      const currentFileContent = action.payload;
+      state.currentFileContent = currentFileContent;
     },
     setSelectedItems(state, action: PayloadAction<TNodeUid[]>) {
       const selectedNodeUids = action.payload;
@@ -34,7 +40,7 @@ const nodeTreeEventSlice = createSlice({
     },
   },
 });
-export const { setFileContent, setSelectedItems, setNodeEvent } =
+export const { setCurrentFileContent, setSelectedItems, setNodeEvent } =
   nodeTreeEventSlice.actions;
 export const NodeTreeEventReducer = undoable(nodeTreeEventSlice.reducer, {
   limit: NodeTree_Event_StoreLimit,

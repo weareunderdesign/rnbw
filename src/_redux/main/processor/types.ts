@@ -1,4 +1,8 @@
-import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
+import {
+  TNode,
+  TNodeTreeData,
+  TNodeUid,
+} from '@_node/types';
 
 export type TProcessorReducerState = {
   navigatorDropdownType: TNavigatorDropdownType;

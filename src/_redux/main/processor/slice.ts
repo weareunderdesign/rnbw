@@ -1,11 +1,15 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import {
+  createSlice,
+  PayloadAction,
+} from '@reduxjs/toolkit';
 
 import {
   TClipboardData,
   TNavigatorDropdownType,
+  TPanelContext,
   TProcessorReducerState,
   TUpdateOptions,
-} from "./types";
+} from './types';
 
 const processorReducerInitialState: TProcessorReducerState = {
   navigatorDropdownType: null,
@@ -38,13 +42,22 @@ const processorSlice = createSlice({
       state.favicon = favicon;
     },
 
-    setShowActionsPanel(state, action: PayloadAction<boolean>) {
-      const showActionsPanel = action.payload;
-      state.showActionsPanel = showActionsPanel;
+    setActivePanel(state, action: PayloadAction<TPanelContext>) {
+      const activePanel = action.payload;
+      state.activePanel = activePanel;
     },
     setClipboardData(state, action: PayloadAction<TClipboardData>) {
       const clipboardData = action.payload;
       state.clipboardData = clipboardData;
+    },
+
+    setShowActionsPanel(state, action: PayloadAction<boolean>) {
+      const showActionsPanel = action.payload;
+      state.showActionsPanel = showActionsPanel;
+    },
+    setShowCodeView(state, action: PayloadAction<boolean>) {
+      const showCodeView = action.payload;
+      state.showCodeView = showCodeView;
     },
 
     setDidUndo(state, action: PayloadAction<boolean>) {
@@ -66,8 +79,11 @@ export const {
   setNavigatorDropdownType,
   setFavicon,
 
-  setShowActionsPanel,
+  setActivePanel,
   setClipboardData,
+
+  setShowActionsPanel,
+  setShowCodeView,
 
   setDidUndo,
   setDidRedo,

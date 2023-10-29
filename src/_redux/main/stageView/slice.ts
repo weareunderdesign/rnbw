@@ -1,11 +1,14 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import {
+  createSlice,
+  PayloadAction,
+} from '@reduxjs/toolkit';
 
-import { TStageViewReducerState } from "./types";
+import { TStageViewReducerState } from './types';
 
 const stageViewReducerInitialState: TStageViewReducerState = {
   iframeSrc: null,
   iframeLoading: false,
-  needToReloadIFrame: false,
+  needToReloadIframe: false,
   linkToOpen: null,
 };
 const stageViewSlice = createSlice({
@@ -20,9 +23,9 @@ const stageViewSlice = createSlice({
       const iframeLoading = actions.payload;
       state.iframeLoading = iframeLoading;
     },
-    setNeedToReloadIFrame(state, actions: PayloadAction<boolean>) {
-      const needToReloadIFrame = actions.payload;
-      state.needToReloadIFrame = needToReloadIFrame;
+    setNeedToReloadIframe(state, actions: PayloadAction<boolean>) {
+      const needToReloadIframe = actions.payload;
+      state.needToReloadIframe = needToReloadIframe;
     },
     setLinkToOpen(state, actions: PayloadAction<string | null>) {
       const linkToOpen = actions.payload;
@@ -33,7 +36,7 @@ const stageViewSlice = createSlice({
 export const {
   setIframeSrc,
   setIframeLoading,
-  setNeedToReloadIFrame,
+  setNeedToReloadIframe,
   setLinkToOpen,
 } = stageViewSlice.actions;
 export const StageViewReducer = stageViewSlice.reducer;
