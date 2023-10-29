@@ -10,7 +10,7 @@ import SettingsPanel from './settingsPanel';
 import { ActionsPanelProps } from './types';
 import WorkspaceTreeView from './workspaceTreeView';
 
-export default function ActionsPanel(props: ActionsPanelProps) {
+export default function ActionsPanel({ ...props }: ActionsPanelProps) {
   const showActionsPanel = useSelector(showActionsPanelSelector);
 
   return useMemo(() => {
