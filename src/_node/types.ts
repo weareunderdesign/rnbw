@@ -1,4 +1,4 @@
-import { THtmlReferenceData } from "./html";
+import { THtmlReferenceData } from './html';
 
 export type TNode = {
   uid: TNodeUid;

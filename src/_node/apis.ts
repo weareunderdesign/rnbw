@@ -1,16 +1,20 @@
-import { RootNodeUid } from "@_constants/main";
-import { TOsType } from "@_types/global";
+import { RootNodeUid } from '@_constants/main';
+import { TOsType } from '@_redux/global';
 
-import { TFileNodeData } from "./file";
-import { THtmlNodeData, THtmlReferenceData } from "./html";
+import { TFileNodeData } from './file';
 import {
+  THtmlNodeData,
+  THtmlReferenceData,
+} from './html';
+import {
+  TBasicNodeData,
   TNode,
   TNodeApiResponse,
   TNodeReferenceData,
   TNodeTreeContext,
   TNodeTreeData,
   TNodeUid,
-} from "./types";
+} from './types';
 
 export const getSubNodeUidsByBfs = (
   uid: TNodeUid,
@@ -77,7 +81,7 @@ export const getValidPrevNodeUid = (
     if (uid === node.uid) break;
 
     const childNode = tree[uid];
-    const childNodeData = childNode.data as TNormalNodeData;
+    const childNodeData = childNode.data as TBasicNodeData;
     if (!childNodeData.valid) continue;
 
     prevNodeUid = uid;
@@ -261,8 +265,8 @@ export const removeNode = (
         const prevNode = tree[prevNodeUid];
         if ((prevNode.data as THtmlNodeData).isFormatText) {
           prevStartIndex =
-            prevNode.sourceCodeLocation.endOffset -
-            prevNode.sourceCodeLocation.startOffset;
+            prevNode.data.sourceCodeLocation.endOffset -
+            prevNode.data.sourceCodeLocation.startOffset;
           delete tree[prevNodeUid];
           parentNode.children = parentNode.children.filter(
             (childUid) => childUid !== prevNodeUid,
@@ -282,15 +286,15 @@ export const removeNode = (
 
     fileData.content = replaceContentByFormatted(
       file.content,
-      tree[uid].sourceCodeLocation.startOffset - prevStartIndex - 1,
-      tree[uid].sourceCodeLocation.endOffset,
+      tree[uid].data.sourceCodeLocation.startOffset - prevStartIndex - 1,
+      tree[uid].data.sourceCodeLocation.endOffset,
       "",
     );
 
     updateExistingTree(
       tree,
-      tree[uid].sourceCodeLocation.startOffset - prevStartIndex - 1,
-      tree[uid].sourceCodeLocation.endOffset,
+      tree[uid].data.sourceCodeLocation.startOffset - prevStartIndex - 1,
+      tree[uid].data.sourceCodeLocation.endOffset,
       "",
     );
 
@@ -745,12 +749,12 @@ export const updateExistingTree = (
   const diff = formattedContent.length - (end - start) - 1;
 
   for (const key in _nodeTree) {
-    if (_nodeTree[key].sourceCodeLocation.startOffset > start) {
-      _nodeTree[key].sourceCodeLocation.startOffset += diff;
+    if (_nodeTree[key].data.sourceCodeLocation.startOffset > start) {
+      _nodeTree[key].data.sourceCodeLocation.startOffset += diff;
     }
 
-    if (_nodeTree[key].sourceCodeLocation.endOffset > end) {
-      _nodeTree[key].sourceCodeLocation.endOffset += diff;
+    if (_nodeTree[key].data.sourceCodeLocation.endOffset > end) {
+      _nodeTree[key].data.sourceCodeLocation.endOffset += diff;
     }
   }
 };

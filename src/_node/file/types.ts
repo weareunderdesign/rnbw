@@ -41,7 +41,6 @@ export type TFile = {
   content: string;
 };
 
-
 export type TZipFileInfo = {
   path: string;
   zip: JSZip | null | undefined;
