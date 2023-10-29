@@ -1,4 +1,4 @@
-import { TFileNodeData } from "@_node/file";
+import { TFileNodeData } from '@_node/file';
 
 export const generateNewNameMoveNode = async (
   nodeData: TFileNodeData,

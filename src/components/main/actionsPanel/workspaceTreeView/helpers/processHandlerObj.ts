@@ -1,6 +1,13 @@
-import { ParsableFileTypes } from "@_constants/main";
-import { TFileHandlerCollection, TFileNodeData } from "@_node/file";
-import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
+import { ParsableFileTypes } from '@_constants/main';
+import {
+  TFileHandlerCollection,
+  TFileNodeData,
+} from '@_node/file';
+import {
+  TNode,
+  TNodeTreeData,
+  TNodeUid,
+} from '@_node/types';
 
 const buildTree = (
   handlerObj: { [key: string]: any },
@@ -31,7 +38,7 @@ const buildTree = (
     treeViewData[uid] = {
       uid,
       parentUid: parentUid,
-      name: name,
+      displayName: name,
       isEntity: kind === "file",
       children: [...children],
       data: {

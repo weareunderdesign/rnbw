@@ -1,19 +1,56 @@
-import { useDispatch, useSelector } from "react-redux";
-import { useCallback, useContext } from "react";
-import { TreeItem } from "react-complex-tree";
+import {
+  useCallback,
+  useContext,
+} from 'react';
+
+import { TreeItem } from 'react-complex-tree';
+import {
+  useDispatch,
+  useSelector,
+} from 'react-redux';
 
 import {
-  MainContext,
-  expandFFNode,
-  ffSelector,
-  navigatorSelector,
-  setCurrentFile,
+  RootNodeUid,
+  TmpNodeUid,
+} from '@_constants/main';
+import { getValidNodeUids } from '@_node/apis';
+import {
+  createDirectory,
+  TFileNodeData,
+  writeFile,
+} from '@_node/file';
+import {
+  TNode,
+  TNodeTreeData,
+  TNodeUid,
+} from '@_node/types';
+import { osTypeSelector } from '@_redux/global';
+import { MainContext } from '@_redux/main';
+import {
+  currentFileUidSelector,
+  expandFileTreeNodes,
+  fileTreeSelector,
+  fileTreeViewStateSelector,
+  projectSelector,
+  setCurrentFileUid,
+  setFileTree,
+} from '@_redux/main/fileTree';
+import {
+  FileTree_Event_ClearActionType,
   setFileAction,
-} from "@_redux/main";
-import { TFileNodeData, createDirectory, writeFile } from "@_node/file";
-import { TNode, TNodeTreeData, TNodeUid, TNormalNodeData } from "@_node/types";
-import { TFileAction, TFileNodeType } from "@_types/main";
-import { verifyFileHandlerPermission } from "@_services/main";
+  TFileAction,
+} from '@_redux/main/fileTree/event';
+import {
+  navigatorDropdownTypeSelector,
+  setNavigatorDropdownType,
+  setShowCodeView,
+  setUpdateOptions,
+  showCodeViewSelector,
+  updateOptionsSelector,
+} from '@_redux/main/processor';
+import { verifyFileHandlerPermission } from '@_services/main';
+import { TFileNodeType } from '@_types/main';
+
 import {
   deletingWarning,
   duplicatingWarning,
@@ -21,48 +58,41 @@ import {
   folderError,
   invalidDirError,
   movingError,
-} from "../errors";
-import { useReloadProject } from "./useReloadProject";
-import { HmsClearActionType, RootNodeUid, TmpNodeUid } from "@_constants/main";
-import { useInvalidNodes } from "./useInvalidNodes";
-import { useTemporaryNodes } from "./useTemporaryNodes";
-import { getValidNodeUids } from "@_node/apis";
+} from '../errors';
 import {
   duplicateNode,
   generateNewName,
   renameNode,
   validateAndDeleteNode,
   validateAndMoveNode,
-} from "../helpers";
+} from '../helpers';
+import { useInvalidNodes } from './useInvalidNodes';
+import { useReloadProject } from './useReloadProject.1';
+import { useTemporaryNodes } from './useTemporaryNodes';
 
 export const useNodeActionsHandler = (
   openFileUid: React.MutableRefObject<string>,
 ) => {
   const dispatch = useDispatch();
-  const { file } = useSelector(navigatorSelector);
+
+  const currentFileUid = useSelector(currentFileUidSelector);
+  const project = useSelector(projectSelector);
+  const fileTree = useSelector(fileTreeSelector);
+  const osType = useSelector(osTypeSelector);
+  const navigatorDropdownType = useSelector(navigatorDropdownTypeSelector);
+
+  const showCodeView = useSelector(showCodeViewSelector);
+  const updateOptions = useSelector(updateOptionsSelector);
 
   const {
     // global action
     addRunningActions,
     removeRunningActions,
-    // navigator
-    project,
-    setNavigatorDropDownType,
     // file tree view
-    ffTree,
-    setFFTree,
     ffHandlers,
-    setCurrentFileUid,
-    // code view
-    showCodeView,
-    setShowCodeView,
-    // processor
-    setUpdateOpt,
     // references
     htmlReferenceData,
     // cmdk
-    // other
-    osType,
     // toasts
     addMessage,
     // non-parse file
@@ -70,8 +100,9 @@ export const useNodeActionsHandler = (
     setPrevFileUid,
   } = useContext(MainContext);
 
-  const { focusedItem, expandedItemsObj, selectedItems } =
-    useSelector(ffSelector);
+  const { focusedItem, expandedItemsObj, selectedItems } = useSelector(
+    fileTreeViewStateSelector,
+  );
 
   const { cb_reloadProject } = useReloadProject();
 
@@ -107,7 +138,7 @@ export const useNodeActionsHandler = (
           return;
         }
       } else if (project.context === "idb") {
-        const parentNode = ffTree[parentUid];
+        const parentNode = fileTree[parentUid];
         const parentNodeData = parentNode.data as TFileNodeData;
 
         newName = await generateNewName(undefined, ffType, ffName);
@@ -147,7 +178,7 @@ export const useNodeActionsHandler = (
 
   const createTmpFFNode = useCallback(
     async (ffNodeType: TFileNodeType) => {
-      const tmpTree = JSON.parse(JSON.stringify(ffTree)) as TNodeTreeData;
+      const tmpTree = JSON.parse(JSON.stringify(fileTree)) as TNodeTreeData;
 
       // validate
       let node = tmpTree[focusedItem];
@@ -159,13 +190,13 @@ export const useNodeActionsHandler = (
       // expand the focusedItem
       node.uid !== RootNodeUid &&
         expandedItemsObj[node.uid] === undefined &&
-        dispatch(expandFFNode([node.uid]));
+        dispatch(expandFileTreeNodes([node.uid]));
 
       // add tmp node
       const tmpNode: TNode = {
         uid: `${node.uid}/${TmpNodeUid}`,
         parentUid: node.uid,
-        name:
+        displayName:
           ffNodeType === "*folder"
             ? "Untitled"
             : ffNodeType === "html"
@@ -176,14 +207,14 @@ export const useNodeActionsHandler = (
         data: {
           valid: false,
           type: ffNodeType,
-        },
-        sourceCodeLocation: {
-          startCol: 0,
-          endCol: 0,
-          endLine: 0,
-          startLine: 0,
-          endOffset: 0,
-          startOffset: 0,
+          sourceCodeLocation: {
+            startCol: 0,
+            endCol: 0,
+            endLine: 0,
+            startLine: 0,
+            endOffset: 0,
+            startOffset: 0,
+          },
         },
       };
 
@@ -192,24 +223,26 @@ export const useNodeActionsHandler = (
       // setFFTree(tmpTree)
 
       setInvalidNodes(tmpNode.uid);
-      await createFFNode(node.uid as TNodeUid, tmpNode.data.type, tmpNode.name);
+      await createFFNode(
+        node.uid as TNodeUid,
+        tmpNode.data.type,
+        tmpNode.displayName,
+      );
       removeInvalidNodes(tmpNode.uid);
-      setNavigatorDropDownType("project");
+      dispatch(setNavigatorDropdownType("project"));
 
       if (ffNodeType !== "*folder") {
-        openFileUid.current = `${node.uid}/${tmpNode.name}.${ffNodeType}`;
-        setCurrentFileUid(openFileUid.current);
+        openFileUid.current = `${node.uid}/${tmpNode.displayName}.${ffNodeType}`;
+        dispatch(setCurrentFileUid(openFileUid.current));
       }
     },
     [
-      ffTree,
+      fileTree,
       focusedItem,
       expandedItemsObj,
       setInvalidNodes,
       createFFNode,
-      setNavigatorDropDownType,
       removeInvalidNodes,
-      setFFTree,
     ],
   );
 
@@ -230,25 +263,25 @@ export const useNodeActionsHandler = (
       const node = item.data as TNode;
       const nodeData = node.data as TFileNodeData;
       if (!nodeData.valid) {
-        const tmpTree = JSON.parse(JSON.stringify(ffTree));
+        const tmpTree = JSON.parse(JSON.stringify(fileTree));
         tmpTree[node.parentUid as TNodeUid].children = tmpTree[
           node.parentUid as TNodeUid
         ].children.filter((c_uid: TNodeUid) => c_uid !== node.uid);
         delete tmpTree[item.data.uid];
-        setFFTree(tmpTree);
+        dispatch(setFileTree(tmpTree));
       }
       removeInvalidNodes(node.uid);
     },
-    [ffTree, removeInvalidNodes],
+    [fileTree, removeInvalidNodes],
   );
 
   const _cb_renameNode = useCallback(
     async (uid: TNodeUid, newName: string, ext: string) => {
       // validate
-      const node = ffTree[uid];
-      if (node === undefined || node.name === newName) return;
+      const node = fileTree[uid];
+      if (node === undefined || node.displayName === newName) return;
       const nodeData = node.data as TFileNodeData;
-      const parentNode = ffTree[node.parentUid as TNodeUid];
+      const parentNode = fileTree[node.parentUid as TNodeUid];
       if (parentNode === undefined) return;
       const parentNodeData = parentNode.data as TFileNodeData;
 
@@ -262,7 +295,7 @@ export const useNodeActionsHandler = (
       project.context,
       setInvalidNodes,
       removeInvalidNodes,
-      ffTree,
+      fileTree,
       ffHandlers,
       cb_reloadProject,
     ],
@@ -271,11 +304,11 @@ export const useNodeActionsHandler = (
   const cb_renameNode = useCallback(
     async (item: TreeItem, newName: string) => {
       const node = item.data as TNode;
-      const nodeData = node.data as TNormalNodeData;
+      const nodeData = node.data as TFileNodeData;
       if (!invalidNodes[node.uid]) return;
 
       if (nodeData.valid) {
-        const _file = ffTree[node.uid];
+        const _file = fileTree[node.uid];
         const _fileData = _file.data as TFileNodeData;
 
         if (_file && _fileData.changed) {
@@ -295,7 +328,7 @@ export const useNodeActionsHandler = (
         );
         removeTemporaryNodes(_file.uid);
       } else {
-        await createFFNode(node.parentUid as TNodeUid, nodeData.type, newName);
+        await createFFNode(node.parentUid as TNodeUid, nodeData.ext, newName);
       }
       removeInvalidNodes(node.uid);
     },
@@ -304,7 +337,7 @@ export const useNodeActionsHandler = (
       _cb_renameNode,
       setTemporaryNodes,
       removeTemporaryNodes,
-      ffTree,
+      fileTree,
       ffHandlers,
       osType,
       createFFNode,
@@ -332,7 +365,7 @@ export const useNodeActionsHandler = (
 
     if (project.context === "local") {
       const allDone = await Promise.all(
-        uids.map((uid) => validateAndDeleteNode(uid, ffTree, ffHandlers)),
+        uids.map((uid) => validateAndDeleteNode(uid, fileTree, ffHandlers)),
       ).then((results) => results.every(Boolean));
 
       if (!allDone) {
@@ -340,7 +373,7 @@ export const useNodeActionsHandler = (
       }
     } else if (project.context === "idb") {
       const allDone = await Promise.all(
-        uids.map((uid) => validateAndDeleteNode(uid, ffTree, ffHandlers)),
+        uids.map((uid) => validateAndDeleteNode(uid, fileTree, ffHandlers)),
       ).then((results) => results.every(Boolean));
 
       if (!allDone) {
@@ -349,7 +382,7 @@ export const useNodeActionsHandler = (
     }
 
     removeInvalidNodes(...uids);
-    await cb_reloadProject(file.uid);
+    await cb_reloadProject(currentFileUid);
     removeRunningActions(["fileTreeView-delete"], false);
   }, [
     addRunningActions,
@@ -359,22 +392,22 @@ export const useNodeActionsHandler = (
     setInvalidNodes,
     removeInvalidNodes,
     selectedItems,
-    ffTree,
+    fileTree,
     ffHandlers,
     cb_reloadProject,
-    file.uid,
+    currentFileUid,
   ]);
 
   const cb_moveNode = useCallback(
     async (uids: TNodeUid[], targetUid: TNodeUid, copy: boolean = false) => {
       // validate
-      const targetNode = ffTree[targetUid];
+      const targetNode = fileTree[targetUid];
 
       if (targetNode === undefined) {
         return;
       }
 
-      const validatedUids = getValidNodeUids(ffTree, uids, targetUid);
+      const validatedUids = getValidNodeUids(fileTree, uids, targetUid);
 
       if (validatedUids.length === 0) {
         return;
@@ -382,7 +415,7 @@ export const useNodeActionsHandler = (
 
       // confirm files' changes
       const hasChangedFile = validatedUids.some((uid) => {
-        const _file = ffTree[uid];
+        const _file = fileTree[uid];
         const _fileData = _file.data as TFileNodeData;
         return _file && _fileData.changed;
       });
@@ -421,9 +454,8 @@ export const useNodeActionsHandler = (
       project.context,
       invalidNodes,
       setInvalidNodes,
-      ffTree,
+      fileTree,
       ffHandlers,
-      ,
       cb_reloadProject,
     ],
   );
@@ -434,7 +466,7 @@ export const useNodeActionsHandler = (
 
     let hasChangedFile = false;
     uids.forEach((uid) => {
-      const _file = ffTree[uid];
+      const _file = fileTree[uid];
       const _fileData = _file.data as TFileNodeData;
       if (_file && _fileData.changed) {
         hasChangedFile = true;
@@ -462,7 +494,7 @@ export const useNodeActionsHandler = (
         const result = await duplicateNode(
           uid,
           true,
-          ffTree,
+          fileTree,
           ffHandlers,
           addMessage,
           setInvalidNodes,
@@ -470,7 +502,7 @@ export const useNodeActionsHandler = (
         );
         if (result) {
           _uids.push(result);
-          _targetUids.push(ffTree[uid].parentUid as TNodeUid);
+          _targetUids.push(fileTree[uid].parentUid as TNodeUid);
         } else {
           allDone = false;
         }
@@ -498,7 +530,7 @@ export const useNodeActionsHandler = (
     invalidNodes,
     setInvalidNodes,
     selectedItems,
-    ffTree,
+    fileTree,
     ffHandlers,
     cb_reloadProject,
   ]);
@@ -506,38 +538,31 @@ export const useNodeActionsHandler = (
   const cb_readNode = useCallback(
     (uid: TNodeUid) => {
       addRunningActions(["fileTreeView-read"]);
-      dispatch({ type: HmsClearActionType });
+      dispatch({ type: FileTree_Event_ClearActionType });
       // validate
       if (invalidNodes[uid]) {
         removeRunningActions(["fileTreeView-read"], false);
         return;
       }
-      const node = ffTree[uid];
-      if (node === undefined || !node.isEntity || file.uid === uid) {
+      const node = fileTree[uid];
+      if (node === undefined || !node.isEntity || currentFileUid === uid) {
         removeRunningActions(["fileTreeView-read"], false);
         return;
       }
       const nodeData = node.data as TFileNodeData;
-      if (nodeData.type === "html") {
-        setPrevFileUid(file.uid);
+      if (nodeData.ext === "html") {
+        setPrevFileUid(currentFileUid);
       }
-      if (nodeData.type === "unknown") {
-        dispatch(
-          setCurrentFile({
-            uid,
-            parentUid: node.parentUid as TNodeUid,
-            name: nodeData.name,
-            content: nodeData.content,
-          }),
-        );
+      if (nodeData.ext === "unknown") {
+        dispatch(setCurrentFileUid(uid));
         removeRunningActions(["fileTreeView-read"]);
         setParseFile(false);
-        showCodeView === false && setShowCodeView(true);
+        showCodeView === false && dispatch(setShowCodeView(true));
       } else {
         // set initial content of the html
         let initialContent = "";
         if (
-          nodeData.type === "html" &&
+          nodeData.ext === "html" &&
           nodeData.kind === "file" &&
           nodeData.content === ""
         ) {
@@ -551,15 +576,8 @@ export const useNodeActionsHandler = (
           nodeData.content = initialContent;
         }
         addRunningActions(["processor-updateOpt"]);
-        dispatch(
-          setCurrentFile({
-            uid,
-            parentUid: node.parentUid as TNodeUid,
-            name: nodeData.name,
-            content: nodeData.content,
-          }),
-        );
-        setUpdateOpt({ parse: true, from: "file" });
+        dispatch(setCurrentFileUid(uid));
+        dispatch(setUpdateOptions({ parse: true, from: "file" }));
         setParseFile(true);
         removeRunningActions(["fileTreeView-read"]);
         setPrevFileUid(uid);
@@ -569,8 +587,8 @@ export const useNodeActionsHandler = (
       addRunningActions,
       removeRunningActions,
       invalidNodes,
-      ffTree,
-      file.uid,
+      fileTree,
+      currentFileUid,
       showCodeView,
     ],
   );

@@ -1,6 +1,12 @@
-import { TFileHandlerCollection, TFileNodeData } from "@_node/file";
-import { TNodeTreeData, TNodeUid } from "@_node/types";
-import { verifyFileHandlerPermission } from "@_services/main";
+import {
+  TFileHandlerCollection,
+  TFileNodeData,
+} from '@_node/file';
+import {
+  TNodeTreeData,
+  TNodeUid,
+} from '@_node/types';
+import { verifyFileHandlerPermission } from '@_services/main';
 
 export const validateAndDeleteNode = async (
   uid: string,

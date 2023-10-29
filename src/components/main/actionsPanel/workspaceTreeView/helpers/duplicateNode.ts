@@ -1,10 +1,20 @@
-import { TNodeTreeData, TNodeUid } from "@_node/types";
-import { moveActions } from "./moveActions";
-import { TFileHandlerCollection, TFileNodeData } from "@_node/file";
-import { verifyFileHandlerPermission } from "@_services/main";
-import { duplicatingWarning, invalidDirError } from "../errors";
-import { generateNewNodeName } from ".";
-import { TToast } from "@_types/global";
+import {
+  TFileHandlerCollection,
+  TFileNodeData,
+} from '@_node/file';
+import {
+  TNodeTreeData,
+  TNodeUid,
+} from '@_node/types';
+import { verifyFileHandlerPermission } from '@_services/main';
+import { TToast } from '@_types/global';
+
+import {
+  duplicatingWarning,
+  invalidDirError,
+} from '../errors';
+import { generateNewNodeName } from './';
+import { moveActions } from './moveActions';
 
 export const duplicateNode = async (
   uid: TNodeUid,

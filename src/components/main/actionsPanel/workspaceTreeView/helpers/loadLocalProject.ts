@@ -1,7 +1,11 @@
-import { LogAllow, RootNodeUid } from "@_constants/main";
-import { TFileHandlerCollection, reloadLocalProject } from "@_node/file";
-import { TNodeTreeData } from "@_node/types";
-import { TOsType } from "@_types/global";
+import { LogAllow } from '@_constants/global';
+import { RootNodeUid } from '@_constants/main';
+import {
+  reloadLocalProject,
+  TFileHandlerCollection,
+} from '@_node/file';
+import { TNodeTreeData } from '@_node/types';
+import { TOsType } from '@_redux/global';
 
 export const loadLocalProject = async (
   ffTree: TNodeTreeData,

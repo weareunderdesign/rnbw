@@ -1,6 +1,7 @@
-import { DefaultProjectPath, LogAllow } from "@_constants/main";
-import { reloadIDBProject } from "@_node/file";
-import { TNodeTreeData } from "@_node/types";
+import { LogAllow } from '@_constants/global';
+import { DefaultProjectPath } from '@_constants/main';
+import { reloadIDBProject } from '@_node/file';
+import { TNodeTreeData } from '@_node/types';
 
 export const loadIDBProject = async (ffTree: TNodeTreeData) => {
   try {

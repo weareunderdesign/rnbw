@@ -1,18 +1,35 @@
-import { useCallback, useContext } from "react";
-import { useSelector } from "react-redux";
+import { useCallback } from 'react';
 
-import { MainContext, ffSelector, navigatorSelector } from "@_redux/main";
-import { useNodeActionsHandler } from "./useNodeActionsHandler";
-import { useInvalidNodes } from "./useInvalidNodes";
-import { AddFileActionPrefix } from "@_constants/main";
-import { TFileNodeType } from "@_types/main";
+import {
+  useDispatch,
+  useSelector,
+} from 'react-redux';
+
+import { AddFileActionPrefix } from '@_constants/main';
+import {
+  currentFileUidSelector,
+  fileTreeSelector,
+  fileTreeViewStateSelector,
+} from '@_redux/main/fileTree';
+import { nodeTreeSelector } from '@_redux/main/nodeTree';
+import {
+  clipboardDataSelector,
+  setClipboardData,
+} from '@_redux/main/processor';
+import { TFileNodeType } from '@_types/main';
+
+import { useInvalidNodes } from './useInvalidNodes';
+import { useNodeActionsHandler } from './useNodeActionsHandler';
 
 export const useCmdk = (openFileUid: React.MutableRefObject<string>) => {
-  const { file } = useSelector(navigatorSelector);
-  const { focusedItem, selectedItems } = useSelector(ffSelector);
+  const dispatch = useDispatch();
 
-  const { clipboardData, setClipboardData, ffTree, nodeTree } =
-    useContext(MainContext);
+  const currentFileUid = useSelector(currentFileUidSelector);
+  const { focusedItem, selectedItems } = useSelector(fileTreeViewStateSelector);
+
+  const clipboardData = useSelector(clipboardDataSelector);
+  const fileTree = useSelector(fileTreeSelector);
+  const nodeTree = useSelector(nodeTreeSelector);
 
   const { createTmpFFNode, cb_deleteNode, cb_moveNode, cb_duplicateNode } =
     useNodeActionsHandler(openFileUid);
@@ -23,29 +40,31 @@ export const useCmdk = (openFileUid: React.MutableRefObject<string>) => {
     cb_deleteNode();
   }, [cb_deleteNode]);
   const onCut = useCallback(() => {
-    setClipboardData({
-      panel: "file",
-      type: "cut",
-      uids: selectedItems,
-      fileType: ffTree[file.uid].data.type,
-      data: [],
-      fileUid: file.uid,
-      prevNodeTree: nodeTree,
-    });
-  }, [selectedItems, ffTree[file.uid], nodeTree]);
+    dispatch(
+      setClipboardData({
+        panel: "file",
+        type: "cut",
+        uids: selectedItems,
+        fileType: fileTree[currentFileUid].data.type,
+        data: [],
+        fileUid: currentFileUid,
+        prevNodeTree: nodeTree,
+      }),
+    );
+  }, [selectedItems, fileTree[currentFileUid], nodeTree]);
   const onCopy = useCallback(() => {
     setClipboardData({
       panel: "file",
       type: "copy",
       uids: selectedItems,
-      fileType: ffTree[file.uid].data.type,
+      fileType: fileTree[currentFileUid].data.type,
       data: [],
-      fileUid: file.uid,
+      fileUid: currentFileUid,
       prevNodeTree: nodeTree,
     });
-  }, [selectedItems, ffTree[file.uid], nodeTree]);
+  }, [selectedItems, fileTree[currentFileUid], nodeTree]);
   const onPaste = useCallback(() => {
-    if (clipboardData.panel !== "file") return;
+    if (clipboardData?.panel !== "file") return;
 
     // validate
     if (invalidNodes[focusedItem]) return;

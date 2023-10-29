@@ -1,19 +1,36 @@
-import { useDispatch } from "react-redux";
-import { useContext } from "react";
+import { useContext } from 'react';
 
-import { TNode, TNodeUid } from "@_node/types";
 import {
-  MainContext,
-  setCurrentFile,
+  useDispatch,
+  useSelector,
+} from 'react-redux';
+
+import { TFileNodeData } from '@_node/file';
+import {
+  TNode,
+  TNodeUid,
+} from '@_node/types';
+import { MainContext } from '@_redux/main';
+import {
+  projectSelector,
+  setCurrentFileUid,
+  updateFileTreeViewState,
+} from '@_redux/main/fileTree';
+import {
   setFileAction,
-  updateFFTreeViewState,
-} from "@_redux/main";
-import { useInvalidNodes, useReloadProject } from "../hooks";
-import { moveActions } from "./moveActions";
-import { verifyFileHandlerPermission } from "@_services/main";
-import { TFileNodeData } from "@_node/file";
-import { invalidDirOrFile, renamingError } from "../errors";
-import { TFileAction } from "@_types/main";
+  TFileAction,
+} from '@_redux/main/fileTree/event';
+import { verifyFileHandlerPermission } from '@_services/main';
+
+import {
+  invalidDirOrFile,
+  renamingError,
+} from '../errors';
+import {
+  useInvalidNodes,
+  useReloadProject,
+} from '../hooks';
+import { moveActions } from './moveActions';
 
 export const renameNode = async (
   ext: string,
@@ -24,8 +41,9 @@ export const renameNode = async (
   uid: TNodeUid,
 ) => {
   const dispatch = useDispatch();
+  const project = useSelector(projectSelector);
 
-  const { removeRunningActions, project, ffHandlers, addMessage } =
+  const { removeRunningActions, ffHandlers, addMessage } =
     useContext(MainContext);
 
   const { cb_reloadProject } = useReloadProject();
@@ -96,15 +114,8 @@ export const renameNode = async (
   dispatch(setFileAction(action));
 
   // update redux
-  dispatch(
-    setCurrentFile({
-      uid: newUid,
-      parentUid: parentNode.uid,
-      name: nodeData.name,
-      content: nodeData.contentInApp as string,
-    }),
-  );
-  dispatch(updateFFTreeViewState({ convertedUids: [[uid, newUid]] }));
+  dispatch(setCurrentFileUid(newUid));
+  dispatch(updateFileTreeViewState({ convertedUids: [[uid, newUid]] }));
 
   await cb_reloadProject();
   removeRunningActions(["fileTreeView-rename"]);

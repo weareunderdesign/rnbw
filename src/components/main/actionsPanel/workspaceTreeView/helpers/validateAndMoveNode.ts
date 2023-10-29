@@ -1,32 +1,42 @@
-import { useContext } from "react";
+import { useContext } from 'react';
 
-import { useInvalidNodes } from "../hooks";
-import { moveActions } from "./moveActions";
-import { MainContext } from "@_redux/main";
-import { TFileNodeData } from "@_node/file";
-import { TNodeUid } from "@_node/types";
-import { verifyFileHandlerPermission } from "@_services/main";
-import { generateNewNameMoveNode } from "./generateNewNameMoveNode";
+import { useSelector } from 'react-redux';
+
+import { TFileNodeData } from '@_node/file';
+import { TNodeUid } from '@_node/types';
+import { MainContext } from '@_redux/main';
+import {
+  fileTreeSelector,
+  projectSelector,
+} from '@_redux/main/fileTree';
+import { verifyFileHandlerPermission } from '@_services/main';
+
+import { useInvalidNodes } from '../hooks';
+import { generateNewNameMoveNode } from './generateNewNameMoveNode';
+import { moveActions } from './moveActions';
 
 export const validateAndMoveNode = async (
   uid: string,
   targetUid: TNodeUid,
   copy: boolean = false,
 ) => {
-  const { project, ffTree, ffHandlers, addMessage } = useContext(MainContext);
+  const project = useSelector(projectSelector);
+  const fileTree = useSelector(fileTreeSelector);
+
+  const { ffHandlers, addMessage } = useContext(MainContext);
 
   const { setInvalidNodes }: any = useInvalidNodes();
 
   const { moveIDBFF, moveLocalFF } = moveActions(addMessage);
 
-  const node = ffTree[uid];
+  const node = fileTree[uid];
 
   if (node === undefined) {
     return false;
   }
 
   const nodeData = node.data as TFileNodeData;
-  const parentNode = ffTree[node.parentUid as TNodeUid];
+  const parentNode = fileTree[node.parentUid as TNodeUid];
 
   if (parentNode === undefined) {
     return false;
@@ -60,7 +70,7 @@ export const validateAndMoveNode = async (
     if (project.context === "local") {
       await moveLocalFF(handler, parentHandler, parentHandler, newUid, copy);
     } else if (project.context === "idb") {
-      const targetNode = ffTree[targetUid];
+      const targetNode = fileTree[targetUid];
       const targetNodeData = targetNode.data as TFileNodeData;
       await moveIDBFF(nodeData, targetNodeData, newUid, copy);
     }
