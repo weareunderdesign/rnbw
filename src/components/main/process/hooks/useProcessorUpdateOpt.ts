@@ -1,23 +1,37 @@
-import { useContext, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import {
+  useContext,
+  useEffect,
+} from 'react';
 
-import { LogAllow } from "@_constants/main";
-import { TFileNodeData, writeFile } from "@_node/file";
-import { TNode, TNodeTreeData } from "@_node/types";
+import {
+  useDispatch,
+  useSelector,
+} from 'react-redux';
+
+import { LogAllow } from '@_constants/main';
+import {
+  TFileNodeData,
+  writeFile,
+} from '@_node/file';
+import {
+  TNode,
+  TNodeTreeData,
+} from '@_node/types';
 import {
   fnSelector,
   MainContext,
   navigatorSelector,
   setCurrentFileContent,
-} from "@_redux/main";
-import { TFileInfo } from "@_types/main";
+} from '@_redux/main';
+import { TFileInfo } from '@_types/main';
+
 import {
   getFileData,
   getPreViewPath,
   handleFileUpdate,
   handleHmsChange,
   updateFileInfoFromNodeTree,
-} from "../helpers";
+} from '../helpers';
 
 export const useProcessorUpdateOpt = () => {
   const dispatch = useDispatch();
@@ -42,7 +56,7 @@ export const useProcessorUpdateOpt = () => {
     setIFrameSrc,
     fileInfo,
     setFileInfo,
-    setNeedToReloadIFrame,
+    setNeedToReloadIframe,
     setNewFocusedNodeUid,
     // processor
     updateOpt,
@@ -145,7 +159,7 @@ export const useProcessorUpdateOpt = () => {
         setNodeTree(_nodeTree);
         setNodeMaxUid(_nodeMaxUid);
         setFileInfo(_fileInfo);
-        setNeedToReloadIFrame(_needToReloadIFrame);
+        setNeedToReloadIframe(_needToReloadIFrame);
         // update redux
         updateOpt.from !== "hms" &&
           dispatch(setCurrentFileContent(fileData.content as string));

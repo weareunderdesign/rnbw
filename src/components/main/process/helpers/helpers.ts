@@ -1,35 +1,38 @@
-import { editor } from "monaco-editor";
+import { editor } from 'monaco-editor';
 
 import {
-  LogAllow,
-  NodeUidAttribNameInApp,
   NodeUidSplitter,
   RootNodeUid,
   StagePreviewPathPrefix,
-} from "@_constants/main";
+} from '@_constants/main';
 import {
   getSubNodeUidsByBfs,
   getValidNodeUids,
   replaceContentByFormatted,
   updateExistingTree,
-} from "@_node/apis";
+} from '@_node/apis';
 import {
   parseFile,
-  serializeFile,
   TFileHandlerCollection,
   TFileNodeData,
   writeFile,
-} from "@_node/file";
+} from '@_node/file';
 import {
-  parseHtmlCodePart,
-  serializeHtml,
+  StageNodeIdAttr,
   THtmlNodeData,
   THtmlPageSettings,
-} from "@_node/html";
-import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
-import { TUpdateOptions } from "@_redux/main/types";
-import { TOsType } from "@_types/global";
-import { TCodeChange, TFile, TFileInfo, TProject } from "@_types/main";
+} from '@_node/html';
+import {
+  TNode,
+  TNodeTreeData,
+  TNodeUid,
+} from '@_node/types';
+import { TProject } from '@_redux/main/fileTree';
+import { TUpdateOptions } from '@_redux/main/processor';
+import {
+  TCodeChange,
+  TFileInfo,
+} from '@_types/main';
 
 export const saveFileContent = async (
   project: TProject,
@@ -111,7 +114,7 @@ export const replaceElementInIframe = (
   let nodeUidIndex = -1;
   const divElement = document.createElement("div");
 
-  if (o_node.name !== "code" && o_node.name !== "pre") {
+  if (o_node.displayName !== "code" && o_node.displayName !== "pre") {
     divElement.innerHTML = formattedContent;
     const nodes: Node[] = [divElement.childNodes[0]];
 
@@ -123,7 +126,7 @@ export const replaceElementInIframe = (
       }
       if ((node as HTMLElement).tagName) {
         (node as HTMLElement).setAttribute(
-          NodeUidAttribNameInApp,
+          StageNodeIdAttr,
           nodeUids[++nodeUidIndex],
         );
         node.childNodes.forEach((childNode) => {
@@ -135,7 +138,7 @@ export const replaceElementInIframe = (
     const element = document
       .querySelector("iframe")
       ?.contentWindow?.window.document.querySelector(
-        `[${NodeUidAttribNameInApp}="${codeChange.uid}"]`,
+        `[${StageNodeIdAttr}="${codeChange.uid}"]`,
       );
     element?.parentElement?.insertBefore(
       divElement.childNodes[0],
@@ -146,11 +149,11 @@ export const replaceElementInIframe = (
     let element = document
       .querySelector("iframe")
       ?.contentWindow?.window.document.querySelector(
-        `[${NodeUidAttribNameInApp}="${codeChange.uid}"]`,
+        `[${StageNodeIdAttr}="${codeChange.uid}"]`,
       );
 
     if (element && tree["ROOT"].data) {
-      element?.setAttribute(NodeUidAttribNameInApp, tree["ROOT"].children[0]);
+      element?.setAttribute(StageNodeIdAttr, tree["ROOT"].children[0]);
       element.outerHTML = (tree["ROOT"].data as THtmlNodeData).htmlInApp;
     }
   }
@@ -167,7 +170,7 @@ export const generateFileInfo = (
   _curScripts.map((script: any) => {
     const attribs = (script.data as THtmlNodeData).attribs;
     const uniqueStr = Object.keys(attribs)
-      .filter((attrName) => attrName !== NodeUidAttribNameInApp)
+      .filter((attrName) => attrName !== StageNodeIdAttr)
       .sort((a, b) => (a > b ? 1 : -1))
       .map((attrName) => {
         return `${attrName}${NodeUidSplitter}${attribs[attrName]}`;
@@ -182,7 +185,7 @@ export const generateFileInfo = (
   _orgScripts.map((script: any) => {
     const attribs = (script.data as THtmlNodeData).attribs;
     const uniqueStr = Object.keys(attribs)
-      .filter((attrName) => attrName !== NodeUidAttribNameInApp)
+      .filter((attrName) => attrName !== StageNodeIdAttr)
       .sort((a, b) => (a > b ? 1 : -1))
       .map((attrName) => {
         return `${attrName}${NodeUidSplitter}${attribs[attrName]}`;
@@ -234,7 +237,7 @@ export const getChangedUids = (
     const n_nodeData = n_node?.data as THtmlNodeData;
     if (o_uid !== n_uid && (o_nodeData.valid || n_nodeData?.valid)) {
       deletedUids.push(o_uid);
-      o_node.name !== "!doctype" &&
+      o_node.displayName !== "!doctype" &&
         _uidsToChange.push(
           (o_nodeData.valid ? o_node.parentUid : n_node.parentUid) as TNodeUid,
         );
@@ -262,7 +265,7 @@ export const getChangedUids = (
     const element = document
       .querySelector("iframe")
       ?.contentWindow?.window.document.querySelector(
-        `[${NodeUidAttribNameInApp}="${uid}"]`,
+        `[${StageNodeIdAttr}="${uid}"]`,
       );
     if (element?.tagName === "HTML") {
       element.innerHTML = n_nodeData.htmlInApp;
@@ -282,9 +285,9 @@ export const refreshIframeIfSeedNodeChanges = (
     const n_node = _nodeTree[o_uid];
     if (!n_node) {
       if (
-        o_node.name === "html" ||
-        o_node.name === "head" ||
-        o_node.name === "body"
+        o_node.displayName === "html" ||
+        o_node.displayName === "head" ||
+        o_node.displayName === "body"
       ) {
         _needToReloadIFrame = true;
         break;
@@ -314,9 +317,9 @@ export const detectSeedNodeChanges = (
     if (node === undefined) continue;
     if (
       uid === RootNodeUid ||
-      node.name === "html" ||
-      node.name === "head" ||
-      node.name === "body"
+      node.displayName === "html" ||
+      node.displayName === "head" ||
+      node.displayName === "body"
     ) {
       seedNodeChanged = true;
     }
@@ -551,7 +554,7 @@ export const editingTextChanges = (
 
   const formattedContent = removeAttributeFromElement(
     codeChange.content,
-    NodeUidAttribNameInApp,
+    StageNodeIdAttr,
   );
 
   if (formattedContent == "") {

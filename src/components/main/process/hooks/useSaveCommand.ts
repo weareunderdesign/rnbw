@@ -1,39 +1,56 @@
-import { useCallback, useContext, useEffect } from "react";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+} from 'react';
 
-import { useSelector } from "react-redux";
+import {
+  useDispatch,
+  useSelector,
+} from 'react-redux';
 
-import { RootNodeUid } from "@_constants/main";
-import { getSubNodeUidsByBfs } from "@_node/apis";
-import { reloadLocalProject, TFileNodeData } from "@_node/file";
+import { RootNodeUid } from '@_constants/main';
+import { getSubNodeUidsByBfs } from '@_node/apis';
+import {
+  reloadLocalProject,
+  TFileNodeData,
+} from '@_node/file';
+import { TNodeTreeData } from '@_node/types';
+import { osTypeSelector } from '@_redux/global';
+import { MainContext } from '@_redux/main';
+import { currentCommandSelector } from '@_redux/main/cmdk';
+import {
+  currentFileUidSelector,
+  fileTreeSelector,
+  projectSelector,
+  setFileTree,
+} from '@_redux/main/fileTree';
+import { setNeedToReloadIframe } from '@_redux/main/stageView';
 
-import { TNodeTreeData } from "@_node/types";
-import { MainContext, navigatorSelector } from "@_redux/main";
-import { saveFileContent } from "../helpers";
+import { saveFileContent } from '../helpers';
 
 export const useSaveCommand = () => {
-  const { file } = useSelector(navigatorSelector);
+  const dispatch = useDispatch();
+
+  const project = useSelector(projectSelector);
+  const fileTree = useSelector(fileTreeSelector);
+  const currentFileUid = useSelector(currentFileUidSelector);
+
+  const currentCommand = useSelector(currentCommandSelector);
+  const osType = useSelector(osTypeSelector);
+
   const {
     // global action
     addRunningActions,
     removeRunningActions,
-    // navigator
-    project,
     // file tree view
-    ffTree,
-    setFFTree,
     ffHandlers,
-    // stage view
-    setNeedToReloadIFrame,
-    // cmdk
-    currentCommand,
-    // other
-    osType,
     // toasts
     addMessage,
   } = useContext(MainContext);
 
   useEffect(() => {
-    switch (currentCommand.action) {
+    switch (currentCommand?.action) {
       case "Save":
         onSave();
         break;
@@ -43,9 +60,9 @@ export const useSaveCommand = () => {
   }, [currentCommand]);
 
   const onSave = useCallback(async () => {
-    if (!ffTree[RootNodeUid]) return;
+    if (!fileTree[RootNodeUid]) return;
 
-    const _ffTree = JSON.parse(JSON.stringify(ffTree)) as TNodeTreeData;
+    const _ffTree = JSON.parse(JSON.stringify(fileTree)) as TNodeTreeData;
 
     addRunningActions(["process-save"]);
 
@@ -53,7 +70,7 @@ export const useSaveCommand = () => {
 
     await Promise.all(
       uids.map(async (uid) => {
-        if (file.uid === uid) {
+        if (currentFileUid === uid) {
           /* only save current file */
           const node = _ffTree[uid];
           const nodeData = node.data as TFileNodeData;
@@ -69,22 +86,23 @@ export const useSaveCommand = () => {
             }
           }
 
-          const fileData = ffTree[file.uid].data as TFileNodeData;
+          const fileData = fileTree[currentFileUid].data as TFileNodeData;
           if (fileData.ext === ".css" || fileData.ext === ".js") {
             reloadLocalProject(
               ffHandlers[RootNodeUid] as FileSystemDirectoryHandle,
-              ffTree,
+              fileTree,
               osType,
-              [file.uid],
+              [currentFileUid],
             );
-            setNeedToReloadIFrame(true);
+            dispatch(setNeedToReloadIframe(true));
+            setNeedToReloadIframe(true);
           }
         }
       }),
     );
 
-    setFFTree(_ffTree);
+    dispatch(setFileTree(_ffTree));
 
     removeRunningActions(["process-save"], false);
-  }, [ffTree, ffHandlers, reloadLocalProject]);
+  }, [fileTree, ffHandlers, reloadLocalProject]);
 };
