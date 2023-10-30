@@ -5,7 +5,6 @@ import { TNode, TNodeUid } from "@_node/types";
 import {
   addNode,
   copyNodeExternal,
-  duplicateNode,
   getValidNodeUids,
   moveNode,
 } from "@_node/index";
@@ -20,7 +19,7 @@ import { creatingNode } from "../helpers/creatingNode";
 import { addNodeToTree } from "../helpers/addNodeToTree";
 import { getTree } from "../helpers/getTree";
 import { useEditor } from "@_components/main/codeView/hooks";
-import { NodeInAppAttribName } from "@_constants/main";
+import { getCopiedContent, sortUidsByMaxEndIndex } from "../helpers";
 
 export function useNodeActions() {
   const dispatch = useDispatch();
@@ -172,76 +171,60 @@ export function useNodeActions() {
     [addRunningActions, removeRunningActions, nodeTree],
   );
 
-  const cb_duplicateNode = useCallback(
-    (uids: TNodeUid[]) => {
-      addRunningActions(["nodeTreeView-duplicate"]);
+  const cb_duplicateNode = (uids: TNodeUid[]) => {
+    setIsContentProgrammaticallyChanged(true);
 
-      // call api
-      const tree = getTree(nodeTree);
-      const res = duplicateNode(
-        tree,
-        uids,
-        "html",
-        String(nodeMaxUid) as TNodeUid,
-        osType,
-        tabSize,
+    const iframe: any = document.getElementById("iframeId");
+    const model = monacoEditorRef.current?.getModel();
+    if (!model) {
+      console.error("Monaco Editor model is undefined");
+      return;
+    }
+    let content = model.getValue();
+
+    const sortedUids = sortUidsByMaxEndIndex(uids, validNodeTree);
+
+    sortedUids.forEach(async (uid) => {
+      const cleanedUpCode = getCopiedContent(uid, iframe);
+
+      if (!cleanedUpCode) return;
+
+      const selectedNode = validNodeTree[uid];
+      if (!selectedNode || !selectedNode.sourceCodeLocation) {
+        console.error("Parent node or source code location is undefined");
+        return;
+      }
+      const { endLine, endCol } = selectedNode.sourceCodeLocation;
+
+      const position = { lineNumber: endLine, column: endCol + 1 };
+
+      const range = new Range(
+        position.lineNumber,
+        position.column,
+        position.lineNumber,
+        position.column,
       );
+      const editOperation = { range, text: "\n" + cleanedUpCode };
 
-      // processor
-      addRunningActions(["processor-updateOpt"]);
-      setUpdateOpt({ parse: false, from: "node" });
-      setNodeTree(res.tree);
+      model.pushEditOperations([], [editOperation], () => null);
+      monacoEditorRef.current?.setPosition({
+        lineNumber: position.lineNumber + 1,
+        column: 1,
+      });
 
-      // view state
-      addRunningActions(["stageView-viewState"]);
-      setUpdateOpt({ parse: true, from: "code" });
-      // side effect
-      setNodeMaxUid(Number(res.nodeMaxUid));
-      setEvent({ type: "duplicate-node", param: [uids, res.addedUidMap] });
+      content = model.getValue();
+    });
 
-      removeRunningActions(["nodeTreeView-duplicate"]);
-      console.log("hms added");
-      dispatch(increaseActionGroupIndex());
-    },
-    [
-      addRunningActions,
-      removeRunningActions,
-      nodeTree,
-      nodeMaxUid,
-      osType,
-      tabSize,
-    ],
-  );
+    handleEditorChange(content);
+  };
 
   const cb_copyNode = (uids: TNodeUid[]) => {
     const iframe: any = document.getElementById("iframeId");
     let copiedCode = "";
 
     uids.forEach((uid) => {
-      const ele = iframe?.contentWindow?.document?.querySelector(
-        `[${NodeInAppAttribName}="${uid}"]`,
-      );
+      const cleanedUpCode = getCopiedContent(uid, iframe);
 
-      //create a copy of ele
-      const eleCopy = ele?.cloneNode(true) as HTMLElement;
-      const innerElements = eleCopy.querySelectorAll(
-        `[${NodeInAppAttribName}]`,
-      );
-
-      innerElements.forEach((element) => {
-        if (element.hasAttribute(NodeInAppAttribName)) {
-          element.removeAttribute(NodeInAppAttribName);
-        }
-      });
-
-      eleCopy?.removeAttribute("contenteditable");
-      eleCopy?.removeAttribute("rnbwdev-rnbw-element-hover");
-      eleCopy?.removeAttribute("rnbwdev-rnbw-element-select");
-      eleCopy?.removeAttribute(NodeInAppAttribName);
-      const cleanedUpCode = eleCopy?.outerHTML;
-
-      //delete the copy
-      eleCopy?.remove();
       if (!cleanedUpCode) return;
 
       copiedCode += cleanedUpCode + "\n";

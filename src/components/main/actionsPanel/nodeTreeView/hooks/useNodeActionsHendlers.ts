@@ -93,7 +93,7 @@ export const useNodeActionsHandlers = () => {
   const onDuplicate = useCallback(() => {
     if (selectedItems.length === 0) return;
     cb_duplicateNode(selectedItems);
-  }, [cb_duplicateNode, selectedItems]);
+  }, [cb_duplicateNode, selectedItems, validNodeTree]);
 
   const onTurnInto = useCallback(() => {}, []);
 
