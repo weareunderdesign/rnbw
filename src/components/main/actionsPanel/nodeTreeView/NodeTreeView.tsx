@@ -293,11 +293,11 @@ function NodeTreeView(props: NodeTreeViewProps) {
               const htmlElementReferenceData =
                 useMemo<THtmlElementsReference>(() => {
                   const node = props.item.data as TNode;
+                  const nodeData = node.data as THtmlNodeData;
                   const refData =
                     htmlReferenceData.elements[
-                      node.name === "#documentType" ? "!DOCTYPE" : node.name
+                      nodeData.name === "!doctype" ? "!DOCTYPE" : nodeData.name
                     ];
-
                   return refData;
                 }, []);
 

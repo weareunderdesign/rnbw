@@ -78,14 +78,12 @@ export const useNodeActionsHandlers = () => {
           column: 1,
         });
         const content = model.getValue();
-        handleEditorChange(content, {
-          matchIds: [focusedNode.parentUid as TNodeUid],
-        });
+        handleEditorChange(content);
       })
       .catch((error) => {
         console.error("Error reading from clipboard:", error);
       });
-  }, [validNodeTree, focusedItem]);
+  }, [validNodeTree, focusedItem, focusedItem]);
 
   const onDelete = useCallback(() => {
     if (selectedItems.length === 0) return;

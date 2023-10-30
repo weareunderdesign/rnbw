@@ -51,7 +51,6 @@ export default function useEditor() {
     setFFTree,
     setMonacoEditorRef,
     setNodeTree,
-    isContentProgrammaticallyChanged,
     setIsContentProgrammaticallyChanged,
     monacoEditorRef,
   } = useContext(MainContext);
@@ -171,7 +170,7 @@ export default function useEditor() {
       const iframeHtml = iframeDoc.getElementsByTagName("html")[0];
       const { htmlDom, tree } = parseHtml(value, false, "");
 
-      let bodyEle = null;
+      let updatedHtml = null;
       if (!htmlDom) return;
       const defaultTreeAdapter = parse5.defaultTreeAdapter;
       const htmlNode = defaultTreeAdapter
@@ -179,42 +178,40 @@ export default function useEditor() {
         .filter(defaultTreeAdapter.isElementNode)[0];
 
       if (htmlNode) {
-        bodyEle = parse5.serialize(htmlNode);
+        updatedHtml = parse5.serialize(htmlDom);
       }
-      if (!iframeHtml || !bodyEle) return;
+      if (!iframeHtml || !updatedHtml) return;
 
       try {
-        morphdom(iframeHtml, bodyEle, {
+        morphdom(iframeHtml, updatedHtml, {
           onBeforeElUpdated: function (fromEl, toEl) {
-            if (configs?.matchIds) {
-              const toElRnbwId = toEl.getAttribute(NodeInAppAttribName);
-              if (!!toElRnbwId && configs.matchIds.includes(toElRnbwId)) {
-                return true;
-              } else if (fromEl.isEqualNode(toEl)) {
-                return false;
+            debugger;
+            const fromElRnbwId = fromEl.getAttribute(NodeInAppAttribName);
+            if (toEl.nodeName.includes("-")) return false;
+            if (
+              configs?.matchIds &&
+              !!fromElRnbwId &&
+              configs.matchIds.includes(fromElRnbwId)
+            ) {
+              return true;
+            } else if (fromEl.isEqualNode(toEl)) {
+              return false;
+            } else if (toEl.nodeName === "HTML") {
+              //copy the attributes
+              for (let i = 0; i < fromEl.attributes.length; i++) {
+                toEl.setAttribute(
+                  fromEl.attributes[i].name,
+                  fromEl.attributes[i].value,
+                );
               }
-            } else {
-              if (fromEl.isEqualNode(toEl)) {
-                return false;
-              } else {
-                //check if the node is a custom element
-                if (toEl.nodeName.includes("-")) {
-                  //copy the content or template of the custom element
-                  // toEl.innerHTML = fromEl.innerHTML;
-                }
-                //check if the node is html
-                if (toEl.nodeName === "HTML") {
-                  //copy the attributes
-                  for (let i = 0; i < fromEl.attributes.length; i++) {
-                    toEl.setAttribute(
-                      fromEl.attributes[i].name,
-                      fromEl.attributes[i].value,
-                    );
-                  }
-                }
-              }
+              if (fromEl.isEqualNode(toEl)) return false;
             }
             return true;
+          },
+          onBeforeNodeAdded: function (node) {
+            debugger;
+            // if (node.nodeValue?.replace(/\s/g, "") === "\n") return false
+            return node;
           },
         });
         codeContentRef.current = value;
@@ -222,6 +219,7 @@ export default function useEditor() {
 
         dispatch(setCurrentFileContent(codeContentRef.current));
         setFSPending(false);
+
         const _file = structuredClone(ffTree[file.uid]) as TNode;
         addRunningActions(["processor-updateOpt"]);
         const fileData = _file.data as TFileNodeData;
@@ -248,19 +246,23 @@ export default function useEditor() {
 
       setCodeEditing(false);
     }, 1000),
-    [],
+    [ffTree, file, setFFTree, addRunningActions, setFSPending, dispatch],
   );
 
-  const handleEditorChange = (
-    value: string | undefined,
-    configs?: {
-      matchIds?: string[] | null;
+  const handleEditorChange = useCallback(
+    (
+      value: string | undefined,
+      configs?: {
+        matchIds?: string[] | null;
+        skipFromChildren?: boolean;
+      },
+    ) => {
+      if (!value) return;
+      debouncedEditorUpdate(value, configs);
+      setIsContentProgrammaticallyChanged(false);
     },
-  ) => {
-    if (!value) return;
-    debouncedEditorUpdate(value, configs);
-    setIsContentProgrammaticallyChanged(false);
-  };
+    [debouncedEditorUpdate],
+  );
 
   // tabSize
   useEffect(() => {

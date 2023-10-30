@@ -48,6 +48,7 @@ export function useNodeActions() {
     theme: _theme,
     monacoEditorRef,
     validNodeTree,
+    setIsContentProgrammaticallyChanged,
   } = useContext(MainContext);
 
   const { handleEditorChange } = useEditor();
@@ -127,14 +128,19 @@ export function useNodeActions() {
 
   const cb_removeNode = useCallback(
     (uids: TNodeUid[]) => {
-      // const allow = isRemovingAllowed(nodeTree, uids);//Commenting this for now as it doesn't makes sense because the user can always delete this from codeview
+      setIsContentProgrammaticallyChanged(true);
       const model = monacoEditorRef.current?.getModel();
       if (!model) return;
       let focusLineNumber = 0;
-
+      let parentUids = [] as TNodeUid[];
       uids.forEach((uid) => {
         let node = validNodeTree[uid];
+
         if (node) {
+          let parentUid = node.parentUid;
+          if (parentUid) {
+            parentUids.push(parentUid);
+          }
           const {
             endCol: endColumn,
             endLine: endLineNumber,
@@ -158,7 +164,9 @@ export function useNodeActions() {
       });
 
       const content = model.getValue();
-      handleEditorChange(content);
+      handleEditorChange(content, {
+        matchIds: uids,
+      });
       monacoEditorRef.current?.revealLineInCenter(focusLineNumber);
     },
     [addRunningActions, removeRunningActions, nodeTree],
