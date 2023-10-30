@@ -19,7 +19,11 @@ import { creatingNode } from "../helpers/creatingNode";
 import { addNodeToTree } from "../helpers/addNodeToTree";
 import { getTree } from "../helpers/getTree";
 import { useEditor } from "@_components/main/codeView/hooks";
-import { getCopiedContent, sortUidsByMaxEndIndex } from "../helpers";
+import {
+  getCopiedContent,
+  sortUidsByMaxEndIndex,
+  sortUidsByMinStartIndex,
+} from "../helpers";
 
 export function useNodeActions() {
   const dispatch = useDispatch();
@@ -349,6 +353,81 @@ export function useNodeActions() {
       tabSize,
     ],
   );
+  const cb_groupNode = (uids: TNodeUid[]) => {
+    const iframe: any = document.getElementById("iframeId");
+    let copiedCode = "";
+
+    const sortedUids = sortUidsByMinStartIndex(uids, validNodeTree);
+
+    sortedUids.forEach((uid) => {
+      const cleanedUpCode = getCopiedContent(uid, iframe);
+
+      if (!cleanedUpCode) return;
+
+      copiedCode += cleanedUpCode + "\n";
+    });
+
+    const { startLine, startCol } =
+      validNodeTree[sortedUids[0]].sourceCodeLocation;
+
+    const model = monacoEditorRef.current?.getModel();
+    if (!model) return;
+    let focusLineNumber = 0;
+    let parentUids = [] as TNodeUid[];
+
+    uids.forEach((uid) => {
+      let node = validNodeTree[uid];
+
+      if (node) {
+        let parentUid = node.parentUid;
+        if (parentUid) {
+          parentUids.push(parentUid);
+        }
+        const {
+          endCol: endColumn,
+          endLine: endLineNumber,
+          startCol: startColumn,
+          startLine: startLineNumber,
+        } = node.sourceCodeLocation;
+
+        const range = new Range(
+          startLineNumber,
+          startColumn,
+          endLineNumber,
+          endColumn,
+        );
+        let edit = {
+          range: range,
+          text: "",
+        };
+        model.applyEdits([edit]);
+        focusLineNumber = startLineNumber;
+      }
+    });
+
+    const position = { lineNumber: startLine, column: startCol };
+    const range = new Range(
+      position.lineNumber,
+      position.column,
+      position.lineNumber,
+      position.column,
+    );
+    const editOperation = {
+      range,
+      text: "<div>" + "\n" + copiedCode + "</div>",
+    };
+
+    model.pushEditOperations([], [editOperation], () => null);
+    monacoEditorRef.current?.setPosition({
+      lineNumber: position.lineNumber + 1,
+      column: 1,
+    });
+
+    const content = model.getValue();
+    handleEditorChange(content, {
+      matchIds: uids,
+    });
+  };
 
   return {
     cb_addNode,
@@ -357,5 +436,6 @@ export function useNodeActions() {
     cb_copyNode,
     cb_copyNodeExternal,
     cb_moveNode,
+    cb_groupNode,
   };
 }

@@ -1,6 +1,5 @@
 import { NodeInAppAttribName } from "@_constants/main";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
-import { IEditorRef } from "@_redux/main";
 import { editor } from "monaco-editor";
 import { DraggingPosition } from "react-complex-tree";
 
@@ -28,6 +27,32 @@ export const sortUidsByMaxEndIndex = (
     const { endLine: endLine2 } = selectedNode2.sourceCodeLocation;
 
     return endLine2 - endLine1; // Sort in descending order
+  });
+};
+export const sortUidsByMinStartIndex = (
+  uids: TNodeUid[],
+  validNodeTree: TNodeTreeData,
+) => {
+  return uids.slice().sort((uid1, uid2) => {
+    const selectedNode1 = validNodeTree[uid1];
+    const selectedNode2 = validNodeTree[uid2];
+
+    if (
+      !selectedNode1 ||
+      !selectedNode1.sourceCodeLocation ||
+      !selectedNode2 ||
+      !selectedNode2.sourceCodeLocation
+    ) {
+      console.error(
+        "Parent node or source code location is undefined for sortedUid",
+      );
+      return 0;
+    }
+
+    const { startOffset: start1 } = selectedNode1.sourceCodeLocation;
+    const { startOffset: start2 } = selectedNode2.sourceCodeLocation;
+
+    return start1 - start2; // Sort in descending order
   });
 };
 export const getCopiedContent = (uid: TNodeUid, iframe: any) => {
