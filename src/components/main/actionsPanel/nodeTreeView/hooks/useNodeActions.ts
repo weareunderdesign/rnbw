@@ -1,50 +1,49 @@
-import {
-  useCallback,
-  useContext,
-} from 'react';
+import { useCallback, useContext } from "react";
 
-import { Range } from 'monaco-editor';
-import {
-  useDispatch,
-  useSelector,
-} from 'react-redux';
+import { Range } from "monaco-editor";
+import { useDispatch, useSelector } from "react-redux";
 
-import { useEditor } from '@_components/main/codeView/hooks';
-import {
-  addNode,
-  copyNodeExternal,
-  getValidNodeUids,
-  moveNode,
-} from '@_node/index';
-import {
-  TNode,
-  TNodeUid,
-} from '@_node/types';
-import { MainContext } from '@_redux/main';
+import { useEditor } from "@_components/main/codeView/hooks";
+import { getValidNodeUids } from "@_node/index";
+import { TNodeUid } from "@_node/types";
+import { MainContext } from "@_redux/main";
 import {
   nodeTreeSelector,
   nodeTreeViewStateSelector,
+  setNodeTree,
   validNodeTreeSelector,
-} from '@_redux/main/nodeTree';
+} from "@_redux/main/nodeTree";
 
-import { addNodeToTree } from '../helpers/addNodeToTree';
-import { getTree } from '../helpers/getTree';
+import { osTypeSelector } from "@_redux/global";
+import {
+  clipboardDataSelector,
+  setUpdateOptions,
+} from "@_redux/main/processor";
+
+import { addNodeToTree } from "../helpers/addNodeToTree";
+import { getTree } from "../helpers/getTree";
+import { getCopiedContent, sortUidsByMaxEndIndex } from "../helpers";
+import { codeViewTabSizeSelector } from "@_redux/main/codeView";
+import { setNodeEvent } from "@_redux/main/nodeTree/event";
 
 export function useNodeActions() {
   const dispatch = useDispatch();
 
   const nodeTree = useSelector(nodeTreeSelector);
   const validNodeTree = useSelector(validNodeTreeSelector);
-
   const { focusedItem } = useSelector(nodeTreeViewStateSelector);
+  const codeViewTabSize = useSelector(codeViewTabSizeSelector);
+  const clipboardData = useSelector(clipboardDataSelector);
+
+  const osType = useSelector(osTypeSelector);
   const {
-    // code view
-    tabSize,
     // references
     htmlReferenceData,
     // other
     monacoEditorRef,
     setIsContentProgrammaticallyChanged,
+    addRunningActions,
+    removeRunningActions,
   } = useContext(MainContext);
 
   const { handleEditorChange } = useEditor();
@@ -54,84 +53,88 @@ export function useNodeActions() {
       const monacoEditor = monacoEditorRef.current;
       if (!monacoEditor) return;
       if (!nodeTree[focusedItem]) return;
-      addRunningActions(["nodeTreeView-add"]);
 
-      let { newNode, _tree, tmpMaxUid, contentNode, newNodeFlag } =
-        creatingNode(
-          nodeMaxUid,
-          nodeTree,
-          focusedItem,
-          nodeType,
-          htmlReferenceData,
-        );
-      let tempTree;
+      //TODO: add node
+      // let { newNode, _tree, tmpMaxUid, contentNode, newNodeFlag } =
+      //   creatingNode(
+      //     nodeMaxUid,
+      //     nodeTree,
+      //     focusedItem,
+      //     nodeType,
+      //     htmlReferenceData,
+      //   );
+      // let tempTree;
 
-      // call api
-      const tree = getTree(nodeTree);
+      // // call api
+      // const tree = getTree(nodeTree);
 
-      if (_tree) {
-        addNodeToTree(_tree, tree, nodeTree, focusedItem, newNode, tmpMaxUid);
-      } else {
-        const res = addNode(
-          tree,
-          focusedItem,
-          newNode,
-          contentNode,
-          "html",
-          String(contentNode ? nodeMaxUid + 2 : nodeMaxUid + 1) as TNodeUid,
-          osType,
-          tabSize,
-        );
-        tempTree = res.tree;
-        tmpMaxUid = res.nodeMaxUid as TNodeUid;
-      }
-      // processor
-      addRunningActions(["processor-updateOpt"]);
-      setUpdateOpt({ parse: false, from: "node" });
-      setNodeTree(tree);
+      // if (_tree) {
+      //   addNodeToTree(_tree, tree, nodeTree, focusedItem, newNode, tmpMaxUid);
+      // } else {
+      //   const res = addNode(
+      //     tree,
+      //     focusedItem,
+      //     newNode,
+      //     contentNode,
+      //     "html",
+      //     String(contentNode ? nodeMaxUid + 2 : nodeMaxUid + 1) as TNodeUid,
+      //     osType,
+      //     codeViewTabSize,
+      //   );
+      //   tempTree = res.tree;
+      //   tmpMaxUid = res.nodeMaxUid as TNodeUid;
+      // }
+      // // processor
+      // addRunningActions(["processor-updateOpt"]);
+      // dispatch(setUpdateOptions({ parse: false, from: "node" }));
+      // setNodeTree(tree);
 
-      // view state
-      addRunningActions(["stageView-viewState"]);
-      setUpdateOpt({ parse: true, from: "code" });
+      // // view state
+      // addRunningActions(["stageView-viewState"]);
+      // dispatch(setUpdateOptions({ parse: true, from: "code" }));
 
-      // side effect
-      setNodeMaxUid(Number(tmpMaxUid) + 1);
-      setEvent({
-        type: "add-node",
-        param: [
-          focusedItem,
-          newNodeFlag ? tree[Number(tmpMaxUid) + 1] : newNode,
-          tree[newNode.uid],
-        ],
-      });
+      // // side effect
+      // setNodeMaxUid(Number(tmpMaxUid) + 1);
+      // dispatch(
+      //   setNodeEvent({
+      //     type: "add-node",
+      //     param: [
+      //       focusedItem,
+      //       newNodeFlag ? tree[Number(tmpMaxUid) + 1] : newNode,
+      //       tree[newNode.uid],
+      //     ],
+      //   }),
+      // );
 
-      removeRunningActions(["nodeTreeView-add"]);
-      console.log("hms added");
-
-      dispatch(increaseActionGroupIndex());
+      // removeRunningActions(["nodeTreeView-add"]);
+      // console.log("hms added");
     },
     [
       addRunningActions,
       removeRunningActions,
       nodeTree,
       focusedItem,
-      nodeMaxUid,
       osType,
-      tabSize,
+      codeViewTabSize,
       htmlReferenceData,
     ],
   );
 
   const cb_removeNode = useCallback(
     (uids: TNodeUid[]) => {
-      // const allow = isRemovingAllowed(nodeTree, uids);//Commenting this for now as it doesn't makes sense because the user can always delete this from codeview
+      setIsContentProgrammaticallyChanged(true);
       const model = monacoEditorRef.current?.getModel();
       if (!model) return;
       let focusLineNumber = 0;
-
+      let parentUids = [] as TNodeUid[];
       uids.forEach((uid) => {
         let node = validNodeTree[uid];
+
         if (node) {
+          let parentUid = node.parentUid;
+          if (parentUid) {
+            parentUids.push(parentUid);
+          }
           const {
             endCol: endColumn,
             endLine: endLineNumber,
@@ -155,7 +158,9 @@ export function useNodeActions() {
       });
 
       const content = model.getValue();
-      handleEditorChange(content);
+      handleEditorChange(content, {
+        matchIds: uids,
+      });
       monacoEditorRef.current?.revealLineInCenter(focusLineNumber);
     },
     [addRunningActions, removeRunningActions, nodeTree],
@@ -172,61 +177,19 @@ export function useNodeActions() {
     }
     let content = model.getValue();
 
-    const sortedUids = uids.slice().sort((uid1, uid2) => {
-      const selectedNode1 = validNodeTree[uid1];
-      const selectedNode2 = validNodeTree[uid2];
-
-      if (
-        !selectedNode1 ||
-        !selectedNode1.sourceCodeLocation ||
-        !selectedNode2 ||
-        !selectedNode2.sourceCodeLocation
-      ) {
-        console.error(
-          "Parent node or source code location is undefined for uid1",
-        );
-        return 0;
-      }
-
-      const { endLine: endLine1 } = selectedNode1.sourceCodeLocation;
-      const { endLine: endLine2 } = selectedNode2.sourceCodeLocation;
-
-      return endLine2 - endLine1; // Sort in descending order
-    });
+    const sortedUids = sortUidsByMaxEndIndex(uids, validNodeTree);
 
     sortedUids.forEach(async (uid) => {
-      const ele = iframe?.contentWindow?.document?.querySelector(
-        `[${NodeInAppAttribName}="${uid}"]`,
-      );
+      const cleanedUpCode = getCopiedContent(uid, iframe);
 
-      //create a copy of ele
-      const eleCopy = ele?.cloneNode(true) as HTMLElement;
-      const innerElements = eleCopy.querySelectorAll(
-        `[${NodeInAppAttribName}]`,
-      );
-
-      innerElements.forEach((element) => {
-        if (element.hasAttribute(NodeInAppAttribName)) {
-          element.removeAttribute(NodeInAppAttribName);
-        }
-      });
-
-      eleCopy?.removeAttribute("contenteditable");
-      eleCopy?.removeAttribute("rnbwdev-rnbw-element-hover");
-      eleCopy?.removeAttribute("rnbwdev-rnbw-element-select");
-      eleCopy?.removeAttribute(NodeInAppAttribName);
-      const cleanedUpCode = eleCopy?.outerHTML;
-
-      //delete the copy
-      eleCopy?.remove();
       if (!cleanedUpCode) return;
 
       const selectedNode = validNodeTree[uid];
-      if (!selectedNode || !selectedNode.sourceCodeLocation) {
+      if (!selectedNode || !selectedNode.data.sourceCodeLocation) {
         console.error("Parent node or source code location is undefined");
         return;
       }
-      const { endLine, endCol } = selectedNode.sourceCodeLocation;
+      const { endLine, endCol } = selectedNode.data.sourceCodeLocation;
 
       const position = { lineNumber: endLine, column: endCol + 1 };
 
@@ -255,28 +218,8 @@ export function useNodeActions() {
     let copiedCode = "";
 
     uids.forEach((uid) => {
-      const ele = iframe?.contentWindow?.document?.querySelector(
-        `[${StageNodeIdAttr}="${uid}"]`,
-      );
+      const cleanedUpCode = getCopiedContent(uid, iframe);
 
-      //create a copy of ele
-      const eleCopy = ele?.cloneNode(true) as HTMLElement;
-      const innerElements = eleCopy.querySelectorAll(`[${StageNodeIdAttr}]`);
-
-      innerElements.forEach((element) => {
-        if (element.hasAttribute(StageNodeIdAttr)) {
-          element.removeAttribute(StageNodeIdAttr);
-        }
-      });
-
-      eleCopy?.removeAttribute("contenteditable");
-      eleCopy?.removeAttribute("rnbwdev-rnbw-element-hover");
-      eleCopy?.removeAttribute("rnbwdev-rnbw-element-select");
-      eleCopy?.removeAttribute(StageNodeIdAttr);
-      const cleanedUpCode = eleCopy?.outerHTML;
-
-      //delete the copy
-      eleCopy?.remove();
       if (!cleanedUpCode) return;
 
       copiedCode += cleanedUpCode + "\n";
@@ -285,66 +228,8 @@ export function useNodeActions() {
     window.navigator.clipboard.writeText(copiedCode);
   };
 
-  const cb_copyNodeExternal = useCallback(
-    (
-      nodes: TNode[],
-      targetUid: TNodeUid,
-      isBetween: boolean,
-      position: number,
-    ) => {
-      addRunningActions(["nodeTreeView-copy"]);
-
-      // call api
-      const tree = getTree(nodeTree);
-      const res = copyNodeExternal(
-        tree,
-        targetUid,
-        isBetween,
-        position,
-        nodes,
-        "html",
-        String(nodeMaxUid) as TNodeUid,
-        osType,
-        tabSize,
-        clipboardData.prevNodeTree,
-      );
-
-      // processor
-      addRunningActions(["processor-updateOpt"]);
-      setUpdateOpt({ parse: false, from: "node" });
-      setNodeTree(res.tree);
-      // view state
-      addRunningActions(["stageView-viewState"]);
-      setUpdateOpt({ parse: true, from: "code" });
-      // side effect
-      setNodeMaxUid(Number(res.nodeMaxUid));
-      setEvent({
-        type: "copy-node-external",
-        param: [nodes, targetUid, isBetween, position, res.addedUidMap],
-      });
-      removeRunningActions(["nodeTreeView-copy"]);
-
-      console.log("hms added");
-      dispatch(increaseActionGroupIndex());
-    },
-    [
-      addRunningActions,
-      removeRunningActions,
-      nodeTree,
-      nodeMaxUid,
-      osType,
-      tabSize,
-      clipboardData,
-    ],
-  );
-
   const cb_moveNode = useCallback(
-    (
-      _uids: TNodeUid[],
-      targetUid: TNodeUid,
-      isBetween: boolean,
-      position: number,
-    ) => {
+    (_uids: TNodeUid[], targetUid: TNodeUid) => {
       // validate
       const uids = getValidNodeUids(
         nodeTree,
@@ -359,46 +244,27 @@ export function useNodeActions() {
 
       // call api
       const tree = getTree(nodeTree);
-      const res = moveNode(
-        tree,
-        targetUid,
-        isBetween,
-        position,
-        uids,
-        "html",
-        String(nodeMaxUid) as TNodeUid,
-        osType,
-        tabSize,
-      );
 
       // processor
       addRunningActions(["processor-updateOpt"]);
-      setUpdateOpt({ parse: false, from: "node" });
-      setNodeTree(res.tree);
+      dispatch(setUpdateOptions({ parse: false, from: "node" }));
 
       // view state
       addRunningActions(["stageView-viewState"]);
-      setUpdateOpt({ parse: true, from: "code" });
+      dispatch(setUpdateOptions({ parse: true, from: "code" }));
       // side effect
-      setNodeMaxUid(Number(res.nodeMaxUid));
-      setEvent({
-        type: "move-node",
-        param: [uids, targetUid, isBetween, res.position],
-      });
 
       removeRunningActions(["nodeTreeView-move"]);
 
       console.log("hms added");
-      dispatch(increaseActionGroupIndex());
     },
     [
       addRunningActions,
       removeRunningActions,
       nodeTree,
       htmlReferenceData,
-      nodeMaxUid,
       osType,
-      tabSize,
+      codeViewTabSize,
     ],
   );
 
@@ -407,7 +273,7 @@ export function useNodeActions() {
     cb_removeNode,
     cb_duplicateNode,
     cb_copyNode,
-    cb_copyNodeExternal,
+
     cb_moveNode,
   };
 }

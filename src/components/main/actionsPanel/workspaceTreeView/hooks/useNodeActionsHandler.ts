@@ -1,31 +1,14 @@
-import {
-  useCallback,
-  useContext,
-} from 'react';
+import { useCallback, useContext } from "react";
 
-import { TreeItem } from 'react-complex-tree';
-import {
-  useDispatch,
-  useSelector,
-} from 'react-redux';
+import { TreeItem } from "react-complex-tree";
+import { useDispatch, useSelector } from "react-redux";
 
-import {
-  RootNodeUid,
-  TmpNodeUid,
-} from '@_constants/main';
-import { getValidNodeUids } from '@_node/apis';
-import {
-  createDirectory,
-  TFileNodeData,
-  writeFile,
-} from '@_node/file';
-import {
-  TNode,
-  TNodeTreeData,
-  TNodeUid,
-} from '@_node/types';
-import { osTypeSelector } from '@_redux/global';
-import { MainContext } from '@_redux/main';
+import { RootNodeUid, TmpNodeUid } from "@_constants/main";
+import { getValidNodeUids } from "@_node/apis";
+import { createDirectory, TFileNodeData, writeFile } from "@_node/file";
+import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
+import { osTypeSelector } from "@_redux/global";
+import { MainContext } from "@_redux/main";
 import {
   currentFileUidSelector,
   expandFileTreeNodes,
@@ -34,12 +17,12 @@ import {
   projectSelector,
   setCurrentFileUid,
   setFileTree,
-} from '@_redux/main/fileTree';
+} from "@_redux/main/fileTree";
 import {
   FileTree_Event_ClearActionType,
   setFileAction,
   TFileAction,
-} from '@_redux/main/fileTree/event';
+} from "@_redux/main/fileTree/event";
 import {
   navigatorDropdownTypeSelector,
   setNavigatorDropdownType,
@@ -47,9 +30,9 @@ import {
   setUpdateOptions,
   showCodeViewSelector,
   updateOptionsSelector,
-} from '@_redux/main/processor';
-import { verifyFileHandlerPermission } from '@_services/main';
-import { TFileNodeType } from '@_types/main';
+} from "@_redux/main/processor";
+import { verifyFileHandlerPermission } from "@_services/main";
+import { TFileNodeType } from "@_types/main";
 
 import {
   deletingWarning,
@@ -58,17 +41,17 @@ import {
   folderError,
   invalidDirError,
   movingError,
-} from '../errors';
+} from "../errors";
 import {
   duplicateNode,
   generateNewName,
   renameNode,
   validateAndDeleteNode,
   validateAndMoveNode,
-} from '../helpers';
-import { useInvalidNodes } from './useInvalidNodes';
-import { useReloadProject } from './useReloadProject.1';
-import { useTemporaryNodes } from './useTemporaryNodes';
+} from "../helpers";
+import { useInvalidNodes } from "./useInvalidNodes";
+import { useReloadProject } from "./useReloadProject.1";
+import { useTemporaryNodes } from "./useTemporaryNodes";
 
 export const useNodeActionsHandler = (
   openFileUid: React.MutableRefObject<string>,
@@ -328,7 +311,11 @@ export const useNodeActionsHandler = (
         );
         removeTemporaryNodes(_file.uid);
       } else {
-        await createFFNode(node.parentUid as TNodeUid, nodeData.ext, newName);
+        await createFFNode(
+          node.parentUid as TNodeUid,
+          nodeData.ext as TFileNodeType,
+          newName,
+        );
       }
       removeInvalidNodes(node.uid);
     },

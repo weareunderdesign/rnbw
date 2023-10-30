@@ -40,6 +40,7 @@ const fileTreeSlice = createSlice({
     },
     setFileTree(state, action: PayloadAction<TNodeTreeData>) {
       const fileTree = action.payload;
+      //@ts-ignore
       state.fileTree = fileTree;
     },
     setFileTreeNode(state, action: PayloadAction<TFileNode>) {

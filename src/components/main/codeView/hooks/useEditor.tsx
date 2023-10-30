@@ -7,22 +7,27 @@ import * as parse5 from "parse5";
 import { useDispatch, useSelector } from "react-redux";
 
 import { styles } from "@_components/main/stageView/iFrame/styles";
-import {
-  DefaultTabSize,
-  NodeUidAttribNameInApp,
-  RootNodeUid,
-} from "@_constants/main";
+import { DefaultTabSize, RootNodeUid } from "@_constants/main";
 import { getSubNodeUidsByBfs } from "@_node/apis";
 import { TFileNodeData } from "@_node/file";
-import { parseHtml } from "@_node/html";
+import { parseHtml, StageNodeIdAttr } from "@_node/html";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
-import {
-  MainContext,
-  navigatorSelector,
-  setCurrentFileContent,
-} from "@_redux/main";
+import { MainContext } from "@_redux/main";
 
 import { CodeSelection } from "../types";
+import {
+  codeViewTabSizeSelector,
+  setCodeEditing,
+  setCodeViewTabSize,
+} from "@_redux/main/codeView";
+import { setNodeTree } from "@_redux/main/nodeTree";
+import {
+  currentFileUidSelector,
+  fileTreeSelector,
+  setFileTree,
+} from "@_redux/main/fileTree";
+import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
+import { setUpdateOptions } from "@_redux/main/processor";
 
 function getLanguageFromExtension(extension: string) {
   switch (extension) {
@@ -41,23 +46,15 @@ function getLanguageFromExtension(extension: string) {
 
 export default function useEditor() {
   const [language, setLanguage] = useState("html");
+  const codeViewTabeSize = useSelector(codeViewTabSizeSelector);
+  const fileTree = useSelector(fileTreeSelector);
+  const currentFileUid = useSelector(currentFileUidSelector);
   const {
-    tabSize,
-    setTabSize,
-    codeEditing,
-    setCodeEditing,
-    ffTree,
     addRunningActions,
-    setUpdateOpt,
-    setFSPending,
-    setFFTree,
     setMonacoEditorRef,
-    setNodeTree,
-    isContentProgrammaticallyChanged,
     setIsContentProgrammaticallyChanged,
     monacoEditorRef,
   } = useContext(MainContext);
-  const { file } = useSelector(navigatorSelector);
 
   const dispatch = useDispatch();
 
@@ -66,7 +63,7 @@ export default function useEditor() {
 
   const editorConfigs = {
     contextmenu: true,
-    tabSize,
+    tabSize: codeViewTabeSize,
     wordWrap,
     minimap: { enabled: false },
     automaticLayout: true,
@@ -89,7 +86,7 @@ export default function useEditor() {
     monacoRef.current = editor;
     setMonacoEditorRef(editor);
 
-    setUpdateOpt({ parse: true, from: "file" });
+    dispatch(setUpdateOptions({ parse: true, from: "file" }));
     editor.onDidChangeCursorPosition((event) => {
       setTimeout(() => {
         if (event.reason === 2) {
@@ -171,9 +168,9 @@ export default function useEditor() {
       const iframe: any = document.getElementById("iframeId");
       const iframeDoc = iframe.contentDocument;
       const iframeHtml = iframeDoc.getElementsByTagName("html")[0];
-      const { htmlDom, tree } = parseHtml(value, false, "");
+      const { htmlDom, nodeTree } = parseHtml(value);
 
-      let bodyEle = null;
+      let updatedHtml = null;
       if (!htmlDom) return;
       const defaultTreeAdapter = parse5.defaultTreeAdapter;
       const htmlNode = defaultTreeAdapter
@@ -181,63 +178,61 @@ export default function useEditor() {
         .filter(defaultTreeAdapter.isElementNode)[0];
 
       if (htmlNode) {
-        bodyEle = parse5.serialize(htmlNode);
+        updatedHtml = parse5.serialize(htmlDom);
       }
-      if (!iframeHtml || !bodyEle) return;
+      if (!iframeHtml || !updatedHtml) return;
 
       try {
-        morphdom(iframeHtml, bodyEle, {
+        morphdom(iframeHtml, updatedHtml, {
           onBeforeElUpdated: function (fromEl, toEl) {
-            if (configs?.matchIds) {
-              const toElRnbwId = toEl.getAttribute(NodeUidAttribNameInApp);
-              if (!!toElRnbwId && configs.matchIds.includes(toElRnbwId)) {
-                return true;
-              } else if (fromEl.isEqualNode(toEl)) {
-                return false;
+            const fromElRnbwId = fromEl.getAttribute(StageNodeIdAttr);
+            if (toEl.nodeName.includes("-")) return false;
+            if (
+              configs?.matchIds &&
+              !!fromElRnbwId &&
+              configs.matchIds.includes(fromElRnbwId)
+            ) {
+              return true;
+            } else if (fromEl.isEqualNode(toEl)) {
+              return false;
+            } else if (toEl.nodeName === "HTML") {
+              //copy the attributes
+              for (let i = 0; i < fromEl.attributes.length; i++) {
+                toEl.setAttribute(
+                  fromEl.attributes[i].name,
+                  fromEl.attributes[i].value,
+                );
               }
-            } else {
-              if (fromEl.isEqualNode(toEl)) {
-                return false;
-              } else {
-                //check if the node is a custom element
-                if (toEl.nodeName.includes("-")) {
-                  //copy the content or template of the custom element
-                  // toEl.innerHTML = fromEl.innerHTML;
-                }
-                //check if the node is html
-                if (toEl.nodeName === "HTML") {
-                  //copy the attributes
-                  for (let i = 0; i < fromEl.attributes.length; i++) {
-                    toEl.setAttribute(
-                      fromEl.attributes[i].name,
-                      fromEl.attributes[i].value,
-                    );
-                  }
-                }
-              }
+              if (fromEl.isEqualNode(toEl)) return false;
             }
             return true;
           },
+          onBeforeNodeAdded: function (node) {
+            debugger;
+            // if (node.nodeValue?.replace(/\s/g, "") === "\n") return false
+            return node;
+          },
         });
         codeContentRef.current = value;
-        setNodeTree(tree);
+        dispatch(setNodeTree(nodeTree));
 
         dispatch(setCurrentFileContent(codeContentRef.current));
-        setFSPending(false);
-        const _file = structuredClone(ffTree[file.uid]) as TNode;
+        // setFSPending(false); TODO: check if this is needed
+
+        const _file = structuredClone(fileTree[currentFileUid]) as TNode;
         addRunningActions(["processor-updateOpt"]);
         const fileData = _file.data as TFileNodeData;
-        (ffTree[file.uid].data as TFileNodeData).content =
+        (fileTree[currentFileUid].data as TFileNodeData).content =
           codeContentRef.current;
-        (ffTree[file.uid].data as TFileNodeData).contentInApp =
+        (fileTree[currentFileUid].data as TFileNodeData).contentInApp =
           codeContentRef.current;
-        (ffTree[file.uid].data as TFileNodeData).changed =
+        (fileTree[currentFileUid].data as TFileNodeData).changed =
           codeContentRef.current !== fileData.orgContent;
-        setFFTree(ffTree);
+        dispatch(setFileTree(fileTree));
         dispatch(setCurrentFileContent(codeContentRef.current));
         codeChangeDecorationRef.current.clear();
-        setCodeEditing(false);
-        setFSPending(false);
+        dispatch(setCodeEditing(false));
+        // setFSPending(false); TODO: check if this is needed
       } catch (e) {
         console.log(e);
       }
@@ -248,25 +243,29 @@ export default function useEditor() {
       style.textContent = styles;
       headNode.appendChild(style);
 
-      setCodeEditing(false);
+      dispatch(setCodeEditing(false));
     }, 1000),
-    [],
+    [dispatch, fileTree, monacoEditorRef, currentFileUid, addRunningActions],
   );
 
-  const handleEditorChange = (
-    value: string | undefined,
-    configs?: {
-      matchIds?: string[] | null;
+  const handleEditorChange = useCallback(
+    (
+      value: string | undefined,
+      configs?: {
+        matchIds?: string[] | null;
+        skipFromChildren?: boolean;
+      },
+    ) => {
+      if (!value) return;
+      debouncedEditorUpdate(value, configs);
+      setIsContentProgrammaticallyChanged(false);
     },
-  ) => {
-    if (!value) return;
-    debouncedEditorUpdate(value, configs);
-    setIsContentProgrammaticallyChanged(false);
-  };
+    [debouncedEditorUpdate],
+  );
 
   // tabSize
   useEffect(() => {
-    setTabSize(DefaultTabSize);
+    dispatch(setCodeViewTabSize(DefaultTabSize));
   }, []);
 
   return {
@@ -280,7 +279,6 @@ export default function useEditor() {
     updateLanguage,
     editorConfigs,
     findNodeBySelection,
-    codeEditing,
     setCodeEditing,
     handleEditorChange,
     focusedNode,

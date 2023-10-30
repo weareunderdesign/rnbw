@@ -4,68 +4,53 @@ import React, {
   useEffect,
   useMemo,
   useRef,
-} from 'react';
+} from "react";
 
-import cx from 'classnames';
-import {
-  useDispatch,
-  useSelector,
-} from 'react-redux';
+import cx from "classnames";
+import { useDispatch, useSelector } from "react-redux";
 
-import {
-  SVGIconI,
-  TreeView,
-} from '@_components/common';
-import { TreeViewData } from '@_components/common/treeView/types';
-import { RootNodeUid } from '@_constants/main';
+import { SVGIconI, TreeView } from "@_components/common";
+import { TreeViewData } from "@_components/common/treeView/types";
+import { RootNodeUid } from "@_constants/main";
 import {
   StageNodeIdAttr,
   TFileNodeData,
   THtmlElementsReference,
   THtmlNodeData,
-} from '@_node/index';
-import {
-  TNode,
-  TNodeUid,
-} from '@_node/types';
-import {
-  osTypeSelector,
-  themeSelector,
-} from '@_redux/global';
-import { MainContext } from '@_redux/main';
+} from "@_node/index";
+import { TNode, TNodeUid } from "@_node/types";
+import { osTypeSelector, themeSelector } from "@_redux/global";
+import { MainContext } from "@_redux/main";
 import {
   currentFileUidSelector,
   expandFileTreeNodes,
   fileTreeSelector,
   fileTreeViewStateSelector,
   setInitialFileUidToOpen,
-} from '@_redux/main/fileTree';
+} from "@_redux/main/fileTree";
 import {
   hoveredNodeUidSelector,
   nodeTreeViewStateSelector,
   setHoveredNodeUid,
   validNodeTreeSelector,
-} from '@_redux/main/nodeTree';
+} from "@_redux/main/nodeTree";
 import {
   navigatorDropdownTypeSelector,
   setActivePanel,
   setNavigatorDropdownType,
-} from '@_redux/main/processor';
-import { getCommandKey } from '@_services/global';
-import {
-  addClass,
-  removeClass,
-} from '@_services/main';
+} from "@_redux/main/processor";
+import { getCommandKey } from "@_services/global";
+import { addClass, removeClass } from "@_services/main";
 
-import { useCmdk } from './hooks/useCmdk';
-import { useNodeActions } from './hooks/useNodeActions';
-import { useNodeTreeCallback } from './hooks/useNodeTreeCallback';
-import { useNodeViewState } from './hooks/useNodeViewState';
-import { Container } from './nodeTreeComponents/Container';
-import { DragBetweenLine } from './nodeTreeComponents/DragBetweenLine';
-import { ItemArrow } from './nodeTreeComponents/ItemArrow';
-import { ItemTitle } from './nodeTreeComponents/ItemTitle';
-import { NodeTreeViewProps } from './types';
+import { useCmdk } from "./hooks/useCmdk";
+import { useNodeActions } from "./hooks/useNodeActions";
+import { useNodeTreeCallback } from "./hooks/useNodeTreeCallback";
+import { useNodeViewState } from "./hooks/useNodeViewState";
+import { Container } from "./nodeTreeComponents/Container";
+import { DragBetweenLine } from "./nodeTreeComponents/DragBetweenLine";
+import { ItemArrow } from "./nodeTreeComponents/ItemArrow";
+import { ItemTitle } from "./nodeTreeComponents/ItemTitle";
+import { NodeTreeViewProps } from "./types";
 
 const AutoExpandDelay = 1 * 1000;
 
@@ -177,12 +162,8 @@ export const NodeTreeView = (props: NodeTreeViewProps) => {
     return data;
   }, [validNodeTree]);
 
-  // node actions handlers
-  const { cb_moveNode } = useNodeActions();
-
   // node view state handlers
-  const { cb_focusNode, cb_selectNode, cb_expandNode, cb_collapseNode } =
-    useNodeViewState(focusedItemRef.current);
+  const { cb_expandNode } = useNodeViewState(focusedItemRef.current);
 
   // cmdk
   useCmdk();

@@ -4,6 +4,7 @@ import { TCodeViewReducerState } from "./types";
 
 const codeViewReducerInitialState: TCodeViewReducerState = {
   codeViewTabSize: 4,
+  codeEditing: false,
 };
 const codeViewSlice = createSlice({
   name: "codeView",
@@ -13,7 +14,11 @@ const codeViewSlice = createSlice({
       const codeViewTabSize = action.payload;
       state.codeViewTabSize = codeViewTabSize;
     },
+    setCodeEditing(state, action: PayloadAction<boolean>) {
+      const codeEditing = action.payload;
+      state.codeEditing = codeEditing;
+    },
   },
 });
-export const { setCodeViewTabSize } = codeViewSlice.actions;
+export const { setCodeViewTabSize, setCodeEditing } = codeViewSlice.actions;
 export const CodeViewReduer = codeViewSlice.reducer;

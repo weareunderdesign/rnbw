@@ -4,43 +4,26 @@ import React, {
   useMemo,
   useRef,
   useState,
-} from 'react';
+} from "react";
 
-import cx from 'classnames';
-import { Command } from 'cmdk';
-import {
-  CustomDirectoryPickerOptions,
-} from 'file-system-access/lib/showDirectoryPicker';
-import {
-  delMany,
-  getMany,
-  setMany,
-} from 'idb-keyval';
-import { editor } from 'monaco-editor';
-import {
-  useDispatch,
-  useSelector,
-} from 'react-redux';
-import {
-  useLocation,
-  useParams,
-} from 'react-router-dom';
+import cx from "classnames";
+import { Command } from "cmdk";
+import { CustomDirectoryPickerOptions } from "file-system-access/lib/showDirectoryPicker";
+import { delMany, getMany, setMany } from "idb-keyval";
+import { editor } from "monaco-editor";
+import { useDispatch, useSelector } from "react-redux";
+import { useLocation, useParams } from "react-router-dom";
 
-import { SVGIcon } from '@_components/common';
-import {
-  ActionsPanel,
-  CodeView,
-  Process,
-  StageView,
-} from '@_components/main';
-import { LogAllow } from '@_constants/global';
+import { SVGIcon } from "@_components/common";
+import { ActionsPanel, CodeView, Process, StageView } from "@_components/main";
+import { LogAllow } from "@_constants/global";
 import {
   AddActionPrefix,
   DefaultProjectPath,
   ParsableFileTypes,
   RecentProjectCount,
   RootNodeUid,
-} from '@_constants/main';
+} from "@_constants/main";
 import {
   downloadProject,
   initIDBProject,
@@ -50,24 +33,20 @@ import {
   TFileNodeData,
   TFilesReference,
   TFilesReferenceData,
-} from '@_node/file';
+} from "@_node/file";
 import {
   THtmlElementsReference,
   THtmlElementsReferenceData,
   THtmlReferenceData,
-} from '@_node/html';
-import {
-  TNode,
-  TNodeTreeData,
-  TNodeUid,
-} from '@_node/types';
+} from "@_node/html";
+import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import {
   osTypeSelector,
   setOsType,
   setTheme,
   themeSelector,
-} from '@_redux/global';
-import { MainContext } from '@_redux/main';
+} from "@_redux/global";
+import { MainContext } from "@_redux/main";
 import {
   cmdkOpenSelector,
   cmdkPagesSelector,
@@ -76,8 +55,8 @@ import {
   setCmdkOpen,
   setCmdkPages,
   setCurrentCommand,
-} from '@_redux/main/cmdk';
-import { codeViewTabSizeSelector } from '@_redux/main/codeView';
+} from "@_redux/main/cmdk";
+import { codeEditingSelector } from "@_redux/main/codeView";
 import {
   currentFileUidSelector,
   fileTreeSelector,
@@ -91,44 +70,44 @@ import {
   TProject,
   TProjectContext,
   workspaceSelector,
-} from '@_redux/main/fileTree';
+} from "@_redux/main/fileTree";
 import {
   fileActionSelector,
   FileTree_Event_ClearActionType,
   fileTreeEventHistoryInfoSelector,
-} from '@_redux/main/fileTree/event';
+  setFileAction,
+} from "@_redux/main/fileTree/event";
 import {
   nodeTreeSelector,
   nodeTreeViewStateSelector,
   setNodeTree,
   setValidNodeTree,
   validNodeTreeSelector,
-} from '@_redux/main/nodeTree';
+} from "@_redux/main/nodeTree";
 import {
   currentFileContentSelector,
   NodeTree_Event_ClearActionType,
   nodeTreeEventHistoryInfoSelector,
-} from '@_redux/main/nodeTree/event';
+} from "@_redux/main/nodeTree/event";
 import {
   activePanelSelector,
   navigatorDropdownTypeSelector,
+  setFavicon,
   setNavigatorDropdownType,
   setShowActionsPanel,
+  setUpdateOptions,
   showActionsPanelSelector,
-} from '@_redux/main/processor';
-import {
-  iframeLoadingSelector,
-  setIframeSrc,
-} from '@_redux/main/stageView';
+} from "@_redux/main/processor";
+import { iframeLoadingSelector, setIframeSrc } from "@_redux/main/stageView";
 // @ts-ignore
-import cmdkRefActions from '@_ref/cmdk.ref/Actions.csv';
+import cmdkRefActions from "@_ref/cmdk.ref/Actions.csv";
 // @ts-ignore
-import cmdkRefJumpstart from '@_ref/cmdk.ref/Jumpstart.csv';
+import cmdkRefJumpstart from "@_ref/cmdk.ref/Jumpstart.csv";
 // @ts-ignore
-import filesRef from '@_ref/rfrncs/Files.csv';
+import filesRef from "@_ref/rfrncs/Files.csv";
 // @ts-ignore
-import htmlRefElements from '@_ref/rfrncs/HTML Elements.csv';
-import { TToast } from '@_types/global';
+import htmlRefElements from "@_ref/rfrncs/HTML Elements.csv";
+import { TToast } from "@_types/global";
 import {
   TCmdkContext,
   TCmdkContextScope,
@@ -138,9 +117,9 @@ import {
   TCmdkReferenceData,
   TCodeChange,
   TSession,
-} from '@_types/main';
+} from "@_types/main";
 
-import { getCommandKey } from '../../services/global';
+import { getCommandKey } from "../../services/global";
 
 export default function MainPage() {
   const dispatch = useDispatch();
@@ -152,7 +131,6 @@ export default function MainPage() {
 
   const currentFileContent = useSelector(currentFileContentSelector);
   const nodeTree = useSelector(nodeTreeSelector);
-  const validNodeTree = useSelector(validNodeTreeSelector);
 
   const fileAction = useSelector(fileActionSelector);
 
@@ -163,7 +141,7 @@ export default function MainPage() {
 
   const showActionsPanel = useSelector(showActionsPanelSelector);
 
-  const codeViewTabeSize = useSelector(codeViewTabSizeSelector);
+  const codeEditing = useSelector(codeEditingSelector);
 
   //ff is fileTreeViewState
   const { focusedItem: ffFocusedItem } = useSelector(fileTreeViewStateSelector);
@@ -409,7 +387,7 @@ export default function MainPage() {
 
     return data;
   }, [
-    ffTree,
+    fileTree,
     ffFocusedItem,
     nodeTree,
     fnFocusedItem,
@@ -645,7 +623,7 @@ export default function MainPage() {
   }, [currentCommand]);
   // -------------------------------------------------------------- handlers --------------------------------------------------------------
   const clearSession = useCallback(() => {
-    dispatch(clearMainState());
+    //dispatch(clearMainState());//TODO: clearMainState
     dispatch({ type: FileTree_Event_ClearActionType });
     dispatch({ type: NodeTree_Event_ClearActionType });
   }, []);
@@ -655,7 +633,7 @@ export default function MainPage() {
       projectHandle?: FileSystemHandle | null,
       internal?: boolean,
     ) => {
-      setFavicon("");
+      dispatch(setFavicon(""));
       if (fsType === "local") {
         setFSPending(true);
         try {
@@ -1075,45 +1053,53 @@ export default function MainPage() {
     if (pending || iframeLoading || fsPending || codeEditing || !parseFileFlag)
       return;
 
-    LogAllow && pastLength === 1 && console.log("hms - it is the origin state");
-    if (pastLength === 1) return;
+    LogAllow &&
+      fileEventPastLength === 1 &&
+      console.log("hms - it is the origin state");
+    if (fileEventPastLength === 1) return;
 
-    setCurrentFileUid(file.uid);
-    setIsHms(true);
+    setCurrentFileUid(currentFileUid); //TODO: check if this is needed
+    //setIsHms(true); //TODO: check if this is needed
 
     dispatch({ type: "main/undo" });
-    setUpdateOpt({ parse: true, from: "hms" });
+    dispatch(setUpdateOptions({ parse: true, from: "hms" }));
   }, [
     pending,
     iframeLoading,
     fsPending,
     codeEditing,
-    pastLength,
+    fileEventPastLength,
     fileAction,
-    file.uid,
+    currentFileUid,
   ]);
   const onRedo = useCallback(() => {
     if (pending || iframeLoading || fsPending || codeEditing || !parseFileFlag)
       return;
 
     LogAllow &&
-      futureLength === 0 &&
+      fileEventFutureLength === 0 &&
       console.log("hms - it is the latest state");
-    if (futureLength === 0) return;
+    if (fileEventFutureLength === 0) return;
 
-    setFFAction(fileAction);
-    setCurrentFileUid(file.uid);
-    setIsHms(false);
-
+    dispatch(setFileAction(fileAction));
+    setCurrentFileUid(currentFileUid); //TODO: check if this is needed
     dispatch({ type: "main/redo" });
-    setUpdateOpt({ parse: true, from: "hms" });
-  }, [pending, iframeLoading, fsPending, codeEditing, futureLength, file.uid]);
+    dispatch(setUpdateOptions({ parse: true, from: "hms" }));
+  }, [
+    pending,
+    iframeLoading,
+    fsPending,
+    codeEditing,
+    fileEventFutureLength,
+    currentFileUid,
+  ]);
+
   useEffect(() => {
     // reset fileAction in the new history
-    futureLength === 0 &&
+    fileEventFutureLength === 0 &&
       fileAction.type !== null &&
       dispatch(setFileAction({ type: null }));
-  }, [actionGroupIndex]);
+  }, []);
   // toogle code view
   const [showCodeView, setShowCodeView] = useState(false);
   const toogleCodeView = useCallback(() => {
@@ -1718,6 +1704,7 @@ export default function MainPage() {
                 setCmdkOpen(false);
               } else {
                 cmdkPages.length !== 1 &&
+                  // @ts-ignore
                   setCmdkPages((cmdkPages) => cmdkPages.slice(0, -1));
               }
             }
