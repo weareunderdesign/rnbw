@@ -1,21 +1,14 @@
-import {
-  Context,
-  createContext,
-} from 'react';
+import { Context, createContext } from "react";
 
-import { editor } from 'monaco-editor';
+import { editor } from "monaco-editor";
 
-import { DefaultTabSize } from '@_constants/main';
-import { TFileHandlerCollection } from '@_node/file';
-import { TNodeUid } from '@_node/types';
-import { TToast } from '@_types/global';
-import { TCodeChange } from '@_types/main';
+import { TFileHandlerCollection } from "@_node/file";
+import { TNodeUid } from "@_node/types";
+import { TToast } from "@_types/global";
+import { TCodeChange } from "@_types/main";
 
-import { TProjectContext } from './fileTree';
-import {
-  IEditorRef,
-  TMainContext,
-} from './types';
+import { TProjectContext } from "./fileTree";
+import { IEditorRef, TMainContext } from "./types";
 
 export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   // global action
@@ -33,8 +26,6 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   setIsContentProgrammaticallyChanged: (changed: boolean) => {},
   codeChanges: [],
   setCodeChanges: (changes: TCodeChange[]) => {},
-  tabSize: DefaultTabSize,
-  setTabSize: (size: number) => {},
   newFocusedNodeUid: "",
   setNewFocusedNodeUid: (uid: TNodeUid) => {},
   setCodeViewOffsetTop: (offsetTop: string) => {},
