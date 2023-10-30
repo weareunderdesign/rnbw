@@ -1108,6 +1108,7 @@ export default function MainPage() {
     dispatch({ type: "main/redo" });
     setUpdateOpt({ parse: true, from: "hms" });
   }, [pending, iframeLoading, fsPending, codeEditing, futureLength, file.uid]);
+
   useEffect(() => {
     // reset fileAction in the new history
     futureLength === 0 &&
