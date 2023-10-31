@@ -1,19 +1,9 @@
-import { RefObject } from 'react';
+import { RefObject } from "react";
 
-import { NodeUidAttribNameInApp } from '@_constants/main';
-import { THtmlNodeData } from '@_node/html';
-import {
-  TNode,
-  TNodeUid,
-} from '@_node/types';
-import {
-  focusFNNode,
-  selectFNNode,
-} from '@_redux/main';
-import {
-  AnyAction,
-  Dispatch,
-} from '@reduxjs/toolkit';
+import { StageNodeIdAttr, THtmlNodeData } from "@_node/html";
+import { TNode, TNodeUid } from "@_node/types";
+import { focusFNNode, selectFNNode } from "@_redux/main";
+import { AnyAction, Dispatch } from "@reduxjs/toolkit";
 
 export const createAndInsertElement = (
   targetUid: TNodeUid,
@@ -33,7 +23,7 @@ export const createAndInsertElement = (
   if (nodeData.name === "!--...--" || nodeData.name === "comment") {
     const targetElement =
       contentRef?.current?.contentWindow?.document?.querySelector(
-        `[${NodeUidAttribNameInApp}="${targetUid}"]`,
+        `[${StageNodeIdAttr}="${targetUid}"]`,
       );
     // targetElement?.append('<!--...-->')
   } else {
@@ -62,7 +52,7 @@ export const createAndInsertElement = (
     } else {
       const targetElement =
         contentRef?.current?.contentWindow?.document?.querySelector(
-          `[${NodeUidAttribNameInApp}="${targetUid}"]`,
+          `[${StageNodeIdAttr}="${targetUid}"]`,
         );
       newElement &&
         targetElement?.parentElement?.insertBefore(

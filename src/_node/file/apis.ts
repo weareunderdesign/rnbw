@@ -1,16 +1,13 @@
-import { Buffer } from 'buffer';
-import FileSaver from 'file-saver';
-import JSZip from 'jszip';
+import { Buffer } from "buffer";
+import FileSaver from "file-saver";
+import JSZip from "jszip";
 
-import {
-  RootNodeUid,
-  StagePreviewPathPrefix,
-} from '@_constants/main';
-import { TOsType } from '@_redux/global';
+import { RootNodeUid, StagePreviewPathPrefix } from "@_constants/main";
+import { TOsType } from "@_redux/global";
 // @ts-ignore
-import htmlRefElements from '@_ref/rfrncs/HTML Elements.csv';
-import { SystemDirectories } from '@_ref/SystemDirectories';
-import { verifyFileHandlerPermission } from '@_services/main';
+import htmlRefElements from "@_ref/rfrncs/HTML Elements.csv";
+import { SystemDirectories } from "@_ref/SystemDirectories";
+import { verifyFileHandlerPermission } from "@_services/main";
 
 import {
   getSubNodeUidsByBfs,
@@ -20,14 +17,14 @@ import {
   THtmlElementsReferenceData,
   TNodeTreeData,
   TNodeUid,
-} from '../';
+} from "../";
 import {
   TFileHandlerInfo,
   TFileHandlerInfoObj,
   TIDBFileInfo,
   TIDBFileInfoObj,
   TZipFileInfo,
-} from './types';
+} from "./types";
 
 export const _fs = window.Filer.fs;
 export const _path = window.Filer.path;
@@ -611,10 +608,11 @@ export const getNormalizedPath = (
   return { isAbsolutePath, normalizedPath };
 };
 
-export const parseFile = (
-  ext: string,
-  content: string,
-): TFileParserResponse => {
+export const parseFile = (params: {
+  ext: string;
+  content: string;
+}): TFileParserResponse => {
+  const { ext, content } = params;
   if (ext === "html") {
     return parseHtml(content);
   } else {

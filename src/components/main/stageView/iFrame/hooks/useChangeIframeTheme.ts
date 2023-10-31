@@ -1,7 +1,11 @@
 import { useContext } from "react";
 
-import { NodeUidAttribNameInApp } from "@_constants/main";
 import { MainContext } from "@_redux/main";
+import { useSelector } from "react-redux";
+import { AppState } from "@_redux/_root";
+import { validNodeTreeSelector } from "@_redux/main/nodeTree";
+import { themeSelector } from "@_redux/global";
+import { StageNodeIdAttr } from "@_node/html";
 
 export interface IUseChangeIframThemeProps {
   contentRef: HTMLIFrameElement | null;
@@ -10,7 +14,8 @@ export interface IUseChangeIframThemeProps {
 export const useChangeIframeTheme = ({
   contentRef,
 }: IUseChangeIframThemeProps) => {
-  const { validNodeTree, theme } = useContext(MainContext);
+  const validNodeTree = useSelector(validNodeTreeSelector);
+  const theme = useSelector(themeSelector);
 
   const changeIframeTheme = () => {
     let uid = "-1";
@@ -24,7 +29,7 @@ export const useChangeIframeTheme = ({
       }
     }
     const ele = contentRef?.contentWindow?.document?.querySelector(
-      `[${NodeUidAttribNameInApp}="${uid}"]`,
+      `[${StageNodeIdAttr}="${uid}"]`,
     );
     if (contentRef) {
       if (theme !== "Light") {

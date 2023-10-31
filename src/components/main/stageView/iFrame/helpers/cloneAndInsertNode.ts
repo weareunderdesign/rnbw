@@ -1,8 +1,8 @@
-import { NodeUidAttribNameInApp } from "@_constants/main";
 import { TNode, TNodeUid } from "@_node/types";
 import { TClipboardData } from "@_types/main";
 
 import { buildHtmlFromNode } from "./buildHtmlFromNode";
+import { StageNodeIdAttr } from "@_node/html";
 
 export const cloneAndInsertNode = (
   node: TNode,
@@ -37,16 +37,16 @@ export const cloneAndInsertNode = (
 
   const newUid = addedUidMap.get(node.uid);
   if (newUid) {
-    _ele.setAttribute(NodeUidAttribNameInApp, newUid);
+    _ele.setAttribute(StageNodeIdAttr, newUid);
   }
 
   const childElementList = _ele.querySelectorAll("*");
   childElementList.forEach((childElement) => {
-    const childUid = childElement.getAttribute(NodeUidAttribNameInApp);
+    const childUid = childElement.getAttribute(StageNodeIdAttr);
     if (childUid) {
       const newChildUid = addedUidMap.get(childUid);
       if (newChildUid) {
-        childElement.setAttribute(NodeUidAttribNameInApp, newChildUid);
+        childElement.setAttribute(StageNodeIdAttr, newChildUid);
       }
     }
   });

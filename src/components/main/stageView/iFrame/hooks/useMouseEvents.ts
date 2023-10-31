@@ -2,21 +2,29 @@ import { useCallback, useContext } from "react";
 
 import { useDispatch, useSelector } from "react-redux";
 
-import { HmsClearActionType, NodeUidAttribNameInApp } from "@_constants/main";
 import { getValidNodeUids } from "@_node/apis";
 import { TFileNodeData } from "@_node/file";
 import { TNode, TNodeUid } from "@_node/types";
-import {
-  expandFNNode,
-  fnSelector,
-  focusFNNode,
-  MainContext,
-  selectFFNode,
-  selectFNNode,
-  setCurrentFile,
-} from "@_redux/main";
+import { MainContext } from "@_redux/main";
 
 import { useSetSelectItem, useTextEditing } from "./";
+import { StageNodeIdAttr } from "@_node/html";
+import { AppState } from "@_redux/_root";
+import {
+  selectFileTreeNodes,
+  setCurrentFileUid,
+  setFileTreeNode,
+} from "@_redux/main/fileTree";
+import {
+  setActivePanel,
+  setNavigatorDropdownType,
+} from "@_redux/main/processor";
+import { setLinkToOpen } from "@_redux/main/stageView";
+import {
+  expandNodeTreeNodes,
+  focusNodeTreeNode,
+  selectNodeTreeNodes,
+} from "@_redux/main/nodeTree";
 
 export interface IUseMouseEventsProps {
   externalDblclick: React.MutableRefObject<boolean>;
@@ -66,23 +74,18 @@ export const useMouseEvents = ({
   });
 
   const dispatch = useDispatch();
-  const { focusedItem } = useSelector(fnSelector);
   const {
-    // node actions
-    setActivePanel,
-    navigatorDropDownType,
-    setNavigatorDropDownType,
-    // file tree view
-    ffTree,
-    setCurrentFileUid,
-    // node tree view
-    fnHoveredItem,
-    setFNHoveredItem,
-    nodeTree,
-    // stage view
-    setLinkToOpen,
-    // other
-    osType,
+    nodeTree: {
+      nodeTreeViewState: { focusedItem },
+      nodeTree,
+    },
+    fileTree: { fileTree },
+    processor: { navigatorDropdownType },
+  } = useSelector((state: AppState) => state.main);
+
+  const { osType } = useSelector((state: AppState) => state.global);
+
+  const {
     // toasts
     parseFileFlag,
     setParseFile,
@@ -121,13 +124,11 @@ export const useMouseEvents = ({
   function handleLinkTag(ele: HTMLElement) {
     const { isLinkTag, linkElement } = isOrContainLinkElement(ele);
     if (isLinkTag && linkElement) {
-      const uid: TNodeUid | null = linkElement.getAttribute(
-        NodeUidAttribNameInApp,
-      );
+      const uid: TNodeUid | null = linkElement.getAttribute(StageNodeIdAttr);
       if (uid !== null) {
         if (uid === linkTagUid.current) {
           const href = linkElement.getAttribute("href");
-          href && setLinkToOpen(href);
+          href && dispatch(setLinkToOpen(href));
           linkTagUid.current = "";
         } else {
           linkTagUid.current = uid;
@@ -140,13 +141,11 @@ export const useMouseEvents = ({
 
   function findEleOrItsNearestParentWithUid(ele: HTMLElement) {
     let newFocusedElement: HTMLElement = ele;
-    let _uid: TNodeUid | null = newFocusedElement.getAttribute(
-      NodeUidAttribNameInApp,
-    );
+    let _uid: TNodeUid | null = newFocusedElement.getAttribute(StageNodeIdAttr);
     while (!_uid) {
       const parentEle = newFocusedElement.parentElement;
       if (!parentEle) break;
-      _uid = parentEle.getAttribute(NodeUidAttribNameInApp);
+      _uid = parentEle.getAttribute(StageNodeIdAttr);
       !_uid ? (newFocusedElement = parentEle) : null;
     }
     return newFocusedElement;
@@ -195,14 +194,14 @@ export const useMouseEvents = ({
   const onMouseMove = useCallback(
     (e: MouseEvent) => {
       const ele = e.target as HTMLElement;
-      let _uid: TNodeUid | null = ele.getAttribute(NodeUidAttribNameInApp);
+      let _uid: TNodeUid | null = ele.getAttribute(StageNodeIdAttr);
       // for the elements which are created by js. (ex: Web Component)
       let newHoveredElement: HTMLElement = ele;
       while (!_uid) {
         const parentEle = newHoveredElement.parentElement;
         if (!parentEle) break;
 
-        _uid = parentEle.getAttribute(NodeUidAttribNameInApp);
+        _uid = parentEle.getAttribute(StageNodeIdAttr);
         !_uid ? (newHoveredElement = parentEle) : null;
       }
 
@@ -222,12 +221,11 @@ export const useMouseEvents = ({
     (e: MouseEvent) => {
       const ele = e.target as HTMLElement;
       if (!parseFileFlag) {
-        const file = ffTree[prevFileUid];
+        const file = fileTree[prevFileUid];
         const uid = prevFileUid;
         const fileData = file.data as TFileNodeData;
-        setNavigatorDropDownType("project");
+        dispatch(setNavigatorDropdownType("project"));
         setParseFile(true);
-        dispatch({ type: HmsClearActionType });
         dispatch(
           setCurrentFile({
             uid,
@@ -236,32 +234,32 @@ export const useMouseEvents = ({
             content: fileData.contentInApp ? fileData.contentInApp : "",
           }),
         );
-        setCurrentFileUid(uid);
-        dispatch(selectFFNode([prevFileUid]));
+        dispatch(setCurrentFileUid(uid));
+        dispatch(selectFileTreeNodes([prevFileUid]));
 
         // select clicked item
-        let _uid: TNodeUid | null = ele.getAttribute(NodeUidAttribNameInApp);
+        let _uid: TNodeUid | null = ele.getAttribute(StageNodeIdAttr);
         // for the elements which are created by js. (ex: Web Component)
         let newFocusedElement: HTMLElement = ele;
         while (!_uid) {
           const parentEle = newFocusedElement.parentElement;
           if (!parentEle) break;
 
-          _uid = parentEle.getAttribute(NodeUidAttribNameInApp);
+          _uid = parentEle.getAttribute(StageNodeIdAttr);
           !_uid ? (newFocusedElement = parentEle) : null;
         }
         setTimeout(() => {
           if (_uid) {
-            dispatch(focusFNNode(_uid));
-            dispatch(selectFNNode([_uid]));
-            dispatch(expandFNNode([_uid]));
+            dispatch(focusNodeTreeNode(_uid));
+            dispatch(selectNodeTreeNodes([_uid]));
+            dispatch(expandNodeTreeNodes([_uid]));
           }
         }, 100);
       } else {
         externalDblclick.current = true;
         handleLinkTag(ele);
 
-        let _uid: TNodeUid | null = ele.getAttribute(NodeUidAttribNameInApp);
+        let _uid: TNodeUid | null = ele.getAttribute(StageNodeIdAttr);
         let isWC = false;
         let newFocusedElement: HTMLElement = ele;
         if (!_uid) {
@@ -269,7 +267,7 @@ export const useMouseEvents = ({
           isWC = true;
           newFocusedElement = findEleOrItsNearestParentWithUid(ele);
 
-          _uid = newFocusedElement.getAttribute(NodeUidAttribNameInApp);
+          _uid = newFocusedElement.getAttribute(StageNodeIdAttr);
         }
 
         const areMultiple = handleSelectofSingleOrMultipleElements(e, _uid);
@@ -296,8 +294,9 @@ export const useMouseEvents = ({
         }
       }
 
-      setActivePanel("stage");
-      navigatorDropDownType !== null && setNavigatorDropDownType(null);
+      dispatch(setActivePanel("stage"));
+      navigatorDropdownType !== null &&
+        dispatch(setNavigatorDropdownType(null));
     },
     [
       osType,
@@ -305,7 +304,7 @@ export const useMouseEvents = ({
       setFocusedSelectedItems,
       nodeTree,
       parseFileFlag,
-      navigatorDropDownType,
+      navigatorDropdownType,
     ],
   );
 

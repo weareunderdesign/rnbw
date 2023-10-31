@@ -2,7 +2,7 @@ import { useCallback, useContext } from "react";
 
 import { useDispatch } from "react-redux";
 
-import { NodeUidAttribNameInApp, RootNodeUid } from "@_constants/main";
+import { RootNodeUid } from "@_constants/main";
 import { TNode, TNodeUid } from "@_node/types";
 import {
   expandFNNode,
@@ -10,6 +10,7 @@ import {
   MainContext,
   selectFNNode,
 } from "@_redux/main";
+import { StageNodeIdAttr } from "@_node/html";
 
 export interface IUseSetSelectItemProps {
   mostRecentSelectedNode: React.MutableRefObject<TNode | undefined>;
@@ -58,7 +59,7 @@ export const useSetSelectItem = ({
 
       const newFocusedElement =
         contentRef?.contentWindow?.document?.querySelector(
-          `[${NodeUidAttribNameInApp}="${uid}"]`,
+          `[${StageNodeIdAttr}="${uid}"]`,
         );
       const elementRect = (
         newFocusedElement as HTMLElement

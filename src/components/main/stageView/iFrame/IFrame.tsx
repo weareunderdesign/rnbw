@@ -1,22 +1,9 @@
-import React, {
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 
-import { useSelector } from 'react-redux';
+import { useSelector } from "react-redux";
 
-import { NodeUidAttribNameInApp } from '@_constants/main';
-import {
-  TNode,
-  TNodeUid,
-} from '@_node/types';
-import {
-  fnSelector,
-  MainContext,
-} from '@_redux/main';
+import { TNode, TNodeUid } from "@_node/types";
+import { MainContext } from "@_redux/main";
 
 import {
   useChangeIframeTheme,
@@ -25,24 +12,28 @@ import {
   useMouseEvents,
   useSideEffectHandlers,
   useTextEditing,
-} from './hooks';
-import { jss } from './js';
-import { styles } from './styles';
+} from "./hooks";
+import { jss } from "./js";
+import { styles } from "./styles";
+import { StageNodeIdAttr } from "@_node/html";
+import { AppState } from "@_redux/_root";
+import {
+  setIframeLoading,
+  setNeedToReloadIframe,
+} from "@_redux/main/stageView";
+import { useDispatch } from "react-redux";
 
 export const IFrame = () => {
   // -------------------------------------------------------------- global state --------------------------------------------------------------
-  const { focusedItem, selectedItems } = useSelector(fnSelector);
+  const dispatch = useDispatch();
+  const { focusedItem, selectedItems } = useSelector(
+    (state: AppState) => state.main.nodeTree.nodeTreeViewState,
+  );
+  const {} = useSelector((state: AppState) => state.main.nodeTreeEvent);
+  const { iframeLoading, needToReloadIframe, iframeSrc } = useSelector(
+    (state: AppState) => state.main.stageView,
+  );
   const {
-    // node actions
-    event,
-    // node tree view
-    fnHoveredItem,
-    // stage view
-    setIFrameLoading,
-    iframeSrc,
-    needToReloadIFrame,
-    setNeedToReloadIframe,
-    // code view
     setCodeViewOffsetTop,
     // toasts
     parseFileFlag,
@@ -68,12 +59,10 @@ export const IFrame = () => {
       // for the elements which are created by js. (ex: Web Component)
       let curHoveredElement =
         contentRef?.contentWindow?.document?.querySelector(
-          `[${NodeUidAttribNameInApp}="${fnHoveredItemRef.current}"]`,
+          `[${StageNodeIdAttr}="${fnHoveredItemRef.current}"]`,
         );
       const isValid: null | string = curHoveredElement?.firstElementChild
-        ? curHoveredElement?.firstElementChild.getAttribute(
-            NodeUidAttribNameInApp,
-          )
+        ? curHoveredElement?.firstElementChild.getAttribute(StageNodeIdAttr)
         : "";
       isValid === null
         ? (curHoveredElement = curHoveredElement?.firstElementChild)
@@ -86,12 +75,10 @@ export const IFrame = () => {
       // for the elements which are created by js. (ex: Web Component)
       let newHoveredElement =
         contentRef?.contentWindow?.document?.querySelector(
-          `[${NodeUidAttribNameInApp}="${fnHoveredItem}"]`,
+          `[${StageNodeIdAttr}="${fnHoveredItem}"]`,
         );
       const isValid: null | string = newHoveredElement?.firstElementChild
-        ? newHoveredElement?.firstElementChild.getAttribute(
-            NodeUidAttribNameInApp,
-          )
+        ? newHoveredElement?.firstElementChild.getAttribute(StageNodeIdAttr)
         : "";
       isValid === null
         ? (newHoveredElement = newHoveredElement?.firstElementChild)
@@ -111,7 +98,7 @@ export const IFrame = () => {
 
     const newFocusedElement =
       contentRef?.contentWindow?.document?.querySelector(
-        `[${NodeUidAttribNameInApp}="${focusedItem}"]`,
+        `[${StageNodeIdAttr}="${focusedItem}"]`,
       );
     const elementRect = (
       newFocusedElement as HTMLElement
@@ -170,12 +157,10 @@ export const IFrame = () => {
         // for the elements which are created by js. (ex: Web Component)
         let curselectedElement =
           contentRef?.contentWindow?.document?.querySelector(
-            `[${NodeUidAttribNameInApp}="${uid}"]`,
+            `[${StageNodeIdAttr}="${uid}"]`,
           );
         const isValid: null | string = curselectedElement?.firstElementChild
-          ? curselectedElement?.firstElementChild.getAttribute(
-              NodeUidAttribNameInApp,
-            )
+          ? curselectedElement?.firstElementChild.getAttribute(StageNodeIdAttr)
           : "";
         isValid === null
           ? (curselectedElement = curselectedElement?.firstElementChild)
@@ -187,12 +172,10 @@ export const IFrame = () => {
         // for the elements which are created by js. (ex: Web Component)
         let newSelectedElement =
           contentRef?.contentWindow?.document?.querySelector(
-            `[${NodeUidAttribNameInApp}="${uid}"]`,
+            `[${StageNodeIdAttr}="${uid}"]`,
           );
         const isValid: null | string = newSelectedElement?.firstElementChild
-          ? newSelectedElement?.firstElementChild.getAttribute(
-              NodeUidAttribNameInApp,
-            )
+          ? newSelectedElement?.firstElementChild.getAttribute(StageNodeIdAttr)
           : "";
         isValid === null
           ? (newSelectedElement = newSelectedElement?.firstElementChild)
@@ -296,7 +279,7 @@ export const IFrame = () => {
   useEffect(() => {
     if (contentRef) {
       dblClickTimestamp.current = 0;
-      setIFrameLoading(true);
+      dispatch(setIframeLoading(true));
       contentRef.onload = () => {
         const _document = contentRef?.contentWindow?.document;
         const htmlNode = _document?.documentElement;
@@ -361,7 +344,7 @@ export const IFrame = () => {
           });
         }
 
-        setIFrameLoading(false);
+        dispatch(setIframeLoading(false));
       };
     }
   }, [contentRef]);
@@ -396,6 +379,7 @@ export const IFrame = () => {
   // node actions, code change - side effect
   useEffect(() => {
     if (event) {
+      //@ts-ignore //TODO: fix this
       const { type, param } = event;
       switch (type) {
         case "add-node":
@@ -447,12 +431,12 @@ export const IFrame = () => {
 
   // reload when script changes
   useEffect(() => {
-    if (needToReloadIFrame) {
+    if (needToReloadIframe) {
       contentRef?.contentWindow?.location.reload();
-      setNeedToReloadIframe(false);
+      dispatch(setNeedToReloadIframe(false));
       linkTagUid.current = "";
     }
-  }, [needToReloadIFrame, contentRef]);
+  }, [needToReloadIframe, contentRef]);
 
   return useMemo(() => {
     const onLoad = () => {
@@ -470,7 +454,7 @@ export const IFrame = () => {
 
     return (
       <>
-        {iframeSrc && !needToReloadIFrame && (
+        {iframeSrc && !needToReloadIframe && (
           <iframe
             ref={setContentRef}
             src={iframeSrc}
@@ -487,5 +471,5 @@ export const IFrame = () => {
         )}
       </>
     );
-  }, [iframeSrc, needToReloadIFrame, parseFileFlag, prevFileUid, setParseFile]);
+  }, [iframeSrc, needToReloadIframe, parseFileFlag, prevFileUid, setParseFile]);
 };

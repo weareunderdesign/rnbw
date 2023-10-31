@@ -3,21 +3,22 @@ import { useCallback, useContext } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { useEditor } from "@_components/main/codeView/hooks";
-import { NodeUidAttribNameInApp, RootNodeUid } from "@_constants/main";
+import { RootNodeUid } from "@_constants/main";
 import { TFileNodeData } from "@_node/file";
-import { THtmlNodeData } from "@_node/html";
+import { StageNodeIdAttr, THtmlNodeData } from "@_node/html";
 import { TNode, TNodeUid } from "@_node/types";
-import {
-  expandFFNode,
-  ffSelector,
-  fnSelector,
-  MainContext,
-} from "@_redux/main";
+import { MainContext } from "@_redux/main";
 import { getCommandKey } from "@_services/global";
 import { TCmdkKeyMap } from "@_types/main";
 
 import { handleElementClick, openNewPage } from "../helpers";
 import { useSetSelectItem } from "./useSetSelectItem";
+import { AppState } from "@_redux/_root";
+import {
+  expandFileTreeNodes,
+  setInitialFileUidToOpen,
+} from "@_redux/main/fileTree";
+import { setNavigatorDropdownType } from "@_redux/main/processor";
 
 export interface IUseTextEditingProps {
   contentEditableUidRef: React.MutableRefObject<string>;
@@ -39,19 +40,16 @@ export const useTextEditing = ({
   externalDblclick,
 }: IUseTextEditingProps) => {
   const dispatch = useDispatch();
-  const { focusedItem } = useSelector(fnSelector);
-  const { expandedItemsObj } = useSelector(ffSelector);
+
+  const { osType } = useSelector((state: AppState) => state.global);
+  const {
+    validNodeTree,
+    nodeTreeViewState: { focusedItem, expandedItemsObj },
+  } = useSelector((state: AppState) => state.main.nodeTree);
+  const { fileTree } = useSelector((state: AppState) => state.main.fileTree);
+
   const { handleEditorChange } = useEditor();
   const {
-    // node actions
-    setNavigatorDropDownType,
-    // file tree view
-    ffTree,
-    setInitialFileToOpen,
-    // node tree view
-    validNodeTree,
-    // other
-    osType,
     // close all panel
     closeAllPanel,
     monacoEditorRef,
@@ -73,7 +71,7 @@ export const useTextEditing = ({
     contentEditableUidRef.current = "";
 
     let ele = contentRef?.contentWindow?.document?.querySelector(
-      `[${NodeUidAttribNameInApp}="${editableId}"]`,
+      `[${StageNodeIdAttr}="${editableId}"]`,
     );
     //create a copy of ele
     const eleCopy = ele?.cloneNode(true) as HTMLElement;
@@ -137,7 +135,7 @@ export const useTextEditing = ({
         //https://github.com/rnbwdev/rnbw/issues/240
         if (contentEditableUidRef.current !== "") {
           const ele = contentRef?.contentWindow?.document?.querySelector(
-            `[${NodeUidAttribNameInApp}="${contentEditableUidRef.current}"]`,
+            `[${StageNodeIdAttr}="${contentEditableUidRef.current}"]`,
           );
           ele?.removeAttribute("contenteditable");
           contentEditableUidRef.current = "";
@@ -156,7 +154,7 @@ export const useTextEditing = ({
 
       if (cmdk.cmd && cmdk.key === "Enter") {
         const ele = contentRef?.contentWindow?.document?.querySelector(
-          `[${NodeUidAttribNameInApp}="${contentEditableUidRef.current}"]`,
+          `[${StageNodeIdAttr}="${contentEditableUidRef.current}"]`,
         );
         if (!ele) return;
         (ele as HTMLElement).blur();
@@ -169,24 +167,25 @@ export const useTextEditing = ({
   const handleWebComponentClick = (ele: HTMLElement) => {
     let flag = true;
     let exist = false;
+
     if (!externalDblclick.current) {
       while (flag) {
-        if (ele.getAttribute(NodeUidAttribNameInApp) !== null) {
-          const uid = ele.getAttribute(NodeUidAttribNameInApp);
+        if (ele.getAttribute(StageNodeIdAttr) !== null) {
+          const uid = ele.getAttribute(StageNodeIdAttr);
           if (uid) {
-            for (let x in ffTree) {
+            for (let x in fileTree) {
               const node = validNodeTree[uid];
               const defineRegex = /customElements\.define\(\s*['"]([\w-]+)['"]/;
               if (
-                (ffTree[x].data as TFileNodeData).content &&
-                (ffTree[x].data as TFileNodeData).ext === ".js"
+                (fileTree[x].data as TFileNodeData).content &&
+                (fileTree[x].data as TFileNodeData).ext === ".js"
               ) {
-                const match = (ffTree[x].data as TFileNodeData).content.match(
+                const match = (fileTree[x].data as TFileNodeData).content.match(
                   defineRegex,
                 );
                 if (match) {
                   if (ele.tagName.toLowerCase() === match[1].toLowerCase()) {
-                    const fileName = (ffTree[x].data as TFileNodeData).name;
+                    const fileName = (fileTree[x].data as TFileNodeData).name;
                     let src = "";
                     for (let i in validNodeTree) {
                       if (
@@ -207,12 +206,12 @@ export const useTextEditing = ({
                         flag = false;
                         break;
                       } else {
-                        setInitialFileToOpen(ffTree[x].uid);
-                        setNavigatorDropDownType("project");
+                        dispatch(setInitialFileUidToOpen(fileTree[x].uid));
+                        dispatch(setNavigatorDropdownType("project"));
                         const _expandedItems = [];
-                        let _file = ffTree[x];
+                        let _file = fileTree[x];
                         while (_file && _file.uid !== RootNodeUid) {
-                          _file = ffTree[_file.parentUid as string];
+                          _file = fileTree[_file.parentUid as string];
                           if (
                             _file &&
                             !_file.isEntity &&
@@ -222,7 +221,7 @@ export const useTextEditing = ({
                             _expandedItems.push(_file.uid);
                           }
                         }
-                        dispatch(expandFFNode(_expandedItems));
+                        dispatch(expandFileTreeNodes(_expandedItems));
                         flag = false;
                         exist = true;
                         break;
@@ -263,7 +262,7 @@ export const useTextEditing = ({
 
       openNewPage(ele);
 
-      let uid: TNodeUid | null = ele.getAttribute(NodeUidAttribNameInApp);
+      let uid: TNodeUid | null = ele.getAttribute(StageNodeIdAttr);
       if (uid) {
         handleElementClick(
           ele,
@@ -279,7 +278,7 @@ export const useTextEditing = ({
         // handleWebComponentClick(ele);
       }
     },
-    [validNodeTree, ffTree, expandedItemsObj, contentRef],
+    [validNodeTree, fileTree, expandedItemsObj, contentRef],
   );
 
   return {

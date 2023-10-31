@@ -25,7 +25,7 @@ export const creatingNode = (
       type: "tag",
       name: nodeType,
       data: "",
-      attribs: { [NodeUidAttribNameInApp]: String(nodeMaxUid + 1) as TNodeUid },
+      attribs: { [StageNodeIdAttr]: String(nodeMaxUid + 1) as TNodeUid },
 
       html: "",
       htmlInApp: "",
@@ -100,7 +100,7 @@ export const creatingNode = (
           type: "text",
           name: "text",
           data: Content,
-          attribs: { [NodeUidAttribNameInApp]: tmpMaxUid as TNodeUid },
+          attribs: { [StageNodeIdAttr]: tmpMaxUid as TNodeUid },
 
           html: "",
           htmlInApp: "",

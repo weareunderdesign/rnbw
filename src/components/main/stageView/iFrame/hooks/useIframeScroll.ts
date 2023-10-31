@@ -1,7 +1,7 @@
 import { useCallback, useContext } from "react";
 
-import { NodeUidAttribNameInApp } from "@_constants/main";
 import { MainContext } from "@_redux/main";
+import { StageNodeIdAttr } from "@_node/html";
 
 export interface IUseIframeScrollProps {
   focusedItemRef: React.MutableRefObject<string>;
@@ -19,7 +19,7 @@ export const useIframeScroll = ({
       if (contentRef && focusedItemRef.current) {
         const newFocusedElement =
           contentRef?.contentWindow?.document?.querySelector(
-            `[${NodeUidAttribNameInApp}="${focusedItemRef.current}"]`,
+            `[${StageNodeIdAttr}="${focusedItemRef.current}"]`,
           );
         const elementRect = (
           newFocusedElement as HTMLElement
