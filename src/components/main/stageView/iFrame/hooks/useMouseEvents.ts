@@ -24,7 +24,9 @@ import {
   expandNodeTreeNodes,
   focusNodeTreeNode,
   selectNodeTreeNodes,
+  setHoveredNodeUid,
 } from "@_redux/main/nodeTree";
+import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
 
 export interface IUseMouseEventsProps {
   externalDblclick: React.MutableRefObject<boolean>;
@@ -78,6 +80,7 @@ export const useMouseEvents = ({
     nodeTree: {
       nodeTreeViewState: { focusedItem },
       nodeTree,
+      hoveredNodeUid,
     },
     fileTree: { fileTree },
     processor: { navigatorDropdownType },
@@ -206,15 +209,15 @@ export const useMouseEvents = ({
       }
 
       // set hovered item
-      if (_uid && _uid !== fnHoveredItem) {
-        setFNHoveredItem(_uid);
+      if (_uid && _uid !== hoveredNodeUid) {
+        dispatch(setHoveredNodeUid(_uid));
       }
     },
-    [fnHoveredItem],
+    [hoveredNodeUid],
   );
 
   const onMouseLeave = (e: MouseEvent) => {
-    setFNHoveredItem("");
+    setHoveredNodeUid("");
   };
 
   const onClick = useCallback(
@@ -226,16 +229,21 @@ export const useMouseEvents = ({
         const fileData = file.data as TFileNodeData;
         dispatch(setNavigatorDropdownType("project"));
         setParseFile(true);
-        dispatch(
-          setCurrentFile({
-            uid,
-            parentUid: file.parentUid as TNodeUid,
-            name: fileData.name,
-            content: fileData.contentInApp ? fileData.contentInApp : "",
-          }),
-        );
+        // dispatch(
+        //   setCurrentFile({
+        //     uid,
+        //     parentUid: file.parentUid as TNodeUid,
+        //     name: fileData.name,
+        //     content: fileData.contentInApp ? fileData.contentInApp : "",
+        //   }),
+        // );
         dispatch(setCurrentFileUid(uid));
         dispatch(selectFileTreeNodes([prevFileUid]));
+        dispatch(
+          setCurrentFileContent(
+            fileData.contentInApp ? fileData.contentInApp : "",
+          ),
+        );
 
         // select clicked item
         let _uid: TNodeUid | null = ele.getAttribute(StageNodeIdAttr);
@@ -286,12 +294,6 @@ export const useMouseEvents = ({
         let canEditOnSingleClick = Object.values(
           canEditOnSingleClickConfig,
         ).every((val) => val === true);
-
-        if (canEditOnSingleClick) {
-          // isEditing.current = true;
-          // onDblClick(e);
-          //TODO: for making a editable element editable on single click once zero-sys is ready
-        }
       }
 
       dispatch(setActivePanel("stage"));

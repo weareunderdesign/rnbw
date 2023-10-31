@@ -19,6 +19,8 @@ import { LogAllow } from "@_constants/global";
 import { setUpdateOptions } from "@_redux/main/processor";
 import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
 import { setNodeTree } from "@_redux/main/nodeTree";
+import { setIframeSrc, setNeedToReloadIframe } from "@_redux/main/stageView";
+import { focusFileTreeNode } from "@_redux/main/fileTree";
 
 export const useProcessorUpdateOpt = () => {
   const dispatch = useDispatch();
@@ -29,8 +31,12 @@ export const useProcessorUpdateOpt = () => {
       nodeTreeViewState: { focusedItem },
       nodeTree,
     },
+    nodeTreeEvent: {
+      present: { currentFileContent },
+    },
     processor: { updateOptions },
   } = useSelector((state: AppState) => state.main);
+  const { osType } = useSelector((state: AppState) => state.global);
   const {
     // global action
     addRunningActions,
@@ -76,20 +82,18 @@ export const useProcessorUpdateOpt = () => {
             fileData,
             { file, focusedItem },
             {
-              ffTree,
+              fileTree,
               nodeTree,
               osType,
               currentFileUid,
             },
             {
               _nodeTree,
-              _nodeMaxUid,
               _needToReloadIFrame,
               _newFocusedNodeUid,
               onlyRenderViewState,
               tempFocusedItem,
             },
-            monacoEditor,
           );
 
           onlyRenderViewState = result.onlyRenderViewState;
@@ -114,21 +118,21 @@ export const useProcessorUpdateOpt = () => {
         (async () => {
           setFSPending(true);
           try {
-            const previewPath = getPreViewPath(ffTree, _file, fileData);
+            const previewPath = getPreViewPath(fileTree, _file, fileData);
             await writeFile(previewPath, fileData.contentInApp as string);
             if (fileData.ext === "html") {
-              setIFrameSrc(`rnbw${previewPath}`);
+              dispatch(setIframeSrc(`rnbw${previewPath}`));
             }
           } catch (err) {}
-          setFSPending(false);
+          // setFSPending(false);TODO: setFSPending
         })();
         // update context
-        setFFNode(_file);
+
+        dispatch(focusFileTreeNode(_file.uid));
         addRunningActions(["processor-nodeTree"]);
         setNodeTree(_nodeTree);
-        setNodeMaxUid(_nodeMaxUid);
-        setFileInfo(_fileInfo);
-        setNeedToReloadIframe(_needToReloadIFrame);
+        // setFileInfo(_fileInfo); TODO: setFileInfo
+        dispatch(setNeedToReloadIframe(_needToReloadIFrame));
         // update redux
         updateOptions.from !== "hms" &&
           dispatch(setCurrentFileContent(fileData.content as string));
@@ -136,34 +140,35 @@ export const useProcessorUpdateOpt = () => {
 
       // select new focused node in code view
       setNewFocusedNodeUid(_newFocusedNodeUid);
-      setUpdateOpt({
-        parse: null,
-        from: updateOptions.from !== "hms" ? null : updateOptions.from,
-      });
+      dispatch(
+        setUpdateOptions({
+          parse: null,
+          from: updateOptions.from !== "hms" ? null : updateOptions.from,
+        }),
+      );
     } else if (updateOptions?.parse === false) {
       // serialize node tree data
       const _nodeTree: TNodeTreeData = JSON.parse(JSON.stringify(nodeTree));
-      const _file = JSON.parse(JSON.stringify(ffTree[file.uid])) as TNode;
-      const fileData = getFileData({
-        file,
-        updateOpt: updateOptions,
-        nodeTree,
-      });
+      const _file = JSON.parse(
+        JSON.stringify(fileTree[currentFileUid]),
+      ) as TNode;
+      const fileData = currentFileContent;
 
       // update idb
       (async () => {
-        setFSPending(true);
+        // setFSPending(true); TODO: setFSPending
         try {
           await writeFile(fileData.path, fileData.contentInApp as string);
         } catch (err) {}
-        setFSPending(false);
+        // setFSPending(false); TODO: setFSPending
       })();
       // update context
-      setFFNode(_file);
+
+      dispatch(focusFileTreeNode(_file.uid));
       addRunningActions(["processor-nodeTree"]);
       dispatch(setNodeTree(_nodeTree));
       // update redux
-      dispatch(setCurrentFileContent(fileData.content as string));
+      dispatch(setCurrentFileContent(currentFileContent as string));
       dispatch(setUpdateOptions({ parse: null, from: updateOptions.from }));
     }
 

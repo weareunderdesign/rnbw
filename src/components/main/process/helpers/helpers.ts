@@ -327,16 +327,15 @@ export const getFileData = (params: {
   const fileData = file.data as TFileNodeData;
 
   if (updateOption?.from === "node") {
-    const serializedRes = serializeFile(fileData.ext, nodeTree);
-
-    if (fileData.ext === "html") {
-      const { html, htmlInApp } = serializedRes as THtmlNodeData;
-
-      // update ffTree
-      fileData.content = html;
-      fileData.contentInApp = htmlInApp;
-      fileData.changed = fileData.content !== fileData.orgContent;
-    }
+    // TODO: remove or keep it
+    // const serializedRes = serializeFile(fileData.ext, nodeTree);
+    // if (fileData.ext === "html") {
+    //   const { html, htmlInApp } = serializedRes as THtmlNodeData;
+    //   // update ffTree
+    //   fileData.content = html;
+    //   fileData.contentInApp = htmlInApp;
+    //   fileData.changed = fileData.content !== fileData.orgContent;
+    // }
   }
   return fileData;
 };
@@ -368,19 +367,16 @@ export const handleHmsChange = (
   },
   updateData: {
     _nodeTree: TNodeTreeData;
-    _nodeMaxUid: number;
     _needToReloadIFrame: boolean;
     _newFocusedNodeUid: string;
     onlyRenderViewState: boolean;
     tempFocusedItem: string;
   },
-  monacoEditor: editor.IStandaloneCodeEditor,
 ) => {
   const { file, focusedItem } = state;
   const { ffTree, nodeTree, osType, currentFileUid } = context;
   let {
     _nodeTree,
-    _nodeMaxUid,
     _needToReloadIFrame,
     _newFocusedNodeUid,
     onlyRenderViewState,
@@ -409,7 +405,6 @@ export const handleHmsChange = (
       content: file.content,
     });
     _nodeTree = tree;
-    _nodeMaxUid = Number(newNodeMaxUid);
     fileData.content = formattedContent;
     fileData.contentInApp = contentInApp;
     fileData.changed = fileData.content !== fileData.orgContent;
@@ -442,7 +437,6 @@ export const handleHmsChange = (
     onlyRenderViewState,
     _newFocusedNodeUid,
     _nodeTree,
-    _nodeMaxUid,
   };
 };
 

@@ -1,8 +1,8 @@
 import { TNode, TNodeUid } from "@_node/types";
-import { TClipboardData } from "@_types/main";
 
 import { buildHtmlFromNode } from "./buildHtmlFromNode";
 import { StageNodeIdAttr } from "@_node/html";
+import { TClipboardData } from "@_redux/main/processor";
 
 export const cloneAndInsertNode = (
   node: TNode,

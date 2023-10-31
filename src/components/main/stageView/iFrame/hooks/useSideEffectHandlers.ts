@@ -3,17 +3,18 @@ import { useCallback, useContext } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { TNode, TNodeUid } from "@_node/types";
-import {
-  expandFNNode,
-  focusFNNode,
-  MainContext,
-  navigatorSelector,
-  selectFNNode,
-  updateFNTreeViewState,
-} from "@_redux/main";
+import { MainContext } from "@_redux/main";
 
 import { cloneAndInsertNode, createAndInsertElement } from "../helpers";
 import { StageNodeIdAttr } from "@_node/html";
+import { setNeedToReloadIframe } from "@_redux/main/stageView";
+import { AppState } from "@_redux/_root";
+import {
+  expandNodeTreeNodes,
+  focusNodeTreeNode,
+  selectNodeTreeNodes,
+  updateNodeTreeTreeViewState,
+} from "@_redux/main/nodeTree";
 
 export interface IUseSideEffectHandlersProps {
   contentRef: any;
@@ -23,15 +24,13 @@ export const useSideEffectHandlers = ({
   contentRef,
 }: IUseSideEffectHandlersProps) => {
   const dispatch = useDispatch();
-  const { file } = useSelector(navigatorSelector);
+  const {
+    nodeTree: { nodeTree },
+    processor: { clipboardData },
+  } = useSelector((state: AppState) => state.main);
   const {
     // global action
     removeRunningActions,
-    // node actions
-    clipboardData,
-    // node tree view
-    nodeTree,
-    setNeedToReloadIframe,
   } = useContext(MainContext);
 
   const addElement = useCallback(
@@ -74,9 +73,9 @@ export const useSideEffectHandlers = ({
       });
 
       setTimeout(() => {
-        dispatch(focusFNNode(node.uid));
-        dispatch(selectFNNode([node.uid]));
-        dispatch(expandFNNode([node.uid]));
+        dispatch(focusNodeTreeNode(node.uid));
+        dispatch(selectNodeTreeNodes([node.uid]));
+        dispatch(expandNodeTreeNodes([node.uid]));
       }, 200);
 
       removeRunningActions(["stageView-viewState"]);
@@ -94,12 +93,12 @@ export const useSideEffectHandlers = ({
       });
       setTimeout(() => {
         if (lastUid && lastUid !== "") {
-          dispatch(focusFNNode(lastUid));
-          dispatch(selectFNNode([lastUid]));
+          dispatch(focusNodeTreeNode(lastUid));
+          dispatch(selectNodeTreeNodes([lastUid]));
         }
       }, 200);
       // view state
-      dispatch(updateFNTreeViewState({ deletedUids }));
+      dispatch(updateNodeTreeTreeViewState({ deletedUids }));
       removeRunningActions(["stageView-viewState"]);
     },
     [removeRunningActions, contentRef],
@@ -143,8 +142,8 @@ export const useSideEffectHandlers = ({
 
       // view state
       setTimeout(() => {
-        dispatch(focusFNNode(uids[uids.length - 1]));
-        dispatch(selectFNNode(uids));
+        dispatch(focusNodeTreeNode(uids[uids.length - 1]));
+        dispatch(selectNodeTreeNodes(uids));
       }, 100);
       removeRunningActions(["stageView-viewState"]);
     },
@@ -200,8 +199,8 @@ export const useSideEffectHandlers = ({
         .map((uid) => addedUidMap.get(uid))
         .filter((uid) => uid) as TNodeUid[];
       setTimeout(() => {
-        dispatch(focusFNNode(newUids[newUids.length - 1]));
-        dispatch(selectFNNode(newUids));
+        dispatch(focusNodeTreeNode(newUids[newUids.length - 1]));
+        dispatch(selectNodeTreeNodes(newUids));
       }, 100);
       removeRunningActions(["stageView-viewState"]);
     },
@@ -241,14 +240,14 @@ export const useSideEffectHandlers = ({
 
       const updateViewState = () => {
         setTimeout(() => {
-          dispatch(focusFNNode(newUids[newUids.length - 1]));
-          dispatch(selectFNNode(newUids));
+          dispatch(focusNodeTreeNode(newUids[newUids.length - 1]));
+          dispatch(selectNodeTreeNodes(newUids));
         }, 100);
         removeRunningActions(["stageView-viewState"]);
       };
       updateViewState();
     },
-    [removeRunningActions, contentRef, clipboardData, file.uid],
+    [removeRunningActions, contentRef, clipboardData],
   );
 
   const duplicateElements = useCallback(
@@ -285,8 +284,8 @@ export const useSideEffectHandlers = ({
         .map((uid) => addedUidMap.get(uid))
         .filter((uid) => uid) as TNodeUid[];
       setTimeout(() => {
-        dispatch(focusFNNode(newUids[newUids.length - 1]));
-        dispatch(selectFNNode(newUids));
+        dispatch(focusNodeTreeNode(newUids[newUids.length - 1]));
+        dispatch(selectNodeTreeNodes(newUids));
       }, 100);
       removeRunningActions(["stageView-viewState"]);
     },

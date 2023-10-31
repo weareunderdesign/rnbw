@@ -1,32 +1,32 @@
-import {
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { useContext, useEffect, useRef, useState } from "react";
 
-import {
-  useDispatch,
-  useSelector,
-} from 'react-redux';
+import { useDispatch, useSelector } from "react-redux";
 
+import { TNodeTreeData, TNodeUid } from "@_node/types";
+import { MainContext } from "@_redux/main";
 import {
-  TNodeTreeData,
-  TNodeUid,
-} from '@_node/types';
-import { MainContext } from '@_redux/main';
-import { projectSelector } from '@_redux/main/fileTree';
+  currentFileUidSelector,
+  fileTreeSelector,
+  projectSelector,
+  setCurrentFileUid,
+  setFileTree,
+  updateFileTreeViewState,
+} from "@_redux/main/fileTree";
 
 import {
   loadIDBProject,
   loadLocalProject,
   processHandlerObj,
-} from '../helpers';
+} from "../helpers";
+import { AppState } from "@_redux/_root";
+import { setIframeSrc } from "@_redux/main/stageView";
+import { setNodeTree, setValidNodeTree } from "@_redux/main/nodeTree";
 
 export const useReloadProject = () => {
   const project = useSelector(projectSelector);
   const fileTree = useSelector(fileTreeSelector);
   const currentFileUid = useSelector(currentFileUidSelector);
+  const { osType } = useSelector((state: AppState) => state.global);
 
   const { ffHandlers } = useContext(MainContext);
 
@@ -41,31 +41,31 @@ export const useReloadProject = () => {
     let _deletedUids: TNodeUid[] = [];
 
     if (project.context === "local") {
-      const result = await loadLocalProject(ffTree, ffHandlers, osType);
+      const result = await loadLocalProject(fileTree, ffHandlers, osType);
       handlerObj = result.handlerObj;
       _deletedUids = result.deletedUids;
     } else if (project.context === "idb") {
-      const result = await loadIDBProject(ffTree);
+      const result = await loadIDBProject(fileTree);
       handlerObj = result.handlerObj;
       _deletedUids = result.deletedUids;
     }
 
     const { treeViewData, ffHandlerObj } = processHandlerObj(
       handlerObj,
-      ffTree,
+      fileTree,
     );
 
-    dispatch(updateFFTreeViewState({ deletedUids: _deletedUids }));
+    dispatch(updateFileTreeViewState({ deletedUids: _deletedUids }));
     if (_uid && !treeViewData[_uid]) {
-      setIFrameSrc(null);
-      setNodeTree({});
-      setValidNodeTree({});
-      setCurrentFileUid("");
-      dispatch(removeCurrentFile());
+      dispatch(setIframeSrc(null));
+      dispatch(setNodeTree({}));
+      dispatch(setValidNodeTree({}));
+      dispatch(setCurrentFileUid(""));
+      // dispatch(removeCurrentFile()); //TODO: removeCurrentFile
     }
     ffTreeRef.current = treeViewData;
-    setFFTree(treeViewData);
-    setFFHandlers(ffHandlerObj);
+    setFileTree(treeViewData);
+    // setFFHandlers(ffHandlerObj); //TODO: setFFHandlers
 
     setIsLoading(false);
   }

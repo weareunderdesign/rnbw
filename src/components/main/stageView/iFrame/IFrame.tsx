@@ -33,6 +33,9 @@ export const IFrame = () => {
   const { iframeLoading, needToReloadIframe, iframeSrc } = useSelector(
     (state: AppState) => state.main.stageView,
   );
+  const { hoveredNodeUid } = useSelector(
+    (state: AppState) => state.main.nodeTree,
+  );
   const {
     setCodeViewOffsetTop,
     // toasts
@@ -44,7 +47,7 @@ export const IFrame = () => {
   const [contentRef, setContentRef] = useState<HTMLIFrameElement | null>(null);
   const isEditing = useRef<boolean>(false);
   // mark hovered item
-  const fnHoveredItemRef = useRef<TNodeUid>(fnHoveredItem);
+  const fnHoveredItemRef = useRef<TNodeUid>(hoveredNodeUid);
   const mostRecentSelectedNode = useRef<TNode>();
 
   const linkTagUid = useRef<TNodeUid>("");
@@ -52,7 +55,7 @@ export const IFrame = () => {
   const contentEditableUidRef = useRef("");
 
   useEffect(() => {
-    if (fnHoveredItemRef.current === fnHoveredItem) return;
+    if (fnHoveredItemRef.current === hoveredNodeUid) return;
 
     // remove cur hovered effect
     {
@@ -75,7 +78,7 @@ export const IFrame = () => {
       // for the elements which are created by js. (ex: Web Component)
       let newHoveredElement =
         contentRef?.contentWindow?.document?.querySelector(
-          `[${StageNodeIdAttr}="${fnHoveredItem}"]`,
+          `[${StageNodeIdAttr}="${hoveredNodeUid}"]`,
         );
       const isValid: null | string = newHoveredElement?.firstElementChild
         ? newHoveredElement?.firstElementChild.getAttribute(StageNodeIdAttr)
@@ -86,8 +89,8 @@ export const IFrame = () => {
       newHoveredElement?.setAttribute("rnbwdev-rnbw-element-hover", "");
     }
 
-    fnHoveredItemRef.current = fnHoveredItem;
-  }, [fnHoveredItem]);
+    fnHoveredItemRef.current = hoveredNodeUid;
+  }, [hoveredNodeUid]);
 
   // iframe scroll event
   const focusedItemRef = useRef<TNodeUid>(focusedItem);

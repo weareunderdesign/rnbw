@@ -2,8 +2,9 @@ import { RefObject } from "react";
 
 import { StageNodeIdAttr, THtmlNodeData } from "@_node/html";
 import { TNode, TNodeUid } from "@_node/types";
-import { focusFNNode, selectFNNode } from "@_redux/main";
+
 import { AnyAction, Dispatch } from "@reduxjs/toolkit";
+import { focusNodeTreeNode, selectNodeTreeNodes } from "@_redux/main/nodeTree";
 
 export const createAndInsertElement = (
   targetUid: TNodeUid,
@@ -63,8 +64,8 @@ export const createAndInsertElement = (
   }
 
   setTimeout(() => {
-    dispatch(focusFNNode(node.uid));
-    dispatch(selectFNNode([node.uid]));
+    dispatch(focusNodeTreeNode(node.uid));
+    dispatch(selectNodeTreeNodes([node.uid]));
   }, 100);
   removeRunningActions(["stageView-viewState"]);
 };

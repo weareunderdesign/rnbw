@@ -1,22 +1,16 @@
-import {
-  useContext,
-  useEffect,
-} from 'react';
+import { useContext, useEffect } from "react";
 
-import {
-  useDispatch,
-  useSelector,
-} from 'react-redux';
+import { useDispatch, useSelector } from "react-redux";
 
-import { MainContext } from '@_redux/main';
+import { MainContext } from "@_redux/main";
 import {
   expandNodeTreeNodes,
   focusNodeTreeNode,
   nodeTreeViewStateSelector,
   selectNodeTreeNodes,
   validNodeTreeSelector,
-} from '@_redux/main/nodeTree';
-import { updateOptionsSelector } from '@_redux/main/processor';
+} from "@_redux/main/nodeTree";
+import { updateOptionsSelector } from "@_redux/main/processor";
 
 export const useProcessorValidNodeTree = () => {
   const dispatch = useDispatch();
@@ -55,7 +49,7 @@ export const useProcessorValidNodeTree = () => {
       const _selectedItems = selectedItems.filter((uid) => {
         return validNodeTree[uid] !== undefined;
       });
-      dispatch(clearFNState());
+      // dispatch(clearFNState()); TODO: clearFNState
       dispatch(focusNodeTreeNode(_focusedItem));
       dispatch(expandNodeTreeNodes([..._expandedItems]));
       dispatch(selectNodeTreeNodes([..._selectedItems, _focusedItem]));
