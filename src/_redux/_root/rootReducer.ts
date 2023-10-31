@@ -5,7 +5,7 @@ import { combineReducers } from "@reduxjs/toolkit";
 const global = { global: GlobalReducer };
 const main = { main: MainReducer };
 
-let rootReducer = combineReducers({
+const rootReducer = combineReducers({
   ...global,
   ...main,
 });
