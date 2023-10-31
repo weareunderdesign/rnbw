@@ -431,7 +431,7 @@ export function useNodeActions() {
     });
   };
 
-  const cb_ungroupNode = async (uids: TNodeUid[]) => {
+  const cb_ungroupNode = (uids: TNodeUid[]) => {
     setIsContentProgrammaticallyChanged(true);
 
     const iframe: any = document.getElementById("iframeId");
@@ -485,7 +485,6 @@ export function useNodeActions() {
       }
 
       let parentUids = [] as TNodeUid[];
-      // let node = validNodeTree[uid];
 
       let parentUid = selectedNode.parentUid;
 
