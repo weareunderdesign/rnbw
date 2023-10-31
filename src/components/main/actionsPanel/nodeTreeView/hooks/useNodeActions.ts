@@ -24,6 +24,7 @@ import {
   sortUidsByMaxEndIndex,
   sortUidsByMinStartIndex,
 } from "../helpers";
+import { NodeInAppAttribName } from "@_constants/main";
 
 export function useNodeActions() {
   const dispatch = useDispatch();
@@ -353,6 +354,7 @@ export function useNodeActions() {
       tabSize,
     ],
   );
+
   const cb_groupNode = (uids: TNodeUid[]) => {
     const iframe: any = document.getElementById("iframeId");
     let copiedCode = "";
@@ -429,6 +431,108 @@ export function useNodeActions() {
     });
   };
 
+  const cb_ungroupNode = async (uids: TNodeUid[]) => {
+    setIsContentProgrammaticallyChanged(true);
+
+    const iframe: any = document.getElementById("iframeId");
+    const model = monacoEditorRef.current?.getModel();
+    if (!model) {
+      console.error("Monaco Editor model is undefined");
+      return;
+    }
+    let content = model.getValue();
+
+    const sortedUids = sortUidsByMaxEndIndex(uids, validNodeTree);
+
+    sortedUids.forEach((uid) => {
+      // const cleanedUpCode = getCopiedContent(uid, iframe);
+
+      const ele = iframe?.contentWindow?.document?.querySelector(
+        `[${NodeInAppAttribName}="${uid}"]`,
+      );
+
+      //create a copy of ele
+      const eleCopy = ele?.cloneNode(true) as HTMLElement;
+      const innerElements = eleCopy.querySelectorAll(
+        `[${NodeInAppAttribName}]`,
+      );
+
+      innerElements.forEach((element) => {
+        if (element.hasAttribute(NodeInAppAttribName)) {
+          element.removeAttribute(NodeInAppAttribName);
+        }
+      });
+
+      eleCopy?.removeAttribute("contenteditable");
+      eleCopy?.removeAttribute("rnbwdev-rnbw-element-hover");
+      eleCopy?.removeAttribute("rnbwdev-rnbw-element-select");
+      eleCopy?.removeAttribute(NodeInAppAttribName);
+      const cleanedUpCode = eleCopy?.innerHTML;
+
+      //delete the copy
+      eleCopy?.remove();
+
+      if (!cleanedUpCode) return;
+
+      const selectedNode = validNodeTree[uid];
+      const selectedNodeChildren = selectedNode.children.length;
+
+      if (!selectedNodeChildren) return;
+
+      if (!selectedNode || !selectedNode.sourceCodeLocation) {
+        console.error("Parent node or source code location is undefined");
+        return;
+      }
+
+      let parentUids = [] as TNodeUid[];
+      // let node = validNodeTree[uid];
+
+      let parentUid = selectedNode.parentUid;
+
+      if (parentUid) {
+        parentUids.push(parentUid);
+      }
+      const {
+        endCol: endColumn,
+        endLine: endLineNumber,
+        startCol: startColumn,
+        startLine: startLineNumber,
+      } = selectedNode.sourceCodeLocation;
+
+      const range = new Range(
+        startLineNumber,
+        startColumn,
+        endLineNumber,
+        endColumn,
+      );
+
+      let edit = {
+        range: range,
+        text: "",
+      };
+      model.applyEdits([edit]);
+
+      const newRange = new Range(
+        startLineNumber,
+        startColumn,
+        startLineNumber,
+        startColumn,
+      );
+
+      const editOperation = { range: newRange, text: cleanedUpCode };
+
+      model.pushEditOperations([], [editOperation], () => null);
+      monacoEditorRef.current?.setPosition({
+        lineNumber: startLineNumber + 1,
+        column: 1,
+      });
+
+      content = model.getValue();
+    });
+
+    handleEditorChange(content);
+  };
+
   return {
     cb_addNode,
     cb_removeNode,
@@ -437,5 +541,6 @@ export function useNodeActions() {
     cb_copyNodeExternal,
     cb_moveNode,
     cb_groupNode,
+    cb_ungroupNode,
   };
 }

@@ -27,6 +27,7 @@ export const useNodeActionsHandlers = () => {
     cb_duplicateNode,
     cb_copyNode,
     cb_groupNode,
+    cb_ungroupNode,
   } = useNodeActions();
 
   const { handleEditorChange } = useEditor();
@@ -106,7 +107,10 @@ export const useNodeActionsHandlers = () => {
     cb_groupNode(selectedItems);
   }, [cb_groupNode, selectedItems, validNodeTree]);
 
-  const onUngroup = useCallback(() => {}, []);
+  const onUngroup = useCallback(() => {
+    if (selectedItems.length === 0) return;
+    cb_ungroupNode(selectedItems);
+  }, [cb_ungroupNode, selectedItems, validNodeTree]);
 
   const onAddNode = useCallback(
     (actionName: string) => {
