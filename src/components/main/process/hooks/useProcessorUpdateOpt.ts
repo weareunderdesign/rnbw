@@ -130,7 +130,7 @@ export const useProcessorUpdateOpt = () => {
 
         dispatch(focusFileTreeNode(_file.uid));
         addRunningActions(["processor-nodeTree"]);
-        setNodeTree(_nodeTree);
+        dispatch(setNodeTree(_nodeTree));
         // setFileInfo(_fileInfo); TODO: setFileInfo
         dispatch(setNeedToReloadIframe(_needToReloadIFrame));
         // update redux
