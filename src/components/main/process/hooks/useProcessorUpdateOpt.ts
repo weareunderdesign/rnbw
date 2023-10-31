@@ -42,7 +42,7 @@ export const useProcessorUpdateOpt = () => {
     addRunningActions,
     removeRunningActions,
     // file tree view
-
+    setFSPending,
     parseFileFlag,
 
     setNewFocusedNodeUid,
@@ -124,7 +124,7 @@ export const useProcessorUpdateOpt = () => {
               dispatch(setIframeSrc(`rnbw${previewPath}`));
             }
           } catch (err) {}
-          // setFSPending(false);TODO: setFSPending
+          setFSPending(false);
         })();
         // update context
 
@@ -156,11 +156,11 @@ export const useProcessorUpdateOpt = () => {
 
       // update idb
       (async () => {
-        // setFSPending(true); TODO: setFSPending
+        setFSPending(true);
         try {
           await writeFile(fileData.path, fileData.contentInApp as string);
         } catch (err) {}
-        // setFSPending(false); TODO: setFSPending
+        setFSPending(false);
       })();
       // update context
 

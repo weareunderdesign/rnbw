@@ -25,10 +25,9 @@ import { setNodeTree, setValidNodeTree } from "@_redux/main/nodeTree";
 export const useReloadProject = () => {
   const project = useSelector(projectSelector);
   const fileTree = useSelector(fileTreeSelector);
-  const currentFileUid = useSelector(currentFileUidSelector);
   const { osType } = useSelector((state: AppState) => state.global);
 
-  const { ffHandlers } = useContext(MainContext);
+  const { ffHandlers, setFFHandlers } = useContext(MainContext);
 
   const ffTreeRef = useRef<TNodeTreeData>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -65,7 +64,7 @@ export const useReloadProject = () => {
     }
     ffTreeRef.current = treeViewData;
     setFileTree(treeViewData);
-    // setFFHandlers(ffHandlerObj); //TODO: setFFHandlers
+    setFFHandlers(ffHandlerObj);
 
     setIsLoading(false);
   }

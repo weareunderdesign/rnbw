@@ -411,9 +411,7 @@ export default function MainPage() {
     [messages],
   );
   // -------------------------------------------------------------- routing --------------------------------------------------------------
-  // navigating
-  const params = useParams();
-  const location = useLocation();
+
   // init workspace
 
   const isChromeOrEdge = () => {
@@ -1607,6 +1605,9 @@ export default function MainPage() {
           // file tree view
           ffHandlers,
           setFFHandlers,
+
+          fsPending,
+          setFSPending,
           // code view
           isContentProgrammaticallyChanged,
           setIsContentProgrammaticallyChanged,

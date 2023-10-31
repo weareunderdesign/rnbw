@@ -5,17 +5,13 @@ import {
   RootNodeUid,
   StagePreviewPathPrefix,
 } from "@_constants/main";
-import {
-  getSubNodeUidsByBfs,
-  getValidNodeUids,
-  replaceContentByFormatted,
-  updateExistingTree,
-} from "@_node/apis";
+import { getSubNodeUidsByBfs, getValidNodeUids } from "@_node/apis";
 import {
   parseFile,
   TFile,
   TFileHandlerCollection,
   TFileNodeData,
+  TFileNodeTreeData,
   writeFile,
 } from "@_node/file";
 import { StageNodeIdAttr, THtmlNodeData, THtmlPageSettings } from "@_node/html";
@@ -360,7 +356,7 @@ export const handleHmsChange = (
   fileData: TFileNodeData,
   state: { file: TFile; focusedItem: string },
   context: {
-    ffTree: TNodeTreeData;
+    ffTree: TFileNodeTreeData;
     nodeTree: TNodeTreeData;
     osType: TOsType;
     currentFileUid: string;

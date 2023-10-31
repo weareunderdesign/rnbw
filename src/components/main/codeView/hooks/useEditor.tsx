@@ -54,6 +54,7 @@ export default function useEditor() {
     setMonacoEditorRef,
     setIsContentProgrammaticallyChanged,
     monacoEditorRef,
+    setFSPending,
   } = useContext(MainContext);
 
   const dispatch = useDispatch();
@@ -217,7 +218,7 @@ export default function useEditor() {
         dispatch(setNodeTree(nodeTree));
 
         dispatch(setCurrentFileContent(codeContentRef.current));
-        // setFSPending(false); TODO: check if this is needed
+        setFSPending(false);
 
         const _file = structuredClone(fileTree[currentFileUid]) as TNode;
         addRunningActions(["processor-updateOpt"]);
@@ -232,7 +233,7 @@ export default function useEditor() {
         dispatch(setCurrentFileContent(codeContentRef.current));
         codeChangeDecorationRef.current.clear();
         dispatch(setCodeEditing(false));
-        // setFSPending(false); TODO: check if this is needed
+        setFSPending(false);
       } catch (e) {
         console.log(e);
       }

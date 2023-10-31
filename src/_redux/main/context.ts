@@ -18,7 +18,8 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   // file tree
   ffHandlers: {},
   setFFHandlers: (ffHandlerObj: TFileHandlerCollection) => {},
-
+  fsPending: false,
+  setFSPending: (pending: boolean) => {},
   // code view
   isContentProgrammaticallyChanged: {
     current: false,

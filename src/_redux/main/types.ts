@@ -37,7 +37,8 @@ export type TMainContext = {
   // file tree
   ffHandlers: TFileHandlerCollection;
   setFFHandlers: (ffHandlerObj: TFileHandlerCollection) => void;
-
+  fsPending: boolean;
+  setFSPending: (pending: boolean) => void;
   // code view
   isContentProgrammaticallyChanged: React.RefObject<boolean>;
   setIsContentProgrammaticallyChanged: (changed: boolean) => void;
