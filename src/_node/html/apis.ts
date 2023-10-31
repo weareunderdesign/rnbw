@@ -1,16 +1,16 @@
-import * as parse5 from 'parse5';
+import * as parse5 from "parse5";
 
-import { RainbowAppName } from '@_constants/global';
-import { RootNodeUid } from '@_constants/main';
+import { RainbowAppName } from "@_constants/global";
+import { RootNodeUid } from "@_constants/main";
 
-import { TNodeUid } from '../';
+import { TNodeUid } from "../";
 import {
   THtmlDomNode,
   THtmlNode,
-  THtmlNodeAttributes,
+  THtmlNodeAttribs,
   THtmlNodeTreeData,
   THtmlParserResponse,
-} from './types';
+} from "./types";
 
 export const StageNodeIdAttr = "data-rnbw-stage-node-id";
 export const parseHtml = (content: string): THtmlParserResponse => {
@@ -58,8 +58,8 @@ export const parseHtml = (content: string): THtmlParserResponse => {
     const getHtmlNodeAttribs = (
       uid: TNodeUid,
       attrs: { name: string; value: string }[],
-    ): THtmlNodeAttributes => {
-      const attribs: THtmlNodeAttributes = {
+    ): THtmlNodeAttribs => {
+      const attribs: THtmlNodeAttribs = {
         [StageNodeIdAttr]: uid,
       };
       attrs.map((attr) => {

@@ -1,11 +1,6 @@
-import JSZip from 'jszip';
+import JSZip from "jszip";
 
-import {
-  TBasicNodeData,
-  TNode,
-  TNodeTreeData,
-  TNodeUid,
-} from '../';
+import { TBasicNodeData, TNode, TNodeTreeData, TNodeUid } from "../";
 
 export type TFileNode = TNode & {
   data: TFileNodeData;

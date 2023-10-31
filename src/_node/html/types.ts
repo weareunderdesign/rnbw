@@ -1,6 +1,6 @@
-import { DOMElement } from 'react';
+import { DOMElement } from "react";
 
-import { Document } from 'parse5/dist/tree-adapters/default';
+import { Document } from "parse5/dist/tree-adapters/default";
 
 import {
   TNode,
@@ -8,7 +8,7 @@ import {
   TNodeSourceCodeLocation,
   TNodeTreeData,
   TNodeUid,
-} from '../';
+} from "../";
 
 export type THtmlNode = TNode & {
   data: THtmlNodeData;
@@ -19,12 +19,12 @@ export type THtmlNodeData = TNodeData & {
   tagName: string;
   textContent: string;
 
-  attribs: THtmlNodeAttributes;
+  attribs: THtmlNodeAttribs;
 
   sourceCodeLocation: TNodeSourceCodeLocation;
 };
 
-export type THtmlNodeAttributes = {
+export type THtmlNodeAttribs = {
   [attrName: string]: any;
 };
 
