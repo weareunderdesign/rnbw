@@ -1,6 +1,5 @@
 import { NodeInAppAttribName } from "@_constants/main";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
-import { IEditorRef } from "@_redux/main";
 import { editor } from "monaco-editor";
 import { DraggingPosition } from "react-complex-tree";
 

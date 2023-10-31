@@ -130,7 +130,6 @@ export function useNodeActions() {
       setIsContentProgrammaticallyChanged(true);
       const model = monacoEditorRef.current?.getModel();
       if (!model) return;
-      let focusLineNumber = 0;
       let parentUids = [] as TNodeUid[];
       uids.forEach((uid) => {
         let node = validNodeTree[uid];
@@ -158,7 +157,6 @@ export function useNodeActions() {
             text: "",
           };
           model.applyEdits([edit]);
-          focusLineNumber = startLineNumber;
         }
       });
 
@@ -166,7 +164,6 @@ export function useNodeActions() {
       handleEditorChange(content, {
         matchIds: uids,
       });
-      monacoEditorRef.current?.revealLineInCenter(focusLineNumber);
     },
     [addRunningActions, removeRunningActions, nodeTree],
   );
@@ -232,59 +229,6 @@ export function useNodeActions() {
     //copy the cleaned up code to clipboard
     window.navigator.clipboard.writeText(copiedCode);
   };
-
-  const cb_copyNodeExternal = useCallback(
-    (
-      nodes: TNode[],
-      targetUid: TNodeUid,
-      isBetween: boolean,
-      position: number,
-    ) => {
-      addRunningActions(["nodeTreeView-copy"]);
-
-      // call api
-      const tree = getTree(nodeTree);
-      const res = copyNodeExternal(
-        tree,
-        targetUid,
-        isBetween,
-        position,
-        nodes,
-        "html",
-        String(nodeMaxUid) as TNodeUid,
-        osType,
-        tabSize,
-        clipboardData.prevNodeTree,
-      );
-
-      // processor
-      addRunningActions(["processor-updateOpt"]);
-      setUpdateOpt({ parse: false, from: "node" });
-      setNodeTree(res.tree);
-      // view state
-      addRunningActions(["stageView-viewState"]);
-      setUpdateOpt({ parse: true, from: "code" });
-      // side effect
-      setNodeMaxUid(Number(res.nodeMaxUid));
-      setEvent({
-        type: "copy-node-external",
-        param: [nodes, targetUid, isBetween, position, res.addedUidMap],
-      });
-      removeRunningActions(["nodeTreeView-copy"]);
-
-      console.log("hms added");
-      dispatch(increaseActionGroupIndex());
-    },
-    [
-      addRunningActions,
-      removeRunningActions,
-      nodeTree,
-      nodeMaxUid,
-      osType,
-      tabSize,
-      clipboardData,
-    ],
-  );
 
   const cb_moveNode = useCallback(
     (
@@ -355,7 +299,6 @@ export function useNodeActions() {
     cb_removeNode,
     cb_duplicateNode,
     cb_copyNode,
-    cb_copyNodeExternal,
     cb_moveNode,
   };
 }
