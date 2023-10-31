@@ -69,7 +69,7 @@ export const useProcessorUpdateOpt = () => {
       const fileData = _file.data as TFileNodeData;
       if (updateOptions.from === "file") {
         if (monacoEditor) {
-          const { tree } = handleFileUpdate(fileData, _nodeTree, file);
+          const { tree } = handleFileUpdate(fileData, _nodeTree, _file);
 
           _nodeTree = tree;
 

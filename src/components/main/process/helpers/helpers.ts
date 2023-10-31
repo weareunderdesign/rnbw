@@ -315,7 +315,7 @@ export const detectSeedNodeChanges = (
   return seedNodeChanged;
 };
 export const getFileData = (params: {
-  file: TNode;
+  file: TFile;
   updateOption: TUpdateOptions;
   nodeTree: TNodeTreeData;
 }) => {
