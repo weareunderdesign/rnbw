@@ -4,26 +4,39 @@ import React, {
   useMemo,
   useRef,
   useState,
-} from "react";
+} from 'react';
 
-import cx from "classnames";
-import { Command } from "cmdk";
-import { CustomDirectoryPickerOptions } from "file-system-access/lib/showDirectoryPicker";
-import { delMany, getMany, setMany } from "idb-keyval";
-import { editor } from "monaco-editor";
-import { useDispatch, useSelector } from "react-redux";
-import { useLocation, useParams } from "react-router-dom";
+import cx from 'classnames';
+import { Command } from 'cmdk';
+import {
+  CustomDirectoryPickerOptions,
+} from 'file-system-access/lib/showDirectoryPicker';
+import {
+  delMany,
+  getMany,
+  setMany,
+} from 'idb-keyval';
+import { editor } from 'monaco-editor';
+import {
+  useDispatch,
+  useSelector,
+} from 'react-redux';
 
-import { SVGIcon } from "@_components/common";
-import { ActionsPanel, CodeView, Process, StageView } from "@_components/main";
-import { LogAllow } from "@_constants/global";
+import { SVGIcon } from '@_components/common';
+import {
+  ActionsPanel,
+  CodeView,
+  Process,
+  StageView,
+} from '@_components/main';
+import { LogAllow } from '@_constants/global';
 import {
   AddActionPrefix,
   DefaultProjectPath,
   ParsableFileTypes,
   RecentProjectCount,
   RootNodeUid,
-} from "@_constants/main";
+} from '@_constants/main';
 import {
   downloadProject,
   initIDBProject,
@@ -33,20 +46,24 @@ import {
   TFileNodeData,
   TFilesReference,
   TFilesReferenceData,
-} from "@_node/file";
+} from '@_node/file';
 import {
   THtmlElementsReference,
   THtmlElementsReferenceData,
   THtmlReferenceData,
-} from "@_node/html";
-import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
+} from '@_node/html';
+import {
+  TNode,
+  TNodeTreeData,
+  TNodeUid,
+} from '@_node/types';
 import {
   osTypeSelector,
   setOsType,
   setTheme,
   themeSelector,
-} from "@_redux/global";
-import { MainContext } from "@_redux/main";
+} from '@_redux/global';
+import { MainContext } from '@_redux/main';
 import {
   cmdkOpenSelector,
   cmdkPagesSelector,
@@ -55,8 +72,8 @@ import {
   setCmdkOpen,
   setCmdkPages,
   setCurrentCommand,
-} from "@_redux/main/cmdk";
-import { codeEditingSelector } from "@_redux/main/codeView";
+} from '@_redux/main/cmdk';
+import { codeEditingSelector } from '@_redux/main/codeView';
 import {
   currentFileUidSelector,
   fileTreeSelector,
@@ -70,25 +87,24 @@ import {
   TProject,
   TProjectContext,
   workspaceSelector,
-} from "@_redux/main/fileTree";
+} from '@_redux/main/fileTree';
 import {
   fileActionSelector,
   FileTree_Event_ClearActionType,
   fileTreeEventHistoryInfoSelector,
   setFileAction,
-} from "@_redux/main/fileTree/event";
+} from '@_redux/main/fileTree/event';
 import {
   nodeTreeSelector,
   nodeTreeViewStateSelector,
   setNodeTree,
   setValidNodeTree,
-  validNodeTreeSelector,
-} from "@_redux/main/nodeTree";
+} from '@_redux/main/nodeTree';
 import {
   currentFileContentSelector,
   NodeTree_Event_ClearActionType,
   nodeTreeEventHistoryInfoSelector,
-} from "@_redux/main/nodeTree/event";
+} from '@_redux/main/nodeTree/event';
 import {
   activePanelSelector,
   navigatorDropdownTypeSelector,
@@ -97,17 +113,20 @@ import {
   setShowActionsPanel,
   setUpdateOptions,
   showActionsPanelSelector,
-} from "@_redux/main/processor";
-import { iframeLoadingSelector, setIframeSrc } from "@_redux/main/stageView";
+} from '@_redux/main/processor';
+import {
+  iframeLoadingSelector,
+  setIframeSrc,
+} from '@_redux/main/stageView';
 // @ts-ignore
-import cmdkRefActions from "@_ref/cmdk.ref/Actions.csv";
+import cmdkRefActions from '@_ref/cmdk.ref/Actions.csv';
 // @ts-ignore
-import cmdkRefJumpstart from "@_ref/cmdk.ref/Jumpstart.csv";
+import cmdkRefJumpstart from '@_ref/cmdk.ref/Jumpstart.csv';
 // @ts-ignore
-import filesRef from "@_ref/rfrncs/Files.csv";
+import filesRef from '@_ref/rfrncs/Files.csv';
 // @ts-ignore
-import htmlRefElements from "@_ref/rfrncs/HTML Elements.csv";
-import { TToast } from "@_types/global";
+import htmlRefElements from '@_ref/rfrncs/HTML Elements.csv';
+import { TToast } from '@_types/global';
 import {
   TCmdkContext,
   TCmdkContextScope,
@@ -117,9 +136,9 @@ import {
   TCmdkReferenceData,
   TCodeChange,
   TSession,
-} from "@_types/main";
+} from '@_types/main';
 
-import { getCommandKey } from "../../services/global";
+import { getCommandKey } from '../../services/global';
 
 export default function MainPage() {
   const dispatch = useDispatch();

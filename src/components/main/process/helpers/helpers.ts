@@ -1,5 +1,4 @@
-import { editor } from "monaco-editor";
-
+import { LogAllow } from "@_constants/global";
 import {
   NodeUidSplitter,
   RootNodeUid,
@@ -8,19 +7,18 @@ import {
 import { getSubNodeUidsByBfs, getValidNodeUids } from "@_node/apis";
 import {
   parseFile,
-  TFile,
   TFileHandlerCollection,
+  TFileNode,
   TFileNodeData,
   TFileNodeTreeData,
   writeFile,
 } from "@_node/file";
 import { StageNodeIdAttr, THtmlNodeData, THtmlPageSettings } from "@_node/html";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
+import { TOsType } from "@_redux/global";
 import { TProject } from "@_redux/main/fileTree";
 import { TUpdateOptions } from "@_redux/main/processor";
 import { TCodeChange, TFileInfo } from "@_types/main";
-import { LogAllow } from "@_constants/global";
-import { TOsType } from "@_redux/global";
 
 export const saveFileContent = async (
   project: TProject,
@@ -315,7 +313,7 @@ export const detectSeedNodeChanges = (
   return seedNodeChanged;
 };
 export const getFileData = (params: {
-  file: TFile;
+  file: TFileNode;
   updateOption: TUpdateOptions;
   nodeTree: TNodeTreeData;
 }) => {
@@ -339,11 +337,11 @@ export const getFileData = (params: {
 export const handleFileUpdate = (
   fileData: TFileNodeData,
   _nodeTree: TNodeTreeData,
-  file: TFile,
+  file: TFileNode,
 ) => {
   const { formattedContent, contentInApp, tree } = parseFile({
     ext: fileData.ext,
-    content: file.content,
+    content: file.data.content,
   });
 
   fileData.content = formattedContent;
@@ -354,7 +352,7 @@ export const handleFileUpdate = (
 
 export const handleHmsChange = (
   fileData: TFileNodeData,
-  state: { file: TFile; focusedItem: string },
+  state: { file: TFileNode; focusedItem: string },
   context: {
     ffTree: TFileNodeTreeData;
     nodeTree: TNodeTreeData;
@@ -383,7 +381,7 @@ export const handleHmsChange = (
 
   if (
     file.uid === currentFileUid &&
-    file.content === _currentFileData.contentInApp
+    file.data.content === _currentFileData.contentInApp
   ) {
     LogAllow && console.log("view state changed by hms");
     // no need to build new node tree
@@ -398,7 +396,7 @@ export const handleHmsChange = (
       nodeMaxUid: newNodeMaxUid,
     } = parseFile({
       ext: fileData.ext,
-      content: file.content,
+      content: file.data.content,
     });
     _nodeTree = tree;
     fileData.content = formattedContent;

@@ -6,25 +6,21 @@ import { useDispatch, useSelector } from "react-redux";
 import { useEditor } from "@_components/main/codeView/hooks";
 import { getValidNodeUids } from "@_node/index";
 import { TNodeUid } from "@_node/types";
+import { osTypeSelector } from "@_redux/global";
 import { MainContext } from "@_redux/main";
+import { codeViewTabSizeSelector } from "@_redux/main/codeView";
 import {
   nodeTreeSelector,
   nodeTreeViewStateSelector,
-  setNodeTree,
   validNodeTreeSelector,
 } from "@_redux/main/nodeTree";
-
-import { osTypeSelector } from "@_redux/global";
 import {
   clipboardDataSelector,
   setUpdateOptions,
 } from "@_redux/main/processor";
 
-import { addNodeToTree } from "../helpers/addNodeToTree";
-import { getTree } from "../helpers/getTree";
 import { getCopiedContent, sortUidsByMaxEndIndex } from "../helpers";
-import { codeViewTabSizeSelector } from "@_redux/main/codeView";
-import { setNodeEvent } from "@_redux/main/nodeTree/event";
+import { getTree } from "../helpers/getTree";
 
 export function useNodeActions() {
   const dispatch = useDispatch();

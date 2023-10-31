@@ -2,25 +2,19 @@ import { useContext, useEffect } from "react";
 
 import { useDispatch, useSelector } from "react-redux";
 
-import { TFileNodeData, writeFile } from "@_node/file";
+import { LogAllow } from "@_constants/global";
+import { TFileNode, TFileNodeData, writeFile } from "@_node/file";
 import { TNode, TNodeTreeData } from "@_node/types";
+import { AppState } from "@_redux/_root";
 import { MainContext } from "@_redux/main";
+import { focusFileTreeNode } from "@_redux/main/fileTree";
+import { setNodeTree } from "@_redux/main/nodeTree";
+import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
+import { setUpdateOptions } from "@_redux/main/processor";
+import { setIframeSrc, setNeedToReloadIframe } from "@_redux/main/stageView";
 import { TFileInfo } from "@_types/main";
 
-import {
-  getFileData,
-  getPreViewPath,
-  handleFileUpdate,
-  handleHmsChange,
-  updateFileInfoFromNodeTree,
-} from "../helpers";
-import { AppState } from "@_redux/_root";
-import { LogAllow } from "@_constants/global";
-import { setUpdateOptions } from "@_redux/main/processor";
-import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
-import { setNodeTree } from "@_redux/main/nodeTree";
-import { setIframeSrc, setNeedToReloadIframe } from "@_redux/main/stageView";
-import { focusFileTreeNode } from "@_redux/main/fileTree";
+import { getPreViewPath, handleFileUpdate } from "../helpers";
 
 export const useProcessorUpdateOpt = () => {
   const dispatch = useDispatch();
@@ -65,7 +59,7 @@ export const useProcessorUpdateOpt = () => {
       if (!fileTree[currentFileUid]) {
         return;
       }
-      const _file = structuredClone(fileTree[currentFileUid]) as TNode;
+      const _file = structuredClone(fileTree[currentFileUid]) as TFileNode;
       const fileData = _file.data as TFileNodeData;
       if (updateOptions.from === "file") {
         if (monacoEditor) {
@@ -78,9 +72,10 @@ export const useProcessorUpdateOpt = () => {
         }
       } else if (updateOptions.from === "hms") {
         if (monacoEditor) {
-          const result = handleHmsChange(
+          // TODO
+          /* const result = handleHmsChange(
             fileData,
-            { file, focusedItem },
+            { file: _file, focusedItem },
             {
               fileTree,
               nodeTree,
@@ -98,19 +93,20 @@ export const useProcessorUpdateOpt = () => {
 
           onlyRenderViewState = result.onlyRenderViewState;
           _nodeTree = result._nodeTree;
-          _newFocusedNodeUid = result._newFocusedNodeUid;
+          _newFocusedNodeUid = result._newFocusedNodeUid; */
         }
       }
       // get file info from node tree
 
       if (fileData.ext === "html") {
-        const result = updateFileInfoFromNodeTree(
+        // TODO
+        /* const result = updateFileInfoFromNodeTree(
           _fileInfo,
           fileInfo,
           _nodeTree,
           _needToReloadIFrame,
         );
-        _needToReloadIFrame = result._needToReloadIFrame;
+        _needToReloadIFrame = result._needToReloadIFrame; */
       }
       LogAllow && _needToReloadIFrame && console.log("need to refresh iframe");
       if (!onlyRenderViewState) {
@@ -158,7 +154,8 @@ export const useProcessorUpdateOpt = () => {
       (async () => {
         setFSPending(true);
         try {
-          await writeFile(fileData.path, fileData.contentInApp as string);
+          // TODO
+          // await writeFile(fileData.path, fileData.contentInApp as string);
         } catch (err) {}
         setFSPending(false);
       })();
