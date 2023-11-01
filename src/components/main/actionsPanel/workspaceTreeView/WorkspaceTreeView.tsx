@@ -370,7 +370,6 @@ export default function WorkspaceTreeView() {
             top: 0,
             left: 0,
             width: "100%",
-            maxHeight: "calc(50vh - 50px)",
             height: "auto",
             overflow: "auto",
 

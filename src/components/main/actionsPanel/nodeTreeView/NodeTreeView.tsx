@@ -268,12 +268,12 @@ function NodeTreeView(props: NodeTreeViewProps) {
       <div
         id="NodeTreeView"
         style={{
-          // position: 'absolute',
           top: 41,
           left: 0,
           width: "100%",
-          height: "calc(100% - 41px)",
+          height: "100%",
           overflow: "auto",
+          padding: "16px 0",
         }}
         onClick={onPanelClick}
       >
