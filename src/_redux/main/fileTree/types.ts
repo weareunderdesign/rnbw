@@ -1,8 +1,8 @@
-import { TFileNodeTreeData } from '@_node/index';
-import { TNodeUid } from '@_node/types';
+import { TFileNodeTreeData } from "@_node/index";
+import { TNodeUid } from "@_node/types";
 
-import { TTreeViewState } from '../types';
-import { TFileAction } from './event';
+import { TTreeViewState } from "../types";
+import { TFileAction } from "./event";
 
 export type TFileTreeReducerState = {
   workspace: TWorkspace;

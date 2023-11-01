@@ -1,20 +1,12 @@
-import React, {
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import React, { useEffect, useMemo, useState } from "react";
 
-import {
-  BrowserRouter as Router,
-  Route,
-  Routes,
-} from 'react-router-dom';
-import { Workbox } from 'workbox-window';
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { Workbox } from "workbox-window";
 
-import { LogAllow } from '@_constants/global';
-import MainPage from '@_pages/main';
+import { LogAllow } from "@_constants/global";
+import MainPage from "@_pages/main";
 
-import { AppProps } from './types';
+import { AppProps } from "./types";
 
 export default function App(props: AppProps) {
   // setup nohost-serviceworker

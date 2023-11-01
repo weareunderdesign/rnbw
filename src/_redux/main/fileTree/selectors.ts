@@ -1,14 +1,11 @@
-import { TFileNodeTreeData } from '@_node/index';
-import { TNodeUid } from '@_node/types';
-import { AppState } from '@_redux/_root';
-import { createSelector } from '@reduxjs/toolkit';
+import { TFileNodeTreeData } from "@_node/index";
+import { TNodeUid } from "@_node/types";
+import { AppState } from "@_redux/_root";
+import { createSelector } from "@reduxjs/toolkit";
 
-import { TTreeViewState } from '../types';
-import { TFileAction } from './event';
-import {
-  TProject,
-  TWorkspace,
-} from './types';
+import { TTreeViewState } from "../types";
+import { TFileAction } from "./event";
+import { TProject, TWorkspace } from "./types";
 
 const getWorkspace = (state: AppState): TWorkspace =>
   state.main.fileTree.workspace;

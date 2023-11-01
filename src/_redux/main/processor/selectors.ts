@@ -25,7 +25,7 @@ export const activePanelSelector = createSelector(
   (activePanel) => activePanel,
 );
 
-const getClipboardData = (state: AppState): TClipboardData =>
+const getClipboardData = (state: AppState): TClipboardData | null =>
   state.main.processor.clipboardData;
 export const clipboardDataSelector = createSelector(
   getClipboardData,
@@ -52,7 +52,7 @@ export const didUndoSelector = createSelector(getDidUndo, (didUndo) => didUndo);
 const getDidRedo = (state: AppState): boolean => state.main.processor.didRedo;
 export const didRedoSelector = createSelector(getDidRedo, (didUndo) => didUndo);
 
-const getUpdateOptions = (state: AppState): TUpdateOptions =>
+const getUpdateOptions = (state: AppState): TUpdateOptions | null =>
   state.main.processor.updateOptions;
 export const updateOptionsSelector = createSelector(
   getUpdateOptions,

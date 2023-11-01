@@ -3,24 +3,24 @@ import { TEventHistoryInfo } from "@_redux/main/types";
 import { createSelector } from "@reduxjs/toolkit";
 
 const getCurrentFileContent = (state: AppState) =>
-  state.main.nodeTreeEvent.present.currentFileContent;
+  state.main.nodeEvent.present.currentFileContent;
 export const currentFileContentSelector = createSelector(
   getCurrentFileContent,
   (currentFileContent) => currentFileContent,
 );
 
 const getSelectedNodeUids = (state: AppState) =>
-  state.main.nodeTreeEvent.present.selectedNodeUids;
+  state.main.nodeEvent.present.selectedNodeUids;
 export const selectedNodeUidsSelector = createSelector(
   getSelectedNodeUids,
   (selectedNodeUids) => selectedNodeUids,
 );
 
-const getNodeTreeEventHistoryInfo = (state: AppState): TEventHistoryInfo => ({
-  future: state.main.nodeTreeEvent.future.length,
-  past: state.main.nodeTreeEvent.past.length,
+const getNodeEventHistoryInfo = (state: AppState): TEventHistoryInfo => ({
+  future: state.main.nodeEvent.future.length,
+  past: state.main.nodeEvent.past.length,
 });
-export const nodeTreeEventHistoryInfoSelector = createSelector(
-  getNodeTreeEventHistoryInfo,
-  (nodeTreeEventHistoryInfo) => nodeTreeEventHistoryInfo,
+export const nodeEventHistoryInfoSelector = createSelector(
+  getNodeEventHistoryInfo,
+  (nodeEventHistoryInfo) => nodeEventHistoryInfo,
 );

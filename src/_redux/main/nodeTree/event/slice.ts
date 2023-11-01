@@ -9,15 +9,15 @@ import {
   NodeTree_Event_StoreLimit,
   NodeTree_Event_UndoActionType,
 } from "./constants";
-import { TNodeTreeEventReducerState } from "./types";
+import { TNodeEventReducerState } from "./types";
 
-const nodeTreeEventReducerInitialState: TNodeTreeEventReducerState = {
+const nodeEventReducerInitialState: TNodeEventReducerState = {
   currentFileContent: "",
   selectedNodeUids: [],
 };
-const nodeTreeEventSlice = createSlice({
-  name: "nodeTreeEvent",
-  initialState: nodeTreeEventReducerInitialState,
+const nodeEventSlice = createSlice({
+  name: "nodeEvent",
+  initialState: nodeEventReducerInitialState,
   reducers: {
     setCurrentFileContent(state, action: PayloadAction<string>) {
       const currentFileContent = action.payload;
@@ -30,8 +30,8 @@ const nodeTreeEventSlice = createSlice({
   },
 });
 export const { setCurrentFileContent, setSelectedItems } =
-  nodeTreeEventSlice.actions;
-export const NodeTreeEventReducer = undoable(nodeTreeEventSlice.reducer, {
+  nodeEventSlice.actions;
+export const NodeEventReducer = undoable(nodeEventSlice.reducer, {
   limit: NodeTree_Event_StoreLimit,
   undoType: NodeTree_Event_UndoActionType,
   redoType: NodeTree_Event_RedoActionType,

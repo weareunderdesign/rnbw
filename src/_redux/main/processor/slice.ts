@@ -1,7 +1,4 @@
-import {
-  createSlice,
-  PayloadAction,
-} from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import {
   TClipboardData,
@@ -9,7 +6,7 @@ import {
   TPanelContext,
   TProcessorReducerState,
   TUpdateOptions,
-} from './types';
+} from "./types";
 
 const processorReducerInitialState: TProcessorReducerState = {
   navigatorDropdownType: null,
@@ -46,7 +43,7 @@ const processorSlice = createSlice({
       const activePanel = action.payload;
       state.activePanel = activePanel;
     },
-    setClipboardData(state, action: PayloadAction<TClipboardData>) {
+    setClipboardData(state, action: PayloadAction<TClipboardData | null>) {
       const clipboardData = action.payload;
       state.clipboardData = clipboardData;
     },
@@ -69,7 +66,7 @@ const processorSlice = createSlice({
       state.didRedo = didRedo;
     },
 
-    setUpdateOptions(state, action: PayloadAction<TUpdateOptions>) {
+    setUpdateOptions(state, action: PayloadAction<TUpdateOptions | null>) {
       const updateOptions = action.payload;
       state.updateOptions = updateOptions;
     },

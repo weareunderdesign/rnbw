@@ -1,9 +1,15 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
+import { StageNodeIdAttr } from "@_node/html";
 import { TNode, TNodeUid } from "@_node/types";
+import { AppState } from "@_redux/_root";
 import { MainContext } from "@_redux/main";
+import {
+  setIframeLoading,
+  setNeedToReloadIframe,
+} from "@_redux/main/stageView";
 
 import {
   useChangeIframeTheme,
@@ -15,13 +21,6 @@ import {
 } from "./hooks";
 import { jss } from "./js";
 import { styles } from "./styles";
-import { StageNodeIdAttr } from "@_node/html";
-import { AppState } from "@_redux/_root";
-import {
-  setIframeLoading,
-  setNeedToReloadIframe,
-} from "@_redux/main/stageView";
-import { useDispatch } from "react-redux";
 
 export const IFrame = () => {
   // -------------------------------------------------------------- global state --------------------------------------------------------------
@@ -29,7 +28,7 @@ export const IFrame = () => {
   const { focusedItem, selectedItems } = useSelector(
     (state: AppState) => state.main.nodeTree.nodeTreeViewState,
   );
-  const {} = useSelector((state: AppState) => state.main.nodeTreeEvent);
+  const {} = useSelector((state: AppState) => state.main.nodeEvent);
   const { iframeLoading, needToReloadIframe, iframeSrc } = useSelector(
     (state: AppState) => state.main.stageView,
   );

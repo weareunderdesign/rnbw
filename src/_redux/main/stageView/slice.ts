@@ -1,9 +1,6 @@
-import {
-  createSlice,
-  PayloadAction,
-} from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { TStageViewReducerState } from './types';
+import { TStageViewReducerState } from "./types";
 
 const stageViewReducerInitialState: TStageViewReducerState = {
   iframeSrc: null,

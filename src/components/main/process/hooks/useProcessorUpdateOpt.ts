@@ -25,7 +25,7 @@ export const useProcessorUpdateOpt = () => {
       nodeTreeViewState: { focusedItem },
       nodeTree,
     },
-    nodeTreeEvent: {
+    nodeEvent: {
       present: { currentFileContent },
     },
     processor: { updateOptions },

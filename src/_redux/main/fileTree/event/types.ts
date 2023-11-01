@@ -1,4 +1,4 @@
-export type TFileTreeEventReducerState = {
+export type TFileEventReducerState = {
   fileAction: TFileAction;
 };
 

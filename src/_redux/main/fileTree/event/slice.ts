@@ -8,16 +8,16 @@ import {
   FileTree_Event_StoreLimit,
   FileTree_Event_UndoActionType,
 } from "./constants";
-import { TFileAction, TFileTreeEventReducerState } from "./types";
+import { TFileAction, TFileEventReducerState } from "./types";
 
-const fileTreeEventReducerInitialState: TFileTreeEventReducerState = {
+const fileEventReducerInitialState: TFileEventReducerState = {
   fileAction: {
     type: null,
   },
 };
-const fileTreeEventSlice = createSlice({
-  name: "fileTreeEvent",
-  initialState: fileTreeEventReducerInitialState,
+const fileEventSlice = createSlice({
+  name: "fileEvent",
+  initialState: fileEventReducerInitialState,
   reducers: {
     setFileAction(state, action: PayloadAction<TFileAction>) {
       const fileAction = action.payload;
@@ -25,8 +25,8 @@ const fileTreeEventSlice = createSlice({
     },
   },
 });
-export const { setFileAction } = fileTreeEventSlice.actions;
-export const FileTreeEventReducer = undoable(fileTreeEventSlice.reducer, {
+export const { setFileAction } = fileEventSlice.actions;
+export const FileEventReducer = undoable(fileEventSlice.reducer, {
   limit: FileTree_Event_StoreLimit,
   undoType: FileTree_Event_UndoActionType,
   redoType: FileTree_Event_RedoActionType,

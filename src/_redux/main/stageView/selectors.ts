@@ -1,5 +1,5 @@
-import { AppState } from '@_redux/_root';
-import { createSelector } from '@reduxjs/toolkit';
+import { AppState } from "@_redux/_root";
+import { createSelector } from "@reduxjs/toolkit";
 
 const getIframeSrc = (state: AppState): string | null =>
   state.main.stageView.iframeSrc;

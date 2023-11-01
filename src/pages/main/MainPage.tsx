@@ -4,39 +4,25 @@ import React, {
   useMemo,
   useRef,
   useState,
-} from 'react';
+} from "react";
 
-import cx from 'classnames';
-import { Command } from 'cmdk';
-import {
-  CustomDirectoryPickerOptions,
-} from 'file-system-access/lib/showDirectoryPicker';
-import {
-  delMany,
-  getMany,
-  setMany,
-} from 'idb-keyval';
-import { editor } from 'monaco-editor';
-import {
-  useDispatch,
-  useSelector,
-} from 'react-redux';
+import cx from "classnames";
+import { Command } from "cmdk";
+import { CustomDirectoryPickerOptions } from "file-system-access/lib/showDirectoryPicker";
+import { delMany, getMany, setMany } from "idb-keyval";
+import { editor } from "monaco-editor";
+import { useDispatch, useSelector } from "react-redux";
 
-import { SVGIcon } from '@_components/common';
-import {
-  ActionsPanel,
-  CodeView,
-  Process,
-  StageView,
-} from '@_components/main';
-import { LogAllow } from '@_constants/global';
+import { SVGIcon } from "@_components/common";
+import { ActionsPanel, CodeView, Process, StageView } from "@_components/main";
+import { LogAllow } from "@_constants/global";
 import {
   AddActionPrefix,
   DefaultProjectPath,
   ParsableFileTypes,
   RecentProjectCount,
   RootNodeUid,
-} from '@_constants/main';
+} from "@_constants/main";
 import {
   downloadProject,
   initIDBProject,
@@ -46,24 +32,20 @@ import {
   TFileNodeData,
   TFilesReference,
   TFilesReferenceData,
-} from '@_node/file';
+} from "@_node/file";
 import {
   THtmlElementsReference,
   THtmlElementsReferenceData,
   THtmlReferenceData,
-} from '@_node/html';
-import {
-  TNode,
-  TNodeTreeData,
-  TNodeUid,
-} from '@_node/types';
+} from "@_node/html";
+import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import {
   osTypeSelector,
   setOsType,
   setTheme,
   themeSelector,
-} from '@_redux/global';
-import { MainContext } from '@_redux/main';
+} from "@_redux/global";
+import { MainContext } from "@_redux/main";
 import {
   cmdkOpenSelector,
   cmdkPagesSelector,
@@ -72,61 +54,79 @@ import {
   setCmdkOpen,
   setCmdkPages,
   setCurrentCommand,
-} from '@_redux/main/cmdk';
-import { codeEditingSelector } from '@_redux/main/codeView';
+} from "@_redux/main/cmdk";
+import {
+  codeEditingSelector,
+  codeViewTabSizeSelector,
+} from "@_redux/main/codeView";
 import {
   currentFileUidSelector,
+  doingFileActionSelector,
   fileTreeSelector,
   fileTreeViewStateSelector,
+  hoveredFileUidSelector,
+  initialFileUidToOpenSelector,
+  lastFileActionSelector,
   projectSelector,
   setCurrentFileUid,
   setFileTree,
-  setInitialFileUidToOpen,
   setProject,
   setWorkspace,
   TProject,
   TProjectContext,
   workspaceSelector,
-} from '@_redux/main/fileTree';
+} from "@_redux/main/fileTree";
 import {
   fileActionSelector,
+  fileEventHistoryInfoSelector,
   FileTree_Event_ClearActionType,
-  fileTreeEventHistoryInfoSelector,
   setFileAction,
-} from '@_redux/main/fileTree/event';
+} from "@_redux/main/fileTree/event";
 import {
+  hoveredNodeUidSelector,
   nodeTreeSelector,
   nodeTreeViewStateSelector,
   setNodeTree,
   setValidNodeTree,
-} from '@_redux/main/nodeTree';
+  validNodeTreeSelector,
+} from "@_redux/main/nodeTree";
 import {
   currentFileContentSelector,
+  nodeEventHistoryInfoSelector,
   NodeTree_Event_ClearActionType,
-  nodeTreeEventHistoryInfoSelector,
-} from '@_redux/main/nodeTree/event';
+  selectedNodeUidsSelector,
+} from "@_redux/main/nodeTree/event";
 import {
   activePanelSelector,
+  clipboardDataSelector,
+  didRedoSelector,
+  didUndoSelector,
+  faviconSelector,
   navigatorDropdownTypeSelector,
   setFavicon,
   setNavigatorDropdownType,
   setShowActionsPanel,
   setUpdateOptions,
   showActionsPanelSelector,
-} from '@_redux/main/processor';
+  showCodeViewSelector,
+  updateOptionsSelector,
+} from "@_redux/main/processor";
 import {
   iframeLoadingSelector,
+  iframeSrcSelector,
+  linkToOpenSelector,
+  needToReloadIframeSelector,
   setIframeSrc,
-} from '@_redux/main/stageView';
+} from "@_redux/main/stageView";
 // @ts-ignore
-import cmdkRefActions from '@_ref/cmdk.ref/Actions.csv';
+import cmdkRefActions from "@_ref/cmdk.ref/Actions.csv";
 // @ts-ignore
-import cmdkRefJumpstart from '@_ref/cmdk.ref/Jumpstart.csv';
+import cmdkRefJumpstart from "@_ref/cmdk.ref/Jumpstart.csv";
 // @ts-ignore
-import filesRef from '@_ref/rfrncs/Files.csv';
+import filesRef from "@_ref/rfrncs/Files.csv";
 // @ts-ignore
-import htmlRefElements from '@_ref/rfrncs/HTML Elements.csv';
-import { TToast } from '@_types/global';
+import htmlRefElements from "@_ref/rfrncs/HTML Elements.csv";
+import { TToast } from "@_types/global";
 import {
   TCmdkContext,
   TCmdkContextScope,
@@ -136,59 +136,108 @@ import {
   TCmdkReferenceData,
   TCodeChange,
   TSession,
-} from '@_types/main';
+} from "@_types/main";
 
-import { getCommandKey } from '../../services/global';
+import { getCommandKey } from "../../services/global";
 
 export default function MainPage() {
+  // ***************************************** Reducer Begin *****************************************
   const dispatch = useDispatch();
 
-  const workspace = useSelector(workspaceSelector);
-  const project = useSelector(projectSelector);
-  const fileTree = useSelector(fileTreeSelector);
-  const currentFileUid = useSelector(currentFileUidSelector);
-
-  const currentFileContent = useSelector(currentFileContentSelector);
-  const nodeTree = useSelector(nodeTreeSelector);
-
-  const fileAction = useSelector(fileActionSelector);
-
-  const cmdkOpen = useSelector(cmdkOpenSelector);
-  const cmdkPages = useSelector(cmdkPagesSelector);
-  const currentCmdkPage = useSelector(currentCmdkPageSelector);
-  const currentCommand = useSelector(currentCommandSelector);
-
-  const showActionsPanel = useSelector(showActionsPanelSelector);
-
-  const codeEditing = useSelector(codeEditingSelector);
-
-  //ff is fileTreeViewState
-  const { focusedItem: ffFocusedItem } = useSelector(fileTreeViewStateSelector);
-
-  //fn is nodeTreeViewState
-  const { focusedItem: fnFocusedItem } = useSelector(nodeTreeViewStateSelector);
-  const { future: nodeEventFutureLength, past: nodeEventPastLength } =
-    useSelector(nodeTreeEventHistoryInfoSelector);
-  const { future: fileEventFutureLength, past: fileEventPastLength } =
-    useSelector(fileTreeEventHistoryInfoSelector);
-
+  // global reducer
   const osType = useSelector(osTypeSelector);
   const theme = useSelector(themeSelector);
 
-  const activePanel = useSelector(activePanelSelector);
-  const navigatorDropdownType = useSelector(navigatorDropdownTypeSelector);
-  const iframeLoading = useSelector(iframeLoadingSelector);
+  // fileTree reducer
+  const workspace = useSelector(workspaceSelector);
+  const project = useSelector(projectSelector);
+  const fileTree = useSelector(fileTreeSelector);
+  const setInitialFileUidToOpen = useSelector(initialFileUidToOpenSelector);
+  const currentFileUid = useSelector(currentFileUidSelector);
 
-  // global action
-  const [pending, setPending] = useState<boolean>(false); // tells if there are any pending running actions
-  const runningActions = useRef<{ [actionName: string]: boolean }>({});
-  const hasNoRunningAction = useCallback(() => {
-    return Object.keys(runningActions.current).length === 0 ? true : false;
-  }, []);
-  const addRunningActions = useCallback((actionNames: string[]) => {
-    let found: boolean = false;
+  const fileTreeViewState = useSelector(fileTreeViewStateSelector);
+  const {
+    focusedItem: fFocusedItem,
+    expandedItems: fExpandedItems,
+    expandedItemsObj: fExpandedItemsObj,
+    selectedItems: fSelectedItems,
+    selectedItemsObj: fSelectedItemsObj,
+  } = fileTreeViewState;
+  const hoveredFileUid = useSelector(hoveredFileUidSelector);
+
+  const doingFileAction = useSelector(doingFileActionSelector);
+  const lastFileAction = useSelector(lastFileActionSelector);
+
+  // fileEvent reducer
+  const fileAction = useSelector(fileActionSelector);
+  const fileEventHistoryInfo = useSelector(fileEventHistoryInfoSelector);
+  const { future: fileEventFutureLength, past: fileEventPastLength } =
+    fileEventHistoryInfo;
+
+  // nodeTree reducer
+  const nodeTree = useSelector(nodeTreeSelector);
+  const validNodeTree = useSelector(validNodeTreeSelector);
+
+  const nodeTreeViewState = useSelector(nodeTreeViewStateSelector);
+  const {
+    focusedItem: nFocusedItem,
+    expandedItems: nExpandedItems,
+    expandedItemsObj: nExpandedItemsObj,
+    selectedItems: nSelectedItems,
+    selectedItemsObj: nSelectedItemsObj,
+  } = nodeTreeViewState;
+  const hoveredNodeUid = useSelector(hoveredNodeUidSelector);
+
+  // nodeEvent reducer
+  const currentFileContent = useSelector(currentFileContentSelector);
+  const selectedNodeUids = useSelector(selectedNodeUidsSelector);
+  const nodeEventHistoryInfo = useSelector(nodeEventHistoryInfoSelector);
+  const { future: nodeEventFutureLength, past: nodeEventPastLength } =
+    nodeEventHistoryInfo;
+
+  // stageView reducer
+  const iframeSrc = useSelector(iframeSrcSelector);
+  const iframeLoading = useSelector(iframeLoadingSelector);
+  const needToReloadIframe = useSelector(needToReloadIframeSelector);
+  const linkToOpen = useSelector(linkToOpenSelector);
+
+  // codeView reducer
+  const codeViewTabSize = useSelector(codeViewTabSizeSelector);
+  const codeEditing = useSelector(codeEditingSelector);
+
+  // processor reducer
+  const navigatorDropdownType = useSelector(navigatorDropdownTypeSelector);
+  const favicon = useSelector(faviconSelector);
+
+  const activePanel = useSelector(activePanelSelector);
+  const clipboardData = useSelector(clipboardDataSelector);
+
+  const showActionsPanel = useSelector(showActionsPanelSelector);
+  const showCodeView = useSelector(showCodeViewSelector);
+
+  const didUndo = useSelector(didUndoSelector);
+  const didRedo = useSelector(didRedoSelector);
+
+  const updateOptions = useSelector(updateOptionsSelector);
+
+  // cmdk reducer
+  const cmdkOpen = useSelector(cmdkOpenSelector);
+  const cmdkPages = useSelector(cmdkPagesSelector);
+  const currentCmdkPage = useSelector(currentCmdkPageSelector);
+
+  const currentCommand = useSelector(currentCommandSelector);
+  // ***************************************** Reducer End *****************************************
+
+  // ***************************************** Context Begin *****************************************
+  // global
+  const [pending, setPending] = useState(false);
+  const runningActions = useRef<{ [actionName: string]: true }>({});
+  const hasRunningAction = () =>
+    Object.keys(runningActions.current).length === 0 ? false : true;
+  const addRunningActions = (actionNames: string[]) => {
+    let found = false;
     for (const actionName of actionNames) {
-      if (runningActions.current[actionName] === undefined) {
+      if (!runningActions.current[actionName]) {
         runningActions.current[actionName] = true;
         found = true;
       }
@@ -196,37 +245,23 @@ export default function MainPage() {
     if (!found) return;
 
     setPending(true);
-  }, []);
-  const removeRunningActions = useCallback(
-    (actionNames: string[], effect: boolean = true) => {
-      let found: boolean = false;
-      for (const actionName of actionNames) {
-        if (runningActions.current[actionName] !== undefined) {
-          delete runningActions.current[actionName];
-          found = true;
-        }
+  };
+  const removeRunningActions = (actionNames: string[]) => {
+    let found: boolean = false;
+    for (const actionName of actionNames) {
+      if (runningActions.current[actionName]) {
+        delete runningActions.current[actionName];
+        found = true;
       }
-      if (!found) return;
+    }
+    if (!found) return;
 
-      LogAllow &&
-        console.log(
-          "remove running actions",
-          actionNames,
-          effect,
-          hasNoRunningAction(),
-        );
-
-      if (hasNoRunningAction()) {
-        LogAllow && effect && console.log("hms added");
-        setPending(false);
-        // effect && dispatch(increaseActionGroupIndex());
-      }
-    },
-    [hasNoRunningAction, currentFileContent],
-  );
+    if (!hasRunningAction()) {
+      setPending(false);
+    }
+  };
 
   // actions panel
-  const [fsPending, setFSPending] = useState<boolean>(false);
   const [ffHandlers, setFFHandlers] = useState<TFileHandlerCollection>({});
   // code view
   const isContentProgrammaticallyChanged = useRef<boolean>(false);
@@ -274,7 +309,7 @@ export default function MainPage() {
     };
 
     // Files
-    const fileNode = fileTree[ffFocusedItem];
+    const fileNode = fileTree[fFocusedItem];
     if (fileNode) {
       filesRef.map((fileRef: TFilesReference) => {
         fileRef.Name &&
@@ -309,7 +344,7 @@ export default function MainPage() {
         flag = false;
       }
     }
-    const htmlNode = nodeTree[fnFocusedItem];
+    const htmlNode = nodeTree[nFocusedItem];
     if (!flag) {
       if (
         htmlNode &&
@@ -407,9 +442,9 @@ export default function MainPage() {
     return data;
   }, [
     fileTree,
-    ffFocusedItem,
+    fFocusedItem,
     nodeTree,
-    fnFocusedItem,
+    nFocusedItem,
     htmlReferenceData,
     cmdkSearch,
   ]);
@@ -1118,7 +1153,6 @@ export default function MainPage() {
       dispatch(setFileAction({ type: null }));
   }, []);
   // toogle code view
-  const [showCodeView, setShowCodeView] = useState(false);
   const toogleCodeView = useCallback(() => {
     setShowCodeView(!showCodeView);
     setNewFocusedNodeUid(fnFocusedItem);
