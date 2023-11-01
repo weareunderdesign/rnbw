@@ -79,7 +79,15 @@ export const useTextEditing = ({
     eleCopy?.removeAttribute("rnbwdev-rnbw-element-hover");
     eleCopy?.removeAttribute("rnbwdev-rnbw-element-select");
     eleCopy?.removeAttribute("data-rnbwdev-rnbw-node");
+
+    let outerText = eleCopy?.outerText;
+    while (outerText?.includes("\n") || outerText?.includes("\r")) {
+      outerText = outerText?.replace("\n", "<br>")?.replace("\r", "<br>");
+    }
+
+    eleCopy.innerHTML = outerText || "";
     const cleanedUpCode = eleCopy?.outerHTML;
+
     //delete the copy
     eleCopy?.remove();
     if (!cleanedUpCode) return;
