@@ -1,3 +1,5 @@
+import { editor } from "monaco-editor";
+
 import { THtmlReferenceData } from "./html";
 
 export type TNode = {
@@ -33,15 +35,26 @@ export type TNodeSourceCodeLocation = {
   endOffset: number;
 };
 
-// --------------------
-
-export type TNodeTreeContext = "file" | "html";
-export type TNodeApiResponse = {
+export type TNodeApiPayload = {
   tree: TNodeTreeData;
-  nodeMaxUid?: TNodeUid;
-  deletedUids?: TNodeUid[];
-  addedUidMap?: Map<TNodeUid, TNodeUid>;
+  isFileTree: boolean;
+  fileExt?: string;
+
+  action: TNodeActionType;
+
+  selectedUids: TNodeUid[];
+  tragetUid: TNodeUid;
+  isBetween?: boolean;
   position?: number;
-  lastNodeUid?: TNodeUid;
+
+  codeViewInstance: editor.IStandaloneCodeEditor;
 };
+
+export type TNodeActionType =
+  | "create"
+  | "remove"
+  | "duplicate"
+  | "move"
+  | "copy";
+
 export type TNodeReferenceData = THtmlReferenceData;

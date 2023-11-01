@@ -1,14 +1,11 @@
 import { RootNodeUid } from "@_constants/main";
-import { TOsType } from "@_redux/global";
 
-import { TFile, TFileNodeData } from "./file";
 import { THtmlNodeData, THtmlReferenceData } from "./html";
 import {
   TBasicNodeData,
   TNode,
-  TNodeApiResponse,
+  TNodeApiPayload,
   TNodeReferenceData,
-  TNodeTreeContext,
   TNodeTreeData,
   TNodeUid,
 } from "./types";
@@ -126,7 +123,7 @@ export const getValidNodeUids = (
   tree: TNodeTreeData,
   uids: TNodeUid[],
   targetUid?: TNodeUid,
-  treeType?: TNodeTreeContext,
+  treeType?: string,
   referenceData?: TNodeReferenceData,
 ): TNodeUid[] => {
   let validatedUids: { [uid: TNodeUid]: boolean } = {};
@@ -199,273 +196,63 @@ export const getValidNodeUids = (
   return uids.filter((uid) => validatedUids[uid]);
 };
 
-export const addNode = (
-  tree: TNodeTreeData,
-  targetUid: TNodeUid,
-  node: TNode,
-  contentNode: TNode | null,
-  treeType: TNodeTreeContext,
-  nodeMaxUid: TNodeUid,
-  osType: TOsType,
-  tabSize: number,
-): TNodeApiResponse => {
-  let _nodeMaxUid = Number(nodeMaxUid);
+export const callNodeApi = async (params: TNodeApiPayload, cb?: () => {}) => {
+  const {
+    tree,
+    isFileTree,
+    fileExt = "",
 
-  // update parent
-  const targetNode = tree[targetUid];
-  const parentNode = tree[targetNode.parentUid as TNodeUid];
-  const position = getNodeChildIndex(parentNode, targetNode) + 1;
-  parentNode.children.splice(position, 0, node.uid);
-  parentNode.isEntity = false;
+    action,
 
-  // add node
-  tree[node.uid] = node;
-  if (contentNode) {
-    tree[contentNode.uid] = contentNode;
-  }
-  if (treeType === "html") {
-    // format node
-  } else {
-    // do nothing
-  }
+    selectedUids,
+    tragetUid,
+    isBetween = false,
+    position = 0,
 
-  return { tree, nodeMaxUid: String(_nodeMaxUid) as TNodeUid };
-};
-export const removeNode = (
-  tree: TNodeTreeData,
-  uids: TNodeUid[],
-  treeType: TNodeTreeContext,
-  fileData: TFileNodeData,
-  file: TFile,
-): TNodeApiResponse => {
-  let validPrevNodeUid = "" as TNodeUid;
-  const deletedUids: TNodeUid[] = [];
-  let prevStartIndex = 0;
-  uids.map((uid) => {
-    const node = tree[uid];
-    const parentNode = tree[node.parentUid as TNodeUid];
+    codeViewInstance,
+  } = params;
 
-    if (treeType === "html") {
-      // store last element when delete nodes
-      validPrevNodeUid = getValidPrevNodeUid(tree, node);
-
-      // remove prev format text node
-      const prevNodeUid = getPrevSiblingNodeUid(tree, node);
-      if (prevNodeUid !== "") {
-        const prevNode = tree[prevNodeUid];
-        if ((prevNode.data as THtmlNodeData).isFormatText) {
-          prevStartIndex =
-            prevNode.data.sourceCodeLocation.endOffset -
-            prevNode.data.sourceCodeLocation.startOffset;
-          delete tree[prevNodeUid];
-          parentNode.children = parentNode.children.filter(
-            (childUid) => childUid !== prevNodeUid,
-          );
+  return new Promise<void>((resolve, reject) => {
+    try {
+      if (isFileTree) {
+        switch (action) {
+          case "create":
+            break;
+          case "remove":
+            break;
+          case "duplicate":
+            break;
+          case "move":
+            break;
+          case "copy":
+            break;
+          default:
+            break;
+        }
+      } else {
+        if (fileExt == "html") {
+          switch (action) {
+            case "create":
+              break;
+            case "remove":
+              break;
+            case "duplicate":
+              break;
+            case "move":
+              break;
+            case "copy":
+              break;
+            default:
+              break;
+          }
+        } else {
         }
       }
-    } else {
-      // do nothing
-    }
 
-    // update parent
-    parentNode.children = parentNode.children.filter((c_uid) => c_uid !== uid);
-    parentNode.isEntity = parentNode.children.length === 0;
-
-    // remove nest nodes
-    const subUids = getSubNodeUidsByBfs(uid, tree);
-
-    fileData.content = replaceContentByFormatted(
-      file.content,
-      tree[uid].data.sourceCodeLocation.startOffset - prevStartIndex - 1,
-      tree[uid].data.sourceCodeLocation.endOffset,
-      "",
-    );
-
-    updateExistingTree(
-      tree,
-      tree[uid].data.sourceCodeLocation.startOffset - prevStartIndex - 1,
-      tree[uid].data.sourceCodeLocation.endOffset,
-      "",
-    );
-
-    subUids.map((subUid) => {
-      delete tree[subUid];
-    });
-
-    deletedUids.push(...subUids);
-  });
-
-  return { tree, deletedUids, lastNodeUid: validPrevNodeUid };
-};
-export const copyNode = (
-  tree: TNodeTreeData,
-  targetUid: TNodeUid,
-  isBetween: boolean,
-  position: number,
-  uids: TNodeUid[],
-  treeType: TNodeTreeContext,
-  nodeMaxUid: TNodeUid,
-): TNodeApiResponse => {
-  let _nodeMaxUid = Number(nodeMaxUid);
-
-  const targetNode = tree[targetUid];
-  const targetNodeDepth = getNodeDepth(tree, targetUid);
-
-  const addedUidMap = new Map<TNodeUid, TNodeUid>();
-
-  const _uids = [...uids];
-  _uids.reverse();
-  _uids.map((uid) => {
-    const node = tree[uid];
-    const orgSubNodeUids = getSubNodeUidsByBfs(uid, tree);
-    // copy root node
-    const newUid = String(++_nodeMaxUid) as TNodeUid;
-
-    const newNode = structuredClone(node) as TNode;
-    const parentNodeDepth = getNodeDepth(tree, newNode.parentUid as TNodeUid);
-
-    newNode.uid = newUid;
-    newNode.parentUid = targetUid;
-
-    // add root node
-    if (isBetween) {
-      let inserted = false,
-        index = -1;
-
-      targetNode.children = targetNode.children.reduce((prev, cur) => {
-        tree[cur].data.valid && index++;
-        if (index === position && !inserted) {
-          inserted = true;
-          prev.push(newUid);
-        }
-
-        prev.push(cur);
-        return prev;
-      }, [] as TNodeUid[]);
-
-      !inserted && targetNode.children.push(newUid);
-    } else {
-      targetNode.children.push(newUid);
-    }
-
-    // copy sub nodes
-    const subNodes = [newNode];
-    let index = -1;
-    while (subNodes.length) {
-      const subNode = subNodes.shift() as TNode;
-
-      addedUidMap.set(orgSubNodeUids[++index], subNode.uid);
-
-      subNode.children = subNode.children.map((childUid) => {
-        const newChildUid = String(++_nodeMaxUid) as string;
-
-        const childNode = structuredClone(tree[childUid]) as TNode;
-
-        childNode.uid = newChildUid;
-        childNode.parentUid = subNode.uid;
-
-        subNodes.push(childNode);
-
-        return newChildUid;
-      });
-      tree[subNode.uid] = subNode;
+      cb && cb();
+      resolve();
+    } catch (err) {
+      reject(err);
     }
   });
-  return { tree, nodeMaxUid: String(_nodeMaxUid) as TNodeUid, addedUidMap };
 };
-
-export const duplicateNode = (
-  tree: TNodeTreeData,
-  uids: TNodeUid[],
-  treeType: TNodeTreeContext,
-  nodeMaxUid: TNodeUid,
-): TNodeApiResponse => {
-  let _nodeMaxUid = Number(nodeMaxUid);
-
-  const addedUidMap = new Map<TNodeUid, TNodeUid>();
-
-  uids.map((uid) => {
-    const node = tree[uid];
-    const parentNode = tree[node.parentUid as TNodeUid];
-    const orgSubNodeUids = getSubNodeUidsByBfs(uid, tree);
-
-    // duplicate root node
-    const newUid = String(++_nodeMaxUid) as TNodeUid;
-    const newNode = structuredClone(tree[uid]) as TNode;
-    newNode.uid = newUid;
-
-    // update parent
-    const position = getNodeChildIndex(parentNode, node) + 1;
-    parentNode.children.splice(position, 0, newUid);
-
-    // duplicate sub nodes
-    const subNodes = [newNode];
-    let index = -1;
-    while (subNodes.length) {
-      const subNode = subNodes.shift() as TNode;
-
-      addedUidMap.set(orgSubNodeUids[++index], subNode.uid);
-
-      subNode.children = subNode.children.map((childUid) => {
-        const newChildUid = String(++_nodeMaxUid) as string;
-
-        const childNode = structuredClone(tree[childUid]) as TNode;
-
-        childNode.uid = newChildUid;
-        childNode.parentUid = subNode.uid;
-
-        subNodes.push(childNode);
-
-        return newChildUid;
-      });
-
-      tree[subNode.uid] = subNode;
-    }
-  });
-
-  return { tree, nodeMaxUid: String(_nodeMaxUid) as TNodeUid, addedUidMap };
-};
-
-export const updateExistingTree = (
-  _nodeTree: TNodeTreeData,
-  start: number,
-  end: number,
-  formattedContent: string,
-) => {
-  const diff = formattedContent.length - (end - start) - 1;
-
-  for (const key in _nodeTree) {
-    if (_nodeTree[key].data.sourceCodeLocation.startOffset > start) {
-      _nodeTree[key].data.sourceCodeLocation.startOffset += diff;
-    }
-
-    if (_nodeTree[key].data.sourceCodeLocation.endOffset > end) {
-      _nodeTree[key].data.sourceCodeLocation.endOffset += diff;
-    }
-  }
-};
-
-export function replaceContentByFormatted(
-  inputString: string,
-  startIndex: number,
-  endIndex: number,
-  replacement: string,
-) {
-  if (
-    typeof inputString !== "string" ||
-    startIndex < 0 ||
-    endIndex < 0 ||
-    startIndex >= inputString.length ||
-    endIndex >= inputString.length
-  ) {
-    // Check if inputString is a string and indices are valid
-    return inputString;
-  }
-
-  const prefix = inputString.slice(0, startIndex + 1);
-  const suffix = inputString.slice(endIndex + 1);
-
-  const replacedString = prefix + replacement + suffix;
-
-  return replacedString;
-}
