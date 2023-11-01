@@ -48,6 +48,7 @@ export default function CodeView(props: CodeViewProps) {
     parseFileFlag,
     showCodeView,
     isContentProgrammaticallyChanged,
+    monacoEditorRef,
   } = useContext(MainContext);
   // -------------------------------------------------------------- references --------------------------------------------------------------
 
@@ -67,6 +68,7 @@ export default function CodeView(props: CodeViewProps) {
     setFocusedNode,
     codeContent,
     setCodeContent,
+    selection,
   } = useEditor();
 
   const { editorWrapperRef, onPanelClick } = useEditorWrapper();
@@ -111,7 +113,7 @@ export default function CodeView(props: CodeViewProps) {
   const revealed = useRef<boolean>(false);
 
   function hightlightFocusedNodeCodeBlock() {
-    const monacoEditor = getCurrentEditorInstance();
+    const monacoEditor = monacoEditorRef.current;
     if (!monacoEditor) return;
     const node = validNodeTree[focusedItem];
 
@@ -174,57 +176,6 @@ export default function CodeView(props: CodeViewProps) {
     }
     focusedItemRef.current = focusedItem;
   }, [focusedItem, parseFileFlag]);
-
-  // watch focus/selection for the editor
-  const firstSelection = useRef<CodeSelection | null>(null);
-  const [selection, setSelection] = useState<CodeSelection | null>(null);
-
-  const updateSelection = useCallback(() => {
-    const monacoEditor = getCurrentEditorInstance();
-    if (!parseFileFlag) return;
-    const _selection = monacoEditor?.getSelection();
-
-    if (_selection) {
-      if (isFirst.current) {
-        firstSelection.current = _selection;
-        isFirst.current = false;
-        return;
-      }
-      if (
-        firstSelection.current &&
-        (_selection.startLineNumber !==
-          firstSelection.current.startLineNumber ||
-          _selection.startColumn !== firstSelection.current.startColumn ||
-          _selection.endLineNumber !== firstSelection.current.endLineNumber ||
-          _selection.endColumn !== firstSelection.current.endColumn)
-      ) {
-        firstSelection.current = _selection;
-        if (
-          !selection ||
-          _selection.startLineNumber !== selection.startLineNumber ||
-          _selection.startColumn !== selection.startColumn ||
-          _selection.endLineNumber !== selection.endLineNumber ||
-          _selection.endColumn !== selection.endColumn
-        ) {
-          setSelection({
-            startLineNumber: _selection.startLineNumber,
-            startColumn: _selection.startColumn,
-            endLineNumber: _selection.endLineNumber,
-            endColumn: _selection.endColumn,
-          });
-        }
-      }
-    } else {
-      setSelection(null);
-    }
-  }, [selection, parseFileFlag]);
-
-  useEffect(() => {
-    const cursorDetectInterval = setInterval(() => updateSelection(), 0);
-
-    return () => clearInterval(cursorDetectInterval);
-  }, [updateSelection]);
-  // detect node of current selection
 
   useEffect(() => {
     if (!parseFileFlag) return;

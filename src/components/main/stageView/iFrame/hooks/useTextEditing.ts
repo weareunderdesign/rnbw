@@ -63,10 +63,9 @@ export const useTextEditing = ({
   });
 
   const beforeTextEdit = useCallback(() => {
-    setIsContentProgrammaticallyChanged(true);
     let node = validNodeTree[contentEditableUidRef.current];
     if (!node) return;
-
+    setIsContentProgrammaticallyChanged(true);
     let editableId = contentEditableUidRef.current;
     contentEditableUidRef.current = "";
 

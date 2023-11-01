@@ -67,6 +67,7 @@ export const useCmdk = (openFileUid: React.MutableRefObject<string>) => {
       cb_moveNode(uids, focusedItem, true);
     }
   }, [clipboardData, invalidNodes, focusedItem, cb_moveNode]);
+
   const onDuplicate = useCallback(() => {
     cb_duplicateNode();
   }, [cb_duplicateNode]);
