@@ -42,7 +42,7 @@ export const useReloadProject = () => {
   const currentFileUid = useSelector(currentFileUidSelector);
   const osType = useSelector(osTypeSelector);
 
-  const { ffHandlers, setFFHandlers } = useContext(MainContext);
+  const { fileHandlers, setFileHandlers } = useContext(MainContext);
 
   const ffTreeRef = useRef<TNodeTreeData>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -55,7 +55,7 @@ export const useReloadProject = () => {
     let _deletedUids: TNodeUid[] = [];
 
     if (project.context === "local") {
-      const result = await loadLocalProject(fileTree, ffHandlers, osType);
+      const result = await loadLocalProject(fileTree, fileHandlers, osType);
       handlerObj = result.handlerObj;
       _deletedUids = result.deletedUids;
     } else if (project.context === "idb") {
@@ -78,7 +78,7 @@ export const useReloadProject = () => {
     }
     ffTreeRef.current = treeViewData;
     dispatch(setFileTree(treeViewData));
-    setFFHandlers(ffHandlerObj);
+    setFileHandlers(ffHandlerObj);
 
     setIsLoading(false);
   }

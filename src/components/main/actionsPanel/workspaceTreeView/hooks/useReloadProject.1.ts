@@ -3,31 +3,30 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { TNodeTreeData, TNodeUid } from "@_node/types";
+import { AppState } from "@_redux/_root";
 import { MainContext } from "@_redux/main";
 import {
-  currentFileUidSelector,
   fileTreeSelector,
   projectSelector,
   setCurrentFileUid,
   setFileTree,
   updateFileTreeViewState,
 } from "@_redux/main/fileTree";
+import { setNodeTree, setValidNodeTree } from "@_redux/main/nodeTree";
+import { setIframeSrc } from "@_redux/main/stageView";
 
 import {
   loadIDBProject,
   loadLocalProject,
   processHandlerObj,
 } from "../helpers";
-import { AppState } from "@_redux/_root";
-import { setIframeSrc } from "@_redux/main/stageView";
-import { setNodeTree, setValidNodeTree } from "@_redux/main/nodeTree";
 
 export const useReloadProject = () => {
   const project = useSelector(projectSelector);
   const fileTree = useSelector(fileTreeSelector);
   const { osType } = useSelector((state: AppState) => state.global);
 
-  const { ffHandlers, setFFHandlers } = useContext(MainContext);
+  const { fileHandlers, setFileHandlers } = useContext(MainContext);
 
   const ffTreeRef = useRef<TNodeTreeData>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -40,7 +39,7 @@ export const useReloadProject = () => {
     let _deletedUids: TNodeUid[] = [];
 
     if (project.context === "local") {
-      const result = await loadLocalProject(fileTree, ffHandlers, osType);
+      const result = await loadLocalProject(fileTree, fileHandlers, osType);
       handlerObj = result.handlerObj;
       _deletedUids = result.deletedUids;
     } else if (project.context === "idb") {
@@ -64,7 +63,7 @@ export const useReloadProject = () => {
     }
     ffTreeRef.current = treeViewData;
     setFileTree(treeViewData);
-    setFFHandlers(ffHandlerObj);
+    setFileHandlers(ffHandlerObj);
 
     setIsLoading(false);
   }

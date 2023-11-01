@@ -79,7 +79,6 @@ import cmdkRefJumpstart from "@_ref/cmdk.ref/Jumpstart.csv";
 import filesRef from "@_ref/rfrncs/Files.csv";
 // @ts-ignore
 import htmlRefElements from "@_ref/rfrncs/HTML Elements.csv";
-import { TToast } from "@_types/global";
 import {
   TCmdkContext,
   TCmdkContextScope,
@@ -172,7 +171,6 @@ export default function MainPage() {
   // ***************************************** Reducer End *****************************************
 
   // ***************************************** Context Begin *****************************************
-  // global
   const [pending, setPending] = useState(false);
   const runningActions = useRef<{ [actionName: string]: true }>({});
   const hasRunningAction = () =>
@@ -204,8 +202,7 @@ export default function MainPage() {
     }
   };
 
-  // file tree
-  const [ffHandlers, setFFHandlers] = useState<TFileHandlerCollection>({});
+  const [fileHandlers, setFileHandlers] = useState<TFileHandlerCollection>({});
 
   // code view
   const isContentProgrammaticallyChanged = useRef<boolean>(false);
@@ -394,22 +391,6 @@ export default function MainPage() {
     htmlReferenceData,
     cmdkSearch,
   ]);
-  // toasts
-  const [messages, setMessages] = useState<TToast[]>([]);
-  const addMessage = useCallback(
-    (message: TToast) => {
-      setMessages([...messages, message]);
-    },
-    [messages],
-  );
-  const removeMessage = useCallback(
-    (index: number) => {
-      const newMessages = JSON.parse(JSON.stringify(messages));
-      newMessages.splice(index);
-      setMessages(JSON.parse(JSON.stringify(newMessages)));
-    },
-    [messages],
-  );
   // -------------------------------------------------------------- routing --------------------------------------------------------------
   const isChromeOrEdge = () => {
     const userAgent = navigator.userAgent;
@@ -728,7 +709,7 @@ export default function MainPage() {
             });
 
             dispatch(setFileTree(treeViewData));
-            setFFHandlers(ffHandlerObj);
+            setFileHandlers(ffHandlerObj);
 
             dispatch(
               setProject({
@@ -860,7 +841,7 @@ export default function MainPage() {
             } as TNode;
           });
           dispatch(setFileTree(treeViewData));
-          setFFHandlers(ffHandlerObj);
+          setFileHandlers(ffHandlerObj);
           setProject({
             context: "idb",
             name: "Untitled",
@@ -1603,13 +1584,16 @@ export default function MainPage() {
       {/* wrap with the context */}
       <MainContext.Provider
         value={{
-          // global action
           addRunningActions,
           removeRunningActions,
 
-          // file tree view
-          ffHandlers,
-          setFFHandlers,
+          filesReferenceData,
+          htmlReferenceData,
+          cmdkReferenceData,
+
+          fileHandlers,
+          setFileHandlers,
+
           // code view
           isContentProgrammaticallyChanged,
           setIsContentProgrammaticallyChanged,
@@ -1618,13 +1602,7 @@ export default function MainPage() {
           newFocusedNodeUid,
           setNewFocusedNodeUid,
           setCodeViewOffsetTop,
-          // references
-          filesReferenceData,
-          htmlReferenceData,
-          cmdkReferenceData,
-          // toasts
-          addMessage,
-          removeMessage,
+
           // load project
           loadProject,
           // non html editable

@@ -1,19 +1,16 @@
-import { useContext } from 'react';
+import { useContext } from "react";
 
-import { useSelector } from 'react-redux';
+import { useSelector } from "react-redux";
 
-import { TFileNodeData } from '@_node/file';
-import { TNodeUid } from '@_node/types';
-import { MainContext } from '@_redux/main';
-import {
-  fileTreeSelector,
-  projectSelector,
-} from '@_redux/main/fileTree';
-import { verifyFileHandlerPermission } from '@_services/main';
+import { TFileNodeData } from "@_node/file";
+import { TNodeUid } from "@_node/types";
+import { MainContext } from "@_redux/main";
+import { fileTreeSelector, projectSelector } from "@_redux/main/fileTree";
+import { verifyFileHandlerPermission } from "@_services/main";
 
-import { useInvalidNodes } from '../hooks';
-import { generateNewNameMoveNode } from './generateNewNameMoveNode';
-import { moveActions } from './moveActions';
+import { useInvalidNodes } from "../hooks";
+import { generateNewNameMoveNode } from "./generateNewNameMoveNode";
+import { moveActions } from "./moveActions";
 
 export const validateAndMoveNode = async (
   uid: string,
@@ -23,11 +20,11 @@ export const validateAndMoveNode = async (
   const project = useSelector(projectSelector);
   const fileTree = useSelector(fileTreeSelector);
 
-  const { ffHandlers, addMessage } = useContext(MainContext);
+  const { fileHandlers } = useContext(MainContext);
 
   const { setInvalidNodes }: any = useInvalidNodes();
 
-  const { moveIDBFF, moveLocalFF } = moveActions(addMessage);
+  const { moveIDBFF, moveLocalFF } = moveActions(() => {});
 
   const node = fileTree[uid];
 
@@ -42,8 +39,10 @@ export const validateAndMoveNode = async (
     return false;
   }
 
-  const handler = ffHandlers[uid];
-  const parentHandler = ffHandlers[parentNode.uid] as FileSystemDirectoryHandle;
+  const handler = fileHandlers[uid];
+  const parentHandler = fileHandlers[
+    parentNode.uid
+  ] as FileSystemDirectoryHandle;
 
   if (
     !(await verifyFileHandlerPermission(handler)) ||

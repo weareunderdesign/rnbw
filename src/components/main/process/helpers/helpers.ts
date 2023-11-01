@@ -22,12 +22,12 @@ import { TCodeChange, TFileInfo } from "@_types/main";
 
 export const saveFileContent = async (
   project: TProject,
-  ffHandlers: TFileHandlerCollection,
+  fileHandlers: TFileHandlerCollection,
   uid: string,
   nodeData: TFileNodeData,
 ) => {
   if (project.context === "local") {
-    const handler = ffHandlers[uid];
+    const handler = fileHandlers[uid];
     const writableStream = await (
       handler as FileSystemFileHandle
     ).createWritable();

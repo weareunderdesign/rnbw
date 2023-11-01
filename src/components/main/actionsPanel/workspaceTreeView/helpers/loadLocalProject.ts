@@ -1,20 +1,17 @@
-import { LogAllow } from '@_constants/global';
-import { RootNodeUid } from '@_constants/main';
-import {
-  reloadLocalProject,
-  TFileHandlerCollection,
-} from '@_node/file';
-import { TNodeTreeData } from '@_node/types';
-import { TOsType } from '@_redux/global';
+import { LogAllow } from "@_constants/global";
+import { RootNodeUid } from "@_constants/main";
+import { reloadLocalProject, TFileHandlerCollection } from "@_node/file";
+import { TNodeTreeData } from "@_node/types";
+import { TOsType } from "@_redux/global";
 
 export const loadLocalProject = async (
   ffTree: TNodeTreeData,
-  ffHandlers: TFileHandlerCollection,
+  fileHandlers: TFileHandlerCollection,
   osType: TOsType,
 ) => {
   try {
     const { handlerObj, deletedUids } = await reloadLocalProject(
-      ffHandlers[RootNodeUid] as FileSystemDirectoryHandle,
+      fileHandlers[RootNodeUid] as FileSystemDirectoryHandle,
       ffTree,
       osType,
     );

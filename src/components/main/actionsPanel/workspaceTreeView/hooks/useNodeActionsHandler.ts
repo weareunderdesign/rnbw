@@ -35,14 +35,6 @@ import { verifyFileHandlerPermission } from "@_services/main";
 import { TFileNodeType } from "@_types/main";
 
 import {
-  deletingWarning,
-  duplicatingWarning,
-  fileError,
-  folderError,
-  invalidDirError,
-  movingError,
-} from "../errors";
-import {
   duplicateNode,
   generateNewName,
   renameNode,
@@ -72,12 +64,10 @@ export const useNodeActionsHandler = (
     addRunningActions,
     removeRunningActions,
     // file tree view
-    ffHandlers,
+    fileHandlers,
     // references
     htmlReferenceData,
     // cmdk
-    // toasts
-    addMessage,
     // non-parse file
     setParseFile,
     setPrevFileUid,
@@ -99,12 +89,11 @@ export const useNodeActionsHandler = (
       let newName: string = "";
 
       if (project.context === "local") {
-        const parentHandler = ffHandlers[
+        const parentHandler = fileHandlers[
           parentUid
         ] as FileSystemDirectoryHandle;
         if (!(await verifyFileHandlerPermission(parentHandler))) {
-          addMessage(invalidDirError);
-          removeRunningActions(["fileTreeView-create"], false);
+          removeRunningActions(["fileTreeView-create"]);
           return;
         }
 
@@ -116,8 +105,7 @@ export const useNodeActionsHandler = (
             create: true,
           });
         } catch (err) {
-          addMessage(folderError);
-          removeRunningActions(["fileTreeView-create"], false);
+          removeRunningActions(["fileTreeView-create"]);
           return;
         }
       } else if (project.context === "idb") {
@@ -134,7 +122,6 @@ export const useNodeActionsHandler = (
             await writeFile(`${parentNodeData.path}/${newName}`, "");
           }
         } catch (err) {
-          addMessage(ffType === "*folder" ? folderError : fileError);
           removeRunningActions(["fileTreeView-create"], false);
           return;
         }
@@ -154,7 +141,7 @@ export const useNodeActionsHandler = (
       addRunningActions,
       removeRunningActions,
       project.context,
-      ffHandlers,
+      fileHandlers,
       cb_reloadProject,
     ],
   );
@@ -279,7 +266,7 @@ export const useNodeActionsHandler = (
       setInvalidNodes,
       removeInvalidNodes,
       fileTree,
-      ffHandlers,
+      fileHandlers,
       cb_reloadProject,
     ],
   );
@@ -325,7 +312,7 @@ export const useNodeActionsHandler = (
       setTemporaryNodes,
       removeTemporaryNodes,
       fileTree,
-      ffHandlers,
+      fileHandlers,
       osType,
       createFFNode,
       removeInvalidNodes,
@@ -352,19 +339,18 @@ export const useNodeActionsHandler = (
 
     if (project.context === "local") {
       const allDone = await Promise.all(
-        uids.map((uid) => validateAndDeleteNode(uid, fileTree, ffHandlers)),
+        uids.map((uid) => validateAndDeleteNode(uid, fileTree, fileHandlers)),
       ).then((results) => results.every(Boolean));
 
       if (!allDone) {
-        addMessage(deletingWarning);
       }
     } else if (project.context === "idb") {
       const allDone = await Promise.all(
-        uids.map((uid) => validateAndDeleteNode(uid, fileTree, ffHandlers)),
+        uids.map((uid) => validateAndDeleteNode(uid, fileTree, fileHandlers)),
       ).then((results) => results.every(Boolean));
 
       if (!allDone) {
-        addMessage(deletingWarning);
+        // addMessage(deletingWarning);
       }
     }
 
@@ -380,7 +366,7 @@ export const useNodeActionsHandler = (
     removeInvalidNodes,
     selectedItems,
     fileTree,
-    ffHandlers,
+    fileHandlers,
     cb_reloadProject,
     currentFileUid,
   ]);
@@ -422,7 +408,7 @@ export const useNodeActionsHandler = (
       );
 
       if (_uids.some((result) => !result)) {
-        addMessage(movingError);
+        // addMessage(movingError);
       }
 
       const action: TFileAction = {
@@ -442,7 +428,7 @@ export const useNodeActionsHandler = (
       invalidNodes,
       setInvalidNodes,
       fileTree,
-      ffHandlers,
+      fileHandlers,
       cb_reloadProject,
     ],
   );
@@ -482,8 +468,8 @@ export const useNodeActionsHandler = (
           uid,
           true,
           fileTree,
-          ffHandlers,
-          addMessage,
+          fileHandlers,
+          () => {},
           setInvalidNodes,
           invalidNodes,
         );
@@ -497,7 +483,7 @@ export const useNodeActionsHandler = (
     );
 
     if (!allDone) {
-      addMessage(duplicatingWarning);
+      // addMessage(duplicatingWarning);
     }
 
     const action: TFileAction = {
@@ -518,7 +504,7 @@ export const useNodeActionsHandler = (
     setInvalidNodes,
     selectedItems,
     fileTree,
-    ffHandlers,
+    fileHandlers,
     cb_reloadProject,
   ]);
 

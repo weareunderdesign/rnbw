@@ -1,8 +1,8 @@
-import { StageNodeIdAttr } from "@_node/html";
-import { TNodeTreeData, TNodeUid } from "@_node/types";
-import { IEditorRef } from "@_redux/main";
 import { editor } from "monaco-editor";
 import { DraggingPosition } from "react-complex-tree";
+
+import { StageNodeIdAttr } from "@_node/html";
+import { TNodeTreeData, TNodeUid } from "@_node/types";
 
 export const sortUidsByMaxEndIndex = (
   uids: TNodeUid[],

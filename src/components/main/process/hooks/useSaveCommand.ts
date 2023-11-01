@@ -1,33 +1,23 @@
-import {
-  useCallback,
-  useContext,
-  useEffect,
-} from 'react';
+import { useCallback, useContext, useEffect } from "react";
 
-import {
-  useDispatch,
-  useSelector,
-} from 'react-redux';
+import { useDispatch, useSelector } from "react-redux";
 
-import { RootNodeUid } from '@_constants/main';
-import { getSubNodeUidsByBfs } from '@_node/apis';
-import {
-  reloadLocalProject,
-  TFileNodeData,
-} from '@_node/file';
-import { TNodeTreeData } from '@_node/types';
-import { osTypeSelector } from '@_redux/global';
-import { MainContext } from '@_redux/main';
-import { currentCommandSelector } from '@_redux/main/cmdk';
+import { RootNodeUid } from "@_constants/main";
+import { getSubNodeUidsByBfs } from "@_node/apis";
+import { reloadLocalProject, TFileNodeData } from "@_node/file";
+import { TNodeTreeData } from "@_node/types";
+import { osTypeSelector } from "@_redux/global";
+import { MainContext } from "@_redux/main";
+import { currentCommandSelector } from "@_redux/main/cmdk";
 import {
   currentFileUidSelector,
   fileTreeSelector,
   projectSelector,
   setFileTree,
-} from '@_redux/main/fileTree';
-import { setNeedToReloadIframe } from '@_redux/main/stageView';
+} from "@_redux/main/fileTree";
+import { setNeedToReloadIframe } from "@_redux/main/stageView";
 
-import { saveFileContent } from '../helpers';
+import { saveFileContent } from "../helpers";
 
 export const useSaveCommand = () => {
   const dispatch = useDispatch();
@@ -40,13 +30,10 @@ export const useSaveCommand = () => {
   const osType = useSelector(osTypeSelector);
 
   const {
-    // global action
     addRunningActions,
     removeRunningActions,
-    // file tree view
-    ffHandlers,
-    // toasts
-    addMessage,
+
+    fileHandlers,
   } = useContext(MainContext);
 
   useEffect(() => {
@@ -77,19 +64,14 @@ export const useSaveCommand = () => {
 
           if (nodeData.changed) {
             try {
-              saveFileContent(project, ffHandlers, uid, nodeData);
-            } catch (err) {
-              addMessage({
-                type: "error",
-                content: "error occurred while saving",
-              });
-            }
+              saveFileContent(project, fileHandlers, uid, nodeData);
+            } catch (err) {}
           }
 
           const fileData = fileTree[currentFileUid].data as TFileNodeData;
           if (fileData.ext === ".css" || fileData.ext === ".js") {
             reloadLocalProject(
-              ffHandlers[RootNodeUid] as FileSystemDirectoryHandle,
+              fileHandlers[RootNodeUid] as FileSystemDirectoryHandle,
               fileTree,
               osType,
               [currentFileUid],
@@ -104,5 +86,5 @@ export const useSaveCommand = () => {
     dispatch(setFileTree(_ffTree));
 
     removeRunningActions(["process-save"], false);
-  }, [fileTree, ffHandlers, reloadLocalProject]);
+  }, [fileTree, fileHandlers, reloadLocalProject]);
 };

@@ -3,7 +3,6 @@ import { editor } from "monaco-editor";
 import { TFileHandlerCollection, TFilesReferenceData } from "@_node/file";
 import { THtmlReferenceData } from "@_node/html";
 import { TNodeUid } from "@_node/types";
-import { TToast } from "@_types/global";
 import { TCmdkReferenceData, TCodeChange } from "@_types/main";
 
 import { TProjectContext } from "./fileTree";
@@ -30,13 +29,20 @@ export type TUpdateTreeViewStatePayload = {
 };
 
 export type TMainContext = {
-  // global action
   addRunningActions: (actionNames: string[]) => void;
   removeRunningActions: (actionNames: string[], effect?: boolean) => void;
 
-  // file tree
-  ffHandlers: TFileHandlerCollection;
-  setFFHandlers: (ffHandlerObj: TFileHandlerCollection) => void;
+  filesReferenceData: TFilesReferenceData;
+  htmlReferenceData: THtmlReferenceData;
+  cmdkReferenceData: TCmdkReferenceData;
+
+  fileHandlers: TFileHandlerCollection;
+  setFileHandlers: (fileHandlerObj: TFileHandlerCollection) => void;
+
+  monacoEditorRef: IEditorRef;
+  setMonacoEditorRef: (
+    editorInstance: editor.IStandaloneCodeEditor | null,
+  ) => void;
 
   // code view
   isContentProgrammaticallyChanged: React.RefObject<boolean>;
@@ -48,13 +54,6 @@ export type TMainContext = {
   setCodeViewOffsetTop: (offsetTop: string) => void;
 
   // references
-  filesReferenceData: TFilesReferenceData;
-  htmlReferenceData: THtmlReferenceData;
-  cmdkReferenceData: TCmdkReferenceData;
-
-  // toasts
-  addMessage: (message: TToast) => void;
-  removeMessage: (index: number) => void;
 
   loadProject: (
     fsType: TProjectContext,
@@ -68,10 +67,6 @@ export type TMainContext = {
   setParseFile: (parseFile: boolean) => void;
   prevFileUid: string;
   setPrevFileUid: (uid: string) => void;
-  monacoEditorRef: IEditorRef;
-  setMonacoEditorRef: (
-    editorInstance: editor.IStandaloneCodeEditor | null,
-  ) => void;
 };
 
 export type IEditorRef = React.RefObject<editor.IStandaloneCodeEditor | null>;

@@ -2,14 +2,14 @@ import {
   removeFileSystem,
   TFileHandlerCollection,
   TFileNodeData,
-} from '@_node/file';
-import { TNodeUid } from '@_node/types';
-import { verifyFileHandlerPermission } from '@_services/main';
+} from "@_node/file";
+import { TNodeUid } from "@_node/types";
+import { verifyFileHandlerPermission } from "@_services/main";
 
 export const deleteFileOrFolder = async (
   uid: TNodeUid,
   ffTree: Record<string, any>,
-  ffHandlers: TFileHandlerCollection,
+  fileHandlers: TFileHandlerCollection,
   projectContext: string,
 ) => {
   try {
@@ -22,7 +22,7 @@ export const deleteFileOrFolder = async (
     const parentNodeData = parentNode.data as TFileNodeData;
 
     if (projectContext === "local") {
-      const parentHandler = ffHandlers[
+      const parentHandler = fileHandlers[
         parentNode.uid
       ] as FileSystemDirectoryHandle;
       if (!(await verifyFileHandlerPermission(parentHandler))) {
