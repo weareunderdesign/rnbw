@@ -66,6 +66,7 @@ import {
 import { setNodeTree, setValidNodeTree } from "@_redux/main/nodeTree";
 import { NodeTree_Event_ClearActionType } from "@_redux/main/nodeTree/event";
 import {
+  setDidUndo,
   setFavicon,
   setNavigatorDropdownType,
   setShowActionsPanel,
@@ -1028,8 +1029,7 @@ export default function MainPage() {
       console.log("hms - it is the origin state");
     if (fileEventPastLength === 1) return;
 
-    setCurrentFileUid(currentFileUid); //TODO: check if this is needed
-    //setIsHms(true); //TODO: check if this is needed
+    dispatch(setDidUndo(true));
 
     dispatch({ type: "main/undo" });
     dispatch(setUpdateOptions({ parse: true, from: "hms" }));
@@ -1058,7 +1058,6 @@ export default function MainPage() {
     if (fileEventFutureLength === 0) return;
 
     dispatch(setFileAction(fileAction));
-    setCurrentFileUid(currentFileUid); //TODO: check if this is needed
     dispatch({ type: "main/redo" });
     dispatch(setUpdateOptions({ parse: true, from: "hms" }));
   }, [
