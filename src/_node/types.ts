@@ -1,5 +1,7 @@
 import { editor } from "monaco-editor";
 
+import { TOsType } from "@_redux/global";
+
 import { THtmlReferenceData } from "./html";
 
 export type TNode = {
@@ -48,6 +50,9 @@ export type TNodeApiPayload = {
   position?: number;
 
   codeViewInstance: editor.IStandaloneCodeEditor;
+  codeViewTabSize?: number;
+
+  osType?: TOsType;
 };
 
 export type TNodeActionType =

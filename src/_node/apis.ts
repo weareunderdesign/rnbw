@@ -210,6 +210,9 @@ export const callNodeApi = async (params: TNodeApiPayload, cb?: () => {}) => {
     position = 0,
 
     codeViewInstance,
+    codeViewTabSize = 2,
+
+    osType = "Windows",
   } = params;
 
   return new Promise<void>((resolve, reject) => {
