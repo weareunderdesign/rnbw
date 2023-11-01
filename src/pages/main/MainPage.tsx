@@ -14,7 +14,8 @@ import { editor } from "monaco-editor";
 import { useDispatch } from "react-redux";
 
 import { SVGIcon } from "@_components/common";
-import { ActionsPanel, CodeView, Process, StageView } from "@_components/main";
+import { ActionsPanel, CodeView, StageView } from "@_components/main";
+import Processor from "@_components/main/processor";
 import { LogAllow } from "@_constants/global";
 import {
   AddActionPrefix,
@@ -44,6 +45,8 @@ import { MainContext } from "@_redux/main";
 import {
   setCmdkOpen,
   setCmdkPages,
+  setCmdkSearchContent,
+  setCurrentCmdkPage,
   setCurrentCommand,
 } from "@_redux/main/cmdk";
 import {
@@ -90,7 +93,8 @@ import {
   TSession,
 } from "@_types/main";
 
-import { getCommandKey } from "../../services/global";
+import { getCommandKey, isChromeOrEdge } from "../../services/global";
+import { addDefaultCmdkActions } from "./helper";
 
 export default function MainPage() {
   // ***************************************** Reducer Begin *****************************************
@@ -166,6 +170,7 @@ export default function MainPage() {
     cmdkPages,
     currentCmdkPage,
 
+    cmdkSearchContent,
     currentCommand,
   } = useAppState();
   // ***************************************** Reducer End *****************************************
@@ -204,6 +209,13 @@ export default function MainPage() {
 
   const [fileHandlers, setFileHandlers] = useState<TFileHandlerCollection>({});
 
+  const monacoEditorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  const setMonacoEditorRef = (
+    editorInstance: editor.IStandaloneCodeEditor | null,
+  ) => {
+    monacoEditorRef.current = editorInstance;
+  };
+
   // code view
   const isContentProgrammaticallyChanged = useRef<boolean>(false);
   function setIsContentProgrammaticallyChanged(value: boolean) {
@@ -211,13 +223,6 @@ export default function MainPage() {
   }
   const [codeChanges, setCodeChanges] = useState<TCodeChange[]>([]);
   const [newFocusedNodeUid, setNewFocusedNodeUid] = useState<TNodeUid>("");
-
-  const monacoEditorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
-  const setMonacoEditorRef = (
-    editorInstance: editor.IStandaloneCodeEditor | null,
-  ) => {
-    monacoEditorRef.current = editorInstance;
-  };
 
   // references
   const [filesReferenceData, setFilesReferenceData] =
@@ -232,17 +237,21 @@ export default function MainPage() {
     useState<TCmdkGroupData>({});
   const [cmdkReferenceActions, setCmdkReferenceActions] =
     useState<TCmdkGroupData>({});
+
   // non-parse file editable
   const [parseFileFlag, setParseFile] = useState<boolean>(true);
   const [prevFileUid, setPrevFileUid] = useState<string>("");
-  // first loaded
-  const firstLoaded = useRef<number>(0);
+
   // guide ref
   const guideRef = useRef<HTMLAnchorElement>(null);
-  const cmdkPage = useMemo(() => {
-    return cmdkPages.length == 0 ? "" : cmdkPages[cmdkPages.length - 1];
+
+  useEffect(() => {
+    dispatch(
+      setCurrentCmdkPage(
+        cmdkPages.length === 0 ? "" : cmdkPages[cmdkPages.length - 1],
+      ),
+    );
   }, [cmdkPages]);
-  const [cmdkSearch, setCmdkSearch] = useState<string>("");
   const cmdkReferenceAdd = useMemo<TCmdkGroupData>(() => {
     const data: TCmdkGroupData = {
       Files: [],
@@ -273,7 +282,7 @@ export default function MainPage() {
       });
     }
     data["Files"] = data["Files"].filter(
-      (element) => element.Featured || !!cmdkSearch,
+      (element) => element.Featured || !!cmdkSearchContent,
     );
     if (data["Files"].length === 0) {
       delete data["Files"];
@@ -368,11 +377,12 @@ export default function MainPage() {
     }
     if (
       data["Elements"].length > 0 &&
-      data["Elements"].filter((element) => element.Featured || !!cmdkSearch)
-        .length > 0
+      data["Elements"].filter(
+        (element) => element.Featured || !!cmdkSearchContent,
+      ).length > 0
     ) {
       data["Elements"] = data["Elements"].filter(
-        (element) => element.Featured || !!cmdkSearch,
+        (element) => element.Featured || !!cmdkSearchContent,
       );
     }
     if (data["Elements"].length === 0) {
@@ -383,27 +393,7 @@ export default function MainPage() {
     delete data["Recent"];
 
     return data;
-  }, [
-    fileTree,
-    fFocusedItem,
-    nodeTree,
-    nFocusedItem,
-    htmlReferenceData,
-    cmdkSearch,
-  ]);
-  // -------------------------------------------------------------- routing --------------------------------------------------------------
-  const isChromeOrEdge = () => {
-    const userAgent = navigator.userAgent;
-
-    if (userAgent.indexOf("Chrome") > -1) {
-      return true; // Current browser is Chrome
-    } else if (userAgent.indexOf("Edg") > -1) {
-      return true; // Current browser is Edge
-    }
-
-    return false; // Current browser is not Chrome or Edge
-  };
-
+  }, [fileTree, fFocusedItem, nodeTree, nFocusedItem, htmlReferenceData]);
   useEffect(() => {
     // check if current broswer is Chrome or Edge
     if (!isChromeOrEdge()) {
@@ -422,26 +412,26 @@ export default function MainPage() {
     });
   }, []);
   // -------------------------------------------------------------- recent project --------------------------------------------------------------
-  const [recentProjectContext, setRecentProjectContext] = useState<
+  const [recentProjectContexts, setRecentProjectContexts] = useState<
     TProjectContext[]
   >([]);
-  const [recentProjectName, setRecentProjectName] = useState<string[]>([]);
-  const [recentProjectHandler, setRecentProjectHandler] = useState<
+  const [recentProjectNames, setRecentProjectNames] = useState<string[]>([]);
+  const [recentProjectHandlers, setRecentProjectHandlers] = useState<
     (FileSystemDirectoryHandle | null)[]
   >([]);
   const cmdkReferneceRecentProject = useMemo<TCmdkReference[]>(() => {
     const _projects: TProject[] = [];
     const _cmdkReferneceRecentProject: TCmdkReference[] = [];
-    recentProjectContext.map((_v, index) => {
+    recentProjectContexts.map((_v, index) => {
       if (_v != "idb") {
         _projects.push({
-          context: recentProjectContext[index],
-          name: recentProjectName[index],
-          handler: recentProjectHandler[index],
+          context: recentProjectContexts[index],
+          name: recentProjectNames[index],
+          handler: recentProjectHandlers[index],
           favicon: null,
         });
         _cmdkReferneceRecentProject.push({
-          Name: recentProjectName[index],
+          Name: recentProjectNames[index],
           Icon: "folder",
           Description: "",
           "Keyboard Shortcut": {
@@ -458,12 +448,11 @@ export default function MainPage() {
     });
     setWorkspace({ name: workspace.name, projects: _projects });
     return _cmdkReferneceRecentProject;
-  }, [recentProjectContext, recentProjectName, recentProjectHandler]);
+  }, [recentProjectContexts, recentProjectNames, recentProjectHandlers]);
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
   // key event listener
   const cb_onKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      // cmdk obj for the current command
       const cmdk: TCmdkKeyMap = {
         cmd: getCommandKey(e, osType),
         shift: e.shiftKey,
@@ -471,6 +460,7 @@ export default function MainPage() {
         key: e.code,
         click: false,
       };
+
       if (e.key === "Escape") {
         closeAllPanel();
         return;
@@ -723,43 +713,43 @@ export default function MainPage() {
             if (internal) {
               // store last edit session
               toogleCodeView();
-              const _recentProjectContext = [...recentProjectContext];
-              const _recentProjectName = [...recentProjectName];
-              const _recentProjectHandler = [...recentProjectHandler];
+              const _recentProjectContexts = [...recentProjectContexts];
+              const _recentProjectNames = [...recentProjectNames];
+              const _recentProjectHandlers = [...recentProjectHandlers];
               for (
                 let index = 0;
-                index < _recentProjectContext.length;
+                index < _recentProjectContexts.length;
                 ++index
               ) {
                 if (
-                  _recentProjectContext[index] === fsType &&
-                  projectHandle?.name === _recentProjectName[index]
+                  _recentProjectContexts[index] === fsType &&
+                  projectHandle?.name === _recentProjectNames[index]
                 ) {
-                  _recentProjectContext.splice(index, 1);
-                  _recentProjectName.splice(index, 1);
-                  _recentProjectHandler.splice(index, 1);
+                  _recentProjectContexts.splice(index, 1);
+                  _recentProjectNames.splice(index, 1);
+                  _recentProjectHandlers.splice(index, 1);
                   break;
                 }
               }
-              if (_recentProjectContext.length === RecentProjectCount) {
-                _recentProjectContext.pop();
-                _recentProjectName.pop();
-                _recentProjectHandler.pop();
+              if (_recentProjectContexts.length === RecentProjectCount) {
+                _recentProjectContexts.pop();
+                _recentProjectNames.pop();
+                _recentProjectHandlers.pop();
               }
-              _recentProjectContext.unshift(fsType);
-              _recentProjectName.unshift(
+              _recentProjectContexts.unshift(fsType);
+              _recentProjectNames.unshift(
                 (projectHandle as FileSystemDirectoryHandle).name,
               );
-              _recentProjectHandler.unshift(
+              _recentProjectHandlers.unshift(
                 projectHandle as FileSystemDirectoryHandle,
               );
-              setRecentProjectContext(_recentProjectContext);
-              setRecentProjectName(_recentProjectName);
-              setRecentProjectHandler(_recentProjectHandler);
+              setRecentProjectContexts(_recentProjectContexts);
+              setRecentProjectNames(_recentProjectNames);
+              setRecentProjectHandlers(_recentProjectHandlers);
               await setMany([
-                ["recent-project-context", _recentProjectContext],
-                ["recent-project-name", _recentProjectName],
-                ["recent-project-handler", _recentProjectHandler],
+                ["recent-project-context", _recentProjectContexts],
+                ["recent-project-name", _recentProjectNames],
+                ["recent-project-handler", _recentProjectHandlers],
               ]);
             }
 
@@ -850,29 +840,29 @@ export default function MainPage() {
           });
 
           // store last edit session
-          // const _recentProjectContext = [...recentProjectContext]
-          // const _recentProjectName = [...recentProjectName]
-          // const _recentProjectHandler = [...recentProjectHandler]
-          // for (let index = 0; index < _recentProjectContext.length; ++index) {
-          //   if (_recentProjectContext[index] === fsType) {
-          //     _recentProjectContext.splice(index, 1)
-          //     _recentProjectName.splice(index, 1)
-          //     _recentProjectHandler.splice(index, 1)
+          // const _recentProjectContexts = [...recentProjectContexts]
+          // const _recentProjectNames = [...recentProjectNames]
+          // const _recentProjectHandlers = [...recentProjectHandlers]
+          // for (let index = 0; index < _recentProjectContexts.length; ++index) {
+          //   if (_recentProjectContexts[index] === fsType) {
+          //     _recentProjectContexts.splice(index, 1)
+          //     _recentProjectNames.splice(index, 1)
+          //     _recentProjectHandlers.splice(index, 1)
           //     break
           //   }
           // }
-          // if (_recentProjectContext.length === RecentProjectCount) {
-          //   _recentProjectContext.pop()
-          //   _recentProjectName.pop()
-          //   _recentProjectHandler.pop()
+          // if (_recentProjectContexts.length === RecentProjectCount) {
+          //   _recentProjectContexts.pop()
+          //   _recentProjectNames.pop()
+          //   _recentProjectHandlers.pop()
           // }
-          // _recentProjectContext.unshift(fsType)
-          // _recentProjectName.unshift('Untitled')
-          // _recentProjectHandler.unshift(null)
-          // setRecentProjectContext(_recentProjectContext)
-          // setRecentProjectName(_recentProjectName)
-          // setRecentProjectHandler(_recentProjectHandler)
-          // await setMany([['recent-project-context', _recentProjectContext], ['recent-project-name', _recentProjectName], ['recent-project-handler', _recentProjectHandler]])
+          // _recentProjectContexts.unshift(fsType)
+          // _recentProjectNames.unshift('Untitled')
+          // _recentProjectHandlers.unshift(null)
+          // setRecentProjectContexts(_recentProjectContexts)
+          // setRecentProjectNames(_recentProjectNames)
+          // setRecentProjectHandlers(_recentProjectHandlers)
+          // await setMany([['recent-project-context', _recentProjectContexts], ['recent-project-name', _recentProjectNames], ['recent-project-handler', _recentProjectHandlers]])
         } catch (err) {
           LogAllow && console.log("failed to load Untitled project");
         }
@@ -882,9 +872,9 @@ export default function MainPage() {
     [
       clearSession,
       osType,
-      recentProjectContext,
-      recentProjectName,
-      recentProjectHandler,
+      recentProjectContexts,
+      recentProjectNames,
+      recentProjectHandlers,
       fileTree,
     ],
   );
@@ -1007,23 +997,25 @@ export default function MainPage() {
   // jumpstart
   const onJumpstart = useCallback(() => {
     if (cmdkOpen) return;
-    setCmdkPages(["Jumpstart"]);
-    setCmdkOpen(true);
+    dispatch(setCmdkPages(["Jumpstart"]));
+    dispatch(setCmdkOpen(true));
   }, [cmdkOpen]);
 
   // open navigator when close the menu
+  const firstLoaded = useRef(0);
   useEffect(() => {
-    if (!cmdkOpen && firstLoaded.current == 2 && !showActionsPanel) {
-      setShowActionsPanel(true);
+    if (!cmdkOpen && firstLoaded.current === 2 && !showActionsPanel) {
+      dispatch(setShowActionsPanel(true));
     }
-    firstLoaded.current++;
+    ++firstLoaded.current;
   }, [cmdkOpen]);
 
   // close all panel
   const closeAllPanel = useCallback(() => {
-    dispatch(setShowCodeView(false));
     dispatch(setShowActionsPanel(false));
+    dispatch(setShowCodeView(false));
   }, []);
+
   // hms
   const onUndo = useCallback(() => {
     if (
@@ -1088,6 +1080,7 @@ export default function MainPage() {
       fileAction.type !== null &&
       dispatch(setFileAction({ type: null }));
   }, []);
+
   // toogle code view
   const toogleCodeView = useCallback(() => {
     setShowCodeView(!showCodeView);
@@ -1156,72 +1149,11 @@ export default function MainPage() {
           "html elements reference data: ",
           htmlElementsReferenceData,
         );
-
-      // set html reference
       setHtmlReferenceData({ elements: htmlElementsReferenceData });
 
       // add default cmdk actions
       const _cmdkReferenceData: TCmdkReferenceData = {};
-      // clear
-      _cmdkReferenceData["Clear"] = {
-        Name: "Clear",
-        Icon: "",
-        Description: "",
-        "Keyboard Shortcut": {
-          cmd: true,
-          shift: true,
-          alt: false,
-          key: "KeyR",
-          click: false,
-        },
-        Group: "default",
-        Context: "all",
-      };
-      // Jumpstart
-      _cmdkReferenceData["Jumpstart"] = {
-        Name: "Jumpstart",
-        Icon: "",
-        Description: "",
-        "Keyboard Shortcut": {
-          cmd: false,
-          shift: false,
-          alt: false,
-          key: "KeyJ",
-          click: false,
-        },
-        Group: "default",
-        Context: "all",
-      };
-      // Actions
-      _cmdkReferenceData["Actions"] = {
-        Name: "Actions",
-        Icon: "",
-        Description: "",
-        "Keyboard Shortcut": {
-          cmd: false,
-          shift: false,
-          alt: false,
-          key: "KeyW",
-          click: false,
-        },
-        Group: "default",
-        Context: "all",
-      };
-      // File Save
-      _cmdkReferenceData["Save"] = {
-        Name: "Save",
-        Icon: "",
-        Description: "",
-        "Keyboard Shortcut": {
-          cmd: true,
-          shift: false,
-          alt: false,
-          key: "KeyS",
-          click: false,
-        },
-        Group: "default",
-        Context: "all",
-      };
+      addDefaultCmdkActions(_cmdkReferenceData);
 
       // reference-cmdk-jumpstart
       const _cmdkRefJumpstartData: TCmdkGroupData = {};
@@ -1277,9 +1209,9 @@ export default function MainPage() {
                   "recent-project-name": sessionInfo[1],
                   "recent-project-handler": sessionInfo[2],
                 };
-                setRecentProjectContext(_session["recent-project-context"]);
-                setRecentProjectName(_session["recent-project-name"]);
-                setRecentProjectHandler(_session["recent-project-handler"]);
+                setRecentProjectContexts(_session["recent-project-context"]);
+                setRecentProjectNames(_session["recent-project-name"]);
+                setRecentProjectHandlers(_session["recent-project-handler"]);
 
                 for (
                   let index = 0;
@@ -1391,7 +1323,6 @@ export default function MainPage() {
       ]);
     })();
   }, []);
-  const [openDefaultProject, setOpenDefaultProject] = useState(false);
   useEffect(() => {
     // wait until "cmdkReferenceJumpstart" is ready
     Object.keys(cmdkReferenceJumpstart).length !== 0 && onJumpstart();
@@ -1520,7 +1451,7 @@ export default function MainPage() {
         setValidMenuItemCount(menuItems.length);
 
         const description =
-          cmdkPage === "Add" || cmdkPage === "Jumpstart"
+          currentCmdkPage === "Add" || currentCmdkPage === "Jumpstart"
             ? document
                 .querySelector('.rnbw-cmdk-menu-item[aria-selected="true"]')
                 ?.getAttribute("rnbw-cmdk-menu-item-description")
@@ -1529,8 +1460,8 @@ export default function MainPage() {
       }, 10);
     } else {
       // clear cmdk pages and search text when close the modal
-      setCmdkPages([]);
-      setCmdkSearch("");
+      dispatch(setCmdkPages([]));
+      dispatch(setCmdkSearchContent(""));
       // setValidMenuItemCount(undefined)
     }
 
@@ -1581,7 +1512,6 @@ export default function MainPage() {
 
   return (
     <>
-      {/* wrap with the context */}
       <MainContext.Provider
         value={{
           addRunningActions,
@@ -1616,13 +1546,8 @@ export default function MainPage() {
           setMonacoEditorRef,
         }}
       >
-        {/* process */}
-        <Process />
+        <Processor />
 
-        {/* spinner */}
-        {/* <Loader show={pending}></Loader> */}
-
-        {/* main page */}
         <div
           id="MainPage"
           className={"view background-primary"}
@@ -1659,13 +1584,11 @@ export default function MainPage() {
           ) : null}
         </div>
 
-        {/* cmdk modal */}
         <Command.Dialog
           open={cmdkOpen}
           className="background-primary radius-s shadow border"
-          onOpenChange={setCmdkOpen}
+          onOpenChange={(open: boolean) => dispatch(setCmdkOpen(open))}
           onKeyDown={(e: React.KeyboardEvent) => {
-            // cmdk obj for the current command
             const cmdk: TCmdkKeyMap = {
               cmd: getCommandKey(e as unknown as KeyboardEvent, osType),
               shift: e.shiftKey,
@@ -1678,15 +1601,14 @@ export default function MainPage() {
             }
             if (
               e.code === "Escape" ||
-              (e.code === "Backspace" && !cmdkSearch)
+              (e.code === "Backspace" && !cmdkSearchContent)
             ) {
               if (e.code === "Escape" && cmdkPages.length === 1) {
-                setCmdkPages([]);
-                setCmdkOpen(false);
+                dispatch(setCmdkPages([]));
+                dispatch(setCmdkOpen(false));
               } else {
                 cmdkPages.length !== 1 &&
-                  // @ts-ignore
-                  setCmdkPages((cmdkPages) => cmdkPages.slice(0, -1));
+                  dispatch(setCmdkPages(cmdkPages.slice(0, -1)));
               }
             }
             e.stopPropagation();
@@ -1695,7 +1617,7 @@ export default function MainPage() {
             return value.includes(search) !== false ? 1 : 0;
           }}
           loop={true}
-          label={cmdkPage}
+          label={currentCmdkPage}
         >
           {/* search input */}
           <div
@@ -1705,15 +1627,17 @@ export default function MainPage() {
             )}
           >
             <Command.Input
-              value={cmdkSearch}
-              onValueChange={setCmdkSearch}
+              value={cmdkSearchContent}
+              onValueChange={(str: string) =>
+                dispatch(setCmdkSearchContent(str))
+              }
               className="justify-start padding-s gap-s text-l background-primary"
               placeholder={
-                cmdkPage === "Jumpstart"
+                currentCmdkPage === "Jumpstart"
                   ? "Jumpstart..."
-                  : cmdkPage === "Actions"
+                  : currentCmdkPage === "Actions"
                   ? "Do something..."
-                  : cmdkPage === "Add"
+                  : currentCmdkPage === "Add"
                   ? "Add something..."
                   : ""
               }
@@ -1723,12 +1647,12 @@ export default function MainPage() {
           {/* modal content */}
           <div
             className={
-              cmdkPage !== "Add" && cmdkPage !== "Jumpstart"
+              currentCmdkPage !== "Add" && currentCmdkPage !== "Jumpstart"
                 ? ""
                 : "box-l direction-column align-stretch box"
             }
             style={{
-              ...(cmdkPage !== "Add" && cmdkPage !== "Jumpstart"
+              ...(currentCmdkPage !== "Add" && currentCmdkPage !== "Jumpstart"
                 ? { width: "100%" }
                 : {}),
               ...(validMenuItemCount === 0
@@ -1751,30 +1675,30 @@ export default function MainPage() {
                   {/* <Command.Empty>No results found for "{cmdkSearch}".</Command.Empty> */}
 
                   {Object.keys(
-                    cmdkPage === "Jumpstart"
+                    currentCmdkPage === "Jumpstart"
                       ? cmdkReferenceJumpstart
-                      : cmdkPage === "Actions"
+                      : currentCmdkPage === "Actions"
                       ? cmdkReferenceActions
-                      : cmdkPage === "Add"
+                      : currentCmdkPage === "Add"
                       ? cmdkReferenceAdd
                       : {},
                   ).map((groupName: string) => {
                     let groupNameShow: boolean = false;
-                    (cmdkPage === "Jumpstart"
+                    (currentCmdkPage === "Jumpstart"
                       ? groupName !== "Recent"
                         ? cmdkReferenceJumpstart[groupName]
                         : cmdkReferneceRecentProject
-                      : cmdkPage === "Actions"
+                      : currentCmdkPage === "Actions"
                       ? cmdkReferenceActions[groupName]
-                      : cmdkPage === "Add"
+                      : currentCmdkPage === "Add"
                       ? cmdkReferenceAdd[groupName]
                       : []
                     ).map((command: TCmdkReference) => {
                       const context: TCmdkContext =
                         command.Context as TCmdkContext;
                       groupNameShow =
-                        cmdkPage === "Jumpstart" ||
-                        (cmdkPage === "Actions" &&
+                        currentCmdkPage === "Jumpstart" ||
+                        (currentCmdkPage === "Actions" &&
                           (command.Name === "Add" ||
                             context.all === true ||
                             (activePanel === "file" &&
@@ -1786,7 +1710,7 @@ export default function MainPage() {
                                   .ext === "html" &&
                                 context["html"] === true) ||
                                 false)))) ||
-                        cmdkPage === "Add";
+                        currentCmdkPage === "Add";
                     });
 
                     return (
@@ -1805,21 +1729,21 @@ export default function MainPage() {
                         ) : (
                           <></>
                         )}
-                        {(cmdkPage === "Jumpstart"
+                        {(currentCmdkPage === "Jumpstart"
                           ? groupName !== "Recent"
                             ? cmdkReferenceJumpstart[groupName]
                             : cmdkReferneceRecentProject
-                          : cmdkPage === "Actions"
+                          : currentCmdkPage === "Actions"
                           ? cmdkReferenceActions[groupName]
-                          : cmdkPage === "Add"
+                          : currentCmdkPage === "Add"
                           ? cmdkReferenceAdd[groupName]
                           : []
                         ).map((command: TCmdkReference, index) => {
                           const context: TCmdkContext =
                             command.Context as TCmdkContext;
                           const show: boolean =
-                            cmdkPage === "Jumpstart" ||
-                            (cmdkPage === "Actions" &&
+                            currentCmdkPage === "Jumpstart" ||
+                            (currentCmdkPage === "Actions" &&
                               (command.Name === "Add" ||
                                 context.all === true ||
                                 (activePanel === "file" &&
@@ -1833,7 +1757,7 @@ export default function MainPage() {
                                     ).ext === "html" &&
                                     context["html"] === true) ||
                                     false)))) ||
-                            cmdkPage === "Add";
+                            currentCmdkPage === "Add";
 
                           return show ? (
                             <Command.Item
@@ -1856,14 +1780,14 @@ export default function MainPage() {
                                     action: `${AddActionPrefix}-${command.Context}`,
                                   });
                                 } else if (
-                                  cmdkPage === "Jumpstart" &&
+                                  currentCmdkPage === "Jumpstart" &&
                                   command.Group === "Recent"
                                 ) {
                                   const index = Number(command.Context);
                                   const projectContext =
-                                    recentProjectContext[index];
+                                    recentProjectContexts[index];
                                   const projectHandler =
-                                    recentProjectHandler[index];
+                                    recentProjectHandlers[index];
                                   if (fileTree) {
                                     // confirm files' changes
                                     let hasChangedFile = false;
@@ -1888,7 +1812,7 @@ export default function MainPage() {
                                     true,
                                   );
                                 } else if (
-                                  cmdkPage === "Add" &&
+                                  currentCmdkPage === "Add" &&
                                   command.Group === "Recent"
                                 ) {
                                 } else {
@@ -1899,7 +1823,7 @@ export default function MainPage() {
                               <div className="justify-stretch padding-s align-center">
                                 <div className="gap-s align-center">
                                   {/* detect Theme Group and render check boxes */}
-                                  {cmdkPage === "Jumpstart" &&
+                                  {currentCmdkPage === "Jumpstart" &&
                                   command.Name === "Theme" ? (
                                     <>
                                       <div className="padding-xs">
@@ -1982,18 +1906,19 @@ export default function MainPage() {
               ref={guideRef}
             ></a>
             {/* description - right panel */}
-            {(cmdkPage === "Add" || cmdkPage === "Jumpstart") && false && (
-              <div
-                className={cx(
-                  "box align-center border-left padding-l text-l",
-                  !!hoveredMenuItemDescription ? "" : "opacity-m",
-                )}
-              >
-                {!!hoveredMenuItemDescription
-                  ? hoveredMenuItemDescription
-                  : "Description"}
-              </div>
-            )}
+            {(currentCmdkPage === "Add" || currentCmdkPage === "Jumpstart") &&
+              false && (
+                <div
+                  className={cx(
+                    "box align-center border-left padding-l text-l",
+                    !!hoveredMenuItemDescription ? "" : "opacity-m",
+                  )}
+                >
+                  {!!hoveredMenuItemDescription
+                    ? hoveredMenuItemDescription
+                    : "Description"}
+                </div>
+              )}
           </div>
         </Command.Dialog>
       </MainContext.Provider>

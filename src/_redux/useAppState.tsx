@@ -58,7 +58,13 @@ export const useAppState = () => {
         didRedo,
         updateOptions,
       },
-      cmdk: { cmdkOpen, cmdkPages, currentCmdkPage, currentCommand },
+      cmdk: {
+        cmdkOpen,
+        cmdkPages,
+        currentCmdkPage,
+        cmdkSearchContent,
+        currentCommand,
+      },
     },
   } = useSelector((state: AppState) => state);
 
@@ -139,6 +145,7 @@ export const useAppState = () => {
     cmdkPages,
     currentCmdkPage,
 
+    cmdkSearchContent,
     currentCommand,
   };
 };

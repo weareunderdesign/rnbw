@@ -1,8 +1,9 @@
 export type TCmdkReducerState = {
   cmdkOpen: boolean;
   cmdkPages: string[];
-  currentCmdkPage: string | null;
+  currentCmdkPage: string;
 
+  cmdkSearchContent: string;
   currentCommand: TCommand | null;
 };
 

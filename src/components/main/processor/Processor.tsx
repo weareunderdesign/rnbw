@@ -1,14 +1,14 @@
-import React, { useMemo } from 'react';
+import React, { useMemo } from "react";
 
 import {
   useProcessorNodeTree,
   useProcessorUpdateOpt,
   useProcessorValidNodeTree,
   useSaveCommand,
-} from './hooks';
-import { ProcessProps } from './types';
+} from "./hooks";
+import { ProcessProps } from "./types";
 
-export default function Process(props: ProcessProps) {
+export default function Processor(props: ProcessProps) {
   // processor-updateOpt
   useProcessorUpdateOpt();
 

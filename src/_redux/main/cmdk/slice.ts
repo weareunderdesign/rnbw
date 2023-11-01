@@ -5,29 +5,34 @@ import { TCmdkReducerState, TCommand } from "./types";
 const cmdkReducerInitialState: TCmdkReducerState = {
   cmdkOpen: false,
   cmdkPages: [],
-  currentCmdkPage: null,
+  currentCmdkPage: "",
 
+  cmdkSearchContent: "",
   currentCommand: null,
 };
 const cmdkSlice = createSlice({
   name: "cmdk",
   initialState: cmdkReducerInitialState,
   reducers: {
-    setCmdkOpen(state, actions: PayloadAction<boolean>) {
-      const cmdkOpen = actions.payload;
+    setCmdkOpen(state, action: PayloadAction<boolean>) {
+      const cmdkOpen = action.payload;
       state.cmdkOpen = cmdkOpen;
     },
-    setCmdkPages(state, actions: PayloadAction<string[]>) {
-      const cmdkPages = actions.payload;
+    setCmdkPages(state, action: PayloadAction<string[]>) {
+      const cmdkPages = action.payload;
       state.cmdkPages = cmdkPages;
     },
-    setCurrentCmdkPage(state, actions: PayloadAction<string>) {
-      const currentCmdkPage = actions.payload;
+    setCurrentCmdkPage(state, action: PayloadAction<string>) {
+      const currentCmdkPage = action.payload;
       state.currentCmdkPage = currentCmdkPage;
     },
 
-    setCurrentCommand(state, actions: PayloadAction<TCommand>) {
-      const currentCommand = actions.payload;
+    setCmdkSearchContent(state, action: PayloadAction<string>) {
+      const cmdkSearchContent = action.payload;
+      state.cmdkSearchContent = cmdkSearchContent;
+    },
+    setCurrentCommand(state, action: PayloadAction<TCommand>) {
+      const currentCommand = action.payload;
       state.currentCommand = currentCommand;
     },
   },
@@ -37,6 +42,7 @@ export const {
   setCmdkPages,
   setCurrentCmdkPage,
 
+  setCmdkSearchContent,
   setCurrentCommand,
 } = cmdkSlice.actions;
 export const CmdkReduer = cmdkSlice.reducer;

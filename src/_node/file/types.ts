@@ -33,6 +33,7 @@ export type TFileParserResponse = {
 export type TFileHandlerCollection = {
   [uid: TNodeUid]: FileSystemHandle;
 };
+
 // --------------------
 export type TFile = {
   uid: TNodeUid;

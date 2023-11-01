@@ -1,4 +1,4 @@
-import Process from './Process';
+import Process from './Processor';
 
 export default Process;
 

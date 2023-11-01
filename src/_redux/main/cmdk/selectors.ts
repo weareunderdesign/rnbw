@@ -15,7 +15,7 @@ export const cmdkPagesSelector = createSelector(
   (cmdkPages) => cmdkPages,
 );
 
-const getCurrentCmdkPage = (state: AppState): string | null =>
+const getCurrentCmdkPage = (state: AppState): string =>
   state.main.cmdk.currentCmdkPage;
 export const currentCmdkPageSelector = createSelector(
   getCurrentCmdkPage,
