@@ -281,6 +281,7 @@ export default function WorkspaceTreeView() {
       cb_focusNode(initialFileUidToOpen);
       cb_selectNode([initialFileUidToOpen]);
       cb_readNode(initialFileUidToOpen);
+
       if (project && currentFileUid) {
         // remove exist script
         const exist = document.head.querySelector("#custom-plausible");

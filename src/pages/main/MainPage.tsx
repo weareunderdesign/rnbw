@@ -450,7 +450,6 @@ export default function MainPage() {
     return _cmdkReferneceRecentProject;
   }, [recentProjectContexts, recentProjectNames, recentProjectHandlers]);
   // -------------------------------------------------------------- cmdk --------------------------------------------------------------
-  // key event listener
   const cb_onKeyDown = useCallback(
     (e: KeyboardEvent) => {
       const cmdk: TCmdkKeyMap = {
@@ -530,12 +529,10 @@ export default function MainPage() {
     },
     [cmdkOpen, cmdkReferenceData, activePanel, osType],
   );
-  // bind onKeyDownCallback (cb_onKeyDown)
   useEffect(() => {
     document.addEventListener("keydown", cb_onKeyDown);
     return () => document.removeEventListener("keydown", cb_onKeyDown);
   }, [cb_onKeyDown]);
-  // command detect & do actions
   useEffect(() => {
     if (!currentCommand) return;
 
@@ -653,7 +650,7 @@ export default function MainPage() {
 
             // hide element panel when there is no index.html
             if (initialFile === "") {
-              setShowActionsPanel(false);
+              dispatch(setShowActionsPanel(false));
               dispatch(setNavigatorDropdownType(null));
             }
 
@@ -754,7 +751,7 @@ export default function MainPage() {
             }
 
             // show actions panel by default
-            !showActionsPanel && setShowActionsPanel(true);
+            !showActionsPanel && dispatch(setShowActionsPanel(true));
           }, 50);
         } catch (err) {
           LogAllow && console.log("failed to load local project");
@@ -832,12 +829,14 @@ export default function MainPage() {
           });
           dispatch(setFileTree(treeViewData));
           setFileHandlers(ffHandlerObj);
-          setProject({
-            context: "idb",
-            name: "Untitled",
-            handler: null,
-            favicon: null,
-          });
+          dispatch(
+            setProject({
+              context: "idb",
+              name: "Untitled",
+              handler: null,
+              favicon: null,
+            }),
+          );
 
           // store last edit session
           // const _recentProjectContexts = [...recentProjectContexts]
@@ -922,14 +921,13 @@ export default function MainPage() {
         }
       }
     }
-    dispatch(setDoingFileAction(true));
 
+    dispatch(setDoingFileAction(true));
     try {
       await onImportProject();
     } catch (err) {
       LogAllow && console.log("failed to open project");
     }
-
     dispatch(setDoingFileAction(false));
   }, [onImportProject, fileTree]);
   // new
@@ -951,16 +949,14 @@ export default function MainPage() {
         }
       }
     }
-    dispatch(setDoingFileAction(true));
 
-    // init/open Untitled project
+    dispatch(setDoingFileAction(true));
     try {
       await initIDBProject(DefaultProjectPath);
       await onImportProject("idb");
     } catch (err) {
       LogAllow && console.log("failed to init/load Untitled project");
     }
-
     dispatch(setDoingFileAction(false));
   }, [onImportProject, fileTree]);
   // actions
@@ -1083,12 +1079,12 @@ export default function MainPage() {
 
   // toogle code view
   const toogleCodeView = useCallback(() => {
-    setShowCodeView(!showCodeView);
+    dispatch(setShowCodeView(!showCodeView));
     setNewFocusedNodeUid(nFocusedItem);
   }, [showCodeView, nFocusedItem]);
   // toogle actions panel
   const toogleActionsPanel = useCallback(() => {
-    setShowActionsPanel(!showActionsPanel);
+    dispatch(setShowActionsPanel(!showActionsPanel));
   }, [showActionsPanel]);
   // open guide page
   const openGuidePage = useCallback(() => {
@@ -1378,12 +1374,13 @@ export default function MainPage() {
       case "System":
         document.documentElement.setAttribute("data-theme", "light");
         localStorage.setItem("theme", "light");
+        dispatch(setTheme("Light"));
         setTheme("Light");
         break;
       case "Light":
         document.documentElement.setAttribute("data-theme", "dark");
         localStorage.setItem("theme", "dark");
-        setTheme("Dark");
+        dispatch(setTheme("Dark"));
         break;
       case "Dark":
         document.documentElement.removeAttribute("data-theme");
@@ -1393,13 +1390,13 @@ export default function MainPage() {
       default:
         break;
     }
-  }, [theme, setSystemTheme]);
+  }, [theme]);
   useEffect(() => {
     const storedTheme = localStorage.getItem("theme");
     LogAllow && console.log("storedTheme: ", storedTheme);
     if (storedTheme) {
       document.documentElement.setAttribute("data-theme", storedTheme);
-      setTheme(storedTheme === "dark" ? "Dark" : "Light");
+      dispatch(setTheme(storedTheme === "dark" ? "Dark" : "Light"));
     } else {
       setSystemTheme();
       window
@@ -1769,16 +1766,21 @@ export default function MainPage() {
                                   command.Description,
                               }}
                               onSelect={() => {
+                                console.log("onSelect", command);
+
                                 // keep modal open when toogling theme or go "Add" menu from "Actions" menu
                                 command.Name !== "Theme" &&
                                   command.Name !== "Add" &&
-                                  setCmdkOpen(false);
+                                  dispatch(setCmdkOpen(false));
+
                                 if (command.Name === "Guide") {
                                   guideRef.current?.click();
                                 } else if (command.Group === "Add") {
-                                  setCurrentCommand({
-                                    action: `${AddActionPrefix}-${command.Context}`,
-                                  });
+                                  dispatch(
+                                    setCurrentCommand({
+                                      action: `${AddActionPrefix}-${command.Context}`,
+                                    }),
+                                  );
                                 } else if (
                                   currentCmdkPage === "Jumpstart" &&
                                   command.Group === "Recent"
@@ -1816,7 +1818,9 @@ export default function MainPage() {
                                   command.Group === "Recent"
                                 ) {
                                 } else {
-                                  setCurrentCommand({ action: command.Name });
+                                  dispatch(
+                                    setCurrentCommand({ action: command.Name }),
+                                  );
                                 }
                               }}
                             >
