@@ -1,25 +1,19 @@
-import {
-  Context,
-  createContext,
-} from 'react';
+import { Context, createContext } from "react";
 
-import { editor } from 'monaco-editor';
+import { editor } from "monaco-editor";
 
-import { TFileHandlerCollection } from '@_node/file';
-import { TNodeUid } from '@_node/types';
-import { TToast } from '@_types/global';
-import { TCodeChange } from '@_types/main';
+import { TFileHandlerCollection } from "@_node/file";
+import { TNodeUid } from "@_node/types";
+import { TToast } from "@_types/global";
+import { TCodeChange } from "@_types/main";
 
-import { TProjectContext } from './fileTree';
-import {
-  IEditorRef,
-  TMainContext,
-} from './types';
+import { TProjectContext } from "./fileTree";
+import { IEditorRef, TMainContext } from "./types";
 
 export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   // global action
   addRunningActions: (actionNames: string[]) => {},
-  removeRunningActions: (actionNames: string[], effect?: boolean) => {},
+  removeRunningActions: (actionNames: string[]) => {},
 
   // file tree
   ffHandlers: {},

@@ -30,6 +30,9 @@ export type TFileParserResponse = {
   [any: string]: any;
 };
 
+export type TFileHandlerCollection = {
+  [uid: TNodeUid]: FileSystemHandle;
+};
 // --------------------
 export type TFile = {
   uid: TNodeUid;
@@ -68,9 +71,6 @@ export type TFileHandlerInfo = {
   content?: Uint8Array;
 
   handler: FileSystemHandle;
-};
-export type TFileHandlerCollection = {
-  [uid: TNodeUid]: FileSystemHandle;
 };
 export type TFileHandlerInfoObj = { [uid: TNodeUid]: TFileHandlerInfo };
 export type TFilesReference = {

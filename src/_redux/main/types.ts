@@ -1,18 +1,12 @@
-import { editor } from 'monaco-editor';
+import { editor } from "monaco-editor";
 
-import {
-  TFileHandlerCollection,
-  TFilesReferenceData,
-} from '@_node/file';
-import { THtmlReferenceData } from '@_node/html';
-import { TNodeUid } from '@_node/types';
-import { TToast } from '@_types/global';
-import {
-  TCmdkReferenceData,
-  TCodeChange,
-} from '@_types/main';
+import { TFileHandlerCollection, TFilesReferenceData } from "@_node/file";
+import { THtmlReferenceData } from "@_node/html";
+import { TNodeUid } from "@_node/types";
+import { TToast } from "@_types/global";
+import { TCmdkReferenceData, TCodeChange } from "@_types/main";
 
-import { TProjectContext } from './fileTree';
+import { TProjectContext } from "./fileTree";
 
 export type TEventHistoryInfo = {
   future: number;

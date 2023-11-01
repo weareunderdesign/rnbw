@@ -69,7 +69,9 @@ import {
   lastFileActionSelector,
   projectSelector,
   setCurrentFileUid,
+  setDoingFileAction,
   setFileTree,
+  setInitialFileUidToOpen,
   setProject,
   setWorkspace,
   TProject,
@@ -106,6 +108,7 @@ import {
   setFavicon,
   setNavigatorDropdownType,
   setShowActionsPanel,
+  setShowCodeView,
   setUpdateOptions,
   showActionsPanelSelector,
   showCodeViewSelector,
@@ -152,7 +155,7 @@ export default function MainPage() {
   const workspace = useSelector(workspaceSelector);
   const project = useSelector(projectSelector);
   const fileTree = useSelector(fileTreeSelector);
-  const setInitialFileUidToOpen = useSelector(initialFileUidToOpenSelector);
+  const initialFileUidToOpen = useSelector(initialFileUidToOpenSelector);
   const currentFileUid = useSelector(currentFileUidSelector);
 
   const fileTreeViewState = useSelector(fileTreeViewStateSelector);
@@ -261,8 +264,9 @@ export default function MainPage() {
     }
   };
 
-  // actions panel
+  // file tree
   const [ffHandlers, setFFHandlers] = useState<TFileHandlerCollection>({});
+
   // code view
   const isContentProgrammaticallyChanged = useRef<boolean>(false);
   function setIsContentProgrammaticallyChanged(value: boolean) {
@@ -270,6 +274,7 @@ export default function MainPage() {
   }
   const [codeChanges, setCodeChanges] = useState<TCodeChange[]>([]);
   const [newFocusedNodeUid, setNewFocusedNodeUid] = useState<TNodeUid>("");
+
   const monacoEditorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const setMonacoEditorRef = (
     editorInstance: editor.IStandaloneCodeEditor | null,
@@ -687,7 +692,7 @@ export default function MainPage() {
     ) => {
       dispatch(setFavicon(""));
       if (fsType === "local") {
-        setFSPending(true);
+        dispatch(setDoingFileAction(true));
         try {
           // configure idb on nohost
           const handlerObj = await loadLocalProject(
@@ -845,9 +850,9 @@ export default function MainPage() {
         } catch (err) {
           LogAllow && console.log("failed to load local project");
         }
-        setFSPending(false);
+        dispatch(setDoingFileAction(false));
       } else if (fsType === "idb") {
-        setFSPending(true);
+        dispatch(setDoingFileAction(true));
         clearSession();
         try {
           const handlerObj = await loadIDBProject(DefaultProjectPath);
@@ -952,7 +957,7 @@ export default function MainPage() {
         } catch (err) {
           LogAllow && console.log("failed to load Untitled project");
         }
-        setFSPending(false);
+        dispatch(setDoingFileAction(false));
       }
     },
     [
@@ -1008,7 +1013,7 @@ export default function MainPage() {
         }
       }
     }
-    setFSPending(true);
+    dispatch(setDoingFileAction(true));
 
     try {
       await onImportProject();
@@ -1016,7 +1021,7 @@ export default function MainPage() {
       LogAllow && console.log("failed to open project");
     }
 
-    setFSPending(false);
+    dispatch(setDoingFileAction(false));
   }, [onImportProject, fileTree]);
   // new
   const onNew = useCallback(async () => {
@@ -1037,7 +1042,7 @@ export default function MainPage() {
         }
       }
     }
-    setFSPending(true);
+    dispatch(setDoingFileAction(true));
 
     // init/open Untitled project
     try {
@@ -1047,7 +1052,7 @@ export default function MainPage() {
       LogAllow && console.log("failed to init/load Untitled project");
     }
 
-    setFSPending(false);
+    dispatch(setDoingFileAction(false));
   }, [onImportProject, fileTree]);
   // actions
   const onActions = useCallback(() => {
@@ -1097,12 +1102,18 @@ export default function MainPage() {
 
   // close all panel
   const closeAllPanel = useCallback(() => {
-    setShowCodeView(false);
-    setShowActionsPanel(false);
+    dispatch(setShowCodeView(false));
+    dispatch(setShowActionsPanel(false));
   }, []);
   // hms
   const onUndo = useCallback(() => {
-    if (pending || iframeLoading || fsPending || codeEditing || !parseFileFlag)
+    if (
+      pending ||
+      iframeLoading ||
+      doingFileAction ||
+      codeEditing ||
+      !parseFileFlag
+    )
       return;
 
     LogAllow &&
@@ -1118,14 +1129,20 @@ export default function MainPage() {
   }, [
     pending,
     iframeLoading,
-    fsPending,
+    doingFileAction,
     codeEditing,
     fileEventPastLength,
     fileAction,
     currentFileUid,
   ]);
   const onRedo = useCallback(() => {
-    if (pending || iframeLoading || fsPending || codeEditing || !parseFileFlag)
+    if (
+      pending ||
+      iframeLoading ||
+      doingFileAction ||
+      codeEditing ||
+      !parseFileFlag
+    )
       return;
 
     LogAllow &&
@@ -1140,7 +1157,7 @@ export default function MainPage() {
   }, [
     pending,
     iframeLoading,
-    fsPending,
+    doingFileAction,
     codeEditing,
     fileEventFutureLength,
     currentFileUid,
@@ -1155,8 +1172,8 @@ export default function MainPage() {
   // toogle code view
   const toogleCodeView = useCallback(() => {
     setShowCodeView(!showCodeView);
-    setNewFocusedNodeUid(fnFocusedItem);
-  }, [showCodeView, fnFocusedItem]);
+    setNewFocusedNodeUid(nFocusedItem);
+  }, [showCodeView, nFocusedItem]);
   // toogle actions panel
   const toogleActionsPanel = useCallback(() => {
     setShowActionsPanel(!showActionsPanel);
@@ -1446,16 +1463,13 @@ export default function MainPage() {
       setCmdkReferenceData(_cmdkReferenceData);
       LogAllow && console.log("cmdk map: ", _cmdkReferenceData);
 
-      removeRunningActions(
-        [
-          "detect-os",
-          "reference-files",
-          "reference-html-elements",
-          "reference-cmdk-jumpstart",
-          "reference-cmdk-actions",
-        ],
-        false,
-      );
+      removeRunningActions([
+        "detect-os",
+        "reference-files",
+        "reference-html-elements",
+        "reference-cmdk-jumpstart",
+        "reference-cmdk-actions",
+      ]);
     })();
   }, []);
   const [openDefaultProject, setOpenDefaultProject] = useState(false);
@@ -1471,7 +1485,7 @@ export default function MainPage() {
       localStorage.setItem("newbie", "false");
       // init/open Untitled project
       (async () => {
-        setFSPending(true);
+        dispatch(setDoingFileAction(true));
         try {
           await initIDBProject(DefaultProjectPath);
           await onImportProject("idb");
@@ -1479,7 +1493,7 @@ export default function MainPage() {
         } catch (err) {
           LogAllow && console.log("failed to init/load Untitled project");
         }
-        setFSPending(false);
+        dispatch(setDoingFileAction(false));
       })();
     }
     // always show default project when do refresh
@@ -1658,9 +1672,6 @@ export default function MainPage() {
           // file tree view
           ffHandlers,
           setFFHandlers,
-
-          fsPending,
-          setFSPending,
           // code view
           isContentProgrammaticallyChanged,
           setIsContentProgrammaticallyChanged,
