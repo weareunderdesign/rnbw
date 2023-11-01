@@ -11,7 +11,7 @@ import { Command } from "cmdk";
 import { CustomDirectoryPickerOptions } from "file-system-access/lib/showDirectoryPicker";
 import { delMany, getMany, setMany } from "idb-keyval";
 import { editor } from "monaco-editor";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 import { SVGIcon } from "@_components/common";
 import { ActionsPanel, CodeView, Process, StageView } from "@_components/main";
@@ -39,35 +39,14 @@ import {
   THtmlReferenceData,
 } from "@_node/html";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
-import {
-  osTypeSelector,
-  setOsType,
-  setTheme,
-  themeSelector,
-} from "@_redux/global";
+import { setOsType, setTheme } from "@_redux/global";
 import { MainContext } from "@_redux/main";
 import {
-  cmdkOpenSelector,
-  cmdkPagesSelector,
-  currentCmdkPageSelector,
-  currentCommandSelector,
   setCmdkOpen,
   setCmdkPages,
   setCurrentCommand,
 } from "@_redux/main/cmdk";
 import {
-  codeEditingSelector,
-  codeViewTabSizeSelector,
-} from "@_redux/main/codeView";
-import {
-  currentFileUidSelector,
-  doingFileActionSelector,
-  fileTreeSelector,
-  fileTreeViewStateSelector,
-  hoveredFileUidSelector,
-  initialFileUidToOpenSelector,
-  lastFileActionSelector,
-  projectSelector,
   setCurrentFileUid,
   setDoingFileAction,
   setFileTree,
@@ -76,51 +55,22 @@ import {
   setWorkspace,
   TProject,
   TProjectContext,
-  workspaceSelector,
 } from "@_redux/main/fileTree";
 import {
-  fileActionSelector,
-  fileEventHistoryInfoSelector,
   FileTree_Event_ClearActionType,
   setFileAction,
 } from "@_redux/main/fileTree/event";
+import { setNodeTree, setValidNodeTree } from "@_redux/main/nodeTree";
+import { NodeTree_Event_ClearActionType } from "@_redux/main/nodeTree/event";
 import {
-  hoveredNodeUidSelector,
-  nodeTreeSelector,
-  nodeTreeViewStateSelector,
-  setNodeTree,
-  setValidNodeTree,
-  validNodeTreeSelector,
-} from "@_redux/main/nodeTree";
-import {
-  currentFileContentSelector,
-  nodeEventHistoryInfoSelector,
-  NodeTree_Event_ClearActionType,
-  selectedNodeUidsSelector,
-} from "@_redux/main/nodeTree/event";
-import {
-  activePanelSelector,
-  clipboardDataSelector,
-  didRedoSelector,
-  didUndoSelector,
-  faviconSelector,
-  navigatorDropdownTypeSelector,
   setFavicon,
   setNavigatorDropdownType,
   setShowActionsPanel,
   setShowCodeView,
   setUpdateOptions,
-  showActionsPanelSelector,
-  showCodeViewSelector,
-  updateOptionsSelector,
 } from "@_redux/main/processor";
-import {
-  iframeLoadingSelector,
-  iframeSrcSelector,
-  linkToOpenSelector,
-  needToReloadIframeSelector,
-  setIframeSrc,
-} from "@_redux/main/stageView";
+import { setIframeSrc } from "@_redux/main/stageView";
+import { useAppState } from "@_redux/useAppState";
 // @ts-ignore
 import cmdkRefActions from "@_ref/cmdk.ref/Actions.csv";
 // @ts-ignore
@@ -146,89 +96,79 @@ import { getCommandKey } from "../../services/global";
 export default function MainPage() {
   // ***************************************** Reducer Begin *****************************************
   const dispatch = useDispatch();
-
-  // global reducer
-  const osType = useSelector(osTypeSelector);
-  const theme = useSelector(themeSelector);
-
-  // fileTree reducer
-  const workspace = useSelector(workspaceSelector);
-  const project = useSelector(projectSelector);
-  const fileTree = useSelector(fileTreeSelector);
-  const initialFileUidToOpen = useSelector(initialFileUidToOpenSelector);
-  const currentFileUid = useSelector(currentFileUidSelector);
-
-  const fileTreeViewState = useSelector(fileTreeViewStateSelector);
   const {
-    focusedItem: fFocusedItem,
-    expandedItems: fExpandedItems,
-    expandedItemsObj: fExpandedItemsObj,
-    selectedItems: fSelectedItems,
-    selectedItemsObj: fSelectedItemsObj,
-  } = fileTreeViewState;
-  const hoveredFileUid = useSelector(hoveredFileUidSelector);
+    osType,
+    theme,
 
-  const doingFileAction = useSelector(doingFileActionSelector);
-  const lastFileAction = useSelector(lastFileActionSelector);
+    workspace,
+    project,
+    initialFileUidToOpen,
+    currentFileUid,
+    fileTree,
 
-  // fileEvent reducer
-  const fileAction = useSelector(fileActionSelector);
-  const fileEventHistoryInfo = useSelector(fileEventHistoryInfoSelector);
-  const { future: fileEventFutureLength, past: fileEventPastLength } =
-    fileEventHistoryInfo;
+    fFocusedItem,
+    fExpandedItems,
+    fExpandedItemsObj,
+    fSelectedItems,
+    fSelectedItemsObj,
+    hoveredFileUid,
 
-  // nodeTree reducer
-  const nodeTree = useSelector(nodeTreeSelector);
-  const validNodeTree = useSelector(validNodeTreeSelector);
+    doingFileAction,
+    lastFileAction,
 
-  const nodeTreeViewState = useSelector(nodeTreeViewStateSelector);
-  const {
-    focusedItem: nFocusedItem,
-    expandedItems: nExpandedItems,
-    expandedItemsObj: nExpandedItemsObj,
-    selectedItems: nSelectedItems,
-    selectedItemsObj: nSelectedItemsObj,
-  } = nodeTreeViewState;
-  const hoveredNodeUid = useSelector(hoveredNodeUidSelector);
+    fileAction,
+    fileEventPast,
+    fileEventPastLength,
+    fileEventFuture,
+    fileEventFutureLength,
 
-  // nodeEvent reducer
-  const currentFileContent = useSelector(currentFileContentSelector);
-  const selectedNodeUids = useSelector(selectedNodeUidsSelector);
-  const nodeEventHistoryInfo = useSelector(nodeEventHistoryInfoSelector);
-  const { future: nodeEventFutureLength, past: nodeEventPastLength } =
-    nodeEventHistoryInfo;
+    nodeTree,
+    validNodeTree,
 
-  // stageView reducer
-  const iframeSrc = useSelector(iframeSrcSelector);
-  const iframeLoading = useSelector(iframeLoadingSelector);
-  const needToReloadIframe = useSelector(needToReloadIframeSelector);
-  const linkToOpen = useSelector(linkToOpenSelector);
+    nFocusedItem,
+    nExpandedItems,
+    nExpandedItemsObj,
+    nSelectedItems,
+    nSelectedItemsObj,
+    hoveredNodeUid,
 
-  // codeView reducer
-  const codeViewTabSize = useSelector(codeViewTabSizeSelector);
-  const codeEditing = useSelector(codeEditingSelector);
+    currentFileContent,
+    selectedNodeUids,
 
-  // processor reducer
-  const navigatorDropdownType = useSelector(navigatorDropdownTypeSelector);
-  const favicon = useSelector(faviconSelector);
+    nodeEventPast,
+    nodeEventPastLength,
 
-  const activePanel = useSelector(activePanelSelector);
-  const clipboardData = useSelector(clipboardDataSelector);
+    nodeEventFuture,
+    nodeEventFutureLength,
 
-  const showActionsPanel = useSelector(showActionsPanelSelector);
-  const showCodeView = useSelector(showCodeViewSelector);
+    iframeSrc,
+    iframeLoading,
+    needToReloadIframe,
+    linkToOpen,
 
-  const didUndo = useSelector(didUndoSelector);
-  const didRedo = useSelector(didRedoSelector);
+    codeViewTabSize,
+    codeEditing,
 
-  const updateOptions = useSelector(updateOptionsSelector);
+    navigatorDropdownType,
+    favicon,
 
-  // cmdk reducer
-  const cmdkOpen = useSelector(cmdkOpenSelector);
-  const cmdkPages = useSelector(cmdkPagesSelector);
-  const currentCmdkPage = useSelector(currentCmdkPageSelector);
+    activePanel,
+    clipboardData,
 
-  const currentCommand = useSelector(currentCommandSelector);
+    showActionsPanel,
+    showCodeView,
+
+    didUndo,
+    didRedo,
+
+    updateOptions,
+
+    cmdkOpen,
+    cmdkPages,
+    currentCmdkPage,
+
+    currentCommand,
+  } = useAppState();
   // ***************************************** Reducer End *****************************************
 
   // ***************************************** Context Begin *****************************************
@@ -349,8 +289,9 @@ export default function MainPage() {
         flag = false;
       }
     }
-    const htmlNode = nodeTree[nFocusedItem];
+
     if (!flag) {
+      const htmlNode = nodeTree[nFocusedItem];
       if (
         htmlNode &&
         htmlNode.parentUid &&
@@ -470,9 +411,6 @@ export default function MainPage() {
     [messages],
   );
   // -------------------------------------------------------------- routing --------------------------------------------------------------
-
-  // init workspace
-
   const isChromeOrEdge = () => {
     const userAgent = navigator.userAgent;
 

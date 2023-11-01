@@ -2,19 +2,19 @@ import { useCallback, useContext } from "react";
 
 import { useDispatch, useSelector } from "react-redux";
 
-import { TNode, TNodeUid } from "@_node/types";
-import { MainContext } from "@_redux/main";
-
-import { cloneAndInsertNode, createAndInsertElement } from "../helpers";
 import { StageNodeIdAttr } from "@_node/html";
-import { setNeedToReloadIframe } from "@_redux/main/stageView";
+import { TNode, TNodeUid } from "@_node/types";
 import { AppState } from "@_redux/_root";
+import { MainContext } from "@_redux/main";
 import {
   expandNodeTreeNodes,
   focusNodeTreeNode,
   selectNodeTreeNodes,
   updateNodeTreeTreeViewState,
 } from "@_redux/main/nodeTree";
+import { setNeedToReloadIframe } from "@_redux/main/stageView";
+
+import { cloneAndInsertNode, createAndInsertElement } from "../helpers";
 
 export interface IUseSideEffectHandlersProps {
   contentRef: any;
@@ -224,14 +224,16 @@ export const useSideEffectHandlers = ({
           )
         : null;
 
-      nodes.forEach((node) =>
-        cloneAndInsertNode(
-          node,
-          addedUidMap,
-          targetElement,
-          refElement,
-          clipboardData,
-        ),
+      nodes.forEach(
+        (node) =>
+          clipboardData &&
+          cloneAndInsertNode(
+            node,
+            addedUidMap,
+            targetElement,
+            refElement,
+            clipboardData,
+          ),
       );
 
       const newUids = nodes

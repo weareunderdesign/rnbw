@@ -3,10 +3,10 @@ export type TCmdkReducerState = {
   cmdkPages: string[];
   currentCmdkPage: string | null;
 
-  currentCommand: TCommand;
+  currentCommand: TCommand | null;
 };
 
 export type TCommand = {
   action: string;
   description?: string;
-} | null;
+};

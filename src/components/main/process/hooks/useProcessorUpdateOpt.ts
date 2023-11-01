@@ -7,7 +7,7 @@ import { TFileNode, TFileNodeData, writeFile } from "@_node/file";
 import { TNode, TNodeTreeData } from "@_node/types";
 import { AppState } from "@_redux/_root";
 import { MainContext } from "@_redux/main";
-import { focusFileTreeNode } from "@_redux/main/fileTree";
+import { focusFileTreeNode, setDoingFileAction } from "@_redux/main/fileTree";
 import { setNodeTree } from "@_redux/main/nodeTree";
 import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
 import { setUpdateOptions } from "@_redux/main/processor";
@@ -36,7 +36,6 @@ export const useProcessorUpdateOpt = () => {
     addRunningActions,
     removeRunningActions,
     // file tree view
-    setFSPending,
     parseFileFlag,
 
     setNewFocusedNodeUid,
@@ -112,7 +111,7 @@ export const useProcessorUpdateOpt = () => {
       if (!onlyRenderViewState) {
         // update idb
         (async () => {
-          setFSPending(true);
+          dispatch(setDoingFileAction(true));
           try {
             const previewPath = getPreViewPath(fileTree, _file, fileData);
             await writeFile(previewPath, fileData.contentInApp as string);
@@ -120,7 +119,7 @@ export const useProcessorUpdateOpt = () => {
               dispatch(setIframeSrc(`rnbw${previewPath}`));
             }
           } catch (err) {}
-          setFSPending(false);
+          dispatch(setDoingFileAction(false));
         })();
         // update context
 
@@ -139,7 +138,7 @@ export const useProcessorUpdateOpt = () => {
       dispatch(
         setUpdateOptions({
           parse: null,
-          from: updateOptions.from !== "hms" ? null : updateOptions.from,
+          from: updateOptions.from !== "hms" ? "none" : updateOptions.from,
         }),
       );
     } else if (updateOptions?.parse === false) {
@@ -152,12 +151,12 @@ export const useProcessorUpdateOpt = () => {
 
       // update idb
       (async () => {
-        setFSPending(true);
+        dispatch(setDoingFileAction(true));
         try {
           // TODO
           // await writeFile(fileData.path, fileData.contentInApp as string);
         } catch (err) {}
-        setFSPending(false);
+        dispatch(setDoingFileAction(false));
       })();
       // update context
 

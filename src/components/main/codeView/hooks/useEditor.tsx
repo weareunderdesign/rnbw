@@ -13,21 +13,22 @@ import { TFileNodeData } from "@_node/file";
 import { parseHtml, StageNodeIdAttr } from "@_node/html";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
-
-import { CodeSelection } from "../types";
 import {
   codeViewTabSizeSelector,
   setCodeEditing,
   setCodeViewTabSize,
 } from "@_redux/main/codeView";
-import { setNodeTree } from "@_redux/main/nodeTree";
 import {
   currentFileUidSelector,
   fileTreeSelector,
+  setDoingFileAction,
   setFileTree,
 } from "@_redux/main/fileTree";
+import { setNodeTree } from "@_redux/main/nodeTree";
 import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
 import { setUpdateOptions } from "@_redux/main/processor";
+
+import { CodeSelection } from "../types";
 
 function getLanguageFromExtension(extension: string) {
   switch (extension) {
@@ -54,7 +55,6 @@ export default function useEditor() {
     setMonacoEditorRef,
     setIsContentProgrammaticallyChanged,
     monacoEditorRef,
-    setFSPending,
   } = useContext(MainContext);
 
   const dispatch = useDispatch();
@@ -218,7 +218,7 @@ export default function useEditor() {
         dispatch(setNodeTree(nodeTree));
 
         dispatch(setCurrentFileContent(codeContentRef.current));
-        setFSPending(false);
+        dispatch(setDoingFileAction(false));
 
         const _file = structuredClone(fileTree[currentFileUid]) as TNode;
         addRunningActions(["processor-updateOpt"]);
@@ -233,7 +233,7 @@ export default function useEditor() {
         dispatch(setCurrentFileContent(codeContentRef.current));
         codeChangeDecorationRef.current.clear();
         dispatch(setCodeEditing(false));
-        setFSPending(false);
+        dispatch(setDoingFileAction(false));
       } catch (e) {
         console.log(e);
       }

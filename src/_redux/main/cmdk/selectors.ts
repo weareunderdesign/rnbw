@@ -22,7 +22,7 @@ export const currentCmdkPageSelector = createSelector(
   (currentCmdkPage) => currentCmdkPage,
 );
 
-const getCurrentCommand = (state: AppState): TCommand =>
+const getCurrentCommand = (state: AppState): TCommand | null =>
   state.main.cmdk.currentCommand;
 export const currentCommandSelector = createSelector(
   getCurrentCommand,
