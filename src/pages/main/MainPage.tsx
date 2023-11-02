@@ -318,13 +318,15 @@ export default function MainPage() {
                   Name: tagRef.Name,
                   Icon: tagRef.Icon,
                   Description: tagRef.Description,
-                  "Keyboard Shortcut": {
-                    cmd: false,
-                    shift: false,
-                    alt: false,
-                    key: "",
-                    click: false,
-                  },
+                  "Keyboard Shortcut": [
+                    {
+                      cmd: false,
+                      shift: false,
+                      alt: false,
+                      key: "",
+                      click: false,
+                    },
+                  ],
                   Group: "Add",
                   Context: `Node-${tagRef.Tag}`,
                 });
@@ -343,13 +345,15 @@ export default function MainPage() {
                   Name: tagRef.Name,
                   Icon: tagRef.Icon,
                   Description: tagRef.Description,
-                  "Keyboard Shortcut": {
-                    cmd: false,
-                    shift: false,
-                    alt: false,
-                    key: "",
-                    click: false,
-                  },
+                  "Keyboard Shortcut": [
+                    {
+                      cmd: false,
+                      shift: false,
+                      alt: false,
+                      key: "",
+                      click: false,
+                    },
+                  ],
                   Group: "Add",
                   Context: `Node-${tagRef.Tag}`,
                 });
@@ -367,13 +371,15 @@ export default function MainPage() {
           Name: tagRef.Name.toUpperCase(),
           Icon: tagRef.Icon,
           Description: tagRef.Description,
-          "Keyboard Shortcut": {
-            cmd: false,
-            shift: false,
-            alt: false,
-            key: "",
-            click: false,
-          },
+          "Keyboard Shortcut": [
+            {
+              cmd: false,
+              shift: false,
+              alt: false,
+              key: "",
+              click: false,
+            },
+          ],
           Group: "Add",
           Context: `Node-${tagRef.Tag}`,
         });
@@ -480,13 +486,15 @@ export default function MainPage() {
           Name: recentProjectName[index],
           Icon: "folder",
           Description: "",
-          "Keyboard Shortcut": {
-            cmd: false,
-            shift: false,
-            alt: false,
-            key: "",
-            click: false,
-          },
+          "Keyboard Shortcut": [
+            {
+              cmd: false,
+              shift: false,
+              alt: false,
+              key: "",
+              click: false,
+            },
+          ],
           Group: "Recent",
           Context: index.toString(),
         });
@@ -537,26 +545,36 @@ export default function MainPage() {
       // detect action
       let action: string | null = null;
       for (const actionName in cmdkReferenceData) {
-        const _cmdk = cmdkReferenceData[actionName][
+        const _cmdkArray = cmdkReferenceData[actionName][
           "Keyboard Shortcut"
-        ] as TCmdkKeyMap;
+        ] as TCmdkKeyMap[];
 
-        const key =
-          _cmdk.key.length === 0
-            ? ""
-            : _cmdk.key === "\\"
-            ? "Backslash"
-            : (_cmdk.key.length === 1 ? "Key" : "") +
-              _cmdk.key[0].toUpperCase() +
-              _cmdk.key.slice(1);
-        if (
-          cmdk.cmd === _cmdk.cmd &&
-          cmdk.shift === _cmdk.shift &&
-          cmdk.alt === _cmdk.alt &&
-          cmdk.key === key
-        ) {
-          action = actionName;
-          break;
+        let matched = false;
+
+        for (const keyObj of _cmdkArray) {
+          const key =
+            keyObj.key.length === 0
+              ? ""
+              : keyObj.key === "\\"
+              ? "Backslash"
+              : (keyObj.key.length === 1 ? "Key" : "") +
+                keyObj.key[0].toUpperCase() +
+                keyObj.key.slice(1);
+
+          if (
+            cmdk.cmd === keyObj.cmd &&
+            cmdk.shift === keyObj.shift &&
+            cmdk.alt === keyObj.alt &&
+            cmdk.key === key
+          ) {
+            action = actionName;
+            matched = true;
+            break; // Match found, exit the inner loop
+          }
+        }
+
+        if (matched) {
+          break; // Match found, exit the outer loop
         }
       }
       if (action === null) return;
@@ -1179,13 +1197,15 @@ export default function MainPage() {
         Name: "Clear",
         Icon: "",
         Description: "",
-        "Keyboard Shortcut": {
-          cmd: true,
-          shift: true,
-          alt: false,
-          key: "KeyR",
-          click: false,
-        },
+        "Keyboard Shortcut": [
+          {
+            cmd: true,
+            shift: true,
+            alt: false,
+            key: "KeyR",
+            click: false,
+          },
+        ],
         Group: "default",
         Context: "all",
       };
@@ -1194,13 +1214,15 @@ export default function MainPage() {
         Name: "Jumpstart",
         Icon: "",
         Description: "",
-        "Keyboard Shortcut": {
-          cmd: false,
-          shift: false,
-          alt: false,
-          key: "KeyJ",
-          click: false,
-        },
+        "Keyboard Shortcut": [
+          {
+            cmd: false,
+            shift: false,
+            alt: false,
+            key: "KeyJ",
+            click: false,
+          },
+        ],
         Group: "default",
         Context: "all",
       };
@@ -1209,13 +1231,15 @@ export default function MainPage() {
         Name: "Actions",
         Icon: "",
         Description: "",
-        "Keyboard Shortcut": {
-          cmd: false,
-          shift: false,
-          alt: false,
-          key: "KeyW",
-          click: false,
-        },
+        "Keyboard Shortcut": [
+          {
+            cmd: false,
+            shift: false,
+            alt: false,
+            key: "KeyW",
+            click: false,
+          },
+        ],
         Group: "default",
         Context: "all",
       };
@@ -1224,13 +1248,15 @@ export default function MainPage() {
         Name: "Save",
         Icon: "",
         Description: "",
-        "Keyboard Shortcut": {
-          cmd: true,
-          shift: false,
-          alt: false,
-          key: "KeyS",
-          click: false,
-        },
+        "Keyboard Shortcut": [
+          {
+            cmd: true,
+            shift: false,
+            alt: false,
+            key: "KeyS",
+            click: false,
+          },
+        ],
         Group: "default",
         Context: "all",
       };
@@ -1239,31 +1265,39 @@ export default function MainPage() {
       const _cmdkRefJumpstartData: TCmdkGroupData = {};
       await Promise.all(
         cmdkRefJumpstart.map(async (command: TCmdkReference) => {
-          const keys: string[] = (command["Keyboard Shortcut"] as string)
-            ?.replace(/ /g, "")
-            .split("+");
-          const keyObj: TCmdkKeyMap = {
-            cmd: false,
-            shift: false,
-            alt: false,
-            key: "",
-            click: false,
-          };
-          keys?.map((key) => {
-            if (
-              key === "cmd" ||
-              key === "shift" ||
-              key === "alt" ||
-              key === "click"
-            ) {
-              keyObj[key] = true;
-            } else {
-              keyObj.key = key;
-            }
+          const shortcuts = (command["Keyboard Shortcut"] as string)?.split(
+            " ",
+          );
+          const keyObjects: any = [];
+
+          shortcuts?.forEach((shortcut) => {
+            const keys = shortcut.split("+");
+            const keyObj = {
+              cmd: false,
+              shift: false,
+              alt: false,
+              key: "",
+              click: false,
+            };
+
+            keys?.forEach((key) => {
+              if (
+                key === "cmd" ||
+                key === "shift" ||
+                key === "alt" ||
+                key === "click"
+              ) {
+                keyObj[key] = true;
+              } else {
+                keyObj.key = key;
+              }
+            });
+
+            keyObjects.push(keyObj);
           });
 
           const _command: TCmdkReference = JSON.parse(JSON.stringify(command));
-          _command["Keyboard Shortcut"] = keyObj;
+          _command["Keyboard Shortcut"] = keyObjects;
 
           const groupName = _command["Group"];
           if (_cmdkRefJumpstartData[groupName] !== undefined) {
@@ -1302,13 +1336,15 @@ export default function MainPage() {
                     Name: _session["recent-project-name"][index],
                     Icon: "folder",
                     Description: "",
-                    "Keyboard Shortcut": {
-                      cmd: false,
-                      shift: false,
-                      alt: false,
-                      key: "",
-                      click: false,
-                    },
+                    "Keyboard Shortcut": [
+                      {
+                        cmd: false,
+                        shift: false,
+                        alt: false,
+                        key: "",
+                        click: false,
+                      },
+                    ],
                     Group: "Recent",
                     Context: index.toString(),
                   } as TCmdkReference;
@@ -1350,32 +1386,41 @@ export default function MainPage() {
           contextObj[context] = true;
         });
 
-        const keys: string[] = (command["Keyboard Shortcut"] as string)
-          ?.replace(/ /g, "")
-          .split("+");
-        const keyObj: TCmdkKeyMap = {
-          cmd: false,
-          shift: false,
-          alt: false,
-          key: "",
-          click: false,
-        };
-        keys?.map((key: string) => {
-          if (
-            key === "cmd" ||
-            key === "shift" ||
-            key === "alt" ||
-            key === "click"
-          ) {
-            keyObj[key] = true;
-          } else {
-            keyObj.key = key;
-          }
+        const shortcuts: string[] = (
+          command["Keyboard Shortcut"] as string
+        )?.split(" ");
+        const keyObjects: any = [];
+
+        shortcuts?.forEach((shortcut) => {
+          const keys = shortcut.split("+");
+          const keyObj = {
+            cmd: false,
+            shift: false,
+            alt: false,
+            key: "",
+            click: false,
+          };
+
+          keys?.forEach((key) => {
+            if (
+              key === "cmd" ||
+              key === "shift" ||
+              key === "alt" ||
+              key === "click"
+            ) {
+              keyObj[key] = true;
+            } else {
+              keyObj.key = key;
+            }
+          });
+
+          keyObjects.push(keyObj);
         });
 
         const _command: TCmdkReference = JSON.parse(JSON.stringify(command));
+
         _command["Context"] = contextObj;
-        _command["Keyboard Shortcut"] = keyObj;
+        _command["Keyboard Shortcut"] = keyObjects;
 
         const groupName = _command["Group"];
         if (_cmdkRefActionsData[groupName] !== undefined) {
@@ -2020,7 +2065,8 @@ export default function MainPage() {
                                     </>
                                   )}
                                 </div>
-                                <div className="gap-s">
+
+                                {/* <div className="gap-s">
                                   {(command["Keyboard Shortcut"] as TCmdkKeyMap)
                                     .cmd && <span className="text-m">⌘</span>}
                                   {(command["Keyboard Shortcut"] as TCmdkKeyMap)
@@ -2049,6 +2095,54 @@ export default function MainPage() {
                                   {(command["Keyboard Shortcut"] as TCmdkKeyMap)
                                     .click && (
                                     <span className="text-m">Click</span>
+                                  )}
+                                </div> */}
+
+                                <div className="gap-s">
+                                  {[command["Keyboard Shortcut"] as any[]].map(
+                                    (shortcut: any, index: any) => {
+                                      const keyObj = {
+                                        cmd: shortcut.cmd || false,
+                                        shift: shortcut.shift || false,
+                                        alt: shortcut.alt || false,
+                                        key: shortcut.key || "",
+                                        click: shortcut.click || false,
+                                      };
+
+                                      const keyText =
+                                        keyObj.key.length === 0
+                                          ? ""
+                                          : keyObj.key === "\\"
+                                          ? "Backslash"
+                                          : keyObj.key.length === 1
+                                          ? keyObj.key[0].toUpperCase() +
+                                            keyObj.key.slice(1)
+                                          : keyObj.key;
+
+                                      return (
+                                        <React.Fragment key={index}>
+                                          {keyObj.cmd && (
+                                            <span className="text-m">⌘</span>
+                                          )}
+                                          {keyObj.shift && (
+                                            <span className="text-m">⇧</span>
+                                          )}
+                                          {keyObj.alt && (
+                                            <span className="text-m">Alt</span>
+                                          )}
+                                          {keyObj.key !== "" && (
+                                            <span className="text-m">
+                                              {keyText}
+                                            </span>
+                                          )}
+                                          {keyObj.click && (
+                                            <span className="text-m">
+                                              Click
+                                            </span>
+                                          )}
+                                        </React.Fragment>
+                                      );
+                                    },
                                   )}
                                 </div>
                               </div>
