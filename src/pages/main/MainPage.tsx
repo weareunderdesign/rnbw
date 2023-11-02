@@ -273,13 +273,15 @@ export default function MainPage() {
             Name: fileRef.Name,
             Icon: fileRef.Icon,
             Description: fileRef.Description,
-            "Keyboard Shortcut": {
-              cmd: false,
-              shift: false,
-              alt: false,
-              key: "",
-              click: false,
-            },
+            "Keyboard Shortcut": [
+              {
+                cmd: false,
+                shift: false,
+                alt: false,
+                key: "",
+                click: false,
+              },
+            ],
             Group: "Add",
             Context: `File-${fileRef.Extension}`,
           });
@@ -1268,7 +1270,7 @@ export default function MainPage() {
           const shortcuts = (command["Keyboard Shortcut"] as string)?.split(
             " ",
           );
-          const keyObjects: any = [];
+          const keyObjects: TCmdkKeyMap[] = [];
 
           shortcuts?.forEach((shortcut) => {
             const keys = shortcut.split("+");
@@ -1389,7 +1391,7 @@ export default function MainPage() {
         const shortcuts: string[] = (
           command["Keyboard Shortcut"] as string
         )?.split(" ");
-        const keyObjects: any = [];
+        const keyObjects: TCmdkKeyMap[] = [];
 
         shortcuts?.forEach((shortcut) => {
           const keys = shortcut.split("+");
@@ -2066,84 +2068,43 @@ export default function MainPage() {
                                   )}
                                 </div>
 
-                                {/* <div className="gap-s">
-                                  {(command["Keyboard Shortcut"] as TCmdkKeyMap)
-                                    .cmd && <span className="text-m">⌘</span>}
-                                  {(command["Keyboard Shortcut"] as TCmdkKeyMap)
-                                    .shift && <span className="text-m">⇧</span>}
-                                  {(command["Keyboard Shortcut"] as TCmdkKeyMap)
-                                    .alt && <span className="text-m">Alt</span>}
-                                  {command["Keyboard Shortcut"] !== undefined &&
+                                <div className="gap-s">
+                                  {command["Keyboard Shortcut"] &&
                                     (
                                       command[
                                         "Keyboard Shortcut"
-                                      ] as TCmdkKeyMap
-                                    ).key !== "" && (
-                                      <span className="text-m">
-                                        {(
-                                          command[
-                                            "Keyboard Shortcut"
-                                          ] as TCmdkKeyMap
-                                        ).key[0].toUpperCase() +
-                                          (
-                                            command[
-                                              "Keyboard Shortcut"
-                                            ] as TCmdkKeyMap
-                                          ).key.slice(1)}
-                                      </span>
-                                    )}
-                                  {(command["Keyboard Shortcut"] as TCmdkKeyMap)
-                                    .click && (
-                                    <span className="text-m">Click</span>
-                                  )}
-                                </div> */}
-
-                                <div className="gap-s">
-                                  {[command["Keyboard Shortcut"] as any[]].map(
-                                    (shortcut: any, index: any) => {
-                                      const keyObj = {
-                                        cmd: shortcut.cmd || false,
-                                        shift: shortcut.shift || false,
-                                        alt: shortcut.alt || false,
-                                        key: shortcut.key || "",
-                                        click: shortcut.click || false,
-                                      };
-
-                                      const keyText =
-                                        keyObj.key.length === 0
-                                          ? ""
-                                          : keyObj.key === "\\"
-                                          ? "Backslash"
-                                          : keyObj.key.length === 1
-                                          ? keyObj.key[0].toUpperCase() +
-                                            keyObj.key.slice(1)
-                                          : keyObj.key;
-
-                                      return (
-                                        <React.Fragment key={index}>
-                                          {keyObj.cmd && (
-                                            <span className="text-m">⌘</span>
-                                          )}
-                                          {keyObj.shift && (
-                                            <span className="text-m">⇧</span>
-                                          )}
-                                          {keyObj.alt && (
-                                            <span className="text-m">Alt</span>
-                                          )}
-                                          {keyObj.key !== "" && (
-                                            <span className="text-m">
-                                              {keyText}
-                                            </span>
-                                          )}
-                                          {keyObj.click && (
-                                            <span className="text-m">
-                                              Click
-                                            </span>
-                                          )}
-                                        </React.Fragment>
-                                      );
-                                    },
-                                  )}
+                                      ] as TCmdkKeyMap[]
+                                    ).map((keyMap, index) => (
+                                      <div className="gap-s" key={index}>
+                                        {keyMap.cmd && (
+                                          <span className="text-m">⌘</span>
+                                        )}
+                                        {keyMap.shift && (
+                                          <span className="text-m">⇧</span>
+                                        )}
+                                        {keyMap.alt && (
+                                          <span className="text-m">Alt</span>
+                                        )}
+                                        {keyMap.key !== "" && (
+                                          <span className="text-m">
+                                            {keyMap.key[0].toUpperCase() +
+                                              keyMap.key.slice(1) +
+                                              (index !==
+                                              (
+                                                command[
+                                                  "Keyboard Shortcut"
+                                                ] as TCmdkKeyMap[]
+                                              ).length -
+                                                1
+                                                ? ","
+                                                : "")}
+                                          </span>
+                                        )}
+                                        {keyMap.click && (
+                                          <span className="text-m">Click</span>
+                                        )}
+                                      </div>
+                                    ))}
                                 </div>
                               </div>
                             </Command.Item>
