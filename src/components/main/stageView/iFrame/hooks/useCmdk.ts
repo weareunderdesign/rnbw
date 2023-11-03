@@ -1,4 +1,5 @@
 import { useCallback, useContext } from "react";
+import { LogAllow } from "@_constants/main";
 import { TNode, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { getCommandKey } from "@_services/global";
@@ -26,6 +27,7 @@ export const useCmdk = ({
   const { osType } = useSelector((state: AppState) => state.global);
 
   const dispatch = useDispatch();
+
   const onKeyDown = useCallback(
     (e: KeyboardEvent) => {
       //We are trying to fina a way to get node id with this event
@@ -33,6 +35,22 @@ export const useCmdk = ({
         let isSaving = e.key === "s" && (e.ctrlKey || e.metaKey);
         if (!isSaving) {
           return;
+        }
+        type TTarget = HTMLElement & {
+          dataset: {
+            rnbwdevRnbwNode: string;
+          };
+        };
+        const target: TTarget | null = e.target as TTarget;
+        if (target && "dataset" in target) {
+          const uid = target.dataset.rnbwdevRnbwNode;
+          if (uid) {
+            let uid = mostRecentSelectedNode.current?.uid as TNodeUid;
+            let parentUid = mostRecentSelectedNode.current
+              ?.parentUid as TNodeUid;
+          }
+
+          //TODO: IN_PROGRESS
         }
       }
 
@@ -48,26 +66,36 @@ export const useCmdk = ({
       // detect action
       let action: string | null = null;
       for (const actionName in cmdkReferenceData) {
-        const _cmdk = cmdkReferenceData[actionName][
+        const _cmdkArray = cmdkReferenceData[actionName][
           "Keyboard Shortcut"
-        ] as TCmdkKeyMap;
+        ] as TCmdkKeyMap[];
 
-        const key =
-          _cmdk.key.length === 0
-            ? ""
-            : _cmdk.key === "\\"
-            ? "Backslash"
-            : (_cmdk.key.length === 1 ? "Key" : "") +
-              _cmdk.key[0].toUpperCase() +
-              _cmdk.key.slice(1);
-        if (
-          cmdk.cmd === _cmdk.cmd &&
-          cmdk.shift === _cmdk.shift &&
-          cmdk.alt === _cmdk.alt &&
-          cmdk.key === key
-        ) {
-          action = actionName;
-          break;
+        let matched = false;
+
+        for (const keyObj of _cmdkArray) {
+          const key =
+            keyObj.key.length === 0
+              ? ""
+              : keyObj.key === "\\"
+              ? "Backslash"
+              : (keyObj.key.length === 1 ? "Key" : "") +
+                keyObj.key[0].toUpperCase() +
+                keyObj.key.slice(1);
+
+          if (
+            cmdk.cmd === keyObj.cmd &&
+            cmdk.shift === keyObj.shift &&
+            cmdk.alt === keyObj.alt &&
+            cmdk.key === key
+          ) {
+            action = actionName;
+            matched = true;
+            break; // Match found, exit the inner loop
+          }
+        }
+
+        if (matched) {
+          break; // Match found, exit the outer loop
         }
       }
       if (action === null) return;

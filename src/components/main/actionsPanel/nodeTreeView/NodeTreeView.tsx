@@ -271,43 +271,58 @@ export const NodeTreeView = (props: NodeTreeViewProps) => {
     canRename: false,
   };
 
-  return currentFileUid !== "" ? (
-    <div
-      id="NodeTreeView"
-      style={{
-        // position: 'absolute',
-        top: 41,
-        left: 0,
-        width: "100%",
-        height: "calc(100% - 41px)",
-        overflow: "auto",
-      }}
-      onClick={onPanelClick}
-    >
-      <TreeView
-        width={"100%"}
-        height={"auto"}
-        info={{ id: "node-tree-view" }}
-        data={nodeTreeViewData}
-        focusedItem={focusedItem}
-        selectedItems={selectedItems}
-        expandedItems={expandedItems}
-        renderers={{
-          renderTreeContainer: (props) => <Container {...props} />,
-          renderItemsContainer: (props) => <Container {...props} />,
+  return useMemo(() => {
+    return currentFileUid !== "" ? (
+      <div
+        id="NodeTreeView"
+        style={{
+          top: 41,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          overflow: "auto",
+          padding: "16px 0",
+        }}
+        onClick={onPanelClick}
+      >
+        <TreeView
+          width={"100%"}
+          height={"auto"}
+          info={{ id: "node-tree-view" }}
+          data={nodeTreeViewData}
+          focusedItem={focusedItem}
+          selectedItems={selectedItems}
+          expandedItems={expandedItems}
+          renderers={{
+            renderTreeContainer: (props) => <Container {...props} />,
+            renderItemsContainer: (props) => <Container {...props} />,
 
-          renderItem: (props) => {
-            const htmlElementReferenceData =
-              useMemo<THtmlElementsReference>(() => {
-                const node = props.item.data as TNode;
-                const refData =
-                  htmlReferenceData.elements[
-                    node.displayName === "#documentType"
-                      ? "!DOCTYPE"
-                      : node.displayName
-                  ];
+            renderItem: (props) => {
+              const htmlElementReferenceData =
+                useMemo<THtmlElementsReference>(() => {
+                  const node = props.item.data as TNode;
+                  const nodeData = node.data as THtmlNodeData;
+                  const refData =
+                    htmlReferenceData.elements[
+                      nodeData.name === "!doctype" ? "!DOCTYPE" : nodeData.name
+                    ];
+                  return refData;
+                }, []);
 
-                return refData;
+              const spanStyles: React.CSSProperties = {
+                width: "calc(100% - 32px)",
+                textOverflow: "ellipsis",
+                overflow: "hidden",
+                whiteSpace: "nowrap",
+              };
+
+              const treeViewRef = useRef<HTMLHeadingElement | any>(null);
+              useEffect(() => {
+                if (props.context.isSelected) {
+                  setTimeout(() => {
+                    treeViewRef?.current?.click();
+                  }, 500);
+                }
               }, []);
 
             const spanStyles: React.CSSProperties = {

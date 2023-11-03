@@ -15,21 +15,38 @@ export default function ActionsPanel({ ...props }: ActionsPanelProps) {
 
   return useMemo(() => {
     return (
-      <div
-        id="ActionsPanel"
-        className="border radius-s background-primary shadow"
-        style={{
-          position: "absolute",
-          ...props,
-          overflow: "hidden",
-          ...(showActionsPanel ? {} : { width: "0", border: "none" }),
-        }}
-      >
-        <NavigatorPanel />
-        <WorkspaceTreeView />
-        <NodeTreeView />
-        {false && <SettingsPanel />}
-      </div>
+      <>
+        <div
+          id="ActionsPanel"
+          className="border radius-s background-primary shadow"
+          style={{
+            position: "absolute",
+            top: props.offsetTop,
+            left: props.offsetLeft,
+            width: props.width,
+            height: props.height,
+
+            overflow: "hidden",
+
+            ...(showActionsPanel
+              ? {}
+              : { width: "0", overflow: "hidden", border: "none" }),
+          }}
+        >
+          <NavigatorPanel />
+          <div
+            style={{
+              display: "grid",
+              gridTemplateRows: "repeat(auto-fit, minmax(50px, 1fr))",
+              height: "100%",
+            }}
+          >
+            <WorkspaceTreeView />
+            <NodeTreeView />
+          </div>
+          {false && <SettingsPanel />}
+        </div>
+      </>
     );
   }, [props, showActionsPanel]);
 }

@@ -1,26 +1,11 @@
-import {
-  useCallback,
-  useContext,
-} from 'react';
+import { useCallback, useContext } from "react";
+import { useSelector } from "react-redux";
+import { fnSelector, MainContext, navigatorSelector } from "@_redux/main";
+import { AddNodeActionPrefix } from "@_constants/main";
 
-import { Range } from 'monaco-editor';
-import { useSelector } from 'react-redux';
-
-import { useEditor } from '@_components/main/codeView/hooks';
-import { AddNodeActionPrefix } from '@_constants/main';
-import { TNodeUid } from '@_node/types';
-import { MainContext } from '@_redux/main';
-import {
-  currentFileUidSelector,
-  fileTreeSelector,
-} from '@_redux/main/fileTree';
-import {
-  nodeTreeSelector,
-  nodeTreeViewStateSelector,
-  validNodeTreeSelector,
-} from '@_redux/main/nodeTree';
-
-import { useNodeActions } from './useNodeActions';
+import { useNodeActions } from "./useNodeActions";
+import { Range } from "monaco-editor";
+import { useEditor } from "@_components/main/codeView/hooks";
 
 export const useNodeActionsHandlers = () => {
   const fileTree = useSelector(fileTreeSelector);
@@ -35,8 +20,14 @@ export const useNodeActionsHandlers = () => {
     monacoEditorRef,
   } = useContext(MainContext);
 
-  const { cb_addNode, cb_removeNode, cb_duplicateNode, cb_copyNode } =
-    useNodeActions();
+  const {
+    cb_addNode,
+    cb_removeNode,
+    cb_duplicateNode,
+    cb_copyNode,
+    cb_groupNode,
+    cb_ungroupNode,
+  } = useNodeActions();
 
   const { handleEditorChange } = useEditor();
 
@@ -116,9 +107,15 @@ export const useNodeActionsHandlers = () => {
 
   const onTurnInto = useCallback(() => {}, []);
 
-  const onGroup = useCallback(() => {}, []);
+  const onGroup = useCallback(() => {
+    if (selectedItems.length === 0) return;
+    cb_groupNode(selectedItems);
+  }, [cb_groupNode, selectedItems, validNodeTree]);
 
-  const onUngroup = useCallback(() => {}, []);
+  const onUngroup = useCallback(() => {
+    if (selectedItems.length === 0) return;
+    cb_ungroupNode(selectedItems);
+  }, [cb_ungroupNode, selectedItems, validNodeTree]);
 
   const onAddNode = useCallback(
     (actionName: string) => {

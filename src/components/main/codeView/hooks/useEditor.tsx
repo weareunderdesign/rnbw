@@ -55,6 +55,7 @@ export default function useEditor() {
     setMonacoEditorRef,
     setIsContentProgrammaticallyChanged,
     monacoEditorRef,
+    parseFileFlag,
   } = useContext(MainContext);
 
   const dispatch = useDispatch();
@@ -83,18 +84,60 @@ export default function useEditor() {
   const decorationCollectionRef = useRef<editor.IEditorDecorationsCollection>();
   const currentPosition = useRef<IPosition | null>(null);
 
+  // watch focus/selection for the editor
+  const firstSelection = useRef<CodeSelection | null>(null);
+  const [selection, setSelection] = useState<CodeSelection | null>(null);
+  const isFirst = useRef<boolean>(true);
+
+  const updateSelection = useCallback(() => {
+    const monacoEditor = getCurrentEditorInstance();
+    if (!parseFileFlag) return;
+    const _selection = monacoEditor?.getSelection();
+
+    if (_selection) {
+      if (isFirst.current) {
+        firstSelection.current = _selection;
+        isFirst.current = false;
+        return;
+      }
+      if (
+        firstSelection.current &&
+        (_selection.startLineNumber !==
+          firstSelection.current.startLineNumber ||
+          _selection.startColumn !== firstSelection.current.startColumn ||
+          _selection.endLineNumber !== firstSelection.current.endLineNumber ||
+          _selection.endColumn !== firstSelection.current.endColumn)
+      ) {
+        firstSelection.current = _selection;
+        if (
+          !selection ||
+          _selection.startLineNumber !== selection.startLineNumber ||
+          _selection.startColumn !== selection.startColumn ||
+          _selection.endLineNumber !== selection.endLineNumber ||
+          _selection.endColumn !== selection.endColumn
+        ) {
+          setSelection({
+            startLineNumber: _selection.startLineNumber,
+            startColumn: _selection.startColumn,
+            endLineNumber: _selection.endLineNumber,
+            endColumn: _selection.endColumn,
+          });
+        }
+      }
+    } else {
+      setSelection(null);
+    }
+  }, [selection, parseFileFlag]);
+
   const handleEditorDidMount = (editor: editor.IStandaloneCodeEditor) => {
     monacoRef.current = editor;
     setMonacoEditorRef(editor);
 
     // dispatch(setUpdateOptions({ parse: true, from: "file" }));
     editor.onDidChangeCursorPosition((event) => {
-      setTimeout(() => {
-        if (event.reason === 2) {
-          currentPosition.current &&
-            monacoRef.current?.setPosition(currentPosition.current);
-        }
-      }, 0);
+      if (event.source === "mouse") {
+        updateSelection();
+      }
     });
     decorationCollectionRef.current = editor.createDecorationsCollection();
   };
@@ -184,6 +227,7 @@ export default function useEditor() {
       if (!iframeHtml || !updatedHtml) return;
 
       try {
+        let nodeUidToFocus = "";
         morphdom(iframeHtml, updatedHtml, {
           onBeforeElUpdated: function (fromEl, toEl) {
             const fromElRnbwId = fromEl.getAttribute(StageNodeIdAttr);
@@ -208,12 +252,18 @@ export default function useEditor() {
             }
             return true;
           },
-          onBeforeNodeAdded: function (node) {
-            debugger;
-            // if (node.nodeValue?.replace(/\s/g, "") === "\n") return false
+          onBeforeNodeAdded: function (node: Node) {
+            if (node.nodeType === 1) {
+              //@ts-ignore
+              const uid = node.getAttribute(NodeInAppAttribName);
+              if (!!uid) {
+                nodeUidToFocus = uid;
+              }
+            }
             return node;
           },
         });
+
         codeContentRef.current = value;
         dispatch(setNodeTree(nodeTree));
 
@@ -234,8 +284,27 @@ export default function useEditor() {
         dispatch(setFileTree(fileTree));
         dispatch(setCurrentFileContent(codeContentRef.current));
         codeChangeDecorationRef.current.clear();
+
         dispatch(setCodeEditing(false));
         dispatch(setDoingFileAction(false));
+
+        //finding and selecting focused node
+        const focusedNode = tree[nodeUidToFocus];
+        dispatch(focusFNNode(focusedNode.uid));
+        dispatch(selectFNNode([focusedNode.uid]));
+        //current code range in monaco editor
+        const {
+          endCol: endColumn,
+          endLine: endLineNumber,
+          startCol: startColumn,
+          startLine: startLineNumber,
+        } = focusedNode.sourceCodeLocation;
+        monacoEditor.setSelection({
+          startLineNumber,
+          startColumn,
+          endLineNumber,
+          endColumn,
+        });
       } catch (e) {
         console.log(e);
       }
@@ -288,5 +357,7 @@ export default function useEditor() {
     setFocusedNode,
     codeContent,
     setCodeContent,
+    selection,
+    updateSelection,
   };
 }

@@ -55,7 +55,7 @@ export type TCmdkReference = {
   Name: string;
   Icon: string;
   Description: string;
-  "Keyboard Shortcut": string | TCmdkKeyMap;
+  "Keyboard Shortcut": string | TCmdkKeyMap | string[] | TCmdkKeyMap[];
   Group: string;
   Context?: string | TCmdkContext;
 };
