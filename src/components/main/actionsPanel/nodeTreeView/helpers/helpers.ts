@@ -1,8 +1,5 @@
-import { StageNodeIdAttr } from "@_node/html";
-import { TNodeTreeData, TNodeUid } from "@_node/types";
 import { editor } from "monaco-editor";
 import { DraggingPosition } from "react-complex-tree";
-
 import { StageNodeIdAttr } from "@_node/html";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
 
@@ -42,9 +39,9 @@ export const sortUidsByMinStartIndex = (
 
     if (
       !selectedNode1 ||
-      !selectedNode1.sourceCodeLocation ||
+      !selectedNode1.data.sourceCodeLocation ||
       !selectedNode2 ||
-      !selectedNode2.sourceCodeLocation
+      !selectedNode2.data.sourceCodeLocation
     ) {
       console.error(
         "Parent node or source code location is undefined for sortedUid",
@@ -52,8 +49,8 @@ export const sortUidsByMinStartIndex = (
       return 0;
     }
 
-    const { startOffset: start1 } = selectedNode1.sourceCodeLocation;
-    const { startOffset: start2 } = selectedNode2.sourceCodeLocation;
+    const { startOffset: start1 } = selectedNode1.data.sourceCodeLocation;
+    const { startOffset: start2 } = selectedNode2.data.sourceCodeLocation;
 
     return start1 - start2; // Sort in descending order
   });

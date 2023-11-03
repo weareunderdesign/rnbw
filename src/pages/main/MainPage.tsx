@@ -577,15 +577,13 @@ export default function MainPage() {
             Name: fileRef.Name,
             Icon: fileRef.Icon,
             Description: fileRef.Description,
-            "Keyboard Shortcut": [
-              {
-                cmd: false,
-                shift: false,
-                alt: false,
-                key: "",
-                click: false,
-              },
-            ],
+            "Keyboard Shortcut": {
+              cmd: false,
+              shift: false,
+              alt: false,
+              key: "",
+              click: false,
+            },
             Group: "Add",
             Context: `File-${fileRef.Extension}`,
           });
@@ -625,15 +623,13 @@ export default function MainPage() {
                   Name: tagRef.Name,
                   Icon: tagRef.Icon,
                   Description: tagRef.Description,
-                  "Keyboard Shortcut": [
-                    {
-                      cmd: false,
-                      shift: false,
-                      alt: false,
-                      key: "",
-                      click: false,
-                    },
-                  ],
+                  "Keyboard Shortcut": {
+                    cmd: false,
+                    shift: false,
+                    alt: false,
+                    key: "",
+                    click: false,
+                  },
                   Group: "Add",
                   Context: `Node-${tagRef.Tag}`,
                 });
@@ -652,15 +648,13 @@ export default function MainPage() {
                   Name: tagRef.Name,
                   Icon: tagRef.Icon,
                   Description: tagRef.Description,
-                  "Keyboard Shortcut": [
-                    {
-                      cmd: false,
-                      shift: false,
-                      alt: false,
-                      key: "",
-                      click: false,
-                    },
-                  ],
+                  "Keyboard Shortcut": {
+                    cmd: false,
+                    shift: false,
+                    alt: false,
+                    key: "",
+                    click: false,
+                  },
                   Group: "Add",
                   Context: `Node-${tagRef.Tag}`,
                 });
@@ -678,15 +672,13 @@ export default function MainPage() {
           Name: tagRef.Name.toUpperCase(),
           Icon: tagRef.Icon,
           Description: tagRef.Description,
-          "Keyboard Shortcut": [
-            {
-              cmd: false,
-              shift: false,
-              alt: false,
-              key: "",
-              click: false,
-            },
-          ],
+          "Keyboard Shortcut": {
+            cmd: false,
+            shift: false,
+            alt: false,
+            key: "",
+            click: false,
+          },
           Group: "Add",
           Context: `Node-${tagRef.Tag}`,
         });
@@ -725,15 +717,13 @@ export default function MainPage() {
           Name: recentProjectNames[index],
           Icon: "folder",
           Description: "",
-          "Keyboard Shortcut": [
-            {
-              cmd: false,
-              shift: false,
-              alt: false,
-              key: "",
-              click: false,
-            },
-          ],
+          "Keyboard Shortcut": {
+            cmd: false,
+            shift: false,
+            alt: false,
+            key: "",
+            click: false,
+          },
           Group: "Recent",
           Context: index.toString(),
         });
@@ -784,36 +774,26 @@ export default function MainPage() {
       // detect action
       let action: string | null = null;
       for (const actionName in cmdkReferenceData) {
-        const _cmdkArray = cmdkReferenceData[actionName][
+        const _cmdk = cmdkReferenceData[actionName][
           "Keyboard Shortcut"
-        ] as TCmdkKeyMap[];
+        ] as TCmdkKeyMap;
 
-        let matched = false;
-
-        for (const keyObj of _cmdkArray) {
-          const key =
-            keyObj.key.length === 0
-              ? ""
-              : keyObj.key === "\\"
-              ? "Backslash"
-              : (keyObj.key.length === 1 ? "Key" : "") +
-                keyObj.key[0].toUpperCase() +
-                keyObj.key.slice(1);
-
-          if (
-            cmdk.cmd === keyObj.cmd &&
-            cmdk.shift === keyObj.shift &&
-            cmdk.alt === keyObj.alt &&
-            cmdk.key === key
-          ) {
-            action = actionName;
-            matched = true;
-            break; // Match found, exit the inner loop
-          }
-        }
-
-        if (matched) {
-          break; // Match found, exit the outer loop
+        const key =
+          _cmdk.key.length === 0
+            ? ""
+            : _cmdk.key === "\\"
+            ? "Backslash"
+            : (_cmdk.key.length === 1 ? "Key" : "") +
+              _cmdk.key[0].toUpperCase() +
+              _cmdk.key.slice(1);
+        if (
+          cmdk.cmd === _cmdk.cmd &&
+          cmdk.shift === _cmdk.shift &&
+          cmdk.alt === _cmdk.alt &&
+          cmdk.key === key
+        ) {
+          action = actionName;
+          break;
         }
       }
       if (action === null) return;
@@ -1301,6 +1281,7 @@ export default function MainPage() {
   }, [cmdkPages]);
   const onDownload = useCallback(async () => {
     if (project.context !== "idb") return;
+
     try {
       await downloadProject(DefaultProjectPath);
     } catch (err) {
@@ -1328,6 +1309,7 @@ export default function MainPage() {
     if (fileEventPastLength === 1) return;
 
     dispatch(setDidUndo(true));
+
     dispatch({ type: "main/undo" });
     dispatch(setUpdateOptions({ parse: true, from: "hms" }));
   }, [
@@ -1886,44 +1868,36 @@ export default function MainPage() {
                                     </>
                                   )}
                                 </div>
-
                                 <div className="gap-s">
-                                  {command["Keyboard Shortcut"] &&
+                                  {(command["Keyboard Shortcut"] as TCmdkKeyMap)
+                                    .cmd && <span className="text-m">⌘</span>}
+                                  {(command["Keyboard Shortcut"] as TCmdkKeyMap)
+                                    .shift && <span className="text-m">⇧</span>}
+                                  {(command["Keyboard Shortcut"] as TCmdkKeyMap)
+                                    .alt && <span className="text-m">Alt</span>}
+                                  {command["Keyboard Shortcut"] !== undefined &&
                                     (
                                       command[
                                         "Keyboard Shortcut"
-                                      ] as TCmdkKeyMap[]
-                                    ).map((keyMap, index) => (
-                                      <div className="gap-s" key={index}>
-                                        {keyMap.cmd && (
-                                          <span className="text-m">⌘</span>
-                                        )}
-                                        {keyMap.shift && (
-                                          <span className="text-m">⇧</span>
-                                        )}
-                                        {keyMap.alt && (
-                                          <span className="text-m">Alt</span>
-                                        )}
-                                        {keyMap.key !== "" && (
-                                          <span className="text-m">
-                                            {keyMap.key[0].toUpperCase() +
-                                              keyMap.key.slice(1) +
-                                              (index !==
-                                              (
-                                                command[
-                                                  "Keyboard Shortcut"
-                                                ] as TCmdkKeyMap[]
-                                              ).length -
-                                                1
-                                                ? ","
-                                                : "")}
-                                          </span>
-                                        )}
-                                        {keyMap.click && (
-                                          <span className="text-m">Click</span>
-                                        )}
-                                      </div>
-                                    ))}
+                                      ] as TCmdkKeyMap
+                                    ).key !== "" && (
+                                      <span className="text-m">
+                                        {(
+                                          command[
+                                            "Keyboard Shortcut"
+                                          ] as TCmdkKeyMap
+                                        ).key[0].toUpperCase() +
+                                          (
+                                            command[
+                                              "Keyboard Shortcut"
+                                            ] as TCmdkKeyMap
+                                          ).key.slice(1)}
+                                      </span>
+                                    )}
+                                  {(command["Keyboard Shortcut"] as TCmdkKeyMap)
+                                    .click && (
+                                    <span className="text-m">Click</span>
+                                  )}
                                 </div>
                               </div>
                             </Command.Item>

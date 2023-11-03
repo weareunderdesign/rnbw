@@ -3,8 +3,7 @@ import { useCallback, useContext } from "react";
 import { Range } from "monaco-editor";
 import { useDispatch, useSelector } from "react-redux";
 
-import { useEditor } from "@_components/main/codeView/hooks";
-import { getValidNodeUids } from "@_node/index";
+import { StageNodeIdAttr, getValidNodeUids } from "@_node/index";
 import { TNodeUid } from "@_node/types";
 import { osTypeSelector } from "@_redux/global";
 import { MainContext } from "@_redux/main";
@@ -19,8 +18,6 @@ import {
   setUpdateOptions,
 } from "@_redux/main/processor";
 
-import { creatingNode } from "../helpers/creatingNode";
-import { addNodeToTree } from "../helpers/addNodeToTree";
 import { getTree } from "../helpers/getTree";
 import { useEditor } from "@_components/main/codeView/hooks";
 import {
@@ -28,7 +25,6 @@ import {
   sortUidsByMaxEndIndex,
   sortUidsByMinStartIndex,
 } from "../helpers";
-import { NodeInAppAttribName } from "@_constants/main";
 
 export function useNodeActions() {
   const dispatch = useDispatch();
@@ -284,7 +280,7 @@ export function useNodeActions() {
     });
 
     const { startLine, startCol } =
-      validNodeTree[sortedUids[0]].sourceCodeLocation;
+      validNodeTree[sortedUids[0]].data.sourceCodeLocation;
 
     const model = monacoEditorRef.current?.getModel();
     if (!model) return;
@@ -304,7 +300,7 @@ export function useNodeActions() {
           endLine: endLineNumber,
           startCol: startColumn,
           startLine: startLineNumber,
-        } = node.sourceCodeLocation;
+        } = node.data.sourceCodeLocation;
 
         const range = new Range(
           startLineNumber,
@@ -362,25 +358,23 @@ export function useNodeActions() {
       // const cleanedUpCode = getCopiedContent(uid, iframe);
 
       const ele = iframe?.contentWindow?.document?.querySelector(
-        `[${NodeInAppAttribName}="${uid}"]`,
+        `[${StageNodeIdAttr}="${uid}"]`,
       );
 
       //create a copy of ele
       const eleCopy = ele?.cloneNode(true) as HTMLElement;
-      const innerElements = eleCopy.querySelectorAll(
-        `[${NodeInAppAttribName}]`,
-      );
+      const innerElements = eleCopy.querySelectorAll(`[${StageNodeIdAttr}]`);
 
       innerElements.forEach((element) => {
-        if (element.hasAttribute(NodeInAppAttribName)) {
-          element.removeAttribute(NodeInAppAttribName);
+        if (element.hasAttribute(StageNodeIdAttr)) {
+          element.removeAttribute(StageNodeIdAttr);
         }
       });
 
       eleCopy?.removeAttribute("contenteditable");
       eleCopy?.removeAttribute("rnbwdev-rnbw-element-hover");
       eleCopy?.removeAttribute("rnbwdev-rnbw-element-select");
-      eleCopy?.removeAttribute(NodeInAppAttribName);
+      eleCopy?.removeAttribute(StageNodeIdAttr);
       const cleanedUpCode = eleCopy?.innerHTML;
 
       //delete the copy
@@ -393,7 +387,7 @@ export function useNodeActions() {
 
       if (!selectedNodeChildren) return;
 
-      if (!selectedNode || !selectedNode.sourceCodeLocation) {
+      if (!selectedNode || !selectedNode.data.sourceCodeLocation) {
         console.error("Parent node or source code location is undefined");
         return;
       }
@@ -410,7 +404,7 @@ export function useNodeActions() {
         endLine: endLineNumber,
         startCol: startColumn,
         startLine: startLineNumber,
-      } = selectedNode.sourceCodeLocation;
+      } = selectedNode.data.sourceCodeLocation;
 
       const range = new Range(
         startLineNumber,

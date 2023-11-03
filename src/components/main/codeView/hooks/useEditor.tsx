@@ -24,7 +24,11 @@ import {
   setDoingFileAction,
   setFileTree,
 } from "@_redux/main/fileTree";
-import { setNodeTree } from "@_redux/main/nodeTree";
+import {
+  focusNodeTreeNode,
+  selectNodeTreeNodes,
+  setNodeTree,
+} from "@_redux/main/nodeTree";
 import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
 import { setUpdateOptions } from "@_redux/main/processor";
 
@@ -289,16 +293,16 @@ export default function useEditor() {
         dispatch(setDoingFileAction(false));
 
         //finding and selecting focused node
-        const focusedNode = tree[nodeUidToFocus];
-        dispatch(focusFNNode(focusedNode.uid));
-        dispatch(selectFNNode([focusedNode.uid]));
+        const focusedNode = nodeTree[nodeUidToFocus];
+        dispatch(focusNodeTreeNode(focusedNode.uid));
+        dispatch(selectNodeTreeNodes([focusedNode.uid]));
         //current code range in monaco editor
         const {
           endCol: endColumn,
           endLine: endLineNumber,
           startCol: startColumn,
           startLine: startLineNumber,
-        } = focusedNode.sourceCodeLocation;
+        } = focusedNode.data.sourceCodeLocation;
         monacoEditor.setSelection({
           startLineNumber,
           startColumn,
