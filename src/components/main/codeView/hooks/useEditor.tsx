@@ -259,7 +259,7 @@ export default function useEditor() {
           onBeforeNodeAdded: function (node: Node) {
             if (node.nodeType === 1) {
               //@ts-ignore
-              const uid = node.getAttribute(NodeInAppAttribName);
+              const uid = node.getAttribute(StageNodeIdAttr);
               if (!!uid) {
                 nodeUidToFocus = uid;
               }

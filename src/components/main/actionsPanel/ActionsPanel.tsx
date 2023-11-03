@@ -1,18 +1,18 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from "react";
 
-import { useSelector } from 'react-redux';
+import { useSelector } from "react-redux";
 
-import { showActionsPanelSelector } from '@_redux/main/processor';
+import { showActionsPanelSelector } from "@_redux/main/processor";
 
-import NavigatorPanel from './navigatorPanel';
-import NodeTreeView from './nodeTreeView';
-import SettingsPanel from './settingsPanel';
-import { ActionsPanelProps } from './types';
-import WorkspaceTreeView from './workspaceTreeView';
+import NavigatorPanel from "./navigatorPanel";
+import NodeTreeView from "./nodeTreeView";
+import SettingsPanel from "./settingsPanel";
+import { ActionsPanelProps } from "./types";
+import WorkspaceTreeView from "./workspaceTreeView";
 
 export default function ActionsPanel({ ...props }: ActionsPanelProps) {
   const showActionsPanel = useSelector(showActionsPanelSelector);
-
+  useEffect(() => console.log(showActionsPanel), [showActionsPanel]);
   return useMemo(() => {
     return (
       <>
@@ -21,8 +21,8 @@ export default function ActionsPanel({ ...props }: ActionsPanelProps) {
           className="border radius-s background-primary shadow"
           style={{
             position: "absolute",
-            top: props.offsetTop,
-            left: props.offsetLeft,
+            top: props.top,
+            left: props.left,
             width: props.width,
             height: props.height,
 

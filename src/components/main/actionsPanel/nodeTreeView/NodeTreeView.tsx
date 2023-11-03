@@ -12,11 +12,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { SVGIconI, TreeView } from "@_components/common";
 import { TreeViewData } from "@_components/common/treeView/types";
 import { RootNodeUid } from "@_constants/main";
-import {
-  StageNodeIdAttr,
-  TFileNodeData,
-  THtmlNodeData,
-} from "@_node/index";
+import { StageNodeIdAttr, TFileNodeData, THtmlNodeData } from "@_node/index";
 import { TNode, TNodeUid } from "@_node/types";
 import { osTypeSelector, themeSelector } from "@_redux/global";
 import { MainContext } from "@_redux/main";
@@ -54,7 +50,7 @@ import { THtmlElementsReference } from "@_types/main";
 
 const AutoExpandDelay = 1 * 1000;
 
-export const NodeTreeView = (props: NodeTreeViewProps) => {
+const NodeTreeView = (props: NodeTreeViewProps) => {
   const dispatch = useDispatch();
 
   const osType = useSelector(osTypeSelector);
@@ -271,61 +267,60 @@ export const NodeTreeView = (props: NodeTreeViewProps) => {
     canRename: false,
   };
 
-  return useMemo(() => {
-    return currentFileUid !== "" ? (
-      <div
-        id="NodeTreeView"
-        style={{
-          top: 41,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          overflow: "auto",
-          padding: "16px 0",
-        }}
-        onClick={onPanelClick}
-      >
-        <TreeView
-          width={"100%"}
-          height={"auto"}
-          info={{ id: "node-tree-view" }}
-          data={nodeTreeViewData}
-          focusedItem={focusedItem}
-          selectedItems={selectedItems}
-          expandedItems={expandedItems}
-          renderers={{
-            renderTreeContainer: (props) => <Container {...props} />,
-            renderItemsContainer: (props) => <Container {...props} />,
+  return currentFileUid !== "" ? (
+    <div
+      id="NodeTreeView"
+      style={{
+        top: 41,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        overflow: "auto",
+        padding: "16px 0",
+      }}
+      onClick={onPanelClick}
+    >
+      <TreeView
+        width={"100%"}
+        height={"auto"}
+        info={{ id: "node-tree-view" }}
+        data={nodeTreeViewData}
+        focusedItem={focusedItem}
+        selectedItems={selectedItems}
+        expandedItems={expandedItems}
+        renderers={{
+          renderTreeContainer: (props) => <Container {...props} />,
+          renderItemsContainer: (props) => <Container {...props} />,
 
-            renderItem: (props) => {
-              const htmlElementReferenceData =
-                useMemo<THtmlElementsReference>(() => {
-                  const node = props.item.data as TNode;
-                  const nodeData = node.data as THtmlNodeData;
-                  const refData =
-                    htmlReferenceData.elements[
-                      nodeData.name === "!doctype" ? "!DOCTYPE" : nodeData.name
-                    ];
-                  return refData;
-                }, []);
-
-              const spanStyles: React.CSSProperties = {
-                width: "calc(100% - 32px)",
-                textOverflow: "ellipsis",
-                overflow: "hidden",
-                whiteSpace: "nowrap",
-              };
-
-              const treeViewRef = useRef<HTMLHeadingElement | any>(null);
-              useEffect(() => {
-                if (props.context.isSelected) {
-                  setTimeout(() => {
-                    treeViewRef?.current?.click();
-                  }, 500);
-                }
+          renderItem: (props) => {
+            const htmlElementReferenceData =
+              useMemo<THtmlElementsReference>(() => {
+                const node = props.item.data as TNode;
+                const nodeData = node.data as THtmlNodeData;
+                const refData =
+                  htmlReferenceData.elements[
+                    nodeData.nodeName === "!doctype"
+                      ? "!DOCTYPE"
+                      : nodeData.nodeName
+                  ];
+                return refData;
               }, []);
 
-     
+            const spanStyles: React.CSSProperties = {
+              width: "calc(100% - 32px)",
+              textOverflow: "ellipsis",
+              overflow: "hidden",
+              whiteSpace: "nowrap",
+            };
+
+            const treeViewRef = useRef<HTMLHeadingElement | any>(null);
+            useEffect(() => {
+              if (props.context.isSelected) {
+                setTimeout(() => {
+                  treeViewRef?.current?.click();
+                }, 500);
+              }
+            }, []);
 
             const onClick = useCallback(
               (e: React.MouseEvent) => {
