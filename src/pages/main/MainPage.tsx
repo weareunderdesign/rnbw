@@ -211,7 +211,7 @@ export default function MainPage() {
     [hasRunningAction],
   );
 
-  const [currentProjectFileHandler, setCurrentProjectFileHandler] =
+  const [currentProjectFileHandle, setCurrentProjectFileHandle] =
     useState<FileSystemDirectoryHandle | null>(null);
   const [fileHandlers, setFileHandlers] = useState<TFileHandlerCollection>({});
 
@@ -718,7 +718,7 @@ export default function MainPage() {
                 favicon: null,
               }),
             );
-            setCurrentProjectFileHandler(
+            setCurrentProjectFileHandle(
               projectHandle as FileSystemDirectoryHandle,
             );
 
@@ -853,7 +853,7 @@ export default function MainPage() {
               favicon: null,
             }),
           );
-          setCurrentProjectFileHandler(null);
+          setCurrentProjectFileHandle(null);
 
           // store last edit session
           // const _recentProjectContexts = [...recentProjectContexts]
@@ -1533,8 +1533,8 @@ export default function MainPage() {
           htmlReferenceData,
           cmdkReferenceData,
 
-          currentProjectFileHandler,
-          setCurrentProjectFileHandler,
+          currentProjectFileHandle,
+          setCurrentProjectFileHandle,
 
           fileHandlers,
           setFileHandlers,
