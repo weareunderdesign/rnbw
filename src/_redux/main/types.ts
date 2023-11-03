@@ -36,6 +36,11 @@ export type TMainContext = {
   htmlReferenceData: THtmlReferenceData;
   cmdkReferenceData: TCmdkReferenceData;
 
+  currentProjectFileHandler: FileSystemDirectoryHandle | null;
+  setCurrentProjectFileHandler: (
+    fileHandler: FileSystemDirectoryHandle | null,
+  ) => void;
+
   fileHandlers: TFileHandlerCollection;
   setFileHandlers: (fileHandlerObj: TFileHandlerCollection) => void;
 

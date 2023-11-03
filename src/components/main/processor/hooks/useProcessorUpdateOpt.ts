@@ -15,22 +15,23 @@ import { setIframeSrc, setNeedToReloadIframe } from "@_redux/main/stageView";
 import { TFileInfo } from "@_types/main";
 
 import { getPreViewPath, handleFileUpdate } from "../helpers";
+import { useAppState } from "@_redux/useAppState";
 
 export const useProcessorUpdateOpt = () => {
   const dispatch = useDispatch();
 
   const {
-    fileTree: { fileTree, currentFileUid },
-    nodeTree: {
-      nodeTreeViewState: { focusedItem },
-      nodeTree,
-    },
-    nodeEvent: {
-      present: { currentFileContent },
-    },
-    processor: { updateOptions },
-  } = useSelector((state: AppState) => state.main);
-  const { osType } = useSelector((state: AppState) => state.global);
+    fileTree,
+    currentFileUid,
+    nodeTree,
+    nFocusedItem,
+    currentFileContent,
+    updateOptions,
+
+    initialFileUidToOpen,
+
+    osType,
+  } = useAppState();
   const {
     // global action
     addRunningActions,
@@ -45,6 +46,16 @@ export const useProcessorUpdateOpt = () => {
   // -------------------------------------------------------------- sync --------------------------------------------------------------
 
   useEffect(() => {
+    console.log({
+      fileTree,
+      initialFileUidToOpen,
+      currentFileUid,
+      nodeTree,
+      nFocusedItem,
+      currentFileContent,
+      updateOptions,
+    });
+
     const monacoEditor = monacoEditorRef.current;
     if (updateOptions?.parse === true) {
       let onlyRenderViewState = false;
@@ -53,7 +64,7 @@ export const useProcessorUpdateOpt = () => {
       let _fileInfo: TFileInfo;
       let _needToReloadIFrame = false;
       let _newFocusedNodeUid = "";
-      let tempFocusedItem = focusedItem;
+      let tempFocusedItem = nFocusedItem;
       // origin state
       if (!fileTree[currentFileUid]) {
         return;

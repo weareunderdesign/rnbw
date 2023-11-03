@@ -12,6 +12,9 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   },
   cmdkReferenceData: {},
 
+  currentProjectFileHandler: null,
+  setCurrentProjectFileHandler: () => {},
+
   fileHandlers: {},
   setFileHandlers: () => {},
 

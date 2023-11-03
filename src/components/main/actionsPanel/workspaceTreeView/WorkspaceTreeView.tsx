@@ -4,36 +4,24 @@ import React, {
   useEffect,
   useMemo,
   useRef,
-} from 'react';
+} from "react";
 
-import cx from 'classnames';
-import { DraggingPositionItem } from 'react-complex-tree';
-import {
-  useDispatch,
-  useSelector,
-} from 'react-redux';
+import cx from "classnames";
+import { DraggingPositionItem } from "react-complex-tree";
+import { useDispatch, useSelector } from "react-redux";
 
-import {
-  SVGIconI,
-  TreeView,
-} from '@_components/common';
-import { TreeViewData } from '@_components/common/treeView/types';
-import {
-  AddFileActionPrefix,
-  RootNodeUid,
-} from '@_constants/main';
+import { SVGIconI, TreeView } from "@_components/common";
+import { TreeViewData } from "@_components/common/treeView/types";
+import { AddFileActionPrefix, RootNodeUid } from "@_constants/main";
 import {
   _path,
   getNormalizedPath,
   TFileNodeData,
   TFilesReference,
-} from '@_node/file';
-import {
-  TNode,
-  TNodeUid,
-} from '@_node/types';
-import { MainContext } from '@_redux/main';
-import { currentCommandSelector } from '@_redux/main/cmdk';
+} from "@_node/file";
+import { TNode, TNodeUid } from "@_node/types";
+import { MainContext } from "@_redux/main";
+import { currentCommandSelector } from "@_redux/main/cmdk";
 import {
   currentFileUidSelector,
   fileTreeSelector,
@@ -44,11 +32,11 @@ import {
   projectSelector,
   setHoveredFileUid,
   setInitialFileUidToOpen,
-} from '@_redux/main/fileTree';
+} from "@_redux/main/fileTree";
 import {
   fileActionSelector,
   FileTree_Event_ClearActionType,
-} from '@_redux/main/fileTree/event';
+} from "@_redux/main/fileTree/event";
 import {
   activePanelSelector,
   didRedoSelector,
@@ -58,13 +46,9 @@ import {
   setDidRedo,
   setDidUndo,
   showActionsPanelSelector,
-} from '@_redux/main/processor';
-import { linkToOpenSelector } from '@_redux/main/stageView';
-import {
-  addClass,
-  generateQuerySelector,
-  removeClass,
-} from '@_services/main';
+} from "@_redux/main/processor";
+import { linkToOpenSelector } from "@_redux/main/stageView";
+import { addClass, generateQuerySelector, removeClass } from "@_services/main";
 
 import {
   useCmdk,
@@ -73,11 +57,8 @@ import {
   useNodeActionsHandler,
   useNodeViewState,
   useTemporaryNodes,
-} from './hooks';
-import {
-  Container,
-  ItemArrow,
-} from './workSpaceTreeComponents';
+} from "./hooks";
+import { Container, ItemArrow } from "./workSpaceTreeComponents";
 
 const AutoExpandDelay = 1 * 1000;
 export default function WorkspaceTreeView() {
@@ -281,6 +262,8 @@ export default function WorkspaceTreeView() {
       cb_focusNode(initialFileUidToOpen);
       cb_selectNode([initialFileUidToOpen]);
       cb_readNode(initialFileUidToOpen);
+
+      console.log({ project, currentFileUid });
 
       if (project && currentFileUid) {
         // remove exist script
