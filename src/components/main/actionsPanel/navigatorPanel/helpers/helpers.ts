@@ -1,21 +1,12 @@
-import {
-  TFileNode,
-  TFileNodeData,
-} from '@_node/file';
-import { THtmlNodeData } from '@_node/html';
-import {
-  TNode,
-  TNodeTreeData,
-} from '@_node/types';
-import {
-  TProject,
-  TWorkspace,
-} from '@_redux/main/fileTree';
+import { TFileNode, TFileNodeData } from "@_node/file";
+import { THtmlNodeData } from "@_node/html";
+import { TNode, TNodeTreeData } from "@_node/types";
+import { TProject, TWorkspace } from "@_redux/main/fileTree";
 import {
   ActionCreatorWithPayload,
   AnyAction,
   Dispatch,
-} from '@reduxjs/toolkit';
+} from "@reduxjs/toolkit";
 
 export const isHomeIcon = (node: TNode) =>
   node.data.type == "html" &&

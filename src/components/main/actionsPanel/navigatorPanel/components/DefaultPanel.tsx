@@ -1,25 +1,18 @@
-import React, {
-  useContext,
-  useMemo,
-} from 'react';
+import React, { useContext, useMemo } from "react";
 
-import { useSelector } from 'react-redux';
+import { useSelector } from "react-redux";
 
-import { SVGIconI } from '@_components/common';
-import { RootNodeUid } from '@_constants/main';
-import { MainContext } from '@_redux/main';
+import { SVGIconI } from "@_components/common";
+import { RootNodeUid } from "@_constants/main";
+import { MainContext } from "@_redux/main";
 import {
   currentFileUidSelector,
   fileTreeSelector,
   projectSelector,
-} from '@_redux/main/fileTree';
+} from "@_redux/main/fileTree";
 
-import {
-  getFileExtension,
-  getFileNameFromPath,
-  isHomeIcon,
-} from '../helpers';
-import { useNavigatorPanelHandlers } from '../hooks';
+import { getFileExtension, getFileNameFromPath, isHomeIcon } from "../helpers";
+import { useNavigatorPanelHandlers } from "../hooks";
 
 export const DefaultPanel = () => {
   const project = useSelector(projectSelector);
@@ -32,8 +25,14 @@ export const DefaultPanel = () => {
     () => fileTree[currentFileUid],
     [fileTree, currentFileUid],
   );
-  const fileName = useMemo(() => getFileNameFromPath(fileNode), [fileNode]);
-  const fileExtension = useMemo(() => getFileExtension(fileNode), [fileNode]);
+  const fileName = useMemo(
+    () => fileNode && getFileNameFromPath(fileNode),
+    [fileNode],
+  );
+  const fileExtension = useMemo(
+    () => fileNode && getFileExtension(fileNode),
+    [fileNode],
+  );
 
   const { onProjectClick, onFileClick } = useNavigatorPanelHandlers();
 
@@ -55,7 +54,7 @@ export const DefaultPanel = () => {
       </div>
       <span className="text-s opacity-m">/</span>
 
-      {fileNode.parentUid !== RootNodeUid && (
+      {fileNode && fileNode.parentUid !== RootNodeUid && (
         <>
           <span className="text-s">...</span>
           <span className="text-s opacity-m">/</span>

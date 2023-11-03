@@ -1,9 +1,13 @@
 import { editor } from "monaco-editor";
 
-import { TFileHandlerCollection, TFilesReferenceData } from "@_node/file";
-import { THtmlReferenceData } from "@_node/html";
+import { TFileHandlerCollection } from "@_node/file";
 import { TNodeUid } from "@_node/types";
-import { TCmdkReferenceData, TCodeChange } from "@_types/main";
+import {
+  TCmdkReferenceData,
+  TCodeChange,
+  TFilesReferenceData,
+  THtmlReferenceData,
+} from "@_types/main";
 
 import { TProjectContext } from "./fileTree";
 

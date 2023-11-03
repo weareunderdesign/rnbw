@@ -41,25 +41,10 @@ export type THtmlParserResponse = {
   nodeTree: TNodeTreeData;
   htmlDom: Document;
 };
+
+
+
 // --------------------
-export type THtmlElementsReference = {
-  Featured: string;
-  Tag: string;
-  Name: string;
-  Type: string;
-  Contain: string;
-  Description: string;
-  Icon: string;
-  Content: string;
-  Attributes: string;
-  "Cover Image": string;
-};
-export type THtmlElementsReferenceData = {
-  [tag: string]: THtmlElementsReference;
-};
-export type THtmlReferenceData = {
-  elements: THtmlElementsReferenceData;
-};
 export type THtmlPageSettings = {
   title: string;
   favicon: string[];

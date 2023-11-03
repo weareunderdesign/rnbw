@@ -13,12 +13,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { SVGIconI, TreeView } from "@_components/common";
 import { TreeViewData } from "@_components/common/treeView/types";
 import { AddFileActionPrefix, RootNodeUid } from "@_constants/main";
-import {
-  _path,
-  getNormalizedPath,
-  TFileNodeData,
-  TFilesReference,
-} from "@_node/file";
+import { _path, getNormalizedPath, TFileNodeData } from "@_node/file";
 import { TNode, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { currentCommandSelector } from "@_redux/main/cmdk";
@@ -59,6 +54,7 @@ import {
   useTemporaryNodes,
 } from "./hooks";
 import { Container, ItemArrow } from "./workSpaceTreeComponents";
+import { TFilesReference } from "@_types/main";
 
 const AutoExpandDelay = 1 * 1000;
 export default function WorkspaceTreeView() {
@@ -252,6 +248,7 @@ export default function WorkspaceTreeView() {
       initialFileUidToOpen !== "" &&
       fileTree[initialFileUidToOpen] !== undefined
     ) {
+      console.log({ initialFileUidToOpen, project, currentFileUid });
       dispatch(setInitialFileUidToOpen(""));
       // focus/select/read the initial file
       addRunningActions([
@@ -259,11 +256,10 @@ export default function WorkspaceTreeView() {
         "fileTreeView-select",
         "fileTreeView-read",
       ]);
+
       cb_focusNode(initialFileUidToOpen);
       cb_selectNode([initialFileUidToOpen]);
       cb_readNode(initialFileUidToOpen);
-
-      console.log({ project, currentFileUid });
 
       if (project && currentFileUid) {
         // remove exist script

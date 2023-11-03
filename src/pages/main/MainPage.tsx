@@ -31,14 +31,8 @@ import {
   loadLocalProject,
   TFileHandlerCollection,
   TFileNodeData,
-  TFilesReference,
-  TFilesReferenceData,
+  TFileNodeTreeData,
 } from "@_node/file";
-import {
-  THtmlElementsReference,
-  THtmlElementsReferenceData,
-  THtmlReferenceData,
-} from "@_node/html";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import { setOsType, setTheme } from "@_redux/global";
 import { MainContext } from "@_redux/main";
@@ -91,6 +85,11 @@ import {
   TCmdkReference,
   TCmdkReferenceData,
   TCodeChange,
+  TFilesReference,
+  TFilesReferenceData,
+  THtmlElementsReference,
+  THtmlElementsReferenceData,
+  THtmlReferenceData,
   TSession,
 } from "@_types/main";
 
@@ -211,6 +210,14 @@ export default function MainPage() {
     [hasRunningAction],
   );
 
+  const [recentProjectContexts, setRecentProjectContexts] = useState<
+    TProjectContext[]
+  >([]);
+  const [recentProjectNames, setRecentProjectNames] = useState<string[]>([]);
+  const [recentProjectHandlers, setRecentProjectHandlers] = useState<
+    (FileSystemDirectoryHandle | null)[]
+  >([]);
+
   const [currentProjectFileHandle, setCurrentProjectFileHandle] =
     useState<FileSystemDirectoryHandle | null>(null);
   const [fileHandlers, setFileHandlers] = useState<TFileHandlerCollection>({});
@@ -222,15 +229,6 @@ export default function MainPage() {
     monacoEditorRef.current = editorInstance;
   };
 
-  // code view
-  const isContentProgrammaticallyChanged = useRef<boolean>(false);
-  function setIsContentProgrammaticallyChanged(value: boolean) {
-    isContentProgrammaticallyChanged.current = value;
-  }
-  const [codeChanges, setCodeChanges] = useState<TCodeChange[]>([]);
-  const [newFocusedNodeUid, setNewFocusedNodeUid] = useState<TNodeUid>("");
-
-  // references
   const [filesReferenceData, setFilesReferenceData] =
     useState<TFilesReferenceData>({});
   const [htmlReferenceData, setHtmlReferenceData] =
@@ -244,172 +242,33 @@ export default function MainPage() {
   const [cmdkReferenceActions, setCmdkReferenceActions] =
     useState<TCmdkGroupData>({});
 
-  // non-parse file editable
+  // TODO Begin
+  const isContentProgrammaticallyChanged = useRef(false);
+  const setIsContentProgrammaticallyChanged = (value: boolean) => {
+    isContentProgrammaticallyChanged.current = value;
+  };
+  const [codeChanges, setCodeChanges] = useState<TCodeChange[]>([]);
+  const [newFocusedNodeUid, setNewFocusedNodeUid] = useState<TNodeUid>("");
+
   const [parseFileFlag, setParseFile] = useState<boolean>(true);
   const [prevFileUid, setPrevFileUid] = useState<string>("");
 
-  // guide ref
   const guideRef = useRef<HTMLAnchorElement>(null);
+  // TODO End
 
+  // ***************************************** Context End *****************************************
+
+  // ***************************************** Init Begin *****************************************
   useEffect(() => {
-    dispatch(
-      setCurrentCmdkPage(
-        cmdkPages.length === 0 ? "" : cmdkPages[cmdkPages.length - 1],
-      ),
-    );
-  }, [cmdkPages]);
-  const cmdkReferenceAdd = useMemo<TCmdkGroupData>(() => {
-    const data: TCmdkGroupData = {
-      Files: [],
-      Elements: [],
-      Recent: [],
-    };
-
-    // Files
-    const fileNode = fileTree[fFocusedItem];
-    if (fileNode) {
-      filesRef.map((fileRef: TFilesReference) => {
-        fileRef.Name &&
-          data["Files"].push({
-            Featured: fileRef.Featured === "Yes",
-            Name: fileRef.Name,
-            Icon: fileRef.Icon,
-            Description: fileRef.Description,
-            "Keyboard Shortcut": {
-              cmd: false,
-              shift: false,
-              alt: false,
-              key: "",
-              click: false,
-            },
-            Group: "Add",
-            Context: `File-${fileRef.Extension}`,
-          });
-      });
-    }
-    data["Files"] = data["Files"].filter(
-      (element) => element.Featured || !!cmdkSearchContent,
-    );
-    if (data["Files"].length === 0) {
-      delete data["Files"];
-    }
-
-    // Elements
-    let flag = true;
-    for (let x in nodeTree) {
-      if (nodeTree[x].displayName === "html") {
-        flag = false;
-      }
-    }
-
-    if (!flag) {
-      const htmlNode = nodeTree[nFocusedItem];
-      if (
-        htmlNode &&
-        htmlNode.parentUid &&
-        htmlNode.parentUid !== RootNodeUid
-      ) {
-        const parentNode = nodeTree[htmlNode.parentUid as TNodeUid];
-        const refData = htmlReferenceData.elements[parentNode.displayName];
-        if (refData) {
-          if (refData.Contain === "All") {
-            Object.keys(htmlReferenceData.elements).map((tag: string) => {
-              const tagRef = htmlReferenceData.elements[tag];
-              if (tagRef !== undefined) {
-                data["Elements"].push({
-                  Featured: tagRef && tagRef.Featured === "Yes" ? true : false,
-                  Name: tagRef.Name,
-                  Icon: tagRef.Icon,
-                  Description: tagRef.Description,
-                  "Keyboard Shortcut": {
-                    cmd: false,
-                    shift: false,
-                    alt: false,
-                    key: "",
-                    click: false,
-                  },
-                  Group: "Add",
-                  Context: `Node-${tagRef.Tag}`,
-                });
-              }
-            });
-          } else if (refData.Contain === "None") {
-            // do nothing
-          } else {
-            const tagList = refData.Contain.replace(/ /g, "").split(",");
-            tagList.map((tag: string) => {
-              const pureTag = tag.slice(1, tag.length - 1);
-              const tagRef = htmlReferenceData.elements[pureTag];
-              if (tagRef !== undefined) {
-                data["Elements"].push({
-                  Featured: tagRef && tagRef.Featured === "Yes" ? true : false,
-                  Name: tagRef.Name,
-                  Icon: tagRef.Icon,
-                  Description: tagRef.Description,
-                  "Keyboard Shortcut": {
-                    cmd: false,
-                    shift: false,
-                    alt: false,
-                    key: "",
-                    click: false,
-                  },
-                  Group: "Add",
-                  Context: `Node-${tagRef.Tag}`,
-                });
-              }
-            });
-          }
-        }
-      }
-    } else {
-      data["Elements"] = [];
-      let tagRef = htmlReferenceData.elements["html"];
-      tagRef &&
-        data["Elements"].push({
-          Featured: tagRef && tagRef.Featured === "Yes" ? true : false,
-          Name: tagRef.Name.toUpperCase(),
-          Icon: tagRef.Icon,
-          Description: tagRef.Description,
-          "Keyboard Shortcut": {
-            cmd: false,
-            shift: false,
-            alt: false,
-            key: "",
-            click: false,
-          },
-          Group: "Add",
-          Context: `Node-${tagRef.Tag}`,
-        });
-    }
-    if (
-      data["Elements"].length > 0 &&
-      data["Elements"].filter(
-        (element) => element.Featured || !!cmdkSearchContent,
-      ).length > 0
-    ) {
-      data["Elements"] = data["Elements"].filter(
-        (element) => element.Featured || !!cmdkSearchContent,
-      );
-    }
-    if (data["Elements"].length === 0) {
-      delete data["Elements"];
-    }
-
-    // Recent
-    delete data["Recent"];
-
-    return data;
-  }, [fileTree, fFocusedItem, nodeTree, nFocusedItem, htmlReferenceData]);
-  useEffect(() => {
-    // check if current broswer is Chrome or Edge
+    // TODO Begin
     if (!isChromeOrEdge()) {
       const message = `Browser is unsupported. rnbw works in the latest versions of Google Chrome and Microsoft Edge.`;
       if (!window.confirm(message)) {
         return;
       }
     }
+    // TODO End
 
-    dispatch(setWorkspace({ name: "local", projects: [] }));
     document.addEventListener("contextmenu", (e) => {
       e.preventDefault();
     });
@@ -417,707 +276,6 @@ export default function MainPage() {
       e.preventDefault();
     });
   }, []);
-  // -------------------------------------------------------------- recent project --------------------------------------------------------------
-  const [recentProjectContexts, setRecentProjectContexts] = useState<
-    TProjectContext[]
-  >([]);
-  const [recentProjectNames, setRecentProjectNames] = useState<string[]>([]);
-  const [recentProjectHandlers, setRecentProjectHandlers] = useState<
-    (FileSystemDirectoryHandle | null)[]
-  >([]);
-  const cmdkReferneceRecentProject = useMemo<TCmdkReference[]>(() => {
-    const _projects: TProject[] = [];
-    const _cmdkReferneceRecentProject: TCmdkReference[] = [];
-    recentProjectContexts.map((_v, index) => {
-      if (_v != "idb") {
-        _projects.push({
-          context: recentProjectContexts[index],
-          name: recentProjectNames[index],
-          handler: recentProjectHandlers[index],
-          favicon: null,
-        });
-        _cmdkReferneceRecentProject.push({
-          Name: recentProjectNames[index],
-          Icon: "folder",
-          Description: "",
-          "Keyboard Shortcut": {
-            cmd: false,
-            shift: false,
-            alt: false,
-            key: "",
-            click: false,
-          },
-          Group: "Recent",
-          Context: index.toString(),
-        });
-      }
-    });
-    setWorkspace({ name: workspace.name, projects: _projects });
-    return _cmdkReferneceRecentProject;
-  }, [recentProjectContexts, recentProjectNames, recentProjectHandlers]);
-  // -------------------------------------------------------------- cmdk --------------------------------------------------------------
-  const cb_onKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      const cmdk: TCmdkKeyMap = {
-        cmd: getCommandKey(e, osType),
-        shift: e.shiftKey,
-        alt: e.altKey,
-        key: e.code,
-        click: false,
-      };
-
-      if (e.key === "Escape") {
-        closeAllPanel();
-        return;
-      }
-      if (cmdk.shift && cmdk.cmd && cmdk.key === "KeyR") {
-        onClear();
-      }
-      if (cmdk.cmd && cmdk.key === "KeyG") {
-        e.preventDefault();
-        e.stopPropagation();
-        // return
-      }
-      if (cmdkOpen) return;
-
-      // skip inline rename input in file-tree-view
-      const targetId = e.target && (e.target as HTMLElement).id;
-      if (targetId === "FileTreeView-RenameInput") {
-        return;
-      }
-
-      // skip monaco-editor shortkeys and general coding
-      if (activePanel === "code") {
-        if (!(cmdk.cmd && !cmdk.shift && !cmdk.alt && cmdk.key === "KeyS")) {
-          return;
-        }
-      }
-
-      // detect action
-      let action: string | null = null;
-      for (const actionName in cmdkReferenceData) {
-        const _cmdk = cmdkReferenceData[actionName][
-          "Keyboard Shortcut"
-        ] as TCmdkKeyMap;
-
-        const key =
-          _cmdk.key.length === 0
-            ? ""
-            : _cmdk.key === "\\"
-            ? "Backslash"
-            : (_cmdk.key.length === 1 ? "Key" : "") +
-              _cmdk.key[0].toUpperCase() +
-              _cmdk.key.slice(1);
-        if (
-          cmdk.cmd === _cmdk.cmd &&
-          cmdk.shift === _cmdk.shift &&
-          cmdk.alt === _cmdk.alt &&
-          cmdk.key === key
-        ) {
-          action = actionName;
-          break;
-        }
-      }
-      if (action === null) return;
-
-      LogAllow && console.log("action to be run by cmdk: ", action);
-
-      // prevent chrome default short keys
-      if (
-        action === "Save" ||
-        action === "Download" ||
-        action === "Duplicate"
-      ) {
-        e.preventDefault();
-      }
-
-      dispatch(setCurrentCommand({ action }));
-    },
-    [cmdkOpen, cmdkReferenceData, activePanel, osType],
-  );
-  useEffect(() => {
-    document.addEventListener("keydown", cb_onKeyDown);
-    return () => document.removeEventListener("keydown", cb_onKeyDown);
-  }, [cb_onKeyDown]);
-  useEffect(() => {
-    if (!currentCommand) return;
-
-    switch (currentCommand.action) {
-      case "Jumpstart":
-        onJumpstart();
-        break;
-      case "New":
-        onNew();
-        toogleCodeView();
-        // show actions panel by default
-        !showActionsPanel && dispatch(setShowActionsPanel(true));
-        break;
-      case "Open":
-        onOpen();
-        toogleCodeView();
-        break;
-      case "Theme":
-        onToggleTheme();
-        break;
-      case "Clear":
-        onClear();
-        break;
-      case "Undo":
-        onUndo();
-        break;
-      case "Redo":
-        onRedo();
-        break;
-      case "Actions":
-        onActions();
-        break;
-      case "Add":
-        onAdd();
-        break;
-      case "Code":
-        toogleCodeView();
-        break;
-      case "Design":
-        toogleActionsPanel();
-        break;
-      case "Guide":
-        openGuidePage();
-        break;
-      case "Download":
-        onDownload();
-        break;
-      default:
-        return;
-    }
-  }, [currentCommand]);
-  // -------------------------------------------------------------- handlers --------------------------------------------------------------
-  const clearSession = useCallback(() => {
-    //dispatch(clearMainState());//TODO: clearMainState
-    dispatch({ type: FileTree_Event_ClearActionType });
-    dispatch({ type: NodeTree_Event_ClearActionType });
-  }, []);
-  const loadProject = useCallback(
-    async (
-      fsType: TProjectContext,
-      projectHandle?: FileSystemHandle | null,
-      internal?: boolean,
-    ) => {
-      dispatch(setFavicon(""));
-      if (fsType === "local") {
-        dispatch(setDoingFileAction(true));
-        try {
-          // configure idb on nohost
-          const handlerObj = await loadLocalProject(
-            projectHandle as FileSystemDirectoryHandle,
-            osType,
-          );
-
-          clearSession(); /* file treeview error fix when the switching project by navigator */
-
-          setTimeout(async () => {
-            // sort by ASC directory/file
-            Object.keys(handlerObj).map((uid) => {
-              const handler = handlerObj[uid];
-              handler.children = handler.children.sort((a, b) => {
-                return handlerObj[a].kind === "file" &&
-                  handlerObj[b].kind === "directory"
-                  ? 1
-                  : handlerObj[a].kind === "directory" &&
-                    handlerObj[b].kind === "file"
-                  ? -1
-                  : handlerObj[a].name > handlerObj[b].name
-                  ? 1
-                  : -1;
-              });
-            });
-
-            // get/set the index/first html to be opened by default
-            let firstHtmlUid: TNodeUid = "",
-              indexHtmlUid: TNodeUid = "";
-            handlerObj[RootNodeUid].children.map((uid) => {
-              const handler = handlerObj[uid];
-              if (handler.kind === "file" && handler.ext === ".html") {
-                firstHtmlUid === "" ? (firstHtmlUid = uid) : null;
-                handler.name === "index" ? (indexHtmlUid = uid) : null;
-              }
-            });
-
-            console.log(handlerObj, firstHtmlUid, indexHtmlUid);
-
-            // set default background
-            dispatch(setCurrentFileUid(""));
-            dispatch(setNodeTree({}));
-            dispatch(setValidNodeTree({}));
-            dispatch(setIframeSrc(null));
-
-            const initialFile =
-              indexHtmlUid !== ""
-                ? indexHtmlUid
-                : firstHtmlUid !== ""
-                ? firstHtmlUid
-                : "";
-
-            // hide element panel when there is no index.html
-            if (initialFile === "") {
-              dispatch(setShowActionsPanel(false));
-              dispatch(setNavigatorDropdownType(null));
-            }
-
-            console.log({ initialFile });
-            dispatch(setInitialFileUidToOpen(initialFile));
-
-            // set ff-tree, ff-handlers
-            const treeViewData: TNodeTreeData = {};
-            const ffHandlerObj: TFileHandlerCollection = {};
-            Object.keys(handlerObj).map((uid) => {
-              const {
-                parentUid,
-                children,
-                path,
-                kind,
-                name,
-                ext,
-                content,
-                handler,
-              } = handlerObj[uid];
-              const type = ParsableFileTypes[ext || ""]
-                ? ext?.slice(1)
-                : "unknown";
-              treeViewData[uid] = {
-                uid,
-                parentUid: parentUid,
-                displayName: name,
-                isEntity: kind === "file",
-                children: [...children],
-                data: {
-                  valid: true,
-                  path: path,
-                  kind: kind,
-                  name: name,
-                  ext: ext,
-                  type,
-                  orgContent: content?.toString(),
-                  content: content?.toString(),
-                  changed: false,
-                } as TFileNodeData,
-              } as TNode;
-
-              ffHandlerObj[uid] = handler;
-            });
-
-            dispatch(setFileTree(treeViewData));
-            setFileHandlers(ffHandlerObj);
-
-            console.log(treeViewData, ffHandlerObj);
-
-            dispatch(
-              setProject({
-                context: "local",
-                name: (projectHandle as FileSystemDirectoryHandle).name,
-                handler: null,
-                favicon: null,
-              }),
-            );
-            setCurrentProjectFileHandle(
-              projectHandle as FileSystemDirectoryHandle,
-            );
-
-            dispatch(setNavigatorDropdownType(null));
-            if (internal) {
-              // store last edit session
-              toogleCodeView();
-              const _recentProjectContexts = [...recentProjectContexts];
-              const _recentProjectNames = [...recentProjectNames];
-              const _recentProjectHandlers = [...recentProjectHandlers];
-              for (
-                let index = 0;
-                index < _recentProjectContexts.length;
-                ++index
-              ) {
-                if (
-                  _recentProjectContexts[index] === fsType &&
-                  projectHandle?.name === _recentProjectNames[index]
-                ) {
-                  _recentProjectContexts.splice(index, 1);
-                  _recentProjectNames.splice(index, 1);
-                  _recentProjectHandlers.splice(index, 1);
-                  break;
-                }
-              }
-              if (_recentProjectContexts.length === RecentProjectCount) {
-                _recentProjectContexts.pop();
-                _recentProjectNames.pop();
-                _recentProjectHandlers.pop();
-              }
-              _recentProjectContexts.unshift(fsType);
-              _recentProjectNames.unshift(
-                (projectHandle as FileSystemDirectoryHandle).name,
-              );
-              _recentProjectHandlers.unshift(
-                projectHandle as FileSystemDirectoryHandle,
-              );
-              setRecentProjectContexts(_recentProjectContexts);
-              setRecentProjectNames(_recentProjectNames);
-              setRecentProjectHandlers(_recentProjectHandlers);
-              await setMany([
-                ["recent-project-context", _recentProjectContexts],
-                ["recent-project-name", _recentProjectNames],
-                ["recent-project-handler", _recentProjectHandlers],
-              ]);
-            }
-
-            // show actions panel by default
-            !showActionsPanel && dispatch(setShowActionsPanel(true));
-          }, 50);
-        } catch (err) {
-          LogAllow && console.log("failed to load local project");
-        }
-        dispatch(setDoingFileAction(false));
-      } else if (fsType === "idb") {
-        dispatch(setDoingFileAction(true));
-        clearSession();
-        try {
-          const handlerObj = await loadIDBProject(DefaultProjectPath);
-
-          // sort by ASC directory/file
-          Object.keys(handlerObj).map((uid) => {
-            const handler = handlerObj[uid];
-            handler.children = handler.children.sort((a, b) => {
-              return handlerObj[a].kind === "file" &&
-                handlerObj[b].kind === "directory"
-                ? 1
-                : handlerObj[a].kind === "directory" &&
-                  handlerObj[b].kind === "file"
-                ? -1
-                : handlerObj[a].name > handlerObj[b].name
-                ? 1
-                : -1;
-            });
-          });
-
-          // get/set the index/first html to be opened by default
-          let firstHtmlUid: TNodeUid = "",
-            indexHtmlUid: TNodeUid = "";
-          handlerObj[RootNodeUid].children.map((uid) => {
-            const handler = handlerObj[uid];
-            if (handler.kind === "file" && handler.ext === ".html") {
-              firstHtmlUid === "" ? (firstHtmlUid = uid) : null;
-              handler.name === "index" ? (indexHtmlUid = uid) : null;
-            }
-          });
-          dispatch(
-            setInitialFileUidToOpen(
-              indexHtmlUid !== ""
-                ? indexHtmlUid
-                : firstHtmlUid !== ""
-                ? firstHtmlUid
-                : "",
-            ),
-          );
-
-          // set ff-tree, ff-handlers
-          const treeViewData: TNodeTreeData = {};
-          const ffHandlerObj: TFileHandlerCollection = {};
-          Object.keys(handlerObj).map((uid) => {
-            const { parentUid, children, path, kind, name, ext, content } =
-              handlerObj[uid];
-            const type = ParsableFileTypes[ext || ""]
-              ? ext?.slice(1)
-              : "unknown";
-            treeViewData[uid] = {
-              uid,
-              parentUid: parentUid,
-              displayName: name,
-              isEntity: kind === "file",
-              children: [...children],
-              data: {
-                valid: true,
-                path: path,
-                kind: kind,
-                name: name,
-                ext: ext,
-                type,
-                orgContent: type !== "unknown" ? content?.toString() : "",
-                content: type !== "unknown" ? content?.toString() : "",
-                changed: false,
-              } as TFileNodeData,
-            } as TNode;
-          });
-          dispatch(setFileTree(treeViewData));
-          setFileHandlers(ffHandlerObj);
-          dispatch(
-            setProject({
-              context: "idb",
-              name: "Untitled",
-              handler: null,
-              favicon: null,
-            }),
-          );
-          setCurrentProjectFileHandle(null);
-
-          // store last edit session
-          // const _recentProjectContexts = [...recentProjectContexts]
-          // const _recentProjectNames = [...recentProjectNames]
-          // const _recentProjectHandlers = [...recentProjectHandlers]
-          // for (let index = 0; index < _recentProjectContexts.length; ++index) {
-          //   if (_recentProjectContexts[index] === fsType) {
-          //     _recentProjectContexts.splice(index, 1)
-          //     _recentProjectNames.splice(index, 1)
-          //     _recentProjectHandlers.splice(index, 1)
-          //     break
-          //   }
-          // }
-          // if (_recentProjectContexts.length === RecentProjectCount) {
-          //   _recentProjectContexts.pop()
-          //   _recentProjectNames.pop()
-          //   _recentProjectHandlers.pop()
-          // }
-          // _recentProjectContexts.unshift(fsType)
-          // _recentProjectNames.unshift('Untitled')
-          // _recentProjectHandlers.unshift(null)
-          // setRecentProjectContexts(_recentProjectContexts)
-          // setRecentProjectNames(_recentProjectNames)
-          // setRecentProjectHandlers(_recentProjectHandlers)
-          // await setMany([['recent-project-context', _recentProjectContexts], ['recent-project-name', _recentProjectNames], ['recent-project-handler', _recentProjectHandlers]])
-        } catch (err) {
-          LogAllow && console.log("failed to load Untitled project");
-        }
-        dispatch(setDoingFileAction(false));
-      }
-    },
-    [
-      clearSession,
-      osType,
-      recentProjectContexts,
-      recentProjectNames,
-      recentProjectHandlers,
-      fileTree,
-    ],
-  );
-  const onImportProject = useCallback(
-    async (fsType: TProjectContext = "local"): Promise<void> => {
-      return new Promise<void>(async (resolve, reject) => {
-        if (fsType === "local") {
-          try {
-            const projectHandle = await showDirectoryPicker({
-              _preferPolyfill: false,
-              mode: "readwrite",
-            } as CustomDirectoryPickerOptions);
-            await loadProject(fsType, projectHandle, true);
-          } catch (err) {
-            reject(err);
-          }
-        } else if (fsType === "idb") {
-          try {
-            await loadProject(fsType, null, true);
-          } catch (err) {
-            reject(err);
-          }
-        }
-        resolve();
-      });
-    },
-    [loadProject],
-  );
-  // open
-  const onOpen = useCallback(async () => {
-    if (fileTree) {
-      // confirm files' changes
-      let hasChangedFile = false;
-      for (let x in fileTree) {
-        const _file = fileTree[x];
-        const _fileData = _file.data as TFileNodeData;
-        if (_file && _fileData.changed) {
-          hasChangedFile = true;
-        }
-      }
-      if (hasChangedFile) {
-        const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`;
-        if (!window.confirm(message)) {
-          return;
-        }
-      }
-    }
-
-    dispatch(setDoingFileAction(true));
-    try {
-      await onImportProject();
-    } catch (err) {
-      LogAllow && console.log("failed to open project");
-    }
-    dispatch(setDoingFileAction(false));
-  }, [onImportProject, fileTree]);
-  // new
-  const onNew = useCallback(async () => {
-    if (fileTree) {
-      // confirm if ffTree is changed
-      let hasChangedFile = false;
-      for (let x in fileTree) {
-        const _file = fileTree[x];
-        const _fileData = _file.data as TFileNodeData;
-        if (_file && _fileData.changed) {
-          hasChangedFile = true;
-        }
-      }
-      if (hasChangedFile) {
-        const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`;
-        if (!window.confirm(message)) {
-          return;
-        }
-      }
-    }
-
-    dispatch(setDoingFileAction(true));
-    try {
-      await initIDBProject(DefaultProjectPath);
-      await onImportProject("idb");
-    } catch (err) {
-      LogAllow && console.log("failed to init/load Untitled project");
-    }
-    dispatch(setDoingFileAction(false));
-  }, [onImportProject, fileTree]);
-  // actions
-  const onActions = useCallback(() => {
-    if (cmdkOpen) return;
-    dispatch(setCmdkPages(["Actions"]));
-    dispatch(setCmdkOpen(true));
-  }, [cmdkOpen]);
-  // add
-  const onAdd = useCallback(() => {
-    setCmdkPages([...cmdkPages, "Add"]);
-    setCmdkOpen(true);
-  }, [cmdkPages]);
-  // download
-  const onDownload = useCallback(async () => {
-    if (project.context !== "idb") return;
-
-    try {
-      await downloadProject(DefaultProjectPath);
-    } catch (err) {
-      LogAllow && console.log("failed to download project");
-    }
-  }, [project.context]);
-  // clear
-  const onClear = useCallback(async () => {
-    // remove localstorage and session
-    window.localStorage.clear();
-    await delMany([
-      "recent-project-context",
-      "recent-project-name",
-      "recent-project-handler",
-    ]);
-  }, []);
-  // jumpstart
-  const onJumpstart = useCallback(() => {
-    if (cmdkOpen) return;
-    dispatch(setCmdkPages(["Jumpstart"]));
-    dispatch(setCmdkOpen(true));
-  }, [cmdkOpen]);
-
-  // open navigator when close the menu
-  const firstLoaded = useRef(0);
-  useEffect(() => {
-    if (!cmdkOpen && firstLoaded.current === 2 && !showActionsPanel) {
-      dispatch(setShowActionsPanel(true));
-    }
-    ++firstLoaded.current;
-  }, [cmdkOpen]);
-
-  // close all panel
-  const closeAllPanel = useCallback(() => {
-    dispatch(setShowActionsPanel(false));
-    dispatch(setShowCodeView(false));
-  }, []);
-
-  // hms
-  const onUndo = useCallback(() => {
-    if (
-      doingAction ||
-      iframeLoading ||
-      doingFileAction ||
-      codeEditing ||
-      !parseFileFlag
-    )
-      return;
-
-    LogAllow &&
-      fileEventPastLength === 1 &&
-      console.log("hms - it is the origin state");
-    if (fileEventPastLength === 1) return;
-
-    dispatch(setDidUndo(true));
-
-    dispatch({ type: "main/undo" });
-    dispatch(setUpdateOptions({ parse: true, from: "hms" }));
-  }, [
-    doingAction,
-    iframeLoading,
-    doingFileAction,
-    codeEditing,
-    fileEventPastLength,
-    fileAction,
-    currentFileUid,
-  ]);
-  const onRedo = useCallback(() => {
-    if (
-      doingAction ||
-      iframeLoading ||
-      doingFileAction ||
-      codeEditing ||
-      !parseFileFlag
-    )
-      return;
-
-    LogAllow &&
-      fileEventFutureLength === 0 &&
-      console.log("hms - it is the latest state");
-    if (fileEventFutureLength === 0) return;
-
-    dispatch(setFileAction(fileAction));
-    dispatch({ type: "main/redo" });
-    dispatch(setUpdateOptions({ parse: true, from: "hms" }));
-  }, [
-    doingAction,
-    iframeLoading,
-    doingFileAction,
-    codeEditing,
-    fileEventFutureLength,
-    currentFileUid,
-  ]);
-
-  useEffect(() => {
-    // reset fileAction in the new history
-    fileEventFutureLength === 0 &&
-      fileAction.type !== null &&
-      dispatch(setFileAction({ type: null }));
-  }, []);
-
-  // toogle code view
-  const toogleCodeView = useCallback(() => {
-    dispatch(setShowCodeView(!showCodeView));
-    setNewFocusedNodeUid(nFocusedItem);
-  }, [showCodeView, nFocusedItem]);
-  // toogle actions panel
-  const toogleActionsPanel = useCallback(() => {
-    dispatch(setShowActionsPanel(!showActionsPanel));
-  }, [showActionsPanel]);
-  // open guide page
-  const openGuidePage = useCallback(() => {
-    window.open("https://guide.rnbw.dev", "_blank", "noreferrer");
-  }, [currentCommand]);
-  // -------------------------------------------------------------- pos/size for panels --------------------------------------------------------------
-  const [actionsPanelOffsetTop, setActionsPanelOffsetTop] = useState(12);
-  const [actionsPanelOffsetLeft, setActionsPanelOffsetLeft] = useState(12);
-  const [actionsPanelWidth, setActionsPanelWidth] = useState(240);
-
-  const [codeViewOffsetBottom, setCodeViewOffsetBottom] = useState("12");
-  const [codeViewOffsetTop, setCodeViewOffsetTop] =
-    useState("calc(60vh - 12px)");
-  const [codeViewOffsetLeft, setCodeViewOffsetLeft] = useState(12);
-  const [codeViewHeight, setCodeViewHeight] = useState("40");
-  const [codeViewDragging, setCodeViewDragging] = useState(false);
-  // -------------------------------------------------------------- other --------------------------------------------------------------
-  // detect OS & fetch reference - html. Jumpstart.csv, Actions.csv - restore recent project session - open Untitled project and jumpstart menu ons tartup
   useEffect(() => {
     (async () => {
       addRunningActions([
@@ -1334,10 +492,6 @@ export default function MainPage() {
       ]);
     })();
   }, []);
-  useEffect(() => {
-    // wait until "cmdkReferenceJumpstart" is ready
-    Object.keys(cmdkReferenceJumpstart).length !== 0 && onJumpstart();
-  }, [cmdkReferenceJumpstart]);
   // newbie flag
   useEffect(() => {
     const isNewbie = localStorage.getItem("newbie");
@@ -1372,6 +526,859 @@ export default function MainPage() {
     //   setCodeViewOffsetTop('66')
     // }
   }, []);
+  useEffect(() => {
+    const storedTheme = localStorage.getItem("theme");
+    LogAllow && console.log("storedTheme: ", storedTheme);
+    if (storedTheme) {
+      document.documentElement.setAttribute("data-theme", storedTheme);
+      dispatch(setTheme(storedTheme === "dark" ? "Dark" : "Light"));
+    } else {
+      setSystemTheme();
+      window
+        .matchMedia("(prefers-color-scheme: dark)")
+        .addEventListener("change", setSystemTheme);
+    }
+
+    return () =>
+      window
+        .matchMedia("(prefers-color-scheme: dark)")
+        .removeEventListener("change", setSystemTheme);
+  }, []);
+  // ***************************************** Init End *****************************************
+
+  // ***************************************** Process Begin *****************************************
+  const firstLoaded = useRef(0);
+  useEffect(() => {
+    if (!cmdkOpen && firstLoaded.current === 2 && !showActionsPanel) {
+      dispatch(setShowActionsPanel(true));
+    }
+    ++firstLoaded.current;
+  }, [cmdkOpen]);
+
+  useEffect(() => {
+    dispatch(setCurrentCmdkPage([...cmdkPages].pop() || ""));
+  }, [cmdkPages]);
+
+  // TODO Begin
+  const cmdkReferenceAdd = useMemo<TCmdkGroupData>(() => {
+    const data: TCmdkGroupData = {
+      Files: [],
+      Elements: [],
+      Recent: [],
+    };
+
+    // Files
+    const fileNode = fileTree[fFocusedItem];
+    if (fileNode) {
+      filesRef.map((fileRef: TFilesReference) => {
+        fileRef.Name &&
+          data["Files"].push({
+            Featured: fileRef.Featured === "Yes",
+            Name: fileRef.Name,
+            Icon: fileRef.Icon,
+            Description: fileRef.Description,
+            "Keyboard Shortcut": {
+              cmd: false,
+              shift: false,
+              alt: false,
+              key: "",
+              click: false,
+            },
+            Group: "Add",
+            Context: `File-${fileRef.Extension}`,
+          });
+      });
+    }
+    data["Files"] = data["Files"].filter(
+      (element) => element.Featured || !!cmdkSearchContent,
+    );
+    if (data["Files"].length === 0) {
+      delete data["Files"];
+    }
+
+    // Elements
+    let flag = true;
+    for (let x in nodeTree) {
+      if (nodeTree[x].displayName === "html") {
+        flag = false;
+      }
+    }
+
+    if (!flag) {
+      const htmlNode = nodeTree[nFocusedItem];
+      if (
+        htmlNode &&
+        htmlNode.parentUid &&
+        htmlNode.parentUid !== RootNodeUid
+      ) {
+        const parentNode = nodeTree[htmlNode.parentUid as TNodeUid];
+        const refData = htmlReferenceData.elements[parentNode.displayName];
+        if (refData) {
+          if (refData.Contain === "All") {
+            Object.keys(htmlReferenceData.elements).map((tag: string) => {
+              const tagRef = htmlReferenceData.elements[tag];
+              if (tagRef !== undefined) {
+                data["Elements"].push({
+                  Featured: tagRef && tagRef.Featured === "Yes" ? true : false,
+                  Name: tagRef.Name,
+                  Icon: tagRef.Icon,
+                  Description: tagRef.Description,
+                  "Keyboard Shortcut": {
+                    cmd: false,
+                    shift: false,
+                    alt: false,
+                    key: "",
+                    click: false,
+                  },
+                  Group: "Add",
+                  Context: `Node-${tagRef.Tag}`,
+                });
+              }
+            });
+          } else if (refData.Contain === "None") {
+            // do nothing
+          } else {
+            const tagList = refData.Contain.replace(/ /g, "").split(",");
+            tagList.map((tag: string) => {
+              const pureTag = tag.slice(1, tag.length - 1);
+              const tagRef = htmlReferenceData.elements[pureTag];
+              if (tagRef !== undefined) {
+                data["Elements"].push({
+                  Featured: tagRef && tagRef.Featured === "Yes" ? true : false,
+                  Name: tagRef.Name,
+                  Icon: tagRef.Icon,
+                  Description: tagRef.Description,
+                  "Keyboard Shortcut": {
+                    cmd: false,
+                    shift: false,
+                    alt: false,
+                    key: "",
+                    click: false,
+                  },
+                  Group: "Add",
+                  Context: `Node-${tagRef.Tag}`,
+                });
+              }
+            });
+          }
+        }
+      }
+    } else {
+      data["Elements"] = [];
+      let tagRef = htmlReferenceData.elements["html"];
+      tagRef &&
+        data["Elements"].push({
+          Featured: tagRef && tagRef.Featured === "Yes" ? true : false,
+          Name: tagRef.Name.toUpperCase(),
+          Icon: tagRef.Icon,
+          Description: tagRef.Description,
+          "Keyboard Shortcut": {
+            cmd: false,
+            shift: false,
+            alt: false,
+            key: "",
+            click: false,
+          },
+          Group: "Add",
+          Context: `Node-${tagRef.Tag}`,
+        });
+    }
+    if (
+      data["Elements"].length > 0 &&
+      data["Elements"].filter(
+        (element) => element.Featured || !!cmdkSearchContent,
+      ).length > 0
+    ) {
+      data["Elements"] = data["Elements"].filter(
+        (element) => element.Featured || !!cmdkSearchContent,
+      );
+    }
+    if (data["Elements"].length === 0) {
+      delete data["Elements"];
+    }
+
+    // Recent
+    delete data["Recent"];
+
+    return data;
+  }, [fileTree, fFocusedItem, nodeTree, nFocusedItem, htmlReferenceData]);
+  const cmdkReferneceRecentProject = useMemo(() => {
+    const _projects: TProject[] = [];
+    const _cmdkReferneceRecentProject: TCmdkReference[] = [];
+    recentProjectContexts.map((_context, index) => {
+      if (_context != "idb") {
+        _projects.push({
+          context: recentProjectContexts[index],
+          name: recentProjectNames[index],
+          handler: recentProjectHandlers[index],
+          favicon: null,
+        });
+        _cmdkReferneceRecentProject.push({
+          Name: recentProjectNames[index],
+          Icon: "folder",
+          Description: "",
+          "Keyboard Shortcut": {
+            cmd: false,
+            shift: false,
+            alt: false,
+            key: "",
+            click: false,
+          },
+          Group: "Recent",
+          Context: index.toString(),
+        });
+      }
+    });
+    setWorkspace({ name: workspace.name, projects: _projects });
+    return _cmdkReferneceRecentProject;
+  }, [recentProjectContexts, recentProjectNames, recentProjectHandlers]);
+  // TODO End
+
+  // TODO Begin
+  const KeyDownEventListener = useCallback(
+    (e: KeyboardEvent) => {
+      const cmdk: TCmdkKeyMap = {
+        cmd: getCommandKey(e, osType),
+        shift: e.shiftKey,
+        alt: e.altKey,
+        key: e.code,
+        click: false,
+      };
+      if (e.key === "Escape") {
+        closeAllPanel();
+        return;
+      }
+      if (cmdk.shift && cmdk.cmd && cmdk.key === "KeyR") {
+        onClear();
+        return;
+      }
+      if (cmdk.cmd && cmdk.key === "KeyG") {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (cmdkOpen) return;
+
+      // skip inline rename input in file-tree-view
+      const targetId = e.target && (e.target as HTMLElement).id;
+      if (targetId === "FileTreeView-RenameInput") {
+        return;
+      }
+
+      // skip monaco-editor shortkeys and general coding
+      if (activePanel === "code") {
+        if (!(cmdk.cmd && !cmdk.shift && !cmdk.alt && cmdk.key === "KeyS")) {
+          return;
+        }
+      }
+
+      // detect action
+      let action: string | null = null;
+      for (const actionName in cmdkReferenceData) {
+        const _cmdk = cmdkReferenceData[actionName][
+          "Keyboard Shortcut"
+        ] as TCmdkKeyMap;
+
+        const key =
+          _cmdk.key.length === 0
+            ? ""
+            : _cmdk.key === "\\"
+            ? "Backslash"
+            : (_cmdk.key.length === 1 ? "Key" : "") +
+              _cmdk.key[0].toUpperCase() +
+              _cmdk.key.slice(1);
+        if (
+          cmdk.cmd === _cmdk.cmd &&
+          cmdk.shift === _cmdk.shift &&
+          cmdk.alt === _cmdk.alt &&
+          cmdk.key === key
+        ) {
+          action = actionName;
+          break;
+        }
+      }
+      if (action === null) return;
+
+      LogAllow && console.log("action to be run by cmdk: ", action);
+
+      // prevent chrome default short keys
+      if (
+        action === "Save" ||
+        action === "Download" ||
+        action === "Duplicate"
+      ) {
+        e.preventDefault();
+      }
+
+      dispatch(setCurrentCommand({ action }));
+    },
+    [cmdkOpen, cmdkReferenceData, activePanel, osType],
+  );
+  // TODO End
+  useEffect(() => {
+    document.addEventListener("keydown", KeyDownEventListener);
+    return () => document.removeEventListener("keydown", KeyDownEventListener);
+  }, [KeyDownEventListener]);
+  useEffect(() => {
+    if (!currentCommand) return;
+
+    switch (currentCommand.action) {
+      case "Jumpstart":
+        onJumpstart();
+        break;
+      case "New":
+        onNew();
+        toogleCodeView();
+        !showActionsPanel && dispatch(setShowActionsPanel(true));
+        break;
+      case "Open":
+        onOpen();
+        toogleCodeView();
+        break;
+      case "Theme":
+        onToggleTheme();
+        break;
+      case "Clear":
+        onClear();
+        break;
+      case "Undo":
+        onUndo();
+        break;
+      case "Redo":
+        onRedo();
+        break;
+      case "Actions":
+        onActions();
+        break;
+      case "Add":
+        onAdd();
+        break;
+      case "Code":
+        toogleCodeView();
+        break;
+      case "Design":
+        toogleActionsPanel();
+        break;
+      case "Guide":
+        openGuidePage();
+        break;
+      case "Download":
+        onDownload();
+        break;
+      default:
+        return;
+    }
+  }, [currentCommand]);
+
+  useEffect(() => {
+    // reset fileAction in the new history
+    fileEventFutureLength === 0 &&
+      fileAction.type !== null &&
+      dispatch(setFileAction({ type: null }));
+  }, [fileEventFutureLength]);
+
+  // ***************************************** Process End *****************************************
+
+  // ***************************************** Handler Begin *****************************************
+  const closeAllPanel = useCallback(() => {
+    dispatch(setShowActionsPanel(false));
+    dispatch(setShowCodeView(false));
+  }, []);
+  const onClear = useCallback(async () => {
+    window.localStorage.clear();
+    await delMany([
+      "recent-project-context",
+      "recent-project-name",
+      "recent-project-handler",
+    ]);
+  }, []);
+  const clearSession = useCallback(() => {
+    //dispatch(clearMainState());//TODO: clearMainState
+    dispatch({ type: FileTree_Event_ClearActionType });
+    dispatch({ type: NodeTree_Event_ClearActionType });
+  }, []);
+
+  const loadProject = useCallback(
+    async (
+      fsType: TProjectContext,
+      projectHandle?: FileSystemHandle | null,
+      internal?: boolean,
+    ) => {
+      console.log("LOAD PROJECT CALL");
+      dispatch(setFavicon(""));
+      if (fsType === "local") {
+        dispatch(setDoingFileAction(true));
+        try {
+          // configure idb on nohost
+          const handlerObj = await loadLocalProject(
+            projectHandle as FileSystemDirectoryHandle,
+            osType,
+          );
+
+          clearSession(); /* file treeview error fix when the switching project by navigator */
+
+          setTimeout(async () => {
+            // sort by ASC directory/file
+            Object.keys(handlerObj).map((uid) => {
+              const handler = handlerObj[uid];
+              handler.children = handler.children.sort((a, b) => {
+                return handlerObj[a].kind === "file" &&
+                  handlerObj[b].kind === "directory"
+                  ? 1
+                  : handlerObj[a].kind === "directory" &&
+                    handlerObj[b].kind === "file"
+                  ? -1
+                  : handlerObj[a].name > handlerObj[b].name
+                  ? 1
+                  : -1;
+              });
+            });
+
+            // get/set the index/first html to be opened by default
+            let firstHtmlUid: TNodeUid = "",
+              indexHtmlUid: TNodeUid = "";
+            handlerObj[RootNodeUid].children.map((uid) => {
+              const handler = handlerObj[uid];
+              if (handler.kind === "file" && handler.ext === ".html") {
+                firstHtmlUid === "" ? (firstHtmlUid = uid) : null;
+                handler.name === "index" ? (indexHtmlUid = uid) : null;
+              }
+            });
+
+            // set default background
+            dispatch(setCurrentFileUid(""));
+            dispatch(setNodeTree({}));
+            dispatch(setValidNodeTree({}));
+            dispatch(setIframeSrc(null));
+
+            const initialFile =
+              indexHtmlUid !== ""
+                ? indexHtmlUid
+                : firstHtmlUid !== ""
+                ? firstHtmlUid
+                : "";
+
+            // hide element panel when there is no index.html
+            if (initialFile === "") {
+              dispatch(setShowActionsPanel(false));
+              dispatch(setNavigatorDropdownType(null));
+            }
+
+            dispatch(setInitialFileUidToOpen(initialFile));
+
+            // set ff-tree, ff-handlers
+            const treeViewData: TNodeTreeData = {};
+            const ffHandlerObj: TFileHandlerCollection = {};
+            Object.keys(handlerObj).map((uid) => {
+              const {
+                parentUid,
+                children,
+                path,
+                kind,
+                name,
+                ext,
+                content,
+                handler,
+              } = handlerObj[uid];
+              const type = ParsableFileTypes[ext || ""]
+                ? ext?.slice(1)
+                : "unknown";
+              treeViewData[uid] = {
+                uid,
+                parentUid: parentUid,
+                displayName: name,
+                isEntity: kind === "file",
+                children: [...children],
+                data: {
+                  valid: true,
+                  path: path,
+                  kind: kind,
+                  name: name,
+                  ext: ext,
+                  type,
+                  orgContent: content?.toString(),
+                  content: content?.toString(),
+                  changed: false,
+                } as TFileNodeData,
+              } as TNode;
+
+              ffHandlerObj[uid] = handler;
+            });
+
+            dispatch(setFileTree(treeViewData as TFileNodeTreeData));
+            setFileHandlers(ffHandlerObj);
+
+            dispatch(
+              setProject({
+                context: "local",
+                name: (projectHandle as FileSystemDirectoryHandle).name,
+                handler: null,
+                favicon: null,
+              }),
+            );
+            setCurrentProjectFileHandle(
+              projectHandle as FileSystemDirectoryHandle,
+            );
+
+            dispatch(setNavigatorDropdownType(null));
+            if (internal) {
+              // store last edit session
+              toogleCodeView();
+              const _recentProjectContexts = [...recentProjectContexts];
+              const _recentProjectNames = [...recentProjectNames];
+              const _recentProjectHandlers = [...recentProjectHandlers];
+              for (
+                let index = 0;
+                index < _recentProjectContexts.length;
+                ++index
+              ) {
+                if (
+                  _recentProjectContexts[index] === fsType &&
+                  projectHandle?.name === _recentProjectNames[index]
+                ) {
+                  _recentProjectContexts.splice(index, 1);
+                  _recentProjectNames.splice(index, 1);
+                  _recentProjectHandlers.splice(index, 1);
+                  break;
+                }
+              }
+              if (_recentProjectContexts.length === RecentProjectCount) {
+                _recentProjectContexts.pop();
+                _recentProjectNames.pop();
+                _recentProjectHandlers.pop();
+              }
+              _recentProjectContexts.unshift(fsType);
+              _recentProjectNames.unshift(
+                (projectHandle as FileSystemDirectoryHandle).name,
+              );
+              _recentProjectHandlers.unshift(
+                projectHandle as FileSystemDirectoryHandle,
+              );
+              setRecentProjectContexts(_recentProjectContexts);
+              setRecentProjectNames(_recentProjectNames);
+              setRecentProjectHandlers(_recentProjectHandlers);
+              await setMany([
+                ["recent-project-context", _recentProjectContexts],
+                ["recent-project-name", _recentProjectNames],
+                ["recent-project-handler", _recentProjectHandlers],
+              ]);
+            }
+
+            // show actions panel by default
+            !showActionsPanel && dispatch(setShowActionsPanel(true));
+          }, 50);
+        } catch (err) {
+          LogAllow && console.log("failed to load local project");
+        }
+        dispatch(setDoingFileAction(false));
+      } else if (fsType === "idb") {
+        dispatch(setDoingFileAction(true));
+        clearSession();
+        try {
+          const handlerObj = await loadIDBProject(DefaultProjectPath);
+          // sort by ASC directory/file
+          Object.keys(handlerObj).map((uid) => {
+            const handler = handlerObj[uid];
+            handler.children = handler.children.sort((a, b) => {
+              return handlerObj[a].kind === "file" &&
+                handlerObj[b].kind === "directory"
+                ? 1
+                : handlerObj[a].kind === "directory" &&
+                  handlerObj[b].kind === "file"
+                ? -1
+                : handlerObj[a].name > handlerObj[b].name
+                ? 1
+                : -1;
+            });
+          });
+
+          // get/set the index/first html to be opened by default
+          let firstHtmlUid: TNodeUid = "",
+            indexHtmlUid: TNodeUid = "";
+          handlerObj[RootNodeUid].children.map((uid) => {
+            const handler = handlerObj[uid];
+            if (handler.kind === "file" && handler.ext === ".html") {
+              firstHtmlUid === "" ? (firstHtmlUid = uid) : null;
+              handler.name === "index" ? (indexHtmlUid = uid) : null;
+            }
+          });
+          dispatch(
+            setInitialFileUidToOpen(
+              indexHtmlUid !== ""
+                ? indexHtmlUid
+                : firstHtmlUid !== ""
+                ? firstHtmlUid
+                : "",
+            ),
+          );
+
+          // set ff-tree, ff-handlers
+          const treeViewData: TNodeTreeData = {};
+          const ffHandlerObj: TFileHandlerCollection = {};
+          Object.keys(handlerObj).map((uid) => {
+            const { parentUid, children, path, kind, name, ext, content } =
+              handlerObj[uid];
+            const type = ParsableFileTypes[ext || ""]
+              ? ext?.slice(1)
+              : "unknown";
+            treeViewData[uid] = {
+              uid,
+              parentUid: parentUid,
+              displayName: name,
+              isEntity: kind === "file",
+              children: [...children],
+              data: {
+                valid: true,
+                path: path,
+                kind: kind,
+                name: name,
+                ext: ext,
+                type,
+                orgContent: type !== "unknown" ? content?.toString() : "",
+                content: type !== "unknown" ? content?.toString() : "",
+                changed: false,
+              } as TFileNodeData,
+            } as TNode;
+          });
+          dispatch(setFileTree(treeViewData as TFileNodeTreeData));
+          setFileHandlers(ffHandlerObj);
+          dispatch(
+            setProject({
+              context: "idb",
+              name: "Untitled",
+              handler: null,
+              favicon: null,
+            }),
+          );
+          setCurrentProjectFileHandle(null);
+          // store last edit session
+          // const _recentProjectContexts = [...recentProjectContexts]
+          // const _recentProjectNames = [...recentProjectNames]
+          // const _recentProjectHandlers = [...recentProjectHandlers]
+          // for (let index = 0; index < _recentProjectContexts.length; ++index) {
+          //   if (_recentProjectContexts[index] === fsType) {
+          //     _recentProjectContexts.splice(index, 1)
+          //     _recentProjectNames.splice(index, 1)
+          //     _recentProjectHandlers.splice(index, 1)
+          //     break
+          //   }
+          // }
+          // if (_recentProjectContexts.length === RecentProjectCount) {
+          //   _recentProjectContexts.pop()
+          //   _recentProjectNames.pop()
+          //   _recentProjectHandlers.pop()
+          // }
+          // _recentProjectContexts.unshift(fsType)
+          // _recentProjectNames.unshift('Untitled')
+          // _recentProjectHandlers.unshift(null)
+          // setRecentProjectContexts(_recentProjectContexts)
+          // setRecentProjectNames(_recentProjectNames)
+          // setRecentProjectHandlers(_recentProjectHandlers)
+          // await setMany([['recent-project-context', _recentProjectContexts], ['recent-project-name', _recentProjectNames], ['recent-project-handler', _recentProjectHandlers]])
+        } catch (err) {
+          LogAllow && console.log("failed to load Untitled project");
+        }
+        dispatch(setDoingFileAction(false));
+      }
+    },
+    [
+      clearSession,
+      osType,
+      recentProjectContexts,
+      recentProjectNames,
+      recentProjectHandlers,
+      fileTree,
+    ],
+  );
+  const onImportProject = useCallback(
+    async (fsType: TProjectContext = "local"): Promise<void> => {
+      return new Promise<void>(async (resolve, reject) => {
+        if (fsType === "local") {
+          try {
+            const projectHandle = await showDirectoryPicker({
+              _preferPolyfill: false,
+              mode: "readwrite",
+            } as CustomDirectoryPickerOptions);
+            await loadProject(fsType, projectHandle, true);
+          } catch (err) {
+            reject(err);
+          }
+        } else if (fsType === "idb") {
+          try {
+            await loadProject(fsType, null, true);
+          } catch (err) {
+            reject(err);
+          }
+        }
+        resolve();
+      });
+    },
+    [loadProject],
+  );
+  const onNew = useCallback(async () => {
+    if (fileTree) {
+      // confirm if ffTree is changed
+      let hasChangedFile = false;
+      for (let x in fileTree) {
+        const _file = fileTree[x];
+        const _fileData = _file.data as TFileNodeData;
+        if (_file && _fileData.changed) {
+          hasChangedFile = true;
+        }
+      }
+      if (hasChangedFile) {
+        const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`;
+        if (!window.confirm(message)) {
+          return;
+        }
+      }
+    }
+
+    dispatch(setDoingFileAction(true));
+    try {
+      await initIDBProject(DefaultProjectPath);
+      await onImportProject("idb");
+    } catch (err) {
+      LogAllow && console.log("failed to init/load Untitled project");
+    }
+    dispatch(setDoingFileAction(false));
+  }, [onImportProject, fileTree]);
+  const onOpen = useCallback(async () => {
+    if (fileTree) {
+      // confirm files' changes
+      let hasChangedFile = false;
+      for (let x in fileTree) {
+        const _file = fileTree[x];
+        const _fileData = _file.data as TFileNodeData;
+        if (_file && _fileData.changed) {
+          hasChangedFile = true;
+        }
+      }
+      if (hasChangedFile) {
+        const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`;
+        if (!window.confirm(message)) {
+          return;
+        }
+      }
+    }
+
+    dispatch(setDoingFileAction(true));
+    try {
+      await onImportProject();
+    } catch (err) {
+      LogAllow && console.log("failed to open project");
+    }
+    dispatch(setDoingFileAction(false));
+  }, [onImportProject, fileTree]);
+
+  const onActions = useCallback(() => {
+    if (cmdkOpen) return;
+    dispatch(setCmdkPages(["Actions"]));
+    dispatch(setCmdkOpen(true));
+  }, [cmdkOpen]);
+  const onAdd = useCallback(() => {
+    setCmdkPages([...cmdkPages, "Add"]);
+    setCmdkOpen(true);
+  }, [cmdkPages]);
+  const onDownload = useCallback(async () => {
+    if (project.context !== "idb") return;
+
+    try {
+      await downloadProject(DefaultProjectPath);
+    } catch (err) {
+      LogAllow && console.log("failed to download project");
+    }
+  }, [project.context]);
+  const onJumpstart = useCallback(() => {
+    if (cmdkOpen) return;
+    dispatch(setCmdkPages(["Jumpstart"]));
+    dispatch(setCmdkOpen(true));
+  }, [cmdkOpen]);
+  const onUndo = useCallback(() => {
+    if (
+      doingAction ||
+      iframeLoading ||
+      doingFileAction ||
+      codeEditing ||
+      !parseFileFlag
+    )
+      return;
+
+    LogAllow &&
+      fileEventPastLength === 1 &&
+      console.log("hms - it is the origin state");
+    if (fileEventPastLength === 1) return;
+
+    dispatch(setDidUndo(true));
+
+    dispatch({ type: "main/undo" });
+    dispatch(setUpdateOptions({ parse: true, from: "hms" }));
+  }, [
+    doingAction,
+    iframeLoading,
+    doingFileAction,
+    codeEditing,
+    fileEventPastLength,
+    fileAction,
+    currentFileUid,
+  ]);
+  const onRedo = useCallback(() => {
+    if (
+      doingAction ||
+      iframeLoading ||
+      doingFileAction ||
+      codeEditing ||
+      !parseFileFlag
+    )
+      return;
+
+    LogAllow &&
+      fileEventFutureLength === 0 &&
+      console.log("hms - it is the latest state");
+    if (fileEventFutureLength === 0) return;
+
+    dispatch(setFileAction(fileAction));
+    dispatch({ type: "main/redo" });
+    dispatch(setUpdateOptions({ parse: true, from: "hms" }));
+  }, [
+    doingAction,
+    iframeLoading,
+    doingFileAction,
+    codeEditing,
+    fileEventFutureLength,
+    currentFileUid,
+  ]);
+
+  // toogle code view
+  const toogleCodeView = useCallback(() => {
+    dispatch(setShowCodeView(!showCodeView));
+    setNewFocusedNodeUid(nFocusedItem);
+  }, [showCodeView, nFocusedItem]);
+  // toogle actions panel
+  const toogleActionsPanel = useCallback(() => {
+    dispatch(setShowActionsPanel(!showActionsPanel));
+  }, [showActionsPanel]);
+  // open guide page
+  const openGuidePage = useCallback(() => {
+    window.open("https://guide.rnbw.dev", "_blank", "noreferrer");
+  }, [currentCommand]);
+  // -------------------------------------------------------------- pos/size for panels --------------------------------------------------------------
+  const [actionsPanelOffsetTop, setActionsPanelOffsetTop] = useState(12);
+  const [actionsPanelOffsetLeft, setActionsPanelOffsetLeft] = useState(12);
+  const [actionsPanelWidth, setActionsPanelWidth] = useState(240);
+
+  const [codeViewOffsetBottom, setCodeViewOffsetBottom] = useState("12");
+  const [codeViewOffsetTop, setCodeViewOffsetTop] =
+    useState("calc(60vh - 12px)");
+  const [codeViewOffsetLeft, setCodeViewOffsetLeft] = useState(12);
+  const [codeViewHeight, setCodeViewHeight] = useState("40");
+  const [codeViewDragging, setCodeViewDragging] = useState(false);
+  // -------------------------------------------------------------- other --------------------------------------------------------------
+  // detect OS & fetch reference - html. Jumpstart.csv, Actions.csv - restore recent project session - open Untitled project and jumpstart menu ons tartup
+
+  useEffect(() => {
+    // wait until "cmdkReferenceJumpstart" is ready
+    Object.keys(cmdkReferenceJumpstart).length !== 0 && onJumpstart();
+  }, [cmdkReferenceJumpstart]);
   // theme
   const setSystemTheme = useCallback(() => {
     dispatch(setTheme("System"));
@@ -1406,24 +1413,6 @@ export default function MainPage() {
         break;
     }
   }, [theme]);
-  useEffect(() => {
-    const storedTheme = localStorage.getItem("theme");
-    LogAllow && console.log("storedTheme: ", storedTheme);
-    if (storedTheme) {
-      document.documentElement.setAttribute("data-theme", storedTheme);
-      dispatch(setTheme(storedTheme === "dark" ? "Dark" : "Light"));
-    } else {
-      setSystemTheme();
-      window
-        .matchMedia("(prefers-color-scheme: dark)")
-        .addEventListener("change", setSystemTheme);
-    }
-
-    return () =>
-      window
-        .matchMedia("(prefers-color-scheme: dark)")
-        .removeEventListener("change", setSystemTheme);
-  }, []);
   // web-tab close event handler
   useEffect(() => {
     let changed = false;

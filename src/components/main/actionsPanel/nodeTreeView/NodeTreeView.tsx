@@ -15,7 +15,6 @@ import { RootNodeUid } from "@_constants/main";
 import {
   StageNodeIdAttr,
   TFileNodeData,
-  THtmlElementsReference,
   THtmlNodeData,
 } from "@_node/index";
 import { TNode, TNodeUid } from "@_node/types";
@@ -51,6 +50,7 @@ import { DragBetweenLine } from "./nodeTreeComponents/DragBetweenLine";
 import { ItemArrow } from "./nodeTreeComponents/ItemArrow";
 import { ItemTitle } from "./nodeTreeComponents/ItemTitle";
 import { NodeTreeViewProps } from "./types";
+import { THtmlElementsReference } from "@_types/main";
 
 const AutoExpandDelay = 1 * 1000;
 

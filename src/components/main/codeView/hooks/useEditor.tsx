@@ -87,7 +87,7 @@ export default function useEditor() {
     monacoRef.current = editor;
     setMonacoEditorRef(editor);
 
-    dispatch(setUpdateOptions({ parse: true, from: "file" }));
+    // dispatch(setUpdateOptions({ parse: true, from: "file" }));
     editor.onDidChangeCursorPosition((event) => {
       setTimeout(() => {
         if (event.reason === 2) {
@@ -229,6 +229,8 @@ export default function useEditor() {
           codeContentRef.current;
         (fileTree[currentFileUid].data as TFileNodeData).changed =
           codeContentRef.current !== fileData.orgContent;
+
+        console.log("useEditor CALL");
         dispatch(setFileTree(fileTree));
         dispatch(setCurrentFileContent(codeContentRef.current));
         codeChangeDecorationRef.current.clear();

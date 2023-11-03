@@ -99,6 +99,9 @@ export default function CodeView(props: CodeViewProps) {
 
   // file content change - set code
   useEffect(() => {
+    console.log(fileTree);
+  }, [fileTree]);
+  useEffect(() => {
     const _file = fileTree[currentFileUid];
 
     if (!_file) return;
@@ -110,7 +113,7 @@ export default function CodeView(props: CodeViewProps) {
     extension && updateLanguage(extension);
 
     setCodeContent(fileData.content);
-  }, [fileTree[currentFileUid]]);
+  }, [currentFileUid]);
 
   // focusedItem - code select
   const focusedItemRef = useRef<TNodeUid>("");

@@ -4,7 +4,11 @@ import { useDispatch, useSelector } from "react-redux";
 
 import { RootNodeUid } from "@_constants/main";
 import { getSubNodeUidsByBfs } from "@_node/apis";
-import { reloadLocalProject, TFileNodeData } from "@_node/file";
+import {
+  reloadLocalProject,
+  TFileNodeData,
+  TFileNodeTreeData,
+} from "@_node/file";
 import { TNodeTreeData } from "@_node/types";
 import { osTypeSelector } from "@_redux/global";
 import { MainContext } from "@_redux/main";
@@ -83,7 +87,7 @@ export const useSaveCommand = () => {
       }),
     );
 
-    dispatch(setFileTree(_ffTree));
+    dispatch(setFileTree(_ffTree as TFileNodeTreeData));
 
     removeRunningActions(["process-save"], false);
   }, [fileTree, fileHandlers, reloadLocalProject]);

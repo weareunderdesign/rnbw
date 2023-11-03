@@ -339,15 +339,14 @@ export const handleFileUpdate = (
   _nodeTree: TNodeTreeData,
   file: TFileNode,
 ) => {
-  const { formattedContent, contentInApp, tree } = parseFile({
-    ext: fileData.ext,
+  const { contentInApp, nodeTree } = parseFile({
+    ext: fileData.ext.slice(1),
     content: file.data.content,
   });
 
-  fileData.content = formattedContent;
   fileData.contentInApp = contentInApp;
   fileData.changed = fileData.content !== fileData.orgContent;
-  return { tree };
+  return { nodeTree };
 };
 
 export const handleHmsChange = (

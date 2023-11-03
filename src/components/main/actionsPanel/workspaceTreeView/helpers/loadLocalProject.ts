@@ -9,6 +9,7 @@ export const loadLocalProject = async (
   fileHandlers: TFileHandlerCollection,
   osType: TOsType,
 ) => {
+  return { handlerObj: {}, deletedUids: [] };
   try {
     const { handlerObj, deletedUids } = await reloadLocalProject(
       fileHandlers[RootNodeUid] as FileSystemDirectoryHandle,

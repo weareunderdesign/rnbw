@@ -1,4 +1,4 @@
-import { TFileNode } from "@_node/index";
+import { TFileNode, TFileNodeTreeData } from "@_node/index";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
@@ -7,7 +7,7 @@ import { TFileAction } from "./event";
 import { TFileTreeReducerState, TProject, TWorkspace } from "./types";
 
 const fileTreeReducerInitialState: TFileTreeReducerState = {
-  workspace: { name: "", projects: [] },
+  workspace: { name: "local", projects: [] },
   project: { context: "idb", name: "welcome", handler: null, favicon: null },
   fileTree: {},
   initialFileUidToOpen: "",
@@ -38,9 +38,8 @@ const fileTreeSlice = createSlice({
       const project = action.payload;
       state.project = project;
     },
-    setFileTree(state, action: PayloadAction<TNodeTreeData>) {
+    setFileTree(state, action: PayloadAction<TFileNodeTreeData>) {
       const fileTree = action.payload;
-      //@ts-ignore
       state.fileTree = fileTree;
     },
     setFileTreeNode(state, action: PayloadAction<TFileNode>) {

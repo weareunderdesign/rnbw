@@ -13,8 +13,6 @@ import {
   getSubNodeUidsByBfs,
   parseHtml,
   TFileParserResponse,
-  THtmlElementsReference,
-  THtmlElementsReferenceData,
   TNodeTreeData,
   TNodeUid,
 } from "../";
@@ -25,6 +23,10 @@ import {
   TIDBFileInfoObj,
   TZipFileInfo,
 } from "./types";
+import {
+  THtmlElementsReference,
+  THtmlElementsReferenceData,
+} from "@_types/main";
 
 export const _fs = window.Filer.fs;
 export const _path = window.Filer.path;

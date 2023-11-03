@@ -80,7 +80,7 @@ export const parseHtml = (content: string): THtmlParserResponse => {
         endLine = 0,
         endCol = 0,
         endOffset = 0,
-      } = node.data.sourceCodeLocation || {};
+      } = node.sourceCodeLocation || {};
 
       nodeTree[parentUid].children.push(uid);
       nodeTree[parentUid].isEntity = false;

@@ -42,8 +42,9 @@ import {
   validateAndMoveNode,
 } from "../helpers";
 import { useInvalidNodes } from "./useInvalidNodes";
-import { useReloadProject } from "./useReloadProject.1";
+import { useReloadProject } from "./useReloadProject";
 import { useTemporaryNodes } from "./useTemporaryNodes";
+import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
 
 export const useNodeActionsHandler = (
   openFileUid: React.MutableRefObject<string>,
@@ -233,7 +234,7 @@ export const useNodeActionsHandler = (
       const node = item.data as TNode;
       const nodeData = node.data as TFileNodeData;
       if (!nodeData.valid) {
-        const tmpTree = JSON.parse(JSON.stringify(fileTree));
+        const tmpTree = structuredClone(fileTree);
         tmpTree[node.parentUid as TNodeUid].children = tmpTree[
           node.parentUid as TNodeUid
         ].children.filter((c_uid: TNodeUid) => c_uid !== node.uid);
@@ -523,6 +524,7 @@ export const useNodeActionsHandler = (
         return;
       }
       const nodeData = node.data as TFileNodeData;
+      console.log(nodeData);
       if (nodeData.ext === "html") {
         setPrevFileUid(currentFileUid);
       }
@@ -550,6 +552,7 @@ export const useNodeActionsHandler = (
         }
         addRunningActions(["processor-updateOpt"]);
         dispatch(setCurrentFileUid(uid));
+        dispatch(setCurrentFileContent(nodeData.content));
         dispatch(setUpdateOptions({ parse: true, from: "file" }));
         setParseFile(true);
         removeRunningActions(["fileTreeView-read"]);

@@ -1,8 +1,7 @@
 import { editor } from "monaco-editor";
 
 import { TOsType } from "@_redux/global";
-
-import { THtmlReferenceData } from "./html";
+import { THtmlReferenceData } from "@_types/main";
 
 export type TNode = {
   uid: TNodeUid;

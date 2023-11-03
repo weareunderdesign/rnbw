@@ -15,7 +15,7 @@ import {
   moveActions,
 } from "../helpers";
 import { useInvalidNodes } from "./useInvalidNodes";
-import { useReloadProject } from "./useReloadProject.1";
+import { useReloadProject } from "./useReloadProject";
 import { useTemporaryNodes } from "./useTemporaryNodes";
 
 export const useFileOperations = () => {

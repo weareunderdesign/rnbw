@@ -74,14 +74,3 @@ export type TFileHandlerInfo = {
   handler: FileSystemHandle;
 };
 export type TFileHandlerInfoObj = { [uid: TNodeUid]: TFileHandlerInfo };
-export type TFilesReference = {
-  Name: string;
-  Extension: string;
-  Type: string;
-  Icon: string;
-  Description: string;
-  Featured: string;
-};
-export type TFilesReferenceData = {
-  [name: string]: TFilesReference;
-};

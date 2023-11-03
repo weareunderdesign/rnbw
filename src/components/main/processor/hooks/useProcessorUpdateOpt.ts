@@ -10,7 +10,10 @@ import { MainContext } from "@_redux/main";
 import { focusFileTreeNode, setDoingFileAction } from "@_redux/main/fileTree";
 import { setNodeTree } from "@_redux/main/nodeTree";
 import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
-import { setUpdateOptions } from "@_redux/main/processor";
+import {
+  setUpdateOptions,
+  updateOptionsSelector,
+} from "@_redux/main/processor";
 import { setIframeSrc, setNeedToReloadIframe } from "@_redux/main/stageView";
 import { TFileInfo } from "@_types/main";
 
@@ -46,6 +49,8 @@ export const useProcessorUpdateOpt = () => {
   // -------------------------------------------------------------- sync --------------------------------------------------------------
 
   useEffect(() => {
+    if (!updateOptions) return;
+
     console.log({
       fileTree,
       initialFileUidToOpen,
@@ -57,7 +62,8 @@ export const useProcessorUpdateOpt = () => {
     });
 
     const monacoEditor = monacoEditorRef.current;
-    if (updateOptions?.parse === true) {
+
+    if (updateOptions.parse === true) {
       let onlyRenderViewState = false;
       // parse file content
       let _nodeTree: TNodeTreeData = structuredClone(nodeTree);
@@ -71,11 +77,13 @@ export const useProcessorUpdateOpt = () => {
       }
       const _file = structuredClone(fileTree[currentFileUid]) as TFileNode;
       const fileData = _file.data as TFileNodeData;
+      fileData.content = currentFileContent;
       if (updateOptions.from === "file") {
         if (monacoEditor) {
-          const { tree } = handleFileUpdate(fileData, _nodeTree, _file);
+          const { nodeTree } = handleFileUpdate(fileData, _nodeTree, _file);
+          console.log({ _file, nodeTree });
 
-          _nodeTree = tree;
+          _nodeTree = nodeTree;
 
           // reload iframe
           _needToReloadIFrame = true;
@@ -152,7 +160,7 @@ export const useProcessorUpdateOpt = () => {
           from: updateOptions.from !== "hms" ? "none" : updateOptions.from,
         }),
       );
-    } else if (updateOptions?.parse === false) {
+    } else if (updateOptions.parse === false) {
       // serialize node tree data
       const _nodeTree: TNodeTreeData = JSON.parse(JSON.stringify(nodeTree));
       const _file = JSON.parse(
