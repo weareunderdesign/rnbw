@@ -325,21 +325,7 @@ export const NodeTreeView = (props: NodeTreeViewProps) => {
                 }
               }, []);
 
-            const spanStyles: React.CSSProperties = {
-              width: "calc(100% - 32px)",
-              textOverflow: "ellipsis",
-              overflow: "hidden",
-              whiteSpace: "nowrap",
-            };
-
-            const treeViewRef = useRef<HTMLHeadingElement | any>(null);
-            useEffect(() => {
-              if (props.context.isSelected) {
-                setTimeout(() => {
-                  treeViewRef?.current?.click();
-                }, 500);
-              }
-            }, []);
+     
 
             const onClick = useCallback(
               (e: React.MouseEvent) => {
