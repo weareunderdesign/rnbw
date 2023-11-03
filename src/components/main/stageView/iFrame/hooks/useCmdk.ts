@@ -29,27 +29,11 @@ export const useCmdk = ({
 
   const onKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      //We are trying to fina a way to get node id with this event
+      //We are trying to find a way to get node id with this event
       if (contentEditableUidRef.current !== "") {
         let isSaving = e.key === "s" && (e.ctrlKey || e.metaKey);
         if (!isSaving) {
           return;
-        }
-        type TTarget = HTMLElement & {
-          dataset: {
-            rnbwdevRnbwNode: string;
-          };
-        };
-        const target: TTarget | null = e.target as TTarget;
-        if (target && "dataset" in target) {
-          const uid = target.dataset.rnbwdevRnbwNode;
-          if (uid) {
-            let uid = mostRecentSelectedNode.current?.uid as TNodeUid;
-            let parentUid = mostRecentSelectedNode.current
-              ?.parentUid as TNodeUid;
-          }
-
-          //TODO: IN_PROGRESS
         }
       }
 

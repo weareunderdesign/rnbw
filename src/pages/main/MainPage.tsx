@@ -328,31 +328,37 @@ export default function MainPage() {
       const _cmdkRefJumpstartData: TCmdkGroupData = {};
       await Promise.all(
         cmdkRefJumpstart.map(async (command: TCmdkReference) => {
-          const keys: string[] = (command["Keyboard Shortcut"] as string)
-            ?.replace(/ /g, "")
-            .split("+");
-          const keyObj: TCmdkKeyMap = {
-            cmd: false,
-            shift: false,
-            alt: false,
-            key: "",
-            click: false,
-          };
-          keys?.map((key) => {
-            if (
-              key === "cmd" ||
-              key === "shift" ||
-              key === "alt" ||
-              key === "click"
-            ) {
-              keyObj[key] = true;
-            } else {
-              keyObj.key = key;
-            }
+          const shortcuts = (command["Keyboard Shortcut"] as string)?.split(
+            " ",
+          );
+          const keyObjects: TCmdkKeyMap[] = [];
+
+          shortcuts?.forEach((shortcut) => {
+            const keys = shortcut.split("+");
+            const keyObj = {
+              cmd: false,
+              shift: false,
+              alt: false,
+              key: "",
+              click: false,
+            };
+            keys?.forEach((key) => {
+              if (
+                key === "cmd" ||
+                key === "shift" ||
+                key === "alt" ||
+                key === "click"
+              ) {
+                keyObj[key] = true;
+              } else {
+                keyObj.key = key;
+              }
+            });
+            keyObjects.push(keyObj);
           });
 
           const _command: TCmdkReference = JSON.parse(JSON.stringify(command));
-          _command["Keyboard Shortcut"] = keyObj;
+          _command["Keyboard Shortcut"] = keyObjects;
 
           const groupName = _command["Group"];
           if (_cmdkRefJumpstartData[groupName] !== undefined) {
@@ -441,32 +447,39 @@ export default function MainPage() {
           contextObj[context] = true;
         });
 
-        const keys: string[] = (command["Keyboard Shortcut"] as string)
-          ?.replace(/ /g, "")
-          .split("+");
-        const keyObj: TCmdkKeyMap = {
-          cmd: false,
-          shift: false,
-          alt: false,
-          key: "",
-          click: false,
-        };
-        keys?.map((key: string) => {
-          if (
-            key === "cmd" ||
-            key === "shift" ||
-            key === "alt" ||
-            key === "click"
-          ) {
-            keyObj[key] = true;
-          } else {
-            keyObj.key = key;
-          }
+        const shortcuts: string[] = (
+          command["Keyboard Shortcut"] as string
+        )?.split(" ");
+
+        const keyObjects: TCmdkKeyMap[] = [];
+
+        shortcuts?.forEach((shortcut) => {
+          const keys = shortcut.split("+");
+          const keyObj = {
+            cmd: false,
+            shift: false,
+            alt: false,
+            key: "",
+            click: false,
+          };
+          keys?.forEach((key) => {
+            if (
+              key === "cmd" ||
+              key === "shift" ||
+              key === "alt" ||
+              key === "click"
+            ) {
+              keyObj[key] = true;
+            } else {
+              keyObj.key = key;
+            }
+          });
+          keyObjects.push(keyObj);
         });
 
         const _command: TCmdkReference = JSON.parse(JSON.stringify(command));
         _command["Context"] = contextObj;
-        _command["Keyboard Shortcut"] = keyObj;
+        _command["Keyboard Shortcut"] = keyObjects;
 
         const groupName = _command["Group"];
         if (_cmdkRefActionsData[groupName] !== undefined) {
@@ -561,7 +574,6 @@ export default function MainPage() {
     dispatch(setCurrentCmdkPage([...cmdkPages].pop() || ""));
   }, [cmdkPages]);
 
-  // TODO Begin
   const cmdkReferenceAdd = useMemo<TCmdkGroupData>(() => {
     const data: TCmdkGroupData = {
       Files: [],
@@ -579,13 +591,15 @@ export default function MainPage() {
             Name: fileRef.Name,
             Icon: fileRef.Icon,
             Description: fileRef.Description,
-            "Keyboard Shortcut": {
-              cmd: false,
-              shift: false,
-              alt: false,
-              key: "",
-              click: false,
-            },
+            "Keyboard Shortcut": [
+              {
+                cmd: false,
+                shift: false,
+                alt: false,
+                key: "",
+                click: false,
+              },
+            ],
             Group: "Add",
             Context: `File-${fileRef.Extension}`,
           });
@@ -625,13 +639,15 @@ export default function MainPage() {
                   Name: tagRef.Name,
                   Icon: tagRef.Icon,
                   Description: tagRef.Description,
-                  "Keyboard Shortcut": {
-                    cmd: false,
-                    shift: false,
-                    alt: false,
-                    key: "",
-                    click: false,
-                  },
+                  "Keyboard Shortcut": [
+                    {
+                      cmd: false,
+                      shift: false,
+                      alt: false,
+                      key: "",
+                      click: false,
+                    },
+                  ],
                   Group: "Add",
                   Context: `Node-${tagRef.Tag}`,
                 });
@@ -650,13 +666,15 @@ export default function MainPage() {
                   Name: tagRef.Name,
                   Icon: tagRef.Icon,
                   Description: tagRef.Description,
-                  "Keyboard Shortcut": {
-                    cmd: false,
-                    shift: false,
-                    alt: false,
-                    key: "",
-                    click: false,
-                  },
+                  "Keyboard Shortcut": [
+                    {
+                      cmd: false,
+                      shift: false,
+                      alt: false,
+                      key: "",
+                      click: false,
+                    },
+                  ],
                   Group: "Add",
                   Context: `Node-${tagRef.Tag}`,
                 });
@@ -674,13 +692,15 @@ export default function MainPage() {
           Name: tagRef.Name.toUpperCase(),
           Icon: tagRef.Icon,
           Description: tagRef.Description,
-          "Keyboard Shortcut": {
-            cmd: false,
-            shift: false,
-            alt: false,
-            key: "",
-            click: false,
-          },
+          "Keyboard Shortcut": [
+            {
+              cmd: false,
+              shift: false,
+              alt: false,
+              key: "",
+              click: false,
+            },
+          ],
           Group: "Add",
           Context: `Node-${tagRef.Tag}`,
         });
@@ -704,6 +724,7 @@ export default function MainPage() {
 
     return data;
   }, [fileTree, fFocusedItem, nodeTree, nFocusedItem, htmlReferenceData]);
+
   const cmdkReferneceRecentProject = useMemo(() => {
     const _projects: TProject[] = [];
     const _cmdkReferneceRecentProject: TCmdkReference[] = [];
@@ -719,13 +740,15 @@ export default function MainPage() {
           Name: recentProjectNames[index],
           Icon: "folder",
           Description: "",
-          "Keyboard Shortcut": {
-            cmd: false,
-            shift: false,
-            alt: false,
-            key: "",
-            click: false,
-          },
+          "Keyboard Shortcut": [
+            {
+              cmd: false,
+              shift: false,
+              alt: false,
+              key: "",
+              click: false,
+            },
+          ],
           Group: "Recent",
           Context: index.toString(),
         });
@@ -734,11 +757,10 @@ export default function MainPage() {
     setWorkspace({ name: workspace.name, projects: _projects });
     return _cmdkReferneceRecentProject;
   }, [recentProjectContexts, recentProjectNames, recentProjectHandlers]);
-  // TODO End
 
-  // TODO Begin
   const KeyDownEventListener = useCallback(
     (e: KeyboardEvent) => {
+      // cmdk obj for the current command
       const cmdk: TCmdkKeyMap = {
         cmd: getCommandKey(e, osType),
         shift: e.shiftKey,
@@ -752,11 +774,11 @@ export default function MainPage() {
       }
       if (cmdk.shift && cmdk.cmd && cmdk.key === "KeyR") {
         onClear();
-        return;
       }
       if (cmdk.cmd && cmdk.key === "KeyG") {
         e.preventDefault();
         e.stopPropagation();
+        // return
       }
       if (cmdkOpen) return;
 
@@ -776,26 +798,36 @@ export default function MainPage() {
       // detect action
       let action: string | null = null;
       for (const actionName in cmdkReferenceData) {
-        const _cmdk = cmdkReferenceData[actionName][
+        const _cmdkArray = cmdkReferenceData[actionName][
           "Keyboard Shortcut"
-        ] as TCmdkKeyMap;
+        ] as TCmdkKeyMap[];
 
-        const key =
-          _cmdk.key.length === 0
-            ? ""
-            : _cmdk.key === "\\"
-            ? "Backslash"
-            : (_cmdk.key.length === 1 ? "Key" : "") +
-              _cmdk.key[0].toUpperCase() +
-              _cmdk.key.slice(1);
-        if (
-          cmdk.cmd === _cmdk.cmd &&
-          cmdk.shift === _cmdk.shift &&
-          cmdk.alt === _cmdk.alt &&
-          cmdk.key === key
-        ) {
-          action = actionName;
-          break;
+        let matched = false;
+
+        for (const keyObj of _cmdkArray) {
+          const key =
+            keyObj.key.length === 0
+              ? ""
+              : keyObj.key === "\\"
+              ? "Backslash"
+              : (keyObj.key.length === 1 ? "Key" : "") +
+                keyObj.key[0].toUpperCase() +
+                keyObj.key.slice(1);
+
+          if (
+            cmdk.cmd === keyObj.cmd &&
+            cmdk.shift === keyObj.shift &&
+            cmdk.alt === keyObj.alt &&
+            cmdk.key === key
+          ) {
+            action = actionName;
+            matched = true;
+            break; // Match found, exit the inner loop
+          }
+        }
+
+        if (matched) {
+          break; // Match found, exit the outer loop
         }
       }
       if (action === null) return;
@@ -815,11 +847,12 @@ export default function MainPage() {
     },
     [cmdkOpen, cmdkReferenceData, activePanel, osType],
   );
-  // TODO End
+
   useEffect(() => {
     document.addEventListener("keydown", KeyDownEventListener);
     return () => document.removeEventListener("keydown", KeyDownEventListener);
   }, [KeyDownEventListener]);
+
   useEffect(() => {
     if (!currentCommand) return;
 
@@ -885,6 +918,7 @@ export default function MainPage() {
     dispatch(setShowActionsPanel(false));
     dispatch(setShowCodeView(false));
   }, []);
+
   const onClear = useCallback(async () => {
     window.localStorage.clear();
     await delMany([
@@ -893,8 +927,8 @@ export default function MainPage() {
       "recent-project-handler",
     ]);
   }, []);
+
   const clearSession = useCallback(() => {
-    //dispatch(clearMainState());//TODO: clearMainState
     dispatch({ type: FileTree_Event_ClearActionType });
     dispatch({ type: NodeTree_Event_ClearActionType });
   }, []);
@@ -1277,10 +1311,12 @@ export default function MainPage() {
     dispatch(setCmdkPages(["Actions"]));
     dispatch(setCmdkOpen(true));
   }, [cmdkOpen]);
+
   const onAdd = useCallback(() => {
     setCmdkPages([...cmdkPages, "Add"]);
     setCmdkOpen(true);
   }, [cmdkPages]);
+
   const onDownload = useCallback(async () => {
     if (project.context !== "idb") return;
 
@@ -1290,11 +1326,13 @@ export default function MainPage() {
       LogAllow && console.log("failed to download project");
     }
   }, [project.context]);
+
   const onJumpstart = useCallback(() => {
     if (cmdkOpen) return;
     dispatch(setCmdkPages(["Jumpstart"]));
     dispatch(setCmdkOpen(true));
   }, [cmdkOpen]);
+
   const onUndo = useCallback(() => {
     if (
       doingAction ||
@@ -1323,6 +1361,7 @@ export default function MainPage() {
     fileAction,
     currentFileUid,
   ]);
+
   const onRedo = useCallback(() => {
     if (
       doingAction ||
@@ -1355,14 +1394,17 @@ export default function MainPage() {
     dispatch(setShowCodeView(!showCodeView));
     setNewFocusedNodeUid(nFocusedItem);
   }, [showCodeView, nFocusedItem]);
+
   // toogle actions panel
   const toogleActionsPanel = useCallback(() => {
     dispatch(setShowActionsPanel(!showActionsPanel));
   }, [showActionsPanel]);
+
   // open guide page
   const openGuidePage = useCallback(() => {
     window.open("https://guide.rnbw.dev", "_blank", "noreferrer");
   }, [currentCommand]);
+
   // -------------------------------------------------------------- pos/size for panels --------------------------------------------------------------
   const [actionsPanelOffsetTop, setActionsPanelOffsetTop] = useState(12);
   const [actionsPanelOffsetLeft, setActionsPanelOffsetLeft] = useState(12);
@@ -1381,6 +1423,7 @@ export default function MainPage() {
     // wait until "cmdkReferenceJumpstart" is ready
     Object.keys(cmdkReferenceJumpstart).length !== 0 && onJumpstart();
   }, [cmdkReferenceJumpstart]);
+
   // theme
   const setSystemTheme = useCallback(() => {
     dispatch(setTheme("System"));
@@ -1393,6 +1436,7 @@ export default function MainPage() {
       document.documentElement.setAttribute("data-theme", "light");
     }
   }, []);
+
   const onToggleTheme = useCallback(() => {
     switch (theme) {
       case "System":
@@ -1415,6 +1459,7 @@ export default function MainPage() {
         break;
     }
   }, [theme]);
+
   // web-tab close event handler
   useEffect(() => {
     let changed = false;
@@ -1440,11 +1485,14 @@ export default function MainPage() {
       window.onbeforeunload = null;
     };
   }, [fileTree]);
+
   // cmdk modal handle
   const [hoveredMenuItemDescription, setHoverMenuItemDescription] = useState<
     string | null | undefined
   >();
+
   const [validMenuItemCount, setValidMenuItemCount] = useState<number>();
+
   useEffect(() => {
     let hoveredMenuItemDetecter: NodeJS.Timeout;
     if (cmdkOpen) {
@@ -1470,6 +1518,7 @@ export default function MainPage() {
 
     return () => clearInterval(hoveredMenuItemDetecter);
   }, [cmdkOpen]);
+
   // file changed - reload the monaco-editor to clear history
   const [needToReloadCodeView, setNeedToReloadCodeView] = useState(false);
   useEffect(() => {
@@ -1744,7 +1793,7 @@ export default function MainPage() {
                           : currentCmdkPage === "Add"
                           ? cmdkReferenceAdd[groupName]
                           : []
-                        ).map((command: TCmdkReference, index) => {
+                        )?.map((command: TCmdkReference, index) => {
                           const context: TCmdkContext =
                             command.Context as TCmdkContext;
                           const show: boolean =
@@ -1871,35 +1920,42 @@ export default function MainPage() {
                                   )}
                                 </div>
                                 <div className="gap-s">
-                                  {(command["Keyboard Shortcut"] as TCmdkKeyMap)
-                                    .cmd && <span className="text-m">⌘</span>}
-                                  {(command["Keyboard Shortcut"] as TCmdkKeyMap)
-                                    .shift && <span className="text-m">⇧</span>}
-                                  {(command["Keyboard Shortcut"] as TCmdkKeyMap)
-                                    .alt && <span className="text-m">Alt</span>}
-                                  {command["Keyboard Shortcut"] !== undefined &&
+                                  {command["Keyboard Shortcut"] &&
                                     (
                                       command[
                                         "Keyboard Shortcut"
-                                      ] as TCmdkKeyMap
-                                    ).key !== "" && (
-                                      <span className="text-m">
-                                        {(
-                                          command[
-                                            "Keyboard Shortcut"
-                                          ] as TCmdkKeyMap
-                                        ).key[0].toUpperCase() +
-                                          (
-                                            command[
-                                              "Keyboard Shortcut"
-                                            ] as TCmdkKeyMap
-                                          ).key.slice(1)}
-                                      </span>
-                                    )}
-                                  {(command["Keyboard Shortcut"] as TCmdkKeyMap)
-                                    .click && (
-                                    <span className="text-m">Click</span>
-                                  )}
+                                      ] as TCmdkKeyMap[]
+                                    )?.map((keyMap, index) => (
+                                      <div className="gap-s" key={index}>
+                                        {keyMap.cmd && (
+                                          <span className="text-m">⌘</span>
+                                        )}
+                                        {keyMap.shift && (
+                                          <span className="text-m">⇧</span>
+                                        )}
+                                        {keyMap.alt && (
+                                          <span className="text-m">Alt</span>
+                                        )}
+                                        {keyMap.key !== "" && (
+                                          <span className="text-m">
+                                            {keyMap.key[0].toUpperCase() +
+                                              keyMap.key.slice(1) +
+                                              (index !==
+                                              (
+                                                command[
+                                                  "Keyboard Shortcut"
+                                                ] as TCmdkKeyMap[]
+                                              ).length -
+                                                1
+                                                ? ","
+                                                : "")}
+                                          </span>
+                                        )}
+                                        {keyMap.click && (
+                                          <span className="text-m">Click</span>
+                                        )}
+                                      </div>
+                                    ))}
                                 </div>
                               </div>
                             </Command.Item>
