@@ -78,7 +78,7 @@ export const useTextEditing = ({
     eleCopy?.removeAttribute("contenteditable");
     eleCopy?.removeAttribute("rnbwdev-rnbw-element-hover");
     eleCopy?.removeAttribute("rnbwdev-rnbw-element-select");
-    eleCopy?.removeAttribute("data-rnbwdev-rnbw-node");
+    eleCopy?.removeAttribute(StageNodeIdAttr);
 
     let outerText = eleCopy?.outerText;
     while (outerText?.includes("\n") || outerText?.includes("\r")) {
@@ -110,6 +110,7 @@ export const useTextEditing = ({
       startLineNumber,
     };
     const id = model.getValueInRange(range);
+    debugger;
     const newModelValue = model.getValue().replace(id, cleanedUpCode);
     model.setValue(newModelValue);
     monacoEditorRef.current?.setModel(model);

@@ -110,7 +110,7 @@ export const parseHtml = (content: string): THtmlParserResponse => {
             startCol,
             startOffset,
             endLine,
-            endCol: endCol - 1,
+            endCol: endCol,
             endOffset,
           },
         },
