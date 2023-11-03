@@ -115,7 +115,6 @@ export const useAppState = () => {
 
     nodeEventPast,
     nodeEventPastLength,
-
     nodeEventFuture,
     nodeEventFutureLength,
 
