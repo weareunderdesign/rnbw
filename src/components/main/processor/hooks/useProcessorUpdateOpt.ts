@@ -127,6 +127,7 @@ export const useProcessorUpdateOpt = () => {
         _needToReloadIFrame = result._needToReloadIFrame; */
       }
       LogAllow && _needToReloadIFrame && console.log("need to refresh iframe");
+
       if (!onlyRenderViewState) {
         // update idb
         (async () => {
@@ -134,7 +135,7 @@ export const useProcessorUpdateOpt = () => {
           try {
             const previewPath = getPreViewPath(fileTree, _file, fileData);
             await writeFile(previewPath, fileData.contentInApp as string);
-            if (fileData.ext === "html") {
+            if (fileData.ext === ".html") {
               dispatch(setIframeSrc(`rnbw${previewPath}`));
             }
           } catch (err) {}
