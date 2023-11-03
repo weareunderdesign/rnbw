@@ -1,13 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo } from "react";
 
-import {
-  ControlledTreeEnvironment,
-  Tree,
-} from 'react-complex-tree';
+import { ControlledTreeEnvironment, Tree } from "react-complex-tree";
 
-import { RootNodeUid } from '@_constants/main';
+import { RootNodeUid } from "@_constants/main";
 
-import { TreeViewProps } from './types';
+import { TreeViewProps } from "./types";
 
 export default function TreeView(props: TreeViewProps) {
   const width = useMemo(() => props.width, [props.width]);
@@ -44,7 +41,7 @@ export default function TreeView(props: TreeViewProps) {
           {...props.callbacks}
           {...props.props}
           items={data}
-          getItemTitle={(item) => item.data.name}
+          getItemTitle={(item) => item.data.displayName}
           viewState={viewState}
           keyboardBindings={{
             primaryAction: ["Space"],
