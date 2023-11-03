@@ -177,11 +177,13 @@ export default function MainPage() {
   // ***************************************** Reducer End *****************************************
 
   // ***************************************** Context Begin *****************************************
-  const [pending, setPending] = useState(false);
+  const [doingAction, setDoingAction] = useState(false);
   const runningActions = useRef<{ [actionName: string]: true }>({});
-  const hasRunningAction = () =>
-    Object.keys(runningActions.current).length === 0 ? false : true;
-  const addRunningActions = (actionNames: string[]) => {
+  const hasRunningAction = useCallback(
+    () => (Object.keys(runningActions.current).length === 0 ? false : true),
+    [],
+  );
+  const addRunningActions = useCallback((actionNames: string[]) => {
     let found = false;
     for (const actionName of actionNames) {
       if (!runningActions.current[actionName]) {
@@ -191,23 +193,26 @@ export default function MainPage() {
     }
     if (!found) return;
 
-    setPending(true);
-  };
-  const removeRunningActions = (actionNames: string[]) => {
-    let found: boolean = false;
-    for (const actionName of actionNames) {
-      if (runningActions.current[actionName]) {
-        delete runningActions.current[actionName];
-        found = true;
+    setDoingAction(true);
+  }, []);
+  const removeRunningActions = useCallback(
+    (actionNames: string[]) => {
+      let found = false;
+      for (const actionName of actionNames) {
+        if (runningActions.current[actionName]) {
+          delete runningActions.current[actionName];
+          found = true;
+        }
       }
-    }
-    if (!found) return;
+      if (!found) return;
 
-    if (!hasRunningAction()) {
-      setPending(false);
-    }
-  };
+      !hasRunningAction() && setDoingAction(false);
+    },
+    [hasRunningAction],
+  );
 
+  const [currentProjectFileHandler, setCurrentProjectFileHandler] =
+    useState<FileSystemDirectoryHandle | null>(null);
   const [fileHandlers, setFileHandlers] = useState<TFileHandlerCollection>({});
 
   const monacoEditorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
@@ -606,6 +611,7 @@ export default function MainPage() {
             projectHandle as FileSystemDirectoryHandle,
             osType,
           );
+
           clearSession(); /* file treeview error fix when the switching project by navigator */
 
           setTimeout(async () => {
@@ -636,13 +642,15 @@ export default function MainPage() {
               }
             });
 
+            console.log(handlerObj, firstHtmlUid, indexHtmlUid);
+
             // set default background
-            dispatch(setIframeSrc(null));
+            dispatch(setCurrentFileUid(""));
             dispatch(setNodeTree({}));
             dispatch(setValidNodeTree({}));
-            dispatch(setCurrentFileUid(""));
+            dispatch(setIframeSrc(null));
 
-            let initialFile =
+            const initialFile =
               indexHtmlUid !== ""
                 ? indexHtmlUid
                 : firstHtmlUid !== ""
@@ -655,6 +663,7 @@ export default function MainPage() {
               dispatch(setNavigatorDropdownType(null));
             }
 
+            console.log({ initialFile });
             dispatch(setInitialFileUidToOpen(initialFile));
 
             // set ff-tree, ff-handlers
@@ -699,14 +708,20 @@ export default function MainPage() {
             dispatch(setFileTree(treeViewData));
             setFileHandlers(ffHandlerObj);
 
+            console.log(treeViewData, ffHandlerObj);
+
             dispatch(
               setProject({
                 context: "local",
                 name: (projectHandle as FileSystemDirectoryHandle).name,
-                handler: projectHandle as FileSystemDirectoryHandle,
+                handler: null,
                 favicon: null,
               }),
             );
+            setCurrentProjectFileHandler(
+              projectHandle as FileSystemDirectoryHandle,
+            );
+
             dispatch(setNavigatorDropdownType(null));
             if (internal) {
               // store last edit session
@@ -838,6 +853,7 @@ export default function MainPage() {
               favicon: null,
             }),
           );
+          setCurrentProjectFileHandler(null);
 
           // store last edit session
           // const _recentProjectContexts = [...recentProjectContexts]
@@ -1016,7 +1032,7 @@ export default function MainPage() {
   // hms
   const onUndo = useCallback(() => {
     if (
-      pending ||
+      doingAction ||
       iframeLoading ||
       doingFileAction ||
       codeEditing ||
@@ -1034,7 +1050,7 @@ export default function MainPage() {
     dispatch({ type: "main/undo" });
     dispatch(setUpdateOptions({ parse: true, from: "hms" }));
   }, [
-    pending,
+    doingAction,
     iframeLoading,
     doingFileAction,
     codeEditing,
@@ -1044,7 +1060,7 @@ export default function MainPage() {
   ]);
   const onRedo = useCallback(() => {
     if (
-      pending ||
+      doingAction ||
       iframeLoading ||
       doingFileAction ||
       codeEditing ||
@@ -1061,7 +1077,7 @@ export default function MainPage() {
     dispatch({ type: "main/redo" });
     dispatch(setUpdateOptions({ parse: true, from: "hms" }));
   }, [
-    pending,
+    doingAction,
     iframeLoading,
     doingFileAction,
     codeEditing,
@@ -1516,6 +1532,9 @@ export default function MainPage() {
           filesReferenceData,
           htmlReferenceData,
           cmdkReferenceData,
+
+          currentProjectFileHandler,
+          setCurrentProjectFileHandler,
 
           fileHandlers,
           setFileHandlers,
