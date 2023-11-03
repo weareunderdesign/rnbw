@@ -391,13 +391,15 @@ export default function MainPage() {
                     Name: _session["recent-project-name"][index],
                     Icon: "folder",
                     Description: "",
-                    "Keyboard Shortcut": {
-                      cmd: false,
-                      shift: false,
-                      alt: false,
-                      key: "",
-                      click: false,
-                    },
+                    "Keyboard Shortcut": [
+                      {
+                        cmd: false,
+                        shift: false,
+                        alt: false,
+                        key: "",
+                        click: false,
+                      },
+                    ],
                     Group: "Recent",
                     Context: index.toString(),
                   } as TCmdkReference;
