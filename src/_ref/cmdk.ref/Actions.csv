@@ -7,7 +7,7 @@ Download,download,,cmd+d,Project,all
 Cut,copy,,cmd+x,Basic,"file, html"
 Copy,copy,,cmd+c,Basic,"file, html"
 Paste,paste,,cmd+v,Basic,"file, html"
-Delete,cross,,backspace,Basic,"file, html"
+Delete,cross,,backspace delete,Basic,"file, html"
 Duplicate,copy,,cmd+j,Basic,"file, html"
 Group,border,,cmd+g,Basic,html
 Ungroup,position,,cmd+shift+g,Basic,html
