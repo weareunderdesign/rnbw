@@ -72,12 +72,9 @@ const NodeTreeView = (props: NodeTreeViewProps) => {
 
   const {
     addRunningActions,
-    removeRunningActions,
 
     htmlReferenceData,
     // toasts
-    parseFileFlag,
-    setParseFile,
   } = useContext(MainContext);
   // -------------------------------------------------------------- sync --------------------------------------------------------------
   // outline the hovered item
@@ -155,6 +152,7 @@ const NodeTreeView = (props: NodeTreeViewProps) => {
         canRename: uid !== RootNodeUid,
       };
     }
+
     return data;
   }, [validNodeTree]);
 
@@ -382,13 +380,7 @@ const NodeTreeView = (props: NodeTreeViewProps) => {
             }, []);
 
             const onDragStart = (e: React.DragEvent) => {
-              const img = new Image();
               e.dataTransfer.effectAllowed = "move";
-              e.dataTransfer.setDragImage(
-                img,
-                window.outerWidth,
-                window.outerHeight,
-              );
               props.context.startDragging();
 
               isDragging.current = true;

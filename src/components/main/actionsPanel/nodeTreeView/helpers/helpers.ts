@@ -117,7 +117,7 @@ export const getDropOptions = (
   const childrenNodes = targetNode.children;
 
   const isFirstNesting = !isBetween && !childrenNodes.length;
-  const targetNodeTagName = targetNode.data.name;
+  const targetNodeTagName = targetNode.data.nodeName;
 
   if (isFirstNesting && isNestingProhibited(targetNodeTagName)) {
     console.log("The target node cannot have children");
