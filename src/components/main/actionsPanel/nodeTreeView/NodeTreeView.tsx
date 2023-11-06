@@ -50,12 +50,10 @@ import { THtmlElementsReference } from "@_types/main";
 
 const AutoExpandDelay = 1 * 1000;
 
-const NodeTreeView = (props: NodeTreeViewProps) => {
+const NodeTreeView = () => {
   const dispatch = useDispatch();
 
   const osType = useSelector(osTypeSelector);
-  const theme = useSelector(themeSelector);
-
   const navigatorDropdownType = useSelector(navigatorDropdownTypeSelector);
 
   const fileTree = useSelector(fileTreeSelector);
@@ -338,7 +336,7 @@ const NodeTreeView = (props: NodeTreeViewProps) => {
                     : props.context.addToSelectedItems()
                   : props.context.selectItem();
 
-                setActivePanel("node");
+                dispatch(setActivePanel("node"));
 
                 navigatorDropdownType !== null &&
                   dispatch(setNavigatorDropdownType(null));

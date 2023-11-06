@@ -28,7 +28,7 @@ export default function useEditorWrapper() {
   const monacoEditor = monacoEditorRef.current;
   // panel focus handler
   function onPanelClick() {
-    setActivePanel("code");
+    dispatch(setActivePanel("code"));
   }
 
   useEffect(() => {

@@ -1,20 +1,16 @@
-import React, {
-  useCallback,
-  useMemo,
-} from 'react';
+import React, { useCallback, useMemo } from "react";
 
-import { useDispatch } from 'react-redux';
+import { useDispatch } from "react-redux";
 
-import { setActivePanel } from '@_redux/main/processor';
+import { setActivePanel } from "@_redux/main/processor";
 
-import { SettingsPanelProps } from './types';
+import { SettingsPanelProps } from "./types";
 
 export default function SettingsPanel(props: SettingsPanelProps) {
   const dispatch = useDispatch();
 
   const onPanelClick = useCallback((e: React.MouseEvent) => {
     dispatch(setActivePanel("settings"));
-    setActivePanel("settings");
   }, []);
 
   return useMemo(() => {

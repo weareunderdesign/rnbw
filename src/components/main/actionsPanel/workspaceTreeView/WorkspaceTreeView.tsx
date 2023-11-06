@@ -478,7 +478,7 @@ export default function WorkspaceTreeView() {
                           : props.context.primaryAction(),
                       ];
 
-                  setActivePanel("file");
+                  dispatch(setActivePanel("file"));
                 },
                 [props.item, props.context],
               );
