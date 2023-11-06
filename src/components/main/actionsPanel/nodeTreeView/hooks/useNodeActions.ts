@@ -48,77 +48,63 @@ export function useNodeActions() {
 
   const { handleEditorChange } = useEditor();
 
-  const cb_addNode = useCallback(
-    (nodeType: string) => {
-      const monacoEditor = monacoEditorRef.current;
-      if (!monacoEditor) return;
-      if (!nodeTree[focusedItem]) return;
+  const cb_addNode = (nodeType: string) => {
+    const focusedNode = validNodeTree[focusedItem];
 
-      //TODO: add node
-      // let { newNode, _tree, tmpMaxUid, contentNode, newNodeFlag } =
-      //   creatingNode(
-      //     nodeMaxUid,
-      //     nodeTree,
-      //     focusedItem,
-      //     nodeType,
-      //     htmlReferenceData,
-      //   );
-      // let tempTree;
+    if (!focusedNode?.uid) {
+      console.error("Focused node is undefined");
+      return;
+    }
 
-      // // call api
-      // const tree = getTree(nodeTree);
+    const selectedNode = validNodeTree[focusedNode.uid];
+    if (!selectedNode || !selectedNode.data.sourceCodeLocation) {
+      console.error("Parent node or source code location is undefined");
+      return;
+    }
 
-      // if (_tree) {
-      //   addNodeToTree(_tree, tree, nodeTree, focusedItem, newNode, tmpMaxUid);
-      // } else {
-      //   const res = addNode(
-      //     tree,
-      //     focusedItem,
-      //     newNode,
-      //     contentNode,
-      //     "html",
-      //     String(contentNode ? nodeMaxUid + 2 : nodeMaxUid + 1) as TNodeUid,
-      //     osType,
-      //     codeViewTabSize,
-      //   );
-      //   tempTree = res.tree;
-      //   tmpMaxUid = res.nodeMaxUid as TNodeUid;
-      // }
-      // // processor
-      // addRunningActions(["processor-updateOpt"]);
-      // dispatch(setUpdateOptions({ parse: false, from: "node" }));
-      // setNodeTree(tree);
+    const { endLine, endCol } = selectedNode.data.sourceCodeLocation;
+    const model = monacoEditorRef.current?.getModel();
 
-      // // view state
-      // addRunningActions(["stageView-viewState"]);
-      // dispatch(setUpdateOptions({ parse: true, from: "code" }));
+    if (!model) {
+      console.error("Monaco Editor model is undefined");
+      return;
+    }
+    const HTMLElement = htmlReferenceData.elements[nodeType];
 
-      // // side effect
-      // setNodeMaxUid(Number(tmpMaxUid) + 1);
-      // dispatch(
-      //   setNodeEvent({
-      //     type: "add-node",
-      //     param: [
-      //       focusedItem,
-      //       newNodeFlag ? tree[Number(tmpMaxUid) + 1] : newNode,
-      //       tree[newNode.uid],
-      //     ],
-      //   }),
-      // );
+    let openingTag = HTMLElement.Tag;
 
-      // removeRunningActions(["nodeTreeView-add"]);
-      // console.log("hms added");
-    },
-    [
-      addRunningActions,
-      removeRunningActions,
-      nodeTree,
-      focusedItem,
-      osType,
-      codeViewTabSize,
-      htmlReferenceData,
-    ],
-  );
+    if (HTMLElement.Attributes) {
+      const tagArray = openingTag.split("");
+      tagArray.splice(tagArray.length - 1, 0, ` ${HTMLElement.Attributes}`);
+      openingTag = tagArray.join("");
+    }
+    const closingTag = `</${nodeType}>`;
+
+    const tagContent = !!HTMLElement.Content ? HTMLElement.Content : "";
+
+    const codeViewText =
+      HTMLElement.Contain === "None"
+        ? openingTag
+        : `${openingTag}${tagContent}${closingTag}`;
+
+    const position = { lineNumber: endLine, column: endCol + 1 };
+    const range = new Range(
+      position.lineNumber,
+      position.column,
+      position.lineNumber,
+      position.column,
+    );
+    const editOperation = { range, text: "\n" + codeViewText };
+
+    model.pushEditOperations([], [editOperation], () => null);
+    monacoEditorRef.current?.setPosition({
+      lineNumber: position.lineNumber + 1,
+      column: 1,
+    });
+
+    const content = model.getValue();
+    handleEditorChange(content);
+  };
 
   const cb_removeNode = useCallback(
     (uids: TNodeUid[]) => {

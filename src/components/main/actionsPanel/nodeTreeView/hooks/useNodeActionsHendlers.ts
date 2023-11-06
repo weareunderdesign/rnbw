@@ -102,7 +102,7 @@ export const useNodeActionsHandlers = () => {
       .catch((error) => {
         console.error("Error reading from clipboard:", error);
       });
-  }, [validNodeTree, focusedItem, focusedItem]);
+  }, [validNodeTree, focusedItem]);
 
   const onDelete = useCallback(() => {
     if (selectedItems.length === 0) return;
@@ -134,7 +134,7 @@ export const useNodeActionsHandlers = () => {
       );
       cb_addNode(tagName);
     },
-    [cb_addNode],
+    [cb_addNode, validNodeTree, focusedItem],
   );
 
   return {
