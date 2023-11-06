@@ -110,7 +110,6 @@ export const useTextEditing = ({
       startLineNumber,
     };
     const id = model.getValueInRange(range);
-    debugger;
     const newModelValue = model.getValue().replace(id, cleanedUpCode);
     model.setValue(newModelValue);
     monacoEditorRef.current?.setModel(model);

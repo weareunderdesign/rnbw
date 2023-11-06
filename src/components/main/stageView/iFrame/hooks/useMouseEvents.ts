@@ -26,7 +26,10 @@ import {
   selectNodeTreeNodes,
   setHoveredNodeUid,
 } from "@_redux/main/nodeTree";
-import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
+import {
+  setCurrentFileContent,
+  setSelectedItems,
+} from "@_redux/main/nodeTree/event";
 
 export interface IUseMouseEventsProps {
   externalDblclick: React.MutableRefObject<boolean>;
@@ -85,8 +88,6 @@ export const useMouseEvents = ({
     fileTree: { fileTree },
     processor: { navigatorDropdownType },
   } = useSelector((state: AppState) => state.main);
-
-  const { osType } = useSelector((state: AppState) => state.global);
 
   const {
     // toasts
@@ -159,6 +160,7 @@ export const useMouseEvents = ({
     uid: TNodeUid | null,
   ) {
     let multiple = false;
+
     if (uid) {
       if (e.shiftKey) {
         let found = false;
@@ -229,14 +231,6 @@ export const useMouseEvents = ({
         const fileData = file.data as TFileNodeData;
         dispatch(setNavigatorDropdownType("project"));
         setParseFile(true);
-        // dispatch(
-        //   setCurrentFile({
-        //     uid,
-        //     parentUid: file.parentUid as TNodeUid,
-        //     name: fileData.name,
-        //     content: fileData.contentInApp ? fileData.contentInApp : "",
-        //   }),
-        // );
         dispatch(setCurrentFileUid(uid));
         dispatch(selectFileTreeNodes([prevFileUid]));
         dispatch(
@@ -256,11 +250,12 @@ export const useMouseEvents = ({
           _uid = parentEle.getAttribute(StageNodeIdAttr);
           !_uid ? (newFocusedElement = parentEle) : null;
         }
+
         setTimeout(() => {
           if (_uid) {
-            dispatch(focusNodeTreeNode(_uid));
-            dispatch(selectNodeTreeNodes([_uid]));
-            dispatch(expandNodeTreeNodes([_uid]));
+            // dispatch(focusNodeTreeNode(_uid));
+            // dispatch(selectNodeTreeNodes([_uid]));
+            // dispatch(expandNodeTreeNodes([_uid]));
           }
         }, 100);
       } else {
@@ -277,7 +272,6 @@ export const useMouseEvents = ({
 
           _uid = newFocusedElement.getAttribute(StageNodeIdAttr);
         }
-
         const areMultiple = handleSelectofSingleOrMultipleElements(e, _uid);
 
         const isEditable = isEditableElement(ele);
@@ -297,11 +291,11 @@ export const useMouseEvents = ({
       }
 
       dispatch(setActivePanel("stage"));
+
       navigatorDropdownType !== null &&
         dispatch(setNavigatorDropdownType(null));
     },
     [
-      osType,
       focusedItem,
       setFocusedSelectedItems,
       nodeTree,
