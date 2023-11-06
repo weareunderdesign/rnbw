@@ -1765,7 +1765,7 @@ export default function MainPage() {
                               activePanel === "stage") &&
                               ((fileTree[currentFileUid] &&
                                 (fileTree[currentFileUid].data as TFileNodeData)
-                                  .ext === "html" &&
+                                  .ext === ".html" &&
                                 context["html"] === true) ||
                                 false)))) ||
                         currentCmdkPage === "Add";
@@ -1812,7 +1812,7 @@ export default function MainPage() {
                                     (
                                       fileTree[currentFileUid]
                                         .data as TFileNodeData
-                                    ).ext === "html" &&
+                                    ).ext === ".html" &&
                                     context["html"] === true) ||
                                     false)))) ||
                             currentCmdkPage === "Add";
