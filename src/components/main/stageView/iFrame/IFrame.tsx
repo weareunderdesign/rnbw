@@ -154,7 +154,7 @@ export const IFrame = () => {
     }
 
     setTimeout(() => {
-      // remove org selcted effect
+      // remove original selected effect
       selectedItemsRef.current.map((uid) => {
         // for the elements which are created by js. (ex: Web Component)
         let curselectedElement =

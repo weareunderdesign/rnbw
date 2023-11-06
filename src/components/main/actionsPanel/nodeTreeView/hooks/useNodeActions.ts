@@ -127,7 +127,7 @@ export function useNodeActions() {
       if (!model) return;
       let parentUids = [] as TNodeUid[];
       uids.forEach((uid) => {
-        let node = validNodeTree[uid];
+        let node = nodeTree[uid];
 
         if (node) {
           let parentUid = node.parentUid;
