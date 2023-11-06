@@ -8,13 +8,15 @@ export const addDefaultCmdkActions = (
     Name: "Clear",
     Icon: "",
     Description: "",
-    "Keyboard Shortcut": {
-      cmd: true,
-      shift: true,
-      alt: false,
-      key: "KeyR",
-      click: false,
-    },
+    "Keyboard Shortcut": [
+      {
+        cmd: true,
+        shift: true,
+        alt: false,
+        key: "KeyR",
+        click: false,
+      },
+    ],
     Group: "default",
     Context: "all",
   };
@@ -23,13 +25,15 @@ export const addDefaultCmdkActions = (
     Name: "Jumpstart",
     Icon: "",
     Description: "",
-    "Keyboard Shortcut": {
-      cmd: false,
-      shift: false,
-      alt: false,
-      key: "KeyJ",
-      click: false,
-    },
+    "Keyboard Shortcut": [
+      {
+        cmd: false,
+        shift: false,
+        alt: false,
+        key: "KeyJ",
+        click: false,
+      },
+    ],
     Group: "default",
     Context: "all",
   };
@@ -38,13 +42,15 @@ export const addDefaultCmdkActions = (
     Name: "Actions",
     Icon: "",
     Description: "",
-    "Keyboard Shortcut": {
-      cmd: false,
-      shift: false,
-      alt: false,
-      key: "KeyW",
-      click: false,
-    },
+    "Keyboard Shortcut": [
+      {
+        cmd: false,
+        shift: false,
+        alt: false,
+        key: "KeyW",
+        click: false,
+      },
+    ],
     Group: "default",
     Context: "all",
   };
@@ -53,13 +59,15 @@ export const addDefaultCmdkActions = (
     Name: "Save",
     Icon: "",
     Description: "",
-    "Keyboard Shortcut": {
-      cmd: true,
-      shift: false,
-      alt: false,
-      key: "KeyS",
-      click: false,
-    },
+    "Keyboard Shortcut": [
+      {
+        cmd: true,
+        shift: false,
+        alt: false,
+        key: "KeyS",
+        click: false,
+      },
+    ],
     Group: "default",
     Context: "all",
   };

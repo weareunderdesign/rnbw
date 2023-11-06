@@ -276,6 +276,7 @@ export default function MainPage() {
       e.preventDefault();
     });
   }, []);
+
   useEffect(() => {
     (async () => {
       addRunningActions([
@@ -313,11 +314,13 @@ export default function MainPage() {
             : htmlRefElement["Tag"]?.slice(1, htmlRefElement["Tag"].length - 1);
         htmlElementsReferenceData[pureTag] = htmlRefElement;
       });
+
       LogAllow &&
         console.log(
           "html elements reference data: ",
           htmlElementsReferenceData,
         );
+
       setHtmlReferenceData({ elements: htmlElementsReferenceData });
 
       // add default cmdk actions
@@ -1313,8 +1316,8 @@ export default function MainPage() {
   }, [cmdkOpen]);
 
   const onAdd = useCallback(() => {
-    setCmdkPages([...cmdkPages, "Add"]);
-    setCmdkOpen(true);
+    dispatch(setCmdkPages([...cmdkPages, "Add"]));
+    dispatch(setCmdkOpen(true));
   }, [cmdkPages]);
 
   const onDownload = useCallback(async () => {
