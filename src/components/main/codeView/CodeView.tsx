@@ -17,7 +17,7 @@ import { MainContext } from "@_redux/main";
 import { Editor, loader } from "@monaco-editor/react";
 
 import { useEditor, useEditorWrapper } from "./hooks";
-import { CodeSelection, CodeViewProps } from "./types";
+import { CodeViewProps } from "./types";
 import { codeEditingSelector } from "@_redux/main/codeView";
 import {
   expandNodeTreeNodes,
@@ -33,7 +33,7 @@ import {
   currentFileUidSelector,
   fileTreeSelector,
 } from "@_redux/main/fileTree";
-import { current } from "@reduxjs/toolkit";
+
 import { AppState } from "@_redux/_root";
 
 loader.config({ monaco });

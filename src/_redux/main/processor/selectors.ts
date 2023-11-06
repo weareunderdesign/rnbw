@@ -40,7 +40,8 @@ export const showActionsPanelSelector = createSelector(
 );
 
 const getShowCodeView = (state: AppState): boolean =>
-  state.main.processor.showActionsPanel;
+  state.main.processor.showCodeView;
+
 export const showCodeViewSelector = createSelector(
   getShowCodeView,
   (showCodeView) => showCodeView,
