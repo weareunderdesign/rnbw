@@ -122,9 +122,9 @@ export function useNodeActions() {
 
   const cb_removeNode = useCallback(
     (uids: TNodeUid[]) => {
-      setIsContentProgrammaticallyChanged(true);
       const model = monacoEditorRef.current?.getModel();
       if (!model) return;
+      setIsContentProgrammaticallyChanged(true);
       let parentUids = [] as TNodeUid[];
       uids.forEach((uid) => {
         let node = nodeTree[uid];
@@ -164,14 +164,13 @@ export function useNodeActions() {
   );
 
   const cb_duplicateNode = (uids: TNodeUid[]) => {
-    setIsContentProgrammaticallyChanged(true);
-
     const iframe: any = document.getElementById("iframeId");
     const model = monacoEditorRef.current?.getModel();
     if (!model) {
       console.error("Monaco Editor model is undefined");
       return;
     }
+    setIsContentProgrammaticallyChanged(true);
     let content = model.getValue();
 
     const sortedUids = sortUidsByMaxEndIndex(uids, validNodeTree);
@@ -342,14 +341,13 @@ export function useNodeActions() {
   };
 
   const cb_ungroupNode = (uids: TNodeUid[]) => {
-    setIsContentProgrammaticallyChanged(true);
-
     const iframe: any = document.getElementById("iframeId");
     const model = monacoEditorRef.current?.getModel();
     if (!model) {
       console.error("Monaco Editor model is undefined");
       return;
     }
+    setIsContentProgrammaticallyChanged(true);
     let content = model.getValue();
 
     const sortedUids = sortUidsByMaxEndIndex(uids, validNodeTree);

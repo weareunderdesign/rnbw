@@ -47,8 +47,6 @@ export const useNodeTreeCallback = (
   const { handleEditorChange } = useEditor();
 
   const onDrop = (items: TreeItem[], target: DraggingPosition) => {
-    setIsContentProgrammaticallyChanged(true);
-
     const uids: TNodeUid[] = items.map((item) => item.index as TNodeUid);
 
     const model = monacoEditorRef.current?.getModel();
@@ -56,7 +54,7 @@ export const useNodeTreeCallback = (
       console.error("Monaco Editor model is undefined");
       return;
     }
-
+    setIsContentProgrammaticallyChanged(true);
     const dropOptions = getDropOptions(target, validNodeTree, model);
     if (dropOptions === undefined) {
       return;
