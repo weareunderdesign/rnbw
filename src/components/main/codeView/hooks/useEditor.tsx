@@ -30,8 +30,6 @@ import {
   setNodeTree,
 } from "@_redux/main/nodeTree";
 import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
-import { setUpdateOptions } from "@_redux/main/processor";
-
 import { CodeSelection } from "../types";
 
 function getLanguageFromExtension(extension: string) {
@@ -51,7 +49,6 @@ function getLanguageFromExtension(extension: string) {
 
 export default function useEditor() {
   const [language, setLanguage] = useState("html");
-  const codeViewTabeSize = useSelector(codeViewTabSizeSelector);
   const fileTree = useSelector(fileTreeSelector);
   const currentFileUid = useSelector(currentFileUidSelector);
   const {
@@ -65,15 +62,23 @@ export default function useEditor() {
   const dispatch = useDispatch();
 
   const [focusedNode, setFocusedNode] = useState<TNode>();
-  const wordWrap: editor.IEditorOptions["wordWrap"] = "off";
+  const wordWrap: editor.IEditorOptions["wordWrap"] = "on";
 
-  const editorConfigs = {
+  const editorConfigs: editor.IEditorConstructionOptions = {
     contextmenu: true,
-    tabSize: codeViewTabeSize,
     wordWrap,
     minimap: { enabled: false },
     automaticLayout: true,
     selectionHighlight: false,
+    autoClosingBrackets: "always",
+    autoIndent: "full",
+    autoClosingQuotes: "always",
+    autoClosingOvertype: "always",
+    autoSurround: "languageDefined",
+    codeLens: false,
+    formatOnPaste: true,
+    formatOnType: true,
+    tabCompletion: "on",
   };
   const codeContentRef = useRef<string>("");
 
@@ -277,12 +282,12 @@ export default function useEditor() {
         const _file = structuredClone(fileTree[currentFileUid]) as TNode;
         addRunningActions(["processor-updateOpt"]);
         const fileData = _file.data as TFileNodeData;
-        (fileTree[currentFileUid].data as TFileNodeData).content =
-          codeContentRef.current;
-        (fileTree[currentFileUid].data as TFileNodeData).contentInApp =
-          codeContentRef.current;
-        (fileTree[currentFileUid].data as TFileNodeData).changed =
-          codeContentRef.current !== fileData.orgContent;
+        dispatch(setCurrentFileContent(codeContentRef.current));
+
+        // (fileTree[currentFileUid].data as TFileNodeData).contentInApp =
+        //   codeContentRef.current;
+        // (fileTree[currentFileUid].data as TFileNodeData).changed =
+        //   codeContentRef.current !== fileData.orgContent;
 
         console.log("useEditor CALL");
         dispatch(setFileTree(fileTree));
@@ -294,21 +299,10 @@ export default function useEditor() {
 
         //finding and selecting focused node
         const focusedNode = nodeTree[nodeUidToFocus];
-        dispatch(focusNodeTreeNode(focusedNode.uid));
-        dispatch(selectNodeTreeNodes([focusedNode.uid]));
-        //current code range in monaco editor
-        const {
-          endCol: endColumn,
-          endLine: endLineNumber,
-          startCol: startColumn,
-          startLine: startLineNumber,
-        } = focusedNode.data.sourceCodeLocation;
-        monacoEditor.setSelection({
-          startLineNumber,
-          startColumn,
-          endLineNumber,
-          endColumn,
-        });
+        if (!!focusedNode) {
+          dispatch(focusNodeTreeNode(focusedNode.uid));
+          dispatch(selectNodeTreeNodes([focusedNode.uid]));
+        }
       } catch (e) {
         console.log(e);
       }

@@ -46,6 +46,9 @@ export default function CodeView(props: CodeViewProps) {
     (state: AppState) => state.main.nodeTree.nodeTreeViewState,
   );
   const {
+    processor: { activePanel },
+  } = useSelector((state: AppState) => state.main);
+  const {
     // code view
     newFocusedNodeUid,
     setNewFocusedNodeUid,
@@ -139,12 +142,15 @@ export default function CodeView(props: CodeViewProps) {
       endLine: endLineNumber,
     } = sourceCodeLocation;
 
-    monacoEditor.setSelection({
-      startLineNumber,
-      startColumn,
-      endLineNumber,
-      endColumn,
-    });
+    if (activePanel !== "code") {
+      monacoEditor.setSelection({
+        startLineNumber,
+        startColumn,
+        endLineNumber,
+        endColumn,
+      });
+    }
+
     monacoEditor?.revealRangeInCenter(
       {
         startLineNumber,
