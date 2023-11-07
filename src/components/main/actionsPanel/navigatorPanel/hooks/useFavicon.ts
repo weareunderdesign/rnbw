@@ -1,27 +1,21 @@
-import {
-  useEffect,
-  useRef,
-} from 'react';
+import { useEffect, useRef } from "react";
 
-import {
-  useDispatch,
-  useSelector,
-} from 'react-redux';
+import { useDispatch, useSelector } from "react-redux";
 
-import { RootNodeUid } from '@_constants/main';
+import { RootNodeUid } from "@_constants/main";
 import {
   currentFileUidSelector,
   projectSelector,
-  selectFileTreeNodes,
   setWorkspace,
   workspaceSelector,
-} from '@_redux/main/fileTree';
-import { validNodeTreeSelector } from '@_redux/main/nodeTree';
-
+} from "@_redux/main/fileTree";
 import {
-  selectFirstNode,
-  setWorkspaceFavicon,
-} from '../helpers/';
+  selectNodeTreeNodes,
+  validNodeTreeSelector,
+  expandNodeTreeNodes,
+} from "@_redux/main/nodeTree";
+
+import { selectFirstNode, setWorkspaceFavicon } from "../helpers/";
 
 export const useFavicon = (
   setFaviconFallback: React.Dispatch<React.SetStateAction<boolean>>,
@@ -52,7 +46,8 @@ export const useFavicon = (
       selectFirstNode(
         validNodeTree,
         isFirst.current,
-        selectFileTreeNodes,
+        selectNodeTreeNodes,
+        expandNodeTreeNodes,
         dispatch,
       );
     }
