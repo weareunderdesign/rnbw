@@ -46,7 +46,11 @@ export const useNodeTreeCallback = (
 
   const { handleEditorChange } = useEditor();
 
-  const onDrop = (items: TreeItem[], target: DraggingPosition) => {
+  const onDrop = (
+    items: TreeItem[],
+    target: DraggingPosition & { parentItem?: TreeItemIndex },
+  ) => {
+    if (target.parentItem === "ROOT") return;
     const uids: TNodeUid[] = items.map((item) => item.index as TNodeUid);
 
     const model = monacoEditorRef.current?.getModel();
