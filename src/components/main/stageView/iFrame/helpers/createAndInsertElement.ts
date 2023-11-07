@@ -1,10 +1,10 @@
 import { RefObject } from "react";
 
-import { NodeInAppAttribName } from "@_constants/main";
-import { THtmlNodeData } from "@_node/html";
+import { StageNodeIdAttr, THtmlNodeData } from "@_node/html";
 import { TNode, TNodeUid } from "@_node/types";
-import { focusFNNode, selectFNNode } from "@_redux/main";
+
 import { AnyAction, Dispatch } from "@reduxjs/toolkit";
+import { focusNodeTreeNode, selectNodeTreeNodes } from "@_redux/main/nodeTree";
 
 export const createAndInsertElement = (
   targetUid: TNodeUid,
@@ -16,7 +16,7 @@ export const createAndInsertElement = (
     actionNames: string[],
     effect?: boolean | undefined,
   ) => void,
-  setNeedToReloadIFrame: (_needToReloadIFrame: boolean) => void,
+  setNeedToReloadIframe: (_needToReloadIFrame: boolean) => void,
 ) => {
   const nodeData = node.data as THtmlNodeData;
   let newElement;
@@ -24,7 +24,7 @@ export const createAndInsertElement = (
   if (nodeData.name === "!--...--" || nodeData.name === "comment") {
     const targetElement =
       contentRef?.current?.contentWindow?.document?.querySelector(
-        `[${NodeInAppAttribName}="${targetUid}"]`,
+        `[${StageNodeIdAttr}="${targetUid}"]`,
       );
     // targetElement?.append('<!--...-->')
   } else {
@@ -49,11 +49,11 @@ export const createAndInsertElement = (
       }
       newElement &&
         contentRef?.current?.contentWindow?.document?.appendChild(newElement);
-      setNeedToReloadIFrame(true);
+      setNeedToReloadIframe(true);
     } else {
       const targetElement =
         contentRef?.current?.contentWindow?.document?.querySelector(
-          `[${NodeInAppAttribName}="${targetUid}"]`,
+          `[${StageNodeIdAttr}="${targetUid}"]`,
         );
       newElement &&
         targetElement?.parentElement?.insertBefore(
@@ -64,8 +64,8 @@ export const createAndInsertElement = (
   }
 
   setTimeout(() => {
-    dispatch(focusFNNode(node.uid));
-    dispatch(selectFNNode([node.uid]));
+    dispatch(focusNodeTreeNode(node.uid));
+    dispatch(selectNodeTreeNodes([node.uid]));
   }, 100);
   removeRunningActions(["stageView-viewState"]);
 };

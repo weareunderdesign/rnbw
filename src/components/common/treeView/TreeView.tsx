@@ -2,17 +2,18 @@ import React, { useMemo } from "react";
 
 import { ControlledTreeEnvironment, Tree } from "react-complex-tree";
 
+import { RootNodeUid } from "@_constants/main";
+
 import { TreeViewProps } from "./types";
 
 export default function TreeView(props: TreeViewProps) {
-  // styles
-  const width: string = useMemo(() => props.width, [props.width]);
-  const height: string = useMemo(() => props.height, [props.height]);
-  // tree id, label
+  const width = useMemo(() => props.width, [props.width]);
+  const height = useMemo(() => props.height, [props.height]);
+
   const info = useMemo(() => props.info, [props.info]);
-  // render items
+
   const data = useMemo(() => props.data, [props.data]);
-  // view state
+
   const focusedItem = useMemo(() => props.focusedItem, [props.focusedItem]);
   const expandedItems = useMemo(
     () => props.expandedItems,
@@ -34,16 +35,14 @@ export default function TreeView(props: TreeViewProps) {
 
   return (
     <>
-      <div style={{ width: width, height: height }}>
+      <div style={{ width, height }}>
         <ControlledTreeEnvironment
-          viewState={viewState}
-          getItemTitle={(item) => {
-            return item.data.name;
-          }}
           {...props.renderers}
-          {...props.props}
           {...props.callbacks}
+          {...props.props}
           items={data}
+          getItemTitle={(item) => item.data.displayName}
+          viewState={viewState}
           keyboardBindings={{
             primaryAction: ["Space"],
             moveFocusToFirstItem: [],
@@ -60,7 +59,11 @@ export default function TreeView(props: TreeViewProps) {
             completeProgrammaticDnd: [],
           }}
         >
-          <Tree treeId={info.id} rootItem="ROOT" treeLabel={info.label} />
+          <Tree
+            treeId={info.id}
+            treeLabel={info.label}
+            rootItem={RootNodeUid}
+          />
         </ControlledTreeEnvironment>
       </div>
     </>

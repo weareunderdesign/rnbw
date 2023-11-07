@@ -1,8 +1,8 @@
-import { NodeInAppAttribName } from "@_constants/main";
-import { THtmlNodeData } from "@_node/html";
-import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
-import { TClipboardData } from "@_types/main";
+import { TNode, TNodeUid } from "@_node/types";
+
 import { buildHtmlFromNode } from "./buildHtmlFromNode";
+import { StageNodeIdAttr } from "@_node/html";
+import { TClipboardData } from "@_redux/main/processor";
 
 export const cloneAndInsertNode = (
   node: TNode,
@@ -11,19 +11,22 @@ export const cloneAndInsertNode = (
   refElement: any,
   clipboardData: TClipboardData,
 ) => {
-
-  const buildHtmlFromClipboard = (clipboardData:TClipboardData) => {
-    if (!clipboardData || !clipboardData.data || clipboardData.data.length === 0) {
-      return ''; 
+  const buildHtmlFromClipboard = (clipboardData: TClipboardData) => {
+    if (
+      !clipboardData ||
+      !clipboardData.data ||
+      clipboardData.data.length === 0
+    ) {
+      return "";
     }
-  
+
     const rootNode = clipboardData.data[0];
-  
+
     return buildHtmlFromNode(rootNode, clipboardData.prevNodeTree);
-  }
-  
+  };
+
   const ele: string = buildHtmlFromClipboard(clipboardData);
-  
+
   const div = document.createElement("div");
 
   if (ele) {
@@ -34,16 +37,16 @@ export const cloneAndInsertNode = (
 
   const newUid = addedUidMap.get(node.uid);
   if (newUid) {
-    _ele.setAttribute(NodeInAppAttribName, newUid);
+    _ele.setAttribute(StageNodeIdAttr, newUid);
   }
 
   const childElementList = _ele.querySelectorAll("*");
   childElementList.forEach((childElement) => {
-    const childUid = childElement.getAttribute(NodeInAppAttribName);
+    const childUid = childElement.getAttribute(StageNodeIdAttr);
     if (childUid) {
       const newChildUid = addedUidMap.get(childUid);
       if (newChildUid) {
-        childElement.setAttribute(NodeInAppAttribName, newChildUid);
+        childElement.setAttribute(StageNodeIdAttr, newChildUid);
       }
     }
   });

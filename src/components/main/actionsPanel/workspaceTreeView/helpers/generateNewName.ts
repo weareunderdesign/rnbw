@@ -1,4 +1,4 @@
-import { TFileNodeType } from "@_types/main";
+import { TFileNodeType } from '@_types/main';
 
 export const generateNewName = async (
   parentHandler: FileSystemDirectoryHandle | undefined,

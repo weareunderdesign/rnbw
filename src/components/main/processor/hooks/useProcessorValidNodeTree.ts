@@ -1,38 +1,44 @@
 import { useContext, useEffect } from "react";
+
 import { useDispatch, useSelector } from "react-redux";
+
+import { MainContext } from "@_redux/main";
 import {
-  clearFNState,
-  expandFNNode,
-  fnSelector,
-  focusFNNode,
-  MainContext,
-  selectFNNode,
-} from "@_redux/main";
+  expandNodeTreeNodes,
+  focusNodeTreeNode,
+  nodeTreeViewStateSelector,
+  selectNodeTreeNodes,
+  validNodeTreeSelector,
+} from "@_redux/main/nodeTree";
+import { updateOptionsSelector } from "@_redux/main/processor";
 
 export const useProcessorValidNodeTree = () => {
   const dispatch = useDispatch();
 
-  const { expandedItems, selectedItems } = useSelector(fnSelector);
+  const validNodeTree = useSelector(validNodeTreeSelector);
+  const updateOptions = useSelector(updateOptionsSelector);
+
+  const { expandedItems, selectedItems } = useSelector(
+    nodeTreeViewStateSelector,
+  );
   const {
     // global action
     removeRunningActions,
-    // node tree view
-    validNodeTree,
     // code view
     newFocusedNodeUid,
-    // processor
-    updateOpt,
   } = useContext(MainContext);
 
   useEffect(() => {
+    if (!updateOptions) return;
+
     if (
-      updateOpt.parse === null &&
-      (updateOpt.from === "file" || updateOpt.from === null)
+      updateOptions.parse === null &&
+      (updateOptions.from === "file" || updateOptions.from === null)
     ) {
       const uids = Object.keys(validNodeTree);
-      dispatch(expandFNNode(uids.slice(0, 50)));
+      dispatch(expandNodeTreeNodes(uids.slice(0, 50)));
       removeRunningActions(["processor-validNodeTree"], false);
-    } else if (updateOpt.parse === null && updateOpt.from === "code") {
+    } else if (updateOptions.parse === null && updateOptions.from === "code") {
       const _focusedItem = newFocusedNodeUid;
       const _expandedItems = expandedItems.filter((uid) => {
         return (
@@ -43,12 +49,12 @@ export const useProcessorValidNodeTree = () => {
       const _selectedItems = selectedItems.filter((uid) => {
         return validNodeTree[uid] !== undefined;
       });
-      dispatch(clearFNState());
-      dispatch(focusFNNode(_focusedItem));
-      dispatch(expandFNNode([..._expandedItems]));
-      dispatch(selectFNNode([..._selectedItems, _focusedItem]));
+      // dispatch(clearFNState()); TODO: clearFNState
+      dispatch(focusNodeTreeNode(_focusedItem));
+      dispatch(expandNodeTreeNodes([..._expandedItems]));
+      dispatch(selectNodeTreeNodes([..._selectedItems, _focusedItem]));
       removeRunningActions(["processor-validNodeTree"], false);
-    } else if (updateOpt.parse === null && updateOpt.from === "node") {
+    } else if (updateOptions.parse === null && updateOptions.from === "node") {
       removeRunningActions(["processor-validNodeTree"], false);
     } else {
       removeRunningActions(["processor-validNodeTree"], false);

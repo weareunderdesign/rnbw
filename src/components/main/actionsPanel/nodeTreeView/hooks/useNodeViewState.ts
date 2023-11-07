@@ -1,39 +1,38 @@
 import { useCallback, useContext } from "react";
+
 import { useDispatch, useSelector } from "react-redux";
+
 import { getValidNodeUids } from "@_node/apis";
-import { TNodeUid } from "@_node/types";
 import { TFileNodeData } from "@_node/file";
-
+import { TNodeUid } from "@_node/types";
+import { MainContext } from "@_redux/main";
 import {
-  collapseFNNode,
-  expandFNNode,
-  fnSelector,
-  focusFNNode,
-  MainContext,
-  selectFFNode,
-  selectFNNode,
-  setCurrentFile,
-} from "@_redux/main";
-
-import { HmsClearActionType } from "@_constants/main";
+  fileTreeSelector,
+  selectFileTreeNodes,
+  setCurrentFileUid,
+} from "@_redux/main/fileTree";
+import {
+  collapseNodeTreeNodes,
+  expandNodeTreeNodes,
+  focusNodeTreeNode,
+  nodeTreeViewStateSelector,
+  selectNodeTreeNodes,
+  validNodeTreeSelector,
+} from "@_redux/main/nodeTree";
+import { NodeTree_Event_ClearActionType } from "@_redux/main/nodeTree/event";
+import { setNavigatorDropdownType } from "@_redux/main/processor";
 
 export function useNodeViewState(focusItemValue: TNodeUid | null) {
   const dispatch = useDispatch();
-  const { focusedItem, selectedItems, selectedItemsObj } =
-    useSelector(fnSelector);
+
+  const fileTree = useSelector(fileTreeSelector);
+  const validNodeTree = useSelector(validNodeTreeSelector);
+  const { addRunningActions, removeRunningActions } = useContext(MainContext);
+
+  const { focusedItem, selectedItems, selectedItemsObj } = useSelector(
+    nodeTreeViewStateSelector,
+  );
   const {
-    // global action
-    addRunningActions,
-    removeRunningActions,
-    // node actions
-    setNavigatorDropDownType,
-    // file tree view
-    ffTree,
-    setCurrentFileUid,
-    // node tree view
-    validNodeTree,
-    // other
-    theme: _theme,
     // toasts
     parseFileFlag,
     setParseFile,
@@ -50,7 +49,7 @@ export function useNodeViewState(focusItemValue: TNodeUid | null) {
         return;
       }
 
-      dispatch(focusFNNode(uid));
+      dispatch(focusNodeTreeNode(uid));
       focusItemValue = uid;
 
       removeRunningActions(["nodeTreeView-focus"]);
@@ -78,25 +77,17 @@ export function useNodeViewState(focusItemValue: TNodeUid | null) {
         }
       }
 
-      dispatch(selectFNNode(_uids));
+      dispatch(selectNodeTreeNodes(_uids));
 
       if (!parseFileFlag) {
-        const node = ffTree[prevFileUid];
+        const node = fileTree[prevFileUid];
         const uid = prevFileUid;
         const nodeData = node.data as TFileNodeData;
         setParseFile(true);
-        setNavigatorDropDownType("project");
-        dispatch({ type: HmsClearActionType });
-        dispatch(
-          setCurrentFile({
-            uid,
-            parentUid: node.parentUid as TNodeUid,
-            name: nodeData.name,
-            content: nodeData.contentInApp ? nodeData.contentInApp : "",
-          }),
-        );
-        setCurrentFileUid(uid);
-        dispatch(selectFFNode([prevFileUid]));
+        dispatch(setNavigatorDropdownType("project"));
+        dispatch({ type: NodeTree_Event_ClearActionType });
+        dispatch(setCurrentFileUid(uid));
+        dispatch(selectFileTreeNodes([prevFileUid]));
       }
       removeRunningActions(["nodeTreeView-select"]);
     },
@@ -114,7 +105,7 @@ export function useNodeViewState(focusItemValue: TNodeUid | null) {
     (uid: TNodeUid) => {
       addRunningActions(["nodeTreeView-arrow"]);
 
-      dispatch(expandFNNode([uid]));
+      dispatch(expandNodeTreeNodes([uid]));
 
       removeRunningActions(["nodeTreeView-arrow"]);
     },
@@ -125,7 +116,7 @@ export function useNodeViewState(focusItemValue: TNodeUid | null) {
     (uid: TNodeUid) => {
       addRunningActions(["nodeTreeView-arrow"]);
 
-      dispatch(collapseFNNode([uid]));
+      dispatch(collapseNodeTreeNodes([uid]));
 
       removeRunningActions(["nodeTreeView-arrow"]);
     },

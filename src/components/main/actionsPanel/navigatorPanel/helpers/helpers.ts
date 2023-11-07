@@ -1,11 +1,7 @@
+import { TFileNode, TFileNodeData } from "@_node/file";
 import { THtmlNodeData } from "@_node/html";
-import { TNodeTreeData } from "@_node/types";
-import { TNode } from "@_node/types";
-import { TFileNodeData } from "@_node/file";
-
-import { TProject, TWorkspace } from "@_types/main";
-import { TFile } from "@_types/main";
-
+import { TNode, TNodeTreeData } from "@_node/types";
+import { TProject, TWorkspace } from "@_redux/main/fileTree";
 import {
   ActionCreatorWithPayload,
   AnyAction,
@@ -25,7 +21,7 @@ export const isSelected = (_project: TProject, project: TProject) => {
     : "";
 };
 
-export const getFileNameFromPath = (file: TFile) => {
+export const getFileNameFromPath = (file: TFileNode) => {
   return file.uid.split("/")[file.uid.split("/").length - 1];
 };
 export const getFileExtension = (node: TNode) =>
@@ -37,7 +33,7 @@ export const getFileExtension = (node: TNode) =>
 export const selectFirstNode = (
   validNodeTree: TNodeTreeData,
   isFirst: boolean,
-  selectFNNode: ActionCreatorWithPayload<string[], "main/selectFNNode">,
+  selectFNNode: ActionCreatorWithPayload<string[]>,
   dispatch: Dispatch<AnyAction>,
 ) => {
   let bodyId = "0";

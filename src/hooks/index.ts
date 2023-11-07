@@ -1,2 +1,1 @@
-import { useTheme } from "./useTheme";
-export { useTheme };
+export { useTheme } from './useTheme';

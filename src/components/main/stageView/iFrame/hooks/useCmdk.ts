@@ -1,9 +1,13 @@
 import { useCallback, useContext } from "react";
-import { LogAllow } from "@_constants/main";
 import { TNode, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { getCommandKey } from "@_services/global";
 import { TCmdkKeyMap } from "@_types/main";
+import { useSelector } from "react-redux";
+import { AppState } from "@_redux/_root";
+import { setCurrentCommand } from "@_redux/main/cmdk";
+import { useDispatch } from "react-redux";
+import { LogAllow } from "@_constants/global";
 
 export interface IUseCmdkProps {
   contentEditableUidRef: React.MutableRefObject<string>;
@@ -15,39 +19,21 @@ export const useCmdk = ({
   mostRecentSelectedNode,
 }: IUseCmdkProps) => {
   const {
-    // node tree view
-    nodeTree,
     // references
     cmdkReferenceData,
-    // cmdk
-    setCurrentCommand,
-    // other
-    osType,
   } = useContext(MainContext);
+  const { nodeTree } = useSelector((state: AppState) => state.main.nodeTree);
+  const { osType } = useSelector((state: AppState) => state.global);
+
+  const dispatch = useDispatch();
 
   const onKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      //We are trying to fina a way to get node id with this event
+      //We are trying to find a way to get node id with this event
       if (contentEditableUidRef.current !== "") {
         let isSaving = e.key === "s" && (e.ctrlKey || e.metaKey);
         if (!isSaving) {
           return;
-        }
-        type TTarget = HTMLElement & {
-          dataset: {
-            rnbwdevRnbwNode: string;
-          };
-        };
-        const target: TTarget | null = e.target as TTarget;
-        if (target && "dataset" in target) {
-          const uid = target.dataset.rnbwdevRnbwNode;
-          if (uid) {
-            let uid = mostRecentSelectedNode.current?.uid as TNodeUid;
-            let parentUid = mostRecentSelectedNode.current
-              ?.parentUid as TNodeUid;
-          }
-
-          //TODO: IN_PROGRESS
         }
       }
 
@@ -108,7 +94,7 @@ export const useCmdk = ({
         e.preventDefault();
       }
 
-      setCurrentCommand({ action });
+      dispatch(setCurrentCommand({ action }));
     },
     [cmdkReferenceData, nodeTree],
   );

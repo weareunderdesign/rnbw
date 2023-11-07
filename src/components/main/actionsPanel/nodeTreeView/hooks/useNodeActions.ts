@@ -1,22 +1,23 @@
 import { useCallback, useContext } from "react";
-import { useDispatch, useSelector } from "react-redux";
+
 import { Range } from "monaco-editor";
-import { TNode, TNodeUid } from "@_node/types";
-import {
-  addNode,
-  copyNodeExternal,
-  getValidNodeUids,
-  moveNode,
-} from "@_node/index";
+import { useDispatch, useSelector } from "react-redux";
 
+import { StageNodeIdAttr, getValidNodeUids } from "@_node/index";
+import { TNodeUid } from "@_node/types";
+import { osTypeSelector } from "@_redux/global";
+import { MainContext } from "@_redux/main";
+import { codeViewTabSizeSelector } from "@_redux/main/codeView";
 import {
-  fnSelector,
-  increaseActionGroupIndex,
-  MainContext,
-} from "@_redux/main";
+  nodeTreeSelector,
+  nodeTreeViewStateSelector,
+  validNodeTreeSelector,
+} from "@_redux/main/nodeTree";
+import {
+  clipboardDataSelector,
+  setUpdateOptions,
+} from "@_redux/main/processor";
 
-import { creatingNode } from "../helpers/creatingNode";
-import { addNodeToTree } from "../helpers/addNodeToTree";
 import { getTree } from "../helpers/getTree";
 import { useEditor } from "@_components/main/codeView/hooks";
 import {
@@ -24,120 +25,95 @@ import {
   sortUidsByMaxEndIndex,
   sortUidsByMinStartIndex,
 } from "../helpers";
-import { NodeInAppAttribName } from "@_constants/main";
 
 export function useNodeActions() {
   const dispatch = useDispatch();
-  const { focusedItem } = useSelector(fnSelector);
+
+  const nodeTree = useSelector(nodeTreeSelector);
+  const validNodeTree = useSelector(validNodeTreeSelector);
+  const { focusedItem } = useSelector(nodeTreeViewStateSelector);
+  const codeViewTabSize = useSelector(codeViewTabSizeSelector);
+  const clipboardData = useSelector(clipboardDataSelector);
+
+  const osType = useSelector(osTypeSelector);
   const {
-    // global action
-    addRunningActions,
-    removeRunningActions,
-    // node actions
-    clipboardData,
-    setEvent,
-    // node tree view
-    nodeTree,
-    setNodeTree,
-    nodeMaxUid,
-    setNodeMaxUid,
-    // code view
-    tabSize,
-    // processor
-    setUpdateOpt,
     // references
     htmlReferenceData,
     // other
-    osType,
-    theme: _theme,
     monacoEditorRef,
-    validNodeTree,
     setIsContentProgrammaticallyChanged,
+    addRunningActions,
+    removeRunningActions,
   } = useContext(MainContext);
 
   const { handleEditorChange } = useEditor();
 
-  const cb_addNode = useCallback(
-    (nodeType: string) => {
-      const monacoEditor = monacoEditorRef.current;
-      if (!monacoEditor) return;
-      if (!nodeTree[focusedItem]) return;
-      addRunningActions(["nodeTreeView-add"]);
+  const cb_addNode = (nodeType: string) => {
+    const focusedNode = validNodeTree[focusedItem];
 
-      let { newNode, _tree, tmpMaxUid, contentNode, newNodeFlag } =
-        creatingNode(
-          nodeMaxUid,
-          nodeTree,
-          focusedItem,
-          nodeType,
-          htmlReferenceData,
-        );
-      let tempTree;
+    if (!focusedNode?.uid) {
+      console.error("Focused node is undefined");
+      return;
+    }
 
-      // call api
-      const tree = getTree(nodeTree);
+    const selectedNode = validNodeTree[focusedNode.uid];
+    if (!selectedNode || !selectedNode.data.sourceCodeLocation) {
+      console.error("Parent node or source code location is undefined");
+      return;
+    }
 
-      if (_tree) {
-        addNodeToTree(_tree, tree, nodeTree, focusedItem, newNode, tmpMaxUid);
-      } else {
-        const res = addNode(
-          tree,
-          focusedItem,
-          newNode,
-          contentNode,
-          "html",
-          String(contentNode ? nodeMaxUid + 2 : nodeMaxUid + 1) as TNodeUid,
-          osType,
-          tabSize,
-        );
-        tempTree = res.tree;
-        tmpMaxUid = res.nodeMaxUid as TNodeUid;
-      }
-      // processor
-      addRunningActions(["processor-updateOpt"]);
-      setUpdateOpt({ parse: false, from: "node" });
-      setNodeTree(tree);
+    const { endLine, endCol } = selectedNode.data.sourceCodeLocation;
+    const model = monacoEditorRef.current?.getModel();
 
-      // view state
-      addRunningActions(["stageView-viewState"]);
-      setUpdateOpt({ parse: true, from: "code" });
+    if (!model) {
+      console.error("Monaco Editor model is undefined");
+      return;
+    }
+    const HTMLElement = htmlReferenceData.elements[nodeType];
 
-      // side effect
-      setNodeMaxUid(Number(tmpMaxUid) + 1);
-      setEvent({
-        type: "add-node",
-        param: [
-          focusedItem,
-          newNodeFlag ? tree[Number(tmpMaxUid) + 1] : newNode,
-          tree[newNode.uid],
-        ],
-      });
+    let openingTag = HTMLElement.Tag;
 
-      removeRunningActions(["nodeTreeView-add"]);
-      console.log("hms added");
+    if (HTMLElement.Attributes) {
+      const tagArray = openingTag.split("");
+      tagArray.splice(tagArray.length - 1, 0, ` ${HTMLElement.Attributes}`);
+      openingTag = tagArray.join("");
+    }
+    const closingTag = `</${nodeType}>`;
 
-      dispatch(increaseActionGroupIndex());
-    },
-    [
-      addRunningActions,
-      removeRunningActions,
-      nodeTree,
-      focusedItem,
-      nodeMaxUid,
-      osType,
-      tabSize,
-      htmlReferenceData,
-    ],
-  );
+    const tagContent = !!HTMLElement.Content ? HTMLElement.Content : "";
+
+    const codeViewText =
+      HTMLElement.Contain === "None"
+        ? openingTag
+        : `${openingTag}${tagContent}${closingTag}`;
+
+    const position = { lineNumber: endLine, column: endCol + 1 };
+    const range = new Range(
+      position.lineNumber,
+      position.column,
+      position.lineNumber,
+      position.column,
+    );
+    const editOperation = { range, text: "\n" + codeViewText };
+
+    model.pushEditOperations([], [editOperation], () => null);
+    monacoEditorRef.current?.setPosition({
+      lineNumber: position.lineNumber + 1,
+      column: 1,
+    });
+
+    const content = model.getValue();
+    handleEditorChange(content);
+  };
 
   const cb_removeNode = useCallback(
     (uids: TNodeUid[]) => {
-      setIsContentProgrammaticallyChanged(true);
       const model = monacoEditorRef.current?.getModel();
       if (!model) return;
+      setIsContentProgrammaticallyChanged(true);
       let parentUids = [] as TNodeUid[];
       uids.forEach((uid) => {
-        let node = validNodeTree[uid];
+        let node = nodeTree[uid];
 
         if (node) {
           let parentUid = node.parentUid;
@@ -149,7 +125,7 @@ export function useNodeActions() {
             endLine: endLineNumber,
             startCol: startColumn,
             startLine: startLineNumber,
-          } = node.sourceCodeLocation;
+          } = node.data.sourceCodeLocation;
 
           const range = new Range(
             startLineNumber,
@@ -174,14 +150,13 @@ export function useNodeActions() {
   );
 
   const cb_duplicateNode = (uids: TNodeUid[]) => {
-    setIsContentProgrammaticallyChanged(true);
-
     const iframe: any = document.getElementById("iframeId");
     const model = monacoEditorRef.current?.getModel();
     if (!model) {
       console.error("Monaco Editor model is undefined");
       return;
     }
+    setIsContentProgrammaticallyChanged(true);
     let content = model.getValue();
 
     const sortedUids = sortUidsByMaxEndIndex(uids, validNodeTree);
@@ -192,11 +167,11 @@ export function useNodeActions() {
       if (!cleanedUpCode) return;
 
       const selectedNode = validNodeTree[uid];
-      if (!selectedNode || !selectedNode.sourceCodeLocation) {
+      if (!selectedNode || !selectedNode.data.sourceCodeLocation) {
         console.error("Parent node or source code location is undefined");
         return;
       }
-      const { endLine, endCol } = selectedNode.sourceCodeLocation;
+      const { endLine, endCol } = selectedNode.data.sourceCodeLocation;
 
       const position = { lineNumber: endLine, column: endCol + 1 };
 
@@ -236,12 +211,7 @@ export function useNodeActions() {
   };
 
   const cb_moveNode = useCallback(
-    (
-      _uids: TNodeUid[],
-      targetUid: TNodeUid,
-      isBetween: boolean,
-      position: number,
-    ) => {
+    (_uids: TNodeUid[], targetUid: TNodeUid) => {
       // validate
       const uids = getValidNodeUids(
         nodeTree,
@@ -256,46 +226,27 @@ export function useNodeActions() {
 
       // call api
       const tree = getTree(nodeTree);
-      const res = moveNode(
-        tree,
-        targetUid,
-        isBetween,
-        position,
-        uids,
-        "html",
-        String(nodeMaxUid) as TNodeUid,
-        osType,
-        tabSize,
-      );
 
       // processor
       addRunningActions(["processor-updateOpt"]);
-      setUpdateOpt({ parse: false, from: "node" });
-      setNodeTree(res.tree);
+      dispatch(setUpdateOptions({ parse: false, from: "node" }));
 
       // view state
       addRunningActions(["stageView-viewState"]);
-      setUpdateOpt({ parse: true, from: "code" });
+      dispatch(setUpdateOptions({ parse: true, from: "code" }));
       // side effect
-      setNodeMaxUid(Number(res.nodeMaxUid));
-      setEvent({
-        type: "move-node",
-        param: [uids, targetUid, isBetween, res.position],
-      });
 
       removeRunningActions(["nodeTreeView-move"]);
 
       console.log("hms added");
-      dispatch(increaseActionGroupIndex());
     },
     [
       addRunningActions,
       removeRunningActions,
       nodeTree,
       htmlReferenceData,
-      nodeMaxUid,
       osType,
-      tabSize,
+      codeViewTabSize,
     ],
   );
 
@@ -314,7 +265,7 @@ export function useNodeActions() {
     });
 
     const { startLine, startCol } =
-      validNodeTree[sortedUids[0]].sourceCodeLocation;
+      validNodeTree[sortedUids[0]].data.sourceCodeLocation;
 
     const model = monacoEditorRef.current?.getModel();
     if (!model) return;
@@ -334,7 +285,7 @@ export function useNodeActions() {
           endLine: endLineNumber,
           startCol: startColumn,
           startLine: startLineNumber,
-        } = node.sourceCodeLocation;
+        } = node.data.sourceCodeLocation;
 
         const range = new Range(
           startLineNumber,
@@ -376,14 +327,13 @@ export function useNodeActions() {
   };
 
   const cb_ungroupNode = (uids: TNodeUid[]) => {
-    setIsContentProgrammaticallyChanged(true);
-
     const iframe: any = document.getElementById("iframeId");
     const model = monacoEditorRef.current?.getModel();
     if (!model) {
       console.error("Monaco Editor model is undefined");
       return;
     }
+    setIsContentProgrammaticallyChanged(true);
     let content = model.getValue();
 
     const sortedUids = sortUidsByMaxEndIndex(uids, validNodeTree);
@@ -392,25 +342,23 @@ export function useNodeActions() {
       // const cleanedUpCode = getCopiedContent(uid, iframe);
 
       const ele = iframe?.contentWindow?.document?.querySelector(
-        `[${NodeInAppAttribName}="${uid}"]`,
+        `[${StageNodeIdAttr}="${uid}"]`,
       );
 
       //create a copy of ele
       const eleCopy = ele?.cloneNode(true) as HTMLElement;
-      const innerElements = eleCopy.querySelectorAll(
-        `[${NodeInAppAttribName}]`,
-      );
+      const innerElements = eleCopy.querySelectorAll(`[${StageNodeIdAttr}]`);
 
       innerElements.forEach((element) => {
-        if (element.hasAttribute(NodeInAppAttribName)) {
-          element.removeAttribute(NodeInAppAttribName);
+        if (element.hasAttribute(StageNodeIdAttr)) {
+          element.removeAttribute(StageNodeIdAttr);
         }
       });
 
       eleCopy?.removeAttribute("contenteditable");
       eleCopy?.removeAttribute("rnbwdev-rnbw-element-hover");
       eleCopy?.removeAttribute("rnbwdev-rnbw-element-select");
-      eleCopy?.removeAttribute(NodeInAppAttribName);
+      eleCopy?.removeAttribute(StageNodeIdAttr);
       const cleanedUpCode = eleCopy?.innerHTML;
 
       //delete the copy
@@ -423,7 +371,7 @@ export function useNodeActions() {
 
       if (!selectedNodeChildren) return;
 
-      if (!selectedNode || !selectedNode.sourceCodeLocation) {
+      if (!selectedNode || !selectedNode.data.sourceCodeLocation) {
         console.error("Parent node or source code location is undefined");
         return;
       }
@@ -440,7 +388,7 @@ export function useNodeActions() {
         endLine: endLineNumber,
         startCol: startColumn,
         startLine: startLineNumber,
-      } = selectedNode.sourceCodeLocation;
+      } = selectedNode.data.sourceCodeLocation;
 
       const range = new Range(
         startLineNumber,

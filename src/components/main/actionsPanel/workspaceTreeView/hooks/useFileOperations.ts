@@ -1,30 +1,33 @@
 import { useCallback, useContext } from "react";
 
+import { useSelector } from "react-redux";
+
+import { TFileNodeData } from "@_node/file";
 import { TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
-import { TFileNodeType } from "@_types/main";
-import { useReloadProject } from "./useReloadProject";
+import { fileTreeSelector, projectSelector } from "@_redux/main/fileTree";
 import { verifyFileHandlerPermission } from "@_services/main";
-import { TFileNodeData } from "@_node/file";
-import { useInvalidNodes } from "./useInvalidNodes";
-import { useTemporaryNodes } from "./useTemporaryNodes";
+import { TFileNodeType } from "@_types/main";
+
 import {
   createFileOrFolder,
   deleteFileOrFolder,
   moveActions,
 } from "../helpers";
+import { useInvalidNodes } from "./useInvalidNodes";
+import { useReloadProject } from "./useReloadProject";
+import { useTemporaryNodes } from "./useTemporaryNodes";
 
 export const useFileOperations = () => {
+  const project = useSelector(projectSelector);
+  const fileTree = useSelector(fileTreeSelector);
+
   const {
     // global action
     addRunningActions,
     removeRunningActions,
-    // navigator
-    project,
     // file tree view
-    ffTree,
-    ffHandlers,
-    addMessage,
+    fileHandlers,
   } = useContext(MainContext);
 
   const { cb_reloadProject } = useReloadProject();
@@ -34,7 +37,7 @@ export const useFileOperations = () => {
 
   const { setTemporaryNodes, removeTemporaryNodes } = useTemporaryNodes();
 
-  const { moveIDBFF, moveLocalFF } = moveActions(addMessage);
+  const { moveIDBFF, moveLocalFF } = moveActions(() => {});
 
   const _create = useCallback(
     async (params: {
@@ -51,8 +54,8 @@ export const useFileOperations = () => {
           name,
           type,
           project,
-          ffTree,
-          ffHandlers,
+          fileTree,
+          fileHandlers,
         );
       } catch (err) {
         throw new Error("err");
@@ -65,8 +68,8 @@ export const useFileOperations = () => {
       addRunningActions,
       removeRunningActions,
       project.context,
-      ffTree,
-      ffHandlers,
+      fileTree,
+      fileHandlers,
       cb_reloadProject,
     ],
   );
@@ -79,7 +82,12 @@ export const useFileOperations = () => {
       await Promise.all(
         uids.map(async (uid) => {
           try {
-            await deleteFileOrFolder(uid, ffTree, ffHandlers, project.context);
+            await deleteFileOrFolder(
+              uid,
+              fileTree,
+              fileHandlers,
+              project.context,
+            );
           } catch (err) {
             console.error(err);
           }
@@ -96,8 +104,8 @@ export const useFileOperations = () => {
       project.context,
       setInvalidNodes,
       removeInvalidNodes,
-      ffTree,
-      ffHandlers,
+      fileTree,
+      fileHandlers,
       cb_reloadProject,
     ],
   );
@@ -107,10 +115,10 @@ export const useFileOperations = () => {
 
       try {
         // validate
-        const node = ffTree[uid];
-        if (node === undefined || node.name === newName) throw "error";
+        const node = fileTree[uid];
+        if (node === undefined || node.displayName === newName) throw "error";
         const nodeData = node.data as TFileNodeData;
-        const parentNode = ffTree[node.parentUid as TNodeUid];
+        const parentNode = fileTree[node.parentUid as TNodeUid];
         if (parentNode === undefined) throw "error";
         const parentNodeData = parentNode.data as TFileNodeData;
 
@@ -119,8 +127,8 @@ export const useFileOperations = () => {
         setInvalidNodes(newUid);
 
         if (project.context === "local") {
-          const handler = ffHandlers[uid],
-            parentHandler = ffHandlers[
+          const handler = fileHandlers[uid],
+            parentHandler = fileHandlers[
               parentNode.uid
             ] as FileSystemDirectoryHandle;
           if (
@@ -149,8 +157,8 @@ export const useFileOperations = () => {
       removeTemporaryNodes,
       setInvalidNodes,
       removeInvalidNodes,
-      ffTree,
-      ffHandlers,
+      fileTree,
+      fileHandlers,
       cb_reloadProject,
     ],
   );
@@ -165,12 +173,12 @@ export const useFileOperations = () => {
           const targetUid = targetUids[index];
 
           // validate
-          const node = ffTree[uid];
+          const node = fileTree[uid];
           if (node === undefined) return;
           const nodeData = node.data as TFileNodeData;
-          const parentNode = ffTree[node.parentUid as TNodeUid];
+          const parentNode = fileTree[node.parentUid as TNodeUid];
           if (parentNode === undefined) return;
-          const targetNode = ffTree[targetUid];
+          const targetNode = fileTree[targetUid];
           if (targetNode === undefined) return;
           const targetNodeData = targetNode.data as TFileNodeData;
 
@@ -180,11 +188,11 @@ export const useFileOperations = () => {
           setInvalidNodes(...Object.keys(_invalidNodes));
 
           if (project.context === "local") {
-            const handler = ffHandlers[uid],
-              parentHandler = ffHandlers[
+            const handler = fileHandlers[uid],
+              parentHandler = fileHandlers[
                 parentNode.uid
               ] as FileSystemDirectoryHandle,
-              targetHandler = ffHandlers[
+              targetHandler = fileHandlers[
                 targetUid
               ] as FileSystemDirectoryHandle;
             if (
@@ -221,8 +229,8 @@ export const useFileOperations = () => {
       project.context,
       invalidNodes,
       setInvalidNodes,
-      ffTree,
-      ffHandlers,
+      fileTree,
+      fileHandlers,
       cb_reloadProject,
     ],
   );
@@ -238,12 +246,12 @@ export const useFileOperations = () => {
           const targetUid = targetUids[index];
 
           // validate
-          const node = ffTree[uid];
+          const node = fileTree[uid];
           if (node === undefined) return;
           const nodeData = node.data as TFileNodeData;
-          const parentNode = ffTree[node.parentUid as TNodeUid];
+          const parentNode = fileTree[node.parentUid as TNodeUid];
           if (parentNode === undefined) return;
-          const targetNode = ffTree[targetUid];
+          const targetNode = fileTree[targetUid];
           if (targetNode === undefined) return;
           const targetNodeData = targetNode.data as TFileNodeData;
 
@@ -253,11 +261,11 @@ export const useFileOperations = () => {
           setInvalidNodes(...Object.keys(_invalidNodes));
 
           if (project.context === "local") {
-            const handler = ffHandlers[uid],
-              parentHandler = ffHandlers[
+            const handler = fileHandlers[uid],
+              parentHandler = fileHandlers[
                 parentNode.uid
               ] as FileSystemDirectoryHandle,
-              targetHandler = ffHandlers[
+              targetHandler = fileHandlers[
                 targetUid
               ] as FileSystemDirectoryHandle;
             if (
@@ -297,8 +305,8 @@ export const useFileOperations = () => {
       project.context,
       invalidNodes,
       setInvalidNodes,
-      ffTree,
-      ffHandlers,
+      fileTree,
+      fileHandlers,
       cb_reloadProject,
     ],
   );

@@ -1,14 +1,18 @@
 import { useCallback, useContext } from "react";
+
 import { useDispatch } from "react-redux";
 
-import { NodeInAppAttribName, RootNodeUid } from "@_constants/main";
+import { RootNodeUid } from "@_constants/main";
 import { TNode, TNodeUid } from "@_node/types";
+import { MainContext } from "@_redux/main";
+import { StageNodeIdAttr } from "@_node/html";
+import { useSelector } from "react-redux";
+import { AppState } from "@_redux/_root";
 import {
-  MainContext,
-  expandFNNode,
-  focusFNNode,
-  selectFNNode,
-} from "@_redux/main";
+  expandNodeTreeNodes,
+  focusNodeTreeNode,
+  selectNodeTreeNodes,
+} from "@_redux/main/nodeTree";
 
 export interface IUseSetSelectItemProps {
   mostRecentSelectedNode: React.MutableRefObject<TNode | undefined>;
@@ -26,11 +30,12 @@ export const useSetSelectItem = ({
     // global action
     addRunningActions,
     removeRunningActions,
-    // node tree view
-    nodeTree,
+
     // code view
     setCodeViewOffsetTop,
   } = useContext(MainContext);
+
+  const { nodeTree } = useSelector((state: AppState) => state.main.nodeTree);
 
   const setFocusedSelectedItems = useCallback(
     (uid: TNodeUid, _selectedItems?: TNodeUid[]) => {
@@ -46,18 +51,18 @@ export const useSetSelectItem = ({
         node = nodeTree[node.parentUid as TNodeUid];
       }
       _expandedItems.shift();
-      dispatch(expandFNNode(_expandedItems));
+      dispatch(expandNodeTreeNodes(_expandedItems));
 
-      dispatch(focusFNNode(uid));
+      dispatch(focusNodeTreeNode(uid));
       _selectedItems
-        ? dispatch(selectFNNode(_selectedItems))
-        : dispatch(selectFNNode([uid]));
+        ? dispatch(selectNodeTreeNodes(_selectedItems))
+        : dispatch(selectNodeTreeNodes([uid]));
 
       focusedItemRef.current = uid;
 
       const newFocusedElement =
         contentRef?.contentWindow?.document?.querySelector(
-          `[${NodeInAppAttribName}="${uid}"]`,
+          `[${StageNodeIdAttr}="${uid}"]`,
         );
       const elementRect = (
         newFocusedElement as HTMLElement

@@ -1,16 +1,20 @@
-import { TNode, TNodeUid } from "@_node/types";
-import {
-  MainContext,
-  expandFNNode,
-  focusFNNode,
-  navigatorSelector,
-  selectFNNode,
-  updateFNTreeViewState,
-} from "@_redux/main";
 import { useCallback, useContext } from "react";
+
 import { useDispatch, useSelector } from "react-redux";
+
+import { StageNodeIdAttr } from "@_node/html";
+import { TNode, TNodeUid } from "@_node/types";
+import { AppState } from "@_redux/_root";
+import { MainContext } from "@_redux/main";
+import {
+  expandNodeTreeNodes,
+  focusNodeTreeNode,
+  selectNodeTreeNodes,
+  updateNodeTreeTreeViewState,
+} from "@_redux/main/nodeTree";
+import { setNeedToReloadIframe } from "@_redux/main/stageView";
+
 import { cloneAndInsertNode, createAndInsertElement } from "../helpers";
-import { NodeInAppAttribName } from "@_constants/main";
 
 export interface IUseSideEffectHandlersProps {
   contentRef: any;
@@ -20,15 +24,13 @@ export const useSideEffectHandlers = ({
   contentRef,
 }: IUseSideEffectHandlersProps) => {
   const dispatch = useDispatch();
-  const { file } = useSelector(navigatorSelector);
+  const {
+    nodeTree: { nodeTree },
+    processor: { clipboardData },
+  } = useSelector((state: AppState) => state.main);
   const {
     // global action
     removeRunningActions,
-    // node actions
-    clipboardData,
-    // node tree view
-    nodeTree,
-    setNeedToReloadIFrame,
   } = useContext(MainContext);
 
   const addElement = useCallback(
@@ -40,7 +42,7 @@ export const useSideEffectHandlers = ({
         contentRef,
         dispatch,
         removeRunningActions,
-        setNeedToReloadIFrame,
+        setNeedToReloadIframe,
       );
     },
     [removeRunningActions, contentRef, nodeTree],
@@ -60,20 +62,20 @@ export const useSideEffectHandlers = ({
         contentRef,
         dispatch,
         removeRunningActions,
-        setNeedToReloadIFrame,
+        setNeedToReloadIframe,
       );
 
       deleteUids.map((uid) => {
         const ele = contentRef?.current?.contentWindow?.document?.querySelector(
-          `[${NodeInAppAttribName}="${uid}"]`,
+          `[${StageNodeIdAttr}="${uid}"]`,
         );
         ele?.remove();
       });
 
       setTimeout(() => {
-        dispatch(focusFNNode(node.uid));
-        dispatch(selectFNNode([node.uid]));
-        dispatch(expandFNNode([node.uid]));
+        dispatch(focusNodeTreeNode(node.uid));
+        dispatch(selectNodeTreeNodes([node.uid]));
+        dispatch(expandNodeTreeNodes([node.uid]));
       }, 200);
 
       removeRunningActions(["stageView-viewState"]);
@@ -85,18 +87,18 @@ export const useSideEffectHandlers = ({
     (uids: TNodeUid[], deletedUids: TNodeUid[], lastUid: TNodeUid) => {
       uids.map((uid) => {
         const ele = contentRef?.contentWindow?.document?.querySelector(
-          `[${NodeInAppAttribName}="${uid}"]`,
+          `[${StageNodeIdAttr}="${uid}"]`,
         );
         ele?.remove();
       });
       setTimeout(() => {
         if (lastUid && lastUid !== "") {
-          dispatch(focusFNNode(lastUid));
-          dispatch(selectFNNode([lastUid]));
+          dispatch(focusNodeTreeNode(lastUid));
+          dispatch(selectNodeTreeNodes([lastUid]));
         }
       }, 200);
       // view state
-      dispatch(updateFNTreeViewState({ deletedUids }));
+      dispatch(updateNodeTreeTreeViewState({ deletedUids }));
       removeRunningActions(["stageView-viewState"]);
     },
     [removeRunningActions, contentRef],
@@ -110,7 +112,7 @@ export const useSideEffectHandlers = ({
       position: number,
     ) => {
       const targetElement = contentRef?.contentWindow?.document?.querySelector(
-        `[${NodeInAppAttribName}="${targetUid}"]`,
+        `[${StageNodeIdAttr}="${targetUid}"]`,
       );
       const _elements: (Node | undefined)[] = [];
 
@@ -120,7 +122,7 @@ export const useSideEffectHandlers = ({
       _uids.map((uid) => {
         // clone
         const ele = contentRef?.contentWindow?.document?.querySelector(
-          `[${NodeInAppAttribName}="${uid}"]`,
+          `[${StageNodeIdAttr}="${uid}"]`,
         );
         _elements.push(ele?.cloneNode(true));
         ele?.remove();
@@ -130,7 +132,7 @@ export const useSideEffectHandlers = ({
       _elements.map((_ele) => {
         const refElement = isBetween
           ? contentRef?.contentWindow?.document?.querySelector(
-              `[${NodeInAppAttribName}="${targetUid}"] > :nth-child(${
+              `[${StageNodeIdAttr}="${targetUid}"] > :nth-child(${
                 position + 1
               })`,
             )
@@ -140,8 +142,8 @@ export const useSideEffectHandlers = ({
 
       // view state
       setTimeout(() => {
-        dispatch(focusFNNode(uids[uids.length - 1]));
-        dispatch(selectFNNode(uids));
+        dispatch(focusNodeTreeNode(uids[uids.length - 1]));
+        dispatch(selectNodeTreeNodes(uids));
       }, 100);
       removeRunningActions(["stageView-viewState"]);
     },
@@ -157,35 +159,33 @@ export const useSideEffectHandlers = ({
       addedUidMap: Map<TNodeUid, TNodeUid>,
     ) => {
       const targetElement = contentRef?.contentWindow?.document?.querySelector(
-        `[${NodeInAppAttribName}="${targetUid}"]`,
+        `[${StageNodeIdAttr}="${targetUid}"]`,
       );
       const refElement = isBetween
         ? contentRef?.contentWindow?.document?.querySelector(
-            `[${NodeInAppAttribName}="${targetUid}"] > :nth-child(${
-              position + 1
-            })`,
+            `[${StageNodeIdAttr}="${targetUid}"] > :nth-child(${position + 1})`,
           )
         : null;
 
       uids.map((uid) => {
         // clone
         const ele = contentRef?.contentWindow?.document?.querySelector(
-          `[${NodeInAppAttribName}="${uid}"]`,
+          `[${StageNodeIdAttr}="${uid}"]`,
         );
         const _ele = ele?.cloneNode(true) as HTMLElement;
 
         // reset nest's uid
         const newUid = addedUidMap.get(uid);
-        newUid && _ele.setAttribute(NodeInAppAttribName, newUid);
+        newUid && _ele.setAttribute(StageNodeIdAttr, newUid);
 
         // reset descendant uids
         const childElementList = _ele.querySelectorAll("*");
         childElementList.forEach((childElement) => {
-          const childUid = childElement.getAttribute(NodeInAppAttribName);
+          const childUid = childElement.getAttribute(StageNodeIdAttr);
           if (childUid) {
             const newChildUid = addedUidMap.get(childUid);
             if (newChildUid) {
-              childElement.setAttribute(NodeInAppAttribName, newChildUid);
+              childElement.setAttribute(StageNodeIdAttr, newChildUid);
             }
           }
         });
@@ -199,8 +199,8 @@ export const useSideEffectHandlers = ({
         .map((uid) => addedUidMap.get(uid))
         .filter((uid) => uid) as TNodeUid[];
       setTimeout(() => {
-        dispatch(focusFNNode(newUids[newUids.length - 1]));
-        dispatch(selectFNNode(newUids));
+        dispatch(focusNodeTreeNode(newUids[newUids.length - 1]));
+        dispatch(selectNodeTreeNodes(newUids));
       }, 100);
       removeRunningActions(["stageView-viewState"]);
     },
@@ -216,24 +216,24 @@ export const useSideEffectHandlers = ({
       addedUidMap: Map<TNodeUid, TNodeUid>,
     ) => {
       const targetElement = contentRef?.contentWindow?.document?.querySelector(
-        `[${NodeInAppAttribName}="${targetUid}"]`,
+        `[${StageNodeIdAttr}="${targetUid}"]`,
       );
       const refElement = isBetween
         ? contentRef?.contentWindow?.document?.querySelector(
-            `[${NodeInAppAttribName}="${targetUid}"] > :nth-child(${
-              position + 1
-            })`,
+            `[${StageNodeIdAttr}="${targetUid}"] > :nth-child(${position + 1})`,
           )
         : null;
 
-      nodes.forEach((node) =>
-        cloneAndInsertNode(
-          node,
-          addedUidMap,
-          targetElement,
-          refElement,
-          clipboardData,
-        ),
+      nodes.forEach(
+        (node) =>
+          clipboardData &&
+          cloneAndInsertNode(
+            node,
+            addedUidMap,
+            targetElement,
+            refElement,
+            clipboardData,
+          ),
       );
 
       const newUids = nodes
@@ -242,14 +242,14 @@ export const useSideEffectHandlers = ({
 
       const updateViewState = () => {
         setTimeout(() => {
-          dispatch(focusFNNode(newUids[newUids.length - 1]));
-          dispatch(selectFNNode(newUids));
+          dispatch(focusNodeTreeNode(newUids[newUids.length - 1]));
+          dispatch(selectNodeTreeNodes(newUids));
         }, 100);
         removeRunningActions(["stageView-viewState"]);
       };
       updateViewState();
     },
-    [removeRunningActions, contentRef, clipboardData, file.uid],
+    [removeRunningActions, contentRef, clipboardData],
   );
 
   const duplicateElements = useCallback(
@@ -257,22 +257,22 @@ export const useSideEffectHandlers = ({
       uids.map((uid) => {
         // clone
         const ele = contentRef?.contentWindow?.document?.querySelector(
-          `[${NodeInAppAttribName}="${uid}"]`,
+          `[${StageNodeIdAttr}="${uid}"]`,
         );
         const _ele = ele?.cloneNode(true) as HTMLElement;
 
         // reset nest's uid
         const newUid = addedUidMap.get(uid);
-        newUid && _ele.setAttribute(NodeInAppAttribName, newUid);
+        newUid && _ele.setAttribute(StageNodeIdAttr, newUid);
 
         // reset descendant uids
         const childElementList = _ele.querySelectorAll("*");
         childElementList.forEach((childElement) => {
-          const childUid = childElement.getAttribute(NodeInAppAttribName);
+          const childUid = childElement.getAttribute(StageNodeIdAttr);
           if (childUid) {
             const newChildUid = addedUidMap.get(childUid);
             if (newChildUid) {
-              childElement.setAttribute(NodeInAppAttribName, newChildUid);
+              childElement.setAttribute(StageNodeIdAttr, newChildUid);
             }
           }
         });
@@ -286,8 +286,8 @@ export const useSideEffectHandlers = ({
         .map((uid) => addedUidMap.get(uid))
         .filter((uid) => uid) as TNodeUid[];
       setTimeout(() => {
-        dispatch(focusFNNode(newUids[newUids.length - 1]));
-        dispatch(selectFNNode(newUids));
+        dispatch(focusNodeTreeNode(newUids[newUids.length - 1]));
+        dispatch(selectNodeTreeNodes(newUids));
       }, 100);
       removeRunningActions(["stageView-viewState"]);
     },

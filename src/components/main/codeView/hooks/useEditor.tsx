@@ -1,29 +1,38 @@
-import * as parse5 from "parse5";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 
-import { useContext, useRef, useState, useEffect, useCallback } from "react";
-import { IPosition, editor } from "monaco-editor";
-import {
-  MainContext,
-  focusFNNode,
-  navigatorSelector,
-  selectFNNode,
-  setCurrentFileContent,
-} from "@_redux/main";
+import { debounce } from "lodash";
+import { editor, IPosition } from "monaco-editor";
 import morphdom from "morphdom";
-import {
-  DefaultTabSize,
-  NodeInAppAttribName,
-  RootNodeUid,
-} from "@_constants/main";
-import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
-import { getSubNodeUidsByBfs } from "@_node/apis";
-import { parseHtml } from "@_node/html";
-import { CodeSelection } from "../types";
-import { TFileNodeData } from "@_node/file";
-import { useSelector } from "react-redux";
-import { useDispatch } from "react-redux";
+import * as parse5 from "parse5";
+import { useDispatch, useSelector } from "react-redux";
+
 import { styles } from "@_components/main/stageView/iFrame/styles";
-import { debounce, set } from "lodash";
+import { DefaultTabSize, RootNodeUid } from "@_constants/main";
+import { getSubNodeUidsByBfs } from "@_node/apis";
+import { TFileNodeData } from "@_node/file";
+import { parseHtml, StageNodeIdAttr } from "@_node/html";
+import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
+import { MainContext } from "@_redux/main";
+import {
+  codeViewTabSizeSelector,
+  setCodeEditing,
+  setCodeViewTabSize,
+} from "@_redux/main/codeView";
+import {
+  currentFileUidSelector,
+  fileTreeSelector,
+  setDoingFileAction,
+  setFileTree,
+} from "@_redux/main/fileTree";
+import {
+  focusNodeTreeNode,
+  selectNodeTreeNodes,
+  setNodeTree,
+} from "@_redux/main/nodeTree";
+import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
+import { setUpdateOptions } from "@_redux/main/processor";
+
+import { CodeSelection } from "../types";
 
 function getLanguageFromExtension(extension: string) {
   switch (extension) {
@@ -42,23 +51,16 @@ function getLanguageFromExtension(extension: string) {
 
 export default function useEditor() {
   const [language, setLanguage] = useState("html");
+  const codeViewTabeSize = useSelector(codeViewTabSizeSelector);
+  const fileTree = useSelector(fileTreeSelector);
+  const currentFileUid = useSelector(currentFileUidSelector);
   const {
-    tabSize,
-    setTabSize,
-    codeEditing,
-    setCodeEditing,
-    ffTree,
     addRunningActions,
-    setUpdateOpt,
-    setFSPending,
-    setFFTree,
     setMonacoEditorRef,
-    setNodeTree,
     setIsContentProgrammaticallyChanged,
     monacoEditorRef,
     parseFileFlag,
   } = useContext(MainContext);
-  const { file } = useSelector(navigatorSelector);
 
   const dispatch = useDispatch();
 
@@ -67,7 +69,7 @@ export default function useEditor() {
 
   const editorConfigs = {
     contextmenu: true,
-    tabSize,
+    tabSize: codeViewTabeSize,
     wordWrap,
     minimap: { enabled: false },
     automaticLayout: true,
@@ -135,7 +137,7 @@ export default function useEditor() {
     monacoRef.current = editor;
     setMonacoEditorRef(editor);
 
-    setUpdateOpt({ parse: true, from: "file" });
+    // dispatch(setUpdateOptions({ parse: true, from: "file" }));
     editor.onDidChangeCursorPosition((event) => {
       if (event.source === "mouse") {
         updateSelection();
@@ -172,7 +174,7 @@ export default function useEditor() {
       uids.reverse();
       for (const uid of uids) {
         const node = validNodeTree[uid];
-        const sourceCodeLocation = node.sourceCodeLocation;
+        const sourceCodeLocation = node.data.sourceCodeLocation;
 
         if (!sourceCodeLocation) {
           continue;
@@ -214,7 +216,7 @@ export default function useEditor() {
       const iframe: any = document.getElementById("iframeId");
       const iframeDoc = iframe.contentDocument;
       const iframeHtml = iframeDoc.getElementsByTagName("html")[0];
-      const { htmlDom, tree } = parseHtml(value, false, "");
+      const { htmlDom, nodeTree } = parseHtml(value);
 
       let updatedHtml = null;
       if (!htmlDom) return;
@@ -232,7 +234,7 @@ export default function useEditor() {
         let nodeUidToFocus = "";
         morphdom(iframeHtml, updatedHtml, {
           onBeforeElUpdated: function (fromEl, toEl) {
-            const fromElRnbwId = fromEl.getAttribute(NodeInAppAttribName);
+            const fromElRnbwId = fromEl.getAttribute(StageNodeIdAttr);
             if (toEl.nodeName.includes("-")) return false;
             if (
               configs?.matchIds &&
@@ -257,7 +259,7 @@ export default function useEditor() {
           onBeforeNodeAdded: function (node: Node) {
             if (node.nodeType === 1) {
               //@ts-ignore
-              const uid = node.getAttribute(NodeInAppAttribName);
+              const uid = node.getAttribute(StageNodeIdAttr);
               if (!!uid) {
                 nodeUidToFocus = uid;
               }
@@ -267,37 +269,40 @@ export default function useEditor() {
         });
 
         codeContentRef.current = value;
-        setNodeTree(tree);
+        dispatch(setNodeTree(nodeTree));
 
         dispatch(setCurrentFileContent(codeContentRef.current));
-        setFSPending(false);
+        dispatch(setDoingFileAction(false));
 
-        const _file = structuredClone(ffTree[file.uid]) as TNode;
+        const _file = structuredClone(fileTree[currentFileUid]) as TNode;
         addRunningActions(["processor-updateOpt"]);
         const fileData = _file.data as TFileNodeData;
-        (ffTree[file.uid].data as TFileNodeData).content =
+        (fileTree[currentFileUid].data as TFileNodeData).content =
           codeContentRef.current;
-        (ffTree[file.uid].data as TFileNodeData).contentInApp =
+        (fileTree[currentFileUid].data as TFileNodeData).contentInApp =
           codeContentRef.current;
-        (ffTree[file.uid].data as TFileNodeData).changed =
+        (fileTree[currentFileUid].data as TFileNodeData).changed =
           codeContentRef.current !== fileData.orgContent;
-        setFFTree(ffTree);
+
+        console.log("useEditor CALL");
+        dispatch(setFileTree(fileTree));
         dispatch(setCurrentFileContent(codeContentRef.current));
         codeChangeDecorationRef.current.clear();
-        setCodeEditing(false);
-        setFSPending(false);
+
+        dispatch(setCodeEditing(false));
+        dispatch(setDoingFileAction(false));
 
         //finding and selecting focused node
-        const focusedNode = tree[nodeUidToFocus];
-        dispatch(focusFNNode(focusedNode.uid));
-        dispatch(selectFNNode([focusedNode.uid]));
+        const focusedNode = nodeTree[nodeUidToFocus];
+        dispatch(focusNodeTreeNode(focusedNode.uid));
+        dispatch(selectNodeTreeNodes([focusedNode.uid]));
         //current code range in monaco editor
         const {
           endCol: endColumn,
           endLine: endLineNumber,
           startCol: startColumn,
           startLine: startLineNumber,
-        } = focusedNode.sourceCodeLocation;
+        } = focusedNode.data.sourceCodeLocation;
         monacoEditor.setSelection({
           startLineNumber,
           startColumn,
@@ -314,9 +319,9 @@ export default function useEditor() {
       style.textContent = styles;
       headNode.appendChild(style);
 
-      setCodeEditing(false);
+      dispatch(setCodeEditing(false));
     }, 1000),
-    [ffTree, file, setFFTree, addRunningActions, setFSPending, dispatch],
+    [dispatch, fileTree, monacoEditorRef, currentFileUid, addRunningActions],
   );
 
   const handleEditorChange = useCallback(
@@ -336,7 +341,7 @@ export default function useEditor() {
 
   // tabSize
   useEffect(() => {
-    setTabSize(DefaultTabSize);
+    dispatch(setCodeViewTabSize(DefaultTabSize));
   }, []);
 
   return {
@@ -350,7 +355,6 @@ export default function useEditor() {
     updateLanguage,
     editorConfigs,
     findNodeBySelection,
-    codeEditing,
     setCodeEditing,
     handleEditorChange,
     focusedNode,

@@ -1,7 +1,7 @@
-import { TOsType } from "../types/global";
+import { TOsType } from "@_redux/global";
 
 export const SystemDirectories: {
-  [osType in TOsType]: { [name: string]: boolean };
+  [osType in TOsType]: { [name: string]: true };
 } = {
   Windows: {
     "$RECYCLE.BIN": true,

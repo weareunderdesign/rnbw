@@ -1,12 +1,17 @@
 import {
-  TFileNodeData,
   getStat,
   readFile,
   removeFileSystem,
+  TFileNodeData,
   writeFile,
-} from "@_node/file";
-import { moveFile, copyDirectory, moveDirectory } from ".";
-import { TToast } from "@_types/global";
+} from '@_node/file';
+import { TToast } from '@_types/global';
+
+import {
+  copyDirectory,
+  moveDirectory,
+  moveFile,
+} from './';
 
 export const moveActions = (addMessage: (message: TToast) => void) => {
   const moveLocalFF = async (

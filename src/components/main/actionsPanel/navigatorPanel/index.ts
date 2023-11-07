@@ -1,4 +1,4 @@
-import NavigatorPanel from "./NavigatorPanel";
+import NavigatorPanel from './NavigatorPanel';
 
 export default NavigatorPanel;
 

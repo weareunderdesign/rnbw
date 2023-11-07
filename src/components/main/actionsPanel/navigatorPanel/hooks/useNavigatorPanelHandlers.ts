@@ -1,18 +1,33 @@
-import { useCallback, useContext } from "react";
-import { getMany } from "idb-keyval";
-import { MainContext } from "@_redux/main";
-import { TFileNodeData } from "@_node/file";
-import { TProject } from "@_types/main";
+import {
+  useCallback,
+  useContext,
+} from 'react';
+
+import { getMany } from 'idb-keyval';
+import {
+  useDispatch,
+  useSelector,
+} from 'react-redux';
+
+import { TFileNodeData } from '@_node/file';
+import { MainContext } from '@_redux/main';
+import {
+  fileTreeSelector,
+  TProject,
+} from '@_redux/main/fileTree';
+import {
+  navigatorDropdownTypeSelector,
+  setActivePanel,
+  setNavigatorDropdownType,
+} from '@_redux/main/processor';
 
 export const useNavigatorPanelHandlers = () => {
+  const dispatch = useDispatch();
+
+  const navigatorDropdownType = useSelector(navigatorDropdownTypeSelector);
+  const fileTree = useSelector(fileTreeSelector);
+
   const {
-    // navigator
-    navigatorDropDownType,
-    setNavigatorDropDownType,
-    // node actions
-    setActivePanel,
-    // file tree view
-    ffTree,
     // open project
     loadProject,
   } = useContext(MainContext);
@@ -27,32 +42,32 @@ export const useNavigatorPanelHandlers = () => {
       sessionInfo[0] &&
       sessionInfo[1] &&
       sessionInfo[2] &&
-      navigatorDropDownType !== "workspace"
+      navigatorDropdownType !== "workspace"
     ) {
-      setNavigatorDropDownType("workspace");
+      dispatch(setNavigatorDropdownType("workspace"));
     }
-  }, [navigatorDropDownType]);
+  }, [navigatorDropdownType]);
 
   const onProjectClick = () => {
-    setNavigatorDropDownType("project");
+    dispatch(setNavigatorDropdownType("project"));
   };
 
   const onFileClick = () => {
-    setNavigatorDropDownType("project");
+    dispatch(setNavigatorDropdownType("project"));
   };
 
   const onCloseDropDown = () => {
-    setNavigatorDropDownType(null);
+    dispatch(setNavigatorDropdownType(null));
   };
 
   const onOpenProject = useCallback(
     (project: TProject) => {
       console.log("open project", { project });
-      if (ffTree) {
+      if (fileTree) {
         // confirm files' changes
         let hasChangedFile = false;
-        for (let x in ffTree) {
-          const _file = ffTree[x];
+        for (let x in fileTree) {
+          const _file = fileTree[x];
           const _fileData = _file.data as TFileNodeData;
           if (_file && _fileData.changed) {
             hasChangedFile = true;
@@ -67,11 +82,11 @@ export const useNavigatorPanelHandlers = () => {
       }
       loadProject(project.context, project.handler, false);
     },
-    [ffTree],
+    [fileTree],
   );
 
   const onPanelClick = () => {
-    setActivePanel("file");
+    dispatch(setActivePanel("file"));
   };
 
   return {

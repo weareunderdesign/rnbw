@@ -1,34 +1,43 @@
-import { useCallback, useContext } from "react";
-import { useDispatch, useSelector } from "react-redux";
-
-import { TNodeUid } from "@_node/types";
 import {
-  MainContext,
-  collapseFFNode,
-  expandFFNode,
-  ffSelector,
-  focusFFNode,
-  navigatorSelector,
-  selectFFNode,
-} from "@_redux/main";
-import { useInvalidNodes } from ".";
-import { getValidNodeUids } from "@_node/apis";
+  useCallback,
+  useContext,
+} from 'react';
+
+import {
+  useDispatch,
+  useSelector,
+} from 'react-redux';
+
+import { getValidNodeUids } from '@_node/apis';
+import { TNodeUid } from '@_node/types';
+import { MainContext } from '@_redux/main';
+import {
+  collapseFileTreeNodes,
+  currentFileUidSelector,
+  expandFileTreeNodes,
+  fileTreeSelector,
+  fileTreeViewStateSelector,
+  focusFileTreeNode,
+  projectSelector,
+  selectFileTreeNodes,
+} from '@_redux/main/fileTree';
+
+import { useInvalidNodes } from './';
 
 export const useNodeViewState = () => {
   const dispatch = useDispatch();
 
-  const { file } = useSelector(navigatorSelector);
+  const project = useSelector(projectSelector);
+  const fileTree = useSelector(fileTreeSelector);
+  const currentFileUid = useSelector(currentFileUidSelector);
+
   const { focusedItem, expandedItemsObj, selectedItems, selectedItemsObj } =
-    useSelector(ffSelector);
+    useSelector(fileTreeViewStateSelector);
 
   const {
     // global action
     addRunningActions,
     removeRunningActions,
-    // navigator
-    project,
-    // file tree view
-    ffTree,
   } = useContext(MainContext);
 
   const { invalidNodes } = useInvalidNodes();
@@ -39,14 +48,14 @@ export const useNodeViewState = () => {
       if (
         invalidNodes[uid] ||
         focusedItem === uid ||
-        ffTree[uid] === undefined
+        fileTree[uid] === undefined
       ) {
         removeRunningActions(["fileTreeView-focus"], false);
         return;
       }
 
       addRunningActions(["fileTreeView-focus"]);
-      dispatch(focusFFNode(uid));
+      dispatch(focusFileTreeNode(uid));
       removeRunningActions(["fileTreeView-focus"]);
     },
     [
@@ -54,7 +63,7 @@ export const useNodeViewState = () => {
       removeRunningActions,
       invalidNodes,
       focusedItem,
-      ffTree,
+      fileTree,
     ],
   );
   const cb_selectNode = useCallback(
@@ -62,13 +71,13 @@ export const useNodeViewState = () => {
       // validate
       let _uids = [...uids];
       _uids = _uids.filter((_uid) => {
-        return !(ffTree[_uid] === undefined);
+        return !(fileTree[_uid] === undefined);
       });
       if (_uids.length === 0) {
         removeRunningActions(["fileTreeView-select"], false);
         return;
       }
-      _uids = getValidNodeUids(ffTree, _uids);
+      _uids = getValidNodeUids(fileTree, _uids);
       if (_uids.length === selectedItems.length) {
         let same = true;
         for (const _uid of _uids) {
@@ -82,7 +91,7 @@ export const useNodeViewState = () => {
           return;
         }
       }
-      if (project && file) {
+      if (project && currentFileUid) {
         // remove exist script
         const exist = document.head.querySelector("#custom-plausible");
         if (exist !== null) {
@@ -97,19 +106,19 @@ export const useNodeViewState = () => {
           "rnbw.dev/" +
           project.name +
           "/" +
-          file.uid.replace("ROOT/", "") +
+          currentFileUid.replace("ROOT/", "") +
           `' + window.location.search });
 		  `;
         document.head.appendChild(script);
       }
       addRunningActions(["fileTreeView-select"]);
-      dispatch(selectFFNode(_uids));
+      dispatch(selectFileTreeNodes(_uids));
       removeRunningActions(["fileTreeView-select"]);
     },
     [
       addRunningActions,
       removeRunningActions,
-      ffTree,
+      fileTree,
       invalidNodes,
       selectedItems,
       selectedItemsObj,
@@ -120,8 +129,8 @@ export const useNodeViewState = () => {
       // validate
       if (
         invalidNodes[uid] ||
-        ffTree[uid] === undefined ||
-        ffTree[uid].isEntity ||
+        fileTree[uid] === undefined ||
+        fileTree[uid].isEntity ||
         expandedItemsObj[uid]
       ) {
         removeRunningActions(["fileTreeView-expand"], false);
@@ -129,14 +138,14 @@ export const useNodeViewState = () => {
       }
 
       addRunningActions(["fileTreeView-expand"]);
-      dispatch(expandFFNode([uid]));
+      dispatch(expandFileTreeNodes([uid]));
       removeRunningActions(["fileTreeView-expand"]);
     },
     [
       addRunningActions,
       removeRunningActions,
       invalidNodes,
-      ffTree,
+      fileTree,
       expandedItemsObj,
     ],
   );
@@ -145,8 +154,8 @@ export const useNodeViewState = () => {
       // validate
       if (
         invalidNodes[uid] ||
-        ffTree[uid] === undefined ||
-        ffTree[uid].isEntity ||
+        fileTree[uid] === undefined ||
+        fileTree[uid].isEntity ||
         !expandedItemsObj[uid]
       ) {
         removeRunningActions(["fileTreeView-collapse"], false);
@@ -154,14 +163,14 @@ export const useNodeViewState = () => {
       }
 
       addRunningActions(["fileTreeView-collapse"]);
-      dispatch(collapseFFNode([uid]));
+      dispatch(collapseFileTreeNodes([uid]));
       removeRunningActions(["fileTreeView-collapse"]);
     },
     [
       addRunningActions,
       removeRunningActions,
       invalidNodes,
-      ffTree,
+      fileTree,
       expandedItemsObj,
     ],
   );

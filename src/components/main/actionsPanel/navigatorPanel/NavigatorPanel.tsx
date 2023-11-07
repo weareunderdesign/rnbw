@@ -1,75 +1,88 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { useSelector } from "react-redux";
+import React, {
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
-import { TFileNodeData } from "@_node/file";
-import { MainContext, navigatorSelector } from "@_redux/main";
+import { useSelector } from 'react-redux';
 
-import { NavigatorPanelProps } from "./types";
-import { useNavigatorPanelHandlers, useFavicon } from "./hooks";
+import { themeSelector } from '@_redux/global';
+import { MainContext } from '@_redux/main';
+import {
+  currentFileUidSelector,
+  fileTreeSelector,
+  projectSelector,
+  workspaceSelector,
+} from '@_redux/main/fileTree';
+import {
+  faviconSelector,
+  navigatorDropdownTypeSelector,
+} from '@_redux/main/processor';
 
 import {
-  unsavedLightProjectImg,
-  unsavedDarkProjectImg,
-  projectLightImg,
+  AdditionalPanel,
+  DefaultPanel,
+  ProjectPanel,
+} from './components';
+import {
   projectDarkImg,
-} from "./constants";
-
-import { AdditionalPanel, DefaultPanel, ProjectPanel } from "./components";
+  projectLightImg,
+  unsavedProjectDarkImg,
+  unsavedProjectLightImg,
+} from './constants';
+import {
+  useFavicon,
+  useNavigatorPanelHandlers,
+} from './hooks';
+import { NavigatorPanelProps } from './types';
 
 export default function NavigatorPanel(props: NavigatorPanelProps) {
-  // -------------------------------------------------------------- global state --------------------------------------------------------------
-  const { file } = useSelector(navigatorSelector);
+  const theme = useSelector(themeSelector);
+
+  const navigatorDropdownType = useSelector(navigatorDropdownTypeSelector);
+  const favicon = useSelector(faviconSelector);
+
+  const workspace = useSelector(workspaceSelector);
+  const project = useSelector(projectSelector);
+  const fileTree = useSelector(fileTreeSelector);
+  const currentFileUid = useSelector(currentFileUidSelector);
+
   const {
-    // navigator
-    workspace,
-    project,
-    navigatorDropDownType,
-    // file tree view
-    ffTree,
-    // references
     filesReferenceData,
-    // other
-    theme,
     // open project
     loadProject,
     setParseFile,
-    favicon,
   } = useContext(MainContext);
 
-  // -------------------------------------------------------------- favicon --------------------------------------------------------------
-  const [faviconFallback, setFaviconFallback] = useState<boolean>(false);
-
+  const [faviconFallback, setFaviconFallback] = useState(false);
   useFavicon(setFaviconFallback);
 
-  // -------------------------------------------------------------- sync --------------------------------------------------------------
   const [unsavedProject, setUnsavedProject] = useState(false);
-
   useMemo(() => {
-    setUnsavedProject(false);
-    for (let x in ffTree) {
-      if (!ffTree[x].data) continue;
-      const nodeData = ffTree[x].data as unknown as TFileNodeData;
-      if (nodeData.changed) {
+    for (const uid in fileTree) {
+      if (fileTree[uid].data.changed) {
         setUnsavedProject(true);
+        return;
       }
     }
-  }, [ffTree]);
+    setUnsavedProject(false);
+  }, [fileTree]);
 
-  // set app's favicon
   useEffect(() => {
     let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
     if (link) {
       link.href = unsavedProject
         ? theme === "Light"
-          ? unsavedLightProjectImg
-          : unsavedDarkProjectImg
+          ? unsavedProjectLightImg
+          : unsavedProjectDarkImg
         : theme === "Light"
         ? projectLightImg
         : projectDarkImg;
     }
   }, [unsavedProject, theme]);
 
-  // -------------------------------------------------------------- dropdown --------------------------------------------------------------
   const navigatorPanelRef = useRef<HTMLDivElement | null>(null);
 
   const {
@@ -82,7 +95,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
   } = useNavigatorPanelHandlers();
 
   return useMemo(() => {
-    return file.uid !== "" ? (
+    return currentFileUid !== "" ? (
       <>
         <div
           id="NavigatorPanel"
@@ -90,18 +103,18 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
           onClick={onPanelClick}
           ref={navigatorPanelRef}
         >
-          {!navigatorDropDownType ? (
+          {!navigatorDropdownType ? (
             <DefaultPanel />
-          ) : navigatorDropDownType === "workspace" ? (
+          ) : navigatorDropdownType === "workspace" ? (
             <></>
-          ) : navigatorDropDownType === "project" ? (
+          ) : navigatorDropdownType === "project" ? (
             <ProjectPanel />
           ) : (
             <></>
           )}
         </div>
 
-        {navigatorDropDownType && (
+        {navigatorDropdownType && (
           <AdditionalPanel navigatorPanel={navigatorPanelRef.current} />
         )}
       </>
@@ -112,13 +125,13 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
     onPanelClick,
     workspace,
     project,
-    file,
+    fileTree,
+    currentFileUid,
     filesReferenceData,
-    ffTree,
     onWorkspaceClick,
     onProjectClick,
     onFileClick,
-    navigatorDropDownType,
+    navigatorDropdownType,
     onCloseDropDown,
     onOpenProject,
     loadProject,

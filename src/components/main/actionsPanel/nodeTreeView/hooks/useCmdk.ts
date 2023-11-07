@@ -1,17 +1,24 @@
-import { useContext, useEffect } from "react";
-import { AddNodeActionPrefix } from "@_constants/main";
-import { MainContext } from "@_redux/main";
-import { useNodeActionsHandlers } from "./useNodeActionsHendlers";
+import {
+  useContext,
+  useEffect,
+} from 'react';
+
+import { useSelector } from 'react-redux';
+
+import { AddNodeActionPrefix } from '@_constants/main';
+import { themeSelector } from '@_redux/global';
+import { MainContext } from '@_redux/main';
+import { currentCommandSelector } from '@_redux/main/cmdk';
+import { activePanelSelector } from '@_redux/main/processor';
+
+import { useNodeActionsHandlers } from './useNodeActionsHendlers';
 
 export const useCmdk = () => {
-  const {
-    // node actions
-    activePanel,
-    // cmdk
-    currentCommand,
-    // other
-    theme: _theme,
-  } = useContext(MainContext);
+  const activePanel = useSelector(activePanelSelector);
+  const currentCommand = useSelector(currentCommandSelector);
+  const theme = useSelector(themeSelector);
+
+  const {} = useContext(MainContext);
 
   const {
     onCut,
@@ -30,6 +37,8 @@ export const useCmdk = () => {
   };
 
   useEffect(() => {
+    if (!currentCommand) return;
+
     if (isAddNodeAction(currentCommand.action)) {
       onAddNode(currentCommand.action);
       return;

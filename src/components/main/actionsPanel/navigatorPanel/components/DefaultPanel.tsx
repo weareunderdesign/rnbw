@@ -1,20 +1,38 @@
 import React, { useContext, useMemo } from "react";
+
 import { useSelector } from "react-redux";
 
 import { SVGIconI } from "@_components/common";
-import { TFileNodeData } from "@_node/file";
-import { MainContext, navigatorSelector } from "@_redux/main";
+import { RootNodeUid } from "@_constants/main";
+import { MainContext } from "@_redux/main";
+import {
+  currentFileUidSelector,
+  fileTreeSelector,
+  projectSelector,
+} from "@_redux/main/fileTree";
 
+import { getFileExtension, getFileNameFromPath, isHomeIcon } from "../helpers";
 import { useNavigatorPanelHandlers } from "../hooks";
-import { isHomeIcon, getFileNameFromPath, getFileExtension } from "../helpers";
 
-export const DefaultPanel = React.memo(() => {
-  const { file } = useSelector(navigatorSelector);
-  const { project, ffTree, filesReferenceData } = useContext(MainContext);
+export const DefaultPanel = () => {
+  const project = useSelector(projectSelector);
+  const fileTree = useSelector(fileTreeSelector);
+  const currentFileUid = useSelector(currentFileUidSelector);
 
-  const node = useMemo(() => ffTree[file.uid], [ffTree, file.uid]);
-  const fileName = useMemo(() => getFileNameFromPath(file), [file]);
-  const fileExtension = useMemo(() => getFileExtension(node), [node]);
+  const { filesReferenceData } = useContext(MainContext);
+
+  const fileNode = useMemo(
+    () => fileTree[currentFileUid],
+    [fileTree, currentFileUid],
+  );
+  const fileName = useMemo(
+    () => fileNode && getFileNameFromPath(fileNode),
+    [fileNode],
+  );
+  const fileExtension = useMemo(
+    () => fileNode && getFileExtension(fileNode),
+    [fileNode],
+  );
 
   const { onProjectClick, onFileClick } = useNavigatorPanelHandlers();
 
@@ -22,7 +40,6 @@ export const DefaultPanel = React.memo(() => {
     <>
       <div className="gap-s align-center" onClick={onProjectClick}>
         <SVGIconI {...{ class: "icon-xs" }}>folder</SVGIconI>
-
         <span
           className="text-s"
           style={{
@@ -35,22 +52,19 @@ export const DefaultPanel = React.memo(() => {
           {project.name}
         </span>
       </div>
-
       <span className="text-s opacity-m">/</span>
 
-      {/* path */}
-      {file.parentUid !== "ROOT" && (
+      {fileNode && fileNode.parentUid !== RootNodeUid && (
         <>
           <span className="text-s">...</span>
           <span className="text-s opacity-m">/</span>
         </>
       )}
 
-      {/* file */}
-      {node && (
+      {fileNode && (
         <div className="gap-s align-center" onClick={onFileClick}>
           <SVGIconI {...{ class: "icon-xs" }}>
-            {isHomeIcon(node)
+            {isHomeIcon(fileNode)
               ? "home"
               : filesReferenceData[fileExtension] && fileExtension !== "md"
               ? filesReferenceData[fileExtension].Icon
@@ -59,7 +73,7 @@ export const DefaultPanel = React.memo(() => {
           <span
             className="text-s"
             style={{
-              width: file.parentUid !== "ROOT" ? "60px" : "90px",
+              width: fileNode.parentUid !== RootNodeUid ? "60px" : "90px",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
               overflow: "hidden",
@@ -68,7 +82,7 @@ export const DefaultPanel = React.memo(() => {
             {fileName}
           </span>
 
-          {node && (node.data as TFileNodeData).changed && (
+          {fileNode && fileNode.data.changed && (
             <div
               className="radius-s foreground-primary"
               title="unsaved file"
@@ -79,4 +93,4 @@ export const DefaultPanel = React.memo(() => {
       )}
     </>
   );
-});
+};

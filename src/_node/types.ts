@@ -1,37 +1,64 @@
-import { TFileNodeData } from "./file";
-import { THtmlDomNodeData, THtmlNodeData, THtmlReferenceData } from "./html";
+import { editor } from "monaco-editor";
 
-export type TNodeUid = string;
+import { TOsType } from "@_redux/global";
+import { THtmlReferenceData } from "@_types/main";
+
 export type TNode = {
   uid: TNodeUid;
   parentUid: TNodeUid | null;
-  name: string;
+
+  displayName: string;
+
   isEntity: boolean;
   children: TNodeUid[];
-  data: TNormalNodeData | TFileNodeData | THtmlNodeData | THtmlDomNodeData;
-  sourceCodeLocation: {
-    startLine: number;
-    startCol: number;
-    startOffset: number;
-    endLine: number;
-    endCol: number;
-    endOffset: number;
-  };
+
+  data: TNodeData;
 };
-export type TNormalNodeData = {
+
+export type TNodeUid = string;
+
+export type TNodeData = TBasicNodeData & { [propName: string]: any };
+
+export type TBasicNodeData = {
   valid: boolean;
-  [propName: string]: any;
 };
+
 export type TNodeTreeData = {
   [uid: TNodeUid]: TNode;
 };
-export type TNodeTreeContext = "file" | "html";
-export type TNodeApiResponse = {
-  tree: TNodeTreeData;
-  nodeMaxUid?: TNodeUid;
-  deletedUids?: TNodeUid[];
-  addedUidMap?: Map<TNodeUid, TNodeUid>;
-  position?: number;
-  lastNodeUid?: TNodeUid;
+
+export type TNodeSourceCodeLocation = {
+  startLine: number;
+  startCol: number;
+  startOffset: number;
+  endLine: number;
+  endCol: number;
+  endOffset: number;
 };
+
+export type TNodeApiPayload = {
+  tree: TNodeTreeData;
+  isFileTree: boolean;
+  fileExt?: string;
+
+  action: TNodeActionType;
+
+  selectedUids: TNodeUid[];
+  tragetUid: TNodeUid;
+  isBetween?: boolean;
+  position?: number;
+
+  codeViewInstance: editor.IStandaloneCodeEditor;
+  codeViewTabSize?: number;
+
+  osType?: TOsType;
+};
+
+export type TNodeActionType =
+  | "create"
+  | "remove"
+  | "duplicate"
+  | "move"
+  | "copy";
+
 export type TNodeReferenceData = THtmlReferenceData;

@@ -1,21 +1,25 @@
 import { useContext, useEffect } from "react";
+
+import { useDispatch, useSelector } from "react-redux";
+
 import { RootNodeUid } from "@_constants/main";
 import { getSubNodeUidsByBfs } from "@_node/apis";
 import { TNodeTreeData } from "@_node/types";
 import { MainContext } from "@_redux/main";
+import { nodeTreeSelector, setValidNodeTree } from "@_redux/main/nodeTree";
 
 export const useProcessorNodeTree = () => {
+  const dispatch = useDispatch();
+
+  const nodeTree = useSelector(nodeTreeSelector);
   const {
     // global action
     addRunningActions,
     removeRunningActions,
-    // node tree view
-    nodeTree,
-    setValidNodeTree,
   } = useContext(MainContext);
 
   useEffect(() => {
-    if (!nodeTree[RootNodeUid]) return;
+    if (!nodeTree || !nodeTree[RootNodeUid]) return;
 
     const _nodeTree: TNodeTreeData = JSON.parse(JSON.stringify(nodeTree));
     const _validNodeTree: TNodeTreeData = {};
@@ -35,7 +39,7 @@ export const useProcessorNodeTree = () => {
     });
 
     addRunningActions(["processor-validNodeTree"]);
-    setValidNodeTree(_validNodeTree);
+    dispatch(setValidNodeTree(_validNodeTree));
 
     removeRunningActions(["processor-nodeTree"]);
   }, [nodeTree]);

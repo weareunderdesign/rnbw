@@ -1,23 +1,31 @@
 import { useCallback, useContext } from "react";
 import { useSelector } from "react-redux";
-import { fnSelector, MainContext, navigatorSelector } from "@_redux/main";
+import { MainContext } from "@_redux/main";
 import { AddNodeActionPrefix } from "@_constants/main";
 
 import { useNodeActions } from "./useNodeActions";
 import { Range } from "monaco-editor";
 import { useEditor } from "@_components/main/codeView/hooks";
+import {
+  currentFileUidSelector,
+  fileTreeSelector,
+} from "@_redux/main/fileTree";
+import {
+  nodeTreeSelector,
+  nodeTreeViewStateSelector,
+  validNodeTreeSelector,
+} from "@_redux/main/nodeTree";
 
 export const useNodeActionsHandlers = () => {
-  const { file } = useSelector(navigatorSelector);
-  const { focusedItem, selectedItems } = useSelector(fnSelector);
+  const fileTree = useSelector(fileTreeSelector);
+  const currentFileUid = useSelector(currentFileUidSelector);
+
+  const nodeTree = useSelector(nodeTreeSelector);
+  const validNodeTree = useSelector(validNodeTreeSelector);
+
+  const { focusedItem, selectedItems } = useSelector(nodeTreeViewStateSelector);
   const {
-    // file tree view
-    ffTree,
-    // node tree view
-    nodeTree,
-    validNodeTree,
     // other
-    theme: _theme,
     monacoEditorRef,
   } = useContext(MainContext);
 
@@ -36,12 +44,18 @@ export const useNodeActionsHandlers = () => {
     if (selectedItems.length === 0) return;
     cb_copyNode(selectedItems);
     cb_removeNode(selectedItems);
-  }, [selectedItems, ffTree[file.uid], nodeTree, cb_removeNode, cb_copyNode]);
+  }, [
+    selectedItems,
+    fileTree[currentFileUid],
+    nodeTree,
+    cb_removeNode,
+    cb_copyNode,
+  ]);
 
   const onCopy = useCallback(() => {
     if (selectedItems.length === 0) return;
     cb_copyNode(selectedItems);
-  }, [selectedItems, ffTree[file.uid], nodeTree, cb_copyNode]);
+  }, [selectedItems, fileTree[currentFileUid], nodeTree, cb_copyNode]);
 
   const onPaste = useCallback(() => {
     const focusedNode = validNodeTree[focusedItem];
@@ -52,12 +66,12 @@ export const useNodeActionsHandlers = () => {
     }
 
     const selectedNode = validNodeTree[focusedNode.uid];
-    if (!selectedNode || !selectedNode.sourceCodeLocation) {
+    if (!selectedNode || !selectedNode.data.sourceCodeLocation) {
       console.error("Parent node or source code location is undefined");
       return;
     }
 
-    const { endLine, endCol } = selectedNode.sourceCodeLocation;
+    const { endLine, endCol } = selectedNode.data.sourceCodeLocation;
     const model = monacoEditorRef.current?.getModel();
 
     if (!model) {
@@ -88,7 +102,7 @@ export const useNodeActionsHandlers = () => {
       .catch((error) => {
         console.error("Error reading from clipboard:", error);
       });
-  }, [validNodeTree, focusedItem, focusedItem]);
+  }, [validNodeTree, focusedItem]);
 
   const onDelete = useCallback(() => {
     if (selectedItems.length === 0) return;
@@ -120,7 +134,7 @@ export const useNodeActionsHandlers = () => {
       );
       cb_addNode(tagName);
     },
-    [cb_addNode],
+    [cb_addNode, validNodeTree, focusedItem],
   );
 
   return {

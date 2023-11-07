@@ -1,13 +1,16 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
-import { NodeInAppAttribName } from "@_constants/main";
+import { StageNodeIdAttr } from "@_node/html";
 import { TNode, TNodeUid } from "@_node/types";
-import { fnSelector, MainContext } from "@_redux/main";
+import { AppState } from "@_redux/_root";
+import { MainContext } from "@_redux/main";
+import {
+  setIframeLoading,
+  setNeedToReloadIframe,
+} from "@_redux/main/stageView";
 
-import { jss } from "./js";
-import { styles } from "./styles";
 import {
   useChangeIframeTheme,
   useCmdk,
@@ -16,21 +19,23 @@ import {
   useSideEffectHandlers,
   useTextEditing,
 } from "./hooks";
+import { jss } from "./js";
+import { styles } from "./styles";
 
 export const IFrame = () => {
   // -------------------------------------------------------------- global state --------------------------------------------------------------
-  const { focusedItem, selectedItems } = useSelector(fnSelector);
+  const dispatch = useDispatch();
+  const { focusedItem, selectedItems } = useSelector(
+    (state: AppState) => state.main.nodeTree.nodeTreeViewState,
+  );
+  const {} = useSelector((state: AppState) => state.main.nodeEvent);
+  const { iframeLoading, needToReloadIframe, iframeSrc } = useSelector(
+    (state: AppState) => state.main.stageView,
+  );
+  const { hoveredNodeUid } = useSelector(
+    (state: AppState) => state.main.nodeTree,
+  );
   const {
-    // node actions
-    event,
-    // node tree view
-    fnHoveredItem,
-    // stage view
-    setIFrameLoading,
-    iframeSrc,
-    needToReloadIFrame,
-    setNeedToReloadIFrame,
-    // code view
     setCodeViewOffsetTop,
     // toasts
     parseFileFlag,
@@ -41,7 +46,7 @@ export const IFrame = () => {
   const [contentRef, setContentRef] = useState<HTMLIFrameElement | null>(null);
   const isEditing = useRef<boolean>(false);
   // mark hovered item
-  const fnHoveredItemRef = useRef<TNodeUid>(fnHoveredItem);
+  const fnHoveredItemRef = useRef<TNodeUid>(hoveredNodeUid);
   const mostRecentSelectedNode = useRef<TNode>();
 
   const linkTagUid = useRef<TNodeUid>("");
@@ -49,17 +54,17 @@ export const IFrame = () => {
   const contentEditableUidRef = useRef("");
 
   useEffect(() => {
-    if (fnHoveredItemRef.current === fnHoveredItem) return;
+    if (fnHoveredItemRef.current === hoveredNodeUid) return;
 
     // remove cur hovered effect
     {
       // for the elements which are created by js. (ex: Web Component)
       let curHoveredElement =
         contentRef?.contentWindow?.document?.querySelector(
-          `[${NodeInAppAttribName}="${fnHoveredItemRef.current}"]`,
+          `[${StageNodeIdAttr}="${fnHoveredItemRef.current}"]`,
         );
       const isValid: null | string = curHoveredElement?.firstElementChild
-        ? curHoveredElement?.firstElementChild.getAttribute(NodeInAppAttribName)
+        ? curHoveredElement?.firstElementChild.getAttribute(StageNodeIdAttr)
         : "";
       isValid === null
         ? (curHoveredElement = curHoveredElement?.firstElementChild)
@@ -72,10 +77,10 @@ export const IFrame = () => {
       // for the elements which are created by js. (ex: Web Component)
       let newHoveredElement =
         contentRef?.contentWindow?.document?.querySelector(
-          `[${NodeInAppAttribName}="${fnHoveredItem}"]`,
+          `[${StageNodeIdAttr}="${hoveredNodeUid}"]`,
         );
       const isValid: null | string = newHoveredElement?.firstElementChild
-        ? newHoveredElement?.firstElementChild.getAttribute(NodeInAppAttribName)
+        ? newHoveredElement?.firstElementChild.getAttribute(StageNodeIdAttr)
         : "";
       isValid === null
         ? (newHoveredElement = newHoveredElement?.firstElementChild)
@@ -83,8 +88,8 @@ export const IFrame = () => {
       newHoveredElement?.setAttribute("rnbwdev-rnbw-element-hover", "");
     }
 
-    fnHoveredItemRef.current = fnHoveredItem;
-  }, [fnHoveredItem]);
+    fnHoveredItemRef.current = hoveredNodeUid;
+  }, [hoveredNodeUid]);
 
   // iframe scroll event
   const focusedItemRef = useRef<TNodeUid>(focusedItem);
@@ -95,7 +100,7 @@ export const IFrame = () => {
 
     const newFocusedElement =
       contentRef?.contentWindow?.document?.querySelector(
-        `[${NodeInAppAttribName}="${focusedItem}"]`,
+        `[${StageNodeIdAttr}="${focusedItem}"]`,
       );
     const elementRect = (
       newFocusedElement as HTMLElement
@@ -149,17 +154,15 @@ export const IFrame = () => {
     }
 
     setTimeout(() => {
-      // remove org selcted effect
+      // remove original selected effect
       selectedItemsRef.current.map((uid) => {
         // for the elements which are created by js. (ex: Web Component)
         let curselectedElement =
           contentRef?.contentWindow?.document?.querySelector(
-            `[${NodeInAppAttribName}="${uid}"]`,
+            `[${StageNodeIdAttr}="${uid}"]`,
           );
         const isValid: null | string = curselectedElement?.firstElementChild
-          ? curselectedElement?.firstElementChild.getAttribute(
-              NodeInAppAttribName,
-            )
+          ? curselectedElement?.firstElementChild.getAttribute(StageNodeIdAttr)
           : "";
         isValid === null
           ? (curselectedElement = curselectedElement?.firstElementChild)
@@ -171,12 +174,10 @@ export const IFrame = () => {
         // for the elements which are created by js. (ex: Web Component)
         let newSelectedElement =
           contentRef?.contentWindow?.document?.querySelector(
-            `[${NodeInAppAttribName}="${uid}"]`,
+            `[${StageNodeIdAttr}="${uid}"]`,
           );
         const isValid: null | string = newSelectedElement?.firstElementChild
-          ? newSelectedElement?.firstElementChild.getAttribute(
-              NodeInAppAttribName,
-            )
+          ? newSelectedElement?.firstElementChild.getAttribute(StageNodeIdAttr)
           : "";
         isValid === null
           ? (newSelectedElement = newSelectedElement?.firstElementChild)
@@ -280,7 +281,7 @@ export const IFrame = () => {
   useEffect(() => {
     if (contentRef) {
       dblClickTimestamp.current = 0;
-      setIFrameLoading(true);
+      dispatch(setIframeLoading(true));
       contentRef.onload = () => {
         const _document = contentRef?.contentWindow?.document;
         const htmlNode = _document?.documentElement;
@@ -324,11 +325,13 @@ export const IFrame = () => {
           let lastClickTime = 0;
           let lastClickTarget: EventTarget | null = null;
           htmlNode.addEventListener("pointerdown", (e: PointerEvent) => {
+            setIsDblClick(true);
             const currentTime = e.timeStamp;
             const timeSinceLastClick = currentTime - lastClickTime;
             if (timeSinceLastClick < 500 && lastClickTarget === e.target) {
               externalDblclick.current = false;
               setIframeEvent(e);
+              onDblClick(e);
             }
             lastClickTime = currentTime;
             lastClickTarget = e.target;
@@ -345,41 +348,15 @@ export const IFrame = () => {
           });
         }
 
-        setIFrameLoading(false);
+        dispatch(setIframeLoading(false));
       };
     }
   }, [contentRef]);
 
-  useEffect(() => {
-    if (!iframeEvent) return;
-
-    const { type } = iframeEvent;
-    switch (type) {
-      case "mouseenter":
-        onMouseEnter(iframeEvent);
-        break;
-      case "mousemove":
-        onMouseMove(iframeEvent);
-        break;
-      case "mouseleave":
-        onMouseLeave(iframeEvent);
-        break;
-      case "click":
-        setIsDblClick(false);
-        onClick(iframeEvent);
-        break;
-      case "pointerdown":
-        setIsDblClick(true);
-        onDblClick(iframeEvent);
-        break;
-      default:
-        break;
-    }
-  }, [iframeEvent]);
-
   // node actions, code change - side effect
   useEffect(() => {
     if (event) {
+      //@ts-ignore //TODO: fix this
       const { type, param } = event;
       switch (type) {
         case "add-node":
@@ -431,12 +408,12 @@ export const IFrame = () => {
 
   // reload when script changes
   useEffect(() => {
-    if (needToReloadIFrame) {
+    if (needToReloadIframe) {
       contentRef?.contentWindow?.location.reload();
-      setNeedToReloadIFrame(false);
+      dispatch(setNeedToReloadIframe(false));
       linkTagUid.current = "";
     }
-  }, [needToReloadIFrame, contentRef]);
+  }, [needToReloadIframe, contentRef]);
 
   return useMemo(() => {
     const onLoad = () => {
@@ -454,7 +431,7 @@ export const IFrame = () => {
 
     return (
       <>
-        {iframeSrc && !needToReloadIFrame && (
+        {iframeSrc && !needToReloadIframe && (
           <iframe
             ref={setContentRef}
             src={iframeSrc}
@@ -471,5 +448,5 @@ export const IFrame = () => {
         )}
       </>
     );
-  }, [iframeSrc, needToReloadIFrame, parseFileFlag, prevFileUid, setParseFile]);
+  }, [iframeSrc, needToReloadIframe, parseFileFlag, prevFileUid, setParseFile]);
 };

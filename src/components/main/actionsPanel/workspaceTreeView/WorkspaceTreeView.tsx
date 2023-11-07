@@ -5,76 +5,88 @@ import React, {
   useMemo,
   useRef,
 } from "react";
+
 import cx from "classnames";
 import { DraggingPositionItem } from "react-complex-tree";
 import { useDispatch, useSelector } from "react-redux";
 
 import { SVGIconI, TreeView } from "@_components/common";
 import { TreeViewData } from "@_components/common/treeView/types";
-import {
-  AddFileActionPrefix,
-  HmsClearActionType,
-  RootNodeUid,
-} from "@_constants/main";
-import {
-  _path,
-  getNormalizedPath,
-  TFileNodeData,
-  TFilesReference,
-} from "@_node/file";
+import { AddFileActionPrefix, RootNodeUid } from "@_constants/main";
+import { _path, getNormalizedPath, TFileNodeData } from "@_node/file";
 import { TNode, TNodeUid } from "@_node/types";
+import { MainContext } from "@_redux/main";
+import { currentCommandSelector } from "@_redux/main/cmdk";
 import {
-  ffSelector,
-  globalSelector,
-  MainContext,
-  navigatorSelector,
-} from "@_redux/main";
+  currentFileUidSelector,
+  fileTreeSelector,
+  fileTreeViewStateSelector,
+  hoveredFileUidSelector,
+  initialFileUidToOpenSelector,
+  lastFileActionSelector,
+  projectSelector,
+  setHoveredFileUid,
+  setInitialFileUidToOpen,
+} from "@_redux/main/fileTree";
+import {
+  fileActionSelector,
+  FileTree_Event_ClearActionType,
+} from "@_redux/main/fileTree/event";
+import {
+  activePanelSelector,
+  didRedoSelector,
+  didUndoSelector,
+  navigatorDropdownTypeSelector,
+  setActivePanel,
+  setDidRedo,
+  setDidUndo,
+  showActionsPanelSelector,
+} from "@_redux/main/processor";
+import { linkToOpenSelector } from "@_redux/main/stageView";
 import { addClass, generateQuerySelector, removeClass } from "@_services/main";
+
 import {
+  useCmdk,
   useFileOperations,
   useInvalidNodes,
   useNodeActionsHandler,
   useNodeViewState,
   useTemporaryNodes,
-  useCmdk,
 } from "./hooks";
 import { Container, ItemArrow } from "./workSpaceTreeComponents";
+import { TFilesReference } from "@_types/main";
 
 const AutoExpandDelay = 1 * 1000;
 export default function WorkspaceTreeView() {
   const dispatch = useDispatch();
-  // -------------------------------------------------------------- global state --------------------------------------------------------------
-  const { file } = useSelector(navigatorSelector);
-  const { fileAction } = useSelector(globalSelector);
-  const { focusedItem, expandedItems, selectedItems } = useSelector(ffSelector);
+
+  const currentFileUid = useSelector(currentFileUidSelector);
+  const fileAction = useSelector(fileActionSelector);
+  const project = useSelector(projectSelector);
+  const navigatorDropdownType = useSelector(navigatorDropdownTypeSelector);
+  const { focusedItem, expandedItems, selectedItems } = useSelector(
+    fileTreeViewStateSelector,
+  );
+  const activePanel = useSelector(activePanelSelector);
+  const showActionsPanel = useSelector(showActionsPanelSelector);
+  const initialFileUidToOpen = useSelector(initialFileUidToOpenSelector);
+
+  const fileTree = useSelector(fileTreeSelector);
+  const hoveredFileUid = useSelector(hoveredFileUidSelector);
+  const lastFileAction = useSelector(lastFileActionSelector);
+
+  const linkToOpen = useSelector(linkToOpenSelector);
+  const currentCommand = useSelector(currentCommandSelector);
+
+  const didUndo = useSelector(didUndoSelector);
+  const didRedo = useSelector(didRedoSelector);
+
   const {
     // global action
     addRunningActions,
     removeRunningActions,
-    // navigator
-    project,
-    navigatorDropDownType,
-    // node actions
-    activePanel,
-    setActivePanel,
-    // actions panel
-    showActionsPanel,
-    // file tree view
-    initialFileToOpen,
-    setInitialFileToOpen,
-    ffTree,
-    ffHoveredItem,
-    setFFHoveredItem,
-    isHms,
-    setIsHms,
-    ffAction,
-    currentFileUid,
-    // stage view
-    linkToOpen,
     // references
     filesReferenceData,
-    // cmdk
-    currentCommand,
     // non-parse file
     parseFileFlag,
     setParseFile,
@@ -89,10 +101,10 @@ export default function WorkspaceTreeView() {
   const { _copy, _create, _cut, _delete, _rename } = useFileOperations();
 
   useEffect(() => {
-    if (isHms === null) return;
+    if (!didUndo && !didRedo) return;
 
     // isHms === true ? undo : redo
-    if (isHms === true) {
+    if (didUndo) {
       const { type, param1, param2 } = fileAction;
       if (type === "create") {
         _delete([param1]);
@@ -132,7 +144,7 @@ export default function WorkspaceTreeView() {
       } else if (type === "delete") {
       }
     } else {
-      const { type, param1, param2 } = ffAction;
+      const { type, param1, param2 } = lastFileAction;
       if (type === "create") {
         _create(param2);
       } else if (type === "rename") {
@@ -164,13 +176,14 @@ export default function WorkspaceTreeView() {
       }
     }
 
-    setIsHms(null);
-  }, [isHms]);
+    dispatch(setDidUndo(false));
+    dispatch(setDidRedo(false));
+  }, [didUndo, didRedo]);
   // -------------------------------------------------------------- sync --------------------------------------------------------------
   // outline the hovered item
-  const hoveredItemRef = useRef<TNodeUid>(ffHoveredItem);
+  const hoveredItemRef = useRef<TNodeUid>(hoveredFileUid);
   useEffect(() => {
-    if (hoveredItemRef.current === ffHoveredItem) return;
+    if (hoveredItemRef.current === hoveredFileUid) return;
 
     const curHoveredElement = document.querySelector(
       `#FileTreeView-${generateQuerySelector(hoveredItemRef.current)}`,
@@ -180,15 +193,15 @@ export default function WorkspaceTreeView() {
       removeClass(curHoveredElement.getAttribute("class") || "", "outline"),
     );
     const newHoveredElement = document.querySelector(
-      `#FileTreeView-${generateQuerySelector(ffHoveredItem)}`,
+      `#FileTreeView-${generateQuerySelector(hoveredFileUid)}`,
     );
     newHoveredElement?.setAttribute(
       "class",
       addClass(newHoveredElement.getAttribute("class") || "", "outline"),
     );
 
-    hoveredItemRef.current = ffHoveredItem;
-  }, [ffHoveredItem]);
+    hoveredItemRef.current = hoveredFileUid;
+  }, [hoveredFileUid]);
   // scroll to the focused item
   const focusedItemRef = useRef<TNodeUid>(focusedItem);
   useEffect(() => {
@@ -212,8 +225,8 @@ export default function WorkspaceTreeView() {
   // build fileTreeViewData
   const fileTreeViewData = useMemo(() => {
     const data: TreeViewData = {};
-    for (const uid in ffTree) {
-      const node: TNode = ffTree[uid];
+    for (const uid in fileTree) {
+      const node: TNode = fileTree[uid];
       data[uid] = {
         index: uid,
         data: node,
@@ -224,25 +237,31 @@ export default function WorkspaceTreeView() {
       };
     }
     return data;
-  }, [ffTree]);
+  }, [fileTree]);
   // -------------------------------------------------------------- node view state handlers --------------------------------------------------------------
   const { cb_collapseNode, cb_expandNode, cb_focusNode, cb_selectNode } =
     useNodeViewState();
   // -------------------------------------------------------------- project --------------------------------------------------------------
   // open default initial html file
   useEffect(() => {
-    if (initialFileToOpen !== "" && ffTree[initialFileToOpen] !== undefined) {
-      setInitialFileToOpen("");
+    if (
+      initialFileUidToOpen !== "" &&
+      fileTree[initialFileUidToOpen] !== undefined
+    ) {
+      console.log({ initialFileUidToOpen, project, currentFileUid });
+      dispatch(setInitialFileUidToOpen(""));
       // focus/select/read the initial file
       addRunningActions([
         "fileTreeView-focus",
         "fileTreeView-select",
         "fileTreeView-read",
       ]);
-      cb_focusNode(initialFileToOpen);
-      cb_selectNode([initialFileToOpen]);
-      cb_readNode(initialFileToOpen);
-      if (project && file) {
+
+      cb_focusNode(initialFileUidToOpen);
+      cb_selectNode([initialFileUidToOpen]);
+      cb_readNode(initialFileUidToOpen);
+
+      if (project && currentFileUid) {
         // remove exist script
         const exist = document.head.querySelector("#custom-plausible");
         if (exist !== null) {
@@ -257,13 +276,13 @@ export default function WorkspaceTreeView() {
           "rnbw.dev/" +
           project.name +
           "/" +
-          file.uid.replace("ROOT/", "") +
+          currentFileUid.replace(`${RootNodeUid}/`, "") +
           `' + window.location.search });
         `;
         document.head.appendChild(script);
       }
     }
-  }, [initialFileToOpen]);
+  }, [initialFileUidToOpen]);
   // -------------------------------------------------------------- node actions handlers --------------------------------------------------------------
 
   const openFileUid = useRef<TNodeUid>("");
@@ -278,18 +297,18 @@ export default function WorkspaceTreeView() {
 
   useEffect(() => {
     if (
-      ffTree[openFileUid.current] !== undefined &&
+      fileTree[openFileUid.current] !== undefined &&
       currentFileUid === openFileUid.current
     ) {
       openFile(openFileUid.current);
     }
-  }, [ffTree, currentFileUid]);
+  }, [fileTree, currentFileUid]);
 
   // handlle links-open
   const openFile = useCallback(
     (uid: TNodeUid) => {
-      if (file.uid === uid) return;
-      dispatch({ type: HmsClearActionType });
+      if (currentFileUid === uid) return;
+      dispatch({ type: FileTree_Event_ClearActionType });
       // focus/select/read the file
       addRunningActions([
         "fileTreeView-focus",
@@ -300,14 +319,14 @@ export default function WorkspaceTreeView() {
       cb_selectNode([uid]);
       cb_readNode(uid);
     },
-    [ffTree, addRunningActions, cb_focusNode, cb_selectNode, cb_readNode],
+    [fileTree, addRunningActions, cb_focusNode, cb_selectNode, cb_readNode],
   );
   useEffect(() => {
-    if (linkToOpen === "") return;
+    if (!linkToOpen || linkToOpen === "") return;
 
-    const node = ffTree[file.uid];
+    const node = fileTree[currentFileUid];
     if (node === undefined) return;
-    const parentNode = ffTree[node.parentUid as TNodeUid];
+    const parentNode = fileTree[node.parentUid as TNodeUid];
     if (parentNode === undefined) return;
 
     const { isAbsolutePath, normalizedPath } = getNormalizedPath(linkToOpen);
@@ -323,6 +342,8 @@ export default function WorkspaceTreeView() {
     useCmdk(openFileUid);
 
   useEffect(() => {
+    if (!currentCommand) return;
+
     if (isAddFileAction(currentCommand.action)) {
       onAddNode(currentCommand.action);
       return;
@@ -357,384 +378,358 @@ export default function WorkspaceTreeView() {
 
   // -------------------------------------------------------------- own --------------------------------------------------------------
   const onPanelClick = useCallback((e: React.MouseEvent) => {
-    setActivePanel("file");
+    dispatch(setActivePanel("file"));
   }, []);
 
-  return useMemo(() => {
-    return file.uid === "" || navigatorDropDownType === "project" ? (
-      <>
-        <div
-          id="FileTreeView"
-          style={{
-            position: "relative",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "auto",
-            overflow: "auto",
+  return currentFileUid === "" || navigatorDropdownType === "project" ? (
+    <>
+      <div
+        id="FileTreeView"
+        style={{
+          position: "relative",
+          top: 0,
+          left: 0,
+          width: "100%",
+          maxHeight: "calc(50vh - 50px)",
+          height: "auto",
+          overflow: "auto",
 
-            ...(navigatorDropDownType ? { zIndex: 2 } : {}),
-          }}
-          className={
-            navigatorDropDownType ? "border-bottom background-primary" : ""
-          }
-          onClick={onPanelClick}
-        >
-          <TreeView
-            width={"100%"}
-            height={"auto"}
-            info={{ id: "file-tree-view" }}
-            data={fileTreeViewData}
-            focusedItem={focusedItem}
-            expandedItems={expandedItems}
-            selectedItems={selectedItems}
-            renderers={{
-              renderTreeContainer: (props) => <Container {...props} />,
-              renderItemsContainer: (props) => <Container {...props} />,
+          ...(navigatorDropdownType ? { zIndex: 2 } : {}),
+        }}
+        className={
+          navigatorDropdownType ? "border-bottom background-primary" : ""
+        }
+        onClick={onPanelClick}
+      >
+        <TreeView
+          width={"100%"}
+          height={"auto"}
+          info={{ id: "file-tree-view" }}
+          data={fileTreeViewData}
+          focusedItem={focusedItem}
+          expandedItems={expandedItems}
+          selectedItems={selectedItems}
+          renderers={{
+            renderTreeContainer: (props) => <Container {...props} />,
+            renderItemsContainer: (props) => <Container {...props} />,
 
-              renderItem: (props) => {
-                useEffect(() => {
-                  const node = props.item.data as TNode;
-                  if (!node.data.valid) {
-                    props.context.selectItem();
-                    props.context.startRenamingItem();
+            renderItem: (props) => {
+              useEffect(() => {
+                const node = props.item.data as TNode;
+                if (!node.data.valid) {
+                  props.context.selectItem();
+                  props.context.startRenamingItem();
+                }
+              }, []);
+
+              const fileReferenceData = useMemo<TFilesReference>(() => {
+                const node = props.item.data as TNode;
+                const nodeData = node.data as TFileNodeData;
+                const refData =
+                  filesReferenceData[
+                    nodeData.kind === "directory"
+                      ? "folder"
+                      : nodeData.ext
+                      ? nodeData.ext.slice(1)
+                      : nodeData.ext
+                  ];
+                return refData;
+              }, []);
+
+              const onClick = useCallback(
+                (e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  openFileUid.current = props.item.data.uid;
+                  // skip click-event from an inline rename input
+                  const targetId = e.target && (e.target as HTMLElement).id;
+                  if (targetId === "FileTreeView-RenameInput") {
+                    return;
                   }
-                }, []);
 
-                const fileReferenceData = useMemo<TFilesReference>(() => {
-                  const node = props.item.data as TNode;
-                  const nodeData = node.data as TFileNodeData;
-                  const refData =
-                    filesReferenceData[
-                      nodeData.kind === "directory"
-                        ? "folder"
-                        : nodeData.ext
-                        ? nodeData.ext.slice(1)
-                        : nodeData.type
-                    ];
-                  return refData;
-                }, []);
-
-                const onClick = useCallback(
-                  (e: React.MouseEvent) => {
-                    e.stopPropagation();
-                    openFileUid.current = props.item.data.uid;
-                    // skip click-event from an inline rename input
-                    const targetId = e.target && (e.target as HTMLElement).id;
-                    if (targetId === "FileTreeView-RenameInput") {
-                      return;
-                    }
-
-                    addRunningActions(["fileTreeView-select"]);
-                    !props.context.isFocused &&
-                      addRunningActions(["fileTreeView-focus"]);
-                    !e.shiftKey &&
-                      !e.ctrlKey &&
-                      addRunningActions(
-                        props.item.isFolder
-                          ? [
-                              props.context.isExpanded
-                                ? "fileTreeView-collapse"
-                                : "fileTreeView-expand",
-                            ]
-                          : ["fileTreeView-read"],
-                      );
-
-                    if (!props.context.isFocused) {
-                      props.context.focusItem();
-                      focusedItemRef.current = props.item.index as TNodeUid;
-                    }
-                    e.shiftKey
-                      ? props.context.selectUpTo()
-                      : e.ctrlKey
-                      ? props.context.isSelected
-                        ? props.context.unselectItem()
-                        : props.context.addToSelectedItems()
-                      : [
-                          props.context.selectItem(),
-                          props.item.isFolder
-                            ? props.context.toggleExpandedState()
-                            : props.context.primaryAction(),
-                        ];
-
-                    setActivePanel("file");
-                  },
-                  [props.item, props.context],
-                );
-
-                const onDragStart = (e: React.DragEvent) => {
-                  const target = e.target as HTMLElement;
-                  e.dataTransfer.setDragImage(
-                    target,
-                    window.outerWidth,
-                    window.outerHeight,
-                  );
-                  props.context.startDragging();
-                };
-
-                const onDragEnter = () => {
-                  if (!props.context.isExpanded) {
-                    setTimeout(
-                      () => cb_expandNode(props.item.index as TNodeUid),
-                      AutoExpandDelay,
+                  addRunningActions(["fileTreeView-select"]);
+                  !props.context.isFocused &&
+                    addRunningActions(["fileTreeView-focus"]);
+                  !e.shiftKey &&
+                    !e.ctrlKey &&
+                    addRunningActions(
+                      props.item.isFolder
+                        ? [
+                            props.context.isExpanded
+                              ? "fileTreeView-collapse"
+                              : "fileTreeView-expand",
+                          ]
+                        : ["fileTreeView-read"],
                     );
+
+                  if (!props.context.isFocused) {
+                    props.context.focusItem();
+                    focusedItemRef.current = props.item.index as TNodeUid;
                   }
-                };
+                  e.shiftKey
+                    ? props.context.selectUpTo()
+                    : e.ctrlKey
+                    ? props.context.isSelected
+                      ? props.context.unselectItem()
+                      : props.context.addToSelectedItems()
+                    : [
+                        props.context.selectItem(),
+                        props.item.isFolder
+                          ? props.context.toggleExpandedState()
+                          : props.context.primaryAction(),
+                      ];
 
-                const onMouseEnter = () =>
-                  setFFHoveredItem(props.item.index as TNodeUid);
+                  dispatch(setActivePanel("file"));
+                },
+                [props.item, props.context],
+              );
 
-                const onMouseLeave = () => setFFHoveredItem("" as TNodeUid);
+              const onDragStart = (e: React.DragEvent) => {
+                const target = e.target as HTMLElement;
+                e.dataTransfer.setDragImage(
+                  target,
+                  window.outerWidth,
+                  window.outerHeight,
+                );
+                props.context.startDragging();
+              };
 
-                return (
-                  <>
-                    <li
+              const onDragEnter = () => {
+                if (!props.context.isExpanded) {
+                  setTimeout(
+                    () => cb_expandNode(props.item.index as TNodeUid),
+                    AutoExpandDelay,
+                  );
+                }
+              };
+
+              const onMouseEnter = () =>
+                dispatch(setHoveredFileUid(props.item.index as TNodeUid));
+
+              const onMouseLeave = () => dispatch(setHoveredFileUid(""));
+
+              return (
+                <>
+                  <li
+                    className={cx(
+                      props.context.isSelected && "background-secondary",
+
+                      props.context.isDraggingOver && "",
+                      props.context.isDraggingOverParent && "",
+
+                      props.context.isFocused && "",
+                    )}
+                    {...props.context.itemContainerWithChildrenProps}
+                  >
+                    <div
+                      id={`FileTreeView-${generateQuerySelector(
+                        props.item.index.toString(),
+                      )}`}
                       className={cx(
-                        props.context.isSelected && "background-secondary",
+                        "justify-stretch",
+                        "padding-xs",
+                        "outline-default",
+                        "gap-s",
 
-                        props.context.isDraggingOver && "",
+                        props.context.isSelected &&
+                          "background-tertiary outline-none",
+                        !props.context.isSelected &&
+                          props.context.isFocused &&
+                          "outline",
+
+                        props.context.isDraggingOver && "outline",
                         props.context.isDraggingOverParent && "",
 
-                        props.context.isFocused && "",
+                        invalidNodes[props.item.data.uid] && "opacity-m",
                       )}
-                      {...props.context.itemContainerWithChildrenProps}
+                      style={{
+                        flexWrap: "nowrap",
+                        paddingLeft: `${props.depth * 18}px`,
+                      }}
+                      {...props.context.itemContainerWithoutChildrenProps}
+                      {...props.context.interactiveElementProps}
+                      onClick={onClick}
+                      onFocus={() => {}}
+                      onMouseEnter={onMouseEnter}
+                      onMouseLeave={onMouseLeave}
+                      onDragStart={onDragStart}
+                      onDragEnter={onDragEnter}
                     >
                       <div
-                        id={`FileTreeView-${generateQuerySelector(
-                          props.item.index.toString(),
-                        )}`}
-                        className={cx(
-                          "justify-stretch",
-                          "padding-xs",
-                          "outline-default",
-                          "gap-s",
-
-                          props.context.isSelected &&
-                            "background-tertiary outline-none",
-                          !props.context.isSelected &&
-                            props.context.isFocused &&
-                            "outline",
-
-                          props.context.isDraggingOver && "outline",
-                          props.context.isDraggingOverParent && "",
-
-                          invalidNodes[props.item.data.uid] && "opacity-m",
-                        )}
+                        className="gap-s padding-xs"
                         style={{
-                          flexWrap: "nowrap",
-                          paddingLeft: `${props.depth * 18}px`,
+                          width: "fit-content",
+                          paddingRight: `0px`,
                         }}
-                        {...props.context.itemContainerWithoutChildrenProps}
-                        {...props.context.interactiveElementProps}
-                        onClick={onClick}
-                        onFocus={() => {}}
-                        onMouseEnter={onMouseEnter}
-                        onMouseLeave={onMouseLeave}
-                        onDragStart={onDragStart}
-                        onDragEnter={onDragEnter}
                       >
-                        <div
-                          className="gap-s padding-xs"
-                          style={{
-                            width: "fit-content",
-                            paddingRight: `0px`,
-                          }}
-                        >
-                          {props.arrow}
+                        {props.arrow}
 
-                          {fileReferenceData ? (
+                        {fileReferenceData ? (
+                          <SVGIconI {...{ class: "icon-xs" }}>
+                            {props.item.data?.data.kind === "file" &&
+                            props.item.data?.data.name === "index" &&
+                            props.item.data?.data.type === "html" &&
+                            props.item.data?.parentUid === "ROOT"
+                              ? "home"
+                              : fileReferenceData &&
+                                fileReferenceData["Icon"] &&
+                                fileReferenceData["Icon"] !== "md"
+                              ? fileReferenceData["Icon"]
+                              : "page"}
+                          </SVGIconI>
+                        ) : (
+                          <div className="icon-xs">
                             <SVGIconI {...{ class: "icon-xs" }}>
-                              {props.item.data?.data.kind === "file" &&
-                              props.item.data?.data.name === "index" &&
-                              props.item.data?.data.type === "html" &&
-                              props.item.data?.parentUid === "ROOT"
-                                ? "home"
-                                : fileReferenceData &&
-                                  fileReferenceData["Icon"] &&
-                                  fileReferenceData["Icon"] !== "md"
-                                ? fileReferenceData["Icon"]
-                                : "page"}
+                              {props.item.data?.data.kind === "file"
+                                ? "page"
+                                : "folder"}
                             </SVGIconI>
-                          ) : (
-                            <div className="icon-xs">
-                              <SVGIconI {...{ class: "icon-xs" }}>
-                                {props.item.data?.data.kind === "file"
-                                  ? "page"
-                                  : "folder"}
-                              </SVGIconI>
-                            </div>
-                          )}
-                        </div>
-
-                        {props.title}
+                          </div>
+                        )}
                       </div>
 
-                      {props.context.isExpanded ? (
-                        <>
-                          <div>{props.children}</div>
-                        </>
-                      ) : null}
-                    </li>
-                  </>
-                );
-              },
-              renderItemArrow: (props) => <ItemArrow {...props} />,
-              renderItemTitle: (props) => {
-                return (
-                  <>
-                    <span
-                      className="text-s justify-start gap-s align-center"
+                      {props.title}
+                    </div>
+
+                    {props.context.isExpanded ? (
+                      <>
+                        <div>{props.children}</div>
+                      </>
+                    ) : null}
+                  </li>
+                </>
+              );
+            },
+            renderItemArrow: (props) => <ItemArrow {...props} />,
+            renderItemTitle: (props) => {
+              return (
+                <>
+                  <span
+                    className="text-s justify-start gap-s align-center"
+                    style={{
+                      width: "100%",
+                      textOverflow: "ellipsis",
+                      overflow: "hidden",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {props.title + props.item?.data?.data?.ext}
+                    {fileTree[props.item.data.uid] &&
+                      (fileTree[props.item.data.uid].data as TFileNodeData)
+                        .changed && (
+                        <div
+                          className="radius-s foreground-primary"
+                          title="unsaved file"
+                          style={{ width: "6px", height: "6px" }}
+                        ></div>
+                      )}
+                  </span>
+                </>
+              );
+            },
+            renderRenameInput: (props) => {
+              const onChange = useCallback(
+                (e: React.ChangeEvent<HTMLInputElement>) => {
+                  props.inputProps.onChange && props.inputProps.onChange(e);
+                },
+                [props.inputProps],
+              );
+
+              const onBlur = useCallback(
+                (e: React.FocusEvent<HTMLInputElement, Element>) => {
+                  props.inputProps.onBlur && props.inputProps.onBlur(e);
+                  props.formProps.onSubmit &&
+                    props.formProps.onSubmit(
+                      new Event(
+                        "",
+                      ) as unknown as React.FormEvent<HTMLFormElement>,
+                    );
+                },
+                [props.inputProps, props.formProps],
+              );
+
+              return (
+                <>
+                  <form {...props.formProps} className={"box"}>
+                    <input
+                      id={"FileTreeView-RenameInput"}
+                      {...props.inputProps}
+                      ref={props.inputRef}
+                      className={cx("text-s")}
                       style={{
-                        width: "100%",
-                        textOverflow: "ellipsis",
-                        overflow: "hidden",
-                        whiteSpace: "nowrap",
+                        outline: "none",
+                        margin: "0",
+                        border: "none",
+                        padding: "0",
+                        background: "transparent",
                       }}
-                    >
-                      {props.title + props.item?.data?.data?.ext}
-                      {ffTree[props.item.data.uid] &&
-                        (ffTree[props.item.data.uid].data as TFileNodeData)
-                          .changed && (
-                          <div
-                            className="radius-s foreground-primary"
-                            title="unsaved file"
-                            style={{ width: "6px", height: "6px" }}
-                          ></div>
-                        )}
-                    </span>
-                  </>
-                );
-              },
-              renderRenameInput: (props) => {
-                const onChange = useCallback(
-                  (e: React.ChangeEvent<HTMLInputElement>) => {
-                    props.inputProps.onChange && props.inputProps.onChange(e);
-                  },
-                  [props.inputProps],
-                );
+                      onChange={onChange}
+                      onBlur={onBlur}
+                    />
+                    <button
+                      ref={props.submitButtonRef}
+                      className={"hidden"}
+                    ></button>
+                  </form>
+                </>
+              );
+            },
+          }}
+          props={{
+            canDragAndDrop: true,
+            canDropOnFolder: true,
+            canDropOnNonFolder: false,
+            canReorderItems: false,
 
-                const onBlur = useCallback(
-                  (e: React.FocusEvent<HTMLInputElement, Element>) => {
-                    props.inputProps.onBlur && props.inputProps.onBlur(e);
-                    props.formProps.onSubmit &&
-                      props.formProps.onSubmit(
-                        new Event(
-                          "",
-                        ) as unknown as React.FormEvent<HTMLFormElement>,
-                      );
-                  },
-                  [props.inputProps, props.formProps],
-                );
+            canSearch: false,
+            canSearchByStartingTyping: false,
+            canRename: true,
+          }}
+          callbacks={{
+            onStartRenamingItem: (item) => {
+              cb_startRenamingNode(item.index as TNodeUid);
+            },
+            onAbortRenamingItem: (item) => {
+              cb_abortRenamingNode(item);
+            },
+            onRenameItem: (item, name) => {
+              cb_renameNode(item, name);
+            },
 
-                return (
-                  <>
-                    <form {...props.formProps} className={"box"}>
-                      <input
-                        id={"FileTreeView-RenameInput"}
-                        {...props.inputProps}
-                        ref={props.inputRef}
-                        className={cx("text-s")}
-                        style={{
-                          outline: "none",
-                          margin: "0",
-                          border: "none",
-                          padding: "0",
-                          background: "transparent",
-                        }}
-                        onChange={onChange}
-                        onBlur={onBlur}
-                      />
-                      <button
-                        ref={props.submitButtonRef}
-                        className={"hidden"}
-                      ></button>
-                    </form>
-                  </>
-                );
-              },
-            }}
-            props={{
-              canDragAndDrop: true,
-              canDropOnFolder: true,
-              canDropOnNonFolder: false,
-              canReorderItems: false,
+            onSelectItems: (items) => {
+              cb_selectNode(items as TNodeUid[]);
+            },
+            onFocusItem: (item) => {
+              cb_focusNode(item.index as TNodeUid);
+            },
+            onExpandItem: (item) => {
+              cb_expandNode(item.index as TNodeUid);
+            },
+            onCollapseItem: (item) => {
+              cb_collapseNode(item.index as TNodeUid);
+            },
 
-              canSearch: false,
-              canSearchByStartingTyping: false,
-              canRename: true,
-            }}
-            callbacks={{
-              onStartRenamingItem: (item) => {
-                cb_startRenamingNode(item.index as TNodeUid);
-              },
-              onAbortRenamingItem: (item) => {
-                cb_abortRenamingNode(item);
-              },
-              onRenameItem: (item, name) => {
-                cb_renameNode(item, name);
-              },
+            onPrimaryAction: (item) => {
+              item.data.data.valid
+                ? cb_readNode(item.index as TNodeUid)
+                : removeRunningActions(["fileTreeView-read"], false);
+            },
 
-              onSelectItems: (items) => {
-                cb_selectNode(items as TNodeUid[]);
-              },
-              onFocusItem: (item) => {
-                cb_focusNode(item.index as TNodeUid);
-              },
-              onExpandItem: (item) => {
-                cb_expandNode(item.index as TNodeUid);
-              },
-              onCollapseItem: (item) => {
-                cb_collapseNode(item.index as TNodeUid);
-              },
+            onDrop: (items, target) => {
+              const targetUid = (target as DraggingPositionItem)
+                .targetItem as TNodeUid;
+              if (invalidNodes[targetUid]) return;
+              const uids = items
+                .map((item) => item.index as TNodeUid)
+                .filter((uid) => !invalidNodes[uid]);
+              if (uids.length === 0) return;
 
-              onPrimaryAction: (item) => {
-                item.data.data.valid
-                  ? cb_readNode(item.index as TNodeUid)
-                  : removeRunningActions(["fileTreeView-read"], false);
-              },
-
-              onDrop: (items, target) => {
-                const targetUid = (target as DraggingPositionItem)
-                  .targetItem as TNodeUid;
-                if (invalidNodes[targetUid]) return;
-                const uids = items
-                  .map((item) => item.index as TNodeUid)
-                  .filter((uid) => !invalidNodes[uid]);
-                if (uids.length === 0) return;
-
-                cb_moveNode(uids, targetUid);
-              },
-            }}
-          />
-        </div>
-      </>
-    ) : (
-      <></>
-    );
-  }, [
-    onPanelClick,
-    showActionsPanel,
-    navigatorDropDownType,
-    ffTree,
-    fileTreeViewData,
-    file,
-    focusedItem,
-    selectedItems,
-    expandedItems,
-    addRunningActions,
-    removeRunningActions,
-    cb_startRenamingNode,
-    cb_abortRenamingNode,
-    cb_renameNode,
-    cb_selectNode,
-    cb_focusNode,
-    cb_expandNode,
-    cb_collapseNode,
-    cb_readNode,
-    cb_moveNode,
-    parseFileFlag,
-    setParseFile,
-    prevFileUid,
-    SVGIconI,
-  ]);
+              cb_moveNode(uids, targetUid);
+            },
+          }}
+        />
+      </div>
+    </>
+  ) : (
+    <></>
+  );
 }

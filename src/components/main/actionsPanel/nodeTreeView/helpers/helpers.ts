@@ -1,7 +1,7 @@
-import { NodeInAppAttribName } from "@_constants/main";
-import { TNodeTreeData, TNodeUid } from "@_node/types";
 import { editor } from "monaco-editor";
 import { DraggingPosition } from "react-complex-tree";
+import { StageNodeIdAttr } from "@_node/html";
+import { TNodeTreeData, TNodeUid } from "@_node/types";
 
 export const sortUidsByMaxEndIndex = (
   uids: TNodeUid[],
@@ -13,9 +13,9 @@ export const sortUidsByMaxEndIndex = (
 
     if (
       !selectedNode1 ||
-      !selectedNode1.sourceCodeLocation ||
+      !selectedNode1.data.sourceCodeLocation ||
       !selectedNode2 ||
-      !selectedNode2.sourceCodeLocation
+      !selectedNode2.data.sourceCodeLocation
     ) {
       console.error(
         "Parent node or source code location is undefined for sortedUid",
@@ -23,8 +23,8 @@ export const sortUidsByMaxEndIndex = (
       return 0;
     }
 
-    const { endLine: endLine1 } = selectedNode1.sourceCodeLocation;
-    const { endLine: endLine2 } = selectedNode2.sourceCodeLocation;
+    const { endLine: endLine1 } = selectedNode1.data.sourceCodeLocation;
+    const { endLine: endLine2 } = selectedNode2.data.sourceCodeLocation;
 
     return endLine2 - endLine1; // Sort in descending order
   });
@@ -39,9 +39,9 @@ export const sortUidsByMinStartIndex = (
 
     if (
       !selectedNode1 ||
-      !selectedNode1.sourceCodeLocation ||
+      !selectedNode1.data.sourceCodeLocation ||
       !selectedNode2 ||
-      !selectedNode2.sourceCodeLocation
+      !selectedNode2.data.sourceCodeLocation
     ) {
       console.error(
         "Parent node or source code location is undefined for sortedUid",
@@ -49,31 +49,31 @@ export const sortUidsByMinStartIndex = (
       return 0;
     }
 
-    const { startOffset: start1 } = selectedNode1.sourceCodeLocation;
-    const { startOffset: start2 } = selectedNode2.sourceCodeLocation;
+    const { startOffset: start1 } = selectedNode1.data.sourceCodeLocation;
+    const { startOffset: start2 } = selectedNode2.data.sourceCodeLocation;
 
     return start1 - start2; // Sort in descending order
   });
 };
 export const getCopiedContent = (uid: TNodeUid, iframe: any) => {
   const ele = iframe?.contentWindow?.document?.querySelector(
-    `[${NodeInAppAttribName}="${uid}"]`,
+    `[${StageNodeIdAttr}="${uid}"]`,
   );
 
   //create a copy of ele
   const eleCopy = ele?.cloneNode(true) as HTMLElement;
-  const innerElements = eleCopy.querySelectorAll(`[${NodeInAppAttribName}]`);
+  const innerElements = eleCopy.querySelectorAll(`[${StageNodeIdAttr}]`);
 
   innerElements.forEach((element) => {
-    if (element.hasAttribute(NodeInAppAttribName)) {
-      element.removeAttribute(NodeInAppAttribName);
+    if (element.hasAttribute(StageNodeIdAttr)) {
+      element.removeAttribute(StageNodeIdAttr);
     }
   });
 
   eleCopy?.removeAttribute("contenteditable");
   eleCopy?.removeAttribute("rnbwdev-rnbw-element-hover");
   eleCopy?.removeAttribute("rnbwdev-rnbw-element-select");
-  eleCopy?.removeAttribute(NodeInAppAttribName);
+  eleCopy?.removeAttribute(StageNodeIdAttr);
   const cleanedUpCode = eleCopy?.outerHTML;
 
   //delete the copy
@@ -117,7 +117,7 @@ export const getDropOptions = (
   const childrenNodes = targetNode.children;
 
   const isFirstNesting = !isBetween && !childrenNodes.length;
-  const targetNodeTagName = targetNode.data.name;
+  const targetNodeTagName = targetNode.data.nodeName;
 
   if (isFirstNesting && isNestingProhibited(targetNodeTagName)) {
     console.log("The target node cannot have children");
@@ -125,13 +125,13 @@ export const getDropOptions = (
   }
 
   const insideNestingPosition = isFirstNesting
-    ? targetNode?.sourceCodeLocation
-    : validNodeTree[childrenNodes[childrenNodes.length - 1]]
+    ? targetNode?.data.sourceCodeLocation
+    : validNodeTree[childrenNodes[childrenNodes.length - 1]]?.data
         ?.sourceCodeLocation;
 
   const betweenNestingPosition = order
-    ? validNodeTree[childrenNodes[order - 1]]?.sourceCodeLocation
-    : validNodeTree[childrenNodes[0]]?.sourceCodeLocation;
+    ? validNodeTree[childrenNodes[order - 1]]?.data?.sourceCodeLocation
+    : validNodeTree[childrenNodes[0]]?.data?.sourceCodeLocation;
 
   const {
     endLine,

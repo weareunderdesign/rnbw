@@ -1,16 +1,17 @@
-import { TNodeTreeData, TNodeUid } from "@_node/types";
-import { moveActions } from "./moveActions";
 import { TFileHandlerCollection, TFileNodeData } from "@_node/file";
+import { TNodeTreeData, TNodeUid } from "@_node/types";
 import { verifyFileHandlerPermission } from "@_services/main";
-import { duplicatingWarning, invalidDirError } from "../errors";
-import { generateNewNodeName } from ".";
 import { TToast } from "@_types/global";
+
+import { duplicatingWarning, invalidDirError } from "../errors";
+import { generateNewNodeName } from "./";
+import { moveActions } from "./moveActions";
 
 export const duplicateNode = async (
   uid: TNodeUid,
   isCopy: boolean,
   ffTree: TNodeTreeData,
-  ffHandlers: TFileHandlerCollection,
+  fileHandlers: TFileHandlerCollection,
   addMessage: (message: TToast) => void,
   setInvalidNodes: any,
   invalidNodes: { [uid: string]: boolean },
@@ -24,7 +25,9 @@ export const duplicateNode = async (
   const parentNode = ffTree[node.parentUid as TNodeUid];
   if (!parentNode) return;
 
-  const parentHandler = ffHandlers[parentNode.uid] as FileSystemDirectoryHandle;
+  const parentHandler = fileHandlers[
+    parentNode.uid
+  ] as FileSystemDirectoryHandle;
 
   if (!(await verifyFileHandlerPermission(parentHandler))) {
     addMessage(invalidDirError);
@@ -43,7 +46,7 @@ export const duplicateNode = async (
 
   try {
     await moveLocalFF(
-      ffHandlers[uid],
+      fileHandlers[uid],
       parentHandler,
       parentHandler,
       newName,

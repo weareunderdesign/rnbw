@@ -1,12 +1,13 @@
 import {
+  createDirectory,
   TFileHandlerCollection,
   TFileNodeData,
-  createDirectory,
   writeFile,
 } from "@_node/file";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
+import { TProject } from "@_redux/main/fileTree";
 import { verifyFileHandlerPermission } from "@_services/main";
-import { TFileNodeType, TProject } from "@_types/main";
+import { TFileNodeType } from "@_types/main";
 
 export const createFileOrFolder = async (
   parentUid: TNodeUid,
@@ -14,7 +15,7 @@ export const createFileOrFolder = async (
   type: TFileNodeType,
   project: TProject,
   ffTree: TNodeTreeData,
-  ffHandlers: TFileHandlerCollection,
+  fileHandlers: TFileHandlerCollection,
 ) => {
   try {
     const parentNode = ffTree[parentUid];
@@ -22,7 +23,7 @@ export const createFileOrFolder = async (
     const parentNodeData = parentNode.data as TFileNodeData;
 
     if (project.context === "local") {
-      const parentHandler = ffHandlers[
+      const parentHandler = fileHandlers[
         parentNode.uid
       ] as FileSystemDirectoryHandle;
       if (!(await verifyFileHandlerPermission(parentHandler))) {

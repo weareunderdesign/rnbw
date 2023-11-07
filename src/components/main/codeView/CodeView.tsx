@@ -11,42 +11,46 @@ import * as monaco from "monaco-editor";
 import { useDispatch, useSelector } from "react-redux";
 
 import { RootNodeUid } from "@_constants/main";
-import { TFileNodeData, THtmlNodeData, TNodeUid } from "@_node/index";
-import {
-  expandFNNode,
-  fnSelector,
-  focusFNNode,
-  MainContext,
-  navigatorSelector,
-  selectFNNode,
-} from "@_redux/main";
-
+import { useTheme } from "@_hooks/useTheme";
+import { TFileNodeData, TNodeUid } from "@_node/index";
+import { MainContext } from "@_redux/main";
 import { Editor, loader } from "@monaco-editor/react";
 
-import { CodeSelection, CodeViewProps } from "./types";
-import { getPositionFromIndex } from "@_services/htmlapi";
-import { useTheme } from "@_hooks/useTheme";
 import { useEditor, useEditorWrapper } from "./hooks";
+import { CodeViewProps } from "./types";
+import { codeEditingSelector } from "@_redux/main/codeView";
+import {
+  expandNodeTreeNodes,
+  focusNodeTreeNode,
+  selectNodeTreeNodes,
+  validNodeTreeSelector,
+} from "@_redux/main/nodeTree";
+import {
+  showCodeViewSelector,
+  updateOptionsSelector,
+} from "@_redux/main/processor";
+import {
+  currentFileUidSelector,
+  fileTreeSelector,
+} from "@_redux/main/fileTree";
+
+import { AppState } from "@_redux/_root";
 
 loader.config({ monaco });
 
 export default function CodeView(props: CodeViewProps) {
   const dispatch = useDispatch();
   // -------------------------------------------------------------- global state --------------------------------------------------------------
-
-  const { file } = useSelector(navigatorSelector);
-  const { focusedItem } = useSelector(fnSelector);
+  const showCodeView = useSelector(showCodeViewSelector);
+  const { focusedItem } = useSelector(
+    (state: AppState) => state.main.nodeTree.nodeTreeViewState,
+  );
   const {
-    ffTree,
-    validNodeTree,
     // code view
     newFocusedNodeUid,
     setNewFocusedNodeUid,
     // processor
-    updateOpt,
-    theme: _theme,
     parseFileFlag,
-    showCodeView,
     isContentProgrammaticallyChanged,
     monacoEditorRef,
   } = useContext(MainContext);
@@ -62,7 +66,6 @@ export default function CodeView(props: CodeViewProps) {
     updateLanguage,
     editorConfigs,
     findNodeBySelection,
-    codeEditing,
     handleEditorChange,
     focusedNode,
     setFocusedNode,
@@ -70,10 +73,13 @@ export default function CodeView(props: CodeViewProps) {
     setCodeContent,
     selection,
   } = useEditor();
-
+  const codeEditing = useSelector(codeEditingSelector);
+  const fileTree = useSelector(fileTreeSelector);
+  const currentFileUid = useSelector(currentFileUidSelector);
   const { editorWrapperRef, onPanelClick } = useEditorWrapper();
   //-----------------------------------------
-
+  const validNodeTree = useSelector(validNodeTreeSelector);
+  const updateOptions = useSelector(updateOptionsSelector);
   const isFirst = useRef<boolean>(true);
 
   const previewDiv = useRef(null);
@@ -95,18 +101,21 @@ export default function CodeView(props: CodeViewProps) {
 
   // file content change - set code
   useEffect(() => {
-    const _file = ffTree[file.uid];
+    console.log(fileTree);
+  }, [fileTree]);
+  useEffect(() => {
+    const _file = fileTree[currentFileUid];
 
     if (!_file) return;
 
-    if (updateOpt.from === "code") return;
+    if (!updateOptions || updateOptions.from === "code") return;
 
     const fileData = _file.data as TFileNodeData;
     const extension = fileData.ext;
     extension && updateLanguage(extension);
 
     setCodeContent(fileData.content);
-  }, [ffTree[file.uid]]);
+  }, [currentFileUid]);
 
   // focusedItem - code select
   const focusedItemRef = useRef<TNodeUid>("");
@@ -117,7 +126,7 @@ export default function CodeView(props: CodeViewProps) {
     if (!monacoEditor) return;
     const node = validNodeTree[focusedItem];
 
-    const sourceCodeLocation = node.sourceCodeLocation;
+    const sourceCodeLocation = node.data.sourceCodeLocation;
 
     if (!sourceCodeLocation) {
       return;
@@ -181,7 +190,7 @@ export default function CodeView(props: CodeViewProps) {
     if (!parseFileFlag) return;
     if (!selection) return;
 
-    const _file = ffTree[file.uid];
+    const _file = fileTree[currentFileUid];
     if (!_file) return;
 
     const validNodeTreeRef = getValidNodeTreeInstance();
@@ -208,7 +217,7 @@ export default function CodeView(props: CodeViewProps) {
   useEffect(() => {
     if (focusedNode) {
       if (focusedNode.uid === focusedItemRef.current) return;
-      if (updateOpt.from === "hms") return;
+      if (!updateOptions || updateOptions.from === "hms") return;
       // expand path to the uid
       const _expandedItems: TNodeUid[] = [];
       let node = validNodeTree[focusedNode.uid];
@@ -220,9 +229,9 @@ export default function CodeView(props: CodeViewProps) {
         node = validNodeTree[node.parentUid as TNodeUid];
       }
       _expandedItems.shift();
-      dispatch(expandFNNode(_expandedItems));
-      dispatch(focusFNNode(focusedNode.uid));
-      dispatch(selectFNNode([focusedNode.uid]));
+      dispatch(expandNodeTreeNodes(_expandedItems));
+      dispatch(focusNodeTreeNode(focusedNode.uid));
+      dispatch(selectNodeTreeNodes([focusedNode.uid]));
       focusedItemRef.current = focusedNode.uid;
     }
   }, [focusedNode]);

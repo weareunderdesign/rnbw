@@ -1,19 +1,20 @@
-import { useDispatch } from "react-redux";
 import { useContext } from "react";
 
+import { useDispatch, useSelector } from "react-redux";
+
+import { TFileNodeData } from "@_node/file";
 import { TNode, TNodeUid } from "@_node/types";
+import { MainContext } from "@_redux/main";
 import {
-  MainContext,
-  setCurrentFile,
-  setFileAction,
-  updateFFTreeViewState,
-} from "@_redux/main";
+  projectSelector,
+  setCurrentFileUid,
+  updateFileTreeViewState,
+} from "@_redux/main/fileTree";
+import { setFileAction, TFileAction } from "@_redux/main/fileTree/event";
+import { verifyFileHandlerPermission } from "@_services/main";
+
 import { useInvalidNodes, useReloadProject } from "../hooks";
 import { moveActions } from "./moveActions";
-import { verifyFileHandlerPermission } from "@_services/main";
-import { TFileNodeData } from "@_node/file";
-import { invalidDirOrFile, renamingError } from "../errors";
-import { TFileAction } from "@_types/main";
 
 export const renameNode = async (
   ext: string,
@@ -24,15 +25,15 @@ export const renameNode = async (
   uid: TNodeUid,
 ) => {
   const dispatch = useDispatch();
+  const project = useSelector(projectSelector);
 
-  const { removeRunningActions, project, ffHandlers, addMessage } =
-    useContext(MainContext);
+  const { removeRunningActions, fileHandlers } = useContext(MainContext);
 
   const { cb_reloadProject } = useReloadProject();
 
   const { removeInvalidNodes, setInvalidNodes } = useInvalidNodes();
 
-  const { moveIDBFF, moveLocalFF } = moveActions(addMessage);
+  const { moveIDBFF, moveLocalFF } = moveActions(() => {});
 
   const _orgName =
     ext === "*folder" ? `${nodeData.name}` : `${nodeData.name}${nodeData.ext}`;
@@ -42,13 +43,13 @@ export const renameNode = async (
   const newUid = `${parentNode.uid}/${_newName}`;
 
   if (project.context === "local") {
-    const handler = ffHandlers[uid],
-      parentHandler = ffHandlers[parentNode.uid] as FileSystemDirectoryHandle;
+    const handler = fileHandlers[uid],
+      parentHandler = fileHandlers[parentNode.uid] as FileSystemDirectoryHandle;
     if (
       !(await verifyFileHandlerPermission(handler)) ||
       !(await verifyFileHandlerPermission(parentHandler))
     ) {
-      addMessage(invalidDirOrFile);
+      // addMessage(invalidDirOrFile);
 
       removeRunningActions(["fileTreeView-rename"], false);
       return;
@@ -67,7 +68,7 @@ export const renameNode = async (
       );
       removeInvalidNodes(newUid);
     } catch (err) {
-      addMessage(renamingError);
+      // addMessage(renamingError);
 
       removeInvalidNodes(newUid);
       removeRunningActions(["fileTreeView-rename"], false);
@@ -80,7 +81,7 @@ export const renameNode = async (
       await moveIDBFF(nodeData, parentNodeData, _newName, false, true);
       removeInvalidNodes(newUid);
     } catch (err) {
-      addMessage(renamingError);
+      // addMessage(renamingError);
 
       removeInvalidNodes(newUid);
       removeRunningActions(["fileTreeView-rename"], false);
@@ -96,15 +97,8 @@ export const renameNode = async (
   dispatch(setFileAction(action));
 
   // update redux
-  dispatch(
-    setCurrentFile({
-      uid: newUid,
-      parentUid: parentNode.uid,
-      name: nodeData.name,
-      content: nodeData.contentInApp as string,
-    }),
-  );
-  dispatch(updateFFTreeViewState({ convertedUids: [[uid, newUid]] }));
+  dispatch(setCurrentFileUid(newUid));
+  dispatch(updateFileTreeViewState({ convertedUids: [[uid, newUid]] }));
 
   await cb_reloadProject();
   removeRunningActions(["fileTreeView-rename"]);

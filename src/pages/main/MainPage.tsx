@@ -11,17 +11,15 @@ import { Command } from "cmdk";
 import { CustomDirectoryPickerOptions } from "file-system-access/lib/showDirectoryPicker";
 import { delMany, getMany, setMany } from "idb-keyval";
 import { editor } from "monaco-editor";
-import { useDispatch, useSelector } from "react-redux";
-import { useLocation, useParams } from "react-router-dom";
+import { useDispatch } from "react-redux";
 
 import { SVGIcon } from "@_components/common";
-import { ActionsPanel, CodeView, Process, StageView } from "@_components/main";
+import { ActionsPanel, CodeView, StageView } from "@_components/main";
+import Processor from "@_components/main/processor";
+import { LogAllow } from "@_constants/global";
 import {
   AddActionPrefix,
   DefaultProjectPath,
-  DefaultTabSize,
-  HmsClearActionType,
-  LogAllow,
   ParsableFileTypes,
   RecentProjectCount,
   RootNodeUid,
@@ -33,31 +31,44 @@ import {
   loadLocalProject,
   TFileHandlerCollection,
   TFileNodeData,
-  TFilesReference,
-  TFilesReferenceData,
+  TFileNodeTreeData,
 } from "@_node/file";
-import {
-  THtmlElementsReference,
-  THtmlElementsReferenceData,
-  THtmlReferenceData,
-} from "@_node/html";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
+import { setOsType, setTheme } from "@_redux/global";
+import { MainContext } from "@_redux/main";
 import {
-  clearMainState,
-  ffSelector,
-  fnSelector,
-  getActionGroupIndexSelector,
-  globalSelector,
-  hmsInfoSelector,
-  increaseActionGroupIndex,
-  MainContext,
-  navigatorSelector,
-  removeCurrentFile,
+  setCmdkOpen,
+  setCmdkPages,
+  setCmdkSearchContent,
+  setCurrentCmdkPage,
+  setCurrentCommand,
+} from "@_redux/main/cmdk";
+import {
+  setCurrentFileUid,
+  setDoingFileAction,
+  setFileTree,
+  setInitialFileUidToOpen,
+  setProject,
+  setWorkspace,
+  TProject,
+  TProjectContext,
+} from "@_redux/main/fileTree";
+import {
+  FileTree_Event_ClearActionType,
   setFileAction,
-  TCommand,
-  TNavigatorDropDownType,
-  TUpdateOptions,
-} from "@_redux/main";
+} from "@_redux/main/fileTree/event";
+import { setNodeTree, setValidNodeTree } from "@_redux/main/nodeTree";
+import { NodeTree_Event_ClearActionType } from "@_redux/main/nodeTree/event";
+import {
+  setDidUndo,
+  setFavicon,
+  setNavigatorDropdownType,
+  setShowActionsPanel,
+  setShowCodeView,
+  setUpdateOptions,
+} from "@_redux/main/processor";
+import { setIframeSrc } from "@_redux/main/stageView";
+import { useAppState } from "@_redux/useAppState";
 // @ts-ignore
 import cmdkRefActions from "@_ref/cmdk.ref/Actions.csv";
 // @ts-ignore
@@ -66,9 +77,7 @@ import cmdkRefJumpstart from "@_ref/cmdk.ref/Jumpstart.csv";
 import filesRef from "@_ref/rfrncs/Files.csv";
 // @ts-ignore
 import htmlRefElements from "@_ref/rfrncs/HTML Elements.csv";
-import { TOsType, TTheme, TToast } from "@_types/global";
 import {
-  TClipboardData,
   TCmdkContext,
   TCmdkContextScope,
   TCmdkGroupData,
@@ -76,143 +85,143 @@ import {
   TCmdkReference,
   TCmdkReferenceData,
   TCodeChange,
-  TEvent,
-  TFileAction,
-  TFileInfo,
-  TPanelContext,
-  TProject,
-  TProjectContext,
+  TFilesReference,
+  TFilesReferenceData,
+  THtmlElementsReference,
+  THtmlElementsReferenceData,
+  THtmlReferenceData,
   TSession,
-  TWorkspace,
 } from "@_types/main";
 
-import { getCommandKey } from "../../services/global";
+import { getCommandKey, isChromeOrEdge } from "../../services/global";
+import { addDefaultCmdkActions } from "./helper";
 
 export default function MainPage() {
-  // -------------------------------------------------------------- redux  --------------------------------------------------------------
+  // ***************************************** Reducer Begin *****************************************
   const dispatch = useDispatch();
-  const actionGroupIndex = useSelector(getActionGroupIndexSelector);
-  const { file } = useSelector(navigatorSelector);
-  const { fileAction } = useSelector(globalSelector);
+  const {
+    osType,
+    theme,
 
-  //ff is fileTreeViewState
-  const { focusedItem: ffFocusedItem } = useSelector(ffSelector);
+    workspace,
+    project,
+    initialFileUidToOpen,
+    currentFileUid,
+    fileTree,
 
-  //fn is nodeTreeViewState
-  const { focusedItem: fnFocusedItem } = useSelector(fnSelector);
-  const { futureLength, pastLength } = useSelector(hmsInfoSelector);
+    fFocusedItem,
+    fExpandedItems,
+    fExpandedItemsObj,
+    fSelectedItems,
+    fSelectedItemsObj,
+    hoveredFileUid,
 
-  // -------------------------------------------------------------- main context --------------------------------------------------------------
-  const [favicon, setFavicon] = useState<string>("");
-  // global action
-  const [pending, setPending] = useState<boolean>(false); // tells if there are any pending running actions
-  const runningActions = useRef<{ [actionName: string]: boolean }>({});
-  const hasNoRunningAction = useCallback(() => {
-    return Object.keys(runningActions.current).length === 0 ? true : false;
-  }, []);
+    doingFileAction,
+    lastFileAction,
+
+    fileAction,
+    fileEventPast,
+    fileEventPastLength,
+    fileEventFuture,
+    fileEventFutureLength,
+
+    nodeTree,
+    validNodeTree,
+
+    nFocusedItem,
+    nExpandedItems,
+    nExpandedItemsObj,
+    nSelectedItems,
+    nSelectedItemsObj,
+    hoveredNodeUid,
+
+    currentFileContent,
+    selectedNodeUids,
+
+    nodeEventPast,
+    nodeEventPastLength,
+
+    nodeEventFuture,
+    nodeEventFutureLength,
+
+    iframeSrc,
+    iframeLoading,
+    needToReloadIframe,
+    linkToOpen,
+
+    codeViewTabSize,
+    codeEditing,
+
+    navigatorDropdownType,
+    favicon,
+
+    activePanel,
+    clipboardData,
+
+    showActionsPanel,
+    showCodeView,
+
+    didUndo,
+    didRedo,
+
+    updateOptions,
+
+    cmdkOpen,
+    cmdkPages,
+    currentCmdkPage,
+
+    cmdkSearchContent,
+    currentCommand,
+  } = useAppState();
+  // ***************************************** Reducer End *****************************************
+
+  // ***************************************** Context Begin *****************************************
+  const [doingAction, setDoingAction] = useState(false);
+  const runningActions = useRef<{ [actionName: string]: true }>({});
+  const hasRunningAction = useCallback(
+    () => (Object.keys(runningActions.current).length === 0 ? false : true),
+    [],
+  );
   const addRunningActions = useCallback((actionNames: string[]) => {
-    let found: boolean = false;
+    let found = false;
     for (const actionName of actionNames) {
-      if (runningActions.current[actionName] === undefined) {
+      if (!runningActions.current[actionName]) {
         runningActions.current[actionName] = true;
         found = true;
       }
     }
     if (!found) return;
 
-    setPending(true);
+    setDoingAction(true);
   }, []);
   const removeRunningActions = useCallback(
-    (actionNames: string[], effect: boolean = true) => {
-      let found: boolean = false;
+    (actionNames: string[]) => {
+      let found = false;
       for (const actionName of actionNames) {
-        if (runningActions.current[actionName] !== undefined) {
+        if (runningActions.current[actionName]) {
           delete runningActions.current[actionName];
           found = true;
         }
       }
       if (!found) return;
 
-      LogAllow &&
-        console.log(
-          "remove running actions",
-          actionNames,
-          effect,
-          hasNoRunningAction(),
-        );
+      !hasRunningAction() && setDoingAction(false);
+    },
+    [hasRunningAction],
+  );
 
-      if (hasNoRunningAction()) {
-        LogAllow && effect && console.log("hms added");
-        setPending(false);
-        effect && dispatch(increaseActionGroupIndex());
-      }
-    },
-    [hasNoRunningAction, file.content],
-  );
-  // navigator
-  const [workspace, setWorkspace] = useState<TWorkspace>({
-    name: "local",
-    projects: [],
-  });
-  const [project, setProject] = useState<TProject>({
-    context: "idb",
-    name: "Untitled",
-    handler: null,
-    favicon: null,
-  });
-  const [navigatorDropDownType, setNavigatorDropDownType] =
-    useState<TNavigatorDropDownType>(null);
-  // node actions
-  const [activePanel, setActivePanel] = useState<TPanelContext>("unknown");
-  const [clipboardData, setClipboardData] = useState<TClipboardData>({
-    panel: "unknown",
-    type: null,
-    uids: [],
-    fileType: "html",
-    data: [],
-    fileUid: "",
-    prevNodeTree: {},
-  });
-  const [event, setEvent] = useState<TEvent>(null);
-  // actions panel
-  const [showActionsPanel, setShowActionsPanel] = useState(false);
-  // file tree view
-  const [initialFileToOpen, setInitialFileToOpen] = useState<TNodeUid>("");
-  const [fsPending, setFSPending] = useState<boolean>(false);
-  const [ffTree, setFFTree] = useState<TNodeTreeData>({});
-  const setFFNode = useCallback(
-    (ffNode: TNode) => {
-      const _ffTree = JSON.parse(JSON.stringify(ffTree));
-      _ffTree[ffNode.uid] = JSON.parse(JSON.stringify(ffNode));
-      setFFTree(_ffTree);
-    },
-    [ffTree],
-  );
-  const [ffHandlers, setFFHandlers] = useState<TFileHandlerCollection>({});
-  const [ffHoveredItem, setFFHoveredItem] = useState<TNodeUid>("");
-  const [isHms, setIsHms] = useState<boolean | null>(null);
-  const [ffAction, setFFAction] = useState<TFileAction>({ type: null });
-  const [currentFileUid, setCurrentFileUid] = useState<TNodeUid>("");
-  // node tree view
-  const [fnHoveredItem, setFNHoveredItem] = useState<TNodeUid>("");
-  const [nodeTree, setNodeTree] = useState<TNodeTreeData>({});
-  const [validNodeTree, setValidNodeTree] = useState<TNodeTreeData>({});
-  const [nodeMaxUid, setNodeMaxUid] = useState<number>(0);
-  // stage-view
-  const [iframeLoading, setIFrameLoading] = useState<boolean>(false);
-  const [iframeSrc, setIFrameSrc] = useState<string | null>(null);
-  const [fileInfo, setFileInfo] = useState<TFileInfo>(null);
-  const [needToReloadIFrame, setNeedToReloadIFrame] = useState<boolean>(true);
-  const [linkToOpen, setLinkToOpen] = useState<string>("");
-  // code view
-  const [codeEditing, setCodeEditing] = useState<boolean>(false);
-  const isContentProgrammaticallyChanged = useRef<boolean>(false);
-  function setIsContentProgrammaticallyChanged(value: boolean) {
-    isContentProgrammaticallyChanged.current = value;
-  }
-  const [codeChanges, setCodeChanges] = useState<TCodeChange[]>([]);
-  const [tabSize, setTabSize] = useState<number>(DefaultTabSize);
-  const [newFocusedNodeUid, setNewFocusedNodeUid] = useState<TNodeUid>("");
+  const [recentProjectContexts, setRecentProjectContexts] = useState<
+    TProjectContext[]
+  >([]);
+  const [recentProjectNames, setRecentProjectNames] = useState<string[]>([]);
+  const [recentProjectHandlers, setRecentProjectHandlers] = useState<
+    (FileSystemDirectoryHandle | null)[]
+  >([]);
+
+  const [currentProjectFileHandle, setCurrentProjectFileHandle] =
+    useState<FileSystemDirectoryHandle | null>(null);
+  const [fileHandlers, setFileHandlers] = useState<TFileHandlerCollection>({});
+
   const monacoEditorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const setMonacoEditorRef = (
     editorInstance: editor.IStandaloneCodeEditor | null,
@@ -220,12 +229,6 @@ export default function MainPage() {
     monacoEditorRef.current = editorInstance;
   };
 
-  // processor
-  const [updateOpt, setUpdateOpt] = useState<TUpdateOptions>({
-    parse: null,
-    from: null,
-  });
-  // references
   const [filesReferenceData, setFilesReferenceData] =
     useState<TFilesReferenceData>({});
   const [htmlReferenceData, setHtmlReferenceData] =
@@ -238,24 +241,342 @@ export default function MainPage() {
     useState<TCmdkGroupData>({});
   const [cmdkReferenceActions, setCmdkReferenceActions] =
     useState<TCmdkGroupData>({});
-  // non-parse file editable
+
+  // TODO Begin
+  const isContentProgrammaticallyChanged = useRef(false);
+  const setIsContentProgrammaticallyChanged = (value: boolean) => {
+    isContentProgrammaticallyChanged.current = value;
+  };
+  const [codeChanges, setCodeChanges] = useState<TCodeChange[]>([]);
+  const [newFocusedNodeUid, setNewFocusedNodeUid] = useState<TNodeUid>("");
+
   const [parseFileFlag, setParseFile] = useState<boolean>(true);
   const [prevFileUid, setPrevFileUid] = useState<string>("");
-  // cmdk
-  const [currentCommand, setCurrentCommand] = useState<TCommand>({
-    action: "",
-  });
-  const [cmdkOpen, setCmdkOpen] = useState<boolean>(false);
-  const [cmdkPages, setCmdkPages] = useState<string[]>([]);
 
-  // first loaded
-  const firstLoaded = useRef<number>(0);
-  // guide ref
   const guideRef = useRef<HTMLAnchorElement>(null);
-  const cmdkPage = useMemo(() => {
-    return cmdkPages.length == 0 ? "" : cmdkPages[cmdkPages.length - 1];
+  // TODO End
+
+  // ***************************************** Context End *****************************************
+
+  // ***************************************** Init Begin *****************************************
+  useEffect(() => {
+    // TODO Begin
+    if (!isChromeOrEdge()) {
+      const message = `Browser is unsupported. rnbw works in the latest versions of Google Chrome and Microsoft Edge.`;
+      if (!window.confirm(message)) {
+        return;
+      }
+    }
+    // TODO End
+
+    document.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+    });
+    window.document.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+    });
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      addRunningActions([
+        "detect-os",
+        "reference-files",
+        "reference-html-elements",
+        "reference-cmdk-jumpstart",
+        "reference-cmdk-actions",
+      ]);
+
+      // detect os
+      LogAllow && console.log("navigator: ", navigator.userAgent);
+      if (navigator.userAgent.indexOf("Mac OS X") !== -1) {
+        dispatch(setOsType("Mac"));
+      } else if (navigator.userAgent.indexOf("Linux") !== -1) {
+        dispatch(setOsType("Linux"));
+      } else {
+        dispatch(setOsType("Windows"));
+      }
+
+      // reference-files
+      const _filesReferenceData: TFilesReferenceData = {};
+      filesRef.map((fileRef: TFilesReference) => {
+        _filesReferenceData[fileRef.Extension] = fileRef;
+      });
+      setFilesReferenceData(_filesReferenceData);
+      LogAllow && console.log("files reference data: ", _filesReferenceData);
+
+      // reference-html-elements
+      const htmlElementsReferenceData: THtmlElementsReferenceData = {};
+      htmlRefElements.map((htmlRefElement: THtmlElementsReference) => {
+        const pureTag =
+          htmlRefElement["Name"] === "Comment"
+            ? "comment"
+            : htmlRefElement["Tag"]?.slice(1, htmlRefElement["Tag"].length - 1);
+        htmlElementsReferenceData[pureTag] = htmlRefElement;
+      });
+
+      LogAllow &&
+        console.log(
+          "html elements reference data: ",
+          htmlElementsReferenceData,
+        );
+
+      setHtmlReferenceData({ elements: htmlElementsReferenceData });
+
+      // add default cmdk actions
+      const _cmdkReferenceData: TCmdkReferenceData = {};
+      addDefaultCmdkActions(_cmdkReferenceData);
+
+      // reference-cmdk-jumpstart
+      const _cmdkRefJumpstartData: TCmdkGroupData = {};
+      await Promise.all(
+        cmdkRefJumpstart.map(async (command: TCmdkReference) => {
+          const shortcuts = (command["Keyboard Shortcut"] as string)?.split(
+            " ",
+          );
+          const keyObjects: TCmdkKeyMap[] = [];
+
+          shortcuts?.forEach((shortcut) => {
+            const keys = shortcut.split("+");
+            const keyObj = {
+              cmd: false,
+              shift: false,
+              alt: false,
+              key: "",
+              click: false,
+            };
+            keys?.forEach((key) => {
+              if (
+                key === "cmd" ||
+                key === "shift" ||
+                key === "alt" ||
+                key === "click"
+              ) {
+                keyObj[key] = true;
+              } else {
+                keyObj.key = key;
+              }
+            });
+            keyObjects.push(keyObj);
+          });
+
+          const _command: TCmdkReference = JSON.parse(JSON.stringify(command));
+          _command["Keyboard Shortcut"] = keyObjects;
+
+          const groupName = _command["Group"];
+          if (_cmdkRefJumpstartData[groupName] !== undefined) {
+            _cmdkRefJumpstartData[groupName].push(_command);
+          } else {
+            _cmdkRefJumpstartData[groupName] = [_command];
+          }
+          if (
+            groupName === "Projects" &&
+            _cmdkRefJumpstartData["Recent"] === undefined
+          ) {
+            _cmdkRefJumpstartData["Recent"] = [];
+            // restore last edit session
+            try {
+              const sessionInfo = await getMany([
+                "recent-project-context",
+                "recent-project-name",
+                "recent-project-handler",
+              ]);
+              if (sessionInfo[0] && sessionInfo[1] && sessionInfo[2]) {
+                const _session: TSession = {
+                  "recent-project-context": sessionInfo[0],
+                  "recent-project-name": sessionInfo[1],
+                  "recent-project-handler": sessionInfo[2],
+                };
+                setRecentProjectContexts(_session["recent-project-context"]);
+                setRecentProjectNames(_session["recent-project-name"]);
+                setRecentProjectHandlers(_session["recent-project-handler"]);
+
+                for (
+                  let index = 0;
+                  index < _session["recent-project-context"].length;
+                  ++index
+                ) {
+                  const _recentProjectCommand = {
+                    Name: _session["recent-project-name"][index],
+                    Icon: "folder",
+                    Description: "",
+                    "Keyboard Shortcut": [
+                      {
+                        cmd: false,
+                        shift: false,
+                        alt: false,
+                        key: "",
+                        click: false,
+                      },
+                    ],
+                    Group: "Recent",
+                    Context: index.toString(),
+                  } as TCmdkReference;
+                  _cmdkRefJumpstartData["Recent"].push(_recentProjectCommand);
+                }
+                LogAllow && console.log("last session loaded", _session);
+              } else {
+                LogAllow && console.log("has no last session");
+              }
+            } catch (err) {
+              LogAllow && console.log("failed to load last session");
+            }
+          }
+
+          _cmdkReferenceData[_command["Name"]] = _command;
+        }),
+      );
+
+      // if (_cmdkRefJumpstartData['Recent'].length === 0) {
+      //   delete _cmdkRefJumpstartData['Recent']
+      // }
+      setCmdkReferenceJumpstart(_cmdkRefJumpstartData);
+      LogAllow &&
+        console.log("cmdk jumpstart reference data: ", _cmdkRefJumpstartData);
+
+      // reference-cmdk-actions
+      const _cmdkRefActionsData: TCmdkGroupData = {};
+      cmdkRefActions.map((command: TCmdkReference) => {
+        const contexts: TCmdkContextScope[] = (command["Context"] as string)
+          ?.replace(/ /g, "")
+          .split(",")
+          .map((scope: string) => scope as TCmdkContextScope);
+        const contextObj: TCmdkContext = {
+          all: false,
+          file: false,
+          html: false,
+        };
+        contexts?.map((context: TCmdkContextScope) => {
+          contextObj[context] = true;
+        });
+
+        const shortcuts: string[] = (
+          command["Keyboard Shortcut"] as string
+        )?.split(" ");
+
+        const keyObjects: TCmdkKeyMap[] = [];
+
+        shortcuts?.forEach((shortcut) => {
+          const keys = shortcut.split("+");
+          const keyObj = {
+            cmd: false,
+            shift: false,
+            alt: false,
+            key: "",
+            click: false,
+          };
+          keys?.forEach((key) => {
+            if (
+              key === "cmd" ||
+              key === "shift" ||
+              key === "alt" ||
+              key === "click"
+            ) {
+              keyObj[key] = true;
+            } else {
+              keyObj.key = key;
+            }
+          });
+          keyObjects.push(keyObj);
+        });
+
+        const _command: TCmdkReference = JSON.parse(JSON.stringify(command));
+        _command["Context"] = contextObj;
+        _command["Keyboard Shortcut"] = keyObjects;
+
+        const groupName = _command["Group"];
+        if (_cmdkRefActionsData[groupName] !== undefined) {
+          _cmdkRefActionsData[groupName].push(_command);
+        } else {
+          _cmdkRefActionsData[groupName] = [_command];
+        }
+
+        _cmdkReferenceData[_command["Name"]] = _command;
+      });
+      setCmdkReferenceActions(_cmdkRefActionsData);
+      LogAllow &&
+        console.log("cmdk actions reference data: ", _cmdkRefActionsData);
+
+      // set cmdk map
+      setCmdkReferenceData(_cmdkReferenceData);
+      LogAllow && console.log("cmdk map: ", _cmdkReferenceData);
+
+      removeRunningActions([
+        "detect-os",
+        "reference-files",
+        "reference-html-elements",
+        "reference-cmdk-jumpstart",
+        "reference-cmdk-actions",
+      ]);
+    })();
+  }, []);
+  // newbie flag
+  useEffect(() => {
+    const isNewbie = localStorage.getItem("newbie");
+    LogAllow && console.log("isNewbie: ", isNewbie === null ? true : false);
+    if (!isNewbie) {
+      localStorage.setItem("newbie", "false");
+      // init/open Untitled project
+      (async () => {
+        dispatch(setDoingFileAction(true));
+        try {
+          await initIDBProject(DefaultProjectPath);
+          await onImportProject("idb");
+          LogAllow && console.log("inited/loaded Untitled project");
+        } catch (err) {
+          LogAllow && console.log("failed to init/load Untitled project");
+        }
+        dispatch(setDoingFileAction(false));
+      })();
+    }
+    // always show default project when do refresh
+    else {
+      onNew();
+    }
+
+    // set initial codeview height & offset
+    // const offsetTop = localStorage.getItem("offsetTop")
+    // const codeViewHeight = localStorage.getItem("codeViewHeight")
+    // if (offsetTop) {
+    //   setCodeViewOffsetTop(offsetTop)
+    // }
+    // else {
+    //   setCodeViewOffsetTop('66')
+    // }
+  }, []);
+  useEffect(() => {
+    const storedTheme = localStorage.getItem("theme");
+    LogAllow && console.log("storedTheme: ", storedTheme);
+    if (storedTheme) {
+      document.documentElement.setAttribute("data-theme", storedTheme);
+      dispatch(setTheme(storedTheme === "dark" ? "Dark" : "Light"));
+    } else {
+      setSystemTheme();
+      window
+        .matchMedia("(prefers-color-scheme: dark)")
+        .addEventListener("change", setSystemTheme);
+    }
+
+    return () =>
+      window
+        .matchMedia("(prefers-color-scheme: dark)")
+        .removeEventListener("change", setSystemTheme);
+  }, []);
+  // ***************************************** Init End *****************************************
+
+  // ***************************************** Process Begin *****************************************
+  const firstLoaded = useRef(0);
+  useEffect(() => {
+    if (!cmdkOpen && firstLoaded.current === 2 && !showActionsPanel) {
+      dispatch(setShowActionsPanel(true));
+    }
+    ++firstLoaded.current;
+  }, [cmdkOpen]);
+
+  useEffect(() => {
+    dispatch(setCurrentCmdkPage([...cmdkPages].pop() || ""));
   }, [cmdkPages]);
-  const [cmdkSearch, setCmdkSearch] = useState<string>("");
+
   const cmdkReferenceAdd = useMemo<TCmdkGroupData>(() => {
     const data: TCmdkGroupData = {
       Files: [],
@@ -264,7 +585,7 @@ export default function MainPage() {
     };
 
     // Files
-    const fileNode = ffTree[ffFocusedItem];
+    const fileNode = fileTree[fFocusedItem];
     if (fileNode) {
       filesRef.map((fileRef: TFilesReference) => {
         fileRef.Name &&
@@ -288,7 +609,7 @@ export default function MainPage() {
       });
     }
     data["Files"] = data["Files"].filter(
-      (element) => element.Featured || !!cmdkSearch,
+      (element) => element.Featured || !!cmdkSearchContent,
     );
     if (data["Files"].length === 0) {
       delete data["Files"];
@@ -297,19 +618,20 @@ export default function MainPage() {
     // Elements
     let flag = true;
     for (let x in nodeTree) {
-      if (nodeTree[x].name === "html") {
+      if (nodeTree[x].displayName === "html") {
         flag = false;
       }
     }
-    const htmlNode = nodeTree[fnFocusedItem];
+
     if (!flag) {
+      const htmlNode = nodeTree[nFocusedItem];
       if (
         htmlNode &&
         htmlNode.parentUid &&
         htmlNode.parentUid !== RootNodeUid
       ) {
         const parentNode = nodeTree[htmlNode.parentUid as TNodeUid];
-        const refData = htmlReferenceData.elements[parentNode.name];
+        const refData = htmlReferenceData.elements[parentNode.displayName];
         if (refData) {
           if (refData.Contain === "All") {
             Object.keys(htmlReferenceData.elements).map((tag: string) => {
@@ -388,11 +710,12 @@ export default function MainPage() {
     }
     if (
       data["Elements"].length > 0 &&
-      data["Elements"].filter((element) => element.Featured || !!cmdkSearch)
-        .length > 0
+      data["Elements"].filter(
+        (element) => element.Featured || !!cmdkSearchContent,
+      ).length > 0
     ) {
       data["Elements"] = data["Elements"].filter(
-        (element) => element.Featured || !!cmdkSearch,
+        (element) => element.Featured || !!cmdkSearchContent,
       );
     }
     if (data["Elements"].length === 0) {
@@ -403,89 +726,21 @@ export default function MainPage() {
     delete data["Recent"];
 
     return data;
-  }, [
-    ffTree,
-    ffFocusedItem,
-    nodeTree,
-    fnFocusedItem,
-    htmlReferenceData,
-    cmdkSearch,
-  ]);
-  // other
-  const [osType, setOsType] = useState<TOsType>("Windows");
-  const [theme, setTheme] = useState<TTheme>("System");
-  // toasts
-  const [messages, setMessages] = useState<TToast[]>([]);
-  const addMessage = useCallback(
-    (message: TToast) => {
-      setMessages([...messages, message]);
-    },
-    [messages],
-  );
-  const removeMessage = useCallback(
-    (index: number) => {
-      const newMessages = JSON.parse(JSON.stringify(messages));
-      newMessages.splice(index);
-      setMessages(JSON.parse(JSON.stringify(newMessages)));
-    },
-    [messages],
-  );
-  // -------------------------------------------------------------- routing --------------------------------------------------------------
-  // navigating
-  const params = useParams();
-  const location = useLocation();
-  // init workspace
+  }, [fileTree, fFocusedItem, nodeTree, nFocusedItem, htmlReferenceData]);
 
-  const isChromeOrEdge = () => {
-    const userAgent = navigator.userAgent;
-
-    if (userAgent.indexOf("Chrome") > -1) {
-      return true; // Current browser is Chrome
-    } else if (userAgent.indexOf("Edg") > -1) {
-      return true; // Current browser is Edge
-    }
-
-    return false; // Current browser is not Chrome or Edge
-  };
-
-  useEffect(() => {
-    // check if current broswer is Chrome or Edge
-    if (!isChromeOrEdge()) {
-      const message = `Browser is unsupported. rnbw works in the latest versions of Google Chrome and Microsoft Edge.`;
-      if (!window.confirm(message)) {
-        return;
-      }
-    }
-
-    setWorkspace({ name: "local", projects: [] });
-    document.addEventListener("contextmenu", (e) => {
-      e.preventDefault();
-    });
-    window.document.addEventListener("contextmenu", (e) => {
-      e.preventDefault();
-    });
-  }, []);
-  // -------------------------------------------------------------- recent project --------------------------------------------------------------
-  const [recentProjectContext, setRecentProjectContext] = useState<
-    TProjectContext[]
-  >([]);
-  const [recentProjectName, setRecentProjectName] = useState<string[]>([]);
-  const [recentProjectHandler, setRecentProjectHandler] = useState<
-    (FileSystemDirectoryHandle | null)[]
-  >([]);
-  const cmdkReferneceRecentProject = useMemo<TCmdkReference[]>(() => {
+  const cmdkReferneceRecentProject = useMemo(() => {
     const _projects: TProject[] = [];
     const _cmdkReferneceRecentProject: TCmdkReference[] = [];
-    recentProjectContext.map((_v, index) => {
-      if (_v != "idb") {
+    recentProjectContexts.map((_context, index) => {
+      if (_context != "idb") {
         _projects.push({
-          context: recentProjectContext[index],
-          name: recentProjectName[index],
-          handler: recentProjectHandler[index],
+          context: recentProjectContexts[index],
+          name: recentProjectNames[index],
+          handler: recentProjectHandlers[index],
           favicon: null,
         });
         _cmdkReferneceRecentProject.push({
-          Name: recentProjectName[index],
+          Name: recentProjectNames[index],
           Icon: "folder",
           Description: "",
           "Keyboard Shortcut": [
@@ -504,10 +759,9 @@ export default function MainPage() {
     });
     setWorkspace({ name: workspace.name, projects: _projects });
     return _cmdkReferneceRecentProject;
-  }, [recentProjectContext, recentProjectName, recentProjectHandler]);
-  // -------------------------------------------------------------- cmdk --------------------------------------------------------------
-  // key event listener
-  const cb_onKeyDown = useCallback(
+  }, [recentProjectContexts, recentProjectNames, recentProjectHandlers]);
+
+  const KeyDownEventListener = useCallback(
     (e: KeyboardEvent) => {
       // cmdk obj for the current command
       const cmdk: TCmdkKeyMap = {
@@ -592,17 +846,19 @@ export default function MainPage() {
         e.preventDefault();
       }
 
-      setCurrentCommand({ action });
+      dispatch(setCurrentCommand({ action }));
     },
     [cmdkOpen, cmdkReferenceData, activePanel, osType],
   );
-  // bind onKeyDownCallback (cb_onKeyDown)
+
   useEffect(() => {
-    document.addEventListener("keydown", cb_onKeyDown);
-    return () => document.removeEventListener("keydown", cb_onKeyDown);
-  }, [cb_onKeyDown]);
-  // command detect & do actions
+    document.addEventListener("keydown", KeyDownEventListener);
+    return () => document.removeEventListener("keydown", KeyDownEventListener);
+  }, [KeyDownEventListener]);
+
   useEffect(() => {
+    if (!currentCommand) return;
+
     switch (currentCommand.action) {
       case "Jumpstart":
         onJumpstart();
@@ -610,8 +866,7 @@ export default function MainPage() {
       case "New":
         onNew();
         toogleCodeView();
-        // show actions panel by default
-        !showActionsPanel && setShowActionsPanel(true);
+        !showActionsPanel && dispatch(setShowActionsPanel(true));
         break;
       case "Open":
         onOpen();
@@ -651,26 +906,53 @@ export default function MainPage() {
         return;
     }
   }, [currentCommand]);
-  // -------------------------------------------------------------- handlers --------------------------------------------------------------
-  const clearSession = useCallback(() => {
-    dispatch(clearMainState());
-    dispatch({ type: HmsClearActionType });
+
+  useEffect(() => {
+    // reset fileAction in the new history
+    fileEventFutureLength === 0 &&
+      fileAction.type !== null &&
+      dispatch(setFileAction({ type: null }));
+  }, [fileEventFutureLength]);
+
+  // ***************************************** Process End *****************************************
+
+  // ***************************************** Handler Begin *****************************************
+  const closeAllPanel = useCallback(() => {
+    dispatch(setShowActionsPanel(false));
+    dispatch(setShowCodeView(false));
   }, []);
+
+  const onClear = useCallback(async () => {
+    window.localStorage.clear();
+    await delMany([
+      "recent-project-context",
+      "recent-project-name",
+      "recent-project-handler",
+    ]);
+  }, []);
+
+  const clearSession = useCallback(() => {
+    dispatch({ type: FileTree_Event_ClearActionType });
+    dispatch({ type: NodeTree_Event_ClearActionType });
+  }, []);
+
   const loadProject = useCallback(
     async (
       fsType: TProjectContext,
       projectHandle?: FileSystemHandle | null,
       internal?: boolean,
     ) => {
-      setFavicon("");
+      console.log("LOAD PROJECT CALL");
+      dispatch(setFavicon(""));
       if (fsType === "local") {
-        setFSPending(true);
+        dispatch(setDoingFileAction(true));
         try {
           // configure idb on nohost
           const handlerObj = await loadLocalProject(
             projectHandle as FileSystemDirectoryHandle,
             osType,
           );
+
           clearSession(); /* file treeview error fix when the switching project by navigator */
 
           setTimeout(async () => {
@@ -702,13 +984,12 @@ export default function MainPage() {
             });
 
             // set default background
-            setIFrameSrc(null);
-            setNodeTree({});
-            setValidNodeTree({});
-            setCurrentFileUid("");
-            dispatch(removeCurrentFile());
+            dispatch(setCurrentFileUid(""));
+            dispatch(setNodeTree({}));
+            dispatch(setValidNodeTree({}));
+            dispatch(setIframeSrc(null));
 
-            let initialFile =
+            const initialFile =
               indexHtmlUid !== ""
                 ? indexHtmlUid
                 : firstHtmlUid !== ""
@@ -717,11 +998,11 @@ export default function MainPage() {
 
             // hide element panel when there is no index.html
             if (initialFile === "") {
-              setShowActionsPanel(false);
-              setNavigatorDropDownType(null);
+              dispatch(setShowActionsPanel(false));
+              dispatch(setNavigatorDropdownType(null));
             }
 
-            setInitialFileToOpen(initialFile);
+            dispatch(setInitialFileUidToOpen(initialFile));
 
             // set ff-tree, ff-handlers
             const treeViewData: TNodeTreeData = {};
@@ -743,7 +1024,7 @@ export default function MainPage() {
               treeViewData[uid] = {
                 uid,
                 parentUid: parentUid,
-                name: name,
+                displayName: name,
                 isEntity: kind === "file",
                 children: [...children],
                 data: {
@@ -762,72 +1043,77 @@ export default function MainPage() {
               ffHandlerObj[uid] = handler;
             });
 
-            setFFTree(treeViewData);
-            setFFHandlers(ffHandlerObj);
+            dispatch(setFileTree(treeViewData as TFileNodeTreeData));
+            setFileHandlers(ffHandlerObj);
 
-            setProject({
-              context: "local",
-              name: (projectHandle as FileSystemDirectoryHandle).name,
-              handler: projectHandle as FileSystemDirectoryHandle,
-              favicon: null,
-            });
-            setNavigatorDropDownType(null);
+            dispatch(
+              setProject({
+                context: "local",
+                name: (projectHandle as FileSystemDirectoryHandle).name,
+                handler: null,
+                favicon: null,
+              }),
+            );
+            setCurrentProjectFileHandle(
+              projectHandle as FileSystemDirectoryHandle,
+            );
+
+            dispatch(setNavigatorDropdownType(null));
             if (internal) {
               // store last edit session
               toogleCodeView();
-              const _recentProjectContext = [...recentProjectContext];
-              const _recentProjectName = [...recentProjectName];
-              const _recentProjectHandler = [...recentProjectHandler];
+              const _recentProjectContexts = [...recentProjectContexts];
+              const _recentProjectNames = [...recentProjectNames];
+              const _recentProjectHandlers = [...recentProjectHandlers];
               for (
                 let index = 0;
-                index < _recentProjectContext.length;
+                index < _recentProjectContexts.length;
                 ++index
               ) {
                 if (
-                  _recentProjectContext[index] === fsType &&
-                  projectHandle?.name === _recentProjectName[index]
+                  _recentProjectContexts[index] === fsType &&
+                  projectHandle?.name === _recentProjectNames[index]
                 ) {
-                  _recentProjectContext.splice(index, 1);
-                  _recentProjectName.splice(index, 1);
-                  _recentProjectHandler.splice(index, 1);
+                  _recentProjectContexts.splice(index, 1);
+                  _recentProjectNames.splice(index, 1);
+                  _recentProjectHandlers.splice(index, 1);
                   break;
                 }
               }
-              if (_recentProjectContext.length === RecentProjectCount) {
-                _recentProjectContext.pop();
-                _recentProjectName.pop();
-                _recentProjectHandler.pop();
+              if (_recentProjectContexts.length === RecentProjectCount) {
+                _recentProjectContexts.pop();
+                _recentProjectNames.pop();
+                _recentProjectHandlers.pop();
               }
-              _recentProjectContext.unshift(fsType);
-              _recentProjectName.unshift(
+              _recentProjectContexts.unshift(fsType);
+              _recentProjectNames.unshift(
                 (projectHandle as FileSystemDirectoryHandle).name,
               );
-              _recentProjectHandler.unshift(
+              _recentProjectHandlers.unshift(
                 projectHandle as FileSystemDirectoryHandle,
               );
-              setRecentProjectContext(_recentProjectContext);
-              setRecentProjectName(_recentProjectName);
-              setRecentProjectHandler(_recentProjectHandler);
+              setRecentProjectContexts(_recentProjectContexts);
+              setRecentProjectNames(_recentProjectNames);
+              setRecentProjectHandlers(_recentProjectHandlers);
               await setMany([
-                ["recent-project-context", _recentProjectContext],
-                ["recent-project-name", _recentProjectName],
-                ["recent-project-handler", _recentProjectHandler],
+                ["recent-project-context", _recentProjectContexts],
+                ["recent-project-name", _recentProjectNames],
+                ["recent-project-handler", _recentProjectHandlers],
               ]);
             }
 
             // show actions panel by default
-            !showActionsPanel && setShowActionsPanel(true);
+            !showActionsPanel && dispatch(setShowActionsPanel(true));
           }, 50);
         } catch (err) {
           LogAllow && console.log("failed to load local project");
         }
-        setFSPending(false);
+        dispatch(setDoingFileAction(false));
       } else if (fsType === "idb") {
-        setFSPending(true);
+        dispatch(setDoingFileAction(true));
         clearSession();
         try {
           const handlerObj = await loadIDBProject(DefaultProjectPath);
-
           // sort by ASC directory/file
           Object.keys(handlerObj).map((uid) => {
             const handler = handlerObj[uid];
@@ -854,12 +1140,14 @@ export default function MainPage() {
               handler.name === "index" ? (indexHtmlUid = uid) : null;
             }
           });
-          setInitialFileToOpen(
-            indexHtmlUid !== ""
-              ? indexHtmlUid
-              : firstHtmlUid !== ""
-              ? firstHtmlUid
-              : "",
+          dispatch(
+            setInitialFileUidToOpen(
+              indexHtmlUid !== ""
+                ? indexHtmlUid
+                : firstHtmlUid !== ""
+                ? firstHtmlUid
+                : "",
+            ),
           );
 
           // set ff-tree, ff-handlers
@@ -874,7 +1162,7 @@ export default function MainPage() {
             treeViewData[uid] = {
               uid,
               parentUid: parentUid,
-              name: name,
+              displayName: name,
               isEntity: kind === "file",
               children: [...children],
               data: {
@@ -890,52 +1178,54 @@ export default function MainPage() {
               } as TFileNodeData,
             } as TNode;
           });
-          setFFTree(treeViewData);
-          setFFHandlers(ffHandlerObj);
-          setProject({
-            context: "idb",
-            name: "Untitled",
-            handler: null,
-            favicon: null,
-          });
-
+          dispatch(setFileTree(treeViewData as TFileNodeTreeData));
+          setFileHandlers(ffHandlerObj);
+          dispatch(
+            setProject({
+              context: "idb",
+              name: "Untitled",
+              handler: null,
+              favicon: null,
+            }),
+          );
+          setCurrentProjectFileHandle(null);
           // store last edit session
-          // const _recentProjectContext = [...recentProjectContext]
-          // const _recentProjectName = [...recentProjectName]
-          // const _recentProjectHandler = [...recentProjectHandler]
-          // for (let index = 0; index < _recentProjectContext.length; ++index) {
-          //   if (_recentProjectContext[index] === fsType) {
-          //     _recentProjectContext.splice(index, 1)
-          //     _recentProjectName.splice(index, 1)
-          //     _recentProjectHandler.splice(index, 1)
+          // const _recentProjectContexts = [...recentProjectContexts]
+          // const _recentProjectNames = [...recentProjectNames]
+          // const _recentProjectHandlers = [...recentProjectHandlers]
+          // for (let index = 0; index < _recentProjectContexts.length; ++index) {
+          //   if (_recentProjectContexts[index] === fsType) {
+          //     _recentProjectContexts.splice(index, 1)
+          //     _recentProjectNames.splice(index, 1)
+          //     _recentProjectHandlers.splice(index, 1)
           //     break
           //   }
           // }
-          // if (_recentProjectContext.length === RecentProjectCount) {
-          //   _recentProjectContext.pop()
-          //   _recentProjectName.pop()
-          //   _recentProjectHandler.pop()
+          // if (_recentProjectContexts.length === RecentProjectCount) {
+          //   _recentProjectContexts.pop()
+          //   _recentProjectNames.pop()
+          //   _recentProjectHandlers.pop()
           // }
-          // _recentProjectContext.unshift(fsType)
-          // _recentProjectName.unshift('Untitled')
-          // _recentProjectHandler.unshift(null)
-          // setRecentProjectContext(_recentProjectContext)
-          // setRecentProjectName(_recentProjectName)
-          // setRecentProjectHandler(_recentProjectHandler)
-          // await setMany([['recent-project-context', _recentProjectContext], ['recent-project-name', _recentProjectName], ['recent-project-handler', _recentProjectHandler]])
+          // _recentProjectContexts.unshift(fsType)
+          // _recentProjectNames.unshift('Untitled')
+          // _recentProjectHandlers.unshift(null)
+          // setRecentProjectContexts(_recentProjectContexts)
+          // setRecentProjectNames(_recentProjectNames)
+          // setRecentProjectHandlers(_recentProjectHandlers)
+          // await setMany([['recent-project-context', _recentProjectContexts], ['recent-project-name', _recentProjectNames], ['recent-project-handler', _recentProjectHandlers]])
         } catch (err) {
           LogAllow && console.log("failed to load Untitled project");
         }
-        setFSPending(false);
+        dispatch(setDoingFileAction(false));
       }
     },
     [
       clearSession,
       osType,
-      recentProjectContext,
-      recentProjectName,
-      recentProjectHandler,
-      ffTree,
+      recentProjectContexts,
+      recentProjectNames,
+      recentProjectHandlers,
+      fileTree,
     ],
   );
   const onImportProject = useCallback(
@@ -963,42 +1253,12 @@ export default function MainPage() {
     },
     [loadProject],
   );
-  // open
-  const onOpen = useCallback(async () => {
-    if (ffTree) {
-      // confirm files' changes
-      let hasChangedFile = false;
-      for (let x in ffTree) {
-        const _file = ffTree[x];
-        const _fileData = _file.data as TFileNodeData;
-        if (_file && _fileData.changed) {
-          hasChangedFile = true;
-        }
-      }
-      if (hasChangedFile) {
-        const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`;
-        if (!window.confirm(message)) {
-          return;
-        }
-      }
-    }
-    setFSPending(true);
-
-    try {
-      await onImportProject();
-    } catch (err) {
-      LogAllow && console.log("failed to open project");
-    }
-
-    setFSPending(false);
-  }, [onImportProject, ffTree]);
-  // new
   const onNew = useCallback(async () => {
-    if (ffTree) {
+    if (fileTree) {
       // confirm if ffTree is changed
       let hasChangedFile = false;
-      for (let x in ffTree) {
-        const _file = ffTree[x];
+      for (let x in fileTree) {
+        const _file = fileTree[x];
         const _fileData = _file.data as TFileNodeData;
         if (_file && _fileData.changed) {
           hasChangedFile = true;
@@ -1011,30 +1271,55 @@ export default function MainPage() {
         }
       }
     }
-    setFSPending(true);
 
-    // init/open Untitled project
+    dispatch(setDoingFileAction(true));
     try {
       await initIDBProject(DefaultProjectPath);
       await onImportProject("idb");
     } catch (err) {
       LogAllow && console.log("failed to init/load Untitled project");
     }
+    dispatch(setDoingFileAction(false));
+  }, [onImportProject, fileTree]);
+  const onOpen = useCallback(async () => {
+    if (fileTree) {
+      // confirm files' changes
+      let hasChangedFile = false;
+      for (let x in fileTree) {
+        const _file = fileTree[x];
+        const _fileData = _file.data as TFileNodeData;
+        if (_file && _fileData.changed) {
+          hasChangedFile = true;
+        }
+      }
+      if (hasChangedFile) {
+        const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`;
+        if (!window.confirm(message)) {
+          return;
+        }
+      }
+    }
 
-    setFSPending(false);
-  }, [onImportProject, ffTree]);
-  // actions
+    dispatch(setDoingFileAction(true));
+    try {
+      await onImportProject();
+    } catch (err) {
+      LogAllow && console.log("failed to open project");
+    }
+    dispatch(setDoingFileAction(false));
+  }, [onImportProject, fileTree]);
+
   const onActions = useCallback(() => {
     if (cmdkOpen) return;
-    setCmdkPages(["Actions"]);
-    setCmdkOpen(true);
+    dispatch(setCmdkPages(["Actions"]));
+    dispatch(setCmdkOpen(true));
   }, [cmdkOpen]);
-  // add
+
   const onAdd = useCallback(() => {
-    setCmdkPages([...cmdkPages, "Add"]);
-    setCmdkOpen(true);
+    dispatch(setCmdkPages([...cmdkPages, "Add"]));
+    dispatch(setCmdkOpen(true));
   }, [cmdkPages]);
-  // download
+
   const onDownload = useCallback(async () => {
     if (project.context !== "idb") return;
 
@@ -1044,95 +1329,85 @@ export default function MainPage() {
       LogAllow && console.log("failed to download project");
     }
   }, [project.context]);
-  // clear
-  const onClear = useCallback(async () => {
-    // remove localstorage and session
-    window.localStorage.clear();
-    await delMany([
-      "recent-project-context",
-      "recent-project-name",
-      "recent-project-handler",
-    ]);
-  }, []);
-  // jumpstart
+
   const onJumpstart = useCallback(() => {
     if (cmdkOpen) return;
-    setCmdkPages(["Jumpstart"]);
-    setCmdkOpen(true);
+    dispatch(setCmdkPages(["Jumpstart"]));
+    dispatch(setCmdkOpen(true));
   }, [cmdkOpen]);
 
-  // open navigator when close the menu
-  useEffect(() => {
-    if (!cmdkOpen && firstLoaded.current == 2 && !showActionsPanel) {
-      setShowActionsPanel(true);
-    }
-    firstLoaded.current++;
-  }, [cmdkOpen]);
-
-  // close all panel
-  const closeAllPanel = useCallback(() => {
-    setShowCodeView(false);
-    setShowActionsPanel(false);
-  }, []);
-  // hms
   const onUndo = useCallback(() => {
-    if (pending || iframeLoading || fsPending || codeEditing || !parseFileFlag)
-      return;
-
-    LogAllow && pastLength === 1 && console.log("hms - it is the origin state");
-    if (pastLength === 1) return;
-
-    setCurrentFileUid(file.uid);
-    setIsHms(true);
-
-    dispatch({ type: "main/undo" });
-    setUpdateOpt({ parse: true, from: "hms" });
-  }, [
-    pending,
-    iframeLoading,
-    fsPending,
-    codeEditing,
-    pastLength,
-    fileAction,
-    file.uid,
-  ]);
-  const onRedo = useCallback(() => {
-    if (pending || iframeLoading || fsPending || codeEditing || !parseFileFlag)
+    if (
+      doingAction ||
+      iframeLoading ||
+      doingFileAction ||
+      codeEditing ||
+      !parseFileFlag
+    )
       return;
 
     LogAllow &&
-      futureLength === 0 &&
+      fileEventPastLength === 1 &&
+      console.log("hms - it is the origin state");
+    if (fileEventPastLength === 1) return;
+
+    dispatch(setDidUndo(true));
+
+    dispatch({ type: "main/undo" });
+    dispatch(setUpdateOptions({ parse: true, from: "hms" }));
+  }, [
+    doingAction,
+    iframeLoading,
+    doingFileAction,
+    codeEditing,
+    fileEventPastLength,
+    fileAction,
+    currentFileUid,
+  ]);
+
+  const onRedo = useCallback(() => {
+    if (
+      doingAction ||
+      iframeLoading ||
+      doingFileAction ||
+      codeEditing ||
+      !parseFileFlag
+    )
+      return;
+
+    LogAllow &&
+      fileEventFutureLength === 0 &&
       console.log("hms - it is the latest state");
-    if (futureLength === 0) return;
+    if (fileEventFutureLength === 0) return;
 
-    setFFAction(fileAction);
-    setCurrentFileUid(file.uid);
-    setIsHms(false);
-
+    dispatch(setFileAction(fileAction));
     dispatch({ type: "main/redo" });
-    setUpdateOpt({ parse: true, from: "hms" });
-  }, [pending, iframeLoading, fsPending, codeEditing, futureLength, file.uid]);
+    dispatch(setUpdateOptions({ parse: true, from: "hms" }));
+  }, [
+    doingAction,
+    iframeLoading,
+    doingFileAction,
+    codeEditing,
+    fileEventFutureLength,
+    currentFileUid,
+  ]);
 
-  useEffect(() => {
-    // reset fileAction in the new history
-    futureLength === 0 &&
-      fileAction.type !== null &&
-      dispatch(setFileAction({ type: null }));
-  }, [actionGroupIndex]);
   // toogle code view
-  const [showCodeView, setShowCodeView] = useState(false);
   const toogleCodeView = useCallback(() => {
-    setShowCodeView(!showCodeView);
-    setNewFocusedNodeUid(fnFocusedItem);
-  }, [showCodeView, fnFocusedItem]);
+    dispatch(setShowCodeView(!showCodeView));
+    setNewFocusedNodeUid(nFocusedItem);
+  }, [showCodeView, nFocusedItem]);
+
   // toogle actions panel
   const toogleActionsPanel = useCallback(() => {
-    setShowActionsPanel(!showActionsPanel);
+    dispatch(setShowActionsPanel(!showActionsPanel));
   }, [showActionsPanel]);
+
   // open guide page
   const openGuidePage = useCallback(() => {
     window.open("https://guide.rnbw.dev", "_blank", "noreferrer");
   }, [currentCommand]);
+
   // -------------------------------------------------------------- pos/size for panels --------------------------------------------------------------
   const [actionsPanelOffsetTop, setActionsPanelOffsetTop] = useState(12);
   const [actionsPanelOffsetLeft, setActionsPanelOffsetLeft] = useState(12);
@@ -1146,355 +1421,15 @@ export default function MainPage() {
   const [codeViewDragging, setCodeViewDragging] = useState(false);
   // -------------------------------------------------------------- other --------------------------------------------------------------
   // detect OS & fetch reference - html. Jumpstart.csv, Actions.csv - restore recent project session - open Untitled project and jumpstart menu ons tartup
-  useEffect(() => {
-    (async () => {
-      addRunningActions([
-        "detect-os",
-        "reference-files",
-        "reference-html-elements",
-        "reference-cmdk-jumpstart",
-        "reference-cmdk-actions",
-      ]);
 
-      // detect os
-      LogAllow && console.log("navigator: ", navigator.userAgent);
-      if (navigator.userAgent.indexOf("Mac OS X") !== -1) {
-        setOsType("Mac");
-      } else if (navigator.userAgent.indexOf("Linux") !== -1) {
-        setOsType("Linux");
-      } else {
-        setOsType("Windows");
-      }
-
-      // reference-files
-      const _filesReferenceData: TFilesReferenceData = {};
-      filesRef.map((fileRef: TFilesReference) => {
-        _filesReferenceData[fileRef.Extension] = fileRef;
-      });
-      setFilesReferenceData(_filesReferenceData);
-      LogAllow && console.log("files reference data: ", _filesReferenceData);
-
-      // reference-html-elements
-      const htmlElementsReferenceData: THtmlElementsReferenceData = {};
-      htmlRefElements.map((htmlRefElement: THtmlElementsReference) => {
-        const pureTag =
-          htmlRefElement["Name"] === "Comment"
-            ? "comment"
-            : htmlRefElement["Tag"]?.slice(1, htmlRefElement["Tag"].length - 1);
-        htmlElementsReferenceData[pureTag] = htmlRefElement;
-      });
-      LogAllow &&
-        console.log(
-          "html elements reference data: ",
-          htmlElementsReferenceData,
-        );
-
-      // set html reference
-      setHtmlReferenceData({ elements: htmlElementsReferenceData });
-
-      // add default cmdk actions
-      const _cmdkReferenceData: TCmdkReferenceData = {};
-      // clear
-      _cmdkReferenceData["Clear"] = {
-        Name: "Clear",
-        Icon: "",
-        Description: "",
-        "Keyboard Shortcut": [
-          {
-            cmd: true,
-            shift: true,
-            alt: false,
-            key: "KeyR",
-            click: false,
-          },
-        ],
-        Group: "default",
-        Context: "all",
-      };
-      // Jumpstart
-      _cmdkReferenceData["Jumpstart"] = {
-        Name: "Jumpstart",
-        Icon: "",
-        Description: "",
-        "Keyboard Shortcut": [
-          {
-            cmd: false,
-            shift: false,
-            alt: false,
-            key: "KeyJ",
-            click: false,
-          },
-        ],
-        Group: "default",
-        Context: "all",
-      };
-      // Actions
-      _cmdkReferenceData["Actions"] = {
-        Name: "Actions",
-        Icon: "",
-        Description: "",
-        "Keyboard Shortcut": [
-          {
-            cmd: false,
-            shift: false,
-            alt: false,
-            key: "KeyW",
-            click: false,
-          },
-        ],
-        Group: "default",
-        Context: "all",
-      };
-      // File Save
-      _cmdkReferenceData["Save"] = {
-        Name: "Save",
-        Icon: "",
-        Description: "",
-        "Keyboard Shortcut": [
-          {
-            cmd: true,
-            shift: false,
-            alt: false,
-            key: "KeyS",
-            click: false,
-          },
-        ],
-        Group: "default",
-        Context: "all",
-      };
-
-      // reference-cmdk-jumpstart
-      const _cmdkRefJumpstartData: TCmdkGroupData = {};
-      await Promise.all(
-        cmdkRefJumpstart.map(async (command: TCmdkReference) => {
-          const shortcuts = (command["Keyboard Shortcut"] as string)?.split(
-            " ",
-          );
-          const keyObjects: TCmdkKeyMap[] = [];
-
-          shortcuts?.forEach((shortcut) => {
-            const keys = shortcut.split("+");
-            const keyObj = {
-              cmd: false,
-              shift: false,
-              alt: false,
-              key: "",
-              click: false,
-            };
-
-            keys?.forEach((key) => {
-              if (
-                key === "cmd" ||
-                key === "shift" ||
-                key === "alt" ||
-                key === "click"
-              ) {
-                keyObj[key] = true;
-              } else {
-                keyObj.key = key;
-              }
-            });
-
-            keyObjects.push(keyObj);
-          });
-
-          const _command: TCmdkReference = JSON.parse(JSON.stringify(command));
-          _command["Keyboard Shortcut"] = keyObjects;
-
-          const groupName = _command["Group"];
-          if (_cmdkRefJumpstartData[groupName] !== undefined) {
-            _cmdkRefJumpstartData[groupName].push(_command);
-          } else {
-            _cmdkRefJumpstartData[groupName] = [_command];
-          }
-          if (
-            groupName === "Projects" &&
-            _cmdkRefJumpstartData["Recent"] === undefined
-          ) {
-            _cmdkRefJumpstartData["Recent"] = [];
-            // restore last edit session
-            try {
-              const sessionInfo = await getMany([
-                "recent-project-context",
-                "recent-project-name",
-                "recent-project-handler",
-              ]);
-              if (sessionInfo[0] && sessionInfo[1] && sessionInfo[2]) {
-                const _session: TSession = {
-                  "recent-project-context": sessionInfo[0],
-                  "recent-project-name": sessionInfo[1],
-                  "recent-project-handler": sessionInfo[2],
-                };
-                setRecentProjectContext(_session["recent-project-context"]);
-                setRecentProjectName(_session["recent-project-name"]);
-                setRecentProjectHandler(_session["recent-project-handler"]);
-
-                for (
-                  let index = 0;
-                  index < _session["recent-project-context"].length;
-                  ++index
-                ) {
-                  const _recentProjectCommand = {
-                    Name: _session["recent-project-name"][index],
-                    Icon: "folder",
-                    Description: "",
-                    "Keyboard Shortcut": [
-                      {
-                        cmd: false,
-                        shift: false,
-                        alt: false,
-                        key: "",
-                        click: false,
-                      },
-                    ],
-                    Group: "Recent",
-                    Context: index.toString(),
-                  } as TCmdkReference;
-                  _cmdkRefJumpstartData["Recent"].push(_recentProjectCommand);
-                }
-                LogAllow && console.log("last session loaded", _session);
-              } else {
-                LogAllow && console.log("has no last session");
-              }
-            } catch (err) {
-              LogAllow && console.log("failed to load last session");
-            }
-          }
-
-          _cmdkReferenceData[_command["Name"]] = _command;
-        }),
-      );
-
-      // if (_cmdkRefJumpstartData['Recent'].length === 0) {
-      //   delete _cmdkRefJumpstartData['Recent']
-      // }
-      setCmdkReferenceJumpstart(_cmdkRefJumpstartData);
-      LogAllow &&
-        console.log("cmdk jumpstart reference data: ", _cmdkRefJumpstartData);
-
-      // reference-cmdk-actions
-      const _cmdkRefActionsData: TCmdkGroupData = {};
-      cmdkRefActions.map((command: TCmdkReference) => {
-        const contexts: TCmdkContextScope[] = (command["Context"] as string)
-          ?.replace(/ /g, "")
-          .split(",")
-          .map((scope: string) => scope as TCmdkContextScope);
-        const contextObj: TCmdkContext = {
-          all: false,
-          file: false,
-          html: false,
-        };
-        contexts?.map((context: TCmdkContextScope) => {
-          contextObj[context] = true;
-        });
-
-        const shortcuts: string[] = (
-          command["Keyboard Shortcut"] as string
-        )?.split(" ");
-        const keyObjects: TCmdkKeyMap[] = [];
-
-        shortcuts?.forEach((shortcut) => {
-          const keys = shortcut.split("+");
-          const keyObj = {
-            cmd: false,
-            shift: false,
-            alt: false,
-            key: "",
-            click: false,
-          };
-
-          keys?.forEach((key) => {
-            if (
-              key === "cmd" ||
-              key === "shift" ||
-              key === "alt" ||
-              key === "click"
-            ) {
-              keyObj[key] = true;
-            } else {
-              keyObj.key = key;
-            }
-          });
-
-          keyObjects.push(keyObj);
-        });
-
-        const _command: TCmdkReference = JSON.parse(JSON.stringify(command));
-
-        _command["Context"] = contextObj;
-        _command["Keyboard Shortcut"] = keyObjects;
-
-        const groupName = _command["Group"];
-        if (_cmdkRefActionsData[groupName] !== undefined) {
-          _cmdkRefActionsData[groupName].push(_command);
-        } else {
-          _cmdkRefActionsData[groupName] = [_command];
-        }
-
-        _cmdkReferenceData[_command["Name"]] = _command;
-      });
-      setCmdkReferenceActions(_cmdkRefActionsData);
-      LogAllow &&
-        console.log("cmdk actions reference data: ", _cmdkRefActionsData);
-
-      // set cmdk map
-      setCmdkReferenceData(_cmdkReferenceData);
-      LogAllow && console.log("cmdk map: ", _cmdkReferenceData);
-
-      removeRunningActions(
-        [
-          "detect-os",
-          "reference-files",
-          "reference-html-elements",
-          "reference-cmdk-jumpstart",
-          "reference-cmdk-actions",
-        ],
-        false,
-      );
-    })();
-  }, []);
-  const [openDefaultProject, setOpenDefaultProject] = useState(false);
   useEffect(() => {
     // wait until "cmdkReferenceJumpstart" is ready
     Object.keys(cmdkReferenceJumpstart).length !== 0 && onJumpstart();
   }, [cmdkReferenceJumpstart]);
-  // newbie flag
-  useEffect(() => {
-    const isNewbie = localStorage.getItem("newbie");
-    LogAllow && console.log("isNewbie: ", isNewbie === null ? true : false);
-    if (!isNewbie) {
-      localStorage.setItem("newbie", "false");
-      // init/open Untitled project
-      (async () => {
-        setFSPending(true);
-        try {
-          await initIDBProject(DefaultProjectPath);
-          await onImportProject("idb");
-          LogAllow && console.log("inited/loaded Untitled project");
-        } catch (err) {
-          LogAllow && console.log("failed to init/load Untitled project");
-        }
-        setFSPending(false);
-      })();
-    }
-    // always show default project when do refresh
-    else {
-      onNew();
-    }
 
-    // set initial codeview height & offset
-    // const offsetTop = localStorage.getItem("offsetTop")
-    // const codeViewHeight = localStorage.getItem("codeViewHeight")
-    // if (offsetTop) {
-    //   setCodeViewOffsetTop(offsetTop)
-    // }
-    // else {
-    //   setCodeViewOffsetTop('66')
-    // }
-  }, []);
   // theme
   const setSystemTheme = useCallback(() => {
-    setTheme("System");
+    dispatch(setTheme("System"));
     if (
       window.matchMedia &&
       window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -1504,17 +1439,19 @@ export default function MainPage() {
       document.documentElement.setAttribute("data-theme", "light");
     }
   }, []);
+
   const onToggleTheme = useCallback(() => {
     switch (theme) {
       case "System":
         document.documentElement.setAttribute("data-theme", "light");
         localStorage.setItem("theme", "light");
+        dispatch(setTheme("Light"));
         setTheme("Light");
         break;
       case "Light":
         document.documentElement.setAttribute("data-theme", "dark");
         localStorage.setItem("theme", "dark");
-        setTheme("Dark");
+        dispatch(setTheme("Dark"));
         break;
       case "Dark":
         document.documentElement.removeAttribute("data-theme");
@@ -1524,32 +1461,15 @@ export default function MainPage() {
       default:
         break;
     }
-  }, [theme, setSystemTheme]);
-  useEffect(() => {
-    const storedTheme = localStorage.getItem("theme");
-    LogAllow && console.log("storedTheme: ", storedTheme);
-    if (storedTheme) {
-      document.documentElement.setAttribute("data-theme", storedTheme);
-      setTheme(storedTheme === "dark" ? "Dark" : "Light");
-    } else {
-      setSystemTheme();
-      window
-        .matchMedia("(prefers-color-scheme: dark)")
-        .addEventListener("change", setSystemTheme);
-    }
+  }, [theme]);
 
-    return () =>
-      window
-        .matchMedia("(prefers-color-scheme: dark)")
-        .removeEventListener("change", setSystemTheme);
-  }, []);
   // web-tab close event handler
   useEffect(() => {
     let changed = false;
 
-    const uids = Object.keys(ffTree);
+    const uids = Object.keys(fileTree);
     for (const uid of uids) {
-      const node = ffTree[uid];
+      const node = fileTree[uid];
       const nodeData = node.data as TFileNodeData;
 
       if (nodeData.changed) {
@@ -1567,12 +1487,15 @@ export default function MainPage() {
     return () => {
       window.onbeforeunload = null;
     };
-  }, [ffTree]);
+  }, [fileTree]);
+
   // cmdk modal handle
   const [hoveredMenuItemDescription, setHoverMenuItemDescription] = useState<
     string | null | undefined
   >();
+
   const [validMenuItemCount, setValidMenuItemCount] = useState<number>();
+
   useEffect(() => {
     let hoveredMenuItemDetecter: NodeJS.Timeout;
     if (cmdkOpen) {
@@ -1582,7 +1505,7 @@ export default function MainPage() {
         setValidMenuItemCount(menuItems.length);
 
         const description =
-          cmdkPage === "Add" || cmdkPage === "Jumpstart"
+          currentCmdkPage === "Add" || currentCmdkPage === "Jumpstart"
             ? document
                 .querySelector('.rnbw-cmdk-menu-item[aria-selected="true"]')
                 ?.getAttribute("rnbw-cmdk-menu-item-description")
@@ -1591,18 +1514,19 @@ export default function MainPage() {
       }, 10);
     } else {
       // clear cmdk pages and search text when close the modal
-      setCmdkPages([]);
-      setCmdkSearch("");
+      dispatch(setCmdkPages([]));
+      dispatch(setCmdkSearchContent(""));
       // setValidMenuItemCount(undefined)
     }
 
     return () => clearInterval(hoveredMenuItemDetecter);
   }, [cmdkOpen]);
+
   // file changed - reload the monaco-editor to clear history
   const [needToReloadCodeView, setNeedToReloadCodeView] = useState(false);
   useEffect(() => {
     setNeedToReloadCodeView(true);
-  }, [file.uid]);
+  }, [currentFileUid]);
   useEffect(() => {
     setNeedToReloadCodeView(false);
   }, [needToReloadCodeView]);
@@ -1638,108 +1562,35 @@ export default function MainPage() {
   }, []);
   // close navigator
   const onCloseDropDown = useCallback(() => {
-    navigatorDropDownType !== null && setNavigatorDropDownType(null);
-  }, [navigatorDropDownType]);
+    navigatorDropdownType !== null && dispatch(setNavigatorDropdownType(null));
+  }, [navigatorDropdownType]);
 
   return (
     <>
-      {/* wrap with the context */}
       <MainContext.Provider
         value={{
-          // global action
           addRunningActions,
           removeRunningActions,
-          // navigator
-          workspace,
-          setWorkspace,
-          project,
-          navigatorDropDownType,
-          setNavigatorDropDownType,
-          // node actions
-          activePanel,
-          setActivePanel,
-          clipboardData,
-          setClipboardData,
-          event,
-          setEvent,
-          favicon,
-          setFavicon,
-          // actions panel
-          showActionsPanel,
-          // file tree view
-          initialFileToOpen,
-          setInitialFileToOpen,
-          fsPending,
-          setFSPending,
-          ffTree,
-          setFFTree,
-          setFFNode,
-          ffHandlers,
-          setFFHandlers,
-          ffHoveredItem,
-          setFFHoveredItem,
-          isHms,
-          setIsHms,
-          ffAction,
-          setFFAction,
-          currentFileUid,
-          setCurrentFileUid,
+
+          filesReferenceData,
+          htmlReferenceData,
+          cmdkReferenceData,
+
+          currentProjectFileHandle,
+          setCurrentProjectFileHandle,
+
+          fileHandlers,
+          setFileHandlers,
+
           // code view
-          showCodeView,
-          setShowCodeView,
-          // node tree view
-          fnHoveredItem,
-          setFNHoveredItem,
-          nodeTree,
-          setNodeTree,
-          validNodeTree,
-          setValidNodeTree,
-          nodeMaxUid,
-          setNodeMaxUid,
-          // stage view
-          iframeLoading,
-          setIFrameLoading,
-          iframeSrc,
-          setIFrameSrc,
-          fileInfo,
-          setFileInfo,
-          needToReloadIFrame,
-          setNeedToReloadIFrame,
-          linkToOpen,
-          setLinkToOpen,
-          // code view
-          codeEditing,
-          setCodeEditing,
           isContentProgrammaticallyChanged,
           setIsContentProgrammaticallyChanged,
           codeChanges,
           setCodeChanges,
-          tabSize,
-          setTabSize,
           newFocusedNodeUid,
           setNewFocusedNodeUid,
           setCodeViewOffsetTop,
-          // processor
-          updateOpt,
-          setUpdateOpt,
-          // references
-          filesReferenceData,
-          htmlReferenceData,
-          cmdkReferenceData,
-          // cmdk
-          currentCommand,
-          setCurrentCommand,
-          cmdkOpen,
-          setCmdkOpen,
-          cmdkPages,
-          setCmdkPages,
-          cmdkPage,
-          // other
-          osType,
-          theme,
-          // toasts
-          addMessage,
-          removeMessage,
+
           // load project
           loadProject,
           // non html editable
@@ -1753,13 +1604,8 @@ export default function MainPage() {
           setMonacoEditorRef,
         }}
       >
-        {/* process */}
-        <Process />
+        <Processor />
 
-        {/* spinner */}
-        {/* <Loader show={pending}></Loader> */}
-
-        {/* main page */}
         <div
           id="MainPage"
           className={"view background-primary"}
@@ -1768,8 +1614,8 @@ export default function MainPage() {
         >
           <StageView />
           <ActionsPanel
-            offsetTop={actionsPanelOffsetTop}
-            offsetLeft={actionsPanelOffsetLeft}
+            top={actionsPanelOffsetTop}
+            left={actionsPanelOffsetLeft}
             width={`${actionsPanelWidth}px`}
             height={`calc(100vh - ${actionsPanelOffsetTop * 2}px)`}
           />
@@ -1796,13 +1642,11 @@ export default function MainPage() {
           ) : null}
         </div>
 
-        {/* cmdk modal */}
         <Command.Dialog
           open={cmdkOpen}
           className="background-primary radius-s shadow border"
-          onOpenChange={setCmdkOpen}
+          onOpenChange={(open: boolean) => dispatch(setCmdkOpen(open))}
           onKeyDown={(e: React.KeyboardEvent) => {
-            // cmdk obj for the current command
             const cmdk: TCmdkKeyMap = {
               cmd: getCommandKey(e as unknown as KeyboardEvent, osType),
               shift: e.shiftKey,
@@ -1815,14 +1659,14 @@ export default function MainPage() {
             }
             if (
               e.code === "Escape" ||
-              (e.code === "Backspace" && !cmdkSearch)
+              (e.code === "Backspace" && !cmdkSearchContent)
             ) {
               if (e.code === "Escape" && cmdkPages.length === 1) {
-                setCmdkPages([]);
-                setCmdkOpen(false);
+                dispatch(setCmdkPages([]));
+                dispatch(setCmdkOpen(false));
               } else {
                 cmdkPages.length !== 1 &&
-                  setCmdkPages((cmdkPages) => cmdkPages.slice(0, -1));
+                  dispatch(setCmdkPages(cmdkPages.slice(0, -1)));
               }
             }
             e.stopPropagation();
@@ -1831,7 +1675,7 @@ export default function MainPage() {
             return value.includes(search) !== false ? 1 : 0;
           }}
           loop={true}
-          label={cmdkPage}
+          label={currentCmdkPage}
         >
           {/* search input */}
           <div
@@ -1841,15 +1685,17 @@ export default function MainPage() {
             )}
           >
             <Command.Input
-              value={cmdkSearch}
-              onValueChange={setCmdkSearch}
+              value={cmdkSearchContent}
+              onValueChange={(str: string) =>
+                dispatch(setCmdkSearchContent(str))
+              }
               className="justify-start padding-s gap-s text-l background-primary"
               placeholder={
-                cmdkPage === "Jumpstart"
+                currentCmdkPage === "Jumpstart"
                   ? "Jumpstart..."
-                  : cmdkPage === "Actions"
+                  : currentCmdkPage === "Actions"
                   ? "Do something..."
-                  : cmdkPage === "Add"
+                  : currentCmdkPage === "Add"
                   ? "Add something..."
                   : ""
               }
@@ -1859,12 +1705,12 @@ export default function MainPage() {
           {/* modal content */}
           <div
             className={
-              cmdkPage !== "Add" && cmdkPage !== "Jumpstart"
+              currentCmdkPage !== "Add" && currentCmdkPage !== "Jumpstart"
                 ? ""
                 : "box-l direction-column align-stretch box"
             }
             style={{
-              ...(cmdkPage !== "Add" && cmdkPage !== "Jumpstart"
+              ...(currentCmdkPage !== "Add" && currentCmdkPage !== "Jumpstart"
                 ? { width: "100%" }
                 : {}),
               ...(validMenuItemCount === 0
@@ -1887,42 +1733,42 @@ export default function MainPage() {
                   {/* <Command.Empty>No results found for "{cmdkSearch}".</Command.Empty> */}
 
                   {Object.keys(
-                    cmdkPage === "Jumpstart"
+                    currentCmdkPage === "Jumpstart"
                       ? cmdkReferenceJumpstart
-                      : cmdkPage === "Actions"
+                      : currentCmdkPage === "Actions"
                       ? cmdkReferenceActions
-                      : cmdkPage === "Add"
+                      : currentCmdkPage === "Add"
                       ? cmdkReferenceAdd
                       : {},
                   ).map((groupName: string) => {
                     let groupNameShow: boolean = false;
-                    (cmdkPage === "Jumpstart"
+                    (currentCmdkPage === "Jumpstart"
                       ? groupName !== "Recent"
                         ? cmdkReferenceJumpstart[groupName]
                         : cmdkReferneceRecentProject
-                      : cmdkPage === "Actions"
+                      : currentCmdkPage === "Actions"
                       ? cmdkReferenceActions[groupName]
-                      : cmdkPage === "Add"
+                      : currentCmdkPage === "Add"
                       ? cmdkReferenceAdd[groupName]
                       : []
                     ).map((command: TCmdkReference) => {
                       const context: TCmdkContext =
                         command.Context as TCmdkContext;
                       groupNameShow =
-                        cmdkPage === "Jumpstart" ||
-                        (cmdkPage === "Actions" &&
+                        currentCmdkPage === "Jumpstart" ||
+                        (currentCmdkPage === "Actions" &&
                           (command.Name === "Add" ||
                             context.all === true ||
                             (activePanel === "file" &&
                               (context["file"] === true || false)) ||
                             ((activePanel === "node" ||
                               activePanel === "stage") &&
-                              ((ffTree[file.uid] &&
-                                (ffTree[file.uid].data as TFileNodeData)
-                                  .type === "html" &&
+                              ((fileTree[currentFileUid] &&
+                                (fileTree[currentFileUid].data as TFileNodeData)
+                                  .ext === ".html" &&
                                 context["html"] === true) ||
                                 false)))) ||
-                        cmdkPage === "Add";
+                        currentCmdkPage === "Add";
                     });
 
                     return (
@@ -1941,33 +1787,35 @@ export default function MainPage() {
                         ) : (
                           <></>
                         )}
-                        {(cmdkPage === "Jumpstart"
+                        {(currentCmdkPage === "Jumpstart"
                           ? groupName !== "Recent"
                             ? cmdkReferenceJumpstart[groupName]
                             : cmdkReferneceRecentProject
-                          : cmdkPage === "Actions"
+                          : currentCmdkPage === "Actions"
                           ? cmdkReferenceActions[groupName]
-                          : cmdkPage === "Add"
+                          : currentCmdkPage === "Add"
                           ? cmdkReferenceAdd[groupName]
                           : []
-                        ).map((command: TCmdkReference, index) => {
+                        )?.map((command: TCmdkReference, index) => {
                           const context: TCmdkContext =
                             command.Context as TCmdkContext;
                           const show: boolean =
-                            cmdkPage === "Jumpstart" ||
-                            (cmdkPage === "Actions" &&
+                            currentCmdkPage === "Jumpstart" ||
+                            (currentCmdkPage === "Actions" &&
                               (command.Name === "Add" ||
                                 context.all === true ||
                                 (activePanel === "file" &&
                                   (context["file"] === true || false)) ||
                                 ((activePanel === "node" ||
                                   activePanel === "stage") &&
-                                  ((ffTree[file.uid] &&
-                                    (ffTree[file.uid].data as TFileNodeData)
-                                      .type === "html" &&
+                                  ((fileTree[currentFileUid] &&
+                                    (
+                                      fileTree[currentFileUid]
+                                        .data as TFileNodeData
+                                    ).ext === ".html" &&
                                     context["html"] === true) ||
                                     false)))) ||
-                            cmdkPage === "Add";
+                            currentCmdkPage === "Add";
 
                           return show ? (
                             <Command.Item
@@ -1979,30 +1827,35 @@ export default function MainPage() {
                                   command.Description,
                               }}
                               onSelect={() => {
+                                console.log("onSelect", command);
+
                                 // keep modal open when toogling theme or go "Add" menu from "Actions" menu
                                 command.Name !== "Theme" &&
                                   command.Name !== "Add" &&
-                                  setCmdkOpen(false);
+                                  dispatch(setCmdkOpen(false));
+
                                 if (command.Name === "Guide") {
                                   guideRef.current?.click();
                                 } else if (command.Group === "Add") {
-                                  setCurrentCommand({
-                                    action: `${AddActionPrefix}-${command.Context}`,
-                                  });
+                                  dispatch(
+                                    setCurrentCommand({
+                                      action: `${AddActionPrefix}-${command.Context}`,
+                                    }),
+                                  );
                                 } else if (
-                                  cmdkPage === "Jumpstart" &&
+                                  currentCmdkPage === "Jumpstart" &&
                                   command.Group === "Recent"
                                 ) {
                                   const index = Number(command.Context);
                                   const projectContext =
-                                    recentProjectContext[index];
+                                    recentProjectContexts[index];
                                   const projectHandler =
-                                    recentProjectHandler[index];
-                                  if (ffTree) {
+                                    recentProjectHandlers[index];
+                                  if (fileTree) {
                                     // confirm files' changes
                                     let hasChangedFile = false;
-                                    for (let x in ffTree) {
-                                      const _file = ffTree[x];
+                                    for (let x in fileTree) {
+                                      const _file = fileTree[x];
                                       const _fileData =
                                         _file.data as TFileNodeData;
                                       if (_file && _fileData.changed) {
@@ -2022,18 +1875,20 @@ export default function MainPage() {
                                     true,
                                   );
                                 } else if (
-                                  cmdkPage === "Add" &&
+                                  currentCmdkPage === "Add" &&
                                   command.Group === "Recent"
                                 ) {
                                 } else {
-                                  setCurrentCommand({ action: command.Name });
+                                  dispatch(
+                                    setCurrentCommand({ action: command.Name }),
+                                  );
                                 }
                               }}
                             >
                               <div className="justify-stretch padding-s align-center">
                                 <div className="gap-s align-center">
                                   {/* detect Theme Group and render check boxes */}
-                                  {cmdkPage === "Jumpstart" &&
+                                  {currentCmdkPage === "Jumpstart" &&
                                   command.Name === "Theme" ? (
                                     <>
                                       <div className="padding-xs">
@@ -2067,14 +1922,13 @@ export default function MainPage() {
                                     </>
                                   )}
                                 </div>
-
                                 <div className="gap-s">
                                   {command["Keyboard Shortcut"] &&
                                     (
                                       command[
                                         "Keyboard Shortcut"
                                       ] as TCmdkKeyMap[]
-                                    ).map((keyMap, index) => (
+                                    )?.map((keyMap, index) => (
                                       <div className="gap-s" key={index}>
                                         {keyMap.cmd && (
                                           <span className="text-m">⌘</span>
@@ -2124,18 +1978,19 @@ export default function MainPage() {
               ref={guideRef}
             ></a>
             {/* description - right panel */}
-            {(cmdkPage === "Add" || cmdkPage === "Jumpstart") && false && (
-              <div
-                className={cx(
-                  "box align-center border-left padding-l text-l",
-                  !!hoveredMenuItemDescription ? "" : "opacity-m",
-                )}
-              >
-                {!!hoveredMenuItemDescription
-                  ? hoveredMenuItemDescription
-                  : "Description"}
-              </div>
-            )}
+            {(currentCmdkPage === "Add" || currentCmdkPage === "Jumpstart") &&
+              false && (
+                <div
+                  className={cx(
+                    "box align-center border-left padding-l text-l",
+                    !!hoveredMenuItemDescription ? "" : "opacity-m",
+                  )}
+                >
+                  {!!hoveredMenuItemDescription
+                    ? hoveredMenuItemDescription
+                    : "Description"}
+                </div>
+              )}
           </div>
         </Command.Dialog>
       </MainContext.Provider>

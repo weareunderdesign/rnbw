@@ -1,5 +1,6 @@
-import React, { FC } from "react";
-import { DraggingPosition } from "react-complex-tree";
+import React, { FC } from 'react';
+
+import { DraggingPosition } from 'react-complex-tree';
 
 interface DragBetweenLine {
   draggingPosition: DraggingPosition;

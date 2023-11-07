@@ -1,58 +1,50 @@
 import { DOMElement } from "react";
 
-import { TNode, TNodeTreeData, TNodeUid } from "../";
 import { Document } from "parse5/dist/tree-adapters/default";
 
-export type THtmlNodeData = {
-  valid: boolean;
-  isFormatText: boolean;
+import {
+  TNode,
+  TNodeData,
+  TNodeSourceCodeLocation,
+  TNodeTreeData,
+  TNodeUid,
+} from "../";
 
-  type: string;
-  name: string;
-  data: string;
-  attribs: THtmlNodeAttributes;
-
-  html: string;
-  htmlInApp: string;
-  positions: {
-    startLineNumber: number;
-    startColumn: number;
-    endLineNumber: number;
-    endColumn: number;
-  };
+export type THtmlNode = TNode & {
+  data: THtmlNodeData;
 };
-export type THtmlNodeAttributes = {
+
+export type THtmlNodeData = TNodeData & {
+  nodeName: string;
+  tagName: string;
+  textContent: string;
+
+  attribs: THtmlNodeAttribs;
+
+  sourceCodeLocation: TNodeSourceCodeLocation;
+};
+
+export type THtmlNodeAttribs = {
   [attrName: string]: any;
 };
-export interface THtmlDomNodeData extends DOMElement<any, HTMLElement> {
-  valid: boolean;
+
+export type THtmlNodeTreeData = {
+  [uid: TNodeUid]: THtmlNode;
+};
+
+export type THtmlDomNode = DOMElement<any, HTMLElement> & {
   [attrName: string]: any;
-}
+};
+
 export type THtmlParserResponse = {
-  formattedContent: string;
   contentInApp: string;
-  tree: TNodeTreeData;
-  nodeMaxUid: TNodeUid;
-  htmlDom?: Document;
+  nodeTree: TNodeTreeData;
+  htmlDom: Document;
 };
-export type THtmlElementsReference = {
-  Featured: string;
-  Tag: string;
-  Name: string;
-  Type: string;
-  Contain: string;
-  Description: string;
-  Icon: string;
-  Content: string;
-  Attributes: string;
-  "Cover Image": string;
-};
-export type THtmlElementsReferenceData = {
-  [tag: string]: THtmlElementsReference;
-};
-export type THtmlReferenceData = {
-  elements: THtmlElementsReferenceData;
-};
+
+
+
+// --------------------
 export type THtmlPageSettings = {
   title: string;
   favicon: string[];

@@ -3,13 +3,13 @@ import React, { useEffect, useMemo, useState } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { Workbox } from "workbox-window";
 
-import { LogAllow } from "@_constants/main";
+import { LogAllow } from "@_constants/global";
 import MainPage from "@_pages/main";
 
 import { AppProps } from "./types";
 
 export default function App(props: AppProps) {
-  // setup nohost
+  // setup nohost-serviceworker
   const [nohostReady, setNohostReady] = useState(false);
   useEffect(() => {
     if ("serviceWorker" in navigator) {

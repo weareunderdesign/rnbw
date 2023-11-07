@@ -1,8 +1,10 @@
-import { NodeInAppAttribName } from "@_constants/main";
-import { parseHtmlCodePart, THtmlNodeData } from "@_node/index";
-import { THtmlReferenceData } from "@_node/html";
-
-import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
+/* import { THtmlReferenceData } from '@_node/html';
+import { THtmlNodeData } from '@_node/index';
+import {
+  TNode,
+  TNodeTreeData,
+  TNodeUid,
+} from '@_node/types';
 
 export const creatingNode = (
   nodeMaxUid: number,
@@ -14,17 +16,16 @@ export const creatingNode = (
   const newNode: TNode = {
     uid: String(nodeMaxUid + 1) as TNodeUid,
     parentUid: nodeTree[focusedItem].parentUid as TNodeUid,
-    name: nodeType,
+    displayName: nodeType,
     isEntity: true,
     children: [],
     data: {
       valid: true,
-      isFormatText: false,
 
       type: "tag",
       name: nodeType,
       data: "",
-      attribs: { [NodeInAppAttribName]: String(nodeMaxUid + 1) as TNodeUid },
+      attribs: { [StageNodeIdAttr]: String(nodeMaxUid + 1) as TNodeUid },
 
       html: "",
       htmlInApp: "",
@@ -99,7 +100,7 @@ export const creatingNode = (
           type: "text",
           name: "text",
           data: Content,
-          attribs: { [NodeInAppAttribName]: tmpMaxUid as TNodeUid },
+          attribs: { [StageNodeIdAttr]: tmpMaxUid as TNodeUid },
 
           html: "",
           htmlInApp: "",
@@ -118,3 +119,4 @@ export const creatingNode = (
 
   return { newNode, _tree, tmpMaxUid, contentNode, newNodeFlag };
 };
+ */

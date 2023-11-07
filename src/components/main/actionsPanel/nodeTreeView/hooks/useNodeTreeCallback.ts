@@ -12,17 +12,18 @@ import {
   getDropOptions,
   sortUidsByMaxEndIndex,
 } from "../helpers";
+import { useSelector } from "react-redux";
+import { AppState } from "@_redux/_root";
 
 export const useNodeTreeCallback = (
   focusItemValue: TNodeUid | null,
   isDragging: boolean,
 ) => {
-  const {
-    theme: _theme,
-    monacoEditorRef,
-    validNodeTree,
-    setIsContentProgrammaticallyChanged,
-  } = useContext(MainContext);
+  const { validNodeTree } = useSelector(
+    (state: AppState) => state.main.nodeTree,
+  );
+  const { monacoEditorRef, setIsContentProgrammaticallyChanged } =
+    useContext(MainContext);
 
   const { cb_focusNode, cb_selectNode, cb_expandNode, cb_collapseNode } =
     useNodeViewState(focusItemValue);
@@ -46,8 +47,6 @@ export const useNodeTreeCallback = (
   const { handleEditorChange } = useEditor();
 
   const onDrop = (items: TreeItem[], target: DraggingPosition) => {
-    setIsContentProgrammaticallyChanged(true);
-
     const uids: TNodeUid[] = items.map((item) => item.index as TNodeUid);
 
     const model = monacoEditorRef.current?.getModel();
@@ -55,7 +54,7 @@ export const useNodeTreeCallback = (
       console.error("Monaco Editor model is undefined");
       return;
     }
-
+    setIsContentProgrammaticallyChanged(true);
     const dropOptions = getDropOptions(target, validNodeTree, model);
     if (dropOptions === undefined) {
       return;
@@ -97,7 +96,7 @@ export const useNodeTreeCallback = (
           startCol: startColumn,
           startLine: startLineNumber,
           endOffset: uidEndOffset,
-        } = node.sourceCodeLocation;
+        } = node.data.sourceCodeLocation;
 
         if (!pasted && uidEndOffset <= targetendOffset) {
           model.pushEditOperations([], [editOperation], () => null);

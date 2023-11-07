@@ -5,7 +5,7 @@ import { verifyFileHandlerPermission } from "@_services/main";
 export const validateAndDeleteNode = async (
   uid: string,
   ffTree: TNodeTreeData,
-  ffHandlers: TFileHandlerCollection,
+  fileHandlers: TFileHandlerCollection,
 ) => {
   const node = ffTree[uid];
 
@@ -20,7 +20,9 @@ export const validateAndDeleteNode = async (
     return false;
   }
 
-  const parentHandler = ffHandlers[parentNode.uid] as FileSystemDirectoryHandle;
+  const parentHandler = fileHandlers[
+    parentNode.uid
+  ] as FileSystemDirectoryHandle;
 
   if (!(await verifyFileHandlerPermission(parentHandler))) {
     return false;

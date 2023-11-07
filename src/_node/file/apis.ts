@@ -3,23 +3,16 @@ import FileSaver from "file-saver";
 import JSZip from "jszip";
 
 import { RootNodeUid, StagePreviewPathPrefix } from "@_constants/main";
+import { TOsType } from "@_redux/global";
 // @ts-ignore
 import htmlRefElements from "@_ref/rfrncs/HTML Elements.csv";
 import { SystemDirectories } from "@_ref/SystemDirectories";
 import { verifyFileHandlerPermission } from "@_services/main";
-import { TOsType } from "@_types/global";
-import { TFileType } from "@_types/main";
 
 import {
   getSubNodeUidsByBfs,
   parseHtml,
-  serializeHtml,
   TFileParserResponse,
-  THtmlElementsReference,
-  THtmlElementsReferenceData,
-  THtmlNodeData,
-  THtmlReferenceData,
-  TNodeReferenceData,
   TNodeTreeData,
   TNodeUid,
 } from "../";
@@ -30,7 +23,10 @@ import {
   TIDBFileInfoObj,
   TZipFileInfo,
 } from "./types";
-import { editor } from "monaco-editor";
+import {
+  THtmlElementsReference,
+  THtmlElementsReferenceData,
+} from "@_types/main";
 
 export const _fs = window.Filer.fs;
 export const _path = window.Filer.path;
@@ -75,73 +71,6 @@ export const createIDBProject = async (projectPath: string): Promise<void> => {
         : "";
       const indexHtmlContent = doctype + html;
 
-      //       `<!DOCTYPE html>
-      // <html lang="en">
-      //     <head>
-      //         <meta charset="UTF-8">
-      //         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      //         <meta http-equiv="X-UA-Compatible" content="ie=edge">
-      //         <title>rnbw</title>
-      //         <meta name="description" content="rainbow">
-      //         <meta property="og:title" content="design. develop. ship.">
-      //         <link rel="icon" href="images/favicon.png">
-      //         <link rel="stylesheet" href="https://unpkg.com/renecss/dist/rene.min.css">
-      //         <script type="module" src="https://unpkg.com/@rainbowapp/svg-icon.js/dist/svg-icon.min.js"></script>
-      //         <script defer data-domain="rnbw.company" src="https://plausible.io/js/script.js"></script>
-      //     </head>
-
-      //     <body>
-      //         <div class="view align-center direction-row">
-      //             <div class="page">
-      //                 <div class="align-center">
-      //                     <img src="https://rnbw.company/images/rnbwcolor.svg" class="box-m"></img>
-      //                 </div>
-      //                 <div class="align-center">
-      //                     <div class="box-m">
-      //                         <h4 class="text-center">
-      //                             welcome to rnbw! hit
-      //                             <span class="padding-s radius-s background-secondary">A</span>
-      //                             to add something. hit
-      //                             <span class="padding-s radius-s background-secondary">W</span>
-      //                             to do something. hit
-      //                             <span class="padding-s radius-s background-secondary">J</span>
-      //                             to jumpstart. hit
-      //                             <span class="padding-s radius-s background-secondary">O</span>
-      //                             to open a project. that's it, you'll get the rest of
-      //                             it!
-      //                         </h4>
-      //                     </div>
-      //                 </div>
-
-      //                 <img class="dark" src="https://rnbw.company/images/keyboard-dark.svg"></img>
-      //                 <img class="light" src="https://rnbw.company/images/keyboard-light.svg"></img>
-      //                 <div class="direction-column gap-xl">
-      //                     <div class="box direction-row">
-      //                         <p>
-      //                             rnbw is an environment to design in the web medium.
-      //                             build websites, apps, and design systems. create
-      //                             with popular libraries or make your stuff. while you
-      //                             act on your ideas, HTML & CSS are generated in the
-      //                             background.
-      //                         </p>
-      //                     </div>
-      //                     <div class="box direction-row">
-      //                         <p>
-      //                             your design is an unlimited living product. it helps
-      //                             you embrace HTML, CSS (and JS!) as the ultimate
-      //                             design tool and common ground with your development
-      //                             workflows. when your design is done, it’s done.
-      //                         </p>
-      //                     </div>
-      //                 </div>
-      //                 <rnbw-nav></rnbw-nav>
-      //             </div>
-      //         </div>
-      //         <rnbw-footer></rnbw-footer>
-      //     </body>
-      //     <script src="https://rnbw.company/rnbw-nav.js"></script>
-      //     <script src="https://rnbw.company/rnbw-footer.js"></script>
-      // </html>`
       await writeFile(indexHtmlPath, indexHtmlContent);
 
       resolve();
@@ -298,7 +227,6 @@ export const reloadIDBProject = async (
     },
   );
 };
-
 export const loadLocalProject = async (
   projectHandle: FileSystemDirectoryHandle,
   osType: TOsType,
@@ -502,7 +430,6 @@ export const reloadLocalProject = async (
     res({ handlerObj, deletedUids: Object.keys(orgUids) });
   });
 };
-
 export const downloadProject = async (projectPath: string): Promise<void> => {
   return new Promise<void>(async (resolve, reject) => {
     try {
@@ -559,7 +486,6 @@ export const downloadProject = async (projectPath: string): Promise<void> => {
     }
   });
 };
-
 export const createDirectory = async (path: string): Promise<void> => {
   return new Promise<void>((resolve, reject) => {
     _fs.mkdir(path, (err: any) => {
@@ -606,34 +532,6 @@ export const getStat = async (path: string): Promise<any> => {
   });
 };
 
-export const parseFile = (params: {
-  type: TFileType;
-  content: string;
-  keepNodeUids?: null | boolean;
-  nodeMaxUid?: TNodeUid;
-}): TFileParserResponse => {
-  const { type, content, keepNodeUids = false, nodeMaxUid = "" } = params;
-  if (type === "html") {
-    return parseHtml(content, keepNodeUids, nodeMaxUid);
-  } else {
-    return {
-      formattedContent: "",
-      contentInApp: "",
-      tree: {},
-      nodeMaxUid: "0",
-    };
-  }
-};
-export const serializeFile = (
-  type: TFileType,
-  tree: TNodeTreeData,
-): THtmlNodeData | string => {
-  if (type === "html") {
-    return serializeHtml(tree);
-  }
-  return "";
-};
-
 export const getNormalizedPath = (
   path: string,
 ): { isAbsolutePath: boolean; normalizedPath: string } => {
@@ -643,4 +541,19 @@ export const getNormalizedPath = (
   const isAbsolutePath = _path.isAbsolute(path);
   const normalizedPath = _path.normalize(path);
   return { isAbsolutePath, normalizedPath };
+};
+
+export const parseFile = (params: {
+  ext: string;
+  content: string;
+}): TFileParserResponse => {
+  const { ext, content } = params;
+  if (ext === "html") {
+    return parseHtml(content);
+  } else {
+    return {
+      contentInApp: "",
+      nodeTree: {},
+    };
+  }
 };
