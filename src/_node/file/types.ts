@@ -52,8 +52,13 @@ export type TFileHandlerInfoObj = { [uid: TNodeUid]: TFileHandlerInfo };
 
 export type TProjectLoaderResponse = {
   handlerArr?: TFileHandlerInfo[];
-  handlerObj: TFileHandlerInfoObj;
+  _fileHandlers?: TFileHandlerCollection;
+
+  _fileTree: TFileNodeTreeData;
+  _initialFileUidToOpen: TNodeUid;
+
   deletedUids: TNodeUid[];
+  deletedUidsObj: { [uid: TNodeUid]: true };
 };
 // --------------------
 export type TFile = {

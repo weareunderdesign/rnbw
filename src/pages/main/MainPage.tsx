@@ -31,6 +31,7 @@ import {
   loadIDBProject,
   loadLocalProject,
   TFileHandlerCollection,
+  TFileNode,
   TFileNodeData,
   TFileNodeTreeData,
 } from "@_node/file";
@@ -59,7 +60,10 @@ import {
   setFileAction,
 } from "@_redux/main/fileTree/event";
 import { setNodeTree, setValidNodeTree } from "@_redux/main/nodeTree";
-import { NodeTree_Event_ClearActionType } from "@_redux/main/nodeTree/event";
+import {
+  NodeTree_Event_ClearActionType,
+  setCurrentFileContent,
+} from "@_redux/main/nodeTree/event";
 import {
   setDidUndo,
   setFavicon,
@@ -935,288 +939,92 @@ export default function MainPage() {
   const clearSession = useCallback(() => {
     dispatch({ type: FileTree_Event_ClearActionType });
     dispatch({ type: NodeTree_Event_ClearActionType });
+
+    dispatch(setCurrentFileUid(""));
+    dispatch(setCurrentFileContent(""));
+    dispatch(setNodeTree({}));
+    dispatch(setValidNodeTree({}));
+    dispatch(setIframeSrc(null));
   }, []);
 
-  const loadProject = useCallback(
+  const importProject = useCallback(
     async (
       fsType: TProjectContext,
-      projectHandle?: FileSystemHandle | null,
-      internal?: boolean,
+      projectHandle?: FileSystemDirectoryHandle | null,
     ) => {
-      console.log("LOAD PROJECT CALL");
-      dispatch(setFavicon(""));
       if (fsType === "local") {
         dispatch(setDoingFileAction(true));
         try {
-          // configure idb on nohost
-          const { handlerObj, handlerArr } = await loadLocalProject(
+          const {
+            handlerArr,
+            _fileHandlers,
+
+            _fileTree,
+            _initialFileUidToOpen,
+          } = await loadLocalProject(
             projectHandle as FileSystemDirectoryHandle,
             osType,
           );
+
+          clearSession();
+
+          // build nohost idb
           handlerArr && buildNohostIDB(handlerArr);
 
-          clearSession(); /* file treeview error fix when the switching project by navigator */
+          dispatch(
+            setProject({
+              context: "local",
+              name: (projectHandle as FileSystemDirectoryHandle).name,
+              handler: null,
+              favicon: null,
+            }),
+          );
+          setCurrentProjectFileHandle(
+            projectHandle as FileSystemDirectoryHandle,
+          );
 
-          setTimeout(async () => {
-            // sort by ASC directory/file
-            Object.keys(handlerObj).map((uid) => {
-              const handler = handlerObj[uid];
-              handler.children = handler.children.sort((a, b) => {
-                return handlerObj[a].kind === "file" &&
-                  handlerObj[b].kind === "directory"
-                  ? 1
-                  : handlerObj[a].kind === "directory" &&
-                    handlerObj[b].kind === "file"
-                  ? -1
-                  : handlerObj[a].name > handlerObj[b].name
-                  ? 1
-                  : -1;
-              });
-            });
+          dispatch(setFileTree(_fileTree));
+          dispatch(setInitialFileUidToOpen(_initialFileUidToOpen));
+          setFileHandlers(_fileHandlers as TFileHandlerCollection);
 
-            // get/set the index/first html to be opened by default
-            let firstHtmlUid: TNodeUid = "",
-              indexHtmlUid: TNodeUid = "";
-            handlerObj[RootNodeUid].children.map((uid) => {
-              const handler = handlerObj[uid];
-              if (handler.kind === "file" && handler.ext === ".html") {
-                firstHtmlUid === "" ? (firstHtmlUid = uid) : null;
-                handler.name === "index" ? (indexHtmlUid = uid) : null;
-              }
-            });
-
-            // set default background
-            dispatch(setCurrentFileUid(""));
-            dispatch(setNodeTree({}));
-            dispatch(setValidNodeTree({}));
-            dispatch(setIframeSrc(null));
-
-            const initialFile =
-              indexHtmlUid !== ""
-                ? indexHtmlUid
-                : firstHtmlUid !== ""
-                ? firstHtmlUid
-                : "";
-
-            // hide element panel when there is no index.html
-            if (initialFile === "") {
-              dispatch(setShowActionsPanel(false));
-              dispatch(setNavigatorDropdownType(null));
-            }
-
-            dispatch(setInitialFileUidToOpen(initialFile));
-
-            // set ff-tree, ff-handlers
-            const treeViewData: TNodeTreeData = {};
-            const ffHandlerObj: TFileHandlerCollection = {};
-            Object.keys(handlerObj).map((uid) => {
-              const {
-                parentUid,
-                children,
-                path,
-                kind,
-                name,
-                ext,
-                content,
-                handler,
-              } = handlerObj[uid];
-              const type = ParsableFileTypes[ext || ""]
-                ? ext?.slice(1)
-                : "unknown";
-              treeViewData[uid] = {
-                uid,
-                parentUid: parentUid,
-                displayName: name,
-                isEntity: kind === "file",
-                children: [...children],
-                data: {
-                  valid: true,
-                  path: path,
-                  kind: kind,
-                  name: name,
-                  ext: ext,
-                  type,
-                  orgContent: content?.toString(),
-                  content: content?.toString(),
-                  changed: false,
-                } as TFileNodeData,
-              } as TNode;
-
-              ffHandlerObj[uid] = handler as FileSystemHandle;
-            });
-
-            dispatch(setFileTree(treeViewData as TFileNodeTreeData));
-            setFileHandlers(ffHandlerObj);
-
-            dispatch(
-              setProject({
-                context: "local",
-                name: (projectHandle as FileSystemDirectoryHandle).name,
-                handler: null,
-                favicon: null,
-              }),
-            );
-            setCurrentProjectFileHandle(
-              projectHandle as FileSystemDirectoryHandle,
-            );
-
+          if (_initialFileUidToOpen === "") {
+            dispatch(setShowActionsPanel(false));
             dispatch(setNavigatorDropdownType(null));
-            if (internal) {
-              // store last edit session
-              toogleCodeView();
-              const _recentProjectContexts = [...recentProjectContexts];
-              const _recentProjectNames = [...recentProjectNames];
-              const _recentProjectHandlers = [...recentProjectHandlers];
-              for (
-                let index = 0;
-                index < _recentProjectContexts.length;
-                ++index
-              ) {
-                if (
-                  _recentProjectContexts[index] === fsType &&
-                  projectHandle?.name === _recentProjectNames[index]
-                ) {
-                  _recentProjectContexts.splice(index, 1);
-                  _recentProjectNames.splice(index, 1);
-                  _recentProjectHandlers.splice(index, 1);
-                  break;
-                }
-              }
-              if (_recentProjectContexts.length === RecentProjectCount) {
-                _recentProjectContexts.pop();
-                _recentProjectNames.pop();
-                _recentProjectHandlers.pop();
-              }
-              _recentProjectContexts.unshift(fsType);
-              _recentProjectNames.unshift(
-                (projectHandle as FileSystemDirectoryHandle).name,
-              );
-              _recentProjectHandlers.unshift(
-                projectHandle as FileSystemDirectoryHandle,
-              );
-              setRecentProjectContexts(_recentProjectContexts);
-              setRecentProjectNames(_recentProjectNames);
-              setRecentProjectHandlers(_recentProjectHandlers);
-              await setMany([
-                ["recent-project-context", _recentProjectContexts],
-                ["recent-project-name", _recentProjectNames],
-                ["recent-project-handler", _recentProjectHandlers],
-              ]);
-            }
+          }
 
-            // show actions panel by default
-            !showActionsPanel && dispatch(setShowActionsPanel(true));
-          }, 50);
+          await saveRecentProject(
+            fsType,
+            projectHandle as FileSystemDirectoryHandle,
+          );
         } catch (err) {
-          LogAllow && console.log("failed to load local project");
+          LogAllow && console.log("ERROR while importing local project", err);
         }
         dispatch(setDoingFileAction(false));
       } else if (fsType === "idb") {
         dispatch(setDoingFileAction(true));
-        clearSession();
         try {
-          const { handlerObj } = await loadIDBProject(DefaultProjectPath);
-          // sort by ASC directory/file
-          Object.keys(handlerObj).map((uid) => {
-            const handler = handlerObj[uid];
-            handler.children = handler.children.sort((a, b) => {
-              return handlerObj[a].kind === "file" &&
-                handlerObj[b].kind === "directory"
-                ? 1
-                : handlerObj[a].kind === "directory" &&
-                  handlerObj[b].kind === "file"
-                ? -1
-                : handlerObj[a].name > handlerObj[b].name
-                ? 1
-                : -1;
-            });
-          });
+          const { _fileTree, _initialFileUidToOpen } =
+            await loadIDBProject(DefaultProjectPath);
 
-          // get/set the index/first html to be opened by default
-          let firstHtmlUid: TNodeUid = "",
-            indexHtmlUid: TNodeUid = "";
-          handlerObj[RootNodeUid].children.map((uid) => {
-            const handler = handlerObj[uid];
-            if (handler.kind === "file" && handler.ext === ".html") {
-              firstHtmlUid === "" ? (firstHtmlUid = uid) : null;
-              handler.name === "index" ? (indexHtmlUid = uid) : null;
-            }
-          });
-          dispatch(
-            setInitialFileUidToOpen(
-              indexHtmlUid !== ""
-                ? indexHtmlUid
-                : firstHtmlUid !== ""
-                ? firstHtmlUid
-                : "",
-            ),
-          );
+          clearSession();
 
-          // set ff-tree, ff-handlers
-          const treeViewData: TNodeTreeData = {};
-          const ffHandlerObj: TFileHandlerCollection = {};
-          Object.keys(handlerObj).map((uid) => {
-            const { parentUid, children, path, kind, name, ext, content } =
-              handlerObj[uid];
-            const type = ParsableFileTypes[ext || ""]
-              ? ext?.slice(1)
-              : "unknown";
-            treeViewData[uid] = {
-              uid,
-              parentUid: parentUid,
-              displayName: name,
-              isEntity: kind === "file",
-              children: [...children],
-              data: {
-                valid: true,
-                path: path,
-                kind: kind,
-                name: name,
-                ext: ext,
-                type,
-                orgContent: type !== "unknown" ? content?.toString() : "",
-                content: type !== "unknown" ? content?.toString() : "",
-                changed: false,
-              } as TFileNodeData,
-            } as TNode;
-          });
-          dispatch(setFileTree(treeViewData as TFileNodeTreeData));
-          setFileHandlers(ffHandlerObj);
           dispatch(
             setProject({
               context: "idb",
-              name: "Untitled",
+              name: "Welcome",
               handler: null,
               favicon: null,
             }),
           );
           setCurrentProjectFileHandle(null);
-          // store last edit session
-          // const _recentProjectContexts = [...recentProjectContexts]
-          // const _recentProjectNames = [...recentProjectNames]
-          // const _recentProjectHandlers = [...recentProjectHandlers]
-          // for (let index = 0; index < _recentProjectContexts.length; ++index) {
-          //   if (_recentProjectContexts[index] === fsType) {
-          //     _recentProjectContexts.splice(index, 1)
-          //     _recentProjectNames.splice(index, 1)
-          //     _recentProjectHandlers.splice(index, 1)
-          //     break
-          //   }
-          // }
-          // if (_recentProjectContexts.length === RecentProjectCount) {
-          //   _recentProjectContexts.pop()
-          //   _recentProjectNames.pop()
-          //   _recentProjectHandlers.pop()
-          // }
-          // _recentProjectContexts.unshift(fsType)
-          // _recentProjectNames.unshift('Untitled')
-          // _recentProjectHandlers.unshift(null)
-          // setRecentProjectContexts(_recentProjectContexts)
-          // setRecentProjectNames(_recentProjectNames)
-          // setRecentProjectHandlers(_recentProjectHandlers)
-          // await setMany([['recent-project-context', _recentProjectContexts], ['recent-project-name', _recentProjectNames], ['recent-project-handler', _recentProjectHandlers]])
+
+          dispatch(setFileTree(_fileTree));
+          dispatch(setInitialFileUidToOpen(_initialFileUidToOpen));
+          setFileHandlers({});
+
+          // await saveRecentProject(fsType);
         } catch (err) {
-          LogAllow && console.log("failed to load Untitled project");
+          LogAllow && console.log("ERROR while importing IDB project", err);
         }
         dispatch(setDoingFileAction(false));
       }
@@ -1230,6 +1038,48 @@ export default function MainPage() {
       fileTree,
     ],
   );
+  const saveRecentProject = useCallback(
+    async (
+      fsType: TProjectContext,
+      projectHandle: FileSystemDirectoryHandle,
+    ) => {
+      const _recentProjectContexts = [...recentProjectContexts];
+      const _recentProjectNames = [...recentProjectNames];
+      const _recentProjectHandlers = [...recentProjectHandlers];
+      for (let index = 0; index < _recentProjectContexts.length; ++index) {
+        if (
+          _recentProjectContexts[index] === fsType &&
+          projectHandle?.name === _recentProjectNames[index]
+        ) {
+          _recentProjectContexts.splice(index, 1);
+          _recentProjectNames.splice(index, 1);
+          _recentProjectHandlers.splice(index, 1);
+          break;
+        }
+      }
+      if (_recentProjectContexts.length === RecentProjectCount) {
+        _recentProjectContexts.pop();
+        _recentProjectNames.pop();
+        _recentProjectHandlers.pop();
+      }
+      _recentProjectContexts.unshift(fsType);
+      _recentProjectNames.unshift(
+        (projectHandle as FileSystemDirectoryHandle).name,
+      );
+      _recentProjectHandlers.unshift(
+        projectHandle as FileSystemDirectoryHandle,
+      );
+      setRecentProjectContexts(_recentProjectContexts);
+      setRecentProjectNames(_recentProjectNames);
+      setRecentProjectHandlers(_recentProjectHandlers);
+      await setMany([
+        ["recent-project-context", _recentProjectContexts],
+        ["recent-project-name", _recentProjectNames],
+        ["recent-project-handler", _recentProjectHandlers],
+      ]);
+    },
+    [recentProjectContexts, recentProjectNames, recentProjectHandlers],
+  );
   const onImportProject = useCallback(
     async (fsType: TProjectContext = "local"): Promise<void> => {
       return new Promise<void>(async (resolve, reject) => {
@@ -1239,13 +1089,13 @@ export default function MainPage() {
               _preferPolyfill: false,
               mode: "readwrite",
             } as CustomDirectoryPickerOptions);
-            await loadProject(fsType, projectHandle, true);
+            await importProject(fsType, projectHandle);
           } catch (err) {
             reject(err);
           }
         } else if (fsType === "idb") {
           try {
-            await loadProject(fsType, null, true);
+            await importProject(fsType, null);
           } catch (err) {
             reject(err);
           }
@@ -1253,7 +1103,7 @@ export default function MainPage() {
         resolve();
       });
     },
-    [loadProject],
+    [importProject],
   );
   const onNew = useCallback(async () => {
     if (fileTree) {
@@ -1594,7 +1444,8 @@ export default function MainPage() {
           setCodeViewOffsetTop,
 
           // load project
-          loadProject,
+          importProject,
+
           // non html editable
           parseFileFlag,
           setParseFile,
@@ -1871,11 +1722,7 @@ export default function MainPage() {
                                       }
                                     }
                                   }
-                                  loadProject(
-                                    projectContext,
-                                    projectHandler,
-                                    true,
-                                  );
+                                  importProject(projectContext, projectHandler);
                                 } else if (
                                   currentCmdkPage === "Add" &&
                                   command.Group === "Recent"

@@ -62,12 +62,10 @@ export type TMainContext = {
   setNewFocusedNodeUid: (uid: TNodeUid) => void;
   setCodeViewOffsetTop: (offsetTop: string) => void;
 
-  // references
-
-  loadProject: (
+  // import project
+  importProject: (
     fsType: TProjectContext,
-    projectHandle?: FileSystemHandle | null,
-    internal?: boolean | true,
+    projectHandle?: FileSystemDirectoryHandle | null,
   ) => void;
   closeAllPanel: () => void;
 
