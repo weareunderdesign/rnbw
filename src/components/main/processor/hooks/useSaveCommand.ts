@@ -5,9 +5,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootNodeUid } from "@_constants/main";
 import { getSubNodeUidsByBfs } from "@_node/apis";
 import {
-  reloadLocalProject,
   TFileNodeData,
   TFileNodeTreeData,
+  loadLocalProject,
 } from "@_node/file";
 import { TNodeTreeData } from "@_node/types";
 import { osTypeSelector } from "@_redux/global";
@@ -74,11 +74,11 @@ export const useSaveCommand = () => {
 
           const fileData = fileTree[currentFileUid].data as TFileNodeData;
           if (fileData.ext === ".css" || fileData.ext === ".js") {
-            reloadLocalProject(
+            loadLocalProject(
               fileHandlers[RootNodeUid] as FileSystemDirectoryHandle,
-              fileTree,
               osType,
-              [currentFileUid],
+              fileTree,
+              // [currentFileUid],
             );
             dispatch(setNeedToReloadIframe(true));
             setNeedToReloadIframe(true);
@@ -90,5 +90,5 @@ export const useSaveCommand = () => {
     dispatch(setFileTree(_ffTree as TFileNodeTreeData));
 
     removeRunningActions(["process-save"], false);
-  }, [fileTree, fileHandlers, reloadLocalProject]);
+  }, [fileTree, fileHandlers, loadLocalProject]);
 };

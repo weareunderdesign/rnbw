@@ -16,11 +16,7 @@ import {
 import { setNodeTree, setValidNodeTree } from "@_redux/main/nodeTree";
 import { setIframeSrc } from "@_redux/main/stageView";
 
-import {
-  loadIDBProject,
-  loadLocalProject,
-  processHandlerObj,
-} from "../helpers";
+import { processHandlerObj } from "../helpers";
 import { TFileNodeTreeData } from "@_node/index";
 
 export const useReloadProject = () => {
@@ -38,7 +34,7 @@ export const useReloadProject = () => {
 
   async function reloadProject(_uid?: TNodeUid) {
     setIsLoading(true);
-    let handlerObj = {};
+    /* let handlerObj = {};
     let _deletedUids: TNodeUid[] = [];
 
     if (project.context === "local") {
@@ -66,7 +62,7 @@ export const useReloadProject = () => {
     ffTreeRef.current = treeViewData;
 
     dispatch(setFileTree(treeViewData as TFileNodeTreeData));
-    setFileHandlers(ffHandlerObj);
+    setFileHandlers(ffHandlerObj); */
 
     setIsLoading(false);
   }

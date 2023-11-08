@@ -25,6 +25,7 @@ import {
   RootNodeUid,
 } from "@_constants/main";
 import {
+  buildNohostIDB,
   downloadProject,
   initIDBProject,
   loadIDBProject,
@@ -948,10 +949,11 @@ export default function MainPage() {
         dispatch(setDoingFileAction(true));
         try {
           // configure idb on nohost
-          const handlerObj = await loadLocalProject(
+          const { handlerObj, handlerArr } = await loadLocalProject(
             projectHandle as FileSystemDirectoryHandle,
             osType,
           );
+          handlerArr && buildNohostIDB(handlerArr);
 
           clearSession(); /* file treeview error fix when the switching project by navigator */
 
