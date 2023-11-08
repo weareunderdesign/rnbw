@@ -7,7 +7,7 @@ export const CodeViewSyncDelay = 1 * 1000;
 export const ParsableFileTypes: {
   [fileType: string]: true;
 } = {
-  ".html": true,
+  html: true,
 };
 
 export const NodeUidSplitter: string = "?";

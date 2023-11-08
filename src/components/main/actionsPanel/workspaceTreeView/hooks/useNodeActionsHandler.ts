@@ -3,7 +3,7 @@ import { useCallback, useContext } from "react";
 import { TreeItem } from "react-complex-tree";
 import { useDispatch, useSelector } from "react-redux";
 
-import { RootNodeUid, TmpNodeUid } from "@_constants/main";
+import { ParsableFileTypes, RootNodeUid, TmpNodeUid } from "@_constants/main";
 import { getValidNodeUids } from "@_node/apis";
 import { createDirectory, TFileNodeData, writeFile } from "@_node/file";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
@@ -44,7 +44,10 @@ import {
 import { useInvalidNodes } from "./useInvalidNodes";
 import { useReloadProject } from "./useReloadProject";
 import { useTemporaryNodes } from "./useTemporaryNodes";
-import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
+import {
+  NodeTree_Event_ClearActionType,
+  setCurrentFileContent,
+} from "@_redux/main/nodeTree/event";
 
 export const useNodeActionsHandler = (
   openFileUid: React.MutableRefObject<string>,
@@ -512,7 +515,7 @@ export const useNodeActionsHandler = (
   const cb_readNode = useCallback(
     (uid: TNodeUid) => {
       addRunningActions(["fileTreeView-read"]);
-      dispatch({ type: FileTree_Event_ClearActionType });
+
       // validate
       if (invalidNodes[uid]) {
         removeRunningActions(["fileTreeView-read"], false);
@@ -523,12 +526,16 @@ export const useNodeActionsHandler = (
         removeRunningActions(["fileTreeView-read"], false);
         return;
       }
+
+      dispatch({ type: NodeTree_Event_ClearActionType });
+
       const nodeData = node.data as TFileNodeData;
-      console.log(nodeData);
+      console.log("cb_readNode", { nodeData });
+
       if (nodeData.ext === "html") {
         setPrevFileUid(currentFileUid);
       }
-      if (nodeData.ext === "unknown") {
+      if (!ParsableFileTypes[nodeData.ext]) {
         dispatch(setCurrentFileUid(uid));
         removeRunningActions(["fileTreeView-read"]);
         setParseFile(false);
