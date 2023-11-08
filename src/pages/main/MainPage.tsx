@@ -574,6 +574,7 @@ export default function MainPage() {
   useEffect(() => {
     if (!cmdkOpen && firstLoaded.current === 2 && !showActionsPanel) {
       dispatch(setShowActionsPanel(true));
+      dispatch(setShowCodeView(true));
     }
     ++firstLoaded.current;
   }, [cmdkOpen]);

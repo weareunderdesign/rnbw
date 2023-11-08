@@ -288,7 +288,7 @@ export const getPreViewPath = (
   fileData: TFileNodeData,
 ) => {
   const p_fileData = ffTree[_file.parentUid as TNodeUid].data as TFileNodeData;
-  const previewPath = `${p_fileData.path}/${StagePreviewPathPrefix}${fileData.name}${fileData.ext}`;
+  const previewPath = `${p_fileData.path}/${StagePreviewPathPrefix}${fileData.name}.${fileData.ext}`;
   return previewPath;
 };
 
@@ -334,15 +334,8 @@ export const getFileData = (params: {
   return fileData;
 };
 
-export const handleFileUpdate = (
-  fileData: TFileNodeData,
-  _nodeTree: TNodeTreeData,
-  file: TFileNode,
-) => {
-  const { contentInApp, nodeTree } = parseFile({
-    ext: fileData.ext.slice(1),
-    content: file.data.content,
-  });
+export const handleFileUpdate = (fileData: TFileNodeData) => {
+  const { contentInApp, nodeTree } = parseFile(fileData);
 
   fileData.contentInApp = contentInApp;
   fileData.changed = fileData.content !== fileData.orgContent;

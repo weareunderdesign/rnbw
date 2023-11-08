@@ -80,8 +80,7 @@ export const useProcessorUpdateOpt = () => {
       fileData.content = currentFileContent;
       if (updateOptions.from === "file") {
         if (monacoEditor) {
-          const { nodeTree } = handleFileUpdate(fileData, _nodeTree, _file);
-          console.log({ _file, nodeTree });
+          const { nodeTree } = handleFileUpdate(fileData);
 
           _nodeTree = nodeTree;
 
@@ -135,7 +134,7 @@ export const useProcessorUpdateOpt = () => {
           try {
             const previewPath = getPreViewPath(fileTree, _file, fileData);
             await writeFile(previewPath, fileData.contentInApp as string);
-            if (fileData.ext === ".html") {
+            if (fileData.ext === "html") {
               dispatch(setIframeSrc(`rnbw${previewPath}`));
             }
           } catch (err) {}
