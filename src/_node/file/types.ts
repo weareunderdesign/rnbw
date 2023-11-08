@@ -50,6 +50,10 @@ export type TFileHandlerInfo = {
 };
 export type TFileHandlerInfoObj = { [uid: TNodeUid]: TFileHandlerInfo };
 
+export type TProjectLoaderResponse = {
+  handlerObj: TFileHandlerInfoObj;
+  deletedUids: TNodeUid[];
+};
 // --------------------
 export type TFile = {
   uid: TNodeUid;

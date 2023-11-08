@@ -12,9 +12,11 @@ import { verifyFileHandlerPermission } from "@_services/main";
 import {
   getSubNodeUidsByBfs,
   parseHtml,
+  TFileNodeTreeData,
   TFileParserResponse,
   TNodeTreeData,
   TNodeUid,
+  TProjectLoaderResponse,
 } from "../";
 import { TFileHandlerInfo, TFileHandlerInfoObj, TZipFileInfo } from "./types";
 import {
@@ -73,11 +75,20 @@ export const createIDBProject = async (projectPath: string): Promise<void> => {
     }
   });
 };
+
 export const loadIDBProject = async (
   projectPath: string,
-): Promise<TFileHandlerInfoObj> => {
-  return new Promise<TFileHandlerInfoObj>(async (resolve, reject) => {
+  fileTree?: TFileNodeTreeData,
+): Promise<TProjectLoaderResponse> => {
+  return new Promise<TProjectLoaderResponse>(async (resolve, reject) => {
     try {
+      const deletedUidsObj: { [uid: TNodeUid]: true } = {};
+      fileTree
+        ? getSubNodeUidsByBfs(RootNodeUid, fileTree, false).map((uid) => {
+            deletedUidsObj[uid] = true;
+          })
+        : null;
+
       // build project root-handler
       const rootHandler: TFileHandlerInfo = {
         uid: RootNodeUid,
@@ -116,6 +127,9 @@ export const loadIDBProject = async (
             const c_content =
               c_kind === "directory" ? undefined : await readFile(c_path);
 
+            // remove c_uid from deletedUids array
+            delete deletedUidsObj[c_uid];
+
             const c_handlerInfo: TFileHandlerInfo = {
               uid: c_uid,
               parentUid: p_uid,
@@ -137,94 +151,13 @@ export const loadIDBProject = async (
         );
       }
 
-      console.log({ handlerObj });
-
-      resolve(handlerObj);
+      resolve({ handlerObj, deletedUids: Object.keys(deletedUidsObj) });
     } catch (err) {
       reject(err);
     }
   });
 };
-export const reloadIDBProject = async (
-  projectPath: string,
-  ffTree: TNodeTreeData,
-): Promise<{ handlerObj: TFileHandlerInfoObj; deletedUids: TNodeUid[] }> => {
-  return new Promise<{
-    handlerObj: TFileHandlerInfoObj;
-    deletedUids: TNodeUid[];
-  }>(async (resolve, reject) => {
-    try {
-      // build project-root
-      const rootHandler: TFileHandlerInfo = {
-        uid: RootNodeUid,
-        parentUid: null,
-        children: [],
-        path: projectPath,
-        kind: "directory",
-        name: "welcome",
-      };
-      const handlerObj: TFileHandlerInfoObj = { [RootNodeUid]: rootHandler };
 
-      const orgUids: { [uid: TNodeUid]: true } = {};
-      getSubNodeUidsByBfs(RootNodeUid, ffTree, false).map((uid) => {
-        orgUids[uid] = true;
-      });
-
-      // loop through the project
-      const dirHandlers: TFileHandlerInfo[] = [rootHandler];
-      while (dirHandlers.length) {
-        const { uid, path } = dirHandlers.shift() as TFileHandlerInfo;
-
-        const entries = await readDir(path);
-        await Promise.all(
-          entries.map(async (entry) => {
-            // skip stage preview files
-            if (entry.startsWith(StagePreviewPathPrefix)) return;
-
-            // build handler
-            const c_uid = _path.join(uid, entry) as string;
-            const c_path = _path.join(path, entry) as string;
-            const stats = await getStat(c_path);
-            const c_name = entry;
-            const c_kind = stats.type === "DIRECTORY" ? "directory" : "file";
-
-            // skip hidden files
-            if (c_name[0] === ".") return;
-
-            const c_ext = _path.extname(c_name) as string;
-            const nameArr = c_name.split(".");
-            nameArr.length > 1 && nameArr.pop();
-            const _c_name = nameArr.join(".");
-
-            delete orgUids[c_uid];
-
-            const handlerInfo: TFileHandlerInfo = {
-              uid: c_uid,
-              parentUid: uid,
-              children: [],
-              path: c_path,
-              kind: c_kind,
-              name: c_kind === "directory" ? c_name : _c_name,
-              ext: c_ext,
-              content:
-                c_kind === "directory" ? undefined : await readFile(c_path),
-            };
-
-            // update handler-obj
-            handlerObj[uid].children.push(c_uid);
-            handlerObj[c_uid] = handlerInfo;
-
-            c_kind === "directory" && dirHandlers.push(handlerInfo);
-          }),
-        );
-      }
-
-      resolve({ handlerObj, deletedUids: Object.keys(orgUids) });
-    } catch (err) {
-      reject(err);
-    }
-  });
-};
 export const loadLocalProject = async (
   projectHandle: FileSystemDirectoryHandle,
   osType: TOsType,
@@ -484,6 +417,7 @@ export const downloadProject = async (projectPath: string): Promise<void> => {
     }
   });
 };
+
 export const createDirectory = async (path: string): Promise<void> => {
   return new Promise<void>((resolve, reject) => {
     _fs.mkdir(path, (err: any) => {
