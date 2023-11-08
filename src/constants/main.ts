@@ -4,15 +4,16 @@ export const DefaultProjectPath = "/untitled";
 export const StagePreviewPathPrefix = "rnbw-stage-preview-";
 export const CodeViewSyncDelay = 1 * 1000;
 
+export const ParsableFileTypes: {
+  [fileType: string]: true;
+} = {
+  ".html": true,
+};
+
 export const NodeUidSplitter: string = "?";
 
 export const TmpNodeUid = "tmp:node:uid";
 export const DefaultTabSize: number = 2;
-export const ParsableFileTypes: {
-  [fileType: string]: boolean;
-} = {
-  ".html": true,
-};
 
 export const AddActionPrefix = "AddAction";
 export const AddFileActionPrefix = `${AddActionPrefix}-File`;

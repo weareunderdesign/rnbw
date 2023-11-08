@@ -77,11 +77,10 @@ export const useSaveCommand = () => {
             loadLocalProject(
               fileHandlers[RootNodeUid] as FileSystemDirectoryHandle,
               osType,
-              fileTree,
+              // fileTree,
               // [currentFileUid],
             );
             dispatch(setNeedToReloadIframe(true));
-            setNeedToReloadIframe(true);
           }
         }
       }),
