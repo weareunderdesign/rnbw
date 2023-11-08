@@ -23,6 +23,7 @@ import {
   THtmlElementsReference,
   THtmlElementsReferenceData,
 } from "@_types/main";
+import { LogAllow } from "@_constants/global";
 
 export const _fs = window.Filer.fs;
 export const _path = window.Filer.path;
@@ -127,9 +128,6 @@ export const loadIDBProject = async (
             const c_content =
               c_kind === "directory" ? undefined : await readFile(c_path);
 
-            // remove c_uid from deletedUids array
-            delete deletedUidsObj[c_uid];
-
             const c_handlerInfo: TFileHandlerInfo = {
               uid: c_uid,
               parentUid: p_uid,
@@ -147,12 +145,16 @@ export const loadIDBProject = async (
             handlerObj[c_uid] = c_handlerInfo;
             handlerObj[p_uid].children.push(c_uid);
             c_kind === "directory" && dirHandlers.push(c_handlerInfo);
+
+            // remove c_uid from deletedUids array
+            delete deletedUidsObj[c_uid];
           }),
         );
       }
 
       resolve({ handlerObj, deletedUids: Object.keys(deletedUidsObj) });
     } catch (err) {
+      LogAllow && console.log("ERROR from loadIDBProject API", err);
       reject(err);
     }
   });
@@ -161,96 +163,136 @@ export const loadIDBProject = async (
 export const loadLocalProject = async (
   projectHandle: FileSystemDirectoryHandle,
   osType: TOsType,
-): Promise<TFileHandlerInfoObj> => {
-  return new Promise(async (res, rej) => {
-    // verify project-handler permission
-    if (!(await verifyFileHandlerPermission(projectHandle)))
-      rej("project handler permission error");
+  fileTree?: TFileNodeTreeData,
+): Promise<TProjectLoaderResponse> => {
+  return new Promise<TProjectLoaderResponse>(async (resolve, reject) => {
+    try {
+      // verify project-handler permission
+      if (!(await verifyFileHandlerPermission(projectHandle)))
+        throw "project handler permission error";
 
-    // build project-root
-    const rootHandler: TFileHandlerInfo = {
-      uid: RootNodeUid,
-      parentUid: null,
-      path: `/${projectHandle.name}`,
-      kind: "directory",
-      name: projectHandle.name,
-      handler: projectHandle,
-      children: [],
-    };
-    const handlerArr: TFileHandlerInfo[] = [rootHandler];
-    const handlerObj: TFileHandlerInfoObj = { [RootNodeUid]: rootHandler };
+      const deletedUidsObj: { [uid: TNodeUid]: true } = {};
+      fileTree
+        ? getSubNodeUidsByBfs(RootNodeUid, fileTree, false).map((uid) => {
+            deletedUidsObj[uid] = true;
+          })
+        : null;
 
-    // loop through the project
-    const dirHandlers: TFileHandlerInfo[] = [rootHandler];
-    while (dirHandlers.length) {
-      const { uid, path, handler } = dirHandlers.shift() as TFileHandlerInfo;
-      try {
+      // build project root-handler
+      const rootHandler: TFileHandlerInfo = {
+        uid: RootNodeUid,
+        parentUid: null,
+        children: [],
+
+        path: `/${projectHandle.name}`,
+        kind: "directory",
+        name: projectHandle.name,
+
+        handler: projectHandle,
+      };
+      const handlerArr: TFileHandlerInfo[] = [rootHandler];
+      const handlerObj: TFileHandlerInfoObj = { [RootNodeUid]: rootHandler };
+
+      // loop through the project
+      const dirHandlers: TFileHandlerInfo[] = [rootHandler];
+      while (dirHandlers.length) {
+        const {
+          uid: p_uid,
+          path: p_path,
+          handler: p_handler,
+        } = dirHandlers.shift() as TFileHandlerInfo;
+
         for await (const entry of (
-          handler as FileSystemDirectoryHandle
+          p_handler as FileSystemDirectoryHandle
         ).values()) {
-          // skip system directories
-          if (SystemDirectories[osType][entry.name]) continue;
+          // skip system directories & hidden files
+          if (SystemDirectories[osType][entry.name] || entry.name[0] === ".")
+            continue;
 
-          // build handler
-          const c_uid = _path.join(uid, entry.name) as string;
-          const c_path = _path.join(path, entry.name) as string;
+          // build c_handler
+          const c_uid = _path.join(p_uid, entry.name) as string;
+          const c_path = _path.join(p_path, entry.name) as string;
+
           const c_kind = entry.kind;
-          const c_name = entry.name;
-          const c_handler = entry;
 
-          // skip hidden files
-          if (c_name[0] === ".") continue;
+          const nameArr = entry.name.split(".");
+          const c_ext = nameArr.length > 1 ? nameArr.pop() : undefined;
+          const c_name = nameArr.join(".");
 
-          const c_ext = _path.extname(c_name) as string;
-          const nameArr = c_name.split(".");
-          nameArr.length > 1 && nameArr.pop();
-          const _c_name = nameArr.join(".");
-
-          const handlerInfo: TFileHandlerInfo = {
+          const c_handlerInfo: TFileHandlerInfo = {
             uid: c_uid,
-            parentUid: uid,
+            parentUid: p_uid,
+            children: [],
+
             path: c_path,
             kind: c_kind,
-            name: c_kind === "directory" ? c_name : _c_name,
+            name: c_kind === "directory" ? entry.name : c_name,
+
             ext: c_ext,
-            handler: c_handler,
-            children: [],
+            handler: entry,
           };
 
           // update handler-arr, handler-obj
-          handlerArr.push(handlerInfo);
-          handlerObj[uid].children.push(c_uid);
-          handlerObj[c_uid] = handlerInfo;
+          handlerObj[p_uid].children.push(c_uid);
+          handlerObj[c_uid] = c_handlerInfo;
+          handlerArr.push(c_handlerInfo);
+          c_kind === "directory" && dirHandlers.push(c_handlerInfo);
 
-          c_kind === "directory" && dirHandlers.push(handlerInfo);
+          // remove c_uid from deletedUids array
+          delete deletedUidsObj[c_uid];
         }
-      } catch (err) {
-        rej(err);
       }
+
+      // build nohost idb
+      try {
+        await Promise.all(
+          handlerArr.map(async (_handler) => {
+            const { uid, kind, path, handler } = _handler;
+            if (kind === "directory") {
+              await createDirectory(path);
+            } else {
+              // read and write file content to idb
+              const fileEntry = await (
+                handler as FileSystemFileHandle
+              ).getFile();
+              const contentBuffer = Buffer.from(await fileEntry.arrayBuffer());
+              handlerObj[uid].content = contentBuffer;
+              await writeFile(path, contentBuffer);
+            }
+          }),
+        );
+      } catch (err) {
+        throw "error while writing nohost-idb";
+      }
+
+      resolve({ handlerObj, deletedUids: Object.keys(deletedUidsObj) });
+    } catch (err) {
+      LogAllow && console.log("ERROR from loadLocalProject API", err);
+      reject(err);
     }
-
-    // build idb
-    try {
-      await Promise.all(
-        handlerArr.map(async (_handler) => {
-          const { uid, kind, path, handler } = _handler;
-          if (kind === "directory") {
-            // create directory
-            await createDirectory(path);
-          } else {
-            // read and store file content
-            const fileEntry = await (handler as FileSystemFileHandle).getFile();
-            const contentBuffer = Buffer.from(await fileEntry.arrayBuffer());
-            handlerObj[uid].content = contentBuffer;
-            await writeFile(path, contentBuffer);
-          }
-        }),
-      );
-    } catch (err) {}
-
-    res(handlerObj);
   });
 };
+export const buildNohostIDB = async (handlerArr: TFileHandlerInfo[]) => {
+  // build nohost idb
+  try {
+    await Promise.all(
+      handlerArr.map(async (_handler) => {
+        const { kind, path, handler } = _handler;
+        if (kind === "directory") {
+          await createDirectory(path);
+        } else {
+          // read and write file content to idb
+          const fileEntry = await (handler as FileSystemFileHandle).getFile();
+          const contentBuffer = Buffer.from(await fileEntry.arrayBuffer());
+          await writeFile(path, contentBuffer);
+        }
+      }),
+    );
+  } catch (err) {
+    throw "error while writing nohost-idb";
+  }
+};
+
 export const reloadLocalProject = async (
   projectHandle: FileSystemDirectoryHandle,
   ffTree: TNodeTreeData,
