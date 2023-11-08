@@ -1113,7 +1113,7 @@ export default function MainPage() {
         dispatch(setDoingFileAction(true));
         clearSession();
         try {
-          const handlerObj = await loadIDBProject(DefaultProjectPath);
+          const { handlerObj } = await loadIDBProject(DefaultProjectPath);
           // sort by ASC directory/file
           Object.keys(handlerObj).map((uid) => {
             const handler = handlerObj[uid];
