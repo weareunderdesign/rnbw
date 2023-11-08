@@ -1040,7 +1040,7 @@ export default function MainPage() {
                 } as TFileNodeData,
               } as TNode;
 
-              ffHandlerObj[uid] = handler;
+              ffHandlerObj[uid] = handler as FileSystemHandle;
             });
 
             dispatch(setFileTree(treeViewData as TFileNodeTreeData));

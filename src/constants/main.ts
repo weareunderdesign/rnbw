@@ -1,8 +1,8 @@
 export const RootNodeUid = "ROOT";
 export const DefaultProjectPath = "/untitled";
 
-export const CodeViewSyncDelay = 1 * 1000;
 export const StagePreviewPathPrefix = "rnbw-stage-preview-";
+export const CodeViewSyncDelay = 1 * 1000;
 
 export const NodeUidSplitter: string = "?";
 
