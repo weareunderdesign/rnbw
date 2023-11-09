@@ -51,6 +51,7 @@ export const getSubNodeUidsByDfs = (
 
   return subUids;
 };
+
 export const getPrevSiblingNodeUid = (
   tree: TNodeTreeData,
   node: TNode,
@@ -120,6 +121,7 @@ export const getNodeDepthExternal = (
 
   return nodeDepth;
 };
+
 export const getValidNodeUids = (
   tree: TNodeTreeData,
   uids: TNodeUid[],

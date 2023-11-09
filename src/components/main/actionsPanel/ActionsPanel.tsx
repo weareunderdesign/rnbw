@@ -12,7 +12,7 @@ import WorkspaceTreeView from "./workspaceTreeView";
 
 export default function ActionsPanel({ ...props }: ActionsPanelProps) {
   const showActionsPanel = useSelector(showActionsPanelSelector);
-  useEffect(() => console.log(showActionsPanel), [showActionsPanel]);
+
   return useMemo(() => {
     return (
       <>

@@ -50,7 +50,7 @@ export const useNodeViewState = () => {
         focusedItem === uid ||
         fileTree[uid] === undefined
       ) {
-        removeRunningActions(["fileTreeView-focus"], false);
+        removeRunningActions(["fileTreeView-focus"]);
         return;
       }
 
@@ -74,7 +74,7 @@ export const useNodeViewState = () => {
         return !(fileTree[_uid] === undefined);
       });
       if (_uids.length === 0) {
-        removeRunningActions(["fileTreeView-select"], false);
+        removeRunningActions(["fileTreeView-select"]);
         return;
       }
       _uids = getValidNodeUids(fileTree, _uids);
@@ -87,7 +87,7 @@ export const useNodeViewState = () => {
           }
         }
         if (same) {
-          removeRunningActions(["fileTreeView-select"], false);
+          removeRunningActions(["fileTreeView-select"]);
           return;
         }
       }
@@ -133,7 +133,7 @@ export const useNodeViewState = () => {
         fileTree[uid].isEntity ||
         expandedItemsObj[uid]
       ) {
-        removeRunningActions(["fileTreeView-expand"], false);
+        removeRunningActions(["fileTreeView-expand"]);
         return;
       }
 
@@ -158,7 +158,7 @@ export const useNodeViewState = () => {
         fileTree[uid].isEntity ||
         !expandedItemsObj[uid]
       ) {
-        removeRunningActions(["fileTreeView-collapse"], false);
+        removeRunningActions(["fileTreeView-collapse"]);
         return;
       }
 

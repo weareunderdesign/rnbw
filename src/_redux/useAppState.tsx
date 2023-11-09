@@ -39,6 +39,7 @@ export const useAppState = () => {
           selectedItemsObj: nSelectedItemsObj,
         },
         hoveredNodeUid,
+        newFocusedNodeUid,
       },
       nodeEvent: {
         past: nodeEventPast,
@@ -109,6 +110,8 @@ export const useAppState = () => {
     nSelectedItems,
     nSelectedItemsObj,
     hoveredNodeUid,
+
+    newFocusedNodeUid,
 
     currentFileContent,
     selectedNodeUids,

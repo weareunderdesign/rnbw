@@ -2,6 +2,7 @@ import { editor } from "monaco-editor";
 import { DraggingPosition } from "react-complex-tree";
 import { StageNodeIdAttr } from "@_node/html";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
+import { LogAllow } from "@_constants/global";
 
 export const sortUidsByMaxEndIndex = (
   uids: TNodeUid[],
@@ -120,7 +121,7 @@ export const getDropOptions = (
   const targetNodeTagName = targetNode.data.nodeName;
 
   if (isFirstNesting && isNestingProhibited(targetNodeTagName)) {
-    console.log("The target node cannot have children");
+    LogAllow && console.log("The target node cannot have children");
     return undefined;
   }
 

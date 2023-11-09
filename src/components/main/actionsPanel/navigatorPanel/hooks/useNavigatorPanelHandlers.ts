@@ -1,25 +1,17 @@
-import {
-  useCallback,
-  useContext,
-} from 'react';
+import { useCallback, useContext } from "react";
 
-import { getMany } from 'idb-keyval';
-import {
-  useDispatch,
-  useSelector,
-} from 'react-redux';
+import { getMany } from "idb-keyval";
+import { useDispatch, useSelector } from "react-redux";
 
-import { TFileNodeData } from '@_node/file';
-import { MainContext } from '@_redux/main';
-import {
-  fileTreeSelector,
-  TProject,
-} from '@_redux/main/fileTree';
+import { TFileNodeData } from "@_node/file";
+import { MainContext } from "@_redux/main";
+import { fileTreeSelector, TProject } from "@_redux/main/fileTree";
 import {
   navigatorDropdownTypeSelector,
   setActivePanel,
   setNavigatorDropdownType,
-} from '@_redux/main/processor';
+} from "@_redux/main/processor";
+import { isUnsavedProject } from "@_node/file/helper";
 
 export const useNavigatorPanelHandlers = () => {
   const dispatch = useDispatch();
@@ -29,7 +21,7 @@ export const useNavigatorPanelHandlers = () => {
 
   const {
     // open project
-    loadProject,
+    importProject,
   } = useContext(MainContext);
 
   const onWorkspaceClick = useCallback(async () => {
@@ -63,24 +55,14 @@ export const useNavigatorPanelHandlers = () => {
   const onOpenProject = useCallback(
     (project: TProject) => {
       console.log("open project", { project });
-      if (fileTree) {
-        // confirm files' changes
-        let hasChangedFile = false;
-        for (let x in fileTree) {
-          const _file = fileTree[x];
-          const _fileData = _file.data as TFileNodeData;
-          if (_file && _fileData.changed) {
-            hasChangedFile = true;
-          }
-        }
-        if (hasChangedFile) {
-          const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`;
-          if (!window.confirm(message)) {
-            return;
-          }
+      // confirm files' changes
+      if (fileTree && isUnsavedProject(fileTree)) {
+        const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`;
+        if (!window.confirm(message)) {
+          return;
         }
       }
-      loadProject(project.context, project.handler, false);
+      importProject(project.context, project.handler);
     },
     [fileTree],
   );

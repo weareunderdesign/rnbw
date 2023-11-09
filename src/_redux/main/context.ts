@@ -28,12 +28,11 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   setIsContentProgrammaticallyChanged: () => {},
   codeChanges: [],
   setCodeChanges: () => {},
-  newFocusedNodeUid: "",
-  setNewFocusedNodeUid: () => {},
+
   setCodeViewOffsetTop: () => {},
 
-  // load project
-  loadProject: () => {},
+  // import project
+  importProject: () => {},
 
   // close all panel
   closeAllPanel: () => {},
