@@ -74,6 +74,10 @@ export const createIDBProject = async (projectPath: string): Promise<void> => {
       let html = htmlElementsReferenceData["html"].Content
         ? `<html>\n` + htmlElementsReferenceData["html"].Content + `\n</html>`
         : "";
+
+      // test
+      html = `<head><title>Untitled</title></head><body><div><h1>Heading 1</h1></div></body>`;
+
       const indexHtmlContent = doctype + html;
 
       await writeFile(indexHtmlPath, indexHtmlContent);
