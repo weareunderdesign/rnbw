@@ -16,6 +16,7 @@ import {
 } from "@_redux/main/nodeTree";
 
 import { selectFirstNode, setWorkspaceFavicon } from "../helpers/";
+import { AppState } from "@_redux/_root";
 
 export const useFavicon = (
   setFaviconFallback: React.Dispatch<React.SetStateAction<boolean>>,
@@ -27,6 +28,9 @@ export const useFavicon = (
   const currentFileUid = useSelector(currentFileUidSelector);
 
   const validNodeTree = useSelector(validNodeTreeSelector);
+  const { focusedItem, selectedItems } = useSelector(
+    (state: AppState) => state.main.nodeTree.nodeTreeViewState,
+  );
 
   const isFirst = useRef(true);
   useEffect(() => {
@@ -42,7 +46,7 @@ export const useFavicon = (
       });
     }
 
-    if (currentFileUid !== "" && isFirst.current === true) {
+    if (currentFileUid !== "" && isFirst.current === true && !focusedItem) {
       selectFirstNode(
         validNodeTree,
         isFirst.current,

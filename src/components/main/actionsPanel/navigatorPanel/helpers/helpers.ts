@@ -2,6 +2,7 @@ import { TFileNode, TFileNodeData } from "@_node/file";
 import { THtmlNodeData } from "@_node/html";
 import { TNode, TNodeTreeData } from "@_node/types";
 import { TProject, TWorkspace } from "@_redux/main/fileTree";
+import { focusNodeTreeNode } from "@_redux/main/nodeTree";
 import {
   ActionCreatorWithPayload,
   AnyAction,
@@ -33,7 +34,7 @@ export const getFileExtension = (node: TNode) =>
 export const selectFirstNode = (
   validNodeTree: TNodeTreeData,
   isFirst: boolean,
-  selectFNNode: ActionCreatorWithPayload<string[]>,
+  selectNodeTreeNodes: ActionCreatorWithPayload<string[]>,
   expandNodeTreeNodes: ActionCreatorWithPayload<string[]>,
   dispatch: Dispatch<AnyAction>,
 ) => {
@@ -61,7 +62,8 @@ export const selectFirstNode = (
       }
     }
     if (firstNodeId !== "0") {
-      dispatch(selectFNNode([firstNodeId]));
+      dispatch(focusNodeTreeNode(firstNodeId));
+      dispatch(selectNodeTreeNodes([firstNodeId]));
       dispatch(expandNodeTreeNodes(Object.keys(validNodeTree)));
       isFirst = false;
     }

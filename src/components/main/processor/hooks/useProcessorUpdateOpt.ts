@@ -8,7 +8,11 @@ import { TNode, TNodeTreeData } from "@_node/types";
 import { AppState } from "@_redux/_root";
 import { MainContext } from "@_redux/main";
 import { focusFileTreeNode, setDoingFileAction } from "@_redux/main/fileTree";
-import { setNodeTree } from "@_redux/main/nodeTree";
+import {
+  focusNodeTreeNode,
+  selectNodeTreeNodes,
+  setNodeTree,
+} from "@_redux/main/nodeTree";
 import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
 import {
   setUpdateOptions,
@@ -81,6 +85,9 @@ export const useProcessorUpdateOpt = () => {
       if (updateOptions.from === "file") {
         if (monacoEditor) {
           const { nodeTree } = handleFileUpdate(fileData, _nodeTree, _file);
+          dispatch(focusNodeTreeNode(""));
+          dispatch(selectNodeTreeNodes([]));
+
           console.log({ _file, nodeTree });
 
           _nodeTree = nodeTree;
