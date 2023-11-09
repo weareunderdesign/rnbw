@@ -24,22 +24,20 @@ export const saveFileContent = async (
   project: TProject,
   fileHandlers: TFileHandlerCollection,
   uid: string,
-  nodeData: TFileNodeData,
+  fileData: TFileNodeData,
 ) => {
   if (project.context === "local") {
     const handler = fileHandlers[uid];
     const writableStream = await (
       handler as FileSystemFileHandle
     ).createWritable();
-    await writableStream.write(nodeData.content);
+    await writableStream.write(fileData.content);
     await writableStream.close();
-    nodeData.changed = false;
-    nodeData.orgContent = nodeData.content;
-  } else if (project.context === "idb") {
-    await writeFile(nodeData.path, nodeData.content);
-    nodeData.changed = false;
-    nodeData.orgContent = nodeData.content;
   }
+
+  await writeFile(fileData.path, fileData.content);
+  fileData.changed = false;
+  fileData.orgContent = fileData.content;
 };
 
 export const removeOrgNode = (
