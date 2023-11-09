@@ -45,7 +45,7 @@ export function useNodeViewState(focusItemValue: TNodeUid | null) {
 
       // validate
       if (focusedItem === uid) {
-        removeRunningActions(["nodeTreeView-focus"], false);
+        removeRunningActions(["nodeTreeView-focus"]);
         return;
       }
 
@@ -72,7 +72,7 @@ export function useNodeViewState(focusItemValue: TNodeUid | null) {
           }
         }
         if (same) {
-          removeRunningActions(["nodeTreeView-select"], false);
+          removeRunningActions(["nodeTreeView-select"]);
           return;
         }
       }

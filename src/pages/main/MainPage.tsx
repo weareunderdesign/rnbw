@@ -1010,8 +1010,6 @@ export default function MainPage() {
           const { _fileTree, _initialFileUidToOpen } =
             await loadIDBProject(DefaultProjectPath);
 
-          console.log({ _fileTree, _initialFileUidToOpen });
-
           clearSession();
 
           dispatch(
