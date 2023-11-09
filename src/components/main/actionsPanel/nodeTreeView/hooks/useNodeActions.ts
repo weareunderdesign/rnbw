@@ -237,8 +237,6 @@ export function useNodeActions() {
       // side effect
 
       removeRunningActions(["nodeTreeView-move"]);
-
-      console.log("hms added");
     },
     [
       addRunningActions,

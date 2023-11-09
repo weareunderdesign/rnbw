@@ -90,10 +90,6 @@ export default function CodeView(props: CodeViewProps) {
     dispatch(setNewFocusedNodeUid(""));
   }, [validNodeTree]);
 
-  // file content change - set code
-  useEffect(() => {
-    console.log(fileTree);
-  }, [fileTree]);
   useEffect(() => {
     const _file = fileTree[currentFileUid];
 

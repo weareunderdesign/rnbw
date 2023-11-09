@@ -62,7 +62,7 @@ export const useFileOperations = () => {
       }
 
       await cb_reloadProject();
-      removeRunningActions(["fileTreeView-create"], false);
+      removeRunningActions(["fileTreeView-create"]);
     },
     [
       addRunningActions,
@@ -96,7 +96,7 @@ export const useFileOperations = () => {
 
       removeInvalidNodes(...uids);
       await cb_reloadProject();
-      removeRunningActions(["fileTreeView-delete"], false);
+      removeRunningActions(["fileTreeView-delete"]);
     },
     [
       addRunningActions,
@@ -147,7 +147,7 @@ export const useFileOperations = () => {
       } catch (err) {}
 
       await cb_reloadProject();
-      removeRunningActions(["fileTreeView-rename"], false);
+      removeRunningActions(["fileTreeView-rename"]);
     },
     [
       addRunningActions,
@@ -221,7 +221,7 @@ export const useFileOperations = () => {
       );
 
       await cb_reloadProject();
-      removeRunningActions(["fileTreeView-move"], false);
+      removeRunningActions(["fileTreeView-move"]);
     },
     [
       addRunningActions,
@@ -297,7 +297,7 @@ export const useFileOperations = () => {
       );
 
       await cb_reloadProject();
-      removeRunningActions(["fileTreeView-duplicate"], false);
+      removeRunningActions(["fileTreeView-duplicate"]);
     },
     [
       addRunningActions,

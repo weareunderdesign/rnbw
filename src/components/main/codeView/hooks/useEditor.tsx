@@ -289,7 +289,6 @@ export default function useEditor() {
         // (fileTree[currentFileUid].data as TFileNodeData).changed =
         //   codeContentRef.current !== fileData.orgContent;
 
-        console.log("useEditor CALL");
         dispatch(setFileTree(fileTree));
         dispatch(setCurrentFileContent(codeContentRef.current));
         codeChangeDecorationRef.current.clear();
