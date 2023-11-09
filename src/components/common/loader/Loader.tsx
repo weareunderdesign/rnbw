@@ -1,14 +1,11 @@
-import React, {
-  useEffect,
-  useState,
-} from 'react';
+import React, { useEffect, useState } from "react";
 
-import { useSelector } from 'react-redux';
-import LoadingBar from 'react-top-loading-bar';
+import { useSelector } from "react-redux";
+import LoadingBar from "react-top-loading-bar";
 
-import { themeSelector } from '@_redux/global';
+import { themeSelector } from "@_redux/global";
 
-import { LoaderProps } from './types';
+import { LoaderProps } from "./types";
 
 export const Loader = ({ show }: LoaderProps) => {
   const theme = useSelector(themeSelector);
@@ -27,7 +24,7 @@ export const Loader = ({ show }: LoaderProps) => {
     }
 
     return () => {
-      paceTimer && clearInterval(paceTimer);
+      // paceTimer && clearInterval(paceTimer);
     };
   }, [show, progress]);
 

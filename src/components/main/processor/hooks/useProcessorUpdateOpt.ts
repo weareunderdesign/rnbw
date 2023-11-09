@@ -8,12 +8,15 @@ import { TNode, TNodeTreeData } from "@_node/types";
 import { AppState } from "@_redux/_root";
 import { MainContext } from "@_redux/main";
 import { focusFileTreeNode, setDoingFileAction } from "@_redux/main/fileTree";
-import { setNewFocusedNodeUid, setNodeTree } from "@_redux/main/nodeTree";
-import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
 import {
-  setUpdateOptions,
-  updateOptionsSelector,
-} from "@_redux/main/processor";
+  focusNodeTreeNode,
+  selectNodeTreeNodes,
+  setNewFocusedNodeUid,
+  setNodeTree,
+} from "@_redux/main/nodeTree";
+
+import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
+import { setUpdateOptions } from "@_redux/main/processor";
 import { setIframeSrc, setNeedToReloadIframe } from "@_redux/main/stageView";
 import { TFileInfo } from "@_types/main";
 
@@ -86,7 +89,8 @@ export const useProcessorUpdateOpt = () => {
       if (updateOptions.from === "file") {
         if (monacoEditor) {
           const { nodeTree } = handleFileUpdate(fileData);
-
+          dispatch(focusNodeTreeNode(""));
+          dispatch(selectNodeTreeNodes([]));
           _nodeTree = nodeTree;
 
           // reload iframe
