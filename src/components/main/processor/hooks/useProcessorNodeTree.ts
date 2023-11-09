@@ -1,27 +1,23 @@
 import { useContext, useEffect } from "react";
 
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 import { RootNodeUid } from "@_constants/main";
 import { getSubNodeUidsByBfs } from "@_node/apis";
 import { TNodeTreeData } from "@_node/types";
 import { MainContext } from "@_redux/main";
-import { nodeTreeSelector, setValidNodeTree } from "@_redux/main/nodeTree";
+import { setValidNodeTree } from "@_redux/main/nodeTree";
+import { useAppState } from "@_redux/useAppState";
 
 export const useProcessorNodeTree = () => {
   const dispatch = useDispatch();
-
-  const nodeTree = useSelector(nodeTreeSelector);
-  const {
-    // global action
-    addRunningActions,
-    removeRunningActions,
-  } = useContext(MainContext);
+  const { nodeTree } = useAppState();
+  const { addRunningActions, removeRunningActions } = useContext(MainContext);
 
   useEffect(() => {
-    if (!nodeTree || !nodeTree[RootNodeUid]) return;
+    if (!nodeTree[RootNodeUid]) return;
 
-    const _nodeTree: TNodeTreeData = JSON.parse(JSON.stringify(nodeTree));
+    const _nodeTree: TNodeTreeData = structuredClone(nodeTree);
     const _validNodeTree: TNodeTreeData = {};
 
     // build valid node tree
@@ -37,10 +33,9 @@ export const useProcessorNodeTree = () => {
       node.isEntity = node.children.length === 0;
       _validNodeTree[uid] = node;
     });
-
-    addRunningActions(["processor-validNodeTree"]);
     dispatch(setValidNodeTree(_validNodeTree));
 
+    addRunningActions(["processor-validNodeTree"]);
     removeRunningActions(["processor-nodeTree"]);
   }, [nodeTree]);
 };

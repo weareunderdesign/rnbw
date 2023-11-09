@@ -22,7 +22,6 @@ import { useAppState } from "@_redux/useAppState";
 
 export const useProcessorUpdateOpt = () => {
   const dispatch = useDispatch();
-
   const {
     fileTree,
     currentFileUid,
@@ -47,6 +46,14 @@ export const useProcessorUpdateOpt = () => {
     monacoEditorRef,
   } = useContext(MainContext);
   // -------------------------------------------------------------- sync --------------------------------------------------------------
+  useEffect(() => {
+    const file = fileTree[currentFileUid];
+    if (!file) return;
+
+    console.log({ currentFileContent, currentFileUid, file });
+
+    const monacoEditor = monacoEditorRef.current;
+  }, [currentFileContent]);
 
   useEffect(() => {
     if (!updateOptions) return;
