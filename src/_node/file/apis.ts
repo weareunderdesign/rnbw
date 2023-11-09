@@ -393,9 +393,17 @@ export const buildNohostIDB = async (
         handlerArr.map(async (_handler) => {
           const { kind, path, content } = _handler;
           if (kind === "directory") {
-            await createDirectory(path);
+            try {
+              await createDirectory(path);
+            } catch (err) {
+              console.log(err);
+            }
           } else {
-            await writeFile(path, content as Uint8Array);
+            try {
+              await writeFile(path, content as Uint8Array);
+            } catch (err) {
+              console.log(err);
+            }
           }
         }),
       );
