@@ -28,8 +28,7 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   setIsContentProgrammaticallyChanged: () => {},
   codeChanges: [],
   setCodeChanges: () => {},
-  newFocusedNodeUid: "",
-  setNewFocusedNodeUid: () => {},
+
   setCodeViewOffsetTop: () => {},
 
   // import project

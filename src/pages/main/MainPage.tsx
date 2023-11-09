@@ -59,7 +59,11 @@ import {
   FileTree_Event_ClearActionType,
   setFileAction,
 } from "@_redux/main/fileTree/event";
-import { setNodeTree, setValidNodeTree } from "@_redux/main/nodeTree";
+import {
+  setNewFocusedNodeUid,
+  setNodeTree,
+  setValidNodeTree,
+} from "@_redux/main/nodeTree";
 import {
   NodeTree_Event_ClearActionType,
   setCurrentFileContent,
@@ -253,7 +257,6 @@ export default function MainPage() {
     isContentProgrammaticallyChanged.current = value;
   };
   const [codeChanges, setCodeChanges] = useState<TCodeChange[]>([]);
-  const [newFocusedNodeUid, setNewFocusedNodeUid] = useState<TNodeUid>("");
 
   const [parseFileFlag, setParseFile] = useState<boolean>(true);
   const [prevFileUid, setPrevFileUid] = useState<string>("");
@@ -1250,7 +1253,7 @@ export default function MainPage() {
   // toogle code view
   const toogleCodeView = useCallback(() => {
     dispatch(setShowCodeView(!showCodeView));
-    setNewFocusedNodeUid(nFocusedItem);
+    dispatch(setNewFocusedNodeUid(nFocusedItem));
   }, [showCodeView, nFocusedItem]);
 
   // toogle actions panel
@@ -1442,8 +1445,6 @@ export default function MainPage() {
           setIsContentProgrammaticallyChanged,
           codeChanges,
           setCodeChanges,
-          newFocusedNodeUid,
-          setNewFocusedNodeUid,
           setCodeViewOffsetTop,
 
           // load project

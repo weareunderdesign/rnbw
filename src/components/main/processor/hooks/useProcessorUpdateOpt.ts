@@ -8,7 +8,7 @@ import { TNode, TNodeTreeData } from "@_node/types";
 import { AppState } from "@_redux/_root";
 import { MainContext } from "@_redux/main";
 import { focusFileTreeNode, setDoingFileAction } from "@_redux/main/fileTree";
-import { setNodeTree } from "@_redux/main/nodeTree";
+import { setNewFocusedNodeUid, setNodeTree } from "@_redux/main/nodeTree";
 import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
 import {
   setUpdateOptions,
@@ -40,8 +40,6 @@ export const useProcessorUpdateOpt = () => {
     removeRunningActions,
     // file tree view
     parseFileFlag,
-
-    setNewFocusedNodeUid,
 
     monacoEditorRef,
   } = useContext(MainContext);
@@ -160,7 +158,7 @@ export const useProcessorUpdateOpt = () => {
       }
 
       // select new focused node in code view
-      setNewFocusedNodeUid(_newFocusedNodeUid);
+      dispatch(setNewFocusedNodeUid(_newFocusedNodeUid));
       dispatch(
         setUpdateOptions({
           parse: null,

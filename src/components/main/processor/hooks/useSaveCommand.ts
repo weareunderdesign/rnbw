@@ -88,6 +88,6 @@ export const useSaveCommand = () => {
 
     dispatch(setFileTree(_ffTree as TFileNodeTreeData));
 
-    removeRunningActions(["process-save"], false);
+    removeRunningActions(["process-save"]);
   }, [fileTree, fileHandlers, loadLocalProject]);
 };

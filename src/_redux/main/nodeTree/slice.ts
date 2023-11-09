@@ -16,6 +16,8 @@ const nodeTreeReducerInitialState: TNodeTreeReducerState = {
     selectedItemsObj: {},
   },
   hoveredNodeUid: "",
+
+  newFocusedNodeUid: "",
 };
 const nodeTreeSlice = createSlice({
   name: "nodeTree",
@@ -119,6 +121,11 @@ const nodeTreeSlice = createSlice({
       const hoveredNodeUid = action.payload;
       state.hoveredNodeUid = hoveredNodeUid;
     },
+
+    setNewFocusedNodeUid(state, action: PayloadAction<TNodeUid>) {
+      const newFocusedNodeUid = action.payload;
+      state.newFocusedNodeUid = newFocusedNodeUid;
+    },
   },
 });
 export const {
@@ -131,5 +138,7 @@ export const {
   selectNodeTreeNodes,
   updateNodeTreeTreeViewState,
   setHoveredNodeUid,
+
+  setNewFocusedNodeUid,
 } = nodeTreeSlice.actions;
 export const NodeTreeReducer = nodeTreeSlice.reducer;

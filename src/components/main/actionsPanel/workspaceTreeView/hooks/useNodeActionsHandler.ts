@@ -126,7 +126,7 @@ export const useNodeActionsHandler = (
             await writeFile(`${parentNodeData.path}/${newName}`, "");
           }
         } catch (err) {
-          removeRunningActions(["fileTreeView-create"], false);
+          removeRunningActions(["fileTreeView-create"]);
           return;
         }
       }
@@ -360,7 +360,7 @@ export const useNodeActionsHandler = (
 
     removeInvalidNodes(...uids);
     await cb_reloadProject(currentFileUid);
-    removeRunningActions(["fileTreeView-delete"], false);
+    removeRunningActions(["fileTreeView-delete"]);
   }, [
     addRunningActions,
     removeRunningActions,
@@ -518,12 +518,12 @@ export const useNodeActionsHandler = (
 
       // validate
       if (invalidNodes[uid]) {
-        removeRunningActions(["fileTreeView-read"], false);
+        removeRunningActions(["fileTreeView-read"]);
         return;
       }
       const node = fileTree[uid];
       if (node === undefined || !node.isEntity || currentFileUid === uid) {
-        removeRunningActions(["fileTreeView-read"], false);
+        removeRunningActions(["fileTreeView-read"]);
         return;
       }
 
