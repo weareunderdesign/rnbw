@@ -34,31 +34,6 @@ export type TFileHandlerCollection = {
   [uid: TNodeUid]: FileSystemHandle;
 };
 
-// --------------------
-export type TFile = {
-  uid: TNodeUid;
-  content: string;
-};
-
-export type TZipFileInfo = {
-  path: string;
-  zip: JSZip | null | undefined;
-};
-export type TIDBFileInfo = {
-  uid: TNodeUid;
-  parentUid: TNodeUid | null;
-  children: TNodeUid[];
-
-  path: string;
-  kind: "directory" | "file";
-  name: string;
-
-  ext?: string;
-  content?: Uint8Array;
-};
-export type TIDBFileInfoObj = {
-  [uid: TNodeUid]: TIDBFileInfo;
-};
 export type TFileHandlerInfo = {
   uid: TNodeUid;
   parentUid: TNodeUid | null;
@@ -71,6 +46,27 @@ export type TFileHandlerInfo = {
   ext?: string;
   content?: Uint8Array;
 
-  handler: FileSystemHandle;
+  handler?: FileSystemHandle;
 };
 export type TFileHandlerInfoObj = { [uid: TNodeUid]: TFileHandlerInfo };
+
+export type TProjectLoaderResponse = {
+  handlerArr?: TFileHandlerInfo[];
+  _fileHandlers?: TFileHandlerCollection;
+
+  _fileTree: TFileNodeTreeData;
+  _initialFileUidToOpen: TNodeUid;
+
+  deletedUids: TNodeUid[];
+  deletedUidsObj: { [uid: TNodeUid]: true };
+};
+// --------------------
+export type TFile = {
+  uid: TNodeUid;
+  content: string;
+};
+
+export type TZipFileInfo = {
+  path: string;
+  zip: JSZip | null | undefined;
+};

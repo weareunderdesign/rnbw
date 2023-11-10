@@ -1,42 +1,29 @@
-import React, {
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 
-import { useSelector } from 'react-redux';
+import { useSelector } from "react-redux";
 
-import { themeSelector } from '@_redux/global';
-import { MainContext } from '@_redux/main';
+import { themeSelector } from "@_redux/global";
+import { MainContext } from "@_redux/main";
 import {
   currentFileUidSelector,
   fileTreeSelector,
   projectSelector,
   workspaceSelector,
-} from '@_redux/main/fileTree';
+} from "@_redux/main/fileTree";
 import {
   faviconSelector,
   navigatorDropdownTypeSelector,
-} from '@_redux/main/processor';
+} from "@_redux/main/processor";
 
-import {
-  AdditionalPanel,
-  DefaultPanel,
-  ProjectPanel,
-} from './components';
+import { AdditionalPanel, DefaultPanel, ProjectPanel } from "./components";
 import {
   projectDarkImg,
   projectLightImg,
   unsavedProjectDarkImg,
   unsavedProjectLightImg,
-} from './constants';
-import {
-  useFavicon,
-  useNavigatorPanelHandlers,
-} from './hooks';
-import { NavigatorPanelProps } from './types';
+} from "./constants";
+import { useFavicon, useNavigatorPanelHandlers } from "./hooks";
+import { NavigatorPanelProps } from "./types";
 
 export default function NavigatorPanel(props: NavigatorPanelProps) {
   const theme = useSelector(themeSelector);
@@ -52,7 +39,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
   const {
     filesReferenceData,
     // open project
-    loadProject,
+    importProject,
     setParseFile,
   } = useContext(MainContext);
 
@@ -134,7 +121,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
     navigatorDropdownType,
     onCloseDropDown,
     onOpenProject,
-    loadProject,
+    importProject,
     favicon,
     unsavedProject,
     setParseFile,

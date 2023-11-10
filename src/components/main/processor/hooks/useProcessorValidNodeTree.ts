@@ -11,53 +11,35 @@ import {
   validNodeTreeSelector,
 } from "@_redux/main/nodeTree";
 import { updateOptionsSelector } from "@_redux/main/processor";
+import { useAppState } from "@_redux/useAppState";
 
 export const useProcessorValidNodeTree = () => {
   const dispatch = useDispatch();
-
-  const validNodeTree = useSelector(validNodeTreeSelector);
-  const updateOptions = useSelector(updateOptionsSelector);
-
-  const { expandedItems, selectedItems } = useSelector(
-    nodeTreeViewStateSelector,
-  );
   const {
-    // global action
-    removeRunningActions,
-    // code view
+    validNodeTree,
+    nExpandedItems,
+    nSelectedItems,
     newFocusedNodeUid,
-  } = useContext(MainContext);
+    updateOptions,
+  } = useAppState();
+  const { removeRunningActions } = useContext(MainContext);
 
   useEffect(() => {
-    if (!updateOptions) return;
-
-    if (
-      updateOptions.parse === null &&
-      (updateOptions.from === "file" || updateOptions.from === null)
-    ) {
+    if (updateOptions?.from === "file") {
+      // when a new file is opened
       const uids = Object.keys(validNodeTree);
       dispatch(expandNodeTreeNodes(uids.slice(0, 50)));
-      removeRunningActions(["processor-validNodeTree"], false);
-    } else if (updateOptions.parse === null && updateOptions.from === "code") {
-      const _focusedItem = newFocusedNodeUid;
-      const _expandedItems = expandedItems.filter((uid) => {
-        return (
-          validNodeTree[uid] !== undefined &&
-          validNodeTree[uid].isEntity === false
-        );
-      });
-      const _selectedItems = selectedItems.filter((uid) => {
-        return validNodeTree[uid] !== undefined;
-      });
-      // dispatch(clearFNState()); TODO: clearFNState
-      dispatch(focusNodeTreeNode(_focusedItem));
-      dispatch(expandNodeTreeNodes([..._expandedItems]));
-      dispatch(selectNodeTreeNodes([..._selectedItems, _focusedItem]));
-      removeRunningActions(["processor-validNodeTree"], false);
-    } else if (updateOptions.parse === null && updateOptions.from === "node") {
-      removeRunningActions(["processor-validNodeTree"], false);
     } else {
-      removeRunningActions(["processor-validNodeTree"], false);
+      // when have any changes
+      const _expandedItems = nExpandedItems.filter(
+        (uid) => validNodeTree[uid] && validNodeTree[uid].isEntity === false,
+      );
+      const _selectedItems = nSelectedItems.filter((uid) => validNodeTree[uid]);
+
+      dispatch(focusNodeTreeNode(newFocusedNodeUid));
+      dispatch(expandNodeTreeNodes([..._expandedItems]));
+      dispatch(selectNodeTreeNodes([..._selectedItems, newFocusedNodeUid]));
     }
+    removeRunningActions(["processor-validNodeTree"]);
   }, [validNodeTree]);
 };

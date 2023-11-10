@@ -34,7 +34,7 @@ export type TUpdateTreeViewStatePayload = {
 
 export type TMainContext = {
   addRunningActions: (actionNames: string[]) => void;
-  removeRunningActions: (actionNames: string[], effect?: boolean) => void;
+  removeRunningActions: (actionNames: string[]) => void;
 
   filesReferenceData: TFilesReferenceData;
   htmlReferenceData: THtmlReferenceData;
@@ -58,16 +58,12 @@ export type TMainContext = {
   setIsContentProgrammaticallyChanged: (changed: boolean) => void;
   codeChanges: TCodeChange[];
   setCodeChanges: (changes: TCodeChange[]) => void;
-  newFocusedNodeUid: TNodeUid;
-  setNewFocusedNodeUid: (uid: TNodeUid) => void;
   setCodeViewOffsetTop: (offsetTop: string) => void;
 
-  // references
-
-  loadProject: (
+  // import project
+  importProject: (
     fsType: TProjectContext,
-    projectHandle?: FileSystemHandle | null,
-    internal?: boolean | true,
+    projectHandle?: FileSystemDirectoryHandle | null,
   ) => void;
   closeAllPanel: () => void;
 

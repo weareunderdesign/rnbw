@@ -8,12 +8,15 @@ import { TNode, TNodeTreeData } from "@_node/types";
 import { AppState } from "@_redux/_root";
 import { MainContext } from "@_redux/main";
 import { focusFileTreeNode, setDoingFileAction } from "@_redux/main/fileTree";
-import { setNodeTree } from "@_redux/main/nodeTree";
-import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
 import {
-  setUpdateOptions,
-  updateOptionsSelector,
-} from "@_redux/main/processor";
+  focusNodeTreeNode,
+  selectNodeTreeNodes,
+  setNewFocusedNodeUid,
+  setNodeTree,
+} from "@_redux/main/nodeTree";
+
+import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
+import { setUpdateOptions } from "@_redux/main/processor";
 import { setIframeSrc, setNeedToReloadIframe } from "@_redux/main/stageView";
 import { TFileInfo } from "@_types/main";
 
@@ -22,7 +25,6 @@ import { useAppState } from "@_redux/useAppState";
 
 export const useProcessorUpdateOpt = () => {
   const dispatch = useDispatch();
-
   const {
     fileTree,
     currentFileUid,
@@ -42,11 +44,17 @@ export const useProcessorUpdateOpt = () => {
     // file tree view
     parseFileFlag,
 
-    setNewFocusedNodeUid,
-
     monacoEditorRef,
   } = useContext(MainContext);
   // -------------------------------------------------------------- sync --------------------------------------------------------------
+  useEffect(() => {
+    const file = fileTree[currentFileUid];
+    if (!file) return;
+
+    console.log({ currentFileContent, currentFileUid, file });
+
+    const monacoEditor = monacoEditorRef.current;
+  }, [currentFileContent]);
 
   useEffect(() => {
     if (!updateOptions) return;
@@ -80,9 +88,9 @@ export const useProcessorUpdateOpt = () => {
       fileData.content = currentFileContent;
       if (updateOptions.from === "file") {
         if (monacoEditor) {
-          const { nodeTree } = handleFileUpdate(fileData, _nodeTree, _file);
-          console.log({ _file, nodeTree });
-
+          const { nodeTree } = handleFileUpdate(fileData);
+          dispatch(focusNodeTreeNode(""));
+          dispatch(selectNodeTreeNodes([]));
           _nodeTree = nodeTree;
 
           // reload iframe
@@ -135,7 +143,7 @@ export const useProcessorUpdateOpt = () => {
           try {
             const previewPath = getPreViewPath(fileTree, _file, fileData);
             await writeFile(previewPath, fileData.contentInApp as string);
-            if (fileData.ext === ".html") {
+            if (fileData.ext === "html") {
               dispatch(setIframeSrc(`rnbw${previewPath}`));
             }
           } catch (err) {}
@@ -154,7 +162,7 @@ export const useProcessorUpdateOpt = () => {
       }
 
       // select new focused node in code view
-      setNewFocusedNodeUid(_newFocusedNodeUid);
+      dispatch(setNewFocusedNodeUid(_newFocusedNodeUid));
       dispatch(
         setUpdateOptions({
           parse: null,

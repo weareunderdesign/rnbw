@@ -51,7 +51,7 @@ export const renameNode = async (
     ) {
       // addMessage(invalidDirOrFile);
 
-      removeRunningActions(["fileTreeView-rename"], false);
+      removeRunningActions(["fileTreeView-rename"]);
       return;
     }
 
@@ -71,7 +71,7 @@ export const renameNode = async (
       // addMessage(renamingError);
 
       removeInvalidNodes(newUid);
-      removeRunningActions(["fileTreeView-rename"], false);
+      removeRunningActions(["fileTreeView-rename"]);
       return;
     }
   } else if (project.context === "idb") {
@@ -84,7 +84,7 @@ export const renameNode = async (
       // addMessage(renamingError);
 
       removeInvalidNodes(newUid);
-      removeRunningActions(["fileTreeView-rename"], false);
+      removeRunningActions(["fileTreeView-rename"]);
       return;
     }
   }

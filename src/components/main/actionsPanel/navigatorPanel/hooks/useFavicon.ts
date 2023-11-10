@@ -1,27 +1,22 @@
-import {
-  useEffect,
-  useRef,
-} from 'react';
+import { useEffect, useRef } from "react";
 
-import {
-  useDispatch,
-  useSelector,
-} from 'react-redux';
+import { useDispatch, useSelector } from "react-redux";
 
-import { RootNodeUid } from '@_constants/main';
+import { RootNodeUid } from "@_constants/main";
 import {
   currentFileUidSelector,
   projectSelector,
-  selectFileTreeNodes,
   setWorkspace,
   workspaceSelector,
-} from '@_redux/main/fileTree';
-import { validNodeTreeSelector } from '@_redux/main/nodeTree';
-
+} from "@_redux/main/fileTree";
 import {
-  selectFirstNode,
-  setWorkspaceFavicon,
-} from '../helpers/';
+  selectNodeTreeNodes,
+  validNodeTreeSelector,
+  expandNodeTreeNodes,
+} from "@_redux/main/nodeTree";
+
+import { selectFirstNode, setWorkspaceFavicon } from "../helpers/";
+import { AppState } from "@_redux/_root";
 
 export const useFavicon = (
   setFaviconFallback: React.Dispatch<React.SetStateAction<boolean>>,
@@ -33,6 +28,9 @@ export const useFavicon = (
   const currentFileUid = useSelector(currentFileUidSelector);
 
   const validNodeTree = useSelector(validNodeTreeSelector);
+  const { focusedItem, selectedItems } = useSelector(
+    (state: AppState) => state.main.nodeTree.nodeTreeViewState,
+  );
 
   const isFirst = useRef(true);
   useEffect(() => {
@@ -48,11 +46,12 @@ export const useFavicon = (
       });
     }
 
-    if (currentFileUid !== "" && isFirst.current === true) {
+    if (currentFileUid !== "" && isFirst.current === true && !focusedItem) {
       selectFirstNode(
         validNodeTree,
         isFirst.current,
-        selectFileTreeNodes,
+        selectNodeTreeNodes,
+        expandNodeTreeNodes,
         dispatch,
       );
     }

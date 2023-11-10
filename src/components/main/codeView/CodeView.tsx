@@ -23,6 +23,7 @@ import {
   expandNodeTreeNodes,
   focusNodeTreeNode,
   selectNodeTreeNodes,
+  setNewFocusedNodeUid,
   validNodeTreeSelector,
 } from "@_redux/main/nodeTree";
 import {
@@ -35,29 +36,16 @@ import {
 } from "@_redux/main/fileTree";
 
 import { AppState } from "@_redux/_root";
+import { useAppState } from "@_redux/useAppState";
 
 loader.config({ monaco });
 
 export default function CodeView(props: CodeViewProps) {
   const dispatch = useDispatch();
-  // -------------------------------------------------------------- global state --------------------------------------------------------------
-  const showCodeView = useSelector(showCodeViewSelector);
-  const { focusedItem } = useSelector(
-    (state: AppState) => state.main.nodeTree.nodeTreeViewState,
-  );
-  const {
-    processor: { activePanel },
-  } = useSelector((state: AppState) => state.main);
-  const {
-    // code view
-    newFocusedNodeUid,
-    setNewFocusedNodeUid,
-    // processor
-    parseFileFlag,
-    isContentProgrammaticallyChanged,
-    monacoEditorRef,
-  } = useContext(MainContext);
-  // -------------------------------------------------------------- references --------------------------------------------------------------
+  const { nFocusedItem, newFocusedNodeUid, activePanel, showCodeView } =
+    useAppState();
+  const { parseFileFlag, isContentProgrammaticallyChanged, monacoEditorRef } =
+    useContext(MainContext);
 
   // ----------------------------------------------------------custom Hooks---------------------------------------------------------------
   const { theme } = useTheme();
@@ -99,13 +87,9 @@ export default function CodeView(props: CodeViewProps) {
 
     setFocusedNode(validNodeTree[newFocusedNodeUid]);
     !isFirst.current ? (focusedItemRef.current = newFocusedNodeUid) : null;
-    setNewFocusedNodeUid("");
+    dispatch(setNewFocusedNodeUid(""));
   }, [validNodeTree]);
 
-  // file content change - set code
-  useEffect(() => {
-    console.log(fileTree);
-  }, [fileTree]);
   useEffect(() => {
     const _file = fileTree[currentFileUid];
 
@@ -127,7 +111,7 @@ export default function CodeView(props: CodeViewProps) {
   function hightlightFocusedNodeCodeBlock() {
     const monacoEditor = monacoEditorRef.current;
     if (!monacoEditor) return;
-    const node = validNodeTree[focusedItem];
+    const node = validNodeTree[nFocusedItem];
 
     const sourceCodeLocation = node.data.sourceCodeLocation;
 
@@ -167,8 +151,8 @@ export default function CodeView(props: CodeViewProps) {
       return;
     }
 
-    if (focusedItem === RootNodeUid) return;
-    if (!validNodeTree[focusedItem]) return;
+    if (nFocusedItem === RootNodeUid) return;
+    if (!validNodeTree[nFocusedItem]) return;
 
     if (codeEditing) return;
     // Convert the indices to positions
@@ -189,8 +173,8 @@ export default function CodeView(props: CodeViewProps) {
       hightlightFocusedNodeCodeBlock();
       revealed.current = true;
     }
-    focusedItemRef.current = focusedItem;
-  }, [focusedItem, parseFileFlag]);
+    focusedItemRef.current = nFocusedItem;
+  }, [nFocusedItem, parseFileFlag]);
 
   useEffect(() => {
     if (!parseFileFlag) return;

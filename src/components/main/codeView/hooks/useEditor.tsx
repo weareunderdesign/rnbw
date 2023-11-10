@@ -1,5 +1,4 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
-
 import { debounce } from "lodash";
 import { editor, IPosition } from "monaco-editor";
 import morphdom from "morphdom";
@@ -13,11 +12,7 @@ import { TFileNodeData } from "@_node/file";
 import { parseHtml, StageNodeIdAttr } from "@_node/html";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
-import {
-  codeViewTabSizeSelector,
-  setCodeEditing,
-  setCodeViewTabSize,
-} from "@_redux/main/codeView";
+import { setCodeEditing, setCodeViewTabSize } from "@_redux/main/codeView";
 import {
   currentFileUidSelector,
   fileTreeSelector,
@@ -239,7 +234,16 @@ export default function useEditor() {
         let nodeUidToFocus = "";
         morphdom(iframeHtml, updatedHtml, {
           onBeforeElUpdated: function (fromEl, toEl) {
+            //check if the node is script or style
+            if (
+              fromEl.nodeName === "SCRIPT" ||
+              fromEl.nodeName === "STYLE" ||
+              fromEl.nodeName === "LINK"
+            ) {
+              return false;
+            }
             const fromElRnbwId = fromEl.getAttribute(StageNodeIdAttr);
+            nodeUidToFocus = configs?.matchIds?.[0] || "";
             if (toEl.nodeName.includes("-")) return false;
             if (
               configs?.matchIds &&
@@ -261,15 +265,27 @@ export default function useEditor() {
             }
             return true;
           },
-          onBeforeNodeAdded: function (node: Node) {
-            if (node.nodeType === 1) {
-              //@ts-ignore
-              const uid = node.getAttribute(StageNodeIdAttr);
-              if (!!uid) {
-                nodeUidToFocus = uid;
+          onElUpdated: function (el) {
+            if (el.nodeName === "HTML") {
+              //copy the attributes
+              for (let i = 0; i < el.attributes.length; i++) {
+                iframeHtml.setAttribute(
+                  el.attributes[i].name,
+                  el.attributes[i].value,
+                );
               }
             }
-            return node;
+          },
+          onBeforeNodeDiscarded: function (node: Node) {
+            //script and style should not be discarded
+            if (
+              node.nodeName === "SCRIPT" ||
+              node.nodeName === "STYLE" ||
+              node.nodeName === "LINK"
+            ) {
+              return false;
+            }
+            return true;
           },
         });
 
@@ -289,7 +305,6 @@ export default function useEditor() {
         // (fileTree[currentFileUid].data as TFileNodeData).changed =
         //   codeContentRef.current !== fileData.orgContent;
 
-        console.log("useEditor CALL");
         dispatch(setFileTree(fileTree));
         dispatch(setCurrentFileContent(codeContentRef.current));
         codeChangeDecorationRef.current.clear();
@@ -306,12 +321,6 @@ export default function useEditor() {
       } catch (e) {
         console.log(e);
       }
-      const headNode = iframeDoc?.head;
-
-      // add rnbw css
-      const style = iframeDoc.createElement("style");
-      style.textContent = styles;
-      headNode.appendChild(style);
 
       dispatch(setCodeEditing(false));
     }, 1000),

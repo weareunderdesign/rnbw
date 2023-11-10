@@ -248,7 +248,6 @@ export default function WorkspaceTreeView() {
       initialFileUidToOpen !== "" &&
       fileTree[initialFileUidToOpen] !== undefined
     ) {
-      console.log({ initialFileUidToOpen, project, currentFileUid });
       dispatch(setInitialFileUidToOpen(""));
       // focus/select/read the initial file
       addRunningActions([
@@ -711,7 +710,7 @@ export default function WorkspaceTreeView() {
             onPrimaryAction: (item) => {
               item.data.data.valid
                 ? cb_readNode(item.index as TNodeUid)
-                : removeRunningActions(["fileTreeView-read"], false);
+                : removeRunningActions(["fileTreeView-read"]);
             },
 
             onDrop: (items, target) => {

@@ -10,26 +10,14 @@ import { MainContext } from "@_redux/main";
 import { useSetSelectItem, useTextEditing } from "./";
 import { StageNodeIdAttr } from "@_node/html";
 import { AppState } from "@_redux/_root";
-import {
-  selectFileTreeNodes,
-  setCurrentFileUid,
-  setFileTreeNode,
-} from "@_redux/main/fileTree";
+import { selectFileTreeNodes, setCurrentFileUid } from "@_redux/main/fileTree";
 import {
   setActivePanel,
   setNavigatorDropdownType,
 } from "@_redux/main/processor";
 import { setLinkToOpen } from "@_redux/main/stageView";
-import {
-  expandNodeTreeNodes,
-  focusNodeTreeNode,
-  selectNodeTreeNodes,
-  setHoveredNodeUid,
-} from "@_redux/main/nodeTree";
-import {
-  setCurrentFileContent,
-  setSelectedItems,
-} from "@_redux/main/nodeTree/event";
+import { focusNodeTreeNode, setHoveredNodeUid } from "@_redux/main/nodeTree";
+import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
 
 export interface IUseMouseEventsProps {
   externalDblclick: React.MutableRefObject<boolean>;
