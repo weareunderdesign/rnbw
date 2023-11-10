@@ -59,10 +59,11 @@ export const getCopiedContent = (uid: TNodeUid, iframe: any) => {
   const ele = iframe?.contentWindow?.document?.querySelector(
     `[${StageNodeIdAttr}="${uid}"]`,
   );
+  if (!ele) return;
 
   //create a copy of ele
   const eleCopy = ele?.cloneNode(true) as HTMLElement;
-  const innerElements = eleCopy.querySelectorAll(`[${StageNodeIdAttr}]`);
+  const innerElements = eleCopy?.querySelectorAll(`[${StageNodeIdAttr}]`);
 
   innerElements.forEach((element) => {
     if (element.hasAttribute(StageNodeIdAttr)) {
