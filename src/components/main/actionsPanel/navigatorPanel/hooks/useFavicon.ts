@@ -47,9 +47,8 @@ export const useFavicon = (
     }
 
     if (currentFileUid !== "" && isFirst.current === true && !focusedItem) {
-      selectFirstNode(
+      isFirst.current = selectFirstNode(
         validNodeTree,
-        isFirst.current,
         selectNodeTreeNodes,
         expandNodeTreeNodes,
         dispatch,
