@@ -165,9 +165,3 @@ export const getDropOptions = (
 
   return { position, isBetween, order, targetendOffset, targetUid };
 };
-
-// const removeSubstring = (originalString: string, substringToRemove) => {
-//   const regex = new RegExp(substringToRemove, "g");
-//   const resultString = originalString.replace(regex, "");
-//   return resultString;
-// };
