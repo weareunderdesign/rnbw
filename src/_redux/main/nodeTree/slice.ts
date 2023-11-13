@@ -121,6 +121,9 @@ const nodeTreeSlice = createSlice({
       const hoveredNodeUid = action.payload;
       state.hoveredNodeUid = hoveredNodeUid;
     },
+    clearNodeTreeViewState(state) {
+      state.nodeTreeViewState = nodeTreeReducerInitialState.nodeTreeViewState;
+    },
 
     setNewFocusedNodeUid(state, action: PayloadAction<TNodeUid>) {
       const newFocusedNodeUid = action.payload;
@@ -138,6 +141,7 @@ export const {
   selectNodeTreeNodes,
   updateNodeTreeTreeViewState,
   setHoveredNodeUid,
+  clearNodeTreeViewState,
 
   setNewFocusedNodeUid,
 } = nodeTreeSlice.actions;

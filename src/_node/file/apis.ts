@@ -544,3 +544,14 @@ export const parseFile = (params: {
     };
   }
 };
+
+export const parseFileExt = (
+  file: {
+    ext: string;
+    content: string;
+  },
+  handlers: { [ext: string]: (content: string) => {} },
+) => {
+  const { ext, content } = file;
+  handlers[ext] && handlers[ext](content);
+};

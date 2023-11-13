@@ -118,6 +118,9 @@ const fileTreeSlice = createSlice({
       const hoveredFileUid = action.payload;
       state.hoveredFileUid = hoveredFileUid;
     },
+    clearFileTreeViewState(state) {
+      state.fileTreeViewState = fileTreeReducerInitialState.fileTreeViewState;
+    },
 
     setDoingFileAction(state, action: PayloadAction<boolean>) {
       const doingFileaction = action.payload;
@@ -143,6 +146,7 @@ export const {
   selectFileTreeNodes,
   updateFileTreeViewState,
   setHoveredFileUid,
+  clearFileTreeViewState,
 
   setDoingFileAction,
   setLastFileAction,

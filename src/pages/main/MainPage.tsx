@@ -103,7 +103,7 @@ import {
 } from "@_types/main";
 
 import { getCommandKey, isChromeOrEdge } from "../../services/global";
-import { addDefaultCmdkActions } from "./helper";
+import { addDefaultCmdkActions, clearProjectSession } from "./helper";
 
 export default function MainPage() {
   // ***************************************** Reducer Begin *****************************************
@@ -940,17 +940,6 @@ export default function MainPage() {
     ]);
   }, []);
 
-  const clearSession = useCallback(() => {
-    dispatch({ type: FileTree_Event_ClearActionType });
-    dispatch({ type: NodeTree_Event_ClearActionType });
-
-    dispatch(setCurrentFileUid(""));
-    dispatch(setCurrentFileContent(""));
-    dispatch(setNodeTree({}));
-    dispatch(setValidNodeTree({}));
-    dispatch(setIframeSrc(null));
-  }, []);
-
   const importProject = useCallback(
     async (
       fsType: TProjectContext,
@@ -969,8 +958,6 @@ export default function MainPage() {
             projectHandle as FileSystemDirectoryHandle,
             osType,
           );
-
-          clearSession();
 
           // build nohost idb
           handlerArr && buildNohostIDB(handlerArr);
@@ -1010,8 +997,6 @@ export default function MainPage() {
           const { _fileTree, _initialFileUidToOpen } =
             await loadIDBProject(DefaultProjectPath);
 
-          clearSession();
-
           dispatch(
             setProject({
               context: "idb",
@@ -1034,7 +1019,6 @@ export default function MainPage() {
       }
     },
     [
-      clearSession,
       osType,
       recentProjectContexts,
       recentProjectNames,
@@ -1093,12 +1077,14 @@ export default function MainPage() {
               _preferPolyfill: false,
               mode: "readwrite",
             } as CustomDirectoryPickerOptions);
+            clearProjectSession();
             await importProject(fsType, projectHandle);
           } catch (err) {
             reject(err);
           }
         } else if (fsType === "idb") {
           try {
+            clearProjectSession();
             await importProject(fsType, null);
           } catch (err) {
             reject(err);
