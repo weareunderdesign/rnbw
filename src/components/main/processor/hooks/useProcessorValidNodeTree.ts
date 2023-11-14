@@ -14,7 +14,7 @@ export const useProcessorValidNodeTree = () => {
   const dispatch = useDispatch();
   const {
     currentFileUid,
-    prevFileUid,
+    prevRenderableFileUid,
 
     validNodeTree,
     nExpandedItems,
@@ -25,7 +25,8 @@ export const useProcessorValidNodeTree = () => {
 
   const isFirstOpenForCurrentFile = useRef(false);
   useEffect(() => {
-    isFirstOpenForCurrentFile.current = currentFileUid !== prevFileUid;
+    isFirstOpenForCurrentFile.current =
+      currentFileUid !== prevRenderableFileUid;
   }, [currentFileUid]);
 
   useEffect(() => {

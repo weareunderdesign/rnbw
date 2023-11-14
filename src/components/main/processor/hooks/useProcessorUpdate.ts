@@ -24,7 +24,7 @@ export const useProcessorUpdate = () => {
 
     fileTree,
     currentFileUid,
-    prevFileUid,
+    prevRenderableFileUid,
     currentFileContent,
 
     selectedNodeUids,
@@ -78,7 +78,7 @@ export const useProcessorUpdate = () => {
       dispatch(setDoingFileAction(false));
     })();
 
-    if (prevFileUid !== currentFileUid) {
+    if (prevRenderableFileUid !== currentFileUid) {
       LogAllow && console.log("need to refresh iframe");
       dispatch(setNeedToReloadIframe(true));
     }

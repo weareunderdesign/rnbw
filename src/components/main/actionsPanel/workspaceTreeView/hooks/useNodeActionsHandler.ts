@@ -3,7 +3,12 @@ import { useCallback, useContext } from "react";
 import { TreeItem } from "react-complex-tree";
 import { useDispatch, useSelector } from "react-redux";
 
-import { ParsableFileTypes, RootNodeUid, TmpNodeUid } from "@_constants/main";
+import {
+  ParsableFileTypes,
+  RednerableFileTypes,
+  RootNodeUid,
+  TmpNodeUid,
+} from "@_constants/main";
 import { getValidNodeUids } from "@_node/apis";
 import { createDirectory, TFileNodeData, writeFile } from "@_node/file";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
@@ -17,7 +22,7 @@ import {
   projectSelector,
   setCurrentFileUid,
   setFileTree,
-  setPrevFileUid,
+  setPrevRenderableFileUid,
 } from "@_redux/main/fileTree";
 import { setFileAction, TFileAction } from "@_redux/main/fileTree/event";
 import {
@@ -526,8 +531,8 @@ export const useNodeActionsHandler = (
 
       const nodeData = node.data as TFileNodeData;
 
-      if (ParsableFileTypes[nodeData.ext]) {
-        dispatch(setPrevFileUid(currentFileUid));
+      if (RednerableFileTypes[nodeData.ext]) {
+        dispatch(setPrevRenderableFileUid(currentFileUid));
 
         // set initial content of the html if file content is empty
         if (

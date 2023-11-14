@@ -27,7 +27,7 @@ export const IFrame = () => {
   // -------------------------------------------------------------- global state --------------------------------------------------------------
   const dispatch = useDispatch();
   const {
-    prevFileUid,
+    prevRenderableFileUid,
     nFocusedItem: focusedItem,
     nSelectedItems: selectedItems,
     hoveredNodeUid,
@@ -447,5 +447,11 @@ export const IFrame = () => {
         )}
       </>
     );
-  }, [iframeSrc, needToReloadIframe, parseFileFlag, prevFileUid, setParseFile]);
+  }, [
+    iframeSrc,
+    needToReloadIframe,
+    parseFileFlag,
+    prevRenderableFileUid,
+    setParseFile,
+  ]);
 };

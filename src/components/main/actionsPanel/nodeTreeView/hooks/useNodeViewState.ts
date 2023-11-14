@@ -22,7 +22,7 @@ import { useAppState } from "@_redux/useAppState";
 export function useNodeViewState(focusItemValue: TNodeUid | null) {
   const dispatch = useDispatch();
 
-  const { fileTree, validNodeTree, prevFileUid } = useAppState();
+  const { fileTree, validNodeTree, prevRenderableFileUid } = useAppState();
 
   const { addRunningActions, removeRunningActions } = useContext(MainContext);
 
@@ -77,14 +77,14 @@ export function useNodeViewState(focusItemValue: TNodeUid | null) {
       dispatch(setSelectedNodeUids(_uids));
 
       if (!parseFileFlag) {
-        const node = fileTree[prevFileUid];
-        const uid = prevFileUid;
+        const node = fileTree[prevRenderableFileUid];
+        const uid = prevRenderableFileUid;
         const nodeData = node.data as TFileNodeData;
         setParseFile(true);
         dispatch(setNavigatorDropdownType("project"));
         dispatch({ type: NodeTree_Event_ClearActionType });
         dispatch(setCurrentFileUid(uid));
-        dispatch(selectFileTreeNodes([prevFileUid]));
+        dispatch(selectFileTreeNodes([prevRenderableFileUid]));
       }
       removeRunningActions(["nodeTreeView-select"]);
     },
