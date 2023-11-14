@@ -1,11 +1,4 @@
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useContext, useEffect, useMemo, useRef } from "react";
 
 import * as monaco from "monaco-editor";
 import { useDispatch, useSelector } from "react-redux";
@@ -14,11 +7,11 @@ import { RootNodeUid } from "@_constants/main";
 import { useTheme } from "@_hooks/useTheme";
 import { TFileNodeData, TNodeUid } from "@_node/index";
 import { MainContext } from "@_redux/main";
-import { Editor, loader } from "@monaco-editor/react";
-
-import { useEditor, useEditorWrapper } from "./hooks";
-import { CodeViewProps } from "./types";
 import { codeEditingSelector } from "@_redux/main/codeView";
+import {
+  currentFileUidSelector,
+  fileTreeSelector,
+} from "@_redux/main/fileTree";
 import {
   expandNodeTreeNodes,
   focusNodeTreeNode,
@@ -26,17 +19,12 @@ import {
   setNewFocusedNodeUid,
   validNodeTreeSelector,
 } from "@_redux/main/nodeTree";
-import {
-  showCodeViewSelector,
-  updateOptionsSelector,
-} from "@_redux/main/processor";
-import {
-  currentFileUidSelector,
-  fileTreeSelector,
-} from "@_redux/main/fileTree";
-
-import { AppState } from "@_redux/_root";
+import { updateOptionsSelector } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
+import { Editor, loader } from "@monaco-editor/react";
+
+import { useEditor, useEditorWrapper } from "./hooks";
+import { CodeViewProps } from "./types";
 
 loader.config({ monaco });
 

@@ -12,9 +12,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { SVGIconI, TreeView } from "@_components/common";
 import { TreeViewData } from "@_components/common/treeView/types";
 import { RootNodeUid } from "@_constants/main";
-import { StageNodeIdAttr, TFileNodeData, THtmlNodeData } from "@_node/index";
+import { StageNodeIdAttr } from "@_node/file/handlers/constants";
+import { TFileNodeData, THtmlNodeData } from "@_node/index";
 import { TNode, TNodeUid } from "@_node/types";
-import { osTypeSelector, themeSelector } from "@_redux/global";
+import { osTypeSelector } from "@_redux/global";
 import { MainContext } from "@_redux/main";
 import {
   currentFileUidSelector,
@@ -36,17 +37,15 @@ import {
 } from "@_redux/main/processor";
 import { getCommandKey } from "@_services/global";
 import { addClass, removeClass } from "@_services/main";
+import { THtmlElementsReference } from "@_types/main";
 
 import { useCmdk } from "./hooks/useCmdk";
-import { useNodeActions } from "./hooks/useNodeActions";
 import { useNodeTreeCallback } from "./hooks/useNodeTreeCallback";
 import { useNodeViewState } from "./hooks/useNodeViewState";
 import { Container } from "./nodeTreeComponents/Container";
 import { DragBetweenLine } from "./nodeTreeComponents/DragBetweenLine";
 import { ItemArrow } from "./nodeTreeComponents/ItemArrow";
 import { ItemTitle } from "./nodeTreeComponents/ItemTitle";
-import { NodeTreeViewProps } from "./types";
-import { THtmlElementsReference } from "@_types/main";
 
 const AutoExpandDelay = 1 * 1000;
 

@@ -33,7 +33,6 @@ export const getFileExtension = (node: TNode) =>
 
 export const selectFirstNode = (
   validNodeTree: TNodeTreeData,
-  isFirst: boolean,
   selectNodeTreeNodes: ActionCreatorWithPayload<string[]>,
   expandNodeTreeNodes: ActionCreatorWithPayload<string[]>,
   dispatch: Dispatch<AnyAction>,
@@ -65,9 +64,10 @@ export const selectFirstNode = (
       dispatch(focusNodeTreeNode(firstNodeId));
       dispatch(selectNodeTreeNodes([firstNodeId]));
       dispatch(expandNodeTreeNodes(Object.keys(validNodeTree)));
-      isFirst = false;
+      return false;
     }
   }
+  return true;
 };
 
 export const setWorkspaceFavicon = (

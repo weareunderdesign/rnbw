@@ -2,6 +2,7 @@ import { Buffer } from "buffer";
 import FileSaver from "file-saver";
 import JSZip from "jszip";
 
+import { LogAllow } from "@_constants/global";
 import {
   ParsableFileTypes,
   RootNodeUid,
@@ -12,26 +13,24 @@ import { TOsType } from "@_redux/global";
 import htmlRefElements from "@_ref/rfrncs/HTML Elements.csv";
 import { SystemDirectories } from "@_ref/SystemDirectories";
 import { verifyFileHandlerPermission } from "@_services/main";
+import {
+  THtmlElementsReference,
+  THtmlElementsReferenceData,
+} from "@_types/main";
 
 import {
   getSubNodeUidsByBfs,
-  parseHtml,
   TFileHandlerCollection,
   TFileNode,
   TFileNodeData,
   TFileNodeTreeData,
   TFileParserResponse,
-  TNodeTreeData,
   TNodeUid,
   TProjectLoaderResponse,
 } from "../";
+import { fileHandlers } from "./handlers/handlers";
+import { getInitialFileUidToOpen, sortFilesByASC } from "./helpers";
 import { TFileHandlerInfo, TFileHandlerInfoObj, TZipFileInfo } from "./types";
-import {
-  THtmlElementsReference,
-  THtmlElementsReferenceData,
-} from "@_types/main";
-import { LogAllow } from "@_constants/global";
-import { getInitialFileUidToOpen, sortFilesByASC } from "./helper";
 
 export const _fs = window.Filer.fs;
 export const _path = window.Filer.path;
@@ -530,17 +529,11 @@ export const getNormalizedPath = (
   return { isAbsolutePath, normalizedPath };
 };
 
-export const parseFile = (params: {
-  ext: string;
-  content: string;
-}): TFileParserResponse => {
-  const { ext, content } = params;
-  if (ext === "html") {
-    return parseHtml(content);
-  } else {
-    return {
-      contentInApp: "",
-      nodeTree: {},
-    };
-  }
+export const parseFile = (
+  ext: string,
+  content: string,
+): TFileParserResponse => {
+  return fileHandlers[ext]
+    ? fileHandlers[ext](content)
+    : { contentInApp: "", nodeTree: {} };
 };

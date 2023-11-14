@@ -1,8 +1,5 @@
-import { THtmlNodeData } from '@_node/index';
-import {
-  TNodeTreeData,
-  TNodeUid,
-} from '@_node/types';
+import { THtmlNodeData } from "@_node/index";
+import { TNodeTreeData, TNodeUid } from "@_node/types";
 
 export const isRemovingAllowed = (
   nodeTree: TNodeTreeData,

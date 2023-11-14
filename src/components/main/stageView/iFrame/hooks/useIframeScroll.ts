@@ -1,7 +1,7 @@
 import { useCallback, useContext } from "react";
 
+import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { MainContext } from "@_redux/main";
-import { StageNodeIdAttr } from "@_node/html";
 
 export interface IUseIframeScrollProps {
   focusedItemRef: React.MutableRefObject<string>;

@@ -1,8 +1,9 @@
 import { editor } from "monaco-editor";
 import { DraggingPosition } from "react-complex-tree";
-import { StageNodeIdAttr } from "@_node/html";
-import { TNodeTreeData, TNodeUid } from "@_node/types";
+
 import { LogAllow } from "@_constants/global";
+import { StageNodeIdAttr } from "@_node/file/handlers/constants";
+import { TNodeTreeData, TNodeUid } from "@_node/types";
 
 export const sortUidsByMaxEndIndex = (
   uids: TNodeUid[],
@@ -69,6 +70,7 @@ export const getCopiedContent = (uid: TNodeUid, iframe: any) => {
   innerElements.forEach((element) => {
     if (element.hasAttribute(StageNodeIdAttr)) {
       element.removeAttribute(StageNodeIdAttr);
+      element?.removeAttribute("rnbwdev-rnbw-element-hover");
     }
   });
 

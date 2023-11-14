@@ -1,19 +1,20 @@
-import { DraggingPosition, TreeItem, TreeItemIndex } from "react-complex-tree";
-
-import { TNodeUid } from "@_node/types";
-
-import { useNodeViewState } from "./useNodeViewState";
 import { useContext } from "react";
-import { MainContext } from "@_redux/main";
+
 import { Range } from "monaco-editor";
+import { DraggingPosition, TreeItem, TreeItemIndex } from "react-complex-tree";
+import { useSelector } from "react-redux";
+
 import { useEditor } from "@_components/main/codeView/hooks";
+import { TNodeUid } from "@_node/types";
+import { AppState } from "@_redux/_root";
+import { MainContext } from "@_redux/main";
+
 import {
   getCopiedContent,
   getDropOptions,
   sortUidsByMaxEndIndex,
 } from "../helpers";
-import { useSelector } from "react-redux";
-import { AppState } from "@_redux/_root";
+import { useNodeViewState } from "./useNodeViewState";
 
 export const useNodeTreeCallback = (
   focusItemValue: TNodeUid | null,

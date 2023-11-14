@@ -1,12 +1,9 @@
-import {
-  useEffect,
-  useState,
-} from 'react';
+import { useEffect, useState } from "react";
 
-import { useSelector } from 'react-redux';
+import { useSelector } from "react-redux";
 
-import { themeSelector } from '@_redux/global';
-import { getSystemTheme } from '@_services/global';
+import { themeSelector } from "@_redux/global";
+import { getSystemTheme } from "@_services/global";
 
 export const getCurrentTheme = (theme: string) => {
   if (theme === "Dark") {

@@ -1,11 +1,11 @@
 import { useCallback, useContext } from "react";
-import { useSelector } from "react-redux";
-import { MainContext } from "@_redux/main";
-import { AddNodeActionPrefix } from "@_constants/main";
 
-import { useNodeActions } from "./useNodeActions";
 import { Range } from "monaco-editor";
+import { useSelector } from "react-redux";
+
 import { useEditor } from "@_components/main/codeView/hooks";
+import { AddNodeActionPrefix } from "@_constants/main";
+import { MainContext } from "@_redux/main";
 import {
   currentFileUidSelector,
   fileTreeSelector,
@@ -15,6 +15,8 @@ import {
   nodeTreeViewStateSelector,
   validNodeTreeSelector,
 } from "@_redux/main/nodeTree";
+
+import { useNodeActions } from "./useNodeActions";
 
 export const useNodeActionsHandlers = () => {
   const fileTree = useSelector(fileTreeSelector);

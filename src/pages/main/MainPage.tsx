@@ -20,7 +20,6 @@ import { LogAllow } from "@_constants/global";
 import {
   AddActionPrefix,
   DefaultProjectPath,
-  ParsableFileTypes,
   RecentProjectCount,
   RootNodeUid,
 } from "@_constants/main";
@@ -31,11 +30,9 @@ import {
   loadIDBProject,
   loadLocalProject,
   TFileHandlerCollection,
-  TFileNode,
   TFileNodeData,
-  TFileNodeTreeData,
 } from "@_node/file";
-import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
+import { TNodeUid } from "@_node/types";
 import { setOsType, setTheme } from "@_redux/global";
 import { MainContext } from "@_redux/main";
 import {
@@ -46,7 +43,6 @@ import {
   setCurrentCommand,
 } from "@_redux/main/cmdk";
 import {
-  setCurrentFileUid,
   setDoingFileAction,
   setFileTree,
   setInitialFileUidToOpen,
@@ -55,28 +51,15 @@ import {
   TProject,
   TProjectContext,
 } from "@_redux/main/fileTree";
-import {
-  FileTree_Event_ClearActionType,
-  setFileAction,
-} from "@_redux/main/fileTree/event";
-import {
-  setNewFocusedNodeUid,
-  setNodeTree,
-  setValidNodeTree,
-} from "@_redux/main/nodeTree";
-import {
-  NodeTree_Event_ClearActionType,
-  setCurrentFileContent,
-} from "@_redux/main/nodeTree/event";
+import { setFileAction } from "@_redux/main/fileTree/event";
+import { setNewFocusedNodeUid } from "@_redux/main/nodeTree";
 import {
   setDidUndo,
-  setFavicon,
   setNavigatorDropdownType,
   setShowActionsPanel,
   setShowCodeView,
   setUpdateOptions,
 } from "@_redux/main/processor";
-import { setIframeSrc } from "@_redux/main/stageView";
 import { useAppState } from "@_redux/useAppState";
 // @ts-ignore
 import cmdkRefActions from "@_ref/cmdk.ref/Actions.csv";
@@ -103,7 +86,7 @@ import {
 } from "@_types/main";
 
 import { getCommandKey, isChromeOrEdge } from "../../services/global";
-import { addDefaultCmdkActions } from "./helper";
+import { addDefaultCmdkActions, clearProjectSession } from "./helper";
 
 export default function MainPage() {
   // ***************************************** Reducer Begin *****************************************
@@ -940,17 +923,6 @@ export default function MainPage() {
     ]);
   }, []);
 
-  const clearSession = useCallback(() => {
-    dispatch({ type: FileTree_Event_ClearActionType });
-    dispatch({ type: NodeTree_Event_ClearActionType });
-
-    dispatch(setCurrentFileUid(""));
-    dispatch(setCurrentFileContent(""));
-    dispatch(setNodeTree({}));
-    dispatch(setValidNodeTree({}));
-    dispatch(setIframeSrc(null));
-  }, []);
-
   const importProject = useCallback(
     async (
       fsType: TProjectContext,
@@ -969,8 +941,6 @@ export default function MainPage() {
             projectHandle as FileSystemDirectoryHandle,
             osType,
           );
-
-          clearSession();
 
           // build nohost idb
           handlerArr && buildNohostIDB(handlerArr);
@@ -1010,8 +980,6 @@ export default function MainPage() {
           const { _fileTree, _initialFileUidToOpen } =
             await loadIDBProject(DefaultProjectPath);
 
-          clearSession();
-
           dispatch(
             setProject({
               context: "idb",
@@ -1034,7 +1002,6 @@ export default function MainPage() {
       }
     },
     [
-      clearSession,
       osType,
       recentProjectContexts,
       recentProjectNames,
@@ -1093,12 +1060,14 @@ export default function MainPage() {
               _preferPolyfill: false,
               mode: "readwrite",
             } as CustomDirectoryPickerOptions);
+            clearProjectSession(dispatch);
             await importProject(fsType, projectHandle);
           } catch (err) {
             reject(err);
           }
         } else if (fsType === "idb") {
           try {
+            clearProjectSession(dispatch);
             await importProject(fsType, null);
           } catch (err) {
             reject(err);
@@ -1620,7 +1589,7 @@ export default function MainPage() {
                               activePanel === "stage") &&
                               ((fileTree[currentFileUid] &&
                                 (fileTree[currentFileUid].data as TFileNodeData)
-                                  .ext === ".html" &&
+                                  .ext === "html" &&
                                 context["html"] === true) ||
                                 false)))) ||
                         currentCmdkPage === "Add";
@@ -1667,7 +1636,7 @@ export default function MainPage() {
                                     (
                                       fileTree[currentFileUid]
                                         .data as TFileNodeData
-                                    ).ext === ".html" &&
+                                    ).ext === "html" &&
                                     context["html"] === true) ||
                                     false)))) ||
                             currentCmdkPage === "Add";

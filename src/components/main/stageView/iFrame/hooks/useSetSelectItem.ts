@@ -1,13 +1,12 @@
 import { useCallback, useContext } from "react";
 
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 import { RootNodeUid } from "@_constants/main";
+import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { TNode, TNodeUid } from "@_node/types";
-import { MainContext } from "@_redux/main";
-import { StageNodeIdAttr } from "@_node/html";
-import { useSelector } from "react-redux";
 import { AppState } from "@_redux/_root";
+import { MainContext } from "@_redux/main";
 import {
   expandNodeTreeNodes,
   focusNodeTreeNode,

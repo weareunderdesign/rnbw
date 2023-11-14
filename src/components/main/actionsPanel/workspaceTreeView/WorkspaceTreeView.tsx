@@ -44,6 +44,7 @@ import {
 } from "@_redux/main/processor";
 import { linkToOpenSelector } from "@_redux/main/stageView";
 import { addClass, generateQuerySelector, removeClass } from "@_services/main";
+import { TFilesReference } from "@_types/main";
 
 import {
   useCmdk,
@@ -54,7 +55,6 @@ import {
   useTemporaryNodes,
 } from "./hooks";
 import { Container, ItemArrow } from "./workSpaceTreeComponents";
-import { TFilesReference } from "@_types/main";
 
 const AutoExpandDelay = 1 * 1000;
 export default function WorkspaceTreeView() {

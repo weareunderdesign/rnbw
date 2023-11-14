@@ -1,11 +1,10 @@
 import { useContext, useEffect } from "react";
 
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 import { LogAllow } from "@_constants/global";
 import { TFileNode, TFileNodeData, writeFile } from "@_node/file";
 import { TNode, TNodeTreeData } from "@_node/types";
-import { AppState } from "@_redux/_root";
 import { MainContext } from "@_redux/main";
 import { focusFileTreeNode, setDoingFileAction } from "@_redux/main/fileTree";
 import {
@@ -14,14 +13,13 @@ import {
   setNewFocusedNodeUid,
   setNodeTree,
 } from "@_redux/main/nodeTree";
-
 import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
 import { setUpdateOptions } from "@_redux/main/processor";
 import { setIframeSrc, setNeedToReloadIframe } from "@_redux/main/stageView";
+import { useAppState } from "@_redux/useAppState";
 import { TFileInfo } from "@_types/main";
 
 import { getPreViewPath, handleFileUpdate } from "../helpers";
-import { useAppState } from "@_redux/useAppState";
 
 export const useProcessorUpdateOpt = () => {
   const dispatch = useDispatch();

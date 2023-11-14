@@ -7,9 +7,9 @@ import { TFileNodeTreeData } from "@_node/file";
 import { MainContext } from "@_redux/main";
 import { setFileTree } from "@_redux/main/fileTree";
 import { setNeedToReloadIframe } from "@_redux/main/stageView";
+import { useAppState } from "@_redux/useAppState";
 
 import { saveFileContent } from "../helpers";
-import { useAppState } from "@_redux/useAppState";
 
 export const useSaveCommand = () => {
   const dispatch = useDispatch();

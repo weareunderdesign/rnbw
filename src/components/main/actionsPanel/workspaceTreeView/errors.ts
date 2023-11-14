@@ -1,4 +1,4 @@
-import { TToast } from '@_types/index';
+import { TToast } from "@_types/index";
 
 export const folderError: TToast = {
   type: "error",

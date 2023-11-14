@@ -1,12 +1,6 @@
-import {
-  StageNodeIdAttr,
-  THtmlNodeData,
-} from '@_node/index';
-import {
-  TNode,
-  TNodeTreeData,
-  TNodeUid,
-} from '@_node/types';
+import { StageNodeIdAttr } from "@_node/file/handlers/constants";
+import { THtmlNodeData } from "@_node/index";
+import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 
 export const addNodeToTree = (
   _tree: TNodeTreeData | null,

@@ -1,4 +1,4 @@
-import { TToast } from '@_types/global';
+import { TToast } from "@_types/global";
 
 export const moveFile = async (
   handler: FileSystemHandle,

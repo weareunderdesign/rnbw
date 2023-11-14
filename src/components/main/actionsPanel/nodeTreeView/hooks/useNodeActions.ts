@@ -3,7 +3,9 @@ import { useCallback, useContext } from "react";
 import { Range } from "monaco-editor";
 import { useDispatch, useSelector } from "react-redux";
 
-import { StageNodeIdAttr, getValidNodeUids } from "@_node/index";
+import { useEditor } from "@_components/main/codeView/hooks";
+import { StageNodeIdAttr } from "@_node/file/handlers/constants";
+import { getValidNodeUids } from "@_node/index";
 import { TNodeUid } from "@_node/types";
 import { osTypeSelector } from "@_redux/global";
 import { MainContext } from "@_redux/main";
@@ -18,13 +20,12 @@ import {
   setUpdateOptions,
 } from "@_redux/main/processor";
 
-import { getTree } from "../helpers/getTree";
-import { useEditor } from "@_components/main/codeView/hooks";
 import {
   getCopiedContent,
   sortUidsByMaxEndIndex,
   sortUidsByMinStartIndex,
 } from "../helpers";
+import { getTree } from "../helpers/getTree";
 
 export function useNodeActions() {
   const dispatch = useDispatch();

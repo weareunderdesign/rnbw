@@ -1,17 +1,14 @@
-import {
-  useContext,
-  useEffect,
-} from 'react';
+import { useContext, useEffect } from "react";
 
-import { useSelector } from 'react-redux';
+import { useSelector } from "react-redux";
 
-import { AddNodeActionPrefix } from '@_constants/main';
-import { themeSelector } from '@_redux/global';
-import { MainContext } from '@_redux/main';
-import { currentCommandSelector } from '@_redux/main/cmdk';
-import { activePanelSelector } from '@_redux/main/processor';
+import { AddNodeActionPrefix } from "@_constants/main";
+import { themeSelector } from "@_redux/global";
+import { MainContext } from "@_redux/main";
+import { currentCommandSelector } from "@_redux/main/cmdk";
+import { activePanelSelector } from "@_redux/main/processor";
 
-import { useNodeActionsHandlers } from './useNodeActionsHendlers';
+import { useNodeActionsHandlers } from "./useNodeActionsHendlers";
 
 export const useCmdk = () => {
   const activePanel = useSelector(activePanelSelector);

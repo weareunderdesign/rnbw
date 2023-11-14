@@ -18,11 +18,11 @@ import {
   setCurrentFileUid,
   setFileTree,
 } from "@_redux/main/fileTree";
+import { setFileAction, TFileAction } from "@_redux/main/fileTree/event";
 import {
-  FileTree_Event_ClearActionType,
-  setFileAction,
-  TFileAction,
-} from "@_redux/main/fileTree/event";
+  NodeTree_Event_ClearActionType,
+  setCurrentFileContent,
+} from "@_redux/main/nodeTree/event";
 import {
   navigatorDropdownTypeSelector,
   setNavigatorDropdownType,
@@ -44,10 +44,6 @@ import {
 import { useInvalidNodes } from "./useInvalidNodes";
 import { useReloadProject } from "./useReloadProject";
 import { useTemporaryNodes } from "./useTemporaryNodes";
-import {
-  NodeTree_Event_ClearActionType,
-  setCurrentFileContent,
-} from "@_redux/main/nodeTree/event";
 
 export const useNodeActionsHandler = (
   openFileUid: React.MutableRefObject<string>,

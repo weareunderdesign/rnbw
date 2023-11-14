@@ -13,7 +13,8 @@ import {
   TFileNodeTreeData,
   writeFile,
 } from "@_node/file";
-import { StageNodeIdAttr, THtmlNodeData, THtmlPageSettings } from "@_node/html";
+import { StageNodeIdAttr } from "@_node/file/handlers/constants";
+import { THtmlNodeData, THtmlPageSettings } from "@_node/html";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import { TOsType } from "@_redux/global";
 import { TProject } from "@_redux/main/fileTree";
@@ -333,7 +334,7 @@ export const getFileData = (params: {
 };
 
 export const handleFileUpdate = (fileData: TFileNodeData) => {
-  const { contentInApp, nodeTree } = parseFile(fileData);
+  const { contentInApp, nodeTree } = parseFile(fileData.ext, fileData.content);
 
   fileData.contentInApp = contentInApp;
   fileData.changed = fileData.content !== fileData.orgContent;
@@ -384,10 +385,7 @@ export const handleHmsChange = (
       contentInApp,
       tree,
       nodeMaxUid: newNodeMaxUid,
-    } = parseFile({
-      ext: fileData.ext,
-      content: file.data.content,
-    });
+    } = parseFile(fileData.ext, file.data.content);
     _nodeTree = tree;
     fileData.content = formattedContent;
     fileData.contentInApp = contentInApp;

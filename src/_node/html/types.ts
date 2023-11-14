@@ -42,8 +42,6 @@ export type THtmlParserResponse = {
   htmlDom: Document;
 };
 
-
-
 // --------------------
 export type THtmlPageSettings = {
   title: string;

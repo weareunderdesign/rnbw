@@ -4,20 +4,20 @@ import { useDispatch, useSelector } from "react-redux";
 
 import { getValidNodeUids } from "@_node/apis";
 import { TFileNodeData } from "@_node/file";
+import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { TNode, TNodeUid } from "@_node/types";
-import { MainContext } from "@_redux/main";
-
-import { useSetSelectItem, useTextEditing } from "./";
-import { StageNodeIdAttr } from "@_node/html";
 import { AppState } from "@_redux/_root";
+import { MainContext } from "@_redux/main";
 import { selectFileTreeNodes, setCurrentFileUid } from "@_redux/main/fileTree";
+import { setHoveredNodeUid } from "@_redux/main/nodeTree";
+import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
 import {
   setActivePanel,
   setNavigatorDropdownType,
 } from "@_redux/main/processor";
 import { setLinkToOpen } from "@_redux/main/stageView";
-import { focusNodeTreeNode, setHoveredNodeUid } from "@_redux/main/nodeTree";
-import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
+
+import { useSetSelectItem, useTextEditing } from "./";
 
 export interface IUseMouseEventsProps {
   externalDblclick: React.MutableRefObject<boolean>;
