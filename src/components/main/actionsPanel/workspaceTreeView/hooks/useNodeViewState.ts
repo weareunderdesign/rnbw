@@ -85,7 +85,7 @@ export const useNodeViewState = () => {
           return;
         }
       }
-      if (project && currentFileUid) {
+      /* if (project && currentFileUid) {
         // remove exist script
         const exist = document.head.querySelector("#custom-plausible");
         if (exist !== null) {
@@ -104,7 +104,7 @@ export const useNodeViewState = () => {
           `' + window.location.search });
 		  `;
         document.head.appendChild(script);
-      }
+      } */
       addRunningActions(["fileTreeView-select"]);
       dispatch(selectFileTreeNodes(_uids));
       removeRunningActions(["fileTreeView-select"]);

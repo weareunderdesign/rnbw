@@ -994,7 +994,7 @@ export default function MainPage() {
           dispatch(setInitialFileUidToOpen(_initialFileUidToOpen));
           setFileHandlers({});
 
-          // await saveRecentProject(fsType);
+          await saveRecentProject(fsType, null);
         } catch (err) {
           LogAllow && console.log("ERROR while importing IDB project", err);
         }
@@ -1012,7 +1012,7 @@ export default function MainPage() {
   const saveRecentProject = useCallback(
     async (
       fsType: TProjectContext,
-      projectHandle: FileSystemDirectoryHandle,
+      projectHandle: FileSystemDirectoryHandle | null,
     ) => {
       const _recentProjectContexts = [...recentProjectContexts];
       const _recentProjectNames = [...recentProjectNames];

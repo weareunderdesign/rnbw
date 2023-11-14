@@ -55,42 +55,91 @@ import {
   useTemporaryNodes,
 } from "./hooks";
 import { Container, ItemArrow } from "./workSpaceTreeComponents";
+import { useAppState } from "@_redux/useAppState";
 
 const AutoExpandDelay = 1 * 1000;
 export default function WorkspaceTreeView() {
   const dispatch = useDispatch();
+  const {
+    osType,
+    theme,
 
-  const currentFileUid = useSelector(currentFileUidSelector);
-  const fileAction = useSelector(fileActionSelector);
-  const project = useSelector(projectSelector);
-  const navigatorDropdownType = useSelector(navigatorDropdownTypeSelector);
-  const { focusedItem, expandedItems, selectedItems } = useSelector(
-    fileTreeViewStateSelector,
-  );
-  const activePanel = useSelector(activePanelSelector);
-  const showActionsPanel = useSelector(showActionsPanelSelector);
-  const initialFileUidToOpen = useSelector(initialFileUidToOpenSelector);
+    workspace,
+    project,
+    initialFileUidToOpen,
+    currentFileUid,
+    fileTree,
 
-  const fileTree = useSelector(fileTreeSelector);
-  const hoveredFileUid = useSelector(hoveredFileUidSelector);
-  const lastFileAction = useSelector(lastFileActionSelector);
+    fFocusedItem: focusedItem,
+    fExpandedItems: expandedItems,
+    fExpandedItemsObj: expandedItemsObj,
+    fSelectedItems: selectedItems,
+    fSelectedItemsObj: selectedItemsObj,
+    hoveredFileUid,
 
-  const linkToOpen = useSelector(linkToOpenSelector);
-  const currentCommand = useSelector(currentCommandSelector);
+    doingFileAction,
+    lastFileAction,
 
-  const didUndo = useSelector(didUndoSelector);
-  const didRedo = useSelector(didRedoSelector);
+    fileAction,
+    fileEventPast,
+    fileEventPastLength,
+    fileEventFuture,
+    fileEventFutureLength,
 
+    nodeTree,
+    validNodeTree,
+
+    nFocusedItem,
+    nExpandedItems,
+    nExpandedItemsObj,
+    nSelectedItems,
+    nSelectedItemsObj,
+    hoveredNodeUid,
+
+    currentFileContent,
+    selectedNodeUids,
+
+    nodeEventPast,
+    nodeEventPastLength,
+
+    nodeEventFuture,
+    nodeEventFutureLength,
+
+    iframeSrc,
+    iframeLoading,
+    needToReloadIframe,
+    linkToOpen,
+
+    codeViewTabSize,
+    codeEditing,
+
+    navigatorDropdownType,
+    favicon,
+
+    activePanel,
+    clipboardData,
+
+    showActionsPanel,
+    showCodeView,
+
+    didUndo,
+    didRedo,
+
+    updateOptions,
+
+    cmdkOpen,
+    cmdkPages,
+    currentCmdkPage,
+
+    cmdkSearchContent,
+    currentCommand,
+  } = useAppState();
   const {
     // global action
     addRunningActions,
     removeRunningActions,
     // references
     filesReferenceData,
-    // non-parse file
-    parseFileFlag,
-    setParseFile,
-    prevFileUid,
   } = useContext(MainContext);
   // -------------------------------------------------------------- node status --------------------------------------------------------------
   //  invalid - can't do any actions on the nodes
@@ -244,12 +293,7 @@ export default function WorkspaceTreeView() {
   // -------------------------------------------------------------- project --------------------------------------------------------------
   // open default initial html file
   useEffect(() => {
-    if (
-      initialFileUidToOpen !== "" &&
-      fileTree[initialFileUidToOpen] !== undefined
-    ) {
-      dispatch(setInitialFileUidToOpen(""));
-      // focus/select/read the initial file
+    if (initialFileUidToOpen !== "" && fileTree[initialFileUidToOpen]) {
       addRunningActions([
         "fileTreeView-focus",
         "fileTreeView-select",
@@ -260,7 +304,7 @@ export default function WorkspaceTreeView() {
       cb_selectNode([initialFileUidToOpen]);
       cb_readNode(initialFileUidToOpen);
 
-      if (project && currentFileUid) {
+      /* if (project && currentFileUid) {
         // remove exist script
         const exist = document.head.querySelector("#custom-plausible");
         if (exist !== null) {
@@ -279,13 +323,12 @@ export default function WorkspaceTreeView() {
           `' + window.location.search });
         `;
         document.head.appendChild(script);
-      }
+      } */
     }
   }, [initialFileUidToOpen]);
   // -------------------------------------------------------------- node actions handlers --------------------------------------------------------------
 
   const openFileUid = useRef<TNodeUid>("");
-
   const {
     cb_startRenamingNode,
     cb_abortRenamingNode,

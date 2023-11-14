@@ -517,7 +517,7 @@ export const useNodeActionsHandler = (
         removeRunningActions(["fileTreeView-read"]);
         return;
       }
-      const node = fileTree[uid];
+      const node = structuredClone(fileTree[uid]);
       if (node === undefined || !node.isEntity || currentFileUid === uid) {
         removeRunningActions(["fileTreeView-read"]);
         return;
@@ -527,39 +527,32 @@ export const useNodeActionsHandler = (
 
       const nodeData = node.data as TFileNodeData;
 
-      if (nodeData.ext === "html") {
+      if (ParsableFileTypes[nodeData.ext]) {
         setPrevFileUid(currentFileUid);
-      }
-      if (!ParsableFileTypes[nodeData.ext]) {
-        dispatch(setCurrentFileUid(uid));
-        removeRunningActions(["fileTreeView-read"]);
-        setParseFile(false);
-        showCodeView === false && dispatch(setShowCodeView(true));
-      } else {
-        // set initial content of the html
-        let initialContent = "";
+
+        // set initial content of the html if file content is empty
         if (
           nodeData.ext === "html" &&
           nodeData.kind === "file" &&
           nodeData.content === ""
         ) {
-          let doctype = "<!DOCTYPE html>\n";
-          let html = htmlReferenceData["elements"]["html"].Content
+          const doctype = "<!DOCTYPE html>\n";
+          const html = htmlReferenceData["elements"]["html"].Content
             ? `<html>\n` +
               htmlReferenceData["elements"]["html"].Content +
               `\n</html>`
             : "";
-          initialContent = doctype + html;
-          nodeData.content = initialContent;
+          nodeData.content = doctype + html;
         }
-        addRunningActions(["processor-updateOpt"]);
-        dispatch(setCurrentFileUid(uid));
-        dispatch(setCurrentFileContent(nodeData.content));
-        dispatch(setUpdateOptions({ parse: true, from: "file" }));
-        setParseFile(true);
-        removeRunningActions(["fileTreeView-read"]);
-        setPrevFileUid(uid);
       }
+
+      dispatch(setCurrentFileUid(uid));
+      dispatch(setCurrentFileContent(nodeData.content));
+
+      addRunningActions(["processor-updateOpt"]);
+      removeRunningActions(["fileTreeView-read"]);
+
+      showCodeView === false && dispatch(setShowCodeView(true));
     },
     [
       addRunningActions,
