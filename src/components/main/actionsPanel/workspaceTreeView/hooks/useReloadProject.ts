@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useRef, useState } from "react";
 
 import { useDispatch, useSelector } from "react-redux";
 
@@ -9,15 +9,7 @@ import {
   currentFileUidSelector,
   fileTreeSelector,
   projectSelector,
-  setCurrentFileUid,
-  setFileTree,
-  updateFileTreeViewState,
 } from "@_redux/main/fileTree";
-import { setNodeTree, setValidNodeTree } from "@_redux/main/nodeTree";
-import { setIframeSrc } from "@_redux/main/stageView";
-
-import { processHandlerObj } from "../helpers";
-import { TFileNodeTreeData } from "@_node/index";
 
 export const useReloadProject = () => {
   const project = useSelector(projectSelector);

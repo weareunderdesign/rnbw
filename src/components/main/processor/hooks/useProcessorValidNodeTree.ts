@@ -1,16 +1,13 @@
 import { useContext, useEffect } from "react";
 
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 import { MainContext } from "@_redux/main";
 import {
   expandNodeTreeNodes,
   focusNodeTreeNode,
-  nodeTreeViewStateSelector,
   selectNodeTreeNodes,
-  validNodeTreeSelector,
 } from "@_redux/main/nodeTree";
-import { updateOptionsSelector } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 
 export const useProcessorValidNodeTree = () => {

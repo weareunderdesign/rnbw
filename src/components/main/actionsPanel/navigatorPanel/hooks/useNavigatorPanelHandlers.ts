@@ -11,7 +11,7 @@ import {
   setActivePanel,
   setNavigatorDropdownType,
 } from "@_redux/main/processor";
-import { isUnsavedProject } from "@_node/file/helper";
+import { isUnsavedProject } from "@_node/file/helpers";
 
 export const useNavigatorPanelHandlers = () => {
   const dispatch = useDispatch();

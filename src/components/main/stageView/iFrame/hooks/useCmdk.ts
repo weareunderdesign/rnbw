@@ -1,13 +1,14 @@
 import { useCallback, useContext } from "react";
-import { TNode, TNodeUid } from "@_node/types";
+
+import { useDispatch, useSelector } from "react-redux";
+
+import { LogAllow } from "@_constants/global";
+import { TNode } from "@_node/types";
+import { AppState } from "@_redux/_root";
 import { MainContext } from "@_redux/main";
+import { setCurrentCommand } from "@_redux/main/cmdk";
 import { getCommandKey } from "@_services/global";
 import { TCmdkKeyMap } from "@_types/main";
-import { useSelector } from "react-redux";
-import { AppState } from "@_redux/_root";
-import { setCurrentCommand } from "@_redux/main/cmdk";
-import { useDispatch } from "react-redux";
-import { LogAllow } from "@_constants/global";
 
 export interface IUseCmdkProps {
   contentEditableUidRef: React.MutableRefObject<string>;

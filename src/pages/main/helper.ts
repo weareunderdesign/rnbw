@@ -1,3 +1,5 @@
+import { useDispatch } from "react-redux";
+
 import {
   clearFileTreeViewState,
   setCurrentFileUid,
@@ -17,7 +19,6 @@ import {
 } from "@_redux/main/nodeTree/event";
 import { setIframeSrc } from "@_redux/main/stageView";
 import { TCmdkReferenceData } from "@_types/main";
-import { useDispatch } from "react-redux";
 
 export const addDefaultCmdkActions = (
   cmdkReferenceData: TCmdkReferenceData,

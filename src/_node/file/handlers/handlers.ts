@@ -3,17 +3,17 @@ import * as parse5 from "parse5";
 import { RainbowAppName } from "@_constants/global";
 import { RootNodeUid } from "@_constants/main";
 
-import { TNodeUid } from "../";
+import { TFileParserResponse, TNodeUid } from "../../";
 import {
   THtmlDomNode,
   THtmlNode,
   THtmlNodeAttribs,
   THtmlNodeTreeData,
   THtmlParserResponse,
-} from "./types";
+} from "../../html/types";
+import { StageNodeIdAttr } from "./constants";
 
-export const StageNodeIdAttr = "data-rnbw-stage-node-id";
-export const parseHtml = (content: string): THtmlParserResponse => {
+const parseHtml = (content: string): THtmlParserResponse => {
   const htmlDom = parse5.parse(content, {
     scriptingEnabled: true,
     sourceCodeLocationInfo: true,
@@ -151,4 +151,10 @@ export const parseHtml = (content: string): THtmlParserResponse => {
     nodeTree,
     htmlDom,
   };
+};
+
+export const fileHandlers: {
+  [ext: string]: (content: string) => TFileParserResponse;
+} = {
+  html: parseHtml,
 };

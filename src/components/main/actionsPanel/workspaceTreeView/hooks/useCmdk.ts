@@ -1,25 +1,22 @@
-import { useCallback } from 'react';
+import { useCallback } from "react";
 
-import {
-  useDispatch,
-  useSelector,
-} from 'react-redux';
+import { useDispatch, useSelector } from "react-redux";
 
-import { AddFileActionPrefix } from '@_constants/main';
+import { AddFileActionPrefix } from "@_constants/main";
 import {
   currentFileUidSelector,
   fileTreeSelector,
   fileTreeViewStateSelector,
-} from '@_redux/main/fileTree';
-import { nodeTreeSelector } from '@_redux/main/nodeTree';
+} from "@_redux/main/fileTree";
+import { nodeTreeSelector } from "@_redux/main/nodeTree";
 import {
   clipboardDataSelector,
   setClipboardData,
-} from '@_redux/main/processor';
-import { TFileNodeType } from '@_types/main';
+} from "@_redux/main/processor";
+import { TFileNodeType } from "@_types/main";
 
-import { useInvalidNodes } from './useInvalidNodes';
-import { useNodeActionsHandler } from './useNodeActionsHandler';
+import { useInvalidNodes } from "./useInvalidNodes";
+import { useNodeActionsHandler } from "./useNodeActionsHandler";
 
 export const useCmdk = (openFileUid: React.MutableRefObject<string>) => {
   const dispatch = useDispatch();

@@ -60,6 +60,7 @@ export type TProjectLoaderResponse = {
   deletedUids: TNodeUid[];
   deletedUidsObj: { [uid: TNodeUid]: true };
 };
+
 // --------------------
 export type TFile = {
   uid: TNodeUid;

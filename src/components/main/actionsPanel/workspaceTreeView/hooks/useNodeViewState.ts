@@ -1,16 +1,10 @@
-import {
-  useCallback,
-  useContext,
-} from 'react';
+import { useCallback, useContext } from "react";
 
-import {
-  useDispatch,
-  useSelector,
-} from 'react-redux';
+import { useDispatch, useSelector } from "react-redux";
 
-import { getValidNodeUids } from '@_node/apis';
-import { TNodeUid } from '@_node/types';
-import { MainContext } from '@_redux/main';
+import { getValidNodeUids } from "@_node/apis";
+import { TNodeUid } from "@_node/types";
+import { MainContext } from "@_redux/main";
 import {
   collapseFileTreeNodes,
   currentFileUidSelector,
@@ -20,9 +14,9 @@ import {
   focusFileTreeNode,
   projectSelector,
   selectFileTreeNodes,
-} from '@_redux/main/fileTree';
+} from "@_redux/main/fileTree";
 
-import { useInvalidNodes } from './';
+import { useInvalidNodes } from "./";
 
 export const useNodeViewState = () => {
   const dispatch = useDispatch();

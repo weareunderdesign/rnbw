@@ -1,15 +1,15 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
+
 import { debounce } from "lodash";
 import { editor, IPosition } from "monaco-editor";
 import morphdom from "morphdom";
 import * as parse5 from "parse5";
 import { useDispatch, useSelector } from "react-redux";
 
-import { styles } from "@_components/main/stageView/iFrame/styles";
 import { DefaultTabSize, RootNodeUid } from "@_constants/main";
 import { getSubNodeUidsByBfs } from "@_node/apis";
-import { TFileNodeData } from "@_node/file";
-import { parseHtml, StageNodeIdAttr } from "@_node/html";
+import { parseFile, TFileNodeData } from "@_node/file";
+import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { setCodeEditing, setCodeViewTabSize } from "@_redux/main/codeView";
@@ -25,6 +25,7 @@ import {
   setNodeTree,
 } from "@_redux/main/nodeTree";
 import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
+
 import { CodeSelection } from "../types";
 
 function getLanguageFromExtension(extension: string) {
@@ -216,7 +217,7 @@ export default function useEditor() {
       const iframe: any = document.getElementById("iframeId");
       const iframeDoc = iframe.contentDocument;
       const iframeHtml = iframeDoc.getElementsByTagName("html")[0];
-      const { htmlDom, nodeTree } = parseHtml(value);
+      const { htmlDom, nodeTree } = parseFile("html", value);
 
       let updatedHtml = null;
       if (!htmlDom) return;

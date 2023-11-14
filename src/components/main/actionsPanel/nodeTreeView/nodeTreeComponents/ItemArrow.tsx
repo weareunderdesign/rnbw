@@ -1,17 +1,8 @@
-import React, {
-  FC,
-  useCallback,
-} from 'react';
+import React, { FC, useCallback } from "react";
 
-import {
-  TreeItem,
-  TreeItemRenderContext,
-} from 'react-complex-tree';
+import { TreeItem, TreeItemRenderContext } from "react-complex-tree";
 
-import {
-  SVGIconI,
-  SVGIconII,
-} from '@_components/common';
+import { SVGIconI, SVGIconII } from "@_components/common";
 
 interface ItemArrowProps {
   item: TreeItem<any>;

@@ -6,7 +6,7 @@ import {
   removeFileSystem,
   TFileNodeData,
   writeFile,
-} from '@_node/file';
+} from "@_node/file";
 
 export const moveDirectory = async (
   orgPath: string,

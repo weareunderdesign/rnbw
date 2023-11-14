@@ -5,20 +5,21 @@ import { useDispatch, useSelector } from "react-redux";
 import { useEditor } from "@_components/main/codeView/hooks";
 import { RootNodeUid } from "@_constants/main";
 import { TFileNodeData } from "@_node/file";
-import { StageNodeIdAttr, THtmlNodeData } from "@_node/html";
+import { StageNodeIdAttr } from "@_node/file/handlers/constants";
+import { THtmlNodeData } from "@_node/html";
 import { TNode, TNodeUid } from "@_node/types";
-import { MainContext } from "@_redux/main";
-import { getCommandKey } from "@_services/global";
-import { TCmdkKeyMap } from "@_types/main";
-
-import { handleElementClick, openNewPage } from "../helpers";
-import { useSetSelectItem } from "./useSetSelectItem";
 import { AppState } from "@_redux/_root";
+import { MainContext } from "@_redux/main";
 import {
   expandFileTreeNodes,
   setInitialFileUidToOpen,
 } from "@_redux/main/fileTree";
 import { setNavigatorDropdownType } from "@_redux/main/processor";
+import { getCommandKey } from "@_services/global";
+import { TCmdkKeyMap } from "@_types/main";
+
+import { handleElementClick, openNewPage } from "../helpers";
+import { useSetSelectItem } from "./useSetSelectItem";
 
 export interface IUseTextEditingProps {
   contentEditableUidRef: React.MutableRefObject<string>;

@@ -1,10 +1,11 @@
 import { RootNodeUid } from "@_constants/main";
+
 import {
   TFileHandlerInfoObj,
   TFileNodeData,
   TFileNodeTreeData,
   TNodeUid,
-} from "..";
+} from "../";
 
 export const sortFilesByASC = (handlerObj: TFileHandlerInfoObj) => {
   // sort by ASC directory/file

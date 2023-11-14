@@ -1,8 +1,10 @@
-import { useRef, useEffect, useContext } from "react";
-import { editor } from "monaco-editor";
+import { useContext, useEffect, useRef } from "react";
+
 import { debounce } from "lodash";
-import { MainContext } from "@_redux/main";
+import { editor } from "monaco-editor";
 import { useDispatch } from "react-redux";
+
+import { MainContext } from "@_redux/main";
 import { setActivePanel } from "@_redux/main/processor";
 
 const resetEditorLayout = (

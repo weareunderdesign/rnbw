@@ -20,7 +20,6 @@ import { LogAllow } from "@_constants/global";
 import {
   AddActionPrefix,
   DefaultProjectPath,
-  ParsableFileTypes,
   RecentProjectCount,
   RootNodeUid,
 } from "@_constants/main";
@@ -31,11 +30,9 @@ import {
   loadIDBProject,
   loadLocalProject,
   TFileHandlerCollection,
-  TFileNode,
   TFileNodeData,
-  TFileNodeTreeData,
 } from "@_node/file";
-import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
+import { TNodeUid } from "@_node/types";
 import { setOsType, setTheme } from "@_redux/global";
 import { MainContext } from "@_redux/main";
 import {
@@ -46,7 +43,6 @@ import {
   setCurrentCommand,
 } from "@_redux/main/cmdk";
 import {
-  setCurrentFileUid,
   setDoingFileAction,
   setFileTree,
   setInitialFileUidToOpen,
@@ -55,28 +51,15 @@ import {
   TProject,
   TProjectContext,
 } from "@_redux/main/fileTree";
-import {
-  FileTree_Event_ClearActionType,
-  setFileAction,
-} from "@_redux/main/fileTree/event";
-import {
-  setNewFocusedNodeUid,
-  setNodeTree,
-  setValidNodeTree,
-} from "@_redux/main/nodeTree";
-import {
-  NodeTree_Event_ClearActionType,
-  setCurrentFileContent,
-} from "@_redux/main/nodeTree/event";
+import { setFileAction } from "@_redux/main/fileTree/event";
+import { setNewFocusedNodeUid } from "@_redux/main/nodeTree";
 import {
   setDidUndo,
-  setFavicon,
   setNavigatorDropdownType,
   setShowActionsPanel,
   setShowCodeView,
   setUpdateOptions,
 } from "@_redux/main/processor";
-import { setIframeSrc } from "@_redux/main/stageView";
 import { useAppState } from "@_redux/useAppState";
 // @ts-ignore
 import cmdkRefActions from "@_ref/cmdk.ref/Actions.csv";
