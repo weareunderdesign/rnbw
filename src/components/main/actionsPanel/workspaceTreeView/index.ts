@@ -1,4 +1,4 @@
-import WorkspaceTreeView from "./WorkspaceTreeView.1";
+import WorkspaceTreeView from "./WorkspaceTreeView";
 
 export default WorkspaceTreeView;
 

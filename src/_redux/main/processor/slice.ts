@@ -15,8 +15,8 @@ const processorReducerInitialState: TProcessorReducerState = {
   activePanel: "none",
   clipboardData: null,
 
-  showActionsPanel: false,
-  showCodeView: false,
+  showActionsPanel: true,
+  showCodeView: true,
 
   didUndo: false,
   didRedo: false,

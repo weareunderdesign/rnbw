@@ -45,6 +45,7 @@ import {
 import { useInvalidNodes } from "./useInvalidNodes";
 import { useReloadProject } from "./useReloadProject";
 import { useTemporaryNodes } from "./useTemporaryNodes";
+import { clearNodeTreeViewState } from "@_redux/main/nodeTree";
 
 export const useNodeActionsHandler = (
   openFileUid: React.MutableRefObject<string>,
@@ -523,6 +524,7 @@ export const useNodeActionsHandler = (
         return;
       }
 
+      dispatch(clearNodeTreeViewState());
       dispatch({ type: NodeTree_Event_ClearActionType });
 
       const nodeData = node.data as TFileNodeData;

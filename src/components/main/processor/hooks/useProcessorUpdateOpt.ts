@@ -26,14 +26,12 @@ export const useProcessorUpdateOpt = () => {
   const {
     fileTree,
     currentFileUid,
+    prevFileUid,
+    currentFileContent,
+
     nodeTree,
     nFocusedItem,
-    currentFileContent,
     updateOptions,
-
-    initialFileUidToOpen,
-
-    osType,
   } = useAppState();
   const {
     // global action
@@ -46,26 +44,42 @@ export const useProcessorUpdateOpt = () => {
   } = useContext(MainContext);
   // -------------------------------------------------------------- sync --------------------------------------------------------------
   useEffect(() => {
-    const file = fileTree[currentFileUid];
+    const file = structuredClone(fileTree[currentFileUid]);
     if (!file) return;
+    const fileData = file.data;
 
-    console.log({ currentFileContent, currentFileUid, file });
+    console.log({ file, currentFileUid, currentFileContent });
 
     const monacoEditor = monacoEditorRef.current;
+    if (!monacoEditor) return;
+
+    const { nodeTree } = handleFileUpdate(fileData);
+    dispatch(setNodeTree(nodeTree));
+    addRunningActions(["processor-nodeTree"]);
+
+    // update idb
+    (async () => {
+      dispatch(setDoingFileAction(true));
+      try {
+        const previewPath = getPreViewPath(fileTree, file, fileData);
+        await writeFile(previewPath, fileData.contentInApp as string);
+        if (fileData.ext === "html") {
+          dispatch(setIframeSrc(`rnbw${previewPath}`));
+        }
+      } catch (err) {}
+      dispatch(setDoingFileAction(false));
+    })();
+
+    if (prevFileUid !== currentFileUid) {
+      LogAllow && console.log("need to refresh iframe");
+      dispatch(setNeedToReloadIframe(true));
+    }
   }, [currentFileContent]);
 
   useEffect(() => {
     if (!updateOptions) return;
 
-    console.log({
-      fileTree,
-      initialFileUidToOpen,
-      currentFileUid,
-      nodeTree,
-      nFocusedItem,
-      currentFileContent,
-      updateOptions,
-    });
+    console.log("ORIGINAL PROCESSOR UPDATE");
 
     const monacoEditor = monacoEditorRef.current;
 
