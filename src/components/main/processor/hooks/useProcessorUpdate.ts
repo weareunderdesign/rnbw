@@ -40,7 +40,6 @@ export const useProcessorUpdate = () => {
 
   // node tree
   useEffect(() => {
-    console.log({ selectedNodeUids });
     if (didRedo || didUndo) {
       dispatch(selectNodeTreeNodes(selectedNodeUids));
       dispatch(
