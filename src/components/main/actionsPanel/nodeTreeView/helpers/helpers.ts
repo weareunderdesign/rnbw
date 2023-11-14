@@ -70,6 +70,7 @@ export const getCopiedContent = (uid: TNodeUid, iframe: any) => {
   innerElements.forEach((element) => {
     if (element.hasAttribute(StageNodeIdAttr)) {
       element.removeAttribute(StageNodeIdAttr);
+      element?.removeAttribute("rnbwdev-rnbw-element-hover");
     }
   });
 
