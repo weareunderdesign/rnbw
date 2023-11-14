@@ -240,7 +240,14 @@ export default function useEditor() {
               fromEl.nodeName === "STYLE" ||
               fromEl.nodeName === "LINK"
             ) {
-              return false;
+              if (fromEl.outerHTML === toEl.outerHTML) {
+                return false;
+              } else {
+             
+                let fromOuter = fromEl.outerHTML;
+                let toOuter = toEl.outerHTML;
+                return true;
+              }
             }
             const fromElRnbwId = fromEl.getAttribute(StageNodeIdAttr);
             nodeUidToFocus = configs?.matchIds?.[0] || "";
