@@ -15,6 +15,8 @@ import { getPreViewPath, handleFileUpdate } from "../helpers";
 export const useProcessorUpdateOpt = () => {
   const dispatch = useDispatch();
   const {
+    fileAction,
+
     fileTree,
     currentFileUid,
     prevFileUid,
@@ -23,7 +25,8 @@ export const useProcessorUpdateOpt = () => {
     didRedo,
   } = useAppState();
   const { addRunningActions, monacoEditorRef } = useContext(MainContext);
-  // -------------------------------------------------------------- sync --------------------------------------------------------------
+
+  // -------- sync --------
   useEffect(() => {
     const file = structuredClone(fileTree[currentFileUid]);
     if (!file) return;
@@ -56,4 +59,6 @@ export const useProcessorUpdateOpt = () => {
       dispatch(setNeedToReloadIframe(true));
     }
   }, [currentFileContent]);
+
+  useEffect(() => {}, [fileAction]);
 };
