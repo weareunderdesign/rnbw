@@ -21,7 +21,7 @@ export const useProcessorValidNodeTree = () => {
     nSelectedItems,
     newFocusedNodeUid,
   } = useAppState();
-  const { removeRunningActions } = useContext(MainContext);
+  const { addRunningActions, removeRunningActions } = useContext(MainContext);
 
   const isFirstOpenForCurrentFile = useRef(false);
   useEffect(() => {
@@ -29,6 +29,8 @@ export const useProcessorValidNodeTree = () => {
   }, [currentFileUid]);
 
   useEffect(() => {
+    addRunningActions(["processor-validNodeTree"]);
+
     if (isFirstOpenForCurrentFile.current) {
       // when a new file is opened
       const uids = Object.keys(validNodeTree);
@@ -44,6 +46,7 @@ export const useProcessorValidNodeTree = () => {
       dispatch(expandNodeTreeNodes([..._expandedItems]));
       dispatch(selectNodeTreeNodes([..._selectedItems, newFocusedNodeUid]));
     }
+
     removeRunningActions(["processor-validNodeTree"]);
   }, [validNodeTree]);
 };

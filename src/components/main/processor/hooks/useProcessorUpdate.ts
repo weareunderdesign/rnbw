@@ -6,14 +6,18 @@ import { LogAllow } from "@_constants/global";
 import { writeFile } from "@_node/file";
 import { MainContext } from "@_redux/main";
 import { setDoingFileAction } from "@_redux/main/fileTree";
-import { focusNodeTreeNode, setNodeTree } from "@_redux/main/nodeTree";
+import {
+  focusNodeTreeNode,
+  selectNodeTreeNodes,
+  setNodeTree,
+} from "@_redux/main/nodeTree";
 import { setIframeSrc, setNeedToReloadIframe } from "@_redux/main/stageView";
 import { useAppState } from "@_redux/useAppState";
 
 import { getPreViewPath, handleFileUpdate } from "../helpers";
 import { setDidRedo, setDidUndo } from "@_redux/main/processor";
 
-export const useProcessorUpdateOpt = () => {
+export const useProcessorUpdate = () => {
   const dispatch = useDispatch();
   const {
     fileAction,
@@ -23,41 +27,43 @@ export const useProcessorUpdateOpt = () => {
     prevFileUid,
     currentFileContent,
 
-    nSelectedItems,
+    selectedNodeUids,
 
     didUndo,
     didRedo,
   } = useAppState();
-  const { addRunningActions, monacoEditorRef } = useContext(MainContext);
+  const { addRunningActions, removeRunningActions, monacoEditorRef } =
+    useContext(MainContext);
 
   // file tree
   useEffect(() => {}, [fileAction]);
 
   // node tree
   useEffect(() => {
+    console.log({ selectedNodeUids });
     if (didRedo || didUndo) {
+      dispatch(selectNodeTreeNodes(selectedNodeUids));
       dispatch(
         focusNodeTreeNode(
-          nSelectedItems.length > 0
-            ? nSelectedItems[nSelectedItems.length - 1]
+          selectedNodeUids.length > 0
+            ? selectedNodeUids[selectedNodeUids.length - 1]
             : "",
         ),
       );
+    } else {
     }
-  }, [nSelectedItems]);
+  }, [selectedNodeUids]);
   useEffect(() => {
-    const file = structuredClone(fileTree[currentFileUid]);
-    if (!file) return;
-    const fileData = file.data;
-
-    console.log({ file, currentFileUid, currentFileContent, didUndo, didRedo });
-
     const monacoEditor = monacoEditorRef.current;
-    if (!monacoEditor) return;
+    if (!fileTree[currentFileUid] || !monacoEditor) return;
+
+    addRunningActions(["processor-update"]);
+
+    const file = structuredClone(fileTree[currentFileUid]);
+    const fileData = file.data;
 
     const { nodeTree } = handleFileUpdate(fileData);
     dispatch(setNodeTree(nodeTree));
-    addRunningActions(["processor-nodeTree"]);
 
     // update idb
     (async () => {
@@ -76,6 +82,8 @@ export const useProcessorUpdateOpt = () => {
       LogAllow && console.log("need to refresh iframe");
       dispatch(setNeedToReloadIframe(true));
     }
+
+    removeRunningActions(["processor-update"]);
   }, [currentFileContent]);
 
   // processor

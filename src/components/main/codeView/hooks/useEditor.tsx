@@ -296,7 +296,6 @@ export default function useEditor() {
         dispatch(setDoingFileAction(false));
 
         const _file = structuredClone(fileTree[currentFileUid]) as TNode;
-        addRunningActions(["processor-updateOpt"]);
         const fileData = _file.data as TFileNodeData;
         dispatch(setCurrentFileContent(codeContentRef.current));
 
