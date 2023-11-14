@@ -6,11 +6,12 @@ import { LogAllow } from "@_constants/global";
 import { writeFile } from "@_node/file";
 import { MainContext } from "@_redux/main";
 import { setDoingFileAction } from "@_redux/main/fileTree";
-import { setNodeTree } from "@_redux/main/nodeTree";
+import { focusNodeTreeNode, setNodeTree } from "@_redux/main/nodeTree";
 import { setIframeSrc, setNeedToReloadIframe } from "@_redux/main/stageView";
 import { useAppState } from "@_redux/useAppState";
 
 import { getPreViewPath, handleFileUpdate } from "../helpers";
+import { setDidRedo, setDidUndo } from "@_redux/main/processor";
 
 export const useProcessorUpdateOpt = () => {
   const dispatch = useDispatch();
@@ -21,12 +22,29 @@ export const useProcessorUpdateOpt = () => {
     currentFileUid,
     prevFileUid,
     currentFileContent,
+
+    nSelectedItems,
+
     didUndo,
     didRedo,
   } = useAppState();
   const { addRunningActions, monacoEditorRef } = useContext(MainContext);
 
-  // -------- sync --------
+  // file tree
+  useEffect(() => {}, [fileAction]);
+
+  // node tree
+  useEffect(() => {
+    if (didRedo || didUndo) {
+      dispatch(
+        focusNodeTreeNode(
+          nSelectedItems.length > 0
+            ? nSelectedItems[nSelectedItems.length - 1]
+            : "",
+        ),
+      );
+    }
+  }, [nSelectedItems]);
   useEffect(() => {
     const file = structuredClone(fileTree[currentFileUid]);
     if (!file) return;
@@ -60,5 +78,9 @@ export const useProcessorUpdateOpt = () => {
     }
   }, [currentFileContent]);
 
-  useEffect(() => {}, [fileAction]);
+  // processor
+  useEffect(() => {
+    didUndo && dispatch(setDidUndo(false));
+    didRedo && dispatch(setDidRedo(false));
+  }, [didUndo, didRedo]);
 };
