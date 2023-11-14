@@ -19,7 +19,6 @@ import {
   setNewFocusedNodeUid,
   validNodeTreeSelector,
 } from "@_redux/main/nodeTree";
-import { updateOptionsSelector } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 import { Editor, loader } from "@monaco-editor/react";
 
@@ -58,7 +57,6 @@ export default function CodeView(props: CodeViewProps) {
   const { editorWrapperRef, onPanelClick } = useEditorWrapper();
   //-----------------------------------------
   const validNodeTree = useSelector(validNodeTreeSelector);
-  const updateOptions = useSelector(updateOptionsSelector);
   const isFirst = useRef<boolean>(true);
 
   const previewDiv = useRef(null);
@@ -82,8 +80,6 @@ export default function CodeView(props: CodeViewProps) {
     const _file = fileTree[currentFileUid];
 
     if (!_file) return;
-
-    if (!updateOptions || updateOptions.from === "code") return;
 
     const fileData = _file.data as TFileNodeData;
     const extension = fileData.ext;
@@ -195,7 +191,6 @@ export default function CodeView(props: CodeViewProps) {
   useEffect(() => {
     if (focusedNode) {
       if (focusedNode.uid === focusedItemRef.current) return;
-      if (!updateOptions || updateOptions.from === "hms") return;
       // expand path to the uid
       const _expandedItems: TNodeUid[] = [];
       let node = validNodeTree[focusedNode.uid];

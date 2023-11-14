@@ -138,7 +138,6 @@ export default function useEditor() {
     monacoRef.current = editor;
     setMonacoEditorRef(editor);
 
-    // dispatch(setUpdateOptions({ parse: true, from: "file" }));
     editor.onDidChangeCursorPosition((event) => {
       if (event.source === "mouse") {
         updateSelection();

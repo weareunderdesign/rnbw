@@ -58,7 +58,6 @@ export const useAppState = () => {
         showCodeView,
         didUndo,
         didRedo,
-        updateOptions,
       },
       cmdk: {
         cmdkOpen,
@@ -142,8 +141,6 @@ export const useAppState = () => {
 
     didUndo,
     didRedo,
-
-    updateOptions,
 
     cmdkOpen,
     cmdkPages,

@@ -58,7 +58,6 @@ import {
   setNavigatorDropdownType,
   setShowActionsPanel,
   setShowCodeView,
-  setUpdateOptions,
 } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 // @ts-ignore
@@ -155,8 +154,6 @@ export default function MainPage() {
 
     didUndo,
     didRedo,
-
-    updateOptions,
 
     cmdkOpen,
     cmdkPages,
@@ -1178,7 +1175,6 @@ export default function MainPage() {
     dispatch(setDidUndo(true));
 
     dispatch({ type: "main/undo" });
-    dispatch(setUpdateOptions({ parse: true, from: "hms" }));
   }, [
     doingAction,
     iframeLoading,
@@ -1206,7 +1202,6 @@ export default function MainPage() {
 
     dispatch(setFileAction(fileAction));
     dispatch({ type: "main/redo" });
-    dispatch(setUpdateOptions({ parse: true, from: "hms" }));
   }, [
     doingAction,
     iframeLoading,

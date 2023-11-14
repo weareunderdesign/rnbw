@@ -125,8 +125,6 @@ export default function WorkspaceTreeView() {
     didUndo,
     didRedo,
 
-    updateOptions,
-
     cmdkOpen,
     cmdkPages,
     currentCmdkPage,

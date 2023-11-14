@@ -20,7 +20,6 @@ export const useProcessorValidNodeTree = () => {
     nExpandedItems,
     nSelectedItems,
     newFocusedNodeUid,
-    updateOptions,
   } = useAppState();
   const { removeRunningActions } = useContext(MainContext);
 

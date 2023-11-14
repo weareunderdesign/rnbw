@@ -18,7 +18,6 @@ import { THtmlNodeData, THtmlPageSettings } from "@_node/html";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import { TOsType } from "@_redux/global";
 import { TProject } from "@_redux/main/fileTree";
-import { TUpdateOptions } from "@_redux/main/processor";
 import { TCodeChange, TFileInfo } from "@_types/main";
 
 export const saveFileContent = async (
@@ -313,23 +312,11 @@ export const detectSeedNodeChanges = (
 };
 export const getFileData = (params: {
   file: TFileNode;
-  updateOption: TUpdateOptions;
   nodeTree: TNodeTreeData;
 }) => {
-  const { file, updateOption, nodeTree } = params;
+  const { file, nodeTree } = params;
   const fileData = file.data as TFileNodeData;
 
-  if (updateOption?.from === "node") {
-    // TODO: remove or keep it
-    // const serializedRes = serializeFile(fileData.ext, nodeTree);
-    // if (fileData.ext === "html") {
-    //   const { html, htmlInApp } = serializedRes as THtmlNodeData;
-    //   // update ffTree
-    //   fileData.content = html;
-    //   fileData.contentInApp = htmlInApp;
-    //   fileData.changed = fileData.content !== fileData.orgContent;
-    // }
-  }
   return fileData;
 };
 

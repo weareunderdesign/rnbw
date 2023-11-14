@@ -28,9 +28,7 @@ import {
   navigatorDropdownTypeSelector,
   setNavigatorDropdownType,
   setShowCodeView,
-  setUpdateOptions,
   showCodeViewSelector,
-  updateOptionsSelector,
 } from "@_redux/main/processor";
 import { verifyFileHandlerPermission } from "@_services/main";
 import { TFileNodeType } from "@_types/main";
@@ -59,7 +57,6 @@ export const useNodeActionsHandler = (
   const navigatorDropdownType = useSelector(navigatorDropdownTypeSelector);
 
   const showCodeView = useSelector(showCodeViewSelector);
-  const updateOptions = useSelector(updateOptionsSelector);
 
   const {
     // global action

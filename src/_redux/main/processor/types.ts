@@ -12,8 +12,6 @@ export type TProcessorReducerState = {
 
   didUndo: boolean;
   didRedo: boolean;
-
-  updateOptions: TUpdateOptions | null;
 };
 
 export type TNavigatorDropdownType = "workspace" | "project" | null;
@@ -37,10 +35,4 @@ export type TClipboardData = {
   data: TNode[];
   fileUid: TNodeUid;
   prevNodeTree: TNodeTreeData;
-};
-
-export type TUpdateOptions = {
-  parse: boolean | null;
-  from: TPanelContext;
-  isRedoUndo?: boolean;
 };
