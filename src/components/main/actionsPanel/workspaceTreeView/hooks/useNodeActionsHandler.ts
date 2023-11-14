@@ -548,7 +548,6 @@ export const useNodeActionsHandler = (
       dispatch(setCurrentFileUid(uid));
       dispatch(setCurrentFileContent(nodeData.content));
 
-      addRunningActions(["processor-updateOpt"]);
       removeRunningActions(["fileTreeView-read"]);
 
       showCodeView === false && dispatch(setShowCodeView(true));
