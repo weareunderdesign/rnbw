@@ -70,8 +70,6 @@ export type TMainContext = {
   // non-html editable
   parseFileFlag: boolean;
   setParseFile: (parseFile: boolean) => void;
-  prevFileUid: string;
-  setPrevFileUid: (uid: string) => void;
 };
 
 export type IEditorRef = React.RefObject<editor.IStandaloneCodeEditor | null>;

@@ -18,6 +18,7 @@ import {
 import { setLinkToOpen } from "@_redux/main/stageView";
 
 import { useSetSelectItem, useTextEditing } from "./";
+import { useAppState } from "@_redux/useAppState";
 
 export interface IUseMouseEventsProps {
   externalDblclick: React.MutableRefObject<boolean>;
@@ -67,6 +68,7 @@ export const useMouseEvents = ({
   });
 
   const dispatch = useDispatch();
+  const { prevFileUid } = useAppState();
   const {
     nodeTree: {
       nodeTreeViewState: { focusedItem },
@@ -81,7 +83,6 @@ export const useMouseEvents = ({
     // toasts
     parseFileFlag,
     setParseFile,
-    prevFileUid,
   } = useContext(MainContext);
 
   const { setFocusedSelectedItems } = useSetSelectItem({

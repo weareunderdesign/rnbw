@@ -21,12 +21,13 @@ import {
 } from "@_redux/main/nodeTree";
 import { NodeTree_Event_ClearActionType } from "@_redux/main/nodeTree/event";
 import { setNavigatorDropdownType } from "@_redux/main/processor";
+import { useAppState } from "@_redux/useAppState";
 
 export function useNodeViewState(focusItemValue: TNodeUid | null) {
   const dispatch = useDispatch();
 
-  const fileTree = useSelector(fileTreeSelector);
-  const validNodeTree = useSelector(validNodeTreeSelector);
+  const { fileTree, validNodeTree, prevFileUid } = useAppState();
+
   const { addRunningActions, removeRunningActions } = useContext(MainContext);
 
   const { focusedItem, selectedItems, selectedItemsObj } = useSelector(
@@ -36,7 +37,6 @@ export function useNodeViewState(focusItemValue: TNodeUid | null) {
     // toasts
     parseFileFlag,
     setParseFile,
-    prevFileUid,
   } = useContext(MainContext);
 
   const cb_focusNode = useCallback(

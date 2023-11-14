@@ -17,6 +17,7 @@ import {
   projectSelector,
   setCurrentFileUid,
   setFileTree,
+  setPrevFileUid,
 } from "@_redux/main/fileTree";
 import { setFileAction, TFileAction } from "@_redux/main/fileTree/event";
 import {
@@ -70,7 +71,6 @@ export const useNodeActionsHandler = (
     // cmdk
     // non-parse file
     setParseFile,
-    setPrevFileUid,
   } = useContext(MainContext);
 
   const { focusedItem, expandedItemsObj, selectedItems } = useSelector(
@@ -528,7 +528,7 @@ export const useNodeActionsHandler = (
       const nodeData = node.data as TFileNodeData;
 
       if (ParsableFileTypes[nodeData.ext]) {
-        setPrevFileUid(currentFileUid);
+        dispatch(setPrevFileUid(currentFileUid));
 
         // set initial content of the html if file content is empty
         if (

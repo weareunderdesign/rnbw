@@ -242,7 +242,6 @@ export default function MainPage() {
   const [codeChanges, setCodeChanges] = useState<TCodeChange[]>([]);
 
   const [parseFileFlag, setParseFile] = useState<boolean>(true);
-  const [prevFileUid, setPrevFileUid] = useState<string>("");
 
   const guideRef = useRef<HTMLAnchorElement>(null);
   // TODO End
@@ -1420,8 +1419,6 @@ export default function MainPage() {
           // non html editable
           parseFileFlag,
           setParseFile,
-          prevFileUid,
-          setPrevFileUid,
           // close all panel
           closeAllPanel,
           monacoEditorRef,
