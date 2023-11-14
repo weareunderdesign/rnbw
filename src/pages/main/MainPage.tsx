@@ -1060,14 +1060,14 @@ export default function MainPage() {
               _preferPolyfill: false,
               mode: "readwrite",
             } as CustomDirectoryPickerOptions);
-            clearProjectSession();
+            clearProjectSession(dispatch);
             await importProject(fsType, projectHandle);
           } catch (err) {
             reject(err);
           }
         } else if (fsType === "idb") {
           try {
-            clearProjectSession();
+            clearProjectSession(dispatch);
             await importProject(fsType, null);
           } catch (err) {
             reject(err);

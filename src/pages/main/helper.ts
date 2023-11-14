@@ -19,6 +19,8 @@ import {
 } from "@_redux/main/nodeTree/event";
 import { setIframeSrc } from "@_redux/main/stageView";
 import { TCmdkReferenceData } from "@_types/main";
+import { Dispatch } from "react";
+import { AnyAction } from "@reduxjs/toolkit";
 
 export const addDefaultCmdkActions = (
   cmdkReferenceData: TCmdkReferenceData,
@@ -93,9 +95,7 @@ export const addDefaultCmdkActions = (
   };
 };
 
-export const clearProjectSession = () => {
-  const dispatch = useDispatch();
-
+export const clearProjectSession = (dispatch: Dispatch<AnyAction>) => {
   dispatch(
     setProject({
       context: "idb",
@@ -111,12 +111,10 @@ export const clearProjectSession = () => {
   dispatch(clearFileTreeViewState());
   dispatch({ type: FileTree_Event_ClearActionType });
 
-  clearFileSession();
+  clearFileSession(dispatch);
 };
 
-export const clearFileSession = () => {
-  const dispatch = useDispatch();
-
+export const clearFileSession = (dispatch: Dispatch<AnyAction>) => {
   dispatch(setNodeTree({}));
   dispatch(setValidNodeTree({}));
   dispatch(clearNodeTreeViewState());
