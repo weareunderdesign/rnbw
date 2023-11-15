@@ -249,7 +249,7 @@ export const useMouseEvents = ({
         }, 100);
       } else {
         externalDblclick.current = true;
-        handleLinkTag(ele);
+        // handleLinkTag(ele);
 
         let _uid: TNodeUid | null = ele.getAttribute(StageNodeIdAttr);
         let isWC = false;
