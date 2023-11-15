@@ -1,4 +1,4 @@
 export { useProcessorNodeTree } from "./useProcessorNodeTree";
-export { useProcessorUpdateOpt } from "./useProcessorUpdateOpt";
+export { useProcessorUpdate } from "./useProcessorUpdate";
 export { useProcessorValidNodeTree } from "./useProcessorValidNodeTree";
 export { useSaveCommand } from "./useSaveCommand";

@@ -7,7 +7,7 @@ import React, {
 } from "react";
 
 import cx from "classnames";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 import { SVGIconI, TreeView } from "@_components/common";
 import { TreeViewData } from "@_components/common/treeView/types";
@@ -15,23 +15,13 @@ import { RootNodeUid } from "@_constants/main";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { TFileNodeData, THtmlNodeData } from "@_node/index";
 import { TNode, TNodeUid } from "@_node/types";
-import { osTypeSelector } from "@_redux/global";
 import { MainContext } from "@_redux/main";
 import {
-  currentFileUidSelector,
   expandFileTreeNodes,
-  fileTreeSelector,
-  fileTreeViewStateSelector,
   setInitialFileUidToOpen,
 } from "@_redux/main/fileTree";
+import { setHoveredNodeUid } from "@_redux/main/nodeTree";
 import {
-  hoveredNodeUidSelector,
-  nodeTreeViewStateSelector,
-  setHoveredNodeUid,
-  validNodeTreeSelector,
-} from "@_redux/main/nodeTree";
-import {
-  navigatorDropdownTypeSelector,
   setActivePanel,
   setNavigatorDropdownType,
 } from "@_redux/main/processor";
@@ -46,37 +36,32 @@ import { Container } from "./nodeTreeComponents/Container";
 import { DragBetweenLine } from "./nodeTreeComponents/DragBetweenLine";
 import { ItemArrow } from "./nodeTreeComponents/ItemArrow";
 import { ItemTitle } from "./nodeTreeComponents/ItemTitle";
+import { useAppState } from "@_redux/useAppState";
 
 const AutoExpandDelay = 1 * 1000;
 
 const NodeTreeView = () => {
   const dispatch = useDispatch();
-
-  const osType = useSelector(osTypeSelector);
-  const navigatorDropdownType = useSelector(navigatorDropdownTypeSelector);
-
-  const fileTree = useSelector(fileTreeSelector);
-  const currentFileUid = useSelector(currentFileUidSelector);
-
-  const { focusedItem, expandedItems, selectedItems } = useSelector(
-    nodeTreeViewStateSelector,
-  );
-
-  const { expandedItemsObj } = useSelector(fileTreeViewStateSelector);
-  const hoveredNodeUid = useSelector(hoveredNodeUidSelector);
-
-  const validNodeTree = useSelector(validNodeTreeSelector);
-
   const {
-    addRunningActions,
+    osType,
+    navigatorDropdownType,
+    fileTree,
+    currentFileUid,
 
-    htmlReferenceData,
-    // toasts
-  } = useContext(MainContext);
-  // -------------------------------------------------------------- sync --------------------------------------------------------------
+    validNodeTree,
+
+    nFocusedItem: focusedItem,
+    nExpandedItems: expandedItems,
+    nSelectedItems: selectedItems,
+    hoveredNodeUid,
+
+    fExpandedItemsObj: expandedItemsObj,
+  } = useAppState();
+  const { addRunningActions, htmlReferenceData } = useContext(MainContext);
+
+  // ------ sync ------
   // outline the hovered item
   const hoveredItemRef = useRef<TNodeUid>(hoveredNodeUid);
-
   useEffect(() => {
     if (hoveredItemRef.current === hoveredNodeUid) return;
 
@@ -100,7 +85,6 @@ const NodeTreeView = () => {
 
   // scroll to the focused item
   const focusedItemRef = useRef<TNodeUid>(focusedItem);
-
   useEffect(() => {
     if (focusedItemRef.current === focusedItem) return;
 
@@ -159,14 +143,12 @@ const NodeTreeView = () => {
   // cmdk
   useCmdk();
 
-  // -------------------------------------------------------------- own --------------------------------------------------------------
   const onPanelClick = useCallback(() => {
     dispatch(setActivePanel("node"));
-
-    navigatorDropdownType !== null && dispatch(setNavigatorDropdownType(null));
+    navigatorDropdownType && dispatch(setNavigatorDropdownType(null));
   }, [navigatorDropdownType]);
 
-  // ------------------------------------------------------------- open wc -------------------------------------------------------------
+  // open web component
   const openWebComponent = useCallback(
     (item: TNodeUid) => {
       // check the element is wc
@@ -249,12 +231,15 @@ const NodeTreeView = () => {
     isDragging.current,
   );
 
-  const dragAndDropConfig = {
-    canDragAndDrop: true,
-    canDropOnFolder: true,
-    canDropOnNonFolder: true,
-    canReorderItems: true,
-  };
+  const dragAndDropConfig = useMemo(
+    () => ({
+      canDragAndDrop: true,
+      canDropOnFolder: true,
+      canDropOnNonFolder: true,
+      canReorderItems: true,
+    }),
+    [],
+  );
 
   const searchConfig = {
     canSearch: false,

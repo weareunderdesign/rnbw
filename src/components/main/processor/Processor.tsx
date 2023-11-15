@@ -2,15 +2,15 @@ import React, { useMemo } from "react";
 
 import {
   useProcessorNodeTree,
-  useProcessorUpdateOpt,
+  useProcessorUpdate,
   useProcessorValidNodeTree,
   useSaveCommand,
 } from "./hooks";
 import { ProcessProps } from "./types";
 
 export default function Processor(props: ProcessProps) {
-  // processor-updateOpt
-  useProcessorUpdateOpt();
+  // processor-update
+  useProcessorUpdate();
 
   // processor-nodeTree
   useProcessorNodeTree();

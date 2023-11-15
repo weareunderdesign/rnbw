@@ -21,26 +21,25 @@ import {
 } from "./hooks";
 import { jss } from "./js";
 import { styles } from "./styles";
+import { useAppState } from "@_redux/useAppState";
 
 export const IFrame = () => {
   // -------------------------------------------------------------- global state --------------------------------------------------------------
   const dispatch = useDispatch();
-  const { focusedItem, selectedItems } = useSelector(
-    (state: AppState) => state.main.nodeTree.nodeTreeViewState,
-  );
-  const {} = useSelector((state: AppState) => state.main.nodeEvent);
-  const { iframeLoading, needToReloadIframe, iframeSrc } = useSelector(
-    (state: AppState) => state.main.stageView,
-  );
-  const { hoveredNodeUid } = useSelector(
-    (state: AppState) => state.main.nodeTree,
-  );
+  const {
+    prevRenderableFileUid,
+    nFocusedItem: focusedItem,
+    nSelectedItems: selectedItems,
+    hoveredNodeUid,
+    iframeLoading,
+    needToReloadIframe,
+    iframeSrc,
+  } = useAppState();
   const {
     setCodeViewOffsetTop,
     // toasts
     parseFileFlag,
     setParseFile,
-    prevFileUid,
   } = useContext(MainContext);
   // -------------------------------------------------------------- sync --------------------------------------------------------------
   const [contentRef, setContentRef] = useState<HTMLIFrameElement | null>(null);
@@ -448,5 +447,11 @@ export const IFrame = () => {
         )}
       </>
     );
-  }, [iframeSrc, needToReloadIframe, parseFileFlag, prevFileUid, setParseFile]);
+  }, [
+    iframeSrc,
+    needToReloadIframe,
+    parseFileFlag,
+    prevRenderableFileUid,
+    setParseFile,
+  ]);
 };

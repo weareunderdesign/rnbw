@@ -11,6 +11,7 @@ export const useAppState = () => {
         project,
         initialFileUidToOpen,
         currentFileUid,
+        prevRenderableFileUid,
         fileTree,
         fileTreeViewState: {
           focusedItem: fFocusedItem,
@@ -57,7 +58,6 @@ export const useAppState = () => {
         showCodeView,
         didUndo,
         didRedo,
-        updateOptions,
       },
       cmdk: {
         cmdkOpen,
@@ -83,6 +83,7 @@ export const useAppState = () => {
     project,
     initialFileUidToOpen,
     currentFileUid,
+    prevRenderableFileUid,
     fileTree,
 
     fFocusedItem,
@@ -140,8 +141,6 @@ export const useAppState = () => {
 
     didUndo,
     didRedo,
-
-    updateOptions,
 
     cmdkOpen,
     cmdkPages,

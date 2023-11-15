@@ -1,4 +1,4 @@
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useRef } from "react";
 
 import { useDispatch } from "react-redux";
 
@@ -13,16 +13,26 @@ import { useAppState } from "@_redux/useAppState";
 export const useProcessorValidNodeTree = () => {
   const dispatch = useDispatch();
   const {
+    currentFileUid,
+    prevRenderableFileUid,
+
     validNodeTree,
     nExpandedItems,
     nSelectedItems,
     newFocusedNodeUid,
-    updateOptions,
   } = useAppState();
-  const { removeRunningActions } = useContext(MainContext);
+  const { addRunningActions, removeRunningActions } = useContext(MainContext);
+
+  const isFirstOpenForCurrentFile = useRef(false);
+  useEffect(() => {
+    isFirstOpenForCurrentFile.current =
+      currentFileUid !== prevRenderableFileUid;
+  }, [currentFileUid]);
 
   useEffect(() => {
-    if (updateOptions?.from === "file") {
+    addRunningActions(["processor-validNodeTree"]);
+
+    if (isFirstOpenForCurrentFile.current) {
       // when a new file is opened
       const uids = Object.keys(validNodeTree);
       dispatch(expandNodeTreeNodes(uids.slice(0, 50)));
@@ -37,6 +47,7 @@ export const useProcessorValidNodeTree = () => {
       dispatch(expandNodeTreeNodes([..._expandedItems]));
       dispatch(selectNodeTreeNodes([..._selectedItems, newFocusedNodeUid]));
     }
+
     removeRunningActions(["processor-validNodeTree"]);
   }, [validNodeTree]);
 };

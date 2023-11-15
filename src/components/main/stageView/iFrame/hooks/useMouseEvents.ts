@@ -18,6 +18,7 @@ import {
 import { setLinkToOpen } from "@_redux/main/stageView";
 
 import { useSetSelectItem, useTextEditing } from "./";
+import { useAppState } from "@_redux/useAppState";
 
 export interface IUseMouseEventsProps {
   externalDblclick: React.MutableRefObject<boolean>;
@@ -67,6 +68,7 @@ export const useMouseEvents = ({
   });
 
   const dispatch = useDispatch();
+  const { prevRenderableFileUid } = useAppState();
   const {
     nodeTree: {
       nodeTreeViewState: { focusedItem },
@@ -81,7 +83,6 @@ export const useMouseEvents = ({
     // toasts
     parseFileFlag,
     setParseFile,
-    prevFileUid,
   } = useContext(MainContext);
 
   const { setFocusedSelectedItems } = useSetSelectItem({
@@ -214,13 +215,13 @@ export const useMouseEvents = ({
     (e: MouseEvent) => {
       const ele = e.target as HTMLElement;
       if (!parseFileFlag) {
-        const file = fileTree[prevFileUid];
-        const uid = prevFileUid;
+        const file = fileTree[prevRenderableFileUid];
+        const uid = prevRenderableFileUid;
         const fileData = file.data as TFileNodeData;
         dispatch(setNavigatorDropdownType("project"));
         setParseFile(true);
         dispatch(setCurrentFileUid(uid));
-        dispatch(selectFileTreeNodes([prevFileUid]));
+        dispatch(selectFileTreeNodes([prevRenderableFileUid]));
         dispatch(
           setCurrentFileContent(
             fileData.contentInApp ? fileData.contentInApp : "",

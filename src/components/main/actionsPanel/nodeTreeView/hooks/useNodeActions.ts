@@ -15,10 +15,7 @@ import {
   nodeTreeViewStateSelector,
   validNodeTreeSelector,
 } from "@_redux/main/nodeTree";
-import {
-  clipboardDataSelector,
-  setUpdateOptions,
-} from "@_redux/main/processor";
+import { clipboardDataSelector } from "@_redux/main/processor";
 
 import {
   getCopiedContent,
@@ -230,11 +227,9 @@ export function useNodeActions() {
 
       // processor
       addRunningActions(["processor-updateOpt"]);
-      dispatch(setUpdateOptions({ parse: false, from: "node" }));
 
       // view state
       addRunningActions(["stageView-viewState"]);
-      dispatch(setUpdateOptions({ parse: true, from: "code" }));
       // side effect
 
       removeRunningActions(["nodeTreeView-move"]);

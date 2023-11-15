@@ -10,6 +10,7 @@ export type TFileTreeReducerState = {
   fileTree: TFileNodeTreeData;
   initialFileUidToOpen: TNodeUid;
   currentFileUid: TNodeUid;
+  prevRenderableFileUid: TNodeUid;
 
   fileTreeViewState: TTreeViewState;
   hoveredFileUid: TNodeUid;

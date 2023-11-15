@@ -3,7 +3,7 @@ import { useCallback, useContext } from "react";
 import { TreeItem } from "react-complex-tree";
 import { useDispatch, useSelector } from "react-redux";
 
-import { ParsableFileTypes, RootNodeUid, TmpNodeUid } from "@_constants/main";
+import { RednerableFileTypes, RootNodeUid, TmpNodeUid } from "@_constants/main";
 import { getValidNodeUids } from "@_node/apis";
 import { createDirectory, TFileNodeData, writeFile } from "@_node/file";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
@@ -17,6 +17,7 @@ import {
   projectSelector,
   setCurrentFileUid,
   setFileTree,
+  setPrevRenderableFileUid,
 } from "@_redux/main/fileTree";
 import { setFileAction, TFileAction } from "@_redux/main/fileTree/event";
 import {
@@ -27,9 +28,7 @@ import {
   navigatorDropdownTypeSelector,
   setNavigatorDropdownType,
   setShowCodeView,
-  setUpdateOptions,
   showCodeViewSelector,
-  updateOptionsSelector,
 } from "@_redux/main/processor";
 import { verifyFileHandlerPermission } from "@_services/main";
 import { TFileNodeType } from "@_types/main";
@@ -42,8 +41,8 @@ import {
   validateAndMoveNode,
 } from "../helpers";
 import { useInvalidNodes } from "./useInvalidNodes";
-import { useReloadProject } from "./useReloadProject";
 import { useTemporaryNodes } from "./useTemporaryNodes";
+import { clearNodeTreeViewState } from "@_redux/main/nodeTree";
 
 export const useNodeActionsHandler = (
   openFileUid: React.MutableRefObject<string>,
@@ -54,30 +53,19 @@ export const useNodeActionsHandler = (
   const project = useSelector(projectSelector);
   const fileTree = useSelector(fileTreeSelector);
   const osType = useSelector(osTypeSelector);
-  const navigatorDropdownType = useSelector(navigatorDropdownTypeSelector);
 
   const showCodeView = useSelector(showCodeViewSelector);
-  const updateOptions = useSelector(updateOptionsSelector);
 
   const {
-    // global action
     addRunningActions,
     removeRunningActions,
-    // file tree view
     fileHandlers,
-    // references
     htmlReferenceData,
-    // cmdk
-    // non-parse file
-    setParseFile,
-    setPrevFileUid,
   } = useContext(MainContext);
 
   const { focusedItem, expandedItemsObj, selectedItems } = useSelector(
     fileTreeViewStateSelector,
   );
-
-  const { cb_reloadProject } = useReloadProject();
 
   const { removeInvalidNodes, setInvalidNodes, invalidNodes } =
     useInvalidNodes();
@@ -134,16 +122,9 @@ export const useNodeActionsHandler = (
       };
       dispatch(setFileAction(action));
 
-      await cb_reloadProject();
       removeRunningActions(["fileTreeView-create"]);
     },
-    [
-      addRunningActions,
-      removeRunningActions,
-      project.context,
-      fileHandlers,
-      cb_reloadProject,
-    ],
+    [addRunningActions, removeRunningActions, project.context, fileHandlers],
   );
 
   const createTmpFFNode = useCallback(
@@ -267,7 +248,6 @@ export const useNodeActionsHandler = (
       removeInvalidNodes,
       fileTree,
       fileHandlers,
-      cb_reloadProject,
     ],
   );
 
@@ -355,7 +335,6 @@ export const useNodeActionsHandler = (
     }
 
     removeInvalidNodes(...uids);
-    await cb_reloadProject(currentFileUid);
     removeRunningActions(["fileTreeView-delete"]);
   }, [
     addRunningActions,
@@ -367,7 +346,6 @@ export const useNodeActionsHandler = (
     selectedItems,
     fileTree,
     fileHandlers,
-    cb_reloadProject,
     currentFileUid,
   ]);
 
@@ -418,7 +396,6 @@ export const useNodeActionsHandler = (
       };
       dispatch(setFileAction(action));
 
-      await cb_reloadProject();
       removeRunningActions(["fileTreeView-move"]);
     },
     [
@@ -429,7 +406,6 @@ export const useNodeActionsHandler = (
       setInvalidNodes,
       fileTree,
       fileHandlers,
-      cb_reloadProject,
     ],
   );
 
@@ -494,7 +470,6 @@ export const useNodeActionsHandler = (
 
     dispatch(setFileAction(action));
 
-    await cb_reloadProject();
     removeRunningActions(["fileTreeView-duplicate"]);
   }, [
     addRunningActions,
@@ -505,7 +480,6 @@ export const useNodeActionsHandler = (
     selectedItems,
     fileTree,
     fileHandlers,
-    cb_reloadProject,
   ]);
 
   const cb_readNode = useCallback(
@@ -517,49 +491,42 @@ export const useNodeActionsHandler = (
         removeRunningActions(["fileTreeView-read"]);
         return;
       }
-      const node = fileTree[uid];
+      const node = structuredClone(fileTree[uid]);
       if (node === undefined || !node.isEntity || currentFileUid === uid) {
         removeRunningActions(["fileTreeView-read"]);
         return;
       }
 
+      dispatch(clearNodeTreeViewState());
       dispatch({ type: NodeTree_Event_ClearActionType });
 
       const nodeData = node.data as TFileNodeData;
 
-      if (nodeData.ext === "html") {
-        setPrevFileUid(currentFileUid);
-      }
-      if (!ParsableFileTypes[nodeData.ext]) {
-        dispatch(setCurrentFileUid(uid));
-        removeRunningActions(["fileTreeView-read"]);
-        setParseFile(false);
-        showCodeView === false && dispatch(setShowCodeView(true));
-      } else {
-        // set initial content of the html
-        let initialContent = "";
+      if (RednerableFileTypes[nodeData.ext]) {
+        dispatch(setPrevRenderableFileUid(currentFileUid));
+
+        // set initial content of the html if file content is empty
         if (
           nodeData.ext === "html" &&
           nodeData.kind === "file" &&
           nodeData.content === ""
         ) {
-          let doctype = "<!DOCTYPE html>\n";
-          let html = htmlReferenceData["elements"]["html"].Content
+          const doctype = "<!DOCTYPE html>\n";
+          const html = htmlReferenceData["elements"]["html"].Content
             ? `<html>\n` +
               htmlReferenceData["elements"]["html"].Content +
               `\n</html>`
             : "";
-          initialContent = doctype + html;
-          nodeData.content = initialContent;
+          nodeData.content = doctype + html;
         }
-        addRunningActions(["processor-updateOpt"]);
-        dispatch(setCurrentFileUid(uid));
-        dispatch(setCurrentFileContent(nodeData.content));
-        dispatch(setUpdateOptions({ parse: true, from: "file" }));
-        setParseFile(true);
-        removeRunningActions(["fileTreeView-read"]);
-        setPrevFileUid(uid);
       }
+
+      dispatch(setCurrentFileUid(uid));
+      dispatch(setCurrentFileContent(nodeData.content));
+
+      removeRunningActions(["fileTreeView-read"]);
+
+      showCodeView === false && dispatch(setShowCodeView(true));
     },
     [
       addRunningActions,

@@ -138,7 +138,6 @@ export default function useEditor() {
     monacoRef.current = editor;
     setMonacoEditorRef(editor);
 
-    // dispatch(setUpdateOptions({ parse: true, from: "file" }));
     editor.onDidChangeCursorPosition((event) => {
       if (event.source === "mouse") {
         updateSelection();
@@ -304,7 +303,6 @@ export default function useEditor() {
         dispatch(setDoingFileAction(false));
 
         const _file = structuredClone(fileTree[currentFileUid]) as TNode;
-        addRunningActions(["processor-updateOpt"]);
         const fileData = _file.data as TFileNodeData;
         dispatch(setCurrentFileContent(codeContentRef.current));
 

@@ -5,7 +5,6 @@ import {
   TClipboardData,
   TNavigatorDropdownType,
   TPanelContext,
-  TUpdateOptions,
 } from "./types";
 
 const getNavigatorDropdownType = (state: AppState): TNavigatorDropdownType =>
@@ -52,10 +51,3 @@ export const didUndoSelector = createSelector(getDidUndo, (didUndo) => didUndo);
 
 const getDidRedo = (state: AppState): boolean => state.main.processor.didRedo;
 export const didRedoSelector = createSelector(getDidRedo, (didUndo) => didUndo);
-
-const getUpdateOptions = (state: AppState): TUpdateOptions | null =>
-  state.main.processor.updateOptions;
-export const updateOptionsSelector = createSelector(
-  getUpdateOptions,
-  (updateOptions) => updateOptions,
-);

@@ -5,7 +5,6 @@ import {
   TNavigatorDropdownType,
   TPanelContext,
   TProcessorReducerState,
-  TUpdateOptions,
 } from "./types";
 
 const processorReducerInitialState: TProcessorReducerState = {
@@ -15,13 +14,11 @@ const processorReducerInitialState: TProcessorReducerState = {
   activePanel: "none",
   clipboardData: null,
 
-  showActionsPanel: false,
-  showCodeView: false,
+  showActionsPanel: true,
+  showCodeView: true,
 
   didUndo: false,
   didRedo: false,
-
-  updateOptions: null,
 };
 const processorSlice = createSlice({
   name: "processor",
@@ -65,11 +62,6 @@ const processorSlice = createSlice({
       const didRedo = action.payload;
       state.didRedo = didRedo;
     },
-
-    setUpdateOptions(state, action: PayloadAction<TUpdateOptions | null>) {
-      const updateOptions = action.payload;
-      state.updateOptions = updateOptions;
-    },
   },
 });
 export const {
@@ -84,7 +76,5 @@ export const {
 
   setDidUndo,
   setDidRedo,
-
-  setUpdateOptions,
 } = processorSlice.actions;
 export const ProcessorReduer = processorSlice.reducer;

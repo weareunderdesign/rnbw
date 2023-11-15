@@ -51,14 +51,18 @@ import {
   TProject,
   TProjectContext,
 } from "@_redux/main/fileTree";
-import { setFileAction } from "@_redux/main/fileTree/event";
+import {
+  FileTree_Event_RedoActionType,
+  FileTree_Event_UndoActionType,
+  setFileAction,
+} from "@_redux/main/fileTree/event";
 import { setNewFocusedNodeUid } from "@_redux/main/nodeTree";
 import {
+  setDidRedo,
   setDidUndo,
   setNavigatorDropdownType,
   setShowActionsPanel,
   setShowCodeView,
-  setUpdateOptions,
 } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 // @ts-ignore
@@ -87,6 +91,10 @@ import {
 
 import { getCommandKey, isChromeOrEdge } from "../../services/global";
 import { addDefaultCmdkActions, clearProjectSession } from "./helper";
+import {
+  NodeTree_Event_RedoActionType,
+  NodeTree_Event_UndoActionType,
+} from "@_redux/main/nodeTree/event";
 
 export default function MainPage() {
   // ***************************************** Reducer Begin *****************************************
@@ -155,8 +163,6 @@ export default function MainPage() {
 
     didUndo,
     didRedo,
-
-    updateOptions,
 
     cmdkOpen,
     cmdkPages,
@@ -242,7 +248,6 @@ export default function MainPage() {
   const [codeChanges, setCodeChanges] = useState<TCodeChange[]>([]);
 
   const [parseFileFlag, setParseFile] = useState<boolean>(true);
-  const [prevFileUid, setPrevFileUid] = useState<string>("");
 
   const guideRef = useRef<HTMLAnchorElement>(null);
   // TODO End
@@ -1161,60 +1166,68 @@ export default function MainPage() {
     dispatch(setCmdkOpen(true));
   }, [cmdkOpen]);
 
+  // History - Undo/Redo
   const onUndo = useCallback(() => {
-    if (
-      doingAction ||
-      iframeLoading ||
-      doingFileAction ||
-      codeEditing ||
-      !parseFileFlag
-    )
-      return;
+    if (doingAction || doingFileAction || iframeLoading || codeEditing) return;
 
-    LogAllow &&
-      fileEventPastLength === 1 &&
-      console.log("hms - it is the origin state");
-    if (fileEventPastLength === 1) return;
+    if (activePanel === "file") {
+      if (fileEventPastLength === 1) {
+        LogAllow && console.log("Undo - FileTree - it is the origin state");
+        return;
+      }
+
+      dispatch({ type: FileTree_Event_UndoActionType });
+    } else {
+      if (nodeEventPastLength === 1) {
+        LogAllow && console.log("Undo - NodeTree - it is the origin state");
+        return;
+      }
+
+      dispatch({ type: NodeTree_Event_UndoActionType });
+    }
 
     dispatch(setDidUndo(true));
-
-    dispatch({ type: "main/undo" });
-    dispatch(setUpdateOptions({ parse: true, from: "hms" }));
   }, [
     doingAction,
-    iframeLoading,
     doingFileAction,
+    iframeLoading,
     codeEditing,
+
+    activePanel,
+
     fileEventPastLength,
-    fileAction,
-    currentFileUid,
+    nodeEventPastLength,
   ]);
-
   const onRedo = useCallback(() => {
-    if (
-      doingAction ||
-      iframeLoading ||
-      doingFileAction ||
-      codeEditing ||
-      !parseFileFlag
-    )
-      return;
+    if (doingAction || iframeLoading || doingFileAction || codeEditing) return;
 
-    LogAllow &&
-      fileEventFutureLength === 0 &&
-      console.log("hms - it is the latest state");
-    if (fileEventFutureLength === 0) return;
+    if (activePanel === "file") {
+      if (fileEventFutureLength === 0) {
+        LogAllow && console.log("Redo - FileTree - it is the latest state");
+        return;
+      }
 
-    dispatch(setFileAction(fileAction));
-    dispatch({ type: "main/redo" });
-    dispatch(setUpdateOptions({ parse: true, from: "hms" }));
+      dispatch({ type: FileTree_Event_RedoActionType });
+    } else {
+      if (nodeEventFutureLength === 0) {
+        LogAllow && console.log("Redo - NodeTree - it is the latest state");
+        return;
+      }
+
+      dispatch({ type: NodeTree_Event_RedoActionType });
+    }
+
+    dispatch(setDidRedo(true));
   }, [
     doingAction,
-    iframeLoading,
     doingFileAction,
+    iframeLoading,
     codeEditing,
+
+    activePanel,
+
     fileEventFutureLength,
-    currentFileUid,
+    nodeEventFutureLength,
   ]);
 
   // toogle code view
@@ -1245,8 +1258,6 @@ export default function MainPage() {
   const [codeViewHeight, setCodeViewHeight] = useState("40");
   const [codeViewDragging, setCodeViewDragging] = useState(false);
   // -------------------------------------------------------------- other --------------------------------------------------------------
-  // detect OS & fetch reference - html. Jumpstart.csv, Actions.csv - restore recent project session - open Untitled project and jumpstart menu ons tartup
-
   useEffect(() => {
     // wait until "cmdkReferenceJumpstart" is ready
     Object.keys(cmdkReferenceJumpstart).length !== 0 && onJumpstart();
@@ -1264,14 +1275,12 @@ export default function MainPage() {
       document.documentElement.setAttribute("data-theme", "light");
     }
   }, []);
-
   const onToggleTheme = useCallback(() => {
     switch (theme) {
       case "System":
         document.documentElement.setAttribute("data-theme", "light");
         localStorage.setItem("theme", "light");
         dispatch(setTheme("Light"));
-        setTheme("Light");
         break;
       case "Light":
         document.documentElement.setAttribute("data-theme", "dark");
@@ -1353,7 +1362,7 @@ export default function MainPage() {
     setNeedToReloadCodeView(true);
   }, [currentFileUid]);
   useEffect(() => {
-    setNeedToReloadCodeView(false);
+    needToReloadCodeView && setNeedToReloadCodeView(false);
   }, [needToReloadCodeView]);
 
   // drag & dragend code view event
@@ -1369,7 +1378,6 @@ export default function MainPage() {
       setCodeViewDragging(true);
     }
   }, []);
-
   const dragEndCodeView = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const offsetTop = (
@@ -1381,10 +1389,10 @@ export default function MainPage() {
     setCodeViewDragging(false);
     localStorage.setItem("offsetTop", offsetTop);
   }, []);
-
   const dropCodeView = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
   }, []);
+
   // close navigator
   const onCloseDropDown = useCallback(() => {
     navigatorDropdownType !== null && dispatch(setNavigatorDropdownType(null));
@@ -1420,8 +1428,6 @@ export default function MainPage() {
           // non html editable
           parseFileFlag,
           setParseFile,
-          prevFileUid,
-          setPrevFileUid,
           // close all panel
           closeAllPanel,
           monacoEditorRef,

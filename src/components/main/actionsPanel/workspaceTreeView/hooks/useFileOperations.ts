@@ -15,7 +15,6 @@ import {
   moveActions,
 } from "../helpers";
 import { useInvalidNodes } from "./useInvalidNodes";
-import { useReloadProject } from "./useReloadProject";
 import { useTemporaryNodes } from "./useTemporaryNodes";
 
 export const useFileOperations = () => {
@@ -29,8 +28,6 @@ export const useFileOperations = () => {
     // file tree view
     fileHandlers,
   } = useContext(MainContext);
-
-  const { cb_reloadProject } = useReloadProject();
 
   const { removeInvalidNodes, setInvalidNodes, invalidNodes } =
     useInvalidNodes();
@@ -61,7 +58,6 @@ export const useFileOperations = () => {
         throw new Error("err");
       }
 
-      await cb_reloadProject();
       removeRunningActions(["fileTreeView-create"]);
     },
     [
@@ -70,7 +66,6 @@ export const useFileOperations = () => {
       project.context,
       fileTree,
       fileHandlers,
-      cb_reloadProject,
     ],
   );
 
@@ -95,7 +90,6 @@ export const useFileOperations = () => {
       );
 
       removeInvalidNodes(...uids);
-      await cb_reloadProject();
       removeRunningActions(["fileTreeView-delete"]);
     },
     [
@@ -106,7 +100,6 @@ export const useFileOperations = () => {
       removeInvalidNodes,
       fileTree,
       fileHandlers,
-      cb_reloadProject,
     ],
   );
   const _rename = useCallback(
@@ -145,8 +138,6 @@ export const useFileOperations = () => {
         removeInvalidNodes(newUid);
         removeTemporaryNodes(uid);
       } catch (err) {}
-
-      await cb_reloadProject();
       removeRunningActions(["fileTreeView-rename"]);
     },
     [
@@ -159,7 +150,6 @@ export const useFileOperations = () => {
       removeInvalidNodes,
       fileTree,
       fileHandlers,
-      cb_reloadProject,
     ],
   );
   const _cut = useCallback(
@@ -219,8 +209,6 @@ export const useFileOperations = () => {
           setInvalidNodes(...Object.keys(_invalidNodes));
         }),
       );
-
-      await cb_reloadProject();
       removeRunningActions(["fileTreeView-move"]);
     },
     [
@@ -231,7 +219,6 @@ export const useFileOperations = () => {
       setInvalidNodes,
       fileTree,
       fileHandlers,
-      cb_reloadProject,
     ],
   );
   const _copy = useCallback(
@@ -295,8 +282,6 @@ export const useFileOperations = () => {
           setInvalidNodes(...Object.keys(_invalidNodes));
         }),
       );
-
-      await cb_reloadProject();
       removeRunningActions(["fileTreeView-duplicate"]);
     },
     [
@@ -307,7 +292,6 @@ export const useFileOperations = () => {
       setInvalidNodes,
       fileTree,
       fileHandlers,
-      cb_reloadProject,
     ],
   );
 
