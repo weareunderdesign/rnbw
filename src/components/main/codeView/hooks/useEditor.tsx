@@ -29,18 +29,8 @@ import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
 import { CodeSelection } from "../types";
 
 function getLanguageFromExtension(extension: string) {
-  switch (extension) {
-    case ".html":
-      return "html";
-    case ".md":
-      return "markdown";
-    case ".js":
-      return "javascript";
-    case ".css":
-      return "css";
-    default:
-      return "plaintext";
-  }
+  if (extension) return extension;
+  return "plaintext";
 }
 
 export default function useEditor() {
@@ -243,7 +233,6 @@ export default function useEditor() {
               if (fromEl.outerHTML === toEl.outerHTML) {
                 return false;
               } else {
-             
                 let fromOuter = fromEl.outerHTML;
                 let toOuter = toEl.outerHTML;
                 return true;
