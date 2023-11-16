@@ -17,6 +17,8 @@ export const useProcessorNodeTree = () => {
   useEffect(() => {
     if (!nodeTree[RootNodeUid]) return;
 
+    addRunningActions(["processor-nodeTree"]);
+
     const _nodeTree: TNodeTreeData = structuredClone(nodeTree);
     const _validNodeTree: TNodeTreeData = {};
 
@@ -35,7 +37,6 @@ export const useProcessorNodeTree = () => {
     });
     dispatch(setValidNodeTree(_validNodeTree));
 
-    addRunningActions(["processor-validNodeTree"]);
     removeRunningActions(["processor-nodeTree"]);
   }, [nodeTree]);
 };

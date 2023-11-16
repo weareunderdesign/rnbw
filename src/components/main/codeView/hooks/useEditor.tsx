@@ -29,18 +29,8 @@ import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
 import { CodeSelection } from "../types";
 
 function getLanguageFromExtension(extension: string) {
-  switch (extension) {
-    case ".html":
-      return "html";
-    case ".md":
-      return "markdown";
-    case ".js":
-      return "javascript";
-    case ".css":
-      return "css";
-    default:
-      return "plaintext";
-  }
+  if (extension) return extension;
+  return "plaintext";
 }
 
 export default function useEditor() {
@@ -240,7 +230,13 @@ export default function useEditor() {
               fromEl.nodeName === "STYLE" ||
               fromEl.nodeName === "LINK"
             ) {
-              return false;
+              if (fromEl.outerHTML === toEl.outerHTML) {
+                return false;
+              } else {
+                let fromOuter = fromEl.outerHTML;
+                let toOuter = toEl.outerHTML;
+                return true;
+              }
             }
             const fromElRnbwId = fromEl.getAttribute(StageNodeIdAttr);
             nodeUidToFocus = configs?.matchIds?.[0] || "";
@@ -296,7 +292,6 @@ export default function useEditor() {
         dispatch(setDoingFileAction(false));
 
         const _file = structuredClone(fileTree[currentFileUid]) as TNode;
-        addRunningActions(["processor-updateOpt"]);
         const fileData = _file.data as TFileNodeData;
         dispatch(setCurrentFileContent(codeContentRef.current));
 

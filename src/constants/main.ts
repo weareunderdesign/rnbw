@@ -9,6 +9,11 @@ export const ParsableFileTypes: {
 } = {
   html: true,
 };
+export const RednerableFileTypes: {
+  [fileType: string]: true;
+} = {
+  html: true,
+};
 
 export const NodeUidSplitter: string = "?";
 

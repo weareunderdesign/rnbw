@@ -68,7 +68,7 @@ export const useMouseEvents = ({
   });
 
   const dispatch = useDispatch();
-  const { prevFileUid } = useAppState();
+  const { prevRenderableFileUid } = useAppState();
   const {
     nodeTree: {
       nodeTreeViewState: { focusedItem },
@@ -215,13 +215,13 @@ export const useMouseEvents = ({
     (e: MouseEvent) => {
       const ele = e.target as HTMLElement;
       if (!parseFileFlag) {
-        const file = fileTree[prevFileUid];
-        const uid = prevFileUid;
+        const file = fileTree[prevRenderableFileUid];
+        const uid = prevRenderableFileUid;
         const fileData = file.data as TFileNodeData;
         dispatch(setNavigatorDropdownType("project"));
         setParseFile(true);
         dispatch(setCurrentFileUid(uid));
-        dispatch(selectFileTreeNodes([prevFileUid]));
+        dispatch(selectFileTreeNodes([prevRenderableFileUid]));
         dispatch(
           setCurrentFileContent(
             fileData.contentInApp ? fileData.contentInApp : "",
@@ -249,7 +249,7 @@ export const useMouseEvents = ({
         }, 100);
       } else {
         externalDblclick.current = true;
-        handleLinkTag(ele);
+        // handleLinkTag(ele);
 
         let _uid: TNodeUid | null = ele.getAttribute(StageNodeIdAttr);
         let isWC = false;

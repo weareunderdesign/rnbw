@@ -6,27 +6,23 @@ import { getValidNodeUids } from "@_node/apis";
 import { TFileNodeData } from "@_node/file";
 import { TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
+import { selectFileTreeNodes, setCurrentFileUid } from "@_redux/main/fileTree";
 import {
-  fileTreeSelector,
-  selectFileTreeNodes,
-  setCurrentFileUid,
-} from "@_redux/main/fileTree";
-import {
+  NodeTree_Event_ClearActionType,
   collapseNodeTreeNodes,
   expandNodeTreeNodes,
   focusNodeTreeNode,
   nodeTreeViewStateSelector,
   selectNodeTreeNodes,
-  validNodeTreeSelector,
+  setSelectedNodeUids,
 } from "@_redux/main/nodeTree";
-import { NodeTree_Event_ClearActionType } from "@_redux/main/nodeTree/event";
 import { setNavigatorDropdownType } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 
 export function useNodeViewState(focusItemValue: TNodeUid | null) {
   const dispatch = useDispatch();
 
-  const { fileTree, validNodeTree, prevFileUid } = useAppState();
+  const { fileTree, validNodeTree, prevRenderableFileUid } = useAppState();
 
   const { addRunningActions, removeRunningActions } = useContext(MainContext);
 
@@ -78,16 +74,17 @@ export function useNodeViewState(focusItemValue: TNodeUid | null) {
       }
 
       dispatch(selectNodeTreeNodes(_uids));
+      dispatch(setSelectedNodeUids(_uids));
 
       if (!parseFileFlag) {
-        const node = fileTree[prevFileUid];
-        const uid = prevFileUid;
+        const node = fileTree[prevRenderableFileUid];
+        const uid = prevRenderableFileUid;
         const nodeData = node.data as TFileNodeData;
         setParseFile(true);
         dispatch(setNavigatorDropdownType("project"));
         dispatch({ type: NodeTree_Event_ClearActionType });
         dispatch(setCurrentFileUid(uid));
-        dispatch(selectFileTreeNodes([prevFileUid]));
+        dispatch(selectFileTreeNodes([prevRenderableFileUid]));
       }
       removeRunningActions(["nodeTreeView-select"]);
     },

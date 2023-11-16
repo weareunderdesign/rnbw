@@ -13,7 +13,7 @@ import {
 import { setFileAction, TFileAction } from "@_redux/main/fileTree/event";
 import { verifyFileHandlerPermission } from "@_services/main";
 
-import { useInvalidNodes, useReloadProject } from "../hooks";
+import { useInvalidNodes } from "../hooks";
 import { moveActions } from "./moveActions";
 
 export const renameNode = async (
@@ -28,8 +28,6 @@ export const renameNode = async (
   const project = useSelector(projectSelector);
 
   const { removeRunningActions, fileHandlers } = useContext(MainContext);
-
-  const { cb_reloadProject } = useReloadProject();
 
   const { removeInvalidNodes, setInvalidNodes } = useInvalidNodes();
 
@@ -100,6 +98,5 @@ export const renameNode = async (
   dispatch(setCurrentFileUid(newUid));
   dispatch(updateFileTreeViewState({ convertedUids: [[uid, newUid]] }));
 
-  await cb_reloadProject();
   removeRunningActions(["fileTreeView-rename"]);
 };

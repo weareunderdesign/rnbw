@@ -3,7 +3,7 @@ import { useCallback, useContext } from "react";
 import { TreeItem } from "react-complex-tree";
 import { useDispatch, useSelector } from "react-redux";
 
-import { ParsableFileTypes, RootNodeUid, TmpNodeUid } from "@_constants/main";
+import { RednerableFileTypes, RootNodeUid, TmpNodeUid } from "@_constants/main";
 import { getValidNodeUids } from "@_node/apis";
 import { createDirectory, TFileNodeData, writeFile } from "@_node/file";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
@@ -17,7 +17,7 @@ import {
   projectSelector,
   setCurrentFileUid,
   setFileTree,
-  setPrevFileUid,
+  setPrevRenderableFileUid,
 } from "@_redux/main/fileTree";
 import { setFileAction, TFileAction } from "@_redux/main/fileTree/event";
 import {
@@ -41,7 +41,6 @@ import {
   validateAndMoveNode,
 } from "../helpers";
 import { useInvalidNodes } from "./useInvalidNodes";
-import { useReloadProject } from "./useReloadProject";
 import { useTemporaryNodes } from "./useTemporaryNodes";
 import { clearNodeTreeViewState } from "@_redux/main/nodeTree";
 
@@ -54,28 +53,19 @@ export const useNodeActionsHandler = (
   const project = useSelector(projectSelector);
   const fileTree = useSelector(fileTreeSelector);
   const osType = useSelector(osTypeSelector);
-  const navigatorDropdownType = useSelector(navigatorDropdownTypeSelector);
 
   const showCodeView = useSelector(showCodeViewSelector);
 
   const {
-    // global action
     addRunningActions,
     removeRunningActions,
-    // file tree view
     fileHandlers,
-    // references
     htmlReferenceData,
-    // cmdk
-    // non-parse file
-    setParseFile,
   } = useContext(MainContext);
 
   const { focusedItem, expandedItemsObj, selectedItems } = useSelector(
     fileTreeViewStateSelector,
   );
-
-  const { cb_reloadProject } = useReloadProject();
 
   const { removeInvalidNodes, setInvalidNodes, invalidNodes } =
     useInvalidNodes();
@@ -132,16 +122,9 @@ export const useNodeActionsHandler = (
       };
       dispatch(setFileAction(action));
 
-      await cb_reloadProject();
       removeRunningActions(["fileTreeView-create"]);
     },
-    [
-      addRunningActions,
-      removeRunningActions,
-      project.context,
-      fileHandlers,
-      cb_reloadProject,
-    ],
+    [addRunningActions, removeRunningActions, project.context, fileHandlers],
   );
 
   const createTmpFFNode = useCallback(
@@ -265,7 +248,6 @@ export const useNodeActionsHandler = (
       removeInvalidNodes,
       fileTree,
       fileHandlers,
-      cb_reloadProject,
     ],
   );
 
@@ -353,7 +335,6 @@ export const useNodeActionsHandler = (
     }
 
     removeInvalidNodes(...uids);
-    await cb_reloadProject(currentFileUid);
     removeRunningActions(["fileTreeView-delete"]);
   }, [
     addRunningActions,
@@ -365,7 +346,6 @@ export const useNodeActionsHandler = (
     selectedItems,
     fileTree,
     fileHandlers,
-    cb_reloadProject,
     currentFileUid,
   ]);
 
@@ -416,7 +396,6 @@ export const useNodeActionsHandler = (
       };
       dispatch(setFileAction(action));
 
-      await cb_reloadProject();
       removeRunningActions(["fileTreeView-move"]);
     },
     [
@@ -427,7 +406,6 @@ export const useNodeActionsHandler = (
       setInvalidNodes,
       fileTree,
       fileHandlers,
-      cb_reloadProject,
     ],
   );
 
@@ -492,7 +470,6 @@ export const useNodeActionsHandler = (
 
     dispatch(setFileAction(action));
 
-    await cb_reloadProject();
     removeRunningActions(["fileTreeView-duplicate"]);
   }, [
     addRunningActions,
@@ -503,7 +480,6 @@ export const useNodeActionsHandler = (
     selectedItems,
     fileTree,
     fileHandlers,
-    cb_reloadProject,
   ]);
 
   const cb_readNode = useCallback(
@@ -526,8 +502,8 @@ export const useNodeActionsHandler = (
 
       const nodeData = node.data as TFileNodeData;
 
-      if (ParsableFileTypes[nodeData.ext]) {
-        dispatch(setPrevFileUid(currentFileUid));
+      if (RednerableFileTypes[nodeData.ext]) {
+        dispatch(setPrevRenderableFileUid(currentFileUid));
 
         // set initial content of the html if file content is empty
         if (
@@ -548,7 +524,6 @@ export const useNodeActionsHandler = (
       dispatch(setCurrentFileUid(uid));
       dispatch(setCurrentFileContent(nodeData.content));
 
-      addRunningActions(["processor-updateOpt"]);
       removeRunningActions(["fileTreeView-read"]);
 
       showCodeView === false && dispatch(setShowCodeView(true));

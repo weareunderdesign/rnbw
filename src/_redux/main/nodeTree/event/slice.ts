@@ -23,13 +23,13 @@ const nodeEventSlice = createSlice({
       const currentFileContent = action.payload;
       state.currentFileContent = currentFileContent;
     },
-    setSelectedItems(state, action: PayloadAction<TNodeUid[]>) {
+    setSelectedNodeUids(state, action: PayloadAction<TNodeUid[]>) {
       const selectedNodeUids = action.payload;
       state.selectedNodeUids = [...selectedNodeUids];
     },
   },
 });
-export const { setCurrentFileContent, setSelectedItems } =
+export const { setCurrentFileContent, setSelectedNodeUids } =
   nodeEventSlice.actions;
 export const NodeEventReducer = undoable(nodeEventSlice.reducer, {
   limit: NodeTree_Event_StoreLimit,
