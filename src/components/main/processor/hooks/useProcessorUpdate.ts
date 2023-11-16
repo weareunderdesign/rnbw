@@ -5,7 +5,7 @@ import { useDispatch } from "react-redux";
 import { LogAllow } from "@_constants/global";
 import { writeFile } from "@_node/file";
 import { MainContext } from "@_redux/main";
-import { setDoingFileAction } from "@_redux/main/fileTree";
+import { setDoingFileAction, setFileTreeNode } from "@_redux/main/fileTree";
 import {
   focusNodeTreeNode,
   selectNodeTreeNodes,
@@ -60,8 +60,10 @@ export const useProcessorUpdate = () => {
 
     const file = structuredClone(fileTree[currentFileUid]);
     const fileData = file.data;
+    fileData.content = currentFileContent;
 
     const { nodeTree } = handleFileUpdate(fileData);
+    dispatch(setFileTreeNode(file));
     dispatch(setNodeTree(nodeTree));
 
     // update idb

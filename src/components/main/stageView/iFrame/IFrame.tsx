@@ -1,10 +1,9 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { TNode, TNodeUid } from "@_node/types";
-import { AppState } from "@_redux/_root";
 import { MainContext } from "@_redux/main";
 import {
   setIframeLoading,
