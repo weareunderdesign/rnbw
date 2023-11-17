@@ -17,6 +17,7 @@ import {
 } from "@_redux/main/nodeTree";
 
 import { useNodeActions } from "./useNodeActions";
+import { html_beautify } from "js-beautify";
 
 export const useNodeActionsHandlers = () => {
   const fileTree = useSelector(fileTreeSelector);
@@ -91,14 +92,15 @@ export const useNodeActionsHandlers = () => {
           position.lineNumber,
           position.column,
         );
-        const editOperation = { range, text: "\n" + copiedCode };
+        const editOperation = { range, text: copiedCode };
 
         model.pushEditOperations([], [editOperation], () => null);
         monacoEditorRef.current?.setPosition({
           lineNumber: position.lineNumber + 1,
           column: 1,
         });
-        const content = model.getValue();
+        const content = html_beautify(model.getValue());
+        model.setValue(content);
         handleEditorChange(content);
       })
       .catch((error) => {
