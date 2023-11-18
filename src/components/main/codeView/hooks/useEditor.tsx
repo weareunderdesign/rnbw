@@ -9,7 +9,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { DefaultTabSize, RootNodeUid } from "@_constants/main";
 import { getSubNodeUidsByBfs } from "@_node/apis";
 import { parseFile, TFileNodeData } from "@_node/file";
-import { StageNodeIdAttr } from "@_node/file/handlers/constants";
+import {
+  PreserveRnbwNode,
+  StageNodeIdAttr,
+} from "@_node/file/handlers/constants";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { setCodeEditing, setCodeViewTabSize } from "@_redux/main/codeView";
@@ -225,11 +228,7 @@ export default function useEditor() {
         morphdom(iframeHtml, updatedHtml, {
           onBeforeElUpdated: function (fromEl, toEl) {
             //check if the node is script or style
-            if (
-              fromEl.nodeName === "SCRIPT" ||
-              fromEl.nodeName === "STYLE" ||
-              fromEl.nodeName === "LINK"
-            ) {
+            if (fromEl.nodeName === "SCRIPT" || fromEl.nodeName === "LINK") {
               if (fromEl.outerHTML === toEl.outerHTML) {
                 return false;
               } else {
@@ -273,14 +272,24 @@ export default function useEditor() {
             }
           },
           onBeforeNodeDiscarded: function (node: Node) {
+            const elementNode = node as Element;
+
+            debugger;
+            const ifPreserveNode = elementNode.getAttribute
+              ? elementNode.getAttribute(PreserveRnbwNode)
+              : false;
+            if (ifPreserveNode) {
+              debugger;
+              return false;
+            }
             //script and style should not be discarded
             if (
-              node.nodeName === "SCRIPT" ||
-              node.nodeName === "STYLE" ||
-              node.nodeName === "LINK"
+              elementNode.nodeName === "SCRIPT" ||
+              elementNode.nodeName === "LINK"
             ) {
               return false;
             }
+
             return true;
           },
         });
