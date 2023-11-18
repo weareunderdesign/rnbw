@@ -240,9 +240,6 @@ export const IFrame = () => {
   });
   // -------------------------------------------------------------- own --------------------------------------------------------------
 
-  // iframe event listeners
-  const [iframeEvent, setIframeEvent] = useState<MouseEvent | PointerEvent>();
-
   // iframe skeleton
   const Skeleton = () => {
     return <div>Cool loading screen</div>;
@@ -302,21 +299,17 @@ export const IFrame = () => {
 
           // define event handlers
           htmlNode.addEventListener("mouseenter", (e: MouseEvent) => {
-            setIframeEvent(e);
             onMouseEnter(e);
           });
           htmlNode.addEventListener("mousemove", (e: MouseEvent) => {
-            setIframeEvent(e);
             onMouseMove(e);
           });
           htmlNode.addEventListener("mouseleave", (e: MouseEvent) => {
-            setIframeEvent(e);
             onMouseLeave(e);
           });
           htmlNode.addEventListener("click", (e: MouseEvent) => {
             e.preventDefault();
             setIsDblClick(false);
-            setIframeEvent(e);
             onClick(e);
           });
 
@@ -328,7 +321,6 @@ export const IFrame = () => {
             const timeSinceLastClick = currentTime - lastClickTime;
             if (timeSinceLastClick < 500 && lastClickTarget === e.target) {
               externalDblclick.current = false;
-              setIframeEvent(e);
               onDblClick(e);
             }
             lastClickTime = currentTime;
