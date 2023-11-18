@@ -1,8 +1,10 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import { useDispatch } from "react-redux";
-
-import { StageNodeIdAttr } from "@_node/file/handlers/constants";
+import {
+  PreserveRnbwNode,
+  StageNodeIdAttr,
+} from "@_node/file/handlers/constants";
 import { TNode, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import {
@@ -30,7 +32,6 @@ export const IFrame = () => {
     nFocusedItem: focusedItem,
     nSelectedItems: selectedItems,
     hoveredNodeUid,
-    iframeLoading,
     needToReloadIframe,
     iframeSrc,
   } = useAppState();
@@ -240,9 +241,6 @@ export const IFrame = () => {
   });
   // -------------------------------------------------------------- own --------------------------------------------------------------
 
-  // iframe event listeners
-  const [iframeEvent, setIframeEvent] = useState<MouseEvent | PointerEvent>();
-
   // iframe skeleton
   const Skeleton = () => {
     return <div>Cool loading screen</div>;
@@ -292,31 +290,29 @@ export const IFrame = () => {
           // add rnbw css
           const style = _document.createElement("style");
           style.textContent = styles;
+          style.setAttribute(PreserveRnbwNode, "true");
           headNode.appendChild(style);
 
           // add js
           const js = _document.createElement("script");
           js.setAttribute("image-validator", "true");
+          js.setAttribute(PreserveRnbwNode, "true");
           js.textContent = jss;
           headNode.appendChild(js);
 
           // define event handlers
           htmlNode.addEventListener("mouseenter", (e: MouseEvent) => {
-            setIframeEvent(e);
             onMouseEnter(e);
           });
           htmlNode.addEventListener("mousemove", (e: MouseEvent) => {
-            setIframeEvent(e);
             onMouseMove(e);
           });
           htmlNode.addEventListener("mouseleave", (e: MouseEvent) => {
-            setIframeEvent(e);
             onMouseLeave(e);
           });
           htmlNode.addEventListener("click", (e: MouseEvent) => {
             e.preventDefault();
             setIsDblClick(false);
-            setIframeEvent(e);
             onClick(e);
           });
 
@@ -328,7 +324,6 @@ export const IFrame = () => {
             const timeSinceLastClick = currentTime - lastClickTime;
             if (timeSinceLastClick < 500 && lastClickTarget === e.target) {
               externalDblclick.current = false;
-              setIframeEvent(e);
               onDblClick(e);
             }
             lastClickTime = currentTime;
