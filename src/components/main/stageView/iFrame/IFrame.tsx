@@ -1,7 +1,6 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import { useDispatch } from "react-redux";
-
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { TNode, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
@@ -30,7 +29,6 @@ export const IFrame = () => {
     nFocusedItem: focusedItem,
     nSelectedItems: selectedItems,
     hoveredNodeUid,
-    iframeLoading,
     needToReloadIframe,
     iframeSrc,
   } = useAppState();
