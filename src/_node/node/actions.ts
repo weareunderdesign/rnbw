@@ -1,5 +1,17 @@
-export const n_create = () => {};
-export const n_remove = () => {};
-export const n_duplicate = () => {};
-export const n_move = () => {};
-export const n_copy = () => {};
+import { TNodeActionType } from "..";
+
+const create = () => {};
+const remove = () => {};
+const duplicate = () => {};
+const move = () => {};
+const copy = () => {};
+
+export const nodeActions: {
+  [action in TNodeActionType]: () => void;
+} = {
+  create,
+  remove,
+  duplicate,
+  move,
+  copy,
+};
