@@ -1,21 +1,12 @@
 import { useCallback, useContext } from "react";
 
 import { Range } from "monaco-editor";
-import { useSelector } from "react-redux";
 
 import { useEditor } from "@_components/main/codeView/hooks";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { getValidNodeUids } from "@_node/index";
 import { TNodeUid } from "@_node/types";
-import { osTypeSelector } from "@_redux/global";
 import { MainContext } from "@_redux/main";
-import { codeViewTabSizeSelector } from "@_redux/main/codeView";
-import {
-  nodeTreeSelector,
-  nodeTreeViewStateSelector,
-  validNodeTreeSelector,
-} from "@_redux/main/nodeTree";
-import { clipboardDataSelector } from "@_redux/main/processor";
 
 import {
   getCopiedContent,
