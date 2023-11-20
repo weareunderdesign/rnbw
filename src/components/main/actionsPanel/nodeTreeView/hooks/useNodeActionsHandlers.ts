@@ -16,7 +16,6 @@ export const useNodeActionsHandlers = () => {
   const {
     nodeTree,
     validNodeTree,
-    codeViewTabSize,
     nFocusedItem: focusedItem,
     nSelectedItems: selectedItems,
   } = useAppState();

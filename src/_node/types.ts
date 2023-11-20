@@ -66,6 +66,18 @@ export type TNodeApiPayload = TNodeApiPayloadBase &
         codeViewInstance?: never;
         tree?: never;
       }
+  ) &
+  (
+    | {
+        action: "create";
+        htmlReferenceData: THtmlReferenceData;
+        nodeTreeFocusedItem: string;
+      }
+    | {
+        action: Exclude<TNodeActionType, "create">;
+        htmlReferenceData?: never;
+        nodeTreeFocusedItem?: never;
+      }
   );
 
 export type TNodeActionType =

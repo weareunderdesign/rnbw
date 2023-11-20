@@ -5,14 +5,89 @@ import {
   getCopiedContent,
   sortUidsByMaxEndIndex,
 } from "@_components/main/actionsPanel/nodeTreeView/helpers";
+import { AddNodeActionPrefix } from "@_constants/main";
+import { THtmlReferenceData } from "@_types/main";
 
-const create = () => {};
+const create = ({
+  actionName,
+  focusedItem,
+  tree,
+  codeViewInstance,
+  htmlReferenceData,
+}: {
+  actionName: string;
+  focusedItem: string;
+  tree: TNodeTreeData;
+  codeViewInstance: editor.IStandaloneCodeEditor;
+  htmlReferenceData: THtmlReferenceData;
+}) => {
+  const tagName = actionName.slice(
+    AddNodeActionPrefix.length + 2,
+    actionName.length - 1,
+  );
+  const focusedNode = tree[focusedItem];
 
-const remove = (
-  tree: TNodeTreeData,
-  uids: TNodeUid[],
-  codeViewInstanceModel: editor.ITextModel,
-) => {
+  if (!focusedNode?.uid) {
+    console.error("Focused node is undefined");
+    return;
+  }
+  const selectedNode = tree[focusedNode.uid];
+  if (!selectedNode || !selectedNode.data.sourceCodeLocation) {
+    console.error("Parent node or source code location is undefined");
+    return;
+  }
+  const { endLine, endCol } = selectedNode.data.sourceCodeLocation;
+  const model = codeViewInstance.getModel();
+  if (!model) {
+    console.error("Monaco Editor model is undefined");
+    return;
+  }
+  const HTMLElement = htmlReferenceData.elements[tagName];
+
+  let openingTag = HTMLElement.Tag;
+
+  if (HTMLElement.Attributes) {
+    const tagArray = openingTag.split("");
+    tagArray.splice(tagArray.length - 1, 0, ` ${HTMLElement.Attributes}`);
+    openingTag = tagArray.join("");
+  }
+  const closingTag = `</${tagName}>`;
+
+  const tagContent = !!HTMLElement.Content ? HTMLElement.Content : "";
+
+  const codeViewText =
+    HTMLElement.Contain === "None"
+      ? openingTag
+      : `${openingTag}${tagContent}${closingTag}`;
+
+  const position = { lineNumber: endLine, column: endCol + 1 };
+  const range = new Range(
+    position.lineNumber,
+    position.column,
+    position.lineNumber,
+    position.column,
+  );
+  const editOperation = { range, text: codeViewText };
+
+  model.pushEditOperations([], [editOperation], () => null);
+  codeViewInstance.setPosition({
+    lineNumber: position.lineNumber + 1,
+    column: 1,
+  });
+
+  // const content = html_beautify(model.getValue());
+  // model.setValue(content);
+};
+
+const remove = ({
+  tree,
+  uids,
+  codeViewInstanceModel,
+}: {
+  tree: TNodeTreeData;
+  uids: TNodeUid[];
+  codeViewInstanceModel: editor.ITextModel;
+}) => {
   uids.forEach((uid) => {
     const node = tree[uid];
     if (node) {
@@ -101,6 +176,7 @@ const duplicate = ({
 
   // handleEditorChange(content);
 };
+
 const move = () => {};
 
 const copy = ({ uids }: { uids: TNodeUid[] }) => {
@@ -124,21 +200,30 @@ export const doNodeActions = (
 ) => {
   const { action, selectedUids } = params;
   let codeViewInstanceModel = null;
-  let tree = null;
+
   if (!(action in ["copy"])) {
     codeViewInstanceModel = params.codeViewInstance?.getModel();
-    tree = params.tree;
   }
 
   switch (action) {
     case "create":
-      create();
+      create({
+        actionName: params.action,
+        focusedItem: params.nodeTreeFocusedItem,
+        tree: params.tree,
+        codeViewInstance: params.codeViewInstance,
+        htmlReferenceData: params.htmlReferenceData,
+      });
       break;
     case "remove":
-      if (!codeViewInstanceModel || !tree) {
+      if (!codeViewInstanceModel) {
         return;
       }
-      const cb_params = remove(tree, selectedUids, codeViewInstanceModel);
+      const cb_params = remove({
+        tree: params.tree,
+        uids: selectedUids,
+        codeViewInstanceModel,
+      });
       // cb && cb(cb_params);
       break;
     case "duplicate":
