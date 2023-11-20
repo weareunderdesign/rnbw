@@ -48,8 +48,8 @@ export type TNodeApiPayloadBase = {
 
 export type TNodeApiPayload = TNodeApiPayloadBase &
   (
-    | { isFileTree: true; fileExt: string }
-    | { isFileTree: false; fileExt?: never }
+    | { isFileTree: true; fileExt: never }
+    | { isFileTree: false; fileExt: string }
   ) &
   (
     | { action: "paste"; targetUid: TNodeUid }

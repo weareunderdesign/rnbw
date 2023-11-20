@@ -18,7 +18,6 @@ export const doFileActions = (
     action,
 
     selectedUids,
-    tragetUid,
     isBetween = false,
     position = 0,
 
