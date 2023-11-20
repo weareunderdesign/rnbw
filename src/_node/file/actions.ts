@@ -1,4 +1,4 @@
-import { TNodeActionType, TNodeApiPayload } from "..";
+import { TNodeApiPayload } from "..";
 
 const create = () => {};
 const remove = () => {};
@@ -24,4 +24,26 @@ export const doFileActions = (params: TNodeApiPayload, cb?: () => {}) => {
 
     osType = "Windows",
   } = params;
+
+  switch (action) {
+    case "create":
+      create();
+      break;
+    case "remove":
+      remove();
+      break;
+    case "duplicate":
+      duplicate();
+      break;
+    case "move":
+      move();
+      break;
+    case "copy":
+      copy();
+      break;
+    default:
+      break;
+  }
+
+  cb && cb();
 };

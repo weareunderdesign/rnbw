@@ -27,16 +27,23 @@ export const doNodeActions = (params: TNodeApiPayload, cb?: () => {}) => {
 
   switch (action) {
     case "create":
+      create();
       break;
     case "remove":
+      remove();
       break;
     case "duplicate":
+      duplicate();
       break;
     case "move":
+      move();
       break;
     case "copy":
+      copy();
       break;
     default:
       break;
   }
+
+  cb && cb();
 };
