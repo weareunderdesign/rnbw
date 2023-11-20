@@ -1,5 +1,5 @@
 import { TFileNode, TFileNodeData } from "@_node/file";
-import { THtmlNodeData } from "@_node/html";
+import { THtmlNodeData } from "@_node/node";
 import { TNode, TNodeTreeData } from "@_node/types";
 import { TProject, TWorkspace } from "@_redux/main/fileTree";
 import { focusNodeTreeNode } from "@_redux/main/nodeTree";

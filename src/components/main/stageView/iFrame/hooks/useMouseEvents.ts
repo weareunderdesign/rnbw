@@ -2,9 +2,9 @@ import { useCallback, useContext } from "react";
 
 import { useDispatch, useSelector } from "react-redux";
 
-import { getValidNodeUids } from "@_node/apis";
 import { TFileNodeData } from "@_node/file";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
+import { getValidNodeUids } from "@_node/helpers";
 import { TNode, TNodeUid } from "@_node/types";
 import { AppState } from "@_redux/_root";
 import { MainContext } from "@_redux/main";
@@ -16,9 +16,9 @@ import {
   setNavigatorDropdownType,
 } from "@_redux/main/processor";
 import { setLinkToOpen } from "@_redux/main/stageView";
+import { useAppState } from "@_redux/useAppState";
 
 import { useSetSelectItem, useTextEditing } from "./";
-import { useAppState } from "@_redux/useAppState";
 
 export interface IUseMouseEventsProps {
   externalDblclick: React.MutableRefObject<boolean>;

@@ -1,4 +1,4 @@
-import { THtmlNodeData } from "@_node/html";
+import { THtmlNodeData } from "@_node/node";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
 
 import { handleTextPaste, selectAllText } from "./";

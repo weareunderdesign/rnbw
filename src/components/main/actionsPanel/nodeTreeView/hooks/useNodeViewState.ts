@@ -1,23 +1,32 @@
-import { useCallback, useContext } from "react";
-
-import { useDispatch, useSelector } from "react-redux";
-
-import { getValidNodeUids } from "@_node/apis";
-import { TFileNodeData } from "@_node/file";
-import { TNodeUid } from "@_node/types";
-import { MainContext } from "@_redux/main";
-import { selectFileTreeNodes, setCurrentFileUid } from "@_redux/main/fileTree";
 import {
-  NodeTree_Event_ClearActionType,
+  useCallback,
+  useContext,
+} from 'react';
+
+import {
+  useDispatch,
+  useSelector,
+} from 'react-redux';
+
+import { TFileNodeData } from '@_node/file';
+import { getValidNodeUids } from '@_node/helpers';
+import { TNodeUid } from '@_node/types';
+import { MainContext } from '@_redux/main';
+import {
+  selectFileTreeNodes,
+  setCurrentFileUid,
+} from '@_redux/main/fileTree';
+import {
   collapseNodeTreeNodes,
   expandNodeTreeNodes,
   focusNodeTreeNode,
+  NodeTree_Event_ClearActionType,
   nodeTreeViewStateSelector,
   selectNodeTreeNodes,
   setSelectedNodeUids,
-} from "@_redux/main/nodeTree";
-import { setNavigatorDropdownType } from "@_redux/main/processor";
-import { useAppState } from "@_redux/useAppState";
+} from '@_redux/main/nodeTree';
+import { setNavigatorDropdownType } from '@_redux/main/processor';
+import { useAppState } from '@_redux/useAppState';
 
 export function useNodeViewState(focusItemValue: TNodeUid | null) {
   const dispatch = useDispatch();

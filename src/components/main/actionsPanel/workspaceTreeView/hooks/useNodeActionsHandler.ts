@@ -4,8 +4,8 @@ import { TreeItem } from "react-complex-tree";
 import { useDispatch, useSelector } from "react-redux";
 
 import { RednerableFileTypes, RootNodeUid, TmpNodeUid } from "@_constants/main";
-import { getValidNodeUids } from "@_node/apis";
 import { createDirectory, TFileNodeData, writeFile } from "@_node/file";
+import { getValidNodeUids } from "@_node/helpers";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import { osTypeSelector } from "@_redux/global";
 import { MainContext } from "@_redux/main";
@@ -20,12 +20,12 @@ import {
   setPrevRenderableFileUid,
 } from "@_redux/main/fileTree";
 import { setFileAction, TFileAction } from "@_redux/main/fileTree/event";
+import { clearNodeTreeViewState } from "@_redux/main/nodeTree";
 import {
   NodeTree_Event_ClearActionType,
   setCurrentFileContent,
 } from "@_redux/main/nodeTree/event";
 import {
-  navigatorDropdownTypeSelector,
   setNavigatorDropdownType,
   setShowCodeView,
   showCodeViewSelector,
@@ -42,7 +42,6 @@ import {
 } from "../helpers";
 import { useInvalidNodes } from "./useInvalidNodes";
 import { useTemporaryNodes } from "./useTemporaryNodes";
-import { clearNodeTreeViewState } from "@_redux/main/nodeTree";
 
 export const useNodeActionsHandler = (
   openFileUid: React.MutableRefObject<string>,
