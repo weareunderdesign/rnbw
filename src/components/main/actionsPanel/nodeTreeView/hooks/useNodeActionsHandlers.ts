@@ -89,9 +89,9 @@ export const useNodeActionsHandlers = () => {
 
   const onDelete = useCallback(() => {
     if (selectedItems.length === 0) return;
-    const model = monacoEditorRef.current?.getModel();
-    if (!model) {
-      LogAllow && console.error("Monaco Editor model is undefined");
+
+    if (!monacoEditorRef.current) {
+      LogAllow && console.error("Monaco Editor  is undefined");
       return;
     }
 
@@ -103,8 +103,7 @@ export const useNodeActionsHandlers = () => {
         fileExt: "html",
         action: "remove",
         selectedUids: selectedItems,
-
-        codeViewInstanceModel: model,
+        codeViewInstance: monacoEditorRef.current,
       },
       // handleEditorChange,
     );
