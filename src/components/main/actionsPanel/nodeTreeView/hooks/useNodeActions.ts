@@ -24,19 +24,19 @@ import {
 } from "../helpers";
 import { getTree } from "../helpers/getTree";
 import { html_beautify } from "js-beautify";
+import { useAppState } from "@_redux/useAppState";
+import { LogAllow } from "@_constants/global";
 
 export function useNodeActions() {
-  const nodeTree = useSelector(nodeTreeSelector);
-  const validNodeTree = useSelector(validNodeTreeSelector);
-  const { focusedItem } = useSelector(nodeTreeViewStateSelector);
-  const codeViewTabSize = useSelector(codeViewTabSizeSelector);
-  const clipboardData = useSelector(clipboardDataSelector);
-
-  const osType = useSelector(osTypeSelector);
   const {
-    // references
+    osType,
+    nodeTree,
+    validNodeTree,
+    nFocusedItem: focusedItem,
+    codeViewTabSize,
+  } = useAppState();
+  const {
     htmlReferenceData,
-    // other
     monacoEditorRef,
     setIsContentProgrammaticallyChanged,
     addRunningActions,
@@ -152,7 +152,7 @@ export function useNodeActions() {
     const iframe: any = document.getElementById("iframeId");
     const model = monacoEditorRef.current?.getModel();
     if (!model) {
-      console.error("Monaco Editor model is undefined");
+      LogAllow && console.error("Monaco Editor model is undefined");
       return;
     }
     setIsContentProgrammaticallyChanged(true);
@@ -167,7 +167,8 @@ export function useNodeActions() {
 
       const selectedNode = validNodeTree[uid];
       if (!selectedNode || !selectedNode.data.sourceCodeLocation) {
-        console.error("Parent node or source code location is undefined");
+        LogAllow &&
+          console.error("Parent node or source code location is undefined");
         return;
       }
       const { endLine, endCol } = selectedNode.data.sourceCodeLocation;

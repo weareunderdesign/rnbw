@@ -1,36 +1,23 @@
 import { useCallback, useContext } from "react";
 
 import { Range } from "monaco-editor";
-import { useSelector } from "react-redux";
 
 import { useEditor } from "@_components/main/codeView/hooks";
 import { AddNodeActionPrefix } from "@_constants/main";
 import { MainContext } from "@_redux/main";
-import {
-  currentFileUidSelector,
-  fileTreeSelector,
-} from "@_redux/main/fileTree";
-import {
-  nodeTreeSelector,
-  nodeTreeViewStateSelector,
-  validNodeTreeSelector,
-} from "@_redux/main/nodeTree";
 
 import { useNodeActions } from "./useNodeActions";
 import { html_beautify } from "js-beautify";
+import { useAppState } from "@_redux/useAppState";
+import { LogAllow } from "@_constants/global";
 
 export const useNodeActionsHandlers = () => {
-  const fileTree = useSelector(fileTreeSelector);
-  const currentFileUid = useSelector(currentFileUidSelector);
-
-  const nodeTree = useSelector(nodeTreeSelector);
-  const validNodeTree = useSelector(validNodeTreeSelector);
-
-  const { focusedItem, selectedItems } = useSelector(nodeTreeViewStateSelector);
   const {
-    // other
-    monacoEditorRef,
-  } = useContext(MainContext);
+    validNodeTree,
+    nFocusedItem: focusedItem,
+    nSelectedItems: selectedItems,
+  } = useAppState();
+  const { monacoEditorRef } = useContext(MainContext);
 
   const {
     cb_addNode,
@@ -47,40 +34,28 @@ export const useNodeActionsHandlers = () => {
     if (selectedItems.length === 0) return;
     cb_copyNode(selectedItems);
     cb_removeNode(selectedItems);
-  }, [
-    selectedItems,
-    fileTree[currentFileUid],
-    nodeTree,
-    cb_removeNode,
-    cb_copyNode,
-  ]);
+  }, [selectedItems, cb_copyNode, cb_removeNode]);
 
   const onCopy = useCallback(() => {
     if (selectedItems.length === 0) return;
     cb_copyNode(selectedItems);
-  }, [selectedItems, fileTree[currentFileUid], nodeTree, cb_copyNode]);
+  }, [selectedItems, cb_copyNode]);
 
   const onPaste = useCallback(() => {
     const focusedNode = validNodeTree[focusedItem];
-
-    if (!focusedNode?.uid) {
-      console.error("Focused node is undefined");
-      return;
-    }
-
-    const selectedNode = validNodeTree[focusedNode.uid];
-    if (!selectedNode || !selectedNode.data.sourceCodeLocation) {
-      console.error("Parent node or source code location is undefined");
-      return;
-    }
-
-    const { endLine, endCol } = selectedNode.data.sourceCodeLocation;
     const model = monacoEditorRef.current?.getModel();
 
-    if (!model) {
-      console.error("Monaco Editor model is undefined");
+    if (!focusedNode || !focusedNode.data.sourceCodeLocation) {
+      LogAllow &&
+        console.error("Focused node or its source code location is undefined");
       return;
     }
+    if (!model) {
+      LogAllow && console.error("Monaco Editor model is undefined");
+      return;
+    }
+
+    const { endLine, endCol } = focusedNode.data.sourceCodeLocation;
 
     window.navigator.clipboard
       .readText()
@@ -104,31 +79,29 @@ export const useNodeActionsHandlers = () => {
         handleEditorChange(content);
       })
       .catch((error) => {
-        console.error("Error reading from clipboard:", error);
+        LogAllow && console.error("Error reading from clipboard:", error);
       });
   }, [validNodeTree, focusedItem]);
 
   const onDelete = useCallback(() => {
     if (selectedItems.length === 0) return;
     cb_removeNode(selectedItems);
-  }, [cb_removeNode, selectedItems]);
-
+  }, [selectedItems, cb_removeNode]);
   const onDuplicate = useCallback(() => {
     if (selectedItems.length === 0) return;
     cb_duplicateNode(selectedItems);
-  }, [cb_duplicateNode, selectedItems, validNodeTree]);
+  }, [selectedItems, cb_duplicateNode]);
 
   const onTurnInto = useCallback(() => {}, []);
 
   const onGroup = useCallback(() => {
     if (selectedItems.length === 0) return;
     cb_groupNode(selectedItems);
-  }, [cb_groupNode, selectedItems, validNodeTree]);
-
+  }, [cb_groupNode, selectedItems]);
   const onUngroup = useCallback(() => {
     if (selectedItems.length === 0) return;
     cb_ungroupNode(selectedItems);
-  }, [cb_ungroupNode, selectedItems, validNodeTree]);
+  }, [cb_ungroupNode, selectedItems]);
 
   const onAddNode = useCallback(
     (actionName: string) => {
@@ -138,10 +111,11 @@ export const useNodeActionsHandlers = () => {
       );
       cb_addNode(tagName);
     },
-    [cb_addNode, validNodeTree, focusedItem],
+    [cb_addNode],
   );
 
   return {
+    onAddNode,
     onCut,
     onCopy,
     onPaste,
@@ -150,6 +124,5 @@ export const useNodeActionsHandlers = () => {
     onTurnInto,
     onGroup,
     onUngroup,
-    onAddNode,
   };
 };
