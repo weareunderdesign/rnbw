@@ -1,33 +1,16 @@
-import { fileActions, nodeActions } from ".";
+import { doFileActions, doNodeActions } from ".";
 import { TNodeApiPayload } from "./types";
 
 export const callNodeApi = async (params: TNodeApiPayload, cb?: () => {}) => {
-  const {
-    tree,
-    isFileTree,
-    fileExt = "",
-
-    action,
-
-    selectedUids,
-    tragetUid,
-    isBetween = false,
-    position = 0,
-
-    codeViewInstance,
-    codeViewTabSize = 2,
-
-    osType = "Windows",
-  } = params;
+  const { isFileTree } = params;
 
   return new Promise<void>((resolve, reject) => {
     try {
       if (isFileTree) {
-        fileActions[action]();
+        doFileActions(params, cb);
       } else {
-        nodeActions[action]();
+        doNodeActions(params, cb);
       }
-      cb && cb();
       resolve();
     } catch (err) {
       reject(err);
