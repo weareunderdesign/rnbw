@@ -37,17 +37,12 @@ export type TNodeSourceCodeLocation = {
 };
 
 export type TNodeApiPayloadBase = {
-  tree: TNodeTreeData;
   isFileTree: boolean | undefined;
   action: TNodeActionType;
   selectedUids: TNodeUid[];
   isBetween?: boolean;
   position?: number;
-
-  codeViewInstance?: editor.IStandaloneCodeEditor;
-  codeViewInstanceModel?: editor.ITextModel;
   codeViewTabSize?: number;
-
   osType?: TOsType;
 };
 
@@ -59,6 +54,18 @@ export type TNodeApiPayload = TNodeApiPayloadBase &
   (
     | { action: "paste"; targetUid: TNodeUid }
     | { action: Exclude<TNodeActionType, "paste"> }
+  ) &
+  (
+    | {
+        action: Exclude<TNodeActionType, "copy">;
+        codeViewInstance: editor.IStandaloneCodeEditor;
+        tree: TNodeTreeData;
+      }
+    | {
+        action: "copy";
+        codeViewInstance?: never;
+        tree?: never;
+      }
   );
 
 export type TNodeActionType =
