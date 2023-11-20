@@ -10,7 +10,7 @@ import {
   THtmlNodeAttribs,
   THtmlNodeTreeData,
   THtmlParserResponse,
-} from "../../html/types";
+} from "../../node/type/html";
 import { StageNodeIdAttr } from "./constants";
 
 const parseHtml = (content: string): THtmlParserResponse => {

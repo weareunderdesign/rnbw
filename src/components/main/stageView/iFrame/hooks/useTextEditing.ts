@@ -6,7 +6,7 @@ import { useEditor } from "@_components/main/codeView/hooks";
 import { RootNodeUid } from "@_constants/main";
 import { TFileNodeData } from "@_node/file";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
-import { THtmlNodeData } from "@_node/html";
+import { THtmlNodeData } from "@_node/node";
 import { TNode, TNodeUid } from "@_node/types";
 import { AppState } from "@_redux/_root";
 import { MainContext } from "@_redux/main";

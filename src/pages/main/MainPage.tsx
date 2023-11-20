@@ -58,6 +58,10 @@ import {
 } from "@_redux/main/fileTree/event";
 import { setNewFocusedNodeUid } from "@_redux/main/nodeTree";
 import {
+  NodeTree_Event_RedoActionType,
+  NodeTree_Event_UndoActionType,
+} from "@_redux/main/nodeTree/event";
+import {
   setDidRedo,
   setDidUndo,
   setNavigatorDropdownType,
@@ -91,10 +95,6 @@ import {
 
 import { getCommandKey, isChromeOrEdge } from "../../services/global";
 import { addDefaultCmdkActions, clearProjectSession } from "./helper";
-import {
-  NodeTree_Event_RedoActionType,
-  NodeTree_Event_UndoActionType,
-} from "@_redux/main/nodeTree/event";
 
 export default function MainPage() {
   // ***************************************** Reducer Begin *****************************************

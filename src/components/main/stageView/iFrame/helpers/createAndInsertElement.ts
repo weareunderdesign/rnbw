@@ -1,7 +1,7 @@
 import { RefObject } from "react";
 
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
-import { THtmlNodeData } from "@_node/html";
+import { THtmlNodeData } from "@_node/node";
 import { TNode, TNodeUid } from "@_node/types";
 import { focusNodeTreeNode, selectNodeTreeNodes } from "@_redux/main/nodeTree";
 import { AnyAction, Dispatch } from "@reduxjs/toolkit";

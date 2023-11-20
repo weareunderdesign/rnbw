@@ -1,4 +1,4 @@
-import { THtmlDomNode } from "@_node/html";
+import { THtmlDomNode } from "@_node/node";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 
 export const getPositionFromIndex = (

@@ -4,7 +4,6 @@ import {
   RootNodeUid,
   StagePreviewPathPrefix,
 } from "@_constants/main";
-import { getSubNodeUidsByBfs, getValidNodeUids } from "@_node/apis";
 import {
   parseFile,
   TFileHandlerCollection,
@@ -14,7 +13,8 @@ import {
   writeFile,
 } from "@_node/file";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
-import { THtmlNodeData, THtmlPageSettings } from "@_node/html";
+import { getSubNodeUidsByBfs, getValidNodeUids } from "@_node/helpers";
+import { THtmlNodeData, THtmlPageSettings } from "@_node/node";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import { TOsType } from "@_redux/global";
 import { TProject } from "@_redux/main/fileTree";
