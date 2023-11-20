@@ -99,12 +99,10 @@ export const useNodeActionsHandlers = () => {
     callNodeApi(
       {
         tree: nodeTree,
-
         action: "remove",
-
         selectedUids: selectedItems,
-
         codeViewInstanceModel: model,
+        isFileTree: false,
       },
       // handleEditorChange,
     );

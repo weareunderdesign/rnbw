@@ -58,7 +58,7 @@ export const doNodeActions = (
     action,
 
     selectedUids,
-    tragetUid = "",
+
     isBetween = false,
     position = 0,
 

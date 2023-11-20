@@ -36,15 +36,11 @@ export type TNodeSourceCodeLocation = {
   endOffset: number;
 };
 
-export type TNodeApiPayload = {
+export type TNodeApiPayloadBase = {
   tree: TNodeTreeData;
-  isFileTree?: boolean;
-  fileExt?: string;
-
+  isFileTree: boolean | undefined;
   action: TNodeActionType;
-
   selectedUids: TNodeUid[];
-  tragetUid?: TNodeUid;
   isBetween?: boolean;
   position?: number;
 
@@ -55,11 +51,22 @@ export type TNodeApiPayload = {
   osType?: TOsType;
 };
 
+export type TNodeApiPayload = TNodeApiPayloadBase &
+  (
+    | { isFileTree: true; fileExt: string }
+    | { isFileTree: false; fileExt?: never }
+  ) &
+  (
+    | { action: "paste"; targetUid: TNodeUid }
+    | { action: Exclude<TNodeActionType, "paste"> }
+  );
+
 export type TNodeActionType =
   | "create"
   | "remove"
   | "duplicate"
   | "move"
-  | "copy";
+  | "copy"
+  | "paste";
 
 export type TNodeReferenceData = THtmlReferenceData;
