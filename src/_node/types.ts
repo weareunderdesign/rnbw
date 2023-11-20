@@ -38,17 +38,18 @@ export type TNodeSourceCodeLocation = {
 
 export type TNodeApiPayload = {
   tree: TNodeTreeData;
-  isFileTree: boolean;
+  isFileTree?: boolean;
   fileExt?: string;
 
   action: TNodeActionType;
 
   selectedUids: TNodeUid[];
-  tragetUid: TNodeUid;
+  tragetUid?: TNodeUid;
   isBetween?: boolean;
   position?: number;
 
-  codeViewInstance: editor.IStandaloneCodeEditor;
+  codeViewInstance?: editor.IStandaloneCodeEditor;
+  codeViewInstanceModel?: editor.ITextModel;
   codeViewTabSize?: number;
 
   osType?: TOsType;

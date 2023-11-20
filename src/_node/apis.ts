@@ -1,7 +1,10 @@
 import { doFileActions, doNodeActions } from ".";
 import { TNodeApiPayload } from "./types";
 
-export const callNodeApi = async (params: TNodeApiPayload, cb?: () => {}) => {
+export const callNodeApi = async (
+  params: TNodeApiPayload,
+  cb?: (...params: any[]) => void,
+) => {
   const { isFileTree } = params;
 
   return new Promise<void>((resolve, reject) => {

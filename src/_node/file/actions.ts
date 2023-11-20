@@ -6,7 +6,10 @@ const duplicate = () => {};
 const move = () => {};
 const copy = () => {};
 
-export const doFileActions = (params: TNodeApiPayload, cb?: () => {}) => {
+export const doFileActions = (
+  params: TNodeApiPayload,
+  cb?: (...params: any[]) => void,
+) => {
   const {
     tree,
     isFileTree,

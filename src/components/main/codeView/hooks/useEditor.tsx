@@ -1,60 +1,39 @@
-import {
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 
-import { debounce } from 'lodash';
-import {
-  editor,
-  IPosition,
-} from 'monaco-editor';
-import morphdom from 'morphdom';
-import * as parse5 from 'parse5';
-import {
-  useDispatch,
-  useSelector,
-} from 'react-redux';
+import { debounce } from "lodash";
+import { editor, IPosition } from "monaco-editor";
+import morphdom from "morphdom";
+import * as parse5 from "parse5";
+import { useDispatch, useSelector } from "react-redux";
 
 import {
+  CodeViewSyncDelay,
   DefaultTabSize,
   RootNodeUid,
-} from '@_constants/main';
-import {
-  parseFile,
-  TFileNodeData,
-} from '@_node/file';
+} from "@_constants/main";
+import { parseFile, TFileNodeData } from "@_node/file";
 import {
   PreserveRnbwNode,
   StageNodeIdAttr,
-} from '@_node/file/handlers/constants';
-import { getSubNodeUidsByBfs } from '@_node/helpers';
-import {
-  TNode,
-  TNodeTreeData,
-  TNodeUid,
-} from '@_node/types';
-import { MainContext } from '@_redux/main';
-import {
-  setCodeEditing,
-  setCodeViewTabSize,
-} from '@_redux/main/codeView';
+} from "@_node/file/handlers/constants";
+import { getSubNodeUidsByBfs } from "@_node/helpers";
+import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
+import { MainContext } from "@_redux/main";
+import { setCodeEditing, setCodeViewTabSize } from "@_redux/main/codeView";
 import {
   currentFileUidSelector,
   fileTreeSelector,
   setDoingFileAction,
   setFileTree,
-} from '@_redux/main/fileTree';
+} from "@_redux/main/fileTree";
 import {
   focusNodeTreeNode,
   selectNodeTreeNodes,
   setNodeTree,
-} from '@_redux/main/nodeTree';
-import { setCurrentFileContent } from '@_redux/main/nodeTree/event';
+} from "@_redux/main/nodeTree";
+import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
 
-import { CodeSelection } from '../types';
+import { CodeSelection } from "../types";
 
 function getLanguageFromExtension(extension: string) {
   if (extension) return extension;
@@ -299,12 +278,12 @@ export default function useEditor() {
           onBeforeNodeDiscarded: function (node: Node) {
             const elementNode = node as Element;
 
-            debugger;
+            // debugger;
             const ifPreserveNode = elementNode.getAttribute
               ? elementNode.getAttribute(PreserveRnbwNode)
               : false;
             if (ifPreserveNode) {
-              debugger;
+              // debugger;
               return false;
             }
             //script and style should not be discarded
@@ -352,7 +331,7 @@ export default function useEditor() {
       }
 
       dispatch(setCodeEditing(false));
-    }, 1000),
+    }, CodeViewSyncDelay),
     [dispatch, fileTree, monacoEditorRef, currentFileUid, addRunningActions],
   );
 

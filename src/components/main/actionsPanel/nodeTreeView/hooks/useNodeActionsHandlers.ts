@@ -10,14 +10,18 @@ import { useNodeActions } from "./useNodeActions";
 import { html_beautify } from "js-beautify";
 import { useAppState } from "@_redux/useAppState";
 import { LogAllow } from "@_constants/global";
+import { callNodeApi } from "@_node/apis";
 
 export const useNodeActionsHandlers = () => {
   const {
+    nodeTree,
     validNodeTree,
+    codeViewTabSize,
     nFocusedItem: focusedItem,
     nSelectedItems: selectedItems,
   } = useAppState();
-  const { monacoEditorRef } = useContext(MainContext);
+  const { monacoEditorRef, setIsContentProgrammaticallyChanged } =
+    useContext(MainContext);
 
   const {
     cb_addNode,
@@ -85,8 +89,26 @@ export const useNodeActionsHandlers = () => {
 
   const onDelete = useCallback(() => {
     if (selectedItems.length === 0) return;
-    cb_removeNode(selectedItems);
-  }, [selectedItems, cb_removeNode]);
+    const model = monacoEditorRef.current?.getModel();
+    if (!model) {
+      LogAllow && console.error("Monaco Editor model is undefined");
+      return;
+    }
+
+    // setIsContentProgrammaticallyChanged(true);
+    callNodeApi(
+      {
+        tree: nodeTree,
+
+        action: "remove",
+
+        selectedUids: selectedItems,
+
+        codeViewInstanceModel: model,
+      },
+      // handleEditorChange,
+    );
+  }, [selectedItems, handleEditorChange]);
   const onDuplicate = useCallback(() => {
     if (selectedItems.length === 0) return;
     cb_duplicateNode(selectedItems);
