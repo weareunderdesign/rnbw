@@ -1,7 +1,7 @@
 import { useCallback, useContext } from "react";
 
 import { Range } from "monaco-editor";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 
 import { useEditor } from "@_components/main/codeView/hooks";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
@@ -23,10 +23,9 @@ import {
   sortUidsByMinStartIndex,
 } from "../helpers";
 import { getTree } from "../helpers/getTree";
+import { html_beautify } from "js-beautify";
 
 export function useNodeActions() {
-  const dispatch = useDispatch();
-
   const nodeTree = useSelector(nodeTreeSelector);
   const validNodeTree = useSelector(validNodeTreeSelector);
   const { focusedItem } = useSelector(nodeTreeViewStateSelector);
@@ -92,7 +91,7 @@ export function useNodeActions() {
       position.lineNumber,
       position.column,
     );
-    const editOperation = { range, text: "\n" + codeViewText };
+    const editOperation = { range, text: codeViewText };
 
     model.pushEditOperations([], [editOperation], () => null);
     monacoEditorRef.current?.setPosition({
@@ -100,7 +99,8 @@ export function useNodeActions() {
       column: 1,
     });
 
-    const content = model.getValue();
+    const content = html_beautify(model.getValue());
+    model.setValue(content);
     handleEditorChange(content);
   };
 
@@ -139,7 +139,8 @@ export function useNodeActions() {
         }
       });
 
-      const content = model.getValue();
+      const content = html_beautify(model.getValue());
+      model.setValue(content);
       handleEditorChange(content, {
         matchIds: uids,
       });
@@ -159,7 +160,7 @@ export function useNodeActions() {
 
     const sortedUids = sortUidsByMaxEndIndex(uids, validNodeTree);
 
-    sortedUids.forEach(async (uid) => {
+    sortedUids.forEach((uid) => {
       const cleanedUpCode = getCopiedContent(uid, iframe);
 
       if (!cleanedUpCode) return;
@@ -179,7 +180,7 @@ export function useNodeActions() {
         position.lineNumber,
         position.column,
       );
-      const editOperation = { range, text: "\n" + cleanedUpCode };
+      const editOperation = { range, text: cleanedUpCode };
 
       model.pushEditOperations([], [editOperation], () => null);
       monacoEditorRef.current?.setPosition({
@@ -187,7 +188,8 @@ export function useNodeActions() {
         column: 1,
       });
 
-      content = model.getValue();
+      content = html_beautify(model.getValue());
+      model.setValue(content);
     });
 
     handleEditorChange(content);
@@ -202,7 +204,7 @@ export function useNodeActions() {
 
       if (!cleanedUpCode) return;
 
-      copiedCode += cleanedUpCode + "\n";
+      copiedCode += cleanedUpCode;
     });
     //copy the cleaned up code to clipboard
     window.navigator.clipboard.writeText(copiedCode);
@@ -305,7 +307,7 @@ export function useNodeActions() {
     );
     const editOperation = {
       range,
-      text: "<div>" + "\n" + copiedCode + "</div>",
+      text: `<div>${copiedCode}</div>`,
     };
 
     model.pushEditOperations([], [editOperation], () => null);
@@ -314,7 +316,8 @@ export function useNodeActions() {
       column: 1,
     });
 
-    const content = model.getValue();
+    const content = html_beautify(model.getValue());
+    model.setValue(content);
     handleEditorChange(content, {
       matchIds: uids,
     });
@@ -412,7 +415,8 @@ export function useNodeActions() {
         column: 1,
       });
 
-      content = model.getValue();
+      const content = html_beautify(model.getValue());
+      model.setValue(content);
     });
 
     handleEditorChange(content);
