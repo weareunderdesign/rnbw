@@ -58,7 +58,6 @@ export const doNodeActions = (
     action,
 
     selectedUids,
-
     isBetween = false,
     position = 0,
 
