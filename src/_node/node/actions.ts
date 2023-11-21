@@ -76,9 +76,6 @@ const add = ({
     lineNumber: position.lineNumber + 1,
     column: 1,
   });
-
-  // const content = html_beautify(codeViewInstanceModel.getValue());
-  // codeViewInstanceModel.setValue(content);
 };
 const remove = ({
   nodeTree,
@@ -240,9 +237,6 @@ const duplicate = ({
       lineNumber: position.lineNumber + 1,
       column: 1,
     });
-
-    // const content = html_beautify(codeViewInstanceModel.getValue());
-    // codeViewInstanceModel.setValue(content);
   });
 };
 const move = ({
