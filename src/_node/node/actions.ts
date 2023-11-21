@@ -137,8 +137,6 @@ const duplicate = ({
     return;
   }
 
-  let content = model.getValue();
-
   const sortedUids = sortUidsByMaxEndIndex(uids, tree);
 
   sortedUids.forEach((uid) => {
