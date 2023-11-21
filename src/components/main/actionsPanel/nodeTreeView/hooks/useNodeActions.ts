@@ -92,7 +92,7 @@ export function useNodeActions() {
 
     const content = html_beautify(model.getValue());
     model.setValue(content);
-    handleEditorChange(content);
+    // handleEditorChange(content);
   };
 
   const cb_removeNode = useCallback(
@@ -132,9 +132,9 @@ export function useNodeActions() {
 
       const content = html_beautify(model.getValue());
       model.setValue(content);
-      handleEditorChange(content, {
-        matchIds: uids,
-      });
+      // handleEditorChange(content, {
+      //   matchIds: uids,
+      // });
     },
     [addRunningActions, removeRunningActions, nodeTree],
   );
@@ -184,7 +184,7 @@ export function useNodeActions() {
       model.setValue(content);
     });
 
-    handleEditorChange(content);
+    // handleEditorChange(content);
   };
 
   const cb_copyNode = (uids: TNodeUid[]) => {
@@ -310,9 +310,9 @@ export function useNodeActions() {
 
     const content = html_beautify(model.getValue());
     model.setValue(content);
-    handleEditorChange(content, {
-      matchIds: uids,
-    });
+    // handleEditorChange(content, {
+    //   matchIds: uids,
+    // });
   };
 
   const cb_ungroupNode = (uids: TNodeUid[]) => {
@@ -411,7 +411,7 @@ export function useNodeActions() {
       model.setValue(content);
     });
 
-    handleEditorChange(content);
+    // handleEditorChange(content);
   };
 
   return {

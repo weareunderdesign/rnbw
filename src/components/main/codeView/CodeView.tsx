@@ -252,7 +252,7 @@ export default function CodeView(props: CodeViewProps) {
             onMount={handleEditorDidMount}
             onChange={(value) => {
               if (isContentProgrammaticallyChanged.current) return;
-              handleEditorChange(value);
+              // handleEditorChange({value});
             }}
             loading={""}
             options={

@@ -535,5 +535,5 @@ export const parseFile = (
 ): TFileParserResponse => {
   return fileHandlers[ext]
     ? fileHandlers[ext](content)
-    : { contentInApp: "", nodeTree: {} };
+    : { contentInApp: "", nodeTree: {}, htmlDom: null };
 };

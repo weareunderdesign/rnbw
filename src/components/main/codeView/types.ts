@@ -1,3 +1,5 @@
+import { TNodeTreeData } from "@_node/types";
+
 export type CodeViewProps = {
   offsetTop: string | number;
   offsetBottom: number | string;
@@ -20,4 +22,14 @@ export type CodeSelection = {
   startColumn: number;
   endLineNumber: number;
   endColumn: number;
+};
+
+export type EditorChange = {
+  value: string;
+  htmlDom: any;
+  nodeTree: TNodeTreeData;
+  configs?: {
+    matchIds?: string[] | null;
+    skipFromChildren?: boolean;
+  };
 };

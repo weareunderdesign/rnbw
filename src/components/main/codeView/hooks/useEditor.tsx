@@ -33,7 +33,7 @@ import {
 } from "@_redux/main/nodeTree";
 import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
 
-import { CodeSelection } from "../types";
+import { CodeSelection, EditorChange } from "../types";
 
 function getLanguageFromExtension(extension: string) {
   if (extension) return extension;
@@ -207,14 +207,14 @@ export default function useEditor() {
   }
 
   const debouncedEditorUpdate = useCallback(
-    debounce((value: string, configs) => {
+    debounce(({ value, htmlDom, nodeTree, configs }: EditorChange) => {
+      debugger;
       const monacoEditor = monacoEditorRef.current;
       if (!monacoEditor) return;
       const iframe: any = document.getElementById("iframeId");
+      if (!iframe) return;
       const iframeDoc = iframe.contentDocument;
       const iframeHtml = iframeDoc.getElementsByTagName("html")[0];
-      const { htmlDom, nodeTree } = parseFile("html", value);
-
       let updatedHtml = null;
       if (!htmlDom) return;
       const defaultTreeAdapter = parse5.defaultTreeAdapter;
@@ -336,15 +336,9 @@ export default function useEditor() {
   );
 
   const handleEditorChange = useCallback(
-    (
-      value: string | undefined,
-      configs?: {
-        matchIds?: string[] | null;
-        skipFromChildren?: boolean;
-      },
-    ) => {
+    ({ value, htmlDom, nodeTree, configs }: EditorChange) => {
       if (!value) return;
-      debouncedEditorUpdate(value, configs);
+      debouncedEditorUpdate({ value, htmlDom, nodeTree, configs });
       setIsContentProgrammaticallyChanged(false);
     },
     [debouncedEditorUpdate],

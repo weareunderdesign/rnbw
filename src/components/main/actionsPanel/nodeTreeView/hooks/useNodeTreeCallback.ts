@@ -169,7 +169,7 @@ export const useNodeTreeCallback = (
     });
 
     const content = model.getValue();
-    handleEditorChange(content, { matchIds: [targetUid, ...uids] });
+    // handleEditorChange(content, { matchIds: [targetUid, ...uids] });
 
     isDragging = false;
 

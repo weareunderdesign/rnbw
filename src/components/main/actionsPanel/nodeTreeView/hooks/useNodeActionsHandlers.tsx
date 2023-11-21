@@ -11,8 +11,11 @@ import { html_beautify } from "js-beautify";
 import { useAppState } from "@_redux/useAppState";
 import { LogAllow } from "@_constants/global";
 import { callNodeApi } from "@_node/apis";
+import { useDispatch } from "react-redux";
+import { setCurrentFileContent } from "@_redux/main/nodeTree";
 
 export const useNodeActionsHandlers = () => {
+  const dispatch = useDispatch();
   const {
     nodeTree,
     validNodeTree,
@@ -79,7 +82,7 @@ export const useNodeActionsHandlers = () => {
         });
         const content = html_beautify(model.getValue());
         model.setValue(content);
-        handleEditorChange(content);
+        // handleEditorChange(content);
       })
       .catch((error) => {
         LogAllow && console.error("Error reading from clipboard:", error);
@@ -93,8 +96,6 @@ export const useNodeActionsHandlers = () => {
       LogAllow && console.error("Monaco Editor  is undefined");
       return;
     }
-
-    // setIsContentProgrammaticallyChanged(true);
     callNodeApi(
       {
         tree: nodeTree,
@@ -104,9 +105,16 @@ export const useNodeActionsHandlers = () => {
         selectedUids: selectedItems,
         codeViewInstance: monacoEditorRef.current,
       },
-      // handleEditorChange,
+      ({ updatedHtml }) => {
+        const model = monacoEditorRef.current?.getModel();
+        if (!updatedHtml || !model) return;
+        const content = html_beautify(updatedHtml);
+        model.setValue(content);
+        dispatch(setCurrentFileContent(updatedHtml));
+      },
     );
   }, [selectedItems, handleEditorChange]);
+
   const onDuplicate = useCallback(() => {
     if (selectedItems.length === 0) return;
     cb_duplicateNode(selectedItems);

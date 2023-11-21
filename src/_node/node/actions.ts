@@ -219,7 +219,7 @@ export const doNodeActions = (
       if (!codeViewInstanceModel) {
         return;
       }
-      const cb_params = remove({
+      remove({
         tree: params.tree,
         uids: selectedUids,
         codeViewInstanceModel,
@@ -248,4 +248,5 @@ export const doNodeActions = (
     default:
       break;
   }
+  return codeViewInstanceModel?.getValue() || null;
 };
