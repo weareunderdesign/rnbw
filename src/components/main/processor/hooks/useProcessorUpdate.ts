@@ -38,10 +38,10 @@ export const useProcessorUpdate = () => {
   const { addRunningActions, removeRunningActions, monacoEditorRef } =
     useContext(MainContext);
 
-  // file tree
+  // file tree event
   useEffect(() => {}, [fileAction]);
 
-  // node tree
+  // node tree event
   useEffect(() => {
     if (didRedo || didUndo) {
       dispatch(selectNodeTreeNodes(selectedNodeUids));
@@ -55,7 +55,6 @@ export const useProcessorUpdate = () => {
     } else {
     }
   }, [selectedNodeUids]);
-
   useEffect(() => {
     const monacoEditor = monacoEditorRef.current;
     if (!fileTree[currentFileUid] || !monacoEditor) return;
@@ -95,7 +94,7 @@ export const useProcessorUpdate = () => {
     removeRunningActions(["processor-update"]);
   }, [currentFileContent]);
 
-  // processor
+  // hms
   useEffect(() => {
     didUndo && dispatch(setDidUndo(false));
     didRedo && dispatch(setDidRedo(false));
