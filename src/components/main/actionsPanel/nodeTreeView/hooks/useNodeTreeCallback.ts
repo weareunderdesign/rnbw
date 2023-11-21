@@ -45,8 +45,6 @@ export const useNodeTreeCallback = (
     cb_collapseNode(item.index as TNodeUid);
   };
 
-  const { handleEditorChange } = useEditor();
-
   const onDrop = (
     items: TreeItem[],
     target: DraggingPosition & {
@@ -168,23 +166,11 @@ export const useNodeTreeCallback = (
       }
     });
 
-    const content = model.getValue();
-    handleEditorChange(content, { matchIds: [targetUid, ...uids] });
+
 
     isDragging = false;
 
-    // const className = "dragging-tree";
-    // const html = document.getElementsByTagName("html").item(0);
-    // let body = document.body as HTMLElement;
-    // body.classList.remove("inheritCursors");
-    // body.style.cursor = "unset";
-    // if (html && new RegExp(className).test(html.className) === true) {
-    //   // Remove className with the added space (from setClassToHTMLElement)
 
-    //   html.className = html.className.replace(new RegExp(" " + className), "");
-    //   // Remove className without added space (just in case)
-    //   html.className = html.className.replace(new RegExp(className), "");
-    // }
   };
   return {
     onSelectItems,

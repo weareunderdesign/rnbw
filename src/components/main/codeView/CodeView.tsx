@@ -3,7 +3,7 @@ import React, { useContext, useEffect, useMemo, useRef } from "react";
 import * as monaco from "monaco-editor";
 import { useDispatch, useSelector } from "react-redux";
 
-import { RootNodeUid } from "@_constants/main";
+import { CodeViewSyncDelay, RootNodeUid } from "@_constants/main";
 import { useTheme } from "@_hooks/useTheme";
 import { TFileNodeData, TNodeUid } from "@_node/index";
 import { MainContext } from "@_redux/main";
@@ -16,6 +16,7 @@ import {
   expandNodeTreeNodes,
   focusNodeTreeNode,
   selectNodeTreeNodes,
+  setCurrentFileContent,
   setNewFocusedNodeUid,
   validNodeTreeSelector,
 } from "@_redux/main/nodeTree";
@@ -24,6 +25,7 @@ import { Editor, loader } from "@monaco-editor/react";
 
 import { useEditor, useEditorWrapper } from "./hooks";
 import { CodeViewProps } from "./types";
+import { debounce } from "lodash";
 
 loader.config({ monaco });
 
@@ -31,8 +33,12 @@ export default function CodeView(props: CodeViewProps) {
   const dispatch = useDispatch();
   const { nFocusedItem, newFocusedNodeUid, activePanel, showCodeView } =
     useAppState();
-  const { parseFileFlag, isContentProgrammaticallyChanged, monacoEditorRef } =
-    useContext(MainContext);
+  const {
+    parseFileFlag,
+    isContentProgrammaticallyChanged,
+    setIsContentProgrammaticallyChanged,
+    monacoEditorRef,
+  } = useContext(MainContext);
 
   // ----------------------------------------------------------custom Hooks---------------------------------------------------------------
   const { theme } = useTheme();
@@ -209,6 +215,10 @@ export default function CodeView(props: CodeViewProps) {
     }
   }, [focusedNode]);
 
+  const onChange = (value: string) => {
+    dispatch(setCurrentFileContent(value));
+  };
+  const debouncedOnChange = debounce(onChange, CodeViewSyncDelay);
   //-------------------------------------------------------------- other --------------------------------------------------------------
 
   return useMemo(() => {
@@ -251,8 +261,14 @@ export default function CodeView(props: CodeViewProps) {
             theme={theme}
             onMount={handleEditorDidMount}
             onChange={(value) => {
-              if (isContentProgrammaticallyChanged.current) return;
-              handleEditorChange(value);
+              if (!value) return;
+
+              if (isContentProgrammaticallyChanged.current === true) {
+                onChange(value);
+                setIsContentProgrammaticallyChanged(false);
+              } else {
+                debouncedOnChange(value);
+              }
             }}
             loading={""}
             options={

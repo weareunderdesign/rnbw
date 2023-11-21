@@ -36,29 +36,84 @@ export type TNodeSourceCodeLocation = {
   endOffset: number;
 };
 
-export type TNodeApiPayload = {
-  tree: TNodeTreeData;
-  isFileTree: boolean;
-  fileExt?: string;
-
+export type TNodeApiPayloadBase = {
   action: TNodeActionType;
-
-  selectedUids: TNodeUid[];
-  tragetUid: TNodeUid;
-  isBetween?: boolean;
-  position?: number;
-
   codeViewInstance: editor.IStandaloneCodeEditor;
-  codeViewTabSize?: number;
-
+  codeViewInstanceModel: editor.ITextModel;
   osType?: TOsType;
 };
+export type TNodeApiPayload = TNodeApiPayloadBase &
+  // isFileTree & fileExt & codeViewTabSize
+  (| { isFileTree: true; fileExt: never; codeViewTabSize?: never }
+    | { isFileTree?: false; fileExt?: string; codeViewTabSize?: number }
+  ) &
+  // nodeTree & validNodeTree
+  (| {
+        action: Extract<TNodeActionType, "paste" | "group" | "ungroup">;
+        nodeTree?: never;
+        validNodeTree: TNodeTreeData;
+      }
+    | {
+        action: Exclude<TNodeActionType, "paste" | "group" | "ungroup">;
+        nodeTree: TNodeTreeData;
+        validNodeTree?: never;
+      }
+  ) &
+  // actionName & referenceData
+  (| {
+        action: Extract<TNodeActionType, "add">;
+        actionName: string;
+        referenceData: TNodeReferenceData;
+      }
+    | {
+        action: Exclude<TNodeActionType, "add">;
+        actionName?: never;
+        referenceData?: never;
+      }
+  ) &
+  // selectedUids
+  (| {
+        action: Extract<TNodeActionType, "add" | "paste">;
+        selectedUids?: never;
+      }
+    | {
+        action: Exclude<TNodeActionType, "add" | "paste">;
+        selectedUids: TNodeUid[];
+      }
+  ) &
+  // targetUid
+  (| {
+        action: Extract<TNodeActionType, "add" | "paste" | "move">;
+        targetUid: TNodeUid;
+      }
+    | {
+        action: Exclude<TNodeActionType, "add" | "paste" | "move">;
+        targetUid?: never;
+      }
+  ) &
+  // isBetween & position
+  (| {
+        action: Extract<TNodeActionType, "move">;
+        isBetween: boolean;
+        position: number;
+      }
+    | {
+        action: Exclude<TNodeActionType, "move">;
+        isBetween?: never;
+        position?: never;
+      }
+  );
 
 export type TNodeActionType =
-  | "create"
+  | "add"
   | "remove"
+  | "cut"
+  | "copy"
+  | "paste"
   | "duplicate"
   | "move"
-  | "copy";
+  | "rename" // "turn into" for node tree - "rename" for file tree
+  | "group"
+  | "ungroup";
 
 export type TNodeReferenceData = THtmlReferenceData;
