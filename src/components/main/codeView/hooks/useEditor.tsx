@@ -1,17 +1,12 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 
-import { debounce } from "lodash";
 import { editor, IPosition } from "monaco-editor";
 import morphdom from "morphdom";
 import * as parse5 from "parse5";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
-import {
-  CodeViewSyncDelay,
-  DefaultTabSize,
-  RootNodeUid,
-} from "@_constants/main";
-import { parseFile, TFileNodeData } from "@_node/file";
+import { DefaultTabSize, RootNodeUid } from "@_constants/main";
+import { TFileNodeData } from "@_node/file";
 import {
   PreserveRnbwNode,
   StageNodeIdAttr,
@@ -20,21 +15,13 @@ import { getSubNodeUidsByBfs } from "@_node/helpers";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { setCodeEditing, setCodeViewTabSize } from "@_redux/main/codeView";
-import {
-  currentFileUidSelector,
-  fileTreeSelector,
-  setDoingFileAction,
-  setFileTree,
-} from "@_redux/main/fileTree";
+import { setDoingFileAction, setFileTree } from "@_redux/main/fileTree";
 import {
   focusNodeTreeNode,
   selectNodeTreeNodes,
   setNodeTree,
 } from "@_redux/main/nodeTree";
-import {
-  setCurrentFileContent,
-  setSelectedNodeUids,
-} from "@_redux/main/nodeTree/event";
+import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
 
 import { CodeSelection, EditorChange } from "../types";
 import { useAppState } from "@_redux/useAppState";
@@ -327,7 +314,6 @@ export default function useEditor() {
         if (!!focusedNode) {
           dispatch(focusNodeTreeNode(focusedNode.uid));
           dispatch(selectNodeTreeNodes([focusedNode.uid]));
-          // dispatch(setSelectedNodeUids([focusedNode.uid]));
         }
       } catch (e) {
         console.log(e);
