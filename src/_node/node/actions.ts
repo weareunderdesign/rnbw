@@ -7,6 +7,7 @@ import {
 } from "@_components/main/actionsPanel/nodeTreeView/helpers";
 import { AddNodeActionPrefix } from "@_constants/main";
 import { THtmlReferenceData } from "@_types/main";
+import { LogAllow } from "@_constants/global";
 
 const create = ({
   actionName,
@@ -74,9 +75,6 @@ const create = ({
     lineNumber: position.lineNumber + 1,
     column: 1,
   });
-
-  // const content = html_beautify(model.getValue());
-  // model.setValue(content);
 };
 
 const remove = ({
@@ -138,7 +136,7 @@ const duplicate = ({
   if (!model) {
     return;
   }
-  // setIsContentProgrammaticallyChanged(true);
+
   let content = model.getValue();
 
   const sortedUids = sortUidsByMaxEndIndex(uids, tree);
@@ -173,8 +171,6 @@ const duplicate = ({
     content = html_beautify(model.getValue());
     model.setValue(content);
   });
-
-  // handleEditorChange(content);
 };
 
 const move = () => {};
@@ -194,10 +190,52 @@ const copy = ({ uids }: { uids: TNodeUid[] }) => {
   window.navigator.clipboard.writeText(copiedCode);
 };
 
-export const doNodeActions = (
-  params: TNodeApiPayload,
-  cb?: (...params: any[]) => void,
-) => {
+const paste = ({
+  focusedItem,
+  tree,
+  codeViewInstance,
+}: {
+  focusedItem: string;
+  tree: TNodeTreeData;
+  codeViewInstance: editor.IStandaloneCodeEditor;
+}) => {
+  const focusedNode = tree[focusedItem];
+  if (!focusedNode || !focusedNode.data.sourceCodeLocation) {
+    LogAllow &&
+      console.error("Focused node or its source code location is undefined");
+    return;
+  }
+  const model = codeViewInstance?.getModel();
+  if (!model) {
+    LogAllow && console.error("Monaco Editor model is undefined");
+    return;
+  }
+  const { endLine, endCol } = focusedNode.data.sourceCodeLocation;
+
+  window.navigator.clipboard
+    .readText()
+    .then((copiedCode) => {
+      const position = { lineNumber: endLine, column: endCol + 1 };
+      const range = new Range(
+        position.lineNumber,
+        position.column,
+        position.lineNumber,
+        position.column,
+      );
+      const editOperation = { range, text: copiedCode };
+
+      model.pushEditOperations([], [editOperation], () => null);
+      codeViewInstance?.setPosition({
+        lineNumber: position.lineNumber + 1,
+        column: 1,
+      });
+    })
+    .catch((error) => {
+      LogAllow && console.error("Error reading from clipboard:", error);
+    });
+};
+
+export const doNodeActions = (params: TNodeApiPayload) => {
   const { action, selectedUids } = params;
   let codeViewInstanceModel = null;
 
@@ -208,7 +246,7 @@ export const doNodeActions = (
   switch (action) {
     case "create":
       create({
-        actionName: params.action,
+        actionName: params.actionName,
         focusedItem: params.nodeTreeFocusedItem,
         tree: params.tree,
         codeViewInstance: params.codeViewInstance,
@@ -224,7 +262,7 @@ export const doNodeActions = (
         uids: selectedUids,
         codeViewInstanceModel,
       });
-      // cb && cb(cb_params);
+
       break;
     case "duplicate":
       if (!codeViewInstanceModel) {
@@ -245,6 +283,12 @@ export const doNodeActions = (
         uids: selectedUids,
       });
       break;
+    case "paste":
+      paste({
+        focusedItem: params.targetUid,
+        tree: params.tree,
+        codeViewInstance: params.codeViewInstance,
+      });
     default:
       break;
   }

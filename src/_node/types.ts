@@ -37,7 +37,7 @@ export type TNodeSourceCodeLocation = {
 };
 
 export type TNodeApiPayloadBase = {
-  isFileTree: boolean | undefined;
+  isFileTree: boolean;
   action: TNodeActionType;
   selectedUids: TNodeUid[];
   isBetween?: boolean;
@@ -48,7 +48,7 @@ export type TNodeApiPayloadBase = {
 
 export type TNodeApiPayload = TNodeApiPayloadBase &
   (
-    | { isFileTree: true; fileExt: never }
+    | { isFileTree: true; fileExt: string }
     | { isFileTree: false; fileExt: string }
   ) &
   (
@@ -72,11 +72,13 @@ export type TNodeApiPayload = TNodeApiPayloadBase &
         action: "create";
         htmlReferenceData: THtmlReferenceData;
         nodeTreeFocusedItem: string;
+        actionName: string;
       }
     | {
         action: Exclude<TNodeActionType, "create">;
         htmlReferenceData?: never;
         nodeTreeFocusedItem?: never;
+        actionName?: never;
       }
   );
 

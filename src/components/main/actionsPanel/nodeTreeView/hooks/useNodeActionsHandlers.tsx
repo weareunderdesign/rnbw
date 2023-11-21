@@ -22,8 +22,20 @@ export const useNodeActionsHandlers = () => {
     nFocusedItem: focusedItem,
     nSelectedItems: selectedItems,
   } = useAppState();
-  const { monacoEditorRef, setIsContentProgrammaticallyChanged } =
-    useContext(MainContext);
+  const { monacoEditorRef, htmlReferenceData } = useContext(MainContext);
+  const nodeActionParams = {
+    tree: nodeTree,
+    fileExt: "html",
+    selectedUids: selectedItems,
+  };
+
+  function handleEditorUpdate({ updatedHtml }: { updatedHtml?: string }) {
+    const model = monacoEditorRef.current?.getModel();
+    if (!updatedHtml || !model) return;
+    const content = html_beautify(updatedHtml);
+    model.setValue(content);
+    dispatch(setCurrentFileContent(updatedHtml));
+  }
 
   const {
     cb_addNode,
@@ -34,59 +46,49 @@ export const useNodeActionsHandlers = () => {
     cb_ungroupNode,
   } = useNodeActions();
 
-  const { handleEditorChange } = useEditor();
+  const onCopy = useCallback(() => {
+    if (selectedItems.length === 0) return;
+    const codeViewInstance = monacoEditorRef.current;
+    if (!codeViewInstance) {
+      LogAllow && console.error("Monaco Editor  is undefined");
+      return;
+    }
+
+    callNodeApi(
+      {
+        isFileTree: false,
+        action: "copy",
+        selectedUids: selectedItems,
+        fileExt: "html",
+      },
+      handleEditorUpdate,
+    );
+  }, [selectedItems]);
 
   const onCut = useCallback(() => {
     if (selectedItems.length === 0) return;
-    cb_copyNode(selectedItems);
-    cb_removeNode(selectedItems);
+    onCopy();
+    onDelete();
   }, [selectedItems, cb_copyNode, cb_removeNode]);
 
-  const onCopy = useCallback(() => {
-    if (selectedItems.length === 0) return;
-    cb_copyNode(selectedItems);
-  }, [selectedItems, cb_copyNode]);
-
   const onPaste = useCallback(() => {
-    const focusedNode = validNodeTree[focusedItem];
-    const model = monacoEditorRef.current?.getModel();
-
-    if (!focusedNode || !focusedNode.data.sourceCodeLocation) {
-      LogAllow &&
-        console.error("Focused node or its source code location is undefined");
+    const codeViewInstance = monacoEditorRef.current;
+    if (!codeViewInstance) {
+      LogAllow && console.error("Monaco Editor  is undefined");
       return;
     }
-    if (!model) {
-      LogAllow && console.error("Monaco Editor model is undefined");
-      return;
-    }
-
-    const { endLine, endCol } = focusedNode.data.sourceCodeLocation;
-
-    window.navigator.clipboard
-      .readText()
-      .then((copiedCode) => {
-        const position = { lineNumber: endLine, column: endCol + 1 };
-        const range = new Range(
-          position.lineNumber,
-          position.column,
-          position.lineNumber,
-          position.column,
-        );
-        const editOperation = { range, text: copiedCode };
-
-        model.pushEditOperations([], [editOperation], () => null);
-        monacoEditorRef.current?.setPosition({
-          lineNumber: position.lineNumber + 1,
-          column: 1,
-        });
-        const content = html_beautify(model.getValue());
-        model.setValue(content);
-        // handleEditorChange(content);
-      })
-      .catch((error) => {
-        LogAllow && console.error("Error reading from clipboard:", error);
-      });
+    callNodeApi(
+      {
+        isFileTree: false,
+        action: "paste",
+        selectedUids: selectedItems,
+        fileExt: "html",
+        targetUid: focusedItem,
+        codeViewInstance,
+        tree: nodeTree,
+      },
+      handleEditorUpdate,
+    );
   }, [validNodeTree, focusedItem]);
 
   const onDelete = useCallback(() => {
@@ -96,24 +98,17 @@ export const useNodeActionsHandlers = () => {
       LogAllow && console.error("Monaco Editor  is undefined");
       return;
     }
+
     callNodeApi(
       {
-        tree: nodeTree,
+        ...nodeActionParams,
         isFileTree: false,
-        fileExt: "html",
         action: "remove",
-        selectedUids: selectedItems,
         codeViewInstance: monacoEditorRef.current,
       },
-      ({ updatedHtml }) => {
-        const model = monacoEditorRef.current?.getModel();
-        if (!updatedHtml || !model) return;
-        const content = html_beautify(updatedHtml);
-        model.setValue(content);
-        dispatch(setCurrentFileContent(updatedHtml));
-      },
+      handleEditorUpdate,
     );
-  }, [selectedItems, handleEditorChange]);
+  }, [selectedItems]);
 
   const onDuplicate = useCallback(() => {
     if (selectedItems.length === 0) return;
@@ -126,6 +121,7 @@ export const useNodeActionsHandlers = () => {
     if (selectedItems.length === 0) return;
     cb_groupNode(selectedItems);
   }, [cb_groupNode, selectedItems]);
+
   const onUngroup = useCallback(() => {
     if (selectedItems.length === 0) return;
     cb_ungroupNode(selectedItems);
@@ -133,11 +129,23 @@ export const useNodeActionsHandlers = () => {
 
   const onAddNode = useCallback(
     (actionName: string) => {
-      const tagName = actionName.slice(
-        AddNodeActionPrefix.length + 2,
-        actionName.length - 1,
+      const codeViewInstance = monacoEditorRef.current;
+      if (!codeViewInstance) {
+        LogAllow && console.error("Monaco Editor  is undefined");
+        return;
+      }
+      callNodeApi(
+        {
+          ...nodeActionParams,
+          isFileTree: false,
+          action: "create",
+          codeViewInstance,
+          htmlReferenceData,
+          nodeTreeFocusedItem: focusedItem,
+          actionName,
+        },
+        handleEditorUpdate,
       );
-      cb_addNode(tagName);
     },
     [cb_addNode],
   );

@@ -12,7 +12,7 @@ export const callNodeApi = async (
       if (isFileTree) {
         doFileActions(params, cb);
       } else {
-        const updatedHtml = doNodeActions(params, cb);
+        const updatedHtml = doNodeActions(params);
         if (updatedHtml) {
           cb && cb({ updatedHtml });
         }

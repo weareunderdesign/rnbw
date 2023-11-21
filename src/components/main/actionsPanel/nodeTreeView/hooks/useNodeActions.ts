@@ -34,8 +34,6 @@ export function useNodeActions() {
     removeRunningActions,
   } = useContext(MainContext);
 
-  const { handleEditorChange } = useEditor();
-
   const cb_addNode = (nodeType: string) => {
     const focusedNode = validNodeTree[focusedItem];
 
