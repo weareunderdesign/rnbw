@@ -167,9 +167,6 @@ const duplicate = ({
       lineNumber: position.lineNumber + 1,
       column: 1,
     });
-
-    content = html_beautify(model.getValue());
-    model.setValue(content);
   });
 };
 
