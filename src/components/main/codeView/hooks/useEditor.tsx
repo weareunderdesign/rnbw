@@ -34,6 +34,7 @@ import {
 import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
 
 import { CodeSelection } from "../types";
+import { useAppState } from "@_redux/useAppState";
 
 function getLanguageFromExtension(extension: string) {
   if (extension) return extension;
@@ -41,19 +42,18 @@ function getLanguageFromExtension(extension: string) {
 }
 
 export default function useEditor() {
-  const [language, setLanguage] = useState("html");
-  const fileTree = useSelector(fileTreeSelector);
-  const currentFileUid = useSelector(currentFileUidSelector);
+  const dispatch = useDispatch();
+  const { fileTree, currentFileUid } = useAppState();
   const {
     addRunningActions,
     setMonacoEditorRef,
+    isContentProgrammaticallyChanged,
     setIsContentProgrammaticallyChanged,
     monacoEditorRef,
     parseFileFlag,
   } = useContext(MainContext);
 
-  const dispatch = useDispatch();
-
+  const [language, setLanguage] = useState("html");
   const [focusedNode, setFocusedNode] = useState<TNode>();
   const wordWrap: editor.IEditorOptions["wordWrap"] = "on";
 
@@ -206,8 +206,14 @@ export default function useEditor() {
     return focusedNode;
   }
 
-  const debouncedEditorUpdate = useCallback(
-    debounce((value: string, configs) => {
+  const editorUpdate = useCallback(
+    (
+      value: string,
+      configs?: {
+        matchIds?: string[] | null;
+        skipFromChildren?: boolean;
+      },
+    ) => {
       const monacoEditor = monacoEditorRef.current;
       if (!monacoEditor) return;
       const iframe: any = document.getElementById("iframeId");
@@ -331,10 +337,13 @@ export default function useEditor() {
       }
 
       dispatch(setCodeEditing(false));
-    }, CodeViewSyncDelay),
+    },
     [dispatch, fileTree, monacoEditorRef, currentFileUid, addRunningActions],
   );
-
+  const debouncedEditorUpdate = useCallback(
+    debounce(editorUpdate, CodeViewSyncDelay),
+    [editorUpdate],
+  );
   const handleEditorChange = useCallback(
     (
       value: string | undefined,
@@ -344,10 +353,15 @@ export default function useEditor() {
       },
     ) => {
       if (!value) return;
-      debouncedEditorUpdate(value, configs);
-      setIsContentProgrammaticallyChanged(false);
+
+      if (isContentProgrammaticallyChanged.current === true) {
+        editorUpdate(value, configs);
+        setIsContentProgrammaticallyChanged(false);
+      } else {
+        debouncedEditorUpdate(value, configs);
+      }
     },
-    [debouncedEditorUpdate],
+    [editorUpdate, debouncedEditorUpdate],
   );
 
   // tabSize

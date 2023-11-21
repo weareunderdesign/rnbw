@@ -251,7 +251,6 @@ export default function CodeView(props: CodeViewProps) {
             theme={theme}
             onMount={handleEditorDidMount}
             onChange={(value) => {
-              if (isContentProgrammaticallyChanged.current) return;
               handleEditorChange(value);
             }}
             loading={""}
