@@ -237,7 +237,7 @@ export default function useEditor() {
               } else {
                 let fromOuter = fromEl.outerHTML;
                 let toOuter = toEl.outerHTML;
-                return true;
+                return false
               }
             }
             const fromElRnbwId = fromEl.getAttribute(StageNodeIdAttr);
