@@ -112,7 +112,19 @@ export const useNodeActionsHandlers = () => {
 
   const onDuplicate = useCallback(() => {
     if (selectedItems.length === 0) return;
-    cb_duplicateNode(selectedItems);
+    if (!monacoEditorRef.current) {
+      LogAllow && console.error("Monaco Editor  is undefined");
+      return;
+    }
+    callNodeApi(
+      {
+        ...nodeActionParams,
+        isFileTree: false,
+        action: "duplicate",
+        codeViewInstance: monacoEditorRef.current,
+      },
+      handleEditorUpdate,
+    );
   }, [selectedItems, cb_duplicateNode]);
 
   const onTurnInto = useCallback(() => {}, []);
