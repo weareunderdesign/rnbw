@@ -37,55 +37,83 @@ export type TNodeSourceCodeLocation = {
 };
 
 export type TNodeApiPayloadBase = {
-  isFileTree: boolean | undefined;
   action: TNodeActionType;
-  selectedUids: TNodeUid[];
-  isBetween?: boolean;
-  position?: number;
-  codeViewTabSize?: number;
+  codeViewInstance: editor.IStandaloneCodeEditor;
+  codeViewInstanceModel: editor.ITextModel;
   osType?: TOsType;
 };
-
 export type TNodeApiPayload = TNodeApiPayloadBase &
-  (
-    | { isFileTree: true; fileExt: never }
-    | { isFileTree: false; fileExt: string }
+  // isFileTree & fileExt & codeViewTabSize
+  (| { isFileTree: true; fileExt: never; codeViewTabSize?: never }
+    | { isFileTree?: false; fileExt?: string; codeViewTabSize?: number }
   ) &
-  (
-    | { action: "paste"; targetUid: TNodeUid }
-    | { action: Exclude<TNodeActionType, "paste"> }
-  ) &
-  (
-    | {
-        action: Exclude<TNodeActionType, "copy">;
-        codeViewInstance: editor.IStandaloneCodeEditor;
-        tree: TNodeTreeData;
+  // nodeTree & validNodeTree
+  (| {
+        action: Extract<TNodeActionType, "paste" | "group" | "ungroup">;
+        nodeTree?: never;
+        validNodeTree: TNodeTreeData;
       }
     | {
-        action: "copy";
-        codeViewInstance?: never;
-        tree?: never;
+        action: Exclude<TNodeActionType, "paste" | "group" | "ungroup">;
+        nodeTree: TNodeTreeData;
+        validNodeTree?: never;
       }
   ) &
-  (
-    | {
-        action: "create";
-        htmlReferenceData: THtmlReferenceData;
-        nodeTreeFocusedItem: string;
+  // actionName & referenceData
+  (| {
+        action: Extract<TNodeActionType, "add">;
+        actionName: string;
+        referenceData: TNodeReferenceData;
       }
     | {
-        action: Exclude<TNodeActionType, "create">;
-        htmlReferenceData?: never;
-        nodeTreeFocusedItem?: never;
+        action: Exclude<TNodeActionType, "add">;
+        actionName?: never;
+        referenceData?: never;
+      }
+  ) &
+  // selectedUids
+  (| {
+        action: Extract<TNodeActionType, "add" | "paste">;
+        selectedUids?: never;
+      }
+    | {
+        action: Exclude<TNodeActionType, "add" | "paste">;
+        selectedUids: TNodeUid[];
+      }
+  ) &
+  // targetUid
+  (| {
+        action: Extract<TNodeActionType, "add" | "paste" | "move">;
+        targetUid: TNodeUid;
+      }
+    | {
+        action: Exclude<TNodeActionType, "add" | "paste" | "move">;
+        targetUid?: never;
+      }
+  ) &
+  // isBetween & position
+  (| {
+        action: Extract<TNodeActionType, "move">;
+        isBetween: boolean;
+        position: number;
+      }
+    | {
+        action: Exclude<TNodeActionType, "move">;
+        isBetween?: never;
+        position?: never;
       }
   );
 
 export type TNodeActionType =
-  | "create"
+  | "add"
   | "remove"
+  | "cut"
+  | "copy"
+  | "paste"
   | "duplicate"
   | "move"
-  | "copy"
-  | "paste";
+  | "rename" // "turn into" for node tree - "rename" for file tree
+  | "group"
+  | "ungroup";
 
 export type TNodeReferenceData = THtmlReferenceData;

@@ -4,6 +4,11 @@ import { DraggingPosition } from "react-complex-tree";
 import { LogAllow } from "@_constants/global";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
+import { AddNodeActionPrefix } from "@_constants/main";
+
+export const isAddNodeAction = (actionName: string): boolean => {
+  return actionName.startsWith(AddNodeActionPrefix) ? true : false;
+};
 
 export const sortUidsByMaxEndIndex = (
   uids: TNodeUid[],

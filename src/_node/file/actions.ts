@@ -1,38 +1,36 @@
 import { TNodeApiPayload } from "..";
 
-const create = () => {};
+const add = () => {};
 const remove = () => {};
+const cut = () => {};
+const copy = () => {};
+const paste = () => {};
 const duplicate = () => {};
 const move = () => {};
-const copy = () => {};
+const rename = () => {};
 
 export const doFileActions = (
   params: TNodeApiPayload,
+  fb?: (...params: any[]) => void,
   cb?: (...params: any[]) => void,
 ) => {
-  const {
-    tree,
-    isFileTree,
-    fileExt = "",
-
-    action,
-
-    selectedUids,
-    isBetween = false,
-    position = 0,
-
-    codeViewInstance,
-    codeViewTabSize = 2,
-
-    osType = "Windows",
-  } = params;
+  const { action, osType = "Windows" } = params;
 
   switch (action) {
-    case "create":
-      create();
+    case "add":
+      add();
       break;
     case "remove":
       remove();
+      break;
+    case "cut":
+      cut();
+      break;
+    case "copy":
+      copy();
+      break;
+    case "paste":
+      paste();
       break;
     case "duplicate":
       duplicate();
@@ -40,12 +38,10 @@ export const doFileActions = (
     case "move":
       move();
       break;
-    case "copy":
-      copy();
+    case "rename":
+      rename();
       break;
     default:
       break;
   }
-
-  cb && cb();
 };

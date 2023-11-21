@@ -19,9 +19,9 @@ export const AddActionPrefix = "AddAction";
 export const AddFileActionPrefix = `${AddActionPrefix}-File`;
 export const AddNodeActionPrefix = `${AddActionPrefix}-Node`;
 
+export const DefaultTabSize: number = 2;
+export const RecentProjectCount = 10;
+
 export const NodeUidSplitter: string = "?";
 
 export const TmpNodeUid = "tmp:node:uid";
-export const DefaultTabSize: number = 2;
-
-export const RecentProjectCount = 10;

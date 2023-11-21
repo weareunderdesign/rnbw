@@ -5,6 +5,7 @@ import { MainContext } from "@_redux/main";
 
 import { useNodeActionsHandlers } from "./useNodeActionsHandlers";
 import { useAppState } from "@_redux/useAppState";
+import { isAddNodeAction } from "../helpers";
 
 export const useCmdk = () => {
   const { activePanel, currentCommand } = useAppState();
@@ -21,10 +22,6 @@ export const useCmdk = () => {
     onGroup,
     onUngroup,
   } = useNodeActionsHandlers();
-
-  const isAddNodeAction = useCallback((actionName: string): boolean => {
-    return actionName.startsWith(AddNodeActionPrefix) ? true : false;
-  }, []);
 
   useEffect(() => {
     if (!currentCommand) return;

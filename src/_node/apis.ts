@@ -3,16 +3,17 @@ import { TNodeApiPayload } from "./types";
 
 export const callNodeApi = async (
   params: TNodeApiPayload,
+  fb?: (...params: any[]) => void,
   cb?: (...params: any[]) => void,
 ) => {
-  const { isFileTree } = params;
+  const { isFileTree = false } = params;
 
   return new Promise<void>((resolve, reject) => {
     try {
       if (isFileTree) {
-        doFileActions(params, cb);
+        doFileActions(params, fb, cb);
       } else {
-        doNodeActions(params, cb);
+        doNodeActions(params, fb, cb);
       }
       resolve();
     } catch (err) {

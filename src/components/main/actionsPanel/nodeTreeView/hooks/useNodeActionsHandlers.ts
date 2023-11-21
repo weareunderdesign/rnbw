@@ -1,16 +1,10 @@
 import { useCallback, useContext } from "react";
-
-import { Range } from "monaco-editor";
-
-import { useEditor } from "@_components/main/codeView/hooks";
-import { AddNodeActionPrefix } from "@_constants/main";
 import { MainContext } from "@_redux/main";
 
-import { useNodeActions } from "./useNodeActions";
-import { html_beautify } from "js-beautify";
 import { useAppState } from "@_redux/useAppState";
 import { LogAllow } from "@_constants/global";
 import { callNodeApi } from "@_node/apis";
+import { getValidNodeUids } from "@_node/helpers";
 
 export const useNodeActionsHandlers = () => {
   const {
@@ -19,120 +13,271 @@ export const useNodeActionsHandlers = () => {
     nFocusedItem: focusedItem,
     nSelectedItems: selectedItems,
   } = useAppState();
-  const { monacoEditorRef, setIsContentProgrammaticallyChanged } =
-    useContext(MainContext);
-
   const {
-    cb_addNode,
-    cb_removeNode,
-    cb_duplicateNode,
-    cb_copyNode,
-    cb_groupNode,
-    cb_ungroupNode,
-  } = useNodeActions();
+    htmlReferenceData,
+    monacoEditorRef,
+    setIsContentProgrammaticallyChanged,
+  } = useContext(MainContext);
 
-  const { handleEditorChange } = useEditor();
+  const onAddNode = useCallback(
+    (actionName: string) => {
+      const focusedNode = nodeTree[focusedItem];
+      if (!focusedNode || !focusedNode.data.sourceCodeLocation) {
+        LogAllow &&
+          console.error("Focused node or source code location is undefined");
+        return;
+      }
+
+      const codeViewInstance = monacoEditorRef.current;
+      const codeViewInstanceModel = codeViewInstance?.getModel();
+      if (!codeViewInstance || !codeViewInstanceModel) {
+        LogAllow &&
+          console.error(
+            `Monaco Editor ${!codeViewInstance ? "" : "Model"} is undefined`,
+          );
+        return;
+      }
+
+      setIsContentProgrammaticallyChanged(true);
+      callNodeApi(
+        {
+          action: "add",
+          actionName,
+          referenceData: htmlReferenceData,
+          nodeTree,
+          targetUid: focusedItem,
+          codeViewInstance,
+          codeViewInstanceModel,
+        },
+        () => setIsContentProgrammaticallyChanged(false),
+      );
+    },
+    [nodeTree, focusedItem],
+  );
 
   const onCut = useCallback(() => {
     if (selectedItems.length === 0) return;
-    cb_copyNode(selectedItems);
-    cb_removeNode(selectedItems);
-  }, [selectedItems, cb_copyNode, cb_removeNode]);
+
+    const codeViewInstance = monacoEditorRef.current;
+    const codeViewInstanceModel = codeViewInstance?.getModel();
+    if (!codeViewInstance || !codeViewInstanceModel) {
+      LogAllow &&
+        console.error(
+          `Monaco Editor ${!codeViewInstance ? "" : "Model"} is undefined`,
+        );
+      return;
+    }
+
+    setIsContentProgrammaticallyChanged(true);
+    callNodeApi(
+      {
+        action: "cut",
+        nodeTree,
+        selectedUids: selectedItems,
+        codeViewInstance,
+        codeViewInstanceModel,
+      },
+      () => setIsContentProgrammaticallyChanged(false),
+    );
+  }, [selectedItems, nodeTree]);
 
   const onCopy = useCallback(() => {
     if (selectedItems.length === 0) return;
-    cb_copyNode(selectedItems);
-  }, [selectedItems, cb_copyNode]);
+
+    const codeViewInstance = monacoEditorRef.current;
+    const codeViewInstanceModel = codeViewInstance?.getModel();
+    if (!codeViewInstance || !codeViewInstanceModel) {
+      LogAllow &&
+        console.error(
+          `Monaco Editor ${!codeViewInstance ? "" : "Model"} is undefined`,
+        );
+      return;
+    }
+
+    setIsContentProgrammaticallyChanged(true);
+    callNodeApi(
+      {
+        action: "copy",
+        nodeTree,
+        selectedUids: selectedItems,
+        codeViewInstance,
+        codeViewInstanceModel,
+      },
+      () => setIsContentProgrammaticallyChanged(false),
+    );
+  }, [selectedItems, nodeTree]);
 
   const onPaste = useCallback(() => {
     const focusedNode = validNodeTree[focusedItem];
-    const model = monacoEditorRef.current?.getModel();
-
     if (!focusedNode || !focusedNode.data.sourceCodeLocation) {
       LogAllow &&
-        console.error("Focused node or its source code location is undefined");
-      return;
-    }
-    if (!model) {
-      LogAllow && console.error("Monaco Editor model is undefined");
+        console.error("Focused node or source code location is undefined");
       return;
     }
 
-    const { endLine, endCol } = focusedNode.data.sourceCodeLocation;
-
-    window.navigator.clipboard
-      .readText()
-      .then((copiedCode) => {
-        const position = { lineNumber: endLine, column: endCol + 1 };
-        const range = new Range(
-          position.lineNumber,
-          position.column,
-          position.lineNumber,
-          position.column,
+    const codeViewInstance = monacoEditorRef.current;
+    const codeViewInstanceModel = codeViewInstance?.getModel();
+    if (!codeViewInstance || !codeViewInstanceModel) {
+      LogAllow &&
+        console.error(
+          `Monaco Editor ${!codeViewInstance ? "" : "Model"} is undefined`,
         );
-        const editOperation = { range, text: copiedCode };
+      return;
+    }
 
-        model.pushEditOperations([], [editOperation], () => null);
-        monacoEditorRef.current?.setPosition({
-          lineNumber: position.lineNumber + 1,
-          column: 1,
-        });
-        const content = html_beautify(model.getValue());
-        model.setValue(content);
-        handleEditorChange(content);
-      })
-      .catch((error) => {
-        LogAllow && console.error("Error reading from clipboard:", error);
-      });
+    setIsContentProgrammaticallyChanged(true);
+    callNodeApi(
+      {
+        action: "paste",
+        validNodeTree,
+        targetUid: focusedItem,
+        codeViewInstance,
+        codeViewInstanceModel,
+      },
+      () => setIsContentProgrammaticallyChanged(false),
+    );
   }, [validNodeTree, focusedItem]);
 
   const onDelete = useCallback(() => {
     if (selectedItems.length === 0) return;
 
-    if (!monacoEditorRef.current) {
-      LogAllow && console.error("Monaco Editor  is undefined");
+    const codeViewInstance = monacoEditorRef.current;
+    const codeViewInstanceModel = codeViewInstance?.getModel();
+    if (!codeViewInstance || !codeViewInstanceModel) {
+      LogAllow &&
+        console.error(
+          `Monaco Editor ${!codeViewInstance ? "" : "Model"} is undefined`,
+        );
       return;
     }
 
-    // setIsContentProgrammaticallyChanged(true);
+    setIsContentProgrammaticallyChanged(true);
     callNodeApi(
       {
-        tree: nodeTree,
-        isFileTree: false,
-        fileExt: "html",
         action: "remove",
+        nodeTree,
         selectedUids: selectedItems,
-        codeViewInstance: monacoEditorRef.current,
+        codeViewInstance,
+        codeViewInstanceModel,
       },
-      // handleEditorChange,
+      () => setIsContentProgrammaticallyChanged(false),
     );
-  }, [selectedItems, handleEditorChange]);
+  }, [selectedItems, nodeTree]);
+
   const onDuplicate = useCallback(() => {
     if (selectedItems.length === 0) return;
-    cb_duplicateNode(selectedItems);
-  }, [selectedItems, cb_duplicateNode]);
+
+    const codeViewInstance = monacoEditorRef.current;
+    const codeViewInstanceModel = codeViewInstance?.getModel();
+    if (!codeViewInstance || !codeViewInstanceModel) {
+      LogAllow &&
+        console.error(
+          `Monaco Editor ${!codeViewInstance ? "" : "Model"} is undefined`,
+        );
+      return;
+    }
+
+    setIsContentProgrammaticallyChanged(true);
+    callNodeApi(
+      {
+        action: "duplicate",
+        nodeTree,
+        selectedUids: selectedItems,
+        codeViewInstance,
+        codeViewInstanceModel,
+      },
+      () => setIsContentProgrammaticallyChanged(false),
+    );
+  }, [selectedItems, nodeTree]);
+
+  const onMove = useCallback(() => {
+    const uids = getValidNodeUids(
+      nodeTree,
+      selectedItems,
+      focusedItem,
+      "html",
+      htmlReferenceData,
+    );
+    if (uids.length === 0) return;
+
+    const codeViewInstance = monacoEditorRef.current;
+    const codeViewInstanceModel = codeViewInstance?.getModel();
+    if (!codeViewInstance || !codeViewInstanceModel) {
+      LogAllow &&
+        console.error(
+          `Monaco Editor ${!codeViewInstance ? "" : "Model"} is undefined`,
+        );
+      return;
+    }
+
+    setIsContentProgrammaticallyChanged(true);
+    callNodeApi(
+      {
+        action: "move",
+        nodeTree,
+        selectedUids: selectedItems,
+        targetUid: focusedItem,
+        isBetween: false,
+        position: 0,
+        codeViewInstance,
+        codeViewInstanceModel,
+      },
+      () => setIsContentProgrammaticallyChanged(false),
+    );
+  }, [nodeTree, selectedItems, focusedItem]);
 
   const onTurnInto = useCallback(() => {}, []);
 
   const onGroup = useCallback(() => {
     if (selectedItems.length === 0) return;
-    cb_groupNode(selectedItems);
-  }, [cb_groupNode, selectedItems]);
+
+    const codeViewInstance = monacoEditorRef.current;
+    const codeViewInstanceModel = codeViewInstance?.getModel();
+    if (!codeViewInstance || !codeViewInstanceModel) {
+      LogAllow &&
+        console.error(
+          `Monaco Editor ${!codeViewInstance ? "" : "Model"} is undefined`,
+        );
+      return;
+    }
+
+    setIsContentProgrammaticallyChanged(true);
+    callNodeApi(
+      {
+        action: "group",
+        validNodeTree,
+        selectedUids: selectedItems,
+        codeViewInstance,
+        codeViewInstanceModel,
+      },
+      () => setIsContentProgrammaticallyChanged(false),
+    );
+  }, [selectedItems, validNodeTree]);
   const onUngroup = useCallback(() => {
     if (selectedItems.length === 0) return;
-    cb_ungroupNode(selectedItems);
-  }, [cb_ungroupNode, selectedItems]);
 
-  const onAddNode = useCallback(
-    (actionName: string) => {
-      const tagName = actionName.slice(
-        AddNodeActionPrefix.length + 2,
-        actionName.length - 1,
-      );
-      cb_addNode(tagName);
-    },
-    [cb_addNode],
-  );
+    const codeViewInstance = monacoEditorRef.current;
+    const codeViewInstanceModel = codeViewInstance?.getModel();
+    if (!codeViewInstance || !codeViewInstanceModel) {
+      LogAllow &&
+        console.error(
+          `Monaco Editor ${!codeViewInstance ? "" : "Model"} is undefined`,
+        );
+      return;
+    }
+
+    setIsContentProgrammaticallyChanged(true);
+    callNodeApi(
+      {
+        action: "ungroup",
+        validNodeTree,
+        selectedUids: selectedItems,
+        codeViewInstance,
+        codeViewInstanceModel,
+      },
+      () => setIsContentProgrammaticallyChanged(false),
+    );
+  }, [selectedItems, validNodeTree]);
 
   return {
     onAddNode,
@@ -141,6 +286,7 @@ export const useNodeActionsHandlers = () => {
     onPaste,
     onDelete,
     onDuplicate,
+    onMove,
     onTurnInto,
     onGroup,
     onUngroup,
