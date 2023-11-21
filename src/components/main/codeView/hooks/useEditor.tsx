@@ -31,7 +31,10 @@ import {
   selectNodeTreeNodes,
   setNodeTree,
 } from "@_redux/main/nodeTree";
-import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
+import {
+  setCurrentFileContent,
+  setSelectedNodeUids,
+} from "@_redux/main/nodeTree/event";
 
 import { CodeSelection, EditorChange } from "../types";
 import { useAppState } from "@_redux/useAppState";
@@ -237,7 +240,7 @@ export default function useEditor() {
               } else {
                 let fromOuter = fromEl.outerHTML;
                 let toOuter = toEl.outerHTML;
-                return false
+                return false;
               }
             }
             const fromElRnbwId = fromEl.getAttribute(StageNodeIdAttr);
@@ -324,6 +327,7 @@ export default function useEditor() {
         if (!!focusedNode) {
           dispatch(focusNodeTreeNode(focusedNode.uid));
           dispatch(selectNodeTreeNodes([focusedNode.uid]));
+          // dispatch(setSelectedNodeUids([focusedNode.uid]));
         }
       } catch (e) {
         console.log(e);

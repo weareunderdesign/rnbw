@@ -9,8 +9,15 @@ import { TNode, TNodeUid } from "@_node/types";
 import { AppState } from "@_redux/_root";
 import { MainContext } from "@_redux/main";
 import { selectFileTreeNodes, setCurrentFileUid } from "@_redux/main/fileTree";
-import { setHoveredNodeUid } from "@_redux/main/nodeTree";
-import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
+import {
+  focusNodeTreeNode,
+  selectNodeTreeNodes,
+  setHoveredNodeUid,
+} from "@_redux/main/nodeTree";
+import {
+  setCurrentFileContent,
+  setSelectedNodeUids,
+} from "@_redux/main/nodeTree/event";
 import {
   setActivePanel,
   setNavigatorDropdownType,
@@ -139,7 +146,8 @@ export const useMouseEvents = ({
       const parentEle = newFocusedElement.parentElement;
       if (!parentEle) break;
       _uid = parentEle.getAttribute(StageNodeIdAttr);
-      !_uid ? (newFocusedElement = parentEle) : null;
+      newFocusedElement = parentEle;
+      // !_uid ? (newFocusedElement = parentEle) : null;
     }
     return newFocusedElement;
   }
@@ -242,8 +250,9 @@ export const useMouseEvents = ({
 
         setTimeout(() => {
           if (_uid) {
-            // dispatch(focusNodeTreeNode(_uid));
-            // dispatch(selectNodeTreeNodes([_uid]));
+            dispatch(focusNodeTreeNode(_uid));
+            dispatch(selectNodeTreeNodes([_uid]));
+            dispatch(setSelectedNodeUids([_uid]));
             // dispatch(expandNodeTreeNodes([_uid]));
           }
         }, 100);
@@ -260,6 +269,12 @@ export const useMouseEvents = ({
           newFocusedElement = findEleOrItsNearestParentWithUid(ele);
 
           _uid = newFocusedElement.getAttribute(StageNodeIdAttr);
+        }
+
+        if (_uid) {
+          dispatch(focusNodeTreeNode(_uid));
+          dispatch(selectNodeTreeNodes([_uid]));
+          dispatch(setSelectedNodeUids([_uid]));
         }
         const areMultiple = handleSelectofSingleOrMultipleElements(e, _uid);
 
