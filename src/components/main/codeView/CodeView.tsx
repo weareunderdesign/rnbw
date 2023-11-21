@@ -24,6 +24,7 @@ import { Editor, loader } from "@monaco-editor/react";
 
 import { useEditor, useEditorWrapper } from "./hooks";
 import { CodeViewProps } from "./types";
+import { html_beautify } from "js-beautify";
 
 loader.config({ monaco });
 

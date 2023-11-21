@@ -141,6 +141,18 @@ export const useNodeActionsHandlers = () => {
     [cb_addNode, validNodeTree, focusedItem],
   );
 
+  const onFormatting = () => {
+    const model = monacoEditorRef.current?.getModel();
+
+    if (!model) {
+      console.error("Monaco Editor model is undefined");
+      return;
+    }
+    const content = html_beautify(model.getValue());
+    model.setValue(content);
+    handleEditorChange(content);
+  };
+
   return {
     onCut,
     onCopy,
@@ -151,5 +163,6 @@ export const useNodeActionsHandlers = () => {
     onGroup,
     onUngroup,
     onAddNode,
+    onFormatting,
   };
 };

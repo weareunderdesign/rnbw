@@ -27,6 +27,7 @@ export const useCmdk = () => {
     onGroup,
     onUngroup,
     onAddNode,
+    onFormatting,
   } = useNodeActionsHandlers();
 
   const isAddNodeAction = (actionName: string): boolean => {
@@ -67,6 +68,9 @@ export const useCmdk = () => {
         break;
       case "Ungroup":
         onUngroup();
+        break;
+      case "Formatting":
+        onFormatting();
         break;
       default:
         break;
