@@ -123,9 +123,9 @@ export const useTextEditing = ({
     //give all the content inside the editor
     const content = model.getValue();
 
-    handleEditorChange(content, {
-      matchIds: [editableId],
-    });
+    // handleEditorChange(content, {
+    //   matchIds: [editableId],
+    // });
   }, [focusedItem]);
 
   const onCmdEnter = useCallback(

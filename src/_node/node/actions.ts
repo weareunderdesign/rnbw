@@ -77,8 +77,8 @@ const add = ({
     column: 1,
   });
 
-  const content = html_beautify(codeViewInstanceModel.getValue());
-  codeViewInstanceModel.setValue(content);
+  // const content = html_beautify(codeViewInstanceModel.getValue());
+  // codeViewInstanceModel.setValue(content);
 };
 const remove = ({
   nodeTree,
@@ -112,11 +112,10 @@ const remove = ({
     }
   });
 
-  const content = html_beautify(codeViewInstanceModel.getValue());
-  codeViewInstanceModel.setValue(content);
+  // const content = html_beautify(codeViewInstanceModel.getValue());
+  // codeViewInstanceModel.setValue(content);
 
   return [
-    content,
     {
       matchIds: uids,
     },
@@ -192,8 +191,8 @@ const paste = ({
         lineNumber: position.lineNumber + 1,
         column: 1,
       });
-      const content = html_beautify(codeViewInstanceModel.getValue());
-      codeViewInstanceModel.setValue(content);
+      // const content = html_beautify(codeViewInstanceModel.getValue());
+      // codeViewInstanceModel.setValue(content);
     })
     .catch((error) => {
       LogAllow && console.error("Error reading from clipboard:", error);
@@ -242,8 +241,8 @@ const duplicate = ({
       column: 1,
     });
 
-    const content = html_beautify(codeViewInstanceModel.getValue());
-    codeViewInstanceModel.setValue(content);
+    // const content = html_beautify(codeViewInstanceModel.getValue());
+    // codeViewInstanceModel.setValue(content);
   });
 };
 const move = ({
@@ -344,11 +343,10 @@ const group = ({
     column: 1,
   });
 
-  const content = html_beautify(codeViewInstanceModel.getValue());
-  codeViewInstanceModel.setValue(content);
+  // const content = html_beautify(codeViewInstanceModel.getValue());
+  // codeViewInstanceModel.setValue(content);
 
   return [
-    content,
     {
       matchIds: uids,
     },
@@ -449,8 +447,8 @@ const ungroup = ({
       column: 1,
     });
 
-    const content = html_beautify(codeViewInstanceModel.getValue());
-    codeViewInstanceModel.setValue(content);
+    // const content = html_beautify(codeViewInstanceModel.getValue());
+    // codeViewInstanceModel.setValue(content);
   });
 };
 
@@ -480,7 +478,7 @@ export const doNodeActions = (
 
       osType = "Windows",
     } = params;
-    let cb_params: any[];
+    let cb_params: any;
 
     switch (action) {
       case "add":
@@ -499,7 +497,6 @@ export const doNodeActions = (
           uids: selectedUids,
           codeViewInstanceModel,
         });
-        cb && cb(cb_params);
         break;
       case "cut":
         cut({
@@ -554,7 +551,6 @@ export const doNodeActions = (
           codeViewInstance,
           codeViewInstanceModel,
         });
-        cb && cb(cb_params);
         break;
       case "ungroup":
         ungroup({
@@ -567,6 +563,10 @@ export const doNodeActions = (
       default:
         break;
     }
+
+    const content = html_beautify(codeViewInstanceModel.getValue());
+    codeViewInstanceModel.setValue(content);
+    cb && cb(cb_params);
   } catch (err) {
     LogAllow && console.log(err);
     fb && fb();

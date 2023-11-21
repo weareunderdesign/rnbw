@@ -33,7 +33,7 @@ import {
 } from "@_redux/main/nodeTree";
 import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
 
-import { CodeSelection } from "../types";
+import { CodeSelection, EditorChange } from "../types";
 import { useAppState } from "@_redux/useAppState";
 
 function getLanguageFromExtension(extension: string) {
@@ -207,20 +207,13 @@ export default function useEditor() {
   }
 
   const editorUpdate = useCallback(
-    (
-      value: string,
-      configs?: {
-        matchIds?: string[] | null;
-        skipFromChildren?: boolean;
-      },
-    ) => {
+    ({ value, htmlDom, nodeTree, configs }: EditorChange) => {
       const monacoEditor = monacoEditorRef.current;
       if (!monacoEditor) return;
       const iframe: any = document.getElementById("iframeId");
+      if (!iframe) return;
       const iframeDoc = iframe.contentDocument;
       const iframeHtml = iframeDoc.getElementsByTagName("html")[0];
-      const { htmlDom, nodeTree } = parseFile("html", value);
-
       let updatedHtml = null;
       if (!htmlDom) return;
       const defaultTreeAdapter = parse5.defaultTreeAdapter;
@@ -340,28 +333,13 @@ export default function useEditor() {
     },
     [dispatch, fileTree, monacoEditorRef, currentFileUid, addRunningActions],
   );
-  const debouncedEditorUpdate = useCallback(
-    debounce(editorUpdate, CodeViewSyncDelay),
-    [editorUpdate],
-  );
   const handleEditorChange = useCallback(
-    (
-      value: string | undefined,
-      configs?: {
-        matchIds?: string[] | null;
-        skipFromChildren?: boolean;
-      },
-    ) => {
+    ({ value, htmlDom, nodeTree, configs }: EditorChange) => {
       if (!value) return;
 
-      if (isContentProgrammaticallyChanged.current === true) {
-        editorUpdate(value, configs);
-        setIsContentProgrammaticallyChanged(false);
-      } else {
-        debouncedEditorUpdate(value, configs);
-      }
+      editorUpdate({ value, htmlDom, nodeTree, configs });
     },
-    [editorUpdate, debouncedEditorUpdate],
+    [editorUpdate],
   );
 
   // tabSize

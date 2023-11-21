@@ -321,10 +321,14 @@ export const getFileData = (params: {
 };
 
 export const handleFileUpdate = (fileData: TFileNodeData) => {
-  const { contentInApp, nodeTree } = parseFile(fileData.ext, fileData.content);
+  const { contentInApp, nodeTree, htmlDom } = parseFile(
+    fileData.ext,
+    fileData.content,
+  );
+
   fileData.contentInApp = contentInApp;
   fileData.changed = fileData.content !== fileData.orgContent;
-  return { nodeTree };
+  return { nodeTree, htmlDom };
 };
 
 export const handleHmsChange = (

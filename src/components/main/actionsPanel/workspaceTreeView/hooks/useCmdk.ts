@@ -36,6 +36,7 @@ export const useCmdk = (openFileUid: React.MutableRefObject<string>) => {
   const onDelete = useCallback(() => {
     cb_deleteNode();
   }, [cb_deleteNode]);
+
   const onCut = useCallback(() => {
     dispatch(
       setClipboardData({
@@ -49,6 +50,7 @@ export const useCmdk = (openFileUid: React.MutableRefObject<string>) => {
       }),
     );
   }, [selectedItems, fileTree[currentFileUid], nodeTree]);
+
   const onCopy = useCallback(() => {
     setClipboardData({
       panel: "file",
@@ -60,6 +62,7 @@ export const useCmdk = (openFileUid: React.MutableRefObject<string>) => {
       prevNodeTree: nodeTree,
     });
   }, [selectedItems, fileTree[currentFileUid], nodeTree]);
+
   const onPaste = useCallback(() => {
     if (clipboardData?.panel !== "file") return;
 
