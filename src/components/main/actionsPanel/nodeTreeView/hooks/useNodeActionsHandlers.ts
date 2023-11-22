@@ -14,11 +14,8 @@ export const useNodeActionsHandlers = () => {
     nFocusedItem: focusedItem,
     nSelectedItems: selectedItems,
   } = useAppState();
-  const {
-    htmlReferenceData,
-    monacoEditorRef,
-    setIsContentProgrammaticallyChanged,
-  } = useContext(MainContext);
+  const { htmlReferenceData, monacoEditorRef, setProgrammaticContentChange } =
+    useContext(MainContext);
 
   const onAddNode = useCallback(
     (actionName: string) => {
@@ -39,7 +36,7 @@ export const useNodeActionsHandlers = () => {
         return;
       }
 
-      setIsContentProgrammaticallyChanged(true);
+      setProgrammaticContentChange({});
       callNodeApi(
         {
           action: "add",
@@ -49,7 +46,7 @@ export const useNodeActionsHandlers = () => {
           targetUid: focusedItem,
           codeViewInstanceModel,
         },
-        () => setIsContentProgrammaticallyChanged(false),
+        () => setProgrammaticContentChange(null),
       );
     },
     [nodeTree, focusedItem],
@@ -68,7 +65,7 @@ export const useNodeActionsHandlers = () => {
       return;
     }
 
-    setIsContentProgrammaticallyChanged(true);
+    setProgrammaticContentChange({});
     callNodeApi(
       {
         action: "cut",
@@ -76,7 +73,7 @@ export const useNodeActionsHandlers = () => {
         selectedUids: selectedItems,
         codeViewInstanceModel,
       },
-      () => setIsContentProgrammaticallyChanged(false),
+      () => setProgrammaticContentChange(null),
     );
   }, [selectedItems, nodeTree]);
 
@@ -93,7 +90,7 @@ export const useNodeActionsHandlers = () => {
       return;
     }
 
-    setIsContentProgrammaticallyChanged(true);
+    setProgrammaticContentChange({});
     callNodeApi(
       {
         action: "copy",
@@ -101,7 +98,7 @@ export const useNodeActionsHandlers = () => {
         selectedUids: selectedItems,
         codeViewInstanceModel,
       },
-      () => setIsContentProgrammaticallyChanged(false),
+      () => setProgrammaticContentChange(null),
     );
   }, [selectedItems, nodeTree]);
 
@@ -123,7 +120,7 @@ export const useNodeActionsHandlers = () => {
       return;
     }
 
-    setIsContentProgrammaticallyChanged(true);
+    setProgrammaticContentChange({});
     callNodeApi(
       {
         action: "paste",
@@ -131,7 +128,7 @@ export const useNodeActionsHandlers = () => {
         targetUid: focusedItem,
         codeViewInstanceModel,
       },
-      () => setIsContentProgrammaticallyChanged(false),
+      () => setProgrammaticContentChange(null),
     );
   }, [validNodeTree, focusedItem]);
 
@@ -148,7 +145,7 @@ export const useNodeActionsHandlers = () => {
       return;
     }
 
-    setIsContentProgrammaticallyChanged(true);
+    setProgrammaticContentChange({});
     callNodeApi(
       {
         action: "remove",
@@ -156,7 +153,7 @@ export const useNodeActionsHandlers = () => {
         selectedUids: selectedItems,
         codeViewInstanceModel,
       },
-      () => setIsContentProgrammaticallyChanged(false),
+      () => setProgrammaticContentChange(null),
     );
   }, [selectedItems, nodeTree]);
 
@@ -173,7 +170,7 @@ export const useNodeActionsHandlers = () => {
       return;
     }
 
-    setIsContentProgrammaticallyChanged(true);
+    setProgrammaticContentChange({});
     callNodeApi(
       {
         action: "duplicate",
@@ -181,7 +178,7 @@ export const useNodeActionsHandlers = () => {
         selectedUids: selectedItems,
         codeViewInstanceModel,
       },
-      () => setIsContentProgrammaticallyChanged(false),
+      () => setProgrammaticContentChange(null),
     );
   }, [selectedItems, nodeTree]);
 
@@ -207,7 +204,7 @@ export const useNodeActionsHandlers = () => {
         return;
       }
 
-      setIsContentProgrammaticallyChanged(true);
+      setProgrammaticContentChange({});
       callNodeApi(
         {
           action: "move",
@@ -218,7 +215,7 @@ export const useNodeActionsHandlers = () => {
           position,
           codeViewInstanceModel,
         },
-        () => setIsContentProgrammaticallyChanged(false),
+        () => setProgrammaticContentChange(null),
       );
     },
     [nodeTree, selectedItems, focusedItem],
@@ -239,7 +236,7 @@ export const useNodeActionsHandlers = () => {
       return;
     }
 
-    setIsContentProgrammaticallyChanged(true);
+    setProgrammaticContentChange({});
     callNodeApi(
       {
         action: "group",
@@ -247,7 +244,7 @@ export const useNodeActionsHandlers = () => {
         selectedUids: selectedItems,
         codeViewInstanceModel,
       },
-      () => setIsContentProgrammaticallyChanged(false),
+      () => setProgrammaticContentChange(null),
     );
   }, [selectedItems, validNodeTree]);
   const onUngroup = useCallback(() => {
@@ -263,7 +260,7 @@ export const useNodeActionsHandlers = () => {
       return;
     }
 
-    setIsContentProgrammaticallyChanged(true);
+    setProgrammaticContentChange({});
     callNodeApi(
       {
         action: "ungroup",
@@ -271,7 +268,7 @@ export const useNodeActionsHandlers = () => {
         selectedUids: selectedItems,
         codeViewInstanceModel,
       },
-      () => setIsContentProgrammaticallyChanged(false),
+      () => setProgrammaticContentChange(null),
     );
   }, [selectedItems, validNodeTree]);
 

@@ -95,6 +95,7 @@ import {
 
 import { getCommandKey, isChromeOrEdge } from "../../services/global";
 import { addDefaultCmdkActions, clearProjectSession } from "./helper";
+import { StageViewSyncConfigs } from "@_components/main/codeView";
 
 export default function MainPage() {
   // ***************************************** Reducer Begin *****************************************
@@ -241,9 +242,9 @@ export default function MainPage() {
     useState<TCmdkGroupData>({});
 
   // TODO Begin
-  const isContentProgrammaticallyChanged = useRef(false);
-  const setIsContentProgrammaticallyChanged = (value: boolean) => {
-    isContentProgrammaticallyChanged.current = value;
+  const programmaticContentChange = useRef<StageViewSyncConfigs | null>(null);
+  const setProgrammaticContentChange = (value: StageViewSyncConfigs | null) => {
+    programmaticContentChange.current = value;
   };
   const [codeChanges, setCodeChanges] = useState<TCodeChange[]>([]);
 
@@ -1416,8 +1417,8 @@ export default function MainPage() {
           setFileHandlers,
 
           // code view
-          isContentProgrammaticallyChanged,
-          setIsContentProgrammaticallyChanged,
+          programmaticContentChange,
+          setProgrammaticContentChange,
           codeChanges,
           setCodeChanges,
           setCodeViewOffsetTop,
