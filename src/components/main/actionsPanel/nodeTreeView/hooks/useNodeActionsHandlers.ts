@@ -5,7 +5,6 @@ import { useAppState } from "@_redux/useAppState";
 import { LogAllow } from "@_constants/global";
 import { callNodeApi } from "@_node/apis";
 
-import { getValidNodeUids } from "@_node/helpers";
 import { TNodeUid } from "@_node/types";
 
 export const useNodeActionsHandlers = () => {
