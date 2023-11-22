@@ -55,6 +55,7 @@ export const useProcessorUpdate = () => {
     } else {
     }
   }, [selectedNodeUids]);
+
   useEffect(() => {
     const monacoEditor = monacoEditorRef.current;
     if (!fileTree[currentFileUid] || !monacoEditor) return;

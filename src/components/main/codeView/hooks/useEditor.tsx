@@ -37,8 +37,6 @@ export default function useEditor() {
   const {
     addRunningActions,
     setMonacoEditorRef,
-    isContentProgrammaticallyChanged,
-    setIsContentProgrammaticallyChanged,
     monacoEditorRef,
     parseFileFlag,
   } = useContext(MainContext);
@@ -266,13 +264,10 @@ export default function useEditor() {
           },
           onBeforeNodeDiscarded: function (node: Node) {
             const elementNode = node as Element;
-
-            // debugger;
             const ifPreserveNode = elementNode.getAttribute
               ? elementNode.getAttribute(PreserveRnbwNode)
               : false;
             if (ifPreserveNode) {
-              // debugger;
               return false;
             }
             //script and style should not be discarded
@@ -293,14 +288,7 @@ export default function useEditor() {
         dispatch(setCurrentFileContent(codeContentRef.current));
         dispatch(setDoingFileAction(false));
 
-        const _file = structuredClone(fileTree[currentFileUid]) as TNode;
-        const fileData = _file.data as TFileNodeData;
         dispatch(setCurrentFileContent(codeContentRef.current));
-
-        // (fileTree[currentFileUid].data as TFileNodeData).contentInApp =
-        //   codeContentRef.current;
-        // (fileTree[currentFileUid].data as TFileNodeData).changed =
-        //   codeContentRef.current !== fileData.orgContent;
 
         dispatch(setFileTree(fileTree));
         dispatch(setCurrentFileContent(codeContentRef.current));

@@ -24,12 +24,13 @@ export type CodeSelection = {
   endColumn: number;
 };
 
+export type StageViewSyncConfigs = {
+  matchIds?: string[] | null;
+  skipFromChildren?: boolean;
+};
 export type EditorChange = {
   value: string;
   htmlDom: any;
   nodeTree: TNodeTreeData;
-  configs?: {
-    matchIds?: string[] | null;
-    skipFromChildren?: boolean;
-  };
+  configs?: StageViewSyncConfigs;
 };

@@ -23,7 +23,7 @@ export const useNodeTreeCallback = (
   const { validNodeTree } = useSelector(
     (state: AppState) => state.main.nodeTree,
   );
-  const { monacoEditorRef, setIsContentProgrammaticallyChanged } =
+  const { monacoEditorRef, setProgrammaticContentChange } =
     useContext(MainContext);
 
   const { cb_focusNode, cb_selectNode, cb_expandNode, cb_collapseNode } =
@@ -84,7 +84,7 @@ export const useNodeTreeCallback = (
       }
     }
 
-    setIsContentProgrammaticallyChanged(true);
+    setProgrammaticContentChange({});
     const dropOptions = getDropOptions(target, validNodeTree, model);
     if (dropOptions === undefined) {
       return;
@@ -166,11 +166,7 @@ export const useNodeTreeCallback = (
       }
     });
 
-
-
     isDragging = false;
-
-
   };
   return {
     onSelectItems,

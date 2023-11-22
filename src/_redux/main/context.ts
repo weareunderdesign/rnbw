@@ -22,10 +22,10 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   setMonacoEditorRef: () => {},
 
   // code view
-  isContentProgrammaticallyChanged: {
-    current: false,
+  programmaticContentChange: {
+    current: {},
   },
-  setIsContentProgrammaticallyChanged: () => {},
+  setProgrammaticContentChange: () => {},
   codeChanges: [],
   setCodeChanges: () => {},
 

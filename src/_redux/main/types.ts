@@ -10,6 +10,7 @@ import {
 } from "@_types/main";
 
 import { TProjectContext } from "./fileTree";
+import { StageViewSyncConfigs } from "@_components/main/codeView";
 
 export type TEventHistoryInfo = {
   future: number;
@@ -54,8 +55,8 @@ export type TMainContext = {
   ) => void;
 
   // code view
-  isContentProgrammaticallyChanged: React.RefObject<boolean>;
-  setIsContentProgrammaticallyChanged: (changed: boolean) => void;
+  programmaticContentChange: React.RefObject<StageViewSyncConfigs | null>;
+  setProgrammaticContentChange: (value: StageViewSyncConfigs | null) => void;
   codeChanges: TCodeChange[];
   setCodeChanges: (changes: TCodeChange[]) => void;
   setCodeViewOffsetTop: (offsetTop: string) => void;
