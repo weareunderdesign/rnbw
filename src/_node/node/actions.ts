@@ -53,7 +53,7 @@ const add = ({
   const focusedNode = nodeTree[focusedItem];
   const { endLine, endCol } = focusedNode.data.sourceCodeLocation;
   const edit = {
-    range: new Range(endLine, endCol + 1, endLine, endCol + 1),
+    range: new Range(endLine, endCol, endLine, endCol),
     text: codeViewText,
   };
   codeViewInstanceModel.applyEdits([edit]);
@@ -149,7 +149,7 @@ const duplicate = ({
         new Range(startLine, startCol, endLine, endCol),
       );
       const edit = {
-        range: new Range(endLine, endCol + 1, endLine, endCol + 1),
+        range: new Range(endLine, endCol, endLine, endCol),
         text,
       };
       codeViewInstanceModel.applyEdits([edit]);

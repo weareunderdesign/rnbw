@@ -38,7 +38,7 @@ export const pasteCode = ({
   const focusedNode = nodeTree[focusedItem];
   const { endLine, endCol } = focusedNode.data.sourceCodeLocation;
   const edit = {
-    range: new Range(endLine, endCol + 1, endLine, endCol + 1),
+    range: new Range(endLine, endCol, endLine, endCol),
     text: code,
   };
   codeViewInstanceModel.applyEdits([edit]);
