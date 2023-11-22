@@ -38,7 +38,7 @@ export type TNodeSourceCodeLocation = {
 
 export type TNodeApiPayloadBase = {
   action: TNodeActionType;
-  codeViewInstance: editor.IStandaloneCodeEditor;
+  nodeTree: TNodeTreeData;
   codeViewInstanceModel: editor.ITextModel;
   osType?: TOsType;
 };
@@ -46,18 +46,6 @@ export type TNodeApiPayload = TNodeApiPayloadBase &
   // isFileTree & fileExt & codeViewTabSize
   (| { isFileTree: true; fileExt: never; codeViewTabSize?: never }
     | { isFileTree?: false; fileExt?: string; codeViewTabSize?: number }
-  ) &
-  // nodeTree & validNodeTree
-  (| {
-        action: Extract<TNodeActionType, "paste" | "group" | "ungroup">;
-        nodeTree?: never;
-        validNodeTree: TNodeTreeData;
-      }
-    | {
-        action: Exclude<TNodeActionType, "paste" | "group" | "ungroup">;
-        nodeTree: TNodeTreeData;
-        validNodeTree?: never;
-      }
   ) &
   // actionName & referenceData
   (| {

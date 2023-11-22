@@ -166,11 +166,7 @@ export const useNodeTreeCallback = (
       }
     });
 
-
-
     isDragging = false;
-
-
   };
   return {
     onSelectItems,

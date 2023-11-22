@@ -6,6 +6,7 @@ import { LogAllow } from "@_constants/global";
 import { callNodeApi } from "@_node/apis";
 
 import { getValidNodeUids } from "@_node/helpers";
+import { TNodeUid } from "@_node/types";
 
 export const useNodeActionsHandlers = () => {
   const {
@@ -47,7 +48,6 @@ export const useNodeActionsHandlers = () => {
           referenceData: htmlReferenceData,
           nodeTree,
           targetUid: focusedItem,
-          codeViewInstance,
           codeViewInstanceModel,
         },
         () => setIsContentProgrammaticallyChanged(false),
@@ -75,7 +75,6 @@ export const useNodeActionsHandlers = () => {
         action: "cut",
         nodeTree,
         selectedUids: selectedItems,
-        codeViewInstance,
         codeViewInstanceModel,
       },
       () => setIsContentProgrammaticallyChanged(false),
@@ -101,7 +100,6 @@ export const useNodeActionsHandlers = () => {
         action: "copy",
         nodeTree,
         selectedUids: selectedItems,
-        codeViewInstance,
         codeViewInstanceModel,
       },
       () => setIsContentProgrammaticallyChanged(false),
@@ -130,9 +128,8 @@ export const useNodeActionsHandlers = () => {
     callNodeApi(
       {
         action: "paste",
-        validNodeTree,
+        nodeTree: validNodeTree,
         targetUid: focusedItem,
-        codeViewInstance,
         codeViewInstanceModel,
       },
       () => setIsContentProgrammaticallyChanged(false),
@@ -158,7 +155,6 @@ export const useNodeActionsHandlers = () => {
         action: "remove",
         nodeTree,
         selectedUids: selectedItems,
-        codeViewInstance,
         codeViewInstanceModel,
       },
       () => setIsContentProgrammaticallyChanged(false),
@@ -184,48 +180,50 @@ export const useNodeActionsHandlers = () => {
         action: "duplicate",
         nodeTree,
         selectedUids: selectedItems,
-        codeViewInstance,
         codeViewInstanceModel,
       },
       () => setIsContentProgrammaticallyChanged(false),
     );
   }, [selectedItems, nodeTree]);
 
-  const onMove = useCallback(() => {
-    const uids = getValidNodeUids(
-      nodeTree,
-      selectedItems,
-      focusedItem,
-      "html",
-      htmlReferenceData,
-    );
-    if (uids.length === 0) return;
+  const onMove = useCallback(
+    ({
+      targetUid,
+      isBetween = false,
+      position = 0,
+    }: {
+      targetUid: TNodeUid;
+      isBetween: boolean;
+      position: number;
+    }) => {
+      if (selectedItems.length === 0) return;
 
-    const codeViewInstance = monacoEditorRef.current;
-    const codeViewInstanceModel = codeViewInstance?.getModel();
-    if (!codeViewInstance || !codeViewInstanceModel) {
-      LogAllow &&
-        console.error(
-          `Monaco Editor ${!codeViewInstance ? "" : "Model"} is undefined`,
-        );
-      return;
-    }
+      const codeViewInstance = monacoEditorRef.current;
+      const codeViewInstanceModel = codeViewInstance?.getModel();
+      if (!codeViewInstance || !codeViewInstanceModel) {
+        LogAllow &&
+          console.error(
+            `Monaco Editor ${!codeViewInstance ? "" : "Model"} is undefined`,
+          );
+        return;
+      }
 
-    setIsContentProgrammaticallyChanged(true);
-    callNodeApi(
-      {
-        action: "move",
-        nodeTree,
-        selectedUids: selectedItems,
-        targetUid: focusedItem,
-        isBetween: false,
-        position: 0,
-        codeViewInstance,
-        codeViewInstanceModel,
-      },
-      () => setIsContentProgrammaticallyChanged(false),
-    );
-  }, [nodeTree, selectedItems, focusedItem]);
+      setIsContentProgrammaticallyChanged(true);
+      callNodeApi(
+        {
+          action: "move",
+          nodeTree,
+          selectedUids: selectedItems,
+          targetUid,
+          isBetween,
+          position,
+          codeViewInstanceModel,
+        },
+        () => setIsContentProgrammaticallyChanged(false),
+      );
+    },
+    [nodeTree, selectedItems, focusedItem],
+  );
 
   const onTurnInto = useCallback(() => {}, []);
 
@@ -246,9 +244,8 @@ export const useNodeActionsHandlers = () => {
     callNodeApi(
       {
         action: "group",
-        validNodeTree,
+        nodeTree: validNodeTree,
         selectedUids: selectedItems,
-        codeViewInstance,
         codeViewInstanceModel,
       },
       () => setIsContentProgrammaticallyChanged(false),
@@ -271,9 +268,8 @@ export const useNodeActionsHandlers = () => {
     callNodeApi(
       {
         action: "ungroup",
-        validNodeTree,
+        nodeTree: validNodeTree,
         selectedUids: selectedItems,
-        codeViewInstance,
         codeViewInstanceModel,
       },
       () => setIsContentProgrammaticallyChanged(false),
