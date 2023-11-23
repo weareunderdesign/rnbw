@@ -1,6 +1,3 @@
-import { editor } from "monaco-editor";
-
-import { TOsType } from "@_redux/global";
 import { THtmlReferenceData } from "@_types/main";
 
 export type TNode = {
@@ -36,29 +33,16 @@ export type TNodeSourceCodeLocation = {
   endOffset: number;
 };
 
-export type TNodeApiPayload = {
-  tree: TNodeTreeData;
-  isFileTree: boolean;
-  fileExt?: string;
-
-  action: TNodeActionType;
-
-  selectedUids: TNodeUid[];
-  tragetUid: TNodeUid;
-  isBetween?: boolean;
-  position?: number;
-
-  codeViewInstance: editor.IStandaloneCodeEditor;
-  codeViewTabSize?: number;
-
-  osType?: TOsType;
-};
-
 export type TNodeActionType =
-  | "create"
+  | "add"
   | "remove"
+  | "cut"
+  | "copy"
+  | "paste"
   | "duplicate"
   | "move"
-  | "copy";
+  | "rename" // "turn into" for node tree - "rename" for file tree
+  | "group"
+  | "ungroup";
 
 export type TNodeReferenceData = THtmlReferenceData;

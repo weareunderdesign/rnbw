@@ -16,6 +16,7 @@ import { useAppState } from "@_redux/useAppState";
 
 import { getPreViewPath, handleFileUpdate } from "../helpers";
 import { setDidRedo, setDidUndo } from "@_redux/main/processor";
+import { useEditor } from "@_components/main/codeView/hooks";
 
 export const useProcessorUpdate = () => {
   const dispatch = useDispatch();
@@ -32,13 +33,15 @@ export const useProcessorUpdate = () => {
     didUndo,
     didRedo,
   } = useAppState();
+
+  const { handleEditorChange } = useEditor();
   const { addRunningActions, removeRunningActions, monacoEditorRef } =
     useContext(MainContext);
 
-  // file tree
+  // file tree event
   useEffect(() => {}, [fileAction]);
 
-  // node tree
+  // node tree event
   useEffect(() => {
     if (didRedo || didUndo) {
       dispatch(selectNodeTreeNodes(selectedNodeUids));
@@ -52,6 +55,7 @@ export const useProcessorUpdate = () => {
     } else {
     }
   }, [selectedNodeUids]);
+
   useEffect(() => {
     const monacoEditor = monacoEditorRef.current;
     if (!fileTree[currentFileUid] || !monacoEditor) return;
@@ -61,8 +65,12 @@ export const useProcessorUpdate = () => {
     const file = structuredClone(fileTree[currentFileUid]);
     const fileData = file.data;
     fileData.content = currentFileContent;
-
-    const { nodeTree } = handleFileUpdate(fileData);
+    const { nodeTree, htmlDom } = handleFileUpdate(fileData);
+    if (fileData.ext === "html") {
+      if (htmlDom) {
+        handleEditorChange({ value: currentFileContent, htmlDom, nodeTree });
+      }
+    }
     dispatch(setFileTreeNode(file));
     dispatch(setNodeTree(nodeTree));
 
@@ -87,7 +95,7 @@ export const useProcessorUpdate = () => {
     removeRunningActions(["processor-update"]);
   }, [currentFileContent]);
 
-  // processor
+  // hms
   useEffect(() => {
     didUndo && dispatch(setDidUndo(false));
     didRedo && dispatch(setDidRedo(false));

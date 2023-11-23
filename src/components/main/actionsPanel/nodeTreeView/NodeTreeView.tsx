@@ -60,6 +60,9 @@ const NodeTreeView = () => {
   const { addRunningActions, htmlReferenceData } = useContext(MainContext);
 
   // ------ sync ------
+  // cmdk
+  useCmdk();
+
   // outline the hovered item
   const hoveredItemRef = useRef<TNodeUid>(hoveredNodeUid);
   useEffect(() => {
@@ -139,9 +142,6 @@ const NodeTreeView = () => {
 
   // node view state handlers
   const { cb_expandNode } = useNodeViewState(focusedItemRef.current);
-
-  // cmdk
-  useCmdk();
 
   const onPanelClick = useCallback(() => {
     dispatch(setActivePanel("node"));

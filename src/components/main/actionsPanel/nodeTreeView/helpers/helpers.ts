@@ -65,7 +65,7 @@ export const getCopiedContent = (uid: TNodeUid, iframe: any) => {
 
   //create a copy of ele
   const eleCopy = ele?.cloneNode(true) as HTMLElement;
-  const innerElements = eleCopy?.querySelectorAll(`[${StageNodeIdAttr}]`);
+  const innerElements = eleCopy.querySelectorAll(`[${StageNodeIdAttr}]`);
 
   innerElements.forEach((element) => {
     if (element.hasAttribute(StageNodeIdAttr)) {
@@ -74,14 +74,14 @@ export const getCopiedContent = (uid: TNodeUid, iframe: any) => {
     }
   });
 
-  eleCopy?.removeAttribute("contenteditable");
-  eleCopy?.removeAttribute("rnbwdev-rnbw-element-hover");
-  eleCopy?.removeAttribute("rnbwdev-rnbw-element-select");
-  eleCopy?.removeAttribute(StageNodeIdAttr);
-  const cleanedUpCode = eleCopy?.outerHTML;
+  eleCopy.removeAttribute("contenteditable");
+  eleCopy.removeAttribute("rnbwdev-rnbw-element-hover");
+  eleCopy.removeAttribute("rnbwdev-rnbw-element-select");
+  eleCopy.removeAttribute(StageNodeIdAttr);
+  const cleanedUpCode = eleCopy.outerHTML;
 
   //delete the copy
-  eleCopy?.remove();
+  eleCopy.remove();
 
   return cleanedUpCode;
 };

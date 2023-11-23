@@ -54,7 +54,7 @@ export const useTextEditing = ({
     // close all panel
     closeAllPanel,
     monacoEditorRef,
-    setIsContentProgrammaticallyChanged,
+    setProgrammaticContentChange,
   } = useContext(MainContext);
 
   const { setFocusedSelectedItems } = useSetSelectItem({
@@ -66,7 +66,7 @@ export const useTextEditing = ({
   const beforeTextEdit = useCallback(() => {
     let node = validNodeTree[contentEditableUidRef.current];
     if (!node) return;
-    setIsContentProgrammaticallyChanged(true);
+    setProgrammaticContentChange({});
     let editableId = contentEditableUidRef.current;
     contentEditableUidRef.current = "";
 
@@ -123,9 +123,9 @@ export const useTextEditing = ({
     //give all the content inside the editor
     const content = model.getValue();
 
-    handleEditorChange(content, {
-      matchIds: [editableId],
-    });
+    // handleEditorChange(content, {
+    //   matchIds: [editableId],
+    // });
   }, [focusedItem]);
 
   const onCmdEnter = useCallback(

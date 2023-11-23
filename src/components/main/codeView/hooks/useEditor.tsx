@@ -1,13 +1,12 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 
-import { debounce } from "lodash";
 import { editor, IPosition } from "monaco-editor";
 import morphdom from "morphdom";
 import * as parse5 from "parse5";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 import { DefaultTabSize, RootNodeUid } from "@_constants/main";
-import { parseFile, TFileNodeData } from "@_node/file";
+import { TFileNodeData } from "@_node/file";
 import {
   PreserveRnbwNode,
   StageNodeIdAttr,
@@ -16,12 +15,7 @@ import { getSubNodeUidsByBfs } from "@_node/helpers";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { setCodeEditing, setCodeViewTabSize } from "@_redux/main/codeView";
-import {
-  currentFileUidSelector,
-  fileTreeSelector,
-  setDoingFileAction,
-  setFileTree,
-} from "@_redux/main/fileTree";
+import { setDoingFileAction, setFileTree } from "@_redux/main/fileTree";
 import {
   focusNodeTreeNode,
   selectNodeTreeNodes,
@@ -29,8 +23,8 @@ import {
 } from "@_redux/main/nodeTree";
 import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
 
-import { CodeSelection } from "../types";
-import { html_beautify } from "js-beautify";
+import { CodeSelection, EditorChange } from "../types";
+import { useAppState } from "@_redux/useAppState";
 
 function getLanguageFromExtension(extension: string) {
   if (extension) return extension;
@@ -38,19 +32,16 @@ function getLanguageFromExtension(extension: string) {
 }
 
 export default function useEditor() {
-  const [language, setLanguage] = useState("html");
-  const fileTree = useSelector(fileTreeSelector);
-  const currentFileUid = useSelector(currentFileUidSelector);
+  const dispatch = useDispatch();
+  const { fileTree, currentFileUid } = useAppState();
   const {
     addRunningActions,
     setMonacoEditorRef,
-    setIsContentProgrammaticallyChanged,
     monacoEditorRef,
     parseFileFlag,
   } = useContext(MainContext);
 
-  const dispatch = useDispatch();
-
+  const [language, setLanguage] = useState("html");
   const [focusedNode, setFocusedNode] = useState<TNode>();
   const wordWrap: editor.IEditorOptions["wordWrap"] = "on";
 
@@ -203,17 +194,14 @@ export default function useEditor() {
     return focusedNode;
   }
 
-  const debouncedEditorUpdate = useCallback(
-    debounce((value: string, configs) => {
-      // value = html_beautify(value);
-
+  const editorUpdate = useCallback(
+    ({ value, htmlDom, nodeTree, configs }: EditorChange) => {
       const monacoEditor = monacoEditorRef.current;
       if (!monacoEditor) return;
       const iframe: any = document.getElementById("iframeId");
+      if (!iframe) return;
       const iframeDoc = iframe.contentDocument;
       const iframeHtml = iframeDoc.getElementsByTagName("html")[0];
-      const { htmlDom, nodeTree } = parseFile("html", value);
-
       let updatedHtml = null;
       if (!htmlDom) return;
       const defaultTreeAdapter = parse5.defaultTreeAdapter;
@@ -237,7 +225,7 @@ export default function useEditor() {
               } else {
                 let fromOuter = fromEl.outerHTML;
                 let toOuter = toEl.outerHTML;
-                return true;
+                return false;
               }
             }
             const fromElRnbwId = fromEl.getAttribute(StageNodeIdAttr);
@@ -276,13 +264,10 @@ export default function useEditor() {
           },
           onBeforeNodeDiscarded: function (node: Node) {
             const elementNode = node as Element;
-
-            debugger;
             const ifPreserveNode = elementNode.getAttribute
               ? elementNode.getAttribute(PreserveRnbwNode)
               : false;
             if (ifPreserveNode) {
-              debugger;
               return false;
             }
             //script and style should not be discarded
@@ -304,14 +289,7 @@ export default function useEditor() {
         dispatch(setCurrentFileContent(codeContentRef.current));
         dispatch(setDoingFileAction(false));
 
-        const _file = structuredClone(fileTree[currentFileUid]) as TNode;
-        const fileData = _file.data as TFileNodeData;
         dispatch(setCurrentFileContent(codeContentRef.current));
-
-        // (fileTree[currentFileUid].data as TFileNodeData).contentInApp =
-        //   codeContentRef.current;
-        // (fileTree[currentFileUid].data as TFileNodeData).changed =
-        //   codeContentRef.current !== fileData.orgContent;
 
         dispatch(setFileTree(fileTree));
         dispatch(setCurrentFileContent(codeContentRef.current));
@@ -331,23 +309,16 @@ export default function useEditor() {
       }
 
       dispatch(setCodeEditing(false));
-    }, 1000),
+    },
     [dispatch, fileTree, monacoEditorRef, currentFileUid, addRunningActions],
   );
-
   const handleEditorChange = useCallback(
-    (
-      value: string | undefined,
-      configs?: {
-        matchIds?: string[] | null;
-        skipFromChildren?: boolean;
-      },
-    ) => {
+    ({ value, htmlDom, nodeTree, configs }: EditorChange) => {
       if (!value) return;
-      debouncedEditorUpdate(value, configs);
-      setIsContentProgrammaticallyChanged(false);
+
+      editorUpdate({ value, htmlDom, nodeTree, configs });
     },
-    [debouncedEditorUpdate],
+    [editorUpdate],
   );
 
   // tabSize

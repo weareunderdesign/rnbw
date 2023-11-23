@@ -1,20 +1,13 @@
 import { useContext, useEffect } from "react";
 
-import { useSelector } from "react-redux";
-
-import { AddNodeActionPrefix } from "@_constants/main";
-import { themeSelector } from "@_redux/global";
 import { MainContext } from "@_redux/main";
-import { currentCommandSelector } from "@_redux/main/cmdk";
-import { activePanelSelector } from "@_redux/main/processor";
 
-import { useNodeActionsHandlers } from "./useNodeActionsHendlers";
+import { useNodeActionsHandlers } from "./useNodeActionsHandlers";
+import { useAppState } from "@_redux/useAppState";
+import { isAddNodeAction, isRenameNodeAction } from "@_node/helpers";
 
 export const useCmdk = () => {
-  const activePanel = useSelector(activePanelSelector);
-  const currentCommand = useSelector(currentCommandSelector);
-  const theme = useSelector(themeSelector);
-
+  const { activePanel, currentCommand } = useAppState();
   const {} = useContext(MainContext);
 
   const {
@@ -27,18 +20,18 @@ export const useCmdk = () => {
     onGroup,
     onUngroup,
     onAddNode,
-    onFormatting,
   } = useNodeActionsHandlers();
-
-  const isAddNodeAction = (actionName: string): boolean => {
-    return actionName.startsWith(AddNodeActionPrefix) ? true : false;
-  };
 
   useEffect(() => {
     if (!currentCommand) return;
 
     if (isAddNodeAction(currentCommand.action)) {
       onAddNode(currentCommand.action);
+      return;
+    }
+
+    if (isRenameNodeAction(currentCommand.action)) {
+      onTurnInto(currentCommand.action);
       return;
     }
 
@@ -60,17 +53,11 @@ export const useCmdk = () => {
       case "Duplicate":
         onDuplicate();
         break;
-      case "Turn into":
-        onTurnInto();
-        break;
       case "Group":
         onGroup();
         break;
       case "Ungroup":
         onUngroup();
-        break;
-      case "Formatting":
-        onFormatting();
         break;
       default:
         break;
