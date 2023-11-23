@@ -283,7 +283,6 @@ export default function useEditor() {
         });
 
         codeContentRef.current = value;
-        // setCodeContent(value);
         dispatch(setNodeTree(nodeTree));
 
         dispatch(setCurrentFileContent(codeContentRef.current));

@@ -14,4 +14,4 @@ Ungroup,position,,cmd+shift+g,Basic,html
 Text,text,Edit Text,t,Basic,html
 Undo,undo,,cmd+z,Basic,all
 Redo,redo,,cmd+shift+z,Basic,all
-Formatting,format,,cmd+shift+f,Basic,"file, html"
+Formatting,format,,cmd+shift+f,Basic,html

@@ -11,6 +11,7 @@ export const useCmdk = () => {
   const {} = useContext(MainContext);
 
   const {
+    onAddNode,
     onCut,
     onCopy,
     onPaste,
@@ -19,7 +20,6 @@ export const useCmdk = () => {
     onTurnInto,
     onGroup,
     onUngroup,
-    onAddNode,
   } = useNodeActionsHandlers();
 
   useEffect(() => {

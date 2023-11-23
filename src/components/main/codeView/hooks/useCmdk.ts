@@ -22,7 +22,9 @@ export const useCmdk = () => {
 
   useEffect(() => {
     if (!currentCommand) return;
-    if (activePanel !== "node" && activePanel !== "stage") return;
+    console.log(activePanel, "### activePanel");
+
+    // if (activePanel !== "node" && activePanel !== "stage") return;
 
     switch (currentCommand.action) {
       case "Formatting":
