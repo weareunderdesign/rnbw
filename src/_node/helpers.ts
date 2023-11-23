@@ -1,6 +1,8 @@
 import { RootNodeUid } from "@_constants/main";
 import { THtmlReferenceData } from "@_types/main";
 
+import { AddNodeActionPrefix, RenameNodeActionPrefix } from "@_constants/main";
+
 import { THtmlNodeData } from "./node";
 import {
   TBasicNodeData,
@@ -196,4 +198,11 @@ export const getValidNodeUids = (
   }
 
   return uids.filter((uid) => validatedUids[uid]);
+};
+
+export const isAddNodeAction = (actionName: string): boolean => {
+  return actionName.startsWith(AddNodeActionPrefix) ? true : false;
+};
+export const isRenameNodeAction = (actionName: string): boolean => {
+  return actionName.startsWith(RenameNodeActionPrefix) ? true : false;
 };

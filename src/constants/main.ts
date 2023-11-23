@@ -19,6 +19,10 @@ export const AddActionPrefix = "AddAction";
 export const AddFileActionPrefix = `${AddActionPrefix}-File`;
 export const AddNodeActionPrefix = `${AddActionPrefix}-Node`;
 
+export const RenameActionPrefix = "RenameAction";
+export const RenameFileActionPrefix = `${RenameActionPrefix}-File`;
+export const RenameNodeActionPrefix = `${RenameActionPrefix}-Node`;
+
 export const DefaultTabSize: number = 2;
 export const RecentProjectCount = 10;
 
