@@ -172,14 +172,28 @@ const move = ({
   codeViewInstanceModel: editor.ITextModel;
 }) => {
   const targetNode = nodeTree[targetUid];
-  const focusedItem = isBetween ? targetNode.children[position] : targetUid;
+  const childCount = targetNode.children.length;
+  const focusedItem = isBetween
+    ? targetNode.children[Math.min(childCount - 1, position)]
+    : targetNode.children[childCount - 1];
   const sortedUids = sortUidsByMaxEndIndex([...uids, focusedItem], nodeTree);
 
   const code = copyCode({ nodeTree, uids, codeViewInstanceModel });
+
+  let isFirst = true; // isFirst is used to when drop focusedItem to itself
   sortedUids.map((uid) => {
-    uid === focusedItem
-      ? pasteCode({ nodeTree, focusedItem, codeViewInstanceModel, code })
-      : remove({ nodeTree, uids: [uid], codeViewInstanceModel });
+    if (uid === focusedItem && isFirst) {
+      isFirst = false;
+      pasteCode({
+        nodeTree,
+        focusedItem,
+        addToBefore: isBetween && position === 0,
+        codeViewInstanceModel,
+        code,
+      });
+    } else {
+      remove({ nodeTree, uids: [uid], codeViewInstanceModel });
+    }
   });
 };
 

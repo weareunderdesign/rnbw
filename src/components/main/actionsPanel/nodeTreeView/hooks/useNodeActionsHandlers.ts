@@ -184,16 +184,16 @@ export const useNodeActionsHandlers = () => {
 
   const onMove = useCallback(
     ({
+      selectedUids,
       targetUid,
       isBetween = false,
       position = 0,
     }: {
+      selectedUids: TNodeUid[];
       targetUid: TNodeUid;
       isBetween: boolean;
       position: number;
     }) => {
-      if (selectedItems.length === 0) return;
-
       const codeViewInstance = monacoEditorRef.current;
       const codeViewInstanceModel = codeViewInstance?.getModel();
       if (!codeViewInstance || !codeViewInstanceModel) {
@@ -209,7 +209,7 @@ export const useNodeActionsHandlers = () => {
         {
           action: "move",
           nodeTree,
-          selectedUids: selectedItems,
+          selectedUids,
           targetUid,
           isBetween,
           position,
@@ -218,7 +218,7 @@ export const useNodeActionsHandlers = () => {
         () => setProgrammaticContentChange(null),
       );
     },
-    [nodeTree, selectedItems, focusedItem],
+    [nodeTree],
   );
 
   const onTurnInto = useCallback(() => {}, []);
