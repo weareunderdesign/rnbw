@@ -1,6 +1,3 @@
-import { editor } from "monaco-editor";
-
-import { TOsType } from "@_redux/global";
 import { THtmlReferenceData } from "@_types/main";
 
 export type TNode = {
@@ -35,62 +32,6 @@ export type TNodeSourceCodeLocation = {
   endCol: number;
   endOffset: number;
 };
-
-export type TNodeApiPayloadBase = {
-  action: TNodeActionType;
-  nodeTree: TNodeTreeData;
-  codeViewInstanceModel: editor.ITextModel;
-  osType?: TOsType;
-};
-export type TNodeApiPayload = TNodeApiPayloadBase &
-  // isFileTree & fileExt & codeViewTabSize
-  (| { isFileTree: true; fileExt: never; codeViewTabSize?: never }
-    | { isFileTree?: false; fileExt?: string; codeViewTabSize?: number }
-  ) &
-  // actionName & referenceData
-  (| {
-        action: Extract<TNodeActionType, "add">;
-        actionName: string;
-        referenceData: TNodeReferenceData;
-      }
-    | {
-        action: Exclude<TNodeActionType, "add">;
-        actionName?: never;
-        referenceData?: never;
-      }
-  ) &
-  // selectedUids
-  (| {
-        action: Extract<TNodeActionType, "add" | "paste">;
-        selectedUids?: never;
-      }
-    | {
-        action: Exclude<TNodeActionType, "add" | "paste">;
-        selectedUids: TNodeUid[];
-      }
-  ) &
-  // targetUid
-  (| {
-        action: Extract<TNodeActionType, "add" | "paste" | "move">;
-        targetUid: TNodeUid;
-      }
-    | {
-        action: Exclude<TNodeActionType, "add" | "paste" | "move">;
-        targetUid?: never;
-      }
-  ) &
-  // isBetween & position
-  (| {
-        action: Extract<TNodeActionType, "move">;
-        isBetween: boolean;
-        position: number;
-      }
-    | {
-        action: Exclude<TNodeActionType, "move">;
-        isBetween?: never;
-        position?: never;
-      }
-  );
 
 export type TNodeActionType =
   | "add"

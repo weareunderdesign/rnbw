@@ -14,7 +14,7 @@ export const copyCode = ({
   uids.forEach((uid) => {
     const node = nodeTree[uid];
     if (node) {
-      const { startCol, startLine, endCol, endLine } =
+      const { startLine, startCol, endLine, endCol } =
         node.data.sourceCodeLocation;
       const text = codeViewInstanceModel.getValueInRange(
         new Range(startLine, startCol, endLine, endCol),
@@ -27,18 +27,26 @@ export const copyCode = ({
 export const pasteCode = ({
   nodeTree,
   focusedItem,
+  addToBefore = false,
   codeViewInstanceModel,
   code,
 }: {
   nodeTree: TNodeTreeData;
   focusedItem: TNodeUid;
+  addToBefore?: boolean;
   codeViewInstanceModel: editor.ITextModel;
   code: string;
 }) => {
   const focusedNode = nodeTree[focusedItem];
-  const { endLine, endCol } = focusedNode.data.sourceCodeLocation;
+  const { startLine, startCol, endLine, endCol } =
+    focusedNode.data.sourceCodeLocation;
   const edit = {
-    range: new Range(endLine, endCol, endLine, endCol),
+    range: new Range(
+      addToBefore ? startLine : endLine,
+      addToBefore ? startCol : endCol,
+      addToBefore ? startLine : endLine,
+      addToBefore ? startCol : endCol,
+    ),
     text: code,
   };
   codeViewInstanceModel.applyEdits([edit]);

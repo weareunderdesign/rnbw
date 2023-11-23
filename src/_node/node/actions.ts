@@ -10,7 +10,11 @@ import {
   sortUidsByMaxEndIndex,
   sortUidsByMinStartIndex,
 } from "@_components/main/actionsPanel/nodeTreeView/helpers";
-import { AddNodeActionPrefix, DefaultTabSize } from "@_constants/main";
+import {
+  AddNodeActionPrefix,
+  DefaultTabSize,
+  RenameNodeActionPrefix,
+} from "@_constants/main";
 import { THtmlReferenceData } from "@_types/main";
 import { LogAllow } from "@_constants/global";
 import { copyCode, pasteCode } from "./helpers";
@@ -172,18 +176,80 @@ const move = ({
   codeViewInstanceModel: editor.ITextModel;
 }) => {
   const targetNode = nodeTree[targetUid];
-  const focusedItem = isBetween ? targetNode.children[position] : targetUid;
+  const childCount = targetNode.children.length;
+  const focusedItem = isBetween
+    ? targetNode.children[Math.min(childCount - 1, position)]
+    : targetNode.children[childCount - 1];
   const sortedUids = sortUidsByMaxEndIndex([...uids, focusedItem], nodeTree);
 
   const code = copyCode({ nodeTree, uids, codeViewInstanceModel });
+
+  let isFirst = true; // isFirst is used to when drop focusedItem to itself
   sortedUids.map((uid) => {
-    uid === focusedItem
-      ? pasteCode({ nodeTree, focusedItem, codeViewInstanceModel, code })
-      : remove({ nodeTree, uids: [uid], codeViewInstanceModel });
+    if (uid === focusedItem && isFirst) {
+      isFirst = false;
+      pasteCode({
+        nodeTree,
+        focusedItem,
+        addToBefore: isBetween && position === 0,
+        codeViewInstanceModel,
+        code,
+      });
+    } else {
+      remove({ nodeTree, uids: [uid], codeViewInstanceModel });
+    }
   });
 };
 
-const rename = () => {};
+const rename = ({
+  actionName,
+  referenceData,
+  nodeTree,
+  focusedItem,
+  codeViewInstanceModel,
+}: {
+  actionName: string;
+  referenceData: THtmlReferenceData;
+  nodeTree: TNodeTreeData;
+  focusedItem: TNodeUid;
+  codeViewInstanceModel: editor.ITextModel;
+}) => {
+  const tagName = actionName.slice(
+    RenameNodeActionPrefix.length + 2,
+    actionName.length - 1,
+  );
+  const htmlReferenceData = referenceData as THtmlReferenceData;
+  const HTMLElement = htmlReferenceData.elements[tagName];
+
+  let openingTag = HTMLElement.Tag;
+  if (HTMLElement.Attributes) {
+    const tagArray = openingTag.split("");
+    tagArray.splice(tagArray.length - 1, 0, ` ${HTMLElement.Attributes}`);
+    openingTag = tagArray.join("");
+  }
+  const closingTag = `</${tagName}>`;
+
+  const tagContent = !!HTMLElement.Content ? HTMLElement.Content : "";
+
+  // **********************************************************
+  // will replace with pureTagCode when we will not want to keep origianl innerHtml of the target node
+  // **********************************************************
+  const pureTagCode =
+    HTMLElement.Contain === "None"
+      ? openingTag
+      : `${openingTag}${tagContent}${closingTag}`;
+
+  const focusedNode = nodeTree[focusedItem];
+
+  const code = copyCode({
+    nodeTree,
+    uids: focusedNode.children,
+    codeViewInstanceModel,
+  });
+  const codeToAdd = `${openingTag}${code}${closingTag}`;
+  remove({ nodeTree, uids: [focusedItem], codeViewInstanceModel });
+  pasteCode({ nodeTree, focusedItem, codeViewInstanceModel, code: codeToAdd });
+};
 
 const group = ({
   nodeTree,
@@ -314,7 +380,13 @@ export const doNodeActions = async (
         });
         break;
       case "rename":
-        rename();
+        rename({
+          actionName,
+          referenceData,
+          nodeTree,
+          focusedItem: targetUid,
+          codeViewInstanceModel,
+        });
         break;
       case "group":
         group({

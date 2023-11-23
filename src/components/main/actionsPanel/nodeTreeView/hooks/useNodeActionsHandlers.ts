@@ -184,16 +184,16 @@ export const useNodeActionsHandlers = () => {
 
   const onMove = useCallback(
     ({
+      selectedUids,
       targetUid,
       isBetween = false,
       position = 0,
     }: {
+      selectedUids: TNodeUid[];
       targetUid: TNodeUid;
       isBetween: boolean;
       position: number;
     }) => {
-      if (selectedItems.length === 0) return;
-
       const codeViewInstance = monacoEditorRef.current;
       const codeViewInstanceModel = codeViewInstance?.getModel();
       if (!codeViewInstance || !codeViewInstanceModel) {
@@ -209,7 +209,7 @@ export const useNodeActionsHandlers = () => {
         {
           action: "move",
           nodeTree,
-          selectedUids: selectedItems,
+          selectedUids,
           targetUid,
           isBetween,
           position,
@@ -218,10 +218,39 @@ export const useNodeActionsHandlers = () => {
         () => setProgrammaticContentChange(null),
       );
     },
-    [nodeTree, selectedItems, focusedItem],
+    [nodeTree],
   );
 
-  const onTurnInto = useCallback(() => {}, []);
+  const onTurnInto = useCallback(
+    (actionName: string) => {
+      const focusedNode = nodeTree[focusedItem];
+      if (!focusedNode) return;
+
+      const codeViewInstance = monacoEditorRef.current;
+      const codeViewInstanceModel = codeViewInstance?.getModel();
+      if (!codeViewInstance || !codeViewInstanceModel) {
+        LogAllow &&
+          console.error(
+            `Monaco Editor ${!codeViewInstance ? "" : "Model"} is undefined`,
+          );
+        return;
+      }
+
+      setProgrammaticContentChange({});
+      callNodeApi(
+        {
+          action: "rename",
+          actionName,
+          referenceData: htmlReferenceData,
+          nodeTree,
+          targetUid: focusedItem,
+          codeViewInstanceModel,
+        },
+        () => setProgrammaticContentChange(null),
+      );
+    },
+    [nodeTree, focusedItem],
+  );
 
   const onGroup = useCallback(() => {
     if (selectedItems.length === 0) return;

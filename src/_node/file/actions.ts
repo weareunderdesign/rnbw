@@ -1,3 +1,4 @@
+import { LogAllow } from "@_constants/global";
 import { TNodeApiPayload } from "..";
 
 const add = () => {};
@@ -9,39 +10,49 @@ const duplicate = () => {};
 const move = () => {};
 const rename = () => {};
 
-export const doFileActions = (
+export const doFileActions = async (
   params: TNodeApiPayload,
   fb?: (...params: any[]) => void,
   cb?: (...params: any[]) => void,
-) => {
-  const { action, osType = "Windows" } = params;
+): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    try {
+      const { action, osType = "Windows" } = params;
 
-  switch (action) {
-    case "add":
-      add();
-      break;
-    case "remove":
-      remove();
-      break;
-    case "cut":
-      cut();
-      break;
-    case "copy":
-      copy();
-      break;
-    case "paste":
-      paste();
-      break;
-    case "duplicate":
-      duplicate();
-      break;
-    case "move":
-      move();
-      break;
-    case "rename":
-      rename();
-      break;
-    default:
-      break;
-  }
+      switch (action) {
+        case "add":
+          add();
+          break;
+        case "remove":
+          remove();
+          break;
+        case "cut":
+          cut();
+          break;
+        case "copy":
+          copy();
+          break;
+        case "paste":
+          paste();
+          break;
+        case "duplicate":
+          duplicate();
+          break;
+        case "move":
+          move();
+          break;
+        case "rename":
+          rename();
+          break;
+        default:
+          break;
+      }
+
+      resolve();
+    } catch (err) {
+      LogAllow && console.error(err);
+      fb && fb();
+      reject();
+    }
+  });
 };
