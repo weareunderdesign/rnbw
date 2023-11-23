@@ -221,7 +221,36 @@ export const useNodeActionsHandlers = () => {
     [nodeTree],
   );
 
-  const onTurnInto = useCallback(() => {}, []);
+  const onTurnInto = useCallback(
+    (actionName: string) => {
+      const focusedNode = nodeTree[focusedItem];
+      if (!focusedNode) return;
+
+      const codeViewInstance = monacoEditorRef.current;
+      const codeViewInstanceModel = codeViewInstance?.getModel();
+      if (!codeViewInstance || !codeViewInstanceModel) {
+        LogAllow &&
+          console.error(
+            `Monaco Editor ${!codeViewInstance ? "" : "Model"} is undefined`,
+          );
+        return;
+      }
+
+      setProgrammaticContentChange({});
+      callNodeApi(
+        {
+          action: "rename",
+          actionName,
+          referenceData: htmlReferenceData,
+          nodeTree,
+          targetUid: focusedItem,
+          codeViewInstanceModel,
+        },
+        () => setProgrammaticContentChange(null),
+      );
+    },
+    [nodeTree, focusedItem],
+  );
 
   const onGroup = useCallback(() => {
     if (selectedItems.length === 0) return;

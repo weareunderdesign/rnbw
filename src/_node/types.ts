@@ -49,33 +49,33 @@ export type TNodeApiPayload = TNodeApiPayloadBase &
   ) &
   // actionName & referenceData
   (| {
-        action: Extract<TNodeActionType, "add">;
+        action: Extract<TNodeActionType, "add" | "rename">;
         actionName: string;
         referenceData: TNodeReferenceData;
       }
     | {
-        action: Exclude<TNodeActionType, "add">;
+        action: Exclude<TNodeActionType, "add" | "rename">;
         actionName?: never;
         referenceData?: never;
       }
   ) &
   // selectedUids
   (| {
-        action: Extract<TNodeActionType, "add" | "paste">;
+        action: Extract<TNodeActionType, "add" | "paste" | "rename">;
         selectedUids?: never;
       }
     | {
-        action: Exclude<TNodeActionType, "add" | "paste">;
+        action: Exclude<TNodeActionType, "add" | "paste" | "rename">;
         selectedUids: TNodeUid[];
       }
   ) &
   // targetUid
   (| {
-        action: Extract<TNodeActionType, "add" | "paste" | "move">;
+        action: Extract<TNodeActionType, "add" | "paste" | "move" | "rename">;
         targetUid: TNodeUid;
       }
     | {
-        action: Exclude<TNodeActionType, "add" | "paste" | "move">;
+        action: Exclude<TNodeActionType, "add" | "paste" | "move" | "rename">;
         targetUid?: never;
       }
   ) &

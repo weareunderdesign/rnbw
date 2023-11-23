@@ -4,7 +4,7 @@ import { MainContext } from "@_redux/main";
 
 import { useNodeActionsHandlers } from "./useNodeActionsHandlers";
 import { useAppState } from "@_redux/useAppState";
-import { isAddNodeAction } from "../helpers";
+import { isAddNodeAction, isRenameNodeAction } from "@_node/helpers";
 
 export const useCmdk = () => {
   const { activePanel, currentCommand } = useAppState();
@@ -30,6 +30,11 @@ export const useCmdk = () => {
       return;
     }
 
+    if (isRenameNodeAction(currentCommand.action)) {
+      onTurnInto(currentCommand.action);
+      return;
+    }
+
     if (activePanel !== "node" && activePanel !== "stage") return;
 
     switch (currentCommand.action) {
@@ -47,9 +52,6 @@ export const useCmdk = () => {
         break;
       case "Duplicate":
         onDuplicate();
-        break;
-      case "Turn into":
-        onTurnInto();
         break;
       case "Group":
         onGroup();
