@@ -57,7 +57,7 @@ const add = ({
   const focusedNode = nodeTree[focusedItem];
   const { endLine, endCol } = focusedNode.data.sourceCodeLocation;
   const edit = {
-    range: new Range(endLine, endCol + 1, endLine, endCol + 1),
+    range: new Range(endLine, endCol, endLine, endCol),
     text: codeViewText,
   };
   codeViewInstanceModel.applyEdits([edit]);
@@ -110,7 +110,7 @@ const copy = ({
   const copiedCode = copyCode({ nodeTree, uids, codeViewInstanceModel });
   window.navigator.clipboard.writeText(copiedCode);
 };
-const paste = ({
+const paste = async ({
   nodeTree,
   focusedItem,
   codeViewInstanceModel,
@@ -119,7 +119,7 @@ const paste = ({
   focusedItem: TNodeUid;
   codeViewInstanceModel: editor.ITextModel;
 }) => {
-  window.navigator.clipboard
+  await window.navigator.clipboard
     .readText()
     .then((code) => {
       pasteCode({
@@ -153,7 +153,7 @@ const duplicate = ({
         new Range(startLine, startCol, endLine, endCol),
       );
       const edit = {
-        range: new Range(endLine, endCol + 1, endLine, endCol + 1),
+        range: new Range(endLine, endCol, endLine, endCol),
         text,
       };
       codeViewInstanceModel.applyEdits([edit]);
@@ -299,7 +299,7 @@ const ungroup = ({
   });
 };
 
-export const doNodeActions = (
+export const doNodeActions = async (
   params: TNodeApiPayload,
   fb?: (...params: any[]) => void,
   cb?: (...params: any[]) => void,
@@ -356,7 +356,7 @@ export const doNodeActions = (
         });
         break;
       case "paste":
-        paste({
+        await paste({
           nodeTree,
           focusedItem: targetUid,
           codeViewInstanceModel,
