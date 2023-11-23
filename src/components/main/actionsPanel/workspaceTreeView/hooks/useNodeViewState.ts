@@ -1,44 +1,35 @@
 import { useCallback, useContext } from "react";
 
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 import { getValidNodeUids } from "@_node/helpers";
 import { TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import {
   collapseFileTreeNodes,
-  currentFileUidSelector,
   expandFileTreeNodes,
-  fileTreeSelector,
-  fileTreeViewStateSelector,
   focusFileTreeNode,
-  projectSelector,
   selectFileTreeNodes,
 } from "@_redux/main/fileTree";
 
 import { useInvalidNodes } from "./";
+import { useAppState } from "@_redux/useAppState";
 
 export const useNodeViewState = () => {
   const dispatch = useDispatch();
-
-  const project = useSelector(projectSelector);
-  const fileTree = useSelector(fileTreeSelector);
-  const currentFileUid = useSelector(currentFileUidSelector);
-
-  const { focusedItem, expandedItemsObj, selectedItems, selectedItemsObj } =
-    useSelector(fileTreeViewStateSelector);
-
   const {
-    // global action
-    addRunningActions,
-    removeRunningActions,
-  } = useContext(MainContext);
+    fileTree,
+    fFocusedItem: focusedItem,
+    fExpandedItemsObj: expandedItemsObj,
+    fSelectedItems: selectedItems,
+    fSelectedItemsObj: selectedItemsObj,
+  } = useAppState();
+  const { addRunningActions, removeRunningActions } = useContext(MainContext);
 
   const { invalidNodes } = useInvalidNodes();
 
   const cb_focusNode = useCallback(
     (uid: TNodeUid) => {
-      // validate
       if (
         invalidNodes[uid] ||
         focusedItem === uid ||
@@ -62,15 +53,13 @@ export const useNodeViewState = () => {
   );
   const cb_selectNode = useCallback(
     (uids: TNodeUid[]) => {
-      // validate
       let _uids = [...uids];
-      _uids = _uids.filter((_uid) => {
-        return !(fileTree[_uid] === undefined);
-      });
+      _uids = _uids.filter((_uid) => !invalidNodes[_uid] && fileTree[_uid]);
       if (_uids.length === 0) {
         removeRunningActions(["fileTreeView-select"]);
         return;
       }
+
       _uids = getValidNodeUids(fileTree, _uids);
       if (_uids.length === selectedItems.length) {
         let same = true;
@@ -85,26 +74,7 @@ export const useNodeViewState = () => {
           return;
         }
       }
-      /* if (project && currentFileUid) {
-        // remove exist script
-        const exist = document.head.querySelector("#custom-plausible");
-        if (exist !== null) {
-          document.head.removeChild(exist);
-        }
-        // plausible analytics
-        var script = document.createElement("script");
-        script.id = "custom-plausible";
-        script.textContent =
-          `
-			plausible('pageview', { u: '` +
-          "rnbw.dev/" +
-          project.name +
-          "/" +
-          currentFileUid.replace("ROOT/", "") +
-          `' + window.location.search });
-		  `;
-        document.head.appendChild(script);
-      } */
+
       addRunningActions(["fileTreeView-select"]);
       dispatch(selectFileTreeNodes(_uids));
       removeRunningActions(["fileTreeView-select"]);
@@ -120,7 +90,6 @@ export const useNodeViewState = () => {
   );
   const cb_expandNode = useCallback(
     (uid: TNodeUid) => {
-      // validate
       if (
         invalidNodes[uid] ||
         fileTree[uid] === undefined ||
@@ -145,7 +114,6 @@ export const useNodeViewState = () => {
   );
   const cb_collapseNode = useCallback(
     (uid: TNodeUid) => {
-      // validate
       if (
         invalidNodes[uid] ||
         fileTree[uid] === undefined ||
@@ -170,9 +138,9 @@ export const useNodeViewState = () => {
   );
 
   return {
+    cb_focusNode,
+    cb_selectNode,
     cb_expandNode,
     cb_collapseNode,
-    cb_selectNode,
-    cb_focusNode,
   };
 };
