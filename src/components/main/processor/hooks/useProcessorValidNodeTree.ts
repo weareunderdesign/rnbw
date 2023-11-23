@@ -15,7 +15,7 @@ export const useProcessorValidNodeTree = () => {
   const {
     currentFileUid,
     prevRenderableFileUid,
-
+    nFocusedItem,
     validNodeTree,
     nExpandedItems,
     nSelectedItems,
@@ -43,7 +43,9 @@ export const useProcessorValidNodeTree = () => {
       );
       const _selectedItems = nSelectedItems.filter((uid) => validNodeTree[uid]);
 
-      dispatch(focusNodeTreeNode(newFocusedNodeUid));
+      dispatch(
+        focusNodeTreeNode(newFocusedNodeUid ? newFocusedNodeUid : nFocusedItem),
+      );
       dispatch(expandNodeTreeNodes([..._expandedItems]));
       dispatch(selectNodeTreeNodes([..._selectedItems, newFocusedNodeUid]));
     }
