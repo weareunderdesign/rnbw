@@ -320,17 +320,6 @@ export const getFileData = (params: {
   return fileData;
 };
 
-export const handleFileUpdate = (fileData: TFileNodeData) => {
-  const { contentInApp, nodeTree, htmlDom } = parseFile(
-    fileData.ext,
-    fileData.content,
-  );
-
-  fileData.contentInApp = contentInApp;
-  fileData.changed = fileData.content !== fileData.orgContent;
-  return { nodeTree, htmlDom };
-};
-
 export const handleHmsChange = (
   fileData: TFileNodeData,
   state: { file: TFileNode; focusedItem: string },
