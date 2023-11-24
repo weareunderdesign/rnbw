@@ -26,9 +26,12 @@ export const useProcessorUpdate = () => {
     fileTree,
     currentFileUid,
     prevRenderableFileUid,
-    currentFileContent,
 
+    currentFileContent,
     selectedNodeUids,
+
+    nodeEventFutureLength,
+    nodeEventPastLength,
 
     didUndo,
     didRedo,
@@ -55,6 +58,10 @@ export const useProcessorUpdate = () => {
     } else {
     }
   }, [selectedNodeUids]);
+
+  useEffect(() => {
+    console.log({ nodeEventFutureLength, nodeEventPastLength });
+  }, [selectedNodeUids, currentFileContent]);
 
   useEffect(() => {
     const monacoEditor = monacoEditorRef.current;

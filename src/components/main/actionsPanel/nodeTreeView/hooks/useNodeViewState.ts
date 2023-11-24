@@ -1,21 +1,11 @@
-import {
-  useCallback,
-  useContext,
-} from 'react';
+import { useCallback, useContext } from "react";
 
-import {
-  useDispatch,
-  useSelector,
-} from 'react-redux';
+import { useDispatch, useSelector } from "react-redux";
 
-import { TFileNodeData } from '@_node/file';
-import { getValidNodeUids } from '@_node/helpers';
-import { TNodeUid } from '@_node/types';
-import { MainContext } from '@_redux/main';
-import {
-  selectFileTreeNodes,
-  setCurrentFileUid,
-} from '@_redux/main/fileTree';
+import { getValidNodeUids } from "@_node/helpers";
+import { TNodeUid } from "@_node/types";
+import { MainContext } from "@_redux/main";
+import { selectFileTreeNodes, setCurrentFileUid } from "@_redux/main/fileTree";
 import {
   collapseNodeTreeNodes,
   expandNodeTreeNodes,
@@ -24,9 +14,9 @@ import {
   nodeTreeViewStateSelector,
   selectNodeTreeNodes,
   setSelectedNodeUids,
-} from '@_redux/main/nodeTree';
-import { setNavigatorDropdownType } from '@_redux/main/processor';
-import { useAppState } from '@_redux/useAppState';
+} from "@_redux/main/nodeTree";
+import { setNavigatorDropdownType } from "@_redux/main/processor";
+import { useAppState } from "@_redux/useAppState";
 
 export function useNodeViewState(focusItemValue: TNodeUid | null) {
   const dispatch = useDispatch();
@@ -86,9 +76,7 @@ export function useNodeViewState(focusItemValue: TNodeUid | null) {
       dispatch(setSelectedNodeUids(_uids));
 
       if (!parseFileFlag) {
-        const node = fileTree[prevRenderableFileUid];
         const uid = prevRenderableFileUid;
-        const nodeData = node.data as TFileNodeData;
         setParseFile(true);
         dispatch(setNavigatorDropdownType("project"));
         dispatch({ type: NodeTree_Event_ClearActionType });
