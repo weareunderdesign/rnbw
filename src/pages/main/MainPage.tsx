@@ -95,7 +95,7 @@ import {
 
 import { getCommandKey, isChromeOrEdge } from "../../services/global";
 import { addDefaultCmdkActions, clearProjectSession } from "./helper";
-import { StageViewSyncConfigs } from "@_components/main/codeView";
+import { StageViewSyncConfigs } from "@_redux/main/stageView";
 
 export default function MainPage() {
   // ***************************************** Reducer Begin *****************************************

@@ -10,7 +10,7 @@ import {
 } from "@_types/main";
 
 import { TProjectContext } from "./fileTree";
-import { StageViewSyncConfigs } from "@_components/main/codeView";
+import { StageViewSyncConfigs } from "./stageView";
 
 export type TEventHistoryInfo = {
   future: number;

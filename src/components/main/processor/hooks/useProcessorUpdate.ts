@@ -66,8 +66,7 @@ export const useProcessorUpdate = () => {
   useEffect(() => {
     // validate
     const monacoEditor = monacoEditorRef.current;
-    const iframe: any = document.getElementById("iframeId");
-    if (!fileTree[currentFileUid] || !monacoEditor || !iframe) return;
+    if (!fileTree[currentFileUid] || !monacoEditor) return;
 
     addRunningActions(["processor-update"]);
 
@@ -109,77 +108,80 @@ export const useProcessorUpdate = () => {
       dispatch(setNeedToReloadIframe(true));
     } else {
       if (fileData.ext === "html") {
-        const iframeDoc = iframe.contentDocument;
-        const iframeHtml = iframeDoc.getElementsByTagName("html")[0];
-        const updatedHtml = contentInApp;
-        if (!iframeHtml || !updatedHtml) return;
+        const iframe: any = document.getElementById("iframeId");
+        if (iframe) {
+          const iframeDoc = iframe.contentDocument;
+          const iframeHtml = iframeDoc.getElementsByTagName("html")[0];
+          const updatedHtml = contentInApp;
+          if (!iframeHtml || !updatedHtml) return;
 
-        let nodeUidToFocus = "";
-        morphdom(iframeHtml, updatedHtml, {
-          onBeforeElUpdated: function (fromEl, toEl) {
-            //check if the node is script or style
-            if (fromEl.nodeName === "SCRIPT" || fromEl.nodeName === "LINK") {
-              if (fromEl.outerHTML === toEl.outerHTML) {
-                return false;
-              } else {
-                let fromOuter = fromEl.outerHTML;
-                let toOuter = toEl.outerHTML;
-                return false;
+          let nodeUidToFocus = "";
+          morphdom(iframeHtml, updatedHtml, {
+            onBeforeElUpdated: function (fromEl, toEl) {
+              //check if the node is script or style
+              if (fromEl.nodeName === "SCRIPT" || fromEl.nodeName === "LINK") {
+                if (fromEl.outerHTML === toEl.outerHTML) {
+                  return false;
+                } else {
+                  let fromOuter = fromEl.outerHTML;
+                  let toOuter = toEl.outerHTML;
+                  return false;
+                }
               }
-            }
-            const fromElRnbwId = fromEl.getAttribute(StageNodeIdAttr);
-            nodeUidToFocus = syncConfigs?.matchIds?.[0] || "";
-            if (toEl.nodeName.includes("-")) return false;
-            if (
-              syncConfigs?.matchIds &&
-              !!fromElRnbwId &&
-              syncConfigs.matchIds.includes(fromElRnbwId)
-            ) {
+              const fromElRnbwId = fromEl.getAttribute(StageNodeIdAttr);
+              nodeUidToFocus = syncConfigs?.matchIds?.[0] || "";
+              if (toEl.nodeName.includes("-")) return false;
+              if (
+                syncConfigs?.matchIds &&
+                !!fromElRnbwId &&
+                syncConfigs.matchIds.includes(fromElRnbwId)
+              ) {
+                return true;
+              } else if (fromEl.isEqualNode(toEl)) {
+                return false;
+              } else if (toEl.nodeName === "HTML") {
+                //copy the attributes
+                for (let i = 0; i < fromEl.attributes.length; i++) {
+                  toEl.setAttribute(
+                    fromEl.attributes[i].name,
+                    fromEl.attributes[i].value,
+                  );
+                }
+                if (fromEl.isEqualNode(toEl)) return false;
+              }
               return true;
-            } else if (fromEl.isEqualNode(toEl)) {
-              return false;
-            } else if (toEl.nodeName === "HTML") {
-              //copy the attributes
-              for (let i = 0; i < fromEl.attributes.length; i++) {
-                toEl.setAttribute(
-                  fromEl.attributes[i].name,
-                  fromEl.attributes[i].value,
-                );
+            },
+            onElUpdated: function (el) {
+              if (el.nodeName === "HTML") {
+                //copy the attributes
+                for (let i = 0; i < el.attributes.length; i++) {
+                  iframeHtml.setAttribute(
+                    el.attributes[i].name,
+                    el.attributes[i].value,
+                  );
+                }
               }
-              if (fromEl.isEqualNode(toEl)) return false;
-            }
-            return true;
-          },
-          onElUpdated: function (el) {
-            if (el.nodeName === "HTML") {
-              //copy the attributes
-              for (let i = 0; i < el.attributes.length; i++) {
-                iframeHtml.setAttribute(
-                  el.attributes[i].name,
-                  el.attributes[i].value,
-                );
+            },
+            onBeforeNodeDiscarded: function (node: Node) {
+              const elementNode = node as Element;
+              const ifPreserveNode = elementNode.getAttribute
+                ? elementNode.getAttribute(PreserveRnbwNode)
+                : false;
+              if (ifPreserveNode) {
+                return false;
               }
-            }
-          },
-          onBeforeNodeDiscarded: function (node: Node) {
-            const elementNode = node as Element;
-            const ifPreserveNode = elementNode.getAttribute
-              ? elementNode.getAttribute(PreserveRnbwNode)
-              : false;
-            if (ifPreserveNode) {
-              return false;
-            }
-            //script and style should not be discarded
-            if (
-              elementNode.nodeName === "SCRIPT" ||
-              elementNode.nodeName === "LINK"
-            ) {
-              return false;
-            }
+              //script and style should not be discarded
+              if (
+                elementNode.nodeName === "SCRIPT" ||
+                elementNode.nodeName === "LINK"
+              ) {
+                return false;
+              }
 
-            return true;
-          },
-        });
+              return true;
+            },
+          });
+        }
       }
     }
 

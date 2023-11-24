@@ -1,6 +1,3 @@
-import { TNodeTreeData } from "@_node/types";
-import { StageViewSyncConfigs } from "@_redux/main/stageView";
-
 export type CodeViewProps = {
   offsetTop: string | number;
   offsetBottom: number | string;
