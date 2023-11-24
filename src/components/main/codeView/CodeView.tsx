@@ -35,8 +35,8 @@ export default function CodeView(props: CodeViewProps) {
     useAppState();
   const {
     parseFileFlag,
-    programmaticContentChange,
-    setProgrammaticContentChange,
+    isContentProgrammaticallyChanged,
+    setIsContentProgrammaticallyChanged,
     monacoEditorRef,
   } = useContext(MainContext);
 
@@ -262,9 +262,9 @@ export default function CodeView(props: CodeViewProps) {
             onChange={(value) => {
               if (!value) return;
 
-              if (programmaticContentChange) {
+              if (isContentProgrammaticallyChanged) {
                 onChange(value);
-                setProgrammaticContentChange(null);
+                setIsContentProgrammaticallyChanged(false);
               } else {
                 debouncedOnChange(value);
               }

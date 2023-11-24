@@ -290,26 +290,6 @@ export const getPreViewPath = (
   return previewPath;
 };
 
-export const detectSeedNodeChanges = (
-  _nodeTree: TNodeTreeData,
-  codeChanges: TCodeChange[],
-) => {
-  let seedNodeChanged = false;
-  for (const change of codeChanges) {
-    const { uid } = change;
-    const node = _nodeTree[uid];
-    if (node === undefined) continue;
-    if (
-      uid === RootNodeUid ||
-      node.displayName === "html" ||
-      node.displayName === "head" ||
-      node.displayName === "body"
-    ) {
-      seedNodeChanged = true;
-    }
-  }
-  return seedNodeChanged;
-};
 export const getFileData = (params: {
   file: TFileNode;
   nodeTree: TNodeTreeData;

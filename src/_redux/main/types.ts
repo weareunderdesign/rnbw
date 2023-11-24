@@ -55,10 +55,9 @@ export type TMainContext = {
   ) => void;
 
   // code view
-  programmaticContentChange: React.RefObject<StageViewSyncConfigs | null>;
-  setProgrammaticContentChange: (value: StageViewSyncConfigs | null) => void;
-  codeChanges: TCodeChange[];
-  setCodeChanges: (changes: TCodeChange[]) => void;
+  isContentProgrammaticallyChanged: React.RefObject<boolean>;
+  setIsContentProgrammaticallyChanged: (value: boolean) => void;
+
   setCodeViewOffsetTop: (offsetTop: string) => void;
 
   // import project
