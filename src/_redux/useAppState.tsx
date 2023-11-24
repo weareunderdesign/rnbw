@@ -47,7 +47,13 @@ export const useAppState = () => {
         present: { currentFileContent, selectedNodeUids },
         future: nodeEventFuture,
       },
-      stageView: { iframeSrc, iframeLoading, needToReloadIframe, linkToOpen },
+      stageView: {
+        iframeSrc,
+        iframeLoading,
+        needToReloadIframe,
+        linkToOpen,
+        syncConfigs,
+      },
       codeView: { codeViewTabSize, codeEditing },
       processor: {
         navigatorDropdownType,
@@ -126,6 +132,7 @@ export const useAppState = () => {
     iframeLoading,
     needToReloadIframe,
     linkToOpen,
+    syncConfigs,
 
     codeViewTabSize,
     codeEditing,
