@@ -30,9 +30,6 @@ export const useProcessorUpdate = () => {
     currentFileContent,
     selectedNodeUids,
 
-    nodeEventFutureLength,
-    nodeEventPastLength,
-
     didUndo,
     didRedo,
   } = useAppState();
@@ -58,10 +55,6 @@ export const useProcessorUpdate = () => {
     } else {
     }
   }, [selectedNodeUids]);
-
-  useEffect(() => {
-    console.log({ nodeEventFutureLength, nodeEventPastLength });
-  }, [selectedNodeUids, currentFileContent]);
 
   useEffect(() => {
     const monacoEditor = monacoEditorRef.current;
