@@ -2,7 +2,6 @@ import { useCallback, useContext } from "react";
 
 import { useDispatch, useSelector } from "react-redux";
 
-import { useEditor } from "@_components/main/codeView/hooks";
 import { RootNodeUid } from "@_constants/main";
 import { TFileNodeData } from "@_node/file";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
@@ -49,12 +48,11 @@ export const useTextEditing = ({
   } = useSelector((state: AppState) => state.main.nodeTree);
   const { fileTree } = useSelector((state: AppState) => state.main.fileTree);
 
-  const { handleEditorChange } = useEditor();
   const {
     // close all panel
     closeAllPanel,
     monacoEditorRef,
-    setProgrammaticContentChange,
+    setIsContentProgrammaticallyChanged,
   } = useContext(MainContext);
 
   const { setFocusedSelectedItems } = useSetSelectItem({
@@ -66,7 +64,7 @@ export const useTextEditing = ({
   const beforeTextEdit = useCallback(() => {
     let node = validNodeTree[contentEditableUidRef.current];
     if (!node) return;
-    setProgrammaticContentChange({});
+    setIsContentProgrammaticallyChanged(true);
     let editableId = contentEditableUidRef.current;
     contentEditableUidRef.current = "";
 
@@ -120,12 +118,6 @@ export const useTextEditing = ({
       lineNumber: startLineNumber,
     });
     monacoEditorRef.current?.revealLineInCenter(startLineNumber);
-    //give all the content inside the editor
-    const content = model.getValue();
-
-    // handleEditorChange(content, {
-    //   matchIds: [editableId],
-    // });
   }, [focusedItem]);
 
   const onCmdEnter = useCallback(

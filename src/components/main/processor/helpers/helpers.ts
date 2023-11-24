@@ -290,26 +290,6 @@ export const getPreViewPath = (
   return previewPath;
 };
 
-export const detectSeedNodeChanges = (
-  _nodeTree: TNodeTreeData,
-  codeChanges: TCodeChange[],
-) => {
-  let seedNodeChanged = false;
-  for (const change of codeChanges) {
-    const { uid } = change;
-    const node = _nodeTree[uid];
-    if (node === undefined) continue;
-    if (
-      uid === RootNodeUid ||
-      node.displayName === "html" ||
-      node.displayName === "head" ||
-      node.displayName === "body"
-    ) {
-      seedNodeChanged = true;
-    }
-  }
-  return seedNodeChanged;
-};
 export const getFileData = (params: {
   file: TFileNode;
   nodeTree: TNodeTreeData;
@@ -318,17 +298,6 @@ export const getFileData = (params: {
   const fileData = file.data as TFileNodeData;
 
   return fileData;
-};
-
-export const handleFileUpdate = (fileData: TFileNodeData) => {
-  const { contentInApp, nodeTree, htmlDom } = parseFile(
-    fileData.ext,
-    fileData.content,
-  );
-
-  fileData.contentInApp = contentInApp;
-  fileData.changed = fileData.content !== fileData.orgContent;
-  return { nodeTree, htmlDom };
 };
 
 export const handleHmsChange = (
