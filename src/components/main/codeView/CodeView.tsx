@@ -32,8 +32,13 @@ loader.config({ monaco });
 
 export default function CodeView(props: CodeViewProps) {
   const dispatch = useDispatch();
-  const { nFocusedItem, newFocusedNodeUid, activePanel, showCodeView } =
-    useAppState();
+  const {
+    nFocusedItem,
+    newFocusedNodeUid,
+    activePanel,
+    showCodeView,
+    currentFileContent,
+  } = useAppState();
   const {
     parseFileFlag,
     isContentProgrammaticallyChanged,
@@ -92,7 +97,7 @@ export default function CodeView(props: CodeViewProps) {
     extension && updateLanguage(extension);
 
     setCodeContent(fileData.content);
-  }, [currentFileUid]);
+  }, [currentFileUid, fileTree]);
 
   // focusedItem - code select
   const focusedItemRef = useRef<TNodeUid>("");
@@ -290,5 +295,6 @@ export default function CodeView(props: CodeViewProps) {
     theme,
     handleEditorDidMount,
     parseFileFlag,
+    currentFileContent,
   ]);
 }
