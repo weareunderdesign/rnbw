@@ -2,28 +2,16 @@ import { useCallback, useContext, useEffect, useRef, useState } from "react";
 
 import { editor, IPosition } from "monaco-editor";
 import morphdom from "morphdom";
-import * as parse5 from "parse5";
 import { useDispatch } from "react-redux";
 
 import { DefaultTabSize, RootNodeUid } from "@_constants/main";
-import { TFileNodeData } from "@_node/file";
-import {
-  PreserveRnbwNode,
-  StageNodeIdAttr,
-} from "@_node/file/handlers/constants";
+
 import { getSubNodeUidsByBfs } from "@_node/helpers";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { setCodeEditing, setCodeViewTabSize } from "@_redux/main/codeView";
-import { setDoingFileAction, setFileTree } from "@_redux/main/fileTree";
-import {
-  focusNodeTreeNode,
-  selectNodeTreeNodes,
-  setNodeTree,
-} from "@_redux/main/nodeTree";
-import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
 
-import { CodeSelection, EditorChange } from "../types";
+import { CodeSelection } from "../types";
 import { useAppState } from "@_redux/useAppState";
 
 function getLanguageFromExtension(extension: string) {
@@ -33,13 +21,7 @@ function getLanguageFromExtension(extension: string) {
 
 export default function useEditor() {
   const dispatch = useDispatch();
-  const { fileTree, currentFileUid } = useAppState();
-  const {
-    addRunningActions,
-    setMonacoEditorRef,
-    monacoEditorRef,
-    parseFileFlag,
-  } = useContext(MainContext);
+  const { setMonacoEditorRef, parseFileFlag } = useContext(MainContext);
 
   const [language, setLanguage] = useState("html");
   const [focusedNode, setFocusedNode] = useState<TNode>();
@@ -194,132 +176,6 @@ export default function useEditor() {
     return focusedNode;
   }
 
-  const editorUpdate = useCallback(
-    ({ value, htmlDom, nodeTree, configs }: EditorChange) => {
-      const monacoEditor = monacoEditorRef.current;
-      if (!monacoEditor) return;
-      const iframe: any = document.getElementById("iframeId");
-      if (!iframe) return;
-      const iframeDoc = iframe.contentDocument;
-      const iframeHtml = iframeDoc.getElementsByTagName("html")[0];
-      let updatedHtml = null;
-      if (!htmlDom) return;
-      const defaultTreeAdapter = parse5.defaultTreeAdapter;
-      const htmlNode = defaultTreeAdapter
-        .getChildNodes(htmlDom)
-        .filter(defaultTreeAdapter.isElementNode)[0];
-
-      if (htmlNode) {
-        updatedHtml = parse5.serialize(htmlDom);
-      }
-      if (!iframeHtml || !updatedHtml) return;
-
-      try {
-        let nodeUidToFocus = "";
-        morphdom(iframeHtml, updatedHtml, {
-          onBeforeElUpdated: function (fromEl, toEl) {
-            //check if the node is script or style
-            if (fromEl.nodeName === "SCRIPT" || fromEl.nodeName === "LINK") {
-              if (fromEl.outerHTML === toEl.outerHTML) {
-                return false;
-              } else {
-                let fromOuter = fromEl.outerHTML;
-                let toOuter = toEl.outerHTML;
-                return false;
-              }
-            }
-            const fromElRnbwId = fromEl.getAttribute(StageNodeIdAttr);
-            nodeUidToFocus = configs?.matchIds?.[0] || "";
-            if (toEl.nodeName.includes("-")) return false;
-            if (
-              configs?.matchIds &&
-              !!fromElRnbwId &&
-              configs.matchIds.includes(fromElRnbwId)
-            ) {
-              return true;
-            } else if (fromEl.isEqualNode(toEl)) {
-              return false;
-            } else if (toEl.nodeName === "HTML") {
-              //copy the attributes
-              for (let i = 0; i < fromEl.attributes.length; i++) {
-                toEl.setAttribute(
-                  fromEl.attributes[i].name,
-                  fromEl.attributes[i].value,
-                );
-              }
-              if (fromEl.isEqualNode(toEl)) return false;
-            }
-            return true;
-          },
-          onElUpdated: function (el) {
-            if (el.nodeName === "HTML") {
-              //copy the attributes
-              for (let i = 0; i < el.attributes.length; i++) {
-                iframeHtml.setAttribute(
-                  el.attributes[i].name,
-                  el.attributes[i].value,
-                );
-              }
-            }
-          },
-          onBeforeNodeDiscarded: function (node: Node) {
-            const elementNode = node as Element;
-            const ifPreserveNode = elementNode.getAttribute
-              ? elementNode.getAttribute(PreserveRnbwNode)
-              : false;
-            if (ifPreserveNode) {
-              return false;
-            }
-            //script and style should not be discarded
-            if (
-              elementNode.nodeName === "SCRIPT" ||
-              elementNode.nodeName === "LINK"
-            ) {
-              return false;
-            }
-
-            return true;
-          },
-        });
-
-        codeContentRef.current = value;
-        dispatch(setNodeTree(nodeTree));
-
-        dispatch(setCurrentFileContent(codeContentRef.current));
-        dispatch(setDoingFileAction(false));
-
-        dispatch(setCurrentFileContent(codeContentRef.current));
-
-        dispatch(setFileTree(fileTree));
-        dispatch(setCurrentFileContent(codeContentRef.current));
-        codeChangeDecorationRef.current.clear();
-
-        dispatch(setCodeEditing(false));
-        dispatch(setDoingFileAction(false));
-
-        //finding and selecting focused node
-        const focusedNode = nodeTree[nodeUidToFocus];
-        if (!!focusedNode) {
-          dispatch(focusNodeTreeNode(focusedNode.uid));
-          dispatch(selectNodeTreeNodes([focusedNode.uid]));
-        }
-      } catch (e) {
-        console.log(e);
-      }
-
-      dispatch(setCodeEditing(false));
-    },
-    [dispatch, fileTree, monacoEditorRef, currentFileUid, addRunningActions],
-  );
-  const handleEditorChange = useCallback(
-    ({ value, htmlDom, nodeTree, configs }: EditorChange) => {
-      if (!value) return;
-
-      editorUpdate({ value, htmlDom, nodeTree, configs });
-    },
-    [editorUpdate],
-  );
-
   // tabSize
   useEffect(() => {
     dispatch(setCodeViewTabSize(DefaultTabSize));
@@ -337,7 +193,6 @@ export default function useEditor() {
     editorConfigs,
     findNodeBySelection,
     setCodeEditing,
-    handleEditorChange,
     focusedNode,
     setFocusedNode,
     codeContent,

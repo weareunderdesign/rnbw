@@ -49,7 +49,6 @@ export const useTextEditing = ({
   } = useSelector((state: AppState) => state.main.nodeTree);
   const { fileTree } = useSelector((state: AppState) => state.main.fileTree);
 
-  const { handleEditorChange } = useEditor();
   const {
     // close all panel
     closeAllPanel,
@@ -120,12 +119,6 @@ export const useTextEditing = ({
       lineNumber: startLineNumber,
     });
     monacoEditorRef.current?.revealLineInCenter(startLineNumber);
-    //give all the content inside the editor
-    const content = model.getValue();
-
-    // handleEditorChange(content, {
-    //   matchIds: [editableId],
-    // });
   }, [focusedItem]);
 
   const onCmdEnter = useCallback(

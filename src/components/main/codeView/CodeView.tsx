@@ -50,7 +50,6 @@ export default function CodeView(props: CodeViewProps) {
     updateLanguage,
     editorConfigs,
     findNodeBySelection,
-    handleEditorChange,
     focusedNode,
     setFocusedNode,
     codeContent,
@@ -289,7 +288,6 @@ export default function CodeView(props: CodeViewProps) {
     language,
     theme,
     handleEditorDidMount,
-    handleEditorChange,
     parseFileFlag,
   ]);
 }

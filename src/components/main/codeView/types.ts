@@ -1,4 +1,5 @@
 import { TNodeTreeData } from "@_node/types";
+import { StageViewSyncConfigs } from "@_redux/main/stageView";
 
 export type CodeViewProps = {
   offsetTop: string | number;
@@ -22,15 +23,4 @@ export type CodeSelection = {
   startColumn: number;
   endLineNumber: number;
   endColumn: number;
-};
-
-export type StageViewSyncConfigs = {
-  matchIds?: string[] | null;
-  skipFromChildren?: boolean;
-};
-export type EditorChange = {
-  value: string;
-  htmlDom: any;
-  nodeTree: TNodeTreeData;
-  configs?: StageViewSyncConfigs;
 };
