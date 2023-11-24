@@ -21,7 +21,7 @@ import { useAppState } from "@_redux/useAppState";
 export function useNodeViewState(focusItemValue: TNodeUid | null) {
   const dispatch = useDispatch();
 
-  const { fileTree, validNodeTree, prevRenderableFileUid } = useAppState();
+  const { validNodeTree, prevRenderableFileUid } = useAppState();
 
   const { addRunningActions, removeRunningActions } = useContext(MainContext);
 
