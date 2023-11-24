@@ -1,5 +1,3 @@
-import { TNodeTreeData } from "@_node/types";
-
 export type CodeViewProps = {
   offsetTop: string | number;
   offsetBottom: number | string;
@@ -22,15 +20,4 @@ export type CodeSelection = {
   startColumn: number;
   endLineNumber: number;
   endColumn: number;
-};
-
-export type StageViewSyncConfigs = {
-  matchIds?: string[] | null;
-  skipFromChildren?: boolean;
-};
-export type EditorChange = {
-  value: string;
-  htmlDom: any;
-  nodeTree: TNodeTreeData;
-  configs?: StageViewSyncConfigs;
 };
