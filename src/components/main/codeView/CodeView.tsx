@@ -26,6 +26,7 @@ import { Editor, loader } from "@monaco-editor/react";
 import { useEditor, useEditorWrapper } from "./hooks";
 import { CodeViewProps } from "./types";
 import { debounce } from "lodash";
+import { useCmdk } from "./hooks/useCmdk";
 
 loader.config({ monaco });
 
@@ -72,7 +73,7 @@ export default function CodeView(props: CodeViewProps) {
   const previewDiv = useRef(null);
 
   // -------------------------------------------------------------- sync --------------------------------------------------------------
-
+  useCmdk();
   // build node tree reference
   useEffect(() => {
     const validNodeTreeRef = getValidNodeTreeInstance();
