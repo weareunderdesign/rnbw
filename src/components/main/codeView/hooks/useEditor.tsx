@@ -1,7 +1,6 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 
 import { editor, IPosition } from "monaco-editor";
-import morphdom from "morphdom";
 import { useDispatch } from "react-redux";
 
 import { DefaultTabSize, RootNodeUid } from "@_constants/main";
