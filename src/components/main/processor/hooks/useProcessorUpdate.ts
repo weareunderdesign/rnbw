@@ -21,7 +21,6 @@ import { useAppState } from "@_redux/useAppState";
 
 import { getPreViewPath } from "../helpers";
 import { setDidRedo, setDidUndo } from "@_redux/main/processor";
-import { useEditor } from "@_components/main/codeView/hooks";
 import morphdom from "morphdom";
 
 export const useProcessorUpdate = () => {
@@ -119,7 +118,11 @@ export const useProcessorUpdate = () => {
           morphdom(iframeHtml, updatedHtml, {
             onBeforeElUpdated: function (fromEl, toEl) {
               //check if the node is script or style
-              if (fromEl.nodeName === "SCRIPT" || fromEl.nodeName === "LINK") {
+              if (
+                fromEl.nodeName === "SCRIPT" ||
+                fromEl.nodeName === "LINK" ||
+                fromEl.nodeName === "STYLE"
+              ) {
                 if (fromEl.outerHTML === toEl.outerHTML) {
                   return false;
                 } else {
@@ -173,7 +176,8 @@ export const useProcessorUpdate = () => {
               //script and style should not be discarded
               if (
                 elementNode.nodeName === "SCRIPT" ||
-                elementNode.nodeName === "LINK"
+                elementNode.nodeName === "LINK" ||
+                elementNode.nodeName === "STYLE"
               ) {
                 return false;
               }
