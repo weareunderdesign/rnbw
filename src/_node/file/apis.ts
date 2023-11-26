@@ -354,7 +354,7 @@ export const loadLocalProject = async (
 
             kind: kind,
             name: name,
-            ext: ext,
+            ext: ext ?? "",
 
             orgContent: fileContent,
             content: fileContent,
@@ -363,6 +363,7 @@ export const loadLocalProject = async (
             changed: false,
           } as TFileNodeData,
         } as TFileNode;
+
         _fileHandlers[uid] = handler as FileSystemHandle;
       });
 

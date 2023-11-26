@@ -641,6 +641,12 @@ export default function WorkspaceTreeView() {
             },
             renderItemArrow: (props) => <ItemArrow {...props} />,
             renderItemTitle: (props) => {
+              const fileOrDirectoryTitle = props?.title;
+              const fileExt = !!props.item?.data?.data?.ext
+                ? `.${props.item?.data?.data?.ext}`
+                : "";
+              const fileOrDirTitle = fileOrDirectoryTitle + fileExt;
+
               return (
                 <>
                   <span
@@ -652,7 +658,7 @@ export default function WorkspaceTreeView() {
                       whiteSpace: "nowrap",
                     }}
                   >
-                    {props.title + props.item?.data?.data?.ext}
+                    {fileOrDirTitle}
                     {fileTree[props.item.data.uid] &&
                       (fileTree[props.item.data.uid].data as TFileNodeData)
                         .changed && (
