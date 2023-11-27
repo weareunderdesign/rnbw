@@ -1,4 +1,10 @@
-import React, { useContext, useEffect, useMemo, useRef } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
 
 import * as monaco from "monaco-editor";
 import { useDispatch, useSelector } from "react-redux";
@@ -107,7 +113,7 @@ export default function CodeView(props: CodeViewProps) {
   const focusedItemRef = useRef<TNodeUid>("");
   const revealed = useRef<boolean>(false);
 
-  function hightlightFocusedNodeCodeBlock() {
+  const hightlightFocusedNodeCodeBlock = useCallback(() => {
     const monacoEditor = monacoEditorRef.current;
     if (!monacoEditor) return;
     const node = validNodeTree[nFocusedItem];
@@ -143,7 +149,7 @@ export default function CodeView(props: CodeViewProps) {
       },
       1,
     );
-  }
+  }, [validNodeTree, nFocusedItem, activePanel]);
 
   useEffect(() => {
     if (!parseFileFlag) {
@@ -224,12 +230,17 @@ export default function CodeView(props: CodeViewProps) {
     }
   }, [focusedNode]);
 
-  const onChange = (value: string) => {
+  const onChange = useCallback((value: string) => {
     console.log("CodeView - onChange");
     dispatch(setCurrentFileContent(value));
-  };
-  const debouncedOnChange = debounce(onChange, CodeViewSyncDelay);
-  const longDebouncedOnChange = debounce(onChange, CodeViewSyncDelay_Long);
+  }, []);
+  const debouncedOnChange = useCallback(debounce(onChange, CodeViewSyncDelay), [
+    onChange,
+  ]);
+  const longDebouncedOnChange = useCallback(
+    debounce(onChange, CodeViewSyncDelay_Long),
+    [onChange],
+  );
   //-------------------------------------------------------------- other --------------------------------------------------------------
 
   return useMemo(() => {
@@ -302,5 +313,7 @@ export default function CodeView(props: CodeViewProps) {
     handleEditorDidMount,
     parseFileFlag,
     currentFileContent,
+    debouncedOnChange,
+    longDebouncedOnChange,
   ]);
 }
