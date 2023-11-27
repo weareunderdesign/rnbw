@@ -151,7 +151,6 @@ export default function MainPage() {
     linkToOpen,
 
     codeViewTabSize,
-    codeEditing,
 
     navigatorDropdownType,
     favicon,
@@ -1168,7 +1167,7 @@ export default function MainPage() {
 
   // History - Undo/Redo
   const onUndo = useCallback(() => {
-    if (doingAction || doingFileAction || iframeLoading || codeEditing) return;
+    if (doingAction || doingFileAction || iframeLoading) return;
 
     if (activePanel === "file") {
       if (fileEventPastLength === 1) {
@@ -1191,7 +1190,6 @@ export default function MainPage() {
     doingAction,
     doingFileAction,
     iframeLoading,
-    codeEditing,
 
     activePanel,
 
@@ -1199,7 +1197,7 @@ export default function MainPage() {
     nodeEventPastLength,
   ]);
   const onRedo = useCallback(() => {
-    if (doingAction || iframeLoading || doingFileAction || codeEditing) return;
+    if (doingAction || iframeLoading || doingFileAction) return;
 
     if (activePanel === "file") {
       if (fileEventFutureLength === 0) {
@@ -1222,7 +1220,6 @@ export default function MainPage() {
     doingAction,
     doingFileAction,
     iframeLoading,
-    codeEditing,
 
     activePanel,
 

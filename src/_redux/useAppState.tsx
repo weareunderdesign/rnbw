@@ -54,7 +54,7 @@ export const useAppState = () => {
         linkToOpen,
         syncConfigs,
       },
-      codeView: { codeViewTabSize, codeEditing },
+      codeView: { codeViewTabSize },
       processor: {
         navigatorDropdownType,
         favicon,
@@ -135,7 +135,6 @@ export const useAppState = () => {
     syncConfigs,
 
     codeViewTabSize,
-    codeEditing,
 
     navigatorDropdownType,
     favicon,

@@ -6,10 +6,3 @@ const getCodeViewTabSize = (state: AppState): number =>
 export const codeViewTabSizeSelector = (state: AppState): number => {
   return getCodeViewTabSize(state);
 };
-
-const getCodeEditing = (state: AppState): boolean =>
-  state.main.codeView.codeEditing;
-export const codeEditingSelector = createSelector(
-  getCodeEditing,
-  (codeEditing) => codeEditing,
-);

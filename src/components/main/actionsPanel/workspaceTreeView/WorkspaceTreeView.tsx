@@ -87,7 +87,6 @@ export default function WorkspaceTreeView() {
     linkToOpen,
 
     codeViewTabSize,
-    codeEditing,
 
     navigatorDropdownType,
     favicon,

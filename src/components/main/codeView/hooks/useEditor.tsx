@@ -8,10 +8,9 @@ import { DefaultTabSize, RootNodeUid } from "@_constants/main";
 import { getSubNodeUidsByBfs } from "@_node/helpers";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
-import { setCodeEditing, setCodeViewTabSize } from "@_redux/main/codeView";
+import { setCodeViewTabSize } from "@_redux/main/codeView";
 
 import { CodeSelection } from "../types";
-import { useAppState } from "@_redux/useAppState";
 
 function getLanguageFromExtension(extension: string) {
   if (extension) return extension;
@@ -191,7 +190,6 @@ export default function useEditor() {
     updateLanguage,
     editorConfigs,
     findNodeBySelection,
-    setCodeEditing,
     focusedNode,
     setFocusedNode,
     codeContent,

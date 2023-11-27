@@ -17,7 +17,6 @@ import {
 import { useTheme } from "@_hooks/useTheme";
 import { TFileNodeData, TNodeUid } from "@_node/index";
 import { MainContext } from "@_redux/main";
-import { codeEditingSelector } from "@_redux/main/codeView";
 import {
   currentFileUidSelector,
   fileTreeSelector,
@@ -43,6 +42,8 @@ loader.config({ monaco });
 export default function CodeView(props: CodeViewProps) {
   const dispatch = useDispatch();
   const {
+    fileTree,
+    currentFileUid,
     nFocusedItem,
     newFocusedNodeUid,
     activePanel,
@@ -72,9 +73,6 @@ export default function CodeView(props: CodeViewProps) {
     setCodeContent,
     selection,
   } = useEditor();
-  const codeEditing = useSelector(codeEditingSelector);
-  const fileTree = useSelector(fileTreeSelector);
-  const currentFileUid = useSelector(currentFileUidSelector);
   const { editorWrapperRef, onPanelClick } = useEditorWrapper();
   //-----------------------------------------
   const validNodeTree = useSelector(validNodeTreeSelector);
@@ -158,9 +156,6 @@ export default function CodeView(props: CodeViewProps) {
 
     if (nFocusedItem === RootNodeUid) return;
     if (!validNodeTree[nFocusedItem]) return;
-
-    if (codeEditing) return;
-    // Convert the indices to positions
 
     const monacoEditor = getCurrentEditorInstance();
     if (!monacoEditor) return;
