@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useMemo } from "react";
 
-import { SvgIconProps } from './types';
+import { SvgIconProps } from "./types";
 
 export const SVGIcon = (props: SvgIconProps) => {
   const SVGIcon = useMemo<keyof JSX.IntrinsicElements>(() => {

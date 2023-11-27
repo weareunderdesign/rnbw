@@ -3,9 +3,9 @@ import {
   TreeItem,
   TreeItemIndex,
   TreeRenderProps,
-} from 'react-complex-tree';
+} from "react-complex-tree";
 
-import { TNodeUid } from '@_node/types';
+import { TNodeUid } from "@_node/types";
 
 export type TreeViewProps = {
   width: string;
