@@ -1697,6 +1697,7 @@ export default function MainPage() {
                                       }
                                     }
                                   }
+                                  clearProjectSession(dispatch);
                                   importProject(projectContext, projectHandler);
                                 } else if (
                                   currentCmdkPage === "Add" &&
