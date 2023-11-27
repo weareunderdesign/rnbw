@@ -284,6 +284,8 @@ const ungroup = ({
   const sortedUids = sortUidsByMaxEndIndex(uids, nodeTree);
   sortedUids.map((uid) => {
     const node = nodeTree[uid];
+    if (node.children.length === 0) return;
+
     const { startLine, startCol } = node.data.sourceCodeLocation;
     const code = copyCode({
       nodeTree,
