@@ -16,22 +16,15 @@ import {
 } from "../helpers";
 import { useInvalidNodes } from "./useInvalidNodes";
 import { useTemporaryNodes } from "./useTemporaryNodes";
+import { useAppState } from "@_redux/useAppState";
 
 export const useFileOperations = () => {
-  const project = useSelector(projectSelector);
-  const fileTree = useSelector(fileTreeSelector);
+  const { project, fileTree } = useAppState();
+  const { addRunningActions, removeRunningActions, fileHandlers } =
+    useContext(MainContext);
 
-  const {
-    // global action
-    addRunningActions,
-    removeRunningActions,
-    // file tree view
-    fileHandlers,
-  } = useContext(MainContext);
-
-  const { removeInvalidNodes, setInvalidNodes, invalidNodes } =
+  const { invalidNodes, removeInvalidNodes, setInvalidNodes } =
     useInvalidNodes();
-
   const { setTemporaryNodes, removeTemporaryNodes } = useTemporaryNodes();
 
   const { moveIDBFF, moveLocalFF } = moveActions(() => {});

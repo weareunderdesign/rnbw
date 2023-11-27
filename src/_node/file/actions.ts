@@ -1,5 +1,5 @@
 import { LogAllow } from "@_constants/global";
-import { TNodeApiPayload } from "..";
+import { TFileApiPayload, TNodeApiPayload } from "..";
 
 const add = () => {};
 const remove = () => {};
@@ -11,7 +11,7 @@ const move = () => {};
 const rename = () => {};
 
 export const doFileActions = async (
-  params: TNodeApiPayload,
+  params: TFileApiPayload,
   fb?: (...params: any[]) => void,
   cb?: (...params: any[]) => void,
 ): Promise<void> => {

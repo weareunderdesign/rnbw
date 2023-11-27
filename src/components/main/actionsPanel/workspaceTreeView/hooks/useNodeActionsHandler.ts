@@ -42,19 +42,22 @@ import {
 } from "../helpers";
 import { useInvalidNodes } from "./useInvalidNodes";
 import { useTemporaryNodes } from "./useTemporaryNodes";
+import { useAppState } from "@_redux/useAppState";
 
 export const useNodeActionsHandler = (
   openFileUid: React.MutableRefObject<string>,
 ) => {
   const dispatch = useDispatch();
-
-  const currentFileUid = useSelector(currentFileUidSelector);
-  const project = useSelector(projectSelector);
-  const fileTree = useSelector(fileTreeSelector);
-  const osType = useSelector(osTypeSelector);
-
-  const showCodeView = useSelector(showCodeViewSelector);
-
+  const {
+    project,
+    currentFileUid,
+    fileTree,
+    osType,
+    showCodeView,
+    fFocusedItem: focusedItem,
+    fExpandedItemsObj: expandedItemsObj,
+    fSelectedItems: selectedItems,
+  } = useAppState();
   const {
     addRunningActions,
     removeRunningActions,
@@ -62,14 +65,10 @@ export const useNodeActionsHandler = (
     htmlReferenceData,
   } = useContext(MainContext);
 
-  const { focusedItem, expandedItemsObj, selectedItems } = useSelector(
-    fileTreeViewStateSelector,
-  );
-
   const { removeInvalidNodes, setInvalidNodes, invalidNodes } =
     useInvalidNodes();
-
-  const { setTemporaryNodes, removeTemporaryNodes } = useTemporaryNodes();
+  const { temporaryNodes, setTemporaryNodes, removeTemporaryNodes } =
+    useTemporaryNodes();
 
   const createFFNode = useCallback(
     async (parentUid: TNodeUid, ffType: TFileNodeType, ffName: string) => {
@@ -125,7 +124,6 @@ export const useNodeActionsHandler = (
     },
     [addRunningActions, removeRunningActions, project.context, fileHandlers],
   );
-
   const createTmpFFNode = useCallback(
     async (ffNodeType: TFileNodeType) => {
       const tmpTree = JSON.parse(JSON.stringify(fileTree)) as TNodeTreeData;
@@ -195,7 +193,6 @@ export const useNodeActionsHandler = (
       removeInvalidNodes,
     ],
   );
-
   const cb_startRenamingNode = useCallback(
     (uid: TNodeUid) => {
       // validate
@@ -207,7 +204,6 @@ export const useNodeActionsHandler = (
     },
     [invalidNodes, setInvalidNodes, removeInvalidNodes],
   );
-
   const cb_abortRenamingNode = useCallback(
     (item: TreeItem) => {
       const node = item.data as TNode;
@@ -224,7 +220,6 @@ export const useNodeActionsHandler = (
     },
     [fileTree, removeInvalidNodes],
   );
-
   const _cb_renameNode = useCallback(
     async (uid: TNodeUid, newName: string, ext: string) => {
       // validate
@@ -249,7 +244,6 @@ export const useNodeActionsHandler = (
       fileHandlers,
     ],
   );
-
   const cb_renameNode = useCallback(
     async (item: TreeItem, newName: string) => {
       const node = item.data as TNode;
@@ -299,19 +293,11 @@ export const useNodeActionsHandler = (
   );
 
   const cb_deleteNode = useCallback(async () => {
-    // validate
     const uids = selectedItems.filter((uid) => !invalidNodes[uid]);
+    if (uids.length === 0) return;
 
-    if (uids.length === 0) {
-      return;
-    }
-
-    // confirm msgbox
     const message = `Are you sure you want to delete them? This action cannot be undone!`;
-
-    if (!window.confirm(message)) {
-      return;
-    }
+    if (!window.confirm(message)) return;
 
     addRunningActions(["fileTreeView-delete"]);
     setInvalidNodes(...uids);
@@ -338,11 +324,11 @@ export const useNodeActionsHandler = (
   }, [
     addRunningActions,
     removeRunningActions,
-    project.context,
+    selectedItems,
     invalidNodes,
     setInvalidNodes,
     removeInvalidNodes,
-    selectedItems,
+    project.context,
     fileTree,
     fileHandlers,
     currentFileUid,

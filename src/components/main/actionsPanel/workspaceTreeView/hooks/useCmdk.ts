@@ -33,6 +33,15 @@ export const useCmdk = (openFileUid: React.MutableRefObject<string>) => {
 
   const { invalidNodes } = useInvalidNodes();
 
+  const onAddNode = useCallback(
+    (actionName: string) => {
+      const nodeType = actionName.slice(AddFileActionPrefix.length + 1);
+      createTmpFFNode(
+        nodeType === "folder" ? "*folder" : (nodeType as TFileNodeType),
+      );
+    },
+    [createTmpFFNode],
+  );
   const onDelete = useCallback(() => {
     cb_deleteNode();
   }, [cb_deleteNode]);
@@ -91,22 +100,12 @@ export const useCmdk = (openFileUid: React.MutableRefObject<string>) => {
     cb_duplicateNode();
   }, [cb_duplicateNode]);
 
-  const onAddNode = useCallback(
-    (actionName: string) => {
-      const nodeType = actionName.slice(AddFileActionPrefix.length + 1);
-      createTmpFFNode(
-        nodeType === "folder" ? "*folder" : (nodeType as TFileNodeType),
-      );
-    },
-    [createTmpFFNode],
-  );
-
   return {
+    onAddNode,
     onDelete,
     onCut,
     onCopy,
     onPaste,
     onDuplicate,
-    onAddNode,
   };
 };

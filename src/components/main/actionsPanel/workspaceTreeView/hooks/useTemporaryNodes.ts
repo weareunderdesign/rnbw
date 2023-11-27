@@ -4,7 +4,7 @@ import { TNodeUid } from "@_node/types";
 
 export const useTemporaryNodes = () => {
   const [temporaryNodes, _setTemporaryNodes] = useState<{
-    [uid: TNodeUid]: boolean;
+    [uid: TNodeUid]: true;
   }>({});
 
   const setTemporaryNodes = useCallback(
@@ -25,5 +25,5 @@ export const useTemporaryNodes = () => {
     [temporaryNodes],
   );
 
-  return { setTemporaryNodes, removeTemporaryNodes };
+  return { temporaryNodes, setTemporaryNodes, removeTemporaryNodes };
 };

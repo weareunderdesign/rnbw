@@ -1,6 +1,13 @@
 import JSZip from "jszip";
 
-import { TBasicNodeData, TNode, TNodeTreeData, TNodeUid } from "../";
+import {
+  TBasicNodeData,
+  TNode,
+  TNodeActionType,
+  TNodeTreeData,
+  TNodeUid,
+} from "../";
+import { TOsType } from "@_redux/global";
 
 export type TFileNode = TNode & {
   data: TFileNodeData;
@@ -61,6 +68,10 @@ export type TProjectLoaderResponse = {
   deletedUidsObj: { [uid: TNodeUid]: true };
 };
 
+export type TFileApiPayload = {
+  action: TNodeActionType;
+  osType?: TOsType;
+};
 // --------------------
 export type TFile = {
   uid: TNodeUid;

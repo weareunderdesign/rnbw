@@ -8,7 +8,7 @@ import React, {
 
 import cx from "classnames";
 import { DraggingPositionItem } from "react-complex-tree";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 import { SVGIconI, TreeView } from "@_components/common";
 import { TreeViewData } from "@_components/common/treeView/types";
@@ -16,33 +16,9 @@ import { AddFileActionPrefix, RootNodeUid } from "@_constants/main";
 import { _path, getNormalizedPath, TFileNodeData } from "@_node/file";
 import { TNode, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
-import { currentCommandSelector } from "@_redux/main/cmdk";
-import {
-  currentFileUidSelector,
-  fileTreeSelector,
-  fileTreeViewStateSelector,
-  hoveredFileUidSelector,
-  initialFileUidToOpenSelector,
-  lastFileActionSelector,
-  projectSelector,
-  setHoveredFileUid,
-  setInitialFileUidToOpen,
-} from "@_redux/main/fileTree";
-import {
-  fileActionSelector,
-  FileTree_Event_ClearActionType,
-} from "@_redux/main/fileTree/event";
-import {
-  activePanelSelector,
-  didRedoSelector,
-  didUndoSelector,
-  navigatorDropdownTypeSelector,
-  setActivePanel,
-  setDidRedo,
-  setDidUndo,
-  showActionsPanelSelector,
-} from "@_redux/main/processor";
-import { linkToOpenSelector } from "@_redux/main/stageView";
+import { setHoveredFileUid } from "@_redux/main/fileTree";
+import { FileTree_Event_ClearActionType } from "@_redux/main/fileTree/event";
+import { setActivePanel, setDidRedo, setDidUndo } from "@_redux/main/processor";
 import { addClass, generateQuerySelector, removeClass } from "@_services/main";
 import { TFilesReference } from "@_types/main";
 
@@ -132,15 +108,10 @@ export default function WorkspaceTreeView() {
     cmdkSearchContent,
     currentCommand,
   } = useAppState();
-  const {
-    // global action
-    addRunningActions,
-    removeRunningActions,
-    // references
-    filesReferenceData,
-  } = useContext(MainContext);
-  // -------------------------------------------------------------- node status --------------------------------------------------------------
-  //  invalid - can't do any actions on the nodes
+  const { addRunningActions, removeRunningActions, filesReferenceData } =
+    useContext(MainContext);
+
+  // invalid - can't do any actions on the nodes
   const { invalidNodes } = useInvalidNodes();
   // temporary - don't display the nodes
   const { setTemporaryNodes, removeTemporaryNodes } = useTemporaryNodes();
@@ -285,10 +256,10 @@ export default function WorkspaceTreeView() {
     }
     return data;
   }, [fileTree]);
-  // -------------------------------------------------------------- node view state handlers --------------------------------------------------------------
+
   const { cb_collapseNode, cb_expandNode, cb_focusNode, cb_selectNode } =
     useNodeViewState();
-  // -------------------------------------------------------------- project --------------------------------------------------------------
+
   // open default initial html file
   useEffect(() => {
     if (initialFileUidToOpen !== "" && fileTree[initialFileUidToOpen]) {
@@ -301,30 +272,8 @@ export default function WorkspaceTreeView() {
       cb_focusNode(initialFileUidToOpen);
       cb_selectNode([initialFileUidToOpen]);
       cb_readNode(initialFileUidToOpen);
-
-      /* if (project && currentFileUid) {
-        // remove exist script
-        const exist = document.head.querySelector("#custom-plausible");
-        if (exist !== null) {
-          document.head.removeChild(exist);
-        }
-        // plausible analytics
-        var script = document.createElement("script");
-        script.id = "custom-plausible";
-        script.textContent =
-          `
-          plausible('pageview', { u: '` +
-          "rnbw.dev/" +
-          project.name +
-          "/" +
-          currentFileUid.replace(`${RootNodeUid}/`, "") +
-          `' + window.location.search });
-        `;
-        document.head.appendChild(script);
-      } */
     }
   }, [initialFileUidToOpen]);
-  // -------------------------------------------------------------- node actions handlers --------------------------------------------------------------
 
   const openFileUid = useRef<TNodeUid>("");
   const {
@@ -337,7 +286,7 @@ export default function WorkspaceTreeView() {
 
   useEffect(() => {
     if (
-      fileTree[openFileUid.current] !== undefined &&
+      fileTree[openFileUid.current] &&
       currentFileUid === openFileUid.current
     ) {
       openFile(openFileUid.current);

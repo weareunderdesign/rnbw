@@ -4,7 +4,7 @@ import { TNodeUid } from "@_node/types";
 
 export const useInvalidNodes = () => {
   const [invalidNodes, _setInvalidNodes] = useState<{
-    [uid: TNodeUid]: boolean;
+    [uid: TNodeUid]: true;
   }>({});
 
   const setInvalidNodes = useCallback(
