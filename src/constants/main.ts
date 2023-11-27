@@ -2,7 +2,8 @@ export const RootNodeUid = "ROOT";
 export const DefaultProjectPath = "/untitled";
 
 export const StagePreviewPathPrefix = "rnbw-stage-preview-";
-export const CodeViewSyncDelay = 1 * 1000;
+export const CodeViewSyncDelay = 100;
+export const CodeViewSyncDelay_Long = 1 * 1000;
 
 export const ParsableFileTypes: {
   [fileType: string]: true;

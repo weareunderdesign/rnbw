@@ -3,7 +3,11 @@ import React, { useContext, useEffect, useMemo, useRef } from "react";
 import * as monaco from "monaco-editor";
 import { useDispatch, useSelector } from "react-redux";
 
-import { CodeViewSyncDelay, RootNodeUid } from "@_constants/main";
+import {
+  CodeViewSyncDelay,
+  CodeViewSyncDelay_Long,
+  RootNodeUid,
+} from "@_constants/main";
 import { useTheme } from "@_hooks/useTheme";
 import { TFileNodeData, TNodeUid } from "@_node/index";
 import { MainContext } from "@_redux/main";
@@ -221,9 +225,11 @@ export default function CodeView(props: CodeViewProps) {
   }, [focusedNode]);
 
   const onChange = (value: string) => {
+    console.log("CodeView - onChange");
     dispatch(setCurrentFileContent(value));
   };
   const debouncedOnChange = debounce(onChange, CodeViewSyncDelay);
+  const longDebouncedOnChange = debounce(onChange, CodeViewSyncDelay_Long);
   //-------------------------------------------------------------- other --------------------------------------------------------------
 
   return useMemo(() => {
@@ -269,10 +275,10 @@ export default function CodeView(props: CodeViewProps) {
               if (!value) return;
 
               if (isContentProgrammaticallyChanged) {
-                onChange(value);
+                debouncedOnChange(value);
                 setIsContentProgrammaticallyChanged(false);
               } else {
-                debouncedOnChange(value);
+                longDebouncedOnChange(value);
               }
             }}
             loading={""}
