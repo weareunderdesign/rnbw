@@ -113,7 +113,7 @@ export default function CodeView(props: CodeViewProps) {
   const focusedItemRef = useRef<TNodeUid>("");
   const revealed = useRef<boolean>(false);
 
-  function hightlightFocusedNodeCodeBlock() {
+  const hightlightFocusedNodeCodeBlock = useCallback(() => {
     const monacoEditor = monacoEditorRef.current;
     if (!monacoEditor) return;
     const node = validNodeTree[nFocusedItem];
@@ -149,7 +149,7 @@ export default function CodeView(props: CodeViewProps) {
       },
       1,
     );
-  }
+  }, [validNodeTree, nFocusedItem, activePanel]);
 
   useEffect(() => {
     if (!parseFileFlag) {
@@ -230,10 +230,11 @@ export default function CodeView(props: CodeViewProps) {
     }
   }, [focusedNode]);
 
-  const onChange = (value: string) => {
+  const onChange = useCallback((value: string) => {
     console.log("CodeView - onChange");
-    // dispatch(setCurrentFileContent(value));
-  };
+    dispatch(setCurrentFileContent(value));
+  }, []);
+
   const debouncedOnChange = useCallback(
     debounce((value) => {
       onChange(value);
@@ -318,5 +319,7 @@ export default function CodeView(props: CodeViewProps) {
     handleEditorDidMount,
     parseFileFlag,
     currentFileContent,
+    debouncedOnChange,
+    longDebouncedOnChange,
   ]);
 }
