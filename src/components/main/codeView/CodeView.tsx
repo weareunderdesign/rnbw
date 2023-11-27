@@ -231,15 +231,18 @@ export default function CodeView(props: CodeViewProps) {
   }, [focusedNode]);
 
   const onChange = useCallback((value: string) => {
-    console.log("CodeView - onChange");
     dispatch(setCurrentFileContent(value));
   }, []);
-  const debouncedOnChange = useCallback(debounce(onChange, CodeViewSyncDelay), [
-    onChange,
-  ]);
+  const debouncedOnChange = useCallback(
+    debounce((value) => {
+      onChange(value);
+      setIsContentProgrammaticallyChanged(false);
+    }, CodeViewSyncDelay),
+    [],
+  );
   const longDebouncedOnChange = useCallback(
     debounce(onChange, CodeViewSyncDelay_Long),
-    [onChange],
+    [],
   );
   //-------------------------------------------------------------- other --------------------------------------------------------------
 
@@ -285,9 +288,8 @@ export default function CodeView(props: CodeViewProps) {
             onChange={(value) => {
               if (!value) return;
 
-              if (isContentProgrammaticallyChanged) {
+              if (isContentProgrammaticallyChanged.current) {
                 debouncedOnChange(value);
-                setIsContentProgrammaticallyChanged(false);
               } else {
                 longDebouncedOnChange(value);
               }
