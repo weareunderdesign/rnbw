@@ -1,19 +1,6 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 
-import { useSelector } from "react-redux";
-
-import { themeSelector } from "@_redux/global";
 import { MainContext } from "@_redux/main";
-import {
-  currentFileUidSelector,
-  fileTreeSelector,
-  projectSelector,
-  workspaceSelector,
-} from "@_redux/main/fileTree";
-import {
-  faviconSelector,
-  navigatorDropdownTypeSelector,
-} from "@_redux/main/processor";
 
 import { AdditionalPanel, DefaultPanel, ProjectPanel } from "./components";
 import {
@@ -24,17 +11,18 @@ import {
 } from "./constants";
 import { useFavicon, useNavigatorPanelHandlers } from "./hooks";
 import { NavigatorPanelProps } from "./types";
+import { useAppState } from "@_redux/useAppState";
 
 export default function NavigatorPanel(props: NavigatorPanelProps) {
-  const theme = useSelector(themeSelector);
-
-  const navigatorDropdownType = useSelector(navigatorDropdownTypeSelector);
-  const favicon = useSelector(faviconSelector);
-
-  const workspace = useSelector(workspaceSelector);
-  const project = useSelector(projectSelector);
-  const fileTree = useSelector(fileTreeSelector);
-  const currentFileUid = useSelector(currentFileUidSelector);
+  const {
+    theme,
+    navigatorDropdownType,
+    favicon,
+    workspace,
+    project,
+    fileTree,
+    currentFileUid,
+  } = useAppState();
 
   const {
     filesReferenceData,

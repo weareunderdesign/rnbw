@@ -1,23 +1,19 @@
 import { useCallback, useContext } from "react";
 
 import { getMany } from "idb-keyval";
-import { useDispatch, useSelector } from "react-redux";
-
-import { TFileNodeData } from "@_node/file";
+import { useDispatch } from "react-redux";
 import { MainContext } from "@_redux/main";
-import { fileTreeSelector, TProject } from "@_redux/main/fileTree";
+import { TProject } from "@_redux/main/fileTree";
 import {
-  navigatorDropdownTypeSelector,
   setActivePanel,
   setNavigatorDropdownType,
 } from "@_redux/main/processor";
 import { isUnsavedProject } from "@_node/file/helpers";
+import { useAppState } from "@_redux/useAppState";
 
 export const useNavigatorPanelHandlers = () => {
   const dispatch = useDispatch();
-
-  const navigatorDropdownType = useSelector(navigatorDropdownTypeSelector);
-  const fileTree = useSelector(fileTreeSelector);
+  const { fileTree, navigatorDropdownType } = useAppState();
 
   const {
     // open project

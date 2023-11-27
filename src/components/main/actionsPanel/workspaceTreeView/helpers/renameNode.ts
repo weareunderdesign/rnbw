@@ -1,12 +1,11 @@
 import { useContext } from "react";
 
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 import { TFileNodeData } from "@_node/file";
 import { TNode, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import {
-  projectSelector,
   setCurrentFileUid,
   updateFileTreeViewState,
 } from "@_redux/main/fileTree";
@@ -15,6 +14,7 @@ import { verifyFileHandlerPermission } from "@_services/main";
 
 import { useInvalidNodes } from "../hooks";
 import { moveActions } from "./moveActions";
+import { useAppState } from "@_redux/useAppState";
 
 export const renameNode = async (
   ext: string,
@@ -25,7 +25,8 @@ export const renameNode = async (
   uid: TNodeUid,
 ) => {
   const dispatch = useDispatch();
-  const project = useSelector(projectSelector);
+
+  const { project } = useAppState();
 
   const { removeRunningActions, fileHandlers } = useContext(MainContext);
 

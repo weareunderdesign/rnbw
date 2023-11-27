@@ -1,8 +1,6 @@
 import { useContext } from "react";
 
-import { Range } from "monaco-editor";
 import { DraggingPosition, TreeItem, TreeItemIndex } from "react-complex-tree";
-import { useSelector } from "react-redux";
 
 import { TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";

@@ -1,8 +1,5 @@
-import { useSelector } from "react-redux";
-
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
-import { themeSelector } from "@_redux/global";
-import { validNodeTreeSelector } from "@_redux/main/nodeTree";
+import { useAppState } from "@_redux/useAppState";
 
 export interface IUseChangeIframThemeProps {
   contentRef: HTMLIFrameElement | null;
@@ -11,8 +8,7 @@ export interface IUseChangeIframThemeProps {
 export const useChangeIframeTheme = ({
   contentRef,
 }: IUseChangeIframThemeProps) => {
-  const validNodeTree = useSelector(validNodeTreeSelector);
-  const theme = useSelector(themeSelector);
+  const { theme, validNodeTree } = useAppState();
 
   const changeIframeTheme = () => {
     let uid = "-1";

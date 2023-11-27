@@ -1,32 +1,26 @@
 import { useCallback } from "react";
 
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 import { AddFileActionPrefix } from "@_constants/main";
-import {
-  currentFileUidSelector,
-  fileTreeSelector,
-  fileTreeViewStateSelector,
-} from "@_redux/main/fileTree";
-import { nodeTreeSelector } from "@_redux/main/nodeTree";
-import {
-  clipboardDataSelector,
-  setClipboardData,
-} from "@_redux/main/processor";
+import { setClipboardData } from "@_redux/main/processor";
 import { TFileNodeType } from "@_types/main";
 
 import { useInvalidNodes } from "./useInvalidNodes";
 import { useNodeActionsHandler } from "./useNodeActionsHandler";
+import { useAppState } from "@_redux/useAppState";
 
 export const useCmdk = (openFileUid: React.MutableRefObject<string>) => {
   const dispatch = useDispatch();
 
-  const currentFileUid = useSelector(currentFileUidSelector);
-  const { focusedItem, selectedItems } = useSelector(fileTreeViewStateSelector);
-
-  const clipboardData = useSelector(clipboardDataSelector);
-  const fileTree = useSelector(fileTreeSelector);
-  const nodeTree = useSelector(nodeTreeSelector);
+  const {
+    currentFileUid,
+    fFocusedItem: focusedItem,
+    fSelectedItems: selectedItems,
+    clipboardData,
+    fileTree,
+    nodeTree,
+  } = useAppState();
 
   const { createTmpFFNode, cb_deleteNode, cb_moveNode, cb_duplicateNode } =
     useNodeActionsHandler(openFileUid);

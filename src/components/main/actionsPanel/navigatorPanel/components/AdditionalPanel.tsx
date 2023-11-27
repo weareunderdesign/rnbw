@@ -1,23 +1,13 @@
-import React, {
-  FC,
-  useRef,
-} from 'react';
+import React, { FC, useRef } from "react";
 
-import cx from 'classnames';
-import { useSelector } from 'react-redux';
+import cx from "classnames";
 
-import { SVGIcon } from '@_components/common';
-import {
-  currentFileUidSelector,
-  fileTreeSelector,
-  projectSelector,
-  TProject,
-  workspaceSelector,
-} from '@_redux/main/fileTree';
-import { navigatorDropdownTypeSelector } from '@_redux/main/processor';
+import { SVGIcon } from "@_components/common";
+import { TProject } from "@_redux/main/fileTree";
 
-import { isSelected } from '../helpers';
-import { useNavigatorPanelHandlers } from '../hooks';
+import { isSelected } from "../helpers";
+import { useNavigatorPanelHandlers } from "../hooks";
+import { useAppState } from "@_redux/useAppState";
 
 interface AdditionalPanelProps {
   navigatorPanel: HTMLDivElement | null;
@@ -26,12 +16,13 @@ interface AdditionalPanelProps {
 export const AdditionalPanel: FC<AdditionalPanelProps> = ({
   navigatorPanel,
 }) => {
-  const workspace = useSelector(workspaceSelector);
-  const project = useSelector(projectSelector);
-  const fileTree = useSelector(fileTreeSelector);
-  const currentFileUid = useSelector(currentFileUidSelector);
-
-  const navigatorDropdownType = useSelector(navigatorDropdownTypeSelector);
+  const {
+    workspace,
+    project,
+    fileTree,
+    currentFileUid,
+    navigatorDropdownType,
+  } = useAppState();
 
   const navigatorDropDownRef = useRef<HTMLDivElement | null>(null);
 

@@ -1,6 +1,6 @@
 import { useCallback, useContext } from "react";
 
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 import { RootNodeUid } from "@_constants/main";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
@@ -12,6 +12,7 @@ import {
   focusNodeTreeNode,
   selectNodeTreeNodes,
 } from "@_redux/main/nodeTree";
+import { useAppState } from "@_redux/useAppState";
 
 export interface IUseSetSelectItemProps {
   mostRecentSelectedNode: React.MutableRefObject<TNode | undefined>;
@@ -34,7 +35,7 @@ export const useSetSelectItem = ({
     setCodeViewOffsetTop,
   } = useContext(MainContext);
 
-  const { nodeTree } = useSelector((state: AppState) => state.main.nodeTree);
+  const { nodeTree } = useAppState();
 
   const setFocusedSelectedItems = useCallback(
     (uid: TNodeUid, _selectedItems?: TNodeUid[]) => {

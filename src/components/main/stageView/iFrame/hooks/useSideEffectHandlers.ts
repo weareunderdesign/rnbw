@@ -1,6 +1,6 @@
 import { useCallback, useContext } from "react";
 
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { TNode, TNodeUid } from "@_node/types";
@@ -15,6 +15,7 @@ import {
 import { setNeedToReloadIframe } from "@_redux/main/stageView";
 
 import { cloneAndInsertNode, createAndInsertElement } from "../helpers";
+import { useAppState } from "@_redux/useAppState";
 
 export interface IUseSideEffectHandlersProps {
   contentRef: any;
@@ -24,10 +25,7 @@ export const useSideEffectHandlers = ({
   contentRef,
 }: IUseSideEffectHandlersProps) => {
   const dispatch = useDispatch();
-  const {
-    nodeTree: { nodeTree },
-    processor: { clipboardData },
-  } = useSelector((state: AppState) => state.main);
+  const { nodeTree, clipboardData } = useAppState();
   const {
     // global action
     removeRunningActions,

@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from "react";
 
-import { useSelector } from "react-redux";
 import LoadingBar from "react-top-loading-bar";
 
-import { themeSelector } from "@_redux/global";
-
 import { LoaderProps } from "./types";
+import { useAppState } from "@_redux/useAppState";
 
 export const Loader = ({ show }: LoaderProps) => {
-  const theme = useSelector(themeSelector);
+  const { theme } = useAppState();
 
   const [progress, setProgress] = useState(0);
   useEffect(() => {

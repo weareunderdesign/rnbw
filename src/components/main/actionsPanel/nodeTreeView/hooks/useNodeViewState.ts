@@ -1,6 +1,6 @@
 import { useCallback, useContext } from "react";
 
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 import { getValidNodeUids } from "@_node/helpers";
 import { TNodeUid } from "@_node/types";
@@ -11,7 +11,6 @@ import {
   expandNodeTreeNodes,
   focusNodeTreeNode,
   NodeTree_Event_ClearActionType,
-  nodeTreeViewStateSelector,
   selectNodeTreeNodes,
   setSelectedNodeUids,
 } from "@_redux/main/nodeTree";
@@ -21,13 +20,16 @@ import { useAppState } from "@_redux/useAppState";
 export function useNodeViewState(focusItemValue: TNodeUid | null) {
   const dispatch = useDispatch();
 
-  const { validNodeTree, prevRenderableFileUid } = useAppState();
+  const {
+    validNodeTree,
+    prevRenderableFileUid,
+    nFocusedItem: focusedItem,
+    nSelectedItems: selectedItems,
+    nSelectedItemsObj: selectedItemsObj,
+  } = useAppState();
 
   const { addRunningActions, removeRunningActions } = useContext(MainContext);
 
-  const { focusedItem, selectedItems, selectedItemsObj } = useSelector(
-    nodeTreeViewStateSelector,
-  );
   const {
     // toasts
     parseFileFlag,

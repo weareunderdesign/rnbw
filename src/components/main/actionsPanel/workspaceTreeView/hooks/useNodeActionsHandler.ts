@@ -1,20 +1,15 @@
 import { useCallback, useContext } from "react";
 
 import { TreeItem } from "react-complex-tree";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 import { RednerableFileTypes, RootNodeUid, TmpNodeUid } from "@_constants/main";
 import { createDirectory, TFileNodeData, writeFile } from "@_node/file";
 import { getValidNodeUids } from "@_node/helpers";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
-import { osTypeSelector } from "@_redux/global";
 import { MainContext } from "@_redux/main";
 import {
-  currentFileUidSelector,
   expandFileTreeNodes,
-  fileTreeSelector,
-  fileTreeViewStateSelector,
-  projectSelector,
   setCurrentFileUid,
   setFileTree,
   setPrevRenderableFileUid,
@@ -28,7 +23,6 @@ import {
 import {
   setNavigatorDropdownType,
   setShowCodeView,
-  showCodeViewSelector,
 } from "@_redux/main/processor";
 import { verifyFileHandlerPermission } from "@_services/main";
 import { TFileNodeType } from "@_types/main";

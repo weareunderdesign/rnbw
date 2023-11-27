@@ -1,6 +1,6 @@
 import { useCallback, useContext } from "react";
 
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 import { LogAllow } from "@_constants/global";
 import { TNode } from "@_node/types";
@@ -9,6 +9,7 @@ import { MainContext } from "@_redux/main";
 import { setCurrentCommand } from "@_redux/main/cmdk";
 import { getCommandKey } from "@_services/global";
 import { TCmdkKeyMap } from "@_types/main";
+import { useAppState } from "@_redux/useAppState";
 
 export interface IUseCmdkProps {
   contentEditableUidRef: React.MutableRefObject<string>;
@@ -19,14 +20,12 @@ export const useCmdk = ({
   contentEditableUidRef,
   mostRecentSelectedNode,
 }: IUseCmdkProps) => {
+  const dispatch = useDispatch();
+  const { nodeTree, osType } = useAppState();
   const {
     // references
     cmdkReferenceData,
   } = useContext(MainContext);
-  const { nodeTree } = useSelector((state: AppState) => state.main.nodeTree);
-  const { osType } = useSelector((state: AppState) => state.global);
-
-  const dispatch = useDispatch();
 
   const onKeyDown = useCallback(
     (e: KeyboardEvent) => {

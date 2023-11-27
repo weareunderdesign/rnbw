@@ -7,7 +7,7 @@ import React, {
 } from "react";
 
 import * as monaco from "monaco-editor";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 import {
   CodeViewSyncDelay,
@@ -18,16 +18,11 @@ import { useTheme } from "@_hooks/useTheme";
 import { TFileNodeData, TNodeUid } from "@_node/index";
 import { MainContext } from "@_redux/main";
 import {
-  currentFileUidSelector,
-  fileTreeSelector,
-} from "@_redux/main/fileTree";
-import {
   expandNodeTreeNodes,
   focusNodeTreeNode,
   selectNodeTreeNodes,
   setCurrentFileContent,
   setNewFocusedNodeUid,
-  validNodeTreeSelector,
 } from "@_redux/main/nodeTree";
 import { useAppState } from "@_redux/useAppState";
 import { Editor, loader } from "@monaco-editor/react";
@@ -49,6 +44,7 @@ export default function CodeView(props: CodeViewProps) {
     activePanel,
     showCodeView,
     currentFileContent,
+    validNodeTree,
   } = useAppState();
   const {
     parseFileFlag,
@@ -75,7 +71,6 @@ export default function CodeView(props: CodeViewProps) {
   } = useEditor();
   const { editorWrapperRef, onPanelClick } = useEditorWrapper();
   //-----------------------------------------
-  const validNodeTree = useSelector(validNodeTreeSelector);
   const isFirst = useRef<boolean>(true);
 
   const previewDiv = useRef(null);

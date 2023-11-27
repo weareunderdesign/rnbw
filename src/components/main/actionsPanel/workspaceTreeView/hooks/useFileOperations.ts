@@ -1,11 +1,8 @@
 import { useCallback, useContext } from "react";
 
-import { useSelector } from "react-redux";
-
 import { TFileNodeData } from "@_node/file";
 import { TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
-import { fileTreeSelector, projectSelector } from "@_redux/main/fileTree";
 import { verifyFileHandlerPermission } from "@_services/main";
 import { TFileNodeType } from "@_types/main";
 

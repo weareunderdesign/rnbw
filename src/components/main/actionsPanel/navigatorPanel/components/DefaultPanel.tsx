@@ -1,23 +1,15 @@
 import React, { useContext, useMemo } from "react";
 
-import { useSelector } from "react-redux";
-
 import { SVGIconI } from "@_components/common";
 import { RootNodeUid } from "@_constants/main";
 import { MainContext } from "@_redux/main";
-import {
-  currentFileUidSelector,
-  fileTreeSelector,
-  projectSelector,
-} from "@_redux/main/fileTree";
 
 import { getFileExtension, getFileNameFromPath, isHomeIcon } from "../helpers";
 import { useNavigatorPanelHandlers } from "../hooks";
+import { useAppState } from "@_redux/useAppState";
 
 export const DefaultPanel = () => {
-  const project = useSelector(projectSelector);
-  const fileTree = useSelector(fileTreeSelector);
-  const currentFileUid = useSelector(currentFileUidSelector);
+  const { project, fileTree, currentFileUid } = useAppState();
 
   const { filesReferenceData } = useContext(MainContext);
 

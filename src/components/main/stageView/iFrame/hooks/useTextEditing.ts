@@ -1,6 +1,6 @@
 import { useCallback, useContext } from "react";
 
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 import { RootNodeUid } from "@_constants/main";
 import { TFileNodeData } from "@_node/file";
@@ -19,6 +19,7 @@ import { TCmdkKeyMap } from "@_types/main";
 
 import { handleElementClick, openNewPage } from "../helpers";
 import { useSetSelectItem } from "./useSetSelectItem";
+import { useAppState } from "@_redux/useAppState";
 
 export interface IUseTextEditingProps {
   contentEditableUidRef: React.MutableRefObject<string>;
@@ -41,12 +42,13 @@ export const useTextEditing = ({
 }: IUseTextEditingProps) => {
   const dispatch = useDispatch();
 
-  const { osType } = useSelector((state: AppState) => state.global);
   const {
+    osType,
     validNodeTree,
-    nodeTreeViewState: { focusedItem, expandedItemsObj },
-  } = useSelector((state: AppState) => state.main.nodeTree);
-  const { fileTree } = useSelector((state: AppState) => state.main.fileTree);
+    nFocusedItem: focusedItem,
+    nExpandedItemsObj: expandedItemsObj,
+    fileTree,
+  } = useAppState();
 
   const {
     // close all panel

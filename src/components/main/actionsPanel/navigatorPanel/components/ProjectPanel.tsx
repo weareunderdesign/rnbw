@@ -1,14 +1,12 @@
-import React from 'react';
+import React from "react";
 
-import { useSelector } from 'react-redux';
+import { SVGIconI } from "@_components/common";
 
-import { SVGIconI } from '@_components/common';
-import { projectSelector } from '@_redux/main/fileTree';
-
-import { useNavigatorPanelHandlers } from '../hooks';
+import { useNavigatorPanelHandlers } from "../hooks";
+import { useAppState } from "@_redux/useAppState";
 
 export const ProjectPanel = () => {
-  const project = useSelector(projectSelector);
+  const { project } = useAppState();
   const { onProjectClick } = useNavigatorPanelHandlers();
 
   return (

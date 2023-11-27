@@ -1,6 +1,6 @@
 import { useCallback, useContext } from "react";
 
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 import { TFileNodeData } from "@_node/file";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
@@ -75,16 +75,14 @@ export const useMouseEvents = ({
   });
 
   const dispatch = useDispatch();
-  const { prevRenderableFileUid } = useAppState();
   const {
-    nodeTree: {
-      nodeTreeViewState: { focusedItem },
-      nodeTree,
-      hoveredNodeUid,
-    },
-    fileTree: { fileTree },
-    processor: { navigatorDropdownType },
-  } = useSelector((state: AppState) => state.main);
+    prevRenderableFileUid,
+    nodeTree,
+    hoveredNodeUid,
+    nFocusedItem: focusedItem,
+    fileTree,
+    navigatorDropdownType,
+  } = useAppState();
 
   const {
     // toasts

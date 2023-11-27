@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 
-import { useSelector } from "react-redux";
-
-import { themeSelector } from "@_redux/global";
 import { getSystemTheme } from "@_services/global";
+import { useAppState } from "@_redux/useAppState";
 
 export const getCurrentTheme = (theme: string) => {
   if (theme === "Dark") {
@@ -16,7 +14,7 @@ export const getCurrentTheme = (theme: string) => {
 };
 
 export const useTheme = () => {
-  const _theme = useSelector(themeSelector);
+  const { theme: _theme } = useAppState();
   const [theme, setTheme] = useState<"vs-dark" | "light">();
 
   useEffect(() => {

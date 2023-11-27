@@ -1,36 +1,31 @@
 import { useEffect, useRef } from "react";
 
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 import { RootNodeUid } from "@_constants/main";
-import {
-  currentFileUidSelector,
-  projectSelector,
-  setWorkspace,
-  workspaceSelector,
-} from "@_redux/main/fileTree";
+import { setWorkspace } from "@_redux/main/fileTree";
 import {
   selectNodeTreeNodes,
-  validNodeTreeSelector,
   expandNodeTreeNodes,
 } from "@_redux/main/nodeTree";
 
 import { selectFirstNode, setWorkspaceFavicon } from "../helpers/";
 import { AppState } from "@_redux/_root";
+import { useAppState } from "@_redux/useAppState";
 
 export const useFavicon = (
   setFaviconFallback: React.Dispatch<React.SetStateAction<boolean>>,
 ) => {
   const dispatch = useDispatch();
 
-  const workspace = useSelector(workspaceSelector);
-  const project = useSelector(projectSelector);
-  const currentFileUid = useSelector(currentFileUidSelector);
-
-  const validNodeTree = useSelector(validNodeTreeSelector);
-  const { focusedItem, selectedItems } = useSelector(
-    (state: AppState) => state.main.nodeTree.nodeTreeViewState,
-  );
+  const {
+    workspace,
+    project,
+    currentFileUid,
+    validNodeTree,
+    nFocusedItem: focusedItem,
+    nSelectedItems: selectedItems,
+  } = useAppState();
 
   const isFirst = useRef(true);
   useEffect(() => {
