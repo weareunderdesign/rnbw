@@ -1,4 +1,10 @@
-import React, { useContext, useEffect, useMemo, useRef } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
 
 import * as monaco from "monaco-editor";
 import { useDispatch, useSelector } from "react-redux";
@@ -226,10 +232,20 @@ export default function CodeView(props: CodeViewProps) {
 
   const onChange = (value: string) => {
     console.log("CodeView - onChange");
-    dispatch(setCurrentFileContent(value));
+    // dispatch(setCurrentFileContent(value));
   };
-  const debouncedOnChange = debounce(onChange, CodeViewSyncDelay);
-  const longDebouncedOnChange = debounce(onChange, CodeViewSyncDelay_Long);
+  const debouncedOnChange = useCallback(
+    debounce((value) => {
+      onChange(value);
+    }, CodeViewSyncDelay),
+    [],
+  );
+  const longDebouncedOnChange = useCallback(
+    debounce((value) => {
+      onChange(value);
+    }, CodeViewSyncDelay_Long * 2),
+    [],
+  );
   //-------------------------------------------------------------- other --------------------------------------------------------------
 
   return useMemo(() => {
