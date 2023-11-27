@@ -866,7 +866,6 @@ export default function MainPage() {
         break;
       case "Open":
         onOpen();
-        toogleCodeView();
         break;
       case "Theme":
         onToggleTheme();
@@ -1694,6 +1693,7 @@ export default function MainPage() {
                                       }
                                     }
                                   }
+                                  clearProjectSession(dispatch);
                                   importProject(projectContext, projectHandler);
                                 } else if (
                                   currentCmdkPage === "Add" &&
