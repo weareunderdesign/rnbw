@@ -867,7 +867,6 @@ export default function MainPage() {
         break;
       case "Open":
         onOpen();
-        toogleCodeView();
         break;
       case "Theme":
         onToggleTheme();
