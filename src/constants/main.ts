@@ -27,6 +27,6 @@ export const RenameNodeActionPrefix = `${RenameActionPrefix}-Node`;
 export const DefaultTabSize: number = 2;
 export const RecentProjectCount = 10;
 
+// ----------------------
 export const NodeUidSplitter: string = "?";
-
 export const TmpNodeUid = "tmp:node:uid";
