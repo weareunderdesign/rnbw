@@ -1,9 +1,10 @@
-import { useProcessorUpdate } from "./useProcessorUpdate";
-import { useProcessorValidNodeTree } from "./useProcessorValidNodeTree";
-import { useSaveCommand } from "./useSaveCommand";
+import { useFileTreeEvent, useHms } from "./hooks";
+import { useNodeTreeEvent } from "./hooks";
+import { useSaveCommand } from "./hooks";
 
 export const useProcessor = () => {
-  useProcessorUpdate();
-  useProcessorValidNodeTree();
+  useHms();
+  useFileTreeEvent();
+  useNodeTreeEvent();
   useSaveCommand();
 };

@@ -46,6 +46,8 @@ export function useNodeViewState(focusItemValue: TNodeUid | null) {
         return;
       }
 
+      console.log("useNodeViewState - focus", uid);
+
       dispatch(focusNodeTreeNode(uid));
       focusItemValue = uid;
 
