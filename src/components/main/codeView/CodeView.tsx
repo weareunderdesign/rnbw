@@ -112,7 +112,6 @@ export default function CodeView(props: CodeViewProps) {
     const node = validNodeTree[nFocusedItem];
 
     const sourceCodeLocation = node.data.sourceCodeLocation;
-
     if (!sourceCodeLocation) {
       return;
     }
@@ -148,12 +147,19 @@ export default function CodeView(props: CodeViewProps) {
     if (!parseFileFlag) {
       return;
     }
-
-    if (nFocusedItem === RootNodeUid) return;
-    if (!validNodeTree[nFocusedItem]) return;
-
     const monacoEditor = getCurrentEditorInstance();
     if (!monacoEditor) return;
+
+    if (nFocusedItem === RootNodeUid) return;
+    if (!validNodeTree[nFocusedItem]) {
+      monacoEditor.setSelection({
+        startLineNumber: 1,
+        startColumn: 1,
+        endLineNumber: 1,
+        endColumn: 1,
+      });
+      return;
+    }
 
     if (isFirst.current) {
       const firstTimer = setInterval(() => {
