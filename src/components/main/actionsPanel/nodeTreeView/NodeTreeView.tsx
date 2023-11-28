@@ -362,8 +362,18 @@ const NodeTreeView = () => {
             }, []);
 
             const onDragStart = (e: React.DragEvent) => {
+              console.log(e.target, "DragStart");
+              // const img = new Image();
+
               e.dataTransfer.effectAllowed = "move";
+              // e.dataTransfer.setDragImage(
+              //   img,
+              //   window.outerWidth,
+              //   window.outerHeight,
+              // );
+
               props.context.startDragging();
+              console.log("DragStart 2");
 
               isDragging.current = true;
             };
@@ -378,89 +388,95 @@ const NodeTreeView = () => {
             };
 
             return (
-              <li
-                className={cx(
-                  props.context.isSelected && "background-secondary",
-
-                  props.context.isDraggingOver && "",
-                  props.context.isDraggingOverParent && "",
-
-                  props.context.isFocused && "",
-                )}
-                {...props.context.itemContainerWithChildrenProps}
-              >
-                <div
-                  id={`NodeTreeView-${props.item.index}`}
+              <>
+                <li
                   className={cx(
-                    "justify-stretch",
-                    "padding-xs",
-                    "outline-default",
+                    props.context.isSelected && "background-secondary",
 
-                    props.context.isSelected &&
-                      "background-tertiary outline-none",
-                    !props.context.isSelected &&
-                      props.context.isFocused &&
-                      "outline",
-
-                    props.context.isDraggingOver && "outline",
+                    props.context.isDraggingOver && "",
                     props.context.isDraggingOverParent && "",
+
+                    props.context.isFocused && "",
                   )}
-                  style={{
-                    flexWrap: "nowrap",
-                    paddingLeft: `${props.depth * 18}px`,
-                  }}
-                  {...props.context.itemContainerWithoutChildrenProps}
-                  {...props.context.interactiveElementProps}
-                  ref={treeViewRef}
-                  onClick={onClick}
-                  onDoubleClick={onDoubleClick}
-                  onMouseEnter={onMouseEnter}
-                  onMouseLeave={onMouseLeave}
-                  onFocus={() => {}}
-                  onDragStart={onDragStart}
-                  onDragEnter={onDragEnter}
+                  {...props.context.itemContainerWithChildrenProps}
                 >
-                  <div className="gap-s padding-xs" style={{ width: "100%" }}>
-                    {props.arrow}
+                  <div
+                    id={`NodeTreeView-${props.item.index}`}
+                    className={cx(
+                      "justify-stretch",
+                      "padding-xs",
+                      "outline-default",
 
-                    {htmlElementReferenceData ? (
-                      <SVGIconI {...{ class: "icon-xs" }}>
-                        {htmlElementReferenceData["Icon"]}
-                      </SVGIconI>
-                    ) : props.item.data.name === "!--...--" ||
-                      props.item.data.name === "comment" ? (
-                      <div className="icon-xs">
-                        <SVGIconI {...{ class: "icon-xs" }}>bubble</SVGIconI>
-                      </div>
-                    ) : (
-                      <div className="icon-xs">
-                        <SVGIconI {...{ class: "icon-xs" }}>component</SVGIconI>
-                      </div>
-                    )}
+                      props.context.isSelected &&
+                        "background-tertiary outline-none",
+                      !props.context.isSelected &&
+                        props.context.isFocused &&
+                        "outline",
 
-                    {htmlElementReferenceData ? (
-                      <span
-                        className="text-s justify-stretch"
-                        style={spanStyles}
-                      >
-                        {htmlElementReferenceData["Name"]}
-                      </span>
-                    ) : props.item.data.name === "!--...--" ||
-                      props.item.data.name === "comment" ? (
-                      <span
-                        className="text-s justify-stretch"
-                        style={spanStyles}
-                      >
-                        comment
-                      </span>
-                    ) : (
-                      props.title
+                      props.context.isDraggingOver && "outline",
+                      props.context.isDraggingOverParent && "",
                     )}
+                    style={{
+                      flexWrap: "nowrap",
+                      paddingLeft: `${props.depth * 18}px`,
+                    }}
+                    {...props.context.itemContainerWithoutChildrenProps}
+                    {...props.context.interactiveElementProps}
+                    ref={treeViewRef}
+                    onClick={onClick}
+                    onDoubleClick={onDoubleClick}
+                    onMouseEnter={onMouseEnter}
+                    onMouseLeave={onMouseLeave}
+                    onFocus={() => {}}
+                    onDragStart={onDragStart}
+                    onDragEnter={onDragEnter}
+                  >
+                    <div className="gap-s padding-xs" style={{ width: "100%" }}>
+                      {props.arrow}
+
+                      {htmlElementReferenceData ? (
+                        <SVGIconI {...{ class: "icon-xs" }}>
+                          {htmlElementReferenceData["Icon"]}
+                        </SVGIconI>
+                      ) : props.item.data.name === "!--...--" ||
+                        props.item.data.name === "comment" ? (
+                        <div className="icon-xs">
+                          <SVGIconI {...{ class: "icon-xs" }}>bubble</SVGIconI>
+                        </div>
+                      ) : (
+                        <div className="icon-xs">
+                          <SVGIconI {...{ class: "icon-xs" }}>
+                            component
+                          </SVGIconI>
+                        </div>
+                      )}
+
+                      {htmlElementReferenceData ? (
+                        <span
+                          className="text-s justify-stretch"
+                          style={spanStyles}
+                        >
+                          {htmlElementReferenceData["Name"]}
+                        </span>
+                      ) : props.item.data.name === "!--...--" ||
+                        props.item.data.name === "comment" ? (
+                        <span
+                          className="text-s justify-stretch"
+                          style={spanStyles}
+                        >
+                          comment
+                        </span>
+                      ) : (
+                        props.title
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                {props.context.isExpanded ? <div>{props.children}</div> : null}
-              </li>
+                  {props.context.isExpanded ? (
+                    <div>{props.children}</div>
+                  ) : null}
+                </li>
+              </>
             );
           },
 
