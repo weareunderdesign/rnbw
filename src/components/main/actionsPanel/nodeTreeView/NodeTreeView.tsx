@@ -374,7 +374,7 @@ const NodeTreeView = () => {
                   AutoExpandDelay,
                 );
               }
-              // e.dataTransfer.effectAllowed = 'move'
+              e.dataTransfer.effectAllowed = "move";
             };
 
             return (

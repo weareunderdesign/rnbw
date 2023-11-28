@@ -74,11 +74,26 @@ const remove = ({
   const sortedUids = sortUidsByMaxEndIndex(uids, nodeTree);
   sortedUids.forEach((uid) => {
     const node = nodeTree[uid];
+
     if (node) {
       const { startCol, startLine, endCol, endLine } =
         node.data.sourceCodeLocation;
+
+      const beforeNode = nodeTree[+uid - 1];
+      const isTabs =
+        beforeNode.data.nodeName === "#text" &&
+        /^[\s\n]*$/.test(beforeNode.data.textContent);
+
+      const { startCol: startColTab, startLine: startLineTab } =
+        beforeNode.data.sourceCodeLocation;
+
       const edit = {
-        range: new Range(startLine, startCol, endLine, endCol),
+        range: new Range(
+          isTabs ? startLineTab : startLine,
+          isTabs ? startColTab : startCol,
+          endLine,
+          endCol,
+        ),
         text: "",
       };
       codeViewInstanceModel.applyEdits([edit]);
@@ -199,6 +214,10 @@ const move = ({
       remove({ nodeTree, uids: [uid], codeViewInstanceModel });
     }
   });
+  // const content = html_beautify(codeViewInstanceModel.getValue(), {
+  //   indent_size: 2,
+  // });
+  // codeViewInstanceModel.setValue(content);
 };
 
 const rename = ({
