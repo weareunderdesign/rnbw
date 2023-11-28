@@ -47,7 +47,13 @@ export const useProcessorValidNodeTree = () => {
         focusNodeTreeNode(newFocusedNodeUid ? newFocusedNodeUid : nFocusedItem),
       );
       dispatch(expandNodeTreeNodes([..._expandedItems]));
-      dispatch(selectNodeTreeNodes([..._selectedItems, newFocusedNodeUid]));
+      dispatch(
+        selectNodeTreeNodes(
+          newFocusedNodeUid
+            ? [..._selectedItems, newFocusedNodeUid]
+            : _selectedItems,
+        ),
+      );
     }
 
     removeRunningActions(["processor-validNodeTree"]);

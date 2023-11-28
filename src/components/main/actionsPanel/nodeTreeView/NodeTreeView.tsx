@@ -363,14 +363,14 @@ const NodeTreeView = () => {
 
             const onDragStart = (e: React.DragEvent) => {
               console.log(e.target, "DragStart");
-              // const img = new Image();
+              const img = new Image();
 
               e.dataTransfer.effectAllowed = "move";
-              // e.dataTransfer.setDragImage(
-              //   img,
-              //   window.outerWidth,
-              //   window.outerHeight,
-              // );
+              e.dataTransfer.setDragImage(
+                img,
+                window.outerWidth,
+                window.outerHeight,
+              );
 
               props.context.startDragging();
               console.log("DragStart 2");
