@@ -12,16 +12,21 @@ import {
 import { MainContext } from "@_redux/main";
 import { setDoingFileAction, setFileTreeNode } from "@_redux/main/fileTree";
 import {
+  expandNodeTreeNodes,
   focusNodeTreeNode,
   selectNodeTreeNodes,
   setNodeTree,
+  setValidNodeTree,
 } from "@_redux/main/nodeTree";
 import { setIframeSrc, setNeedToReloadIframe } from "@_redux/main/stageView";
 import { useAppState } from "@_redux/useAppState";
 
-import { getPreViewPath } from "../helpers";
+import { getPreViewPath } from "./helpers";
 import { setDidRedo, setDidUndo } from "@_redux/main/processor";
 import morphdom from "morphdom";
+import { TNodeTreeData } from "@_node/types";
+import { getSubNodeUidsByBfs } from "@_node/helpers";
+import { RootNodeUid } from "@_constants/main";
 
 export const useProcessorUpdate = () => {
   const dispatch = useDispatch();
@@ -49,6 +54,8 @@ export const useProcessorUpdate = () => {
 
   // node tree event
   useEffect(() => {
+    console.log("useProcessorUpdate", { selectedNodeUids });
+
     if (didRedo || didUndo) {
       dispatch(selectNodeTreeNodes(selectedNodeUids));
       dispatch(
@@ -63,6 +70,8 @@ export const useProcessorUpdate = () => {
   }, [selectedNodeUids]);
 
   useEffect(() => {
+    console.log("useProcessorUpdate", { selectedNodeUids, currentFileContent });
+
     // validate
     const monacoEditor = monacoEditorRef.current;
     if (!fileTree[currentFileUid] || !monacoEditor) return;
@@ -84,8 +93,37 @@ export const useProcessorUpdate = () => {
     // code-view is already synced
     // ---
 
-    // sync node-tree and file-tree
-    dispatch(setNodeTree(nodeTree));
+    // sync node-tree
+    (() => {
+      dispatch(setNodeTree(nodeTree));
+
+      // build valid-node-tree
+      const _nodeTree = structuredClone(nodeTree);
+      const _validNodeTree: TNodeTreeData = {};
+
+      const uids = getSubNodeUidsByBfs(RootNodeUid, _nodeTree);
+      uids.reverse();
+      uids.map((uid) => {
+        const node = _nodeTree[uid];
+        if (!node.data.valid) return;
+
+        node.children = node.children.filter(
+          (c_uid) => _nodeTree[c_uid].data.valid,
+        );
+        node.isEntity = node.children.length === 0;
+        _validNodeTree[uid] = node;
+      });
+
+      dispatch(setValidNodeTree(_validNodeTree));
+
+      // when open a new file, expand items in node tree
+      if (prevRenderableFileUid !== currentFileUid) {
+        const uids = Object.keys(_validNodeTree);
+        dispatch(expandNodeTreeNodes(true ? uids.slice(0, 50) : uids));
+      }
+    })();
+
+    // sync file-tree
     dispatch(setFileTreeNode(file));
     (async () => {
       // update idb

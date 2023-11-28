@@ -9,7 +9,7 @@ import { setFileTree } from "@_redux/main/fileTree";
 import { setNeedToReloadIframe } from "@_redux/main/stageView";
 import { useAppState } from "@_redux/useAppState";
 
-import { saveFileContent } from "../helpers";
+import { saveFileContent } from "./helpers";
 
 export const useSaveCommand = () => {
   const dispatch = useDispatch();

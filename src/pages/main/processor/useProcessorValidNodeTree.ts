@@ -37,6 +37,8 @@ export const useProcessorValidNodeTree = () => {
       const uids = Object.keys(validNodeTree);
       dispatch(expandNodeTreeNodes(uids.slice(0, 50)));
     } else {
+      console.log("useProcessorValidNodeTree - node select status changed");
+
       // when have any changes
       const _expandedItems = nExpandedItems.filter(
         (uid) => validNodeTree[uid] && validNodeTree[uid].isEntity === false,

@@ -15,7 +15,6 @@ import { useDispatch } from "react-redux";
 
 import { SVGIcon } from "@_components/common";
 import { ActionsPanel, CodeView, StageView } from "@_components/main";
-import Processor from "@_components/main/processor";
 import { LogAllow } from "@_constants/global";
 import {
   AddActionPrefix,
@@ -84,7 +83,6 @@ import {
   TCmdkKeyMap,
   TCmdkReference,
   TCmdkReferenceData,
-  TCodeChange,
   TFilesReference,
   TFilesReferenceData,
   THtmlElementsReference,
@@ -95,7 +93,7 @@ import {
 
 import { getCommandKey, isChromeOrEdge } from "../../services/global";
 import { addDefaultCmdkActions, clearProjectSession } from "./helper";
-import { StageViewSyncConfigs } from "@_redux/main/stageView";
+import { useProcessor } from "./processor";
 
 export default function MainPage() {
   // ***************************************** Reducer Begin *****************************************
@@ -1394,6 +1392,8 @@ export default function MainPage() {
     navigatorDropdownType !== null && dispatch(setNavigatorDropdownType(null));
   }, [navigatorDropdownType]);
 
+  useProcessor();
+
   return (
     <>
       <MainContext.Provider
@@ -1428,8 +1428,6 @@ export default function MainPage() {
           setMonacoEditorRef,
         }}
       >
-        <Processor />
-
         <div
           id="MainPage"
           className={"view background-primary"}
