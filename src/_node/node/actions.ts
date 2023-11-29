@@ -408,8 +408,8 @@ export const doNodeActions = async (
         break;
     }
 
-    // const content = html_beautify(codeViewInstanceModel.getValue());
-    // codeViewInstanceModel.setValue(content);
+    const content = html_beautify(codeViewInstanceModel.getValue());
+    codeViewInstanceModel.setValue(content);
 
     cb && cb();
   } catch (err) {
