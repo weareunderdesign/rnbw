@@ -41,7 +41,6 @@ export default function useEditor() {
     formatOnType: true,
     tabCompletion: "on",
   };
-  const codeContentRef = useRef<string>("");
 
   const [codeContent, setCodeContent] = useState<string>("");
 
@@ -102,9 +101,9 @@ export default function useEditor() {
   const handleEditorDidMount = (editor: editor.IStandaloneCodeEditor) => {
     monacoRef.current = editor;
     setMonacoEditorRef(editor);
-    //disable undo/redo
-    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyZ, function () {});
-    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyY, function () {});
+    //override undo/redo
+    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyZ, () => {});
+    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyY, () => {});
 
     editor.onDidChangeCursorPosition((event) => {
       if (event.source === "mouse") {
