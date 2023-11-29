@@ -7,6 +7,7 @@ import {
 } from "..";
 import { html_beautify } from "js-beautify";
 import {
+  isNestingProhibited,
   sortUidsByMaxEndIndex,
   sortUidsByMinStartIndex,
 } from "@_components/main/actionsPanel/nodeTreeView/helpers";
@@ -177,11 +178,23 @@ const move = ({
   position: number;
   codeViewInstanceModel: editor.ITextModel;
 }) => {
+  let firstNesting = false;
+
   const targetNode = nodeTree[targetUid];
   const childCount = targetNode.children.length;
   const focusedItem = isBetween
     ? targetNode.children[Math.min(childCount - 1, position)]
+    : childCount === 0
+    ? targetNode.uid
     : targetNode.children[childCount - 1];
+
+  if (childCount === 0) {
+    firstNesting = true;
+    const targetNodeTagName = targetNode.data.nodeName;
+    if (isNestingProhibited(targetNodeTagName)) {
+      firstNesting = false;
+    }
+  }
   const sortedUids = sortUidsByMaxEndIndex([...uids, focusedItem], nodeTree);
 
   const code = copyCode({ nodeTree, uids, codeViewInstanceModel });
@@ -196,15 +209,12 @@ const move = ({
         addToBefore: isBetween && position === 0,
         codeViewInstanceModel,
         code,
+        firstNesting,
       });
     } else {
       remove({ nodeTree, uids: [uid], codeViewInstanceModel });
     }
   });
-  // const content = html_beautify(codeViewInstanceModel.getValue(), {
-  //   indent_size: 2,
-  // });
-  // codeViewInstanceModel.setValue(content);
 };
 
 const rename = ({

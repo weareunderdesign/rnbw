@@ -30,22 +30,26 @@ export const pasteCode = ({
   addToBefore = false,
   codeViewInstanceModel,
   code,
+  firstNesting = false,
 }: {
   nodeTree: TNodeTreeData;
   focusedItem: TNodeUid;
   addToBefore?: boolean;
   codeViewInstanceModel: editor.ITextModel;
   code: string;
+  firstNesting?: boolean;
 }) => {
   const focusedNode = nodeTree[focusedItem];
   const { startLine, startCol, endLine, endCol } =
     focusedNode.data.sourceCodeLocation;
+  const tagLength = focusedNode.displayName.length + 3;
+
   const edit = {
     range: new Range(
       addToBefore ? startLine : endLine,
-      addToBefore ? startCol : endCol,
+      addToBefore ? startCol : firstNesting ? endCol - tagLength : endCol,
       addToBefore ? startLine : endLine,
-      addToBefore ? startCol : endCol,
+      addToBefore ? startCol : firstNesting ? endCol - tagLength : endCol,
     ),
     text: code,
   };

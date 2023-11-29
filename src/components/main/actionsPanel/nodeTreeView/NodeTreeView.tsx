@@ -362,7 +362,6 @@ const NodeTreeView = () => {
             }, []);
 
             const onDragStart = (e: React.DragEvent) => {
-              console.log(e.target, "DragStart");
               const img = new Image();
 
               e.dataTransfer.effectAllowed = "move";
@@ -373,8 +372,6 @@ const NodeTreeView = () => {
               );
 
               props.context.startDragging();
-              console.log("DragStart 2");
-
               isDragging.current = true;
             };
             const onDragEnter = (e: React.DragEvent) => {
@@ -384,7 +381,7 @@ const NodeTreeView = () => {
                   AutoExpandDelay,
                 );
               }
-              e.dataTransfer.effectAllowed = "move";
+              // e.dataTransfer.effectAllowed = "move";
             };
 
             return (
