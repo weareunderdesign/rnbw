@@ -46,6 +46,8 @@ export function useNodeViewState(focusItemValue: TNodeUid | null) {
         return;
       }
 
+      console.log("useNodeViewState - focus", uid);
+
       dispatch(focusNodeTreeNode(uid));
       focusItemValue = uid;
 
@@ -57,7 +59,6 @@ export function useNodeViewState(focusItemValue: TNodeUid | null) {
   const cb_selectNode = useCallback(
     (uids: TNodeUid[]) => {
       addRunningActions(["nodeTreeView-select"]);
-
       // validate
       const _uids = getValidNodeUids(validNodeTree, uids);
       if (_uids.length === selectedItems.length) {
@@ -73,6 +74,8 @@ export function useNodeViewState(focusItemValue: TNodeUid | null) {
           return;
         }
       }
+
+      console.log("useNodeViewState - select", _uids);
 
       dispatch(selectNodeTreeNodes(_uids));
       dispatch(setSelectedNodeUids(_uids));

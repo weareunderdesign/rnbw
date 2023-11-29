@@ -12,22 +12,24 @@ import {
 import { MainContext } from "@_redux/main";
 import { setDoingFileAction, setFileTreeNode } from "@_redux/main/fileTree";
 import {
+  expandNodeTreeNodes,
   focusNodeTreeNode,
   selectNodeTreeNodes,
   setNodeTree,
+  setValidNodeTree,
 } from "@_redux/main/nodeTree";
 import { setIframeSrc, setNeedToReloadIframe } from "@_redux/main/stageView";
 import { useAppState } from "@_redux/useAppState";
 
 import { getPreViewPath } from "../helpers";
-import { setDidRedo, setDidUndo } from "@_redux/main/processor";
 import morphdom from "morphdom";
+import { TNodeTreeData } from "@_node/types";
+import { getSubNodeUidsByBfs } from "@_node/helpers";
+import { RootNodeUid } from "@_constants/main";
 
-export const useProcessorUpdate = () => {
+export const useNodeTreeEvent = () => {
   const dispatch = useDispatch();
   const {
-    fileAction,
-
     fileTree,
     currentFileUid,
     prevRenderableFileUid,
@@ -35,37 +37,37 @@ export const useProcessorUpdate = () => {
     currentFileContent,
     selectedNodeUids,
 
+    nExpandedItems,
+
     syncConfigs,
-
-    didUndo,
-    didRedo,
   } = useAppState();
-
   const { addRunningActions, removeRunningActions, monacoEditorRef } =
     useContext(MainContext);
 
-  // file tree event
-  useEffect(() => {}, [fileAction]);
-
-  // node tree event
   useEffect(() => {
-    if (didRedo || didUndo) {
-      dispatch(selectNodeTreeNodes(selectedNodeUids));
-      dispatch(
-        focusNodeTreeNode(
-          selectedNodeUids.length > 0
-            ? selectedNodeUids[selectedNodeUids.length - 1]
-            : "",
-        ),
-      );
-    } else {
-    }
+    console.log("useProcessorUpdate - selectedNodeUids", {
+      selectedNodeUids,
+      currentFileContent,
+    });
+
+    dispatch(selectNodeTreeNodes(selectedNodeUids));
+    dispatch(
+      focusNodeTreeNode(
+        selectedNodeUids.length > 0
+          ? selectedNodeUids[selectedNodeUids.length - 1]
+          : "",
+      ),
+    );
   }, [selectedNodeUids]);
 
   useEffect(() => {
+    console.log("useProcessorUpdate - currentFileContent", {
+      selectedNodeUids,
+      currentFileContent,
+    });
+
     // validate
-    const monacoEditor = monacoEditorRef.current;
-    if (!fileTree[currentFileUid] || !monacoEditor) return;
+    if (!fileTree[currentFileUid]) return;
 
     addRunningActions(["processor-update"]);
 
@@ -84,8 +86,44 @@ export const useProcessorUpdate = () => {
     // code-view is already synced
     // ---
 
-    // sync node-tree and file-tree
-    dispatch(setNodeTree(nodeTree));
+    // sync node-tree
+    (() => {
+      dispatch(setNodeTree(nodeTree));
+
+      // build valid-node-tree
+      const _nodeTree = structuredClone(nodeTree);
+      const _validNodeTree: TNodeTreeData = {};
+      const uids = getSubNodeUidsByBfs(RootNodeUid, _nodeTree);
+      uids.reverse();
+      uids.map((uid) => {
+        const node = _nodeTree[uid];
+        if (!node.data.valid) return;
+
+        node.children = node.children.filter(
+          (c_uid) => _nodeTree[c_uid].data.valid,
+        );
+        node.isEntity = node.children.length === 0;
+        _validNodeTree[uid] = node;
+      });
+      dispatch(setValidNodeTree(_validNodeTree));
+
+      // update expand/select status
+      // ******************************
+      // WIP: need to decide
+      // ******************************
+      const _expandedItems = nExpandedItems.filter(
+        (uid) => _validNodeTree[uid] && _validNodeTree[uid].isEntity === false,
+      );
+      dispatch(expandNodeTreeNodes([..._expandedItems]));
+
+      // when open a new file, expand items in node tree
+      if (prevRenderableFileUid !== currentFileUid) {
+        const uids = Object.keys(_validNodeTree);
+        dispatch(expandNodeTreeNodes(true ? uids.slice(0, 50) : uids));
+      }
+    })();
+
+    // sync file-tree
     dispatch(setFileTreeNode(file));
     (async () => {
       // update idb
@@ -191,10 +229,4 @@ export const useProcessorUpdate = () => {
 
     removeRunningActions(["processor-update"]);
   }, [currentFileContent]);
-
-  // hms
-  useEffect(() => {
-    didUndo && dispatch(setDidUndo(false));
-    didRedo && dispatch(setDidRedo(false));
-  }, [didUndo, didRedo]);
 };

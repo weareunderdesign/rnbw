@@ -14,7 +14,6 @@ import { saveFileContent } from "../helpers";
 export const useSaveCommand = () => {
   const dispatch = useDispatch();
   const { project, fileTree, currentFileUid, currentCommand } = useAppState();
-
   const { addRunningActions, removeRunningActions, fileHandlers } =
     useContext(MainContext);
 
