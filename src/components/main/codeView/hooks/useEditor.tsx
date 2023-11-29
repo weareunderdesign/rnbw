@@ -1,6 +1,6 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 
-import { editor, IPosition } from "monaco-editor";
+import { editor, IPosition, KeyCode, KeyMod } from "monaco-editor";
 import { useDispatch } from "react-redux";
 
 import { DefaultTabSize, RootNodeUid } from "@_constants/main";
@@ -102,6 +102,9 @@ export default function useEditor() {
   const handleEditorDidMount = (editor: editor.IStandaloneCodeEditor) => {
     monacoRef.current = editor;
     setMonacoEditorRef(editor);
+    //disable undo/redo
+    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyZ, function () {});
+    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyY, function () {});
 
     editor.onDidChangeCursorPosition((event) => {
       if (event.source === "mouse") {
