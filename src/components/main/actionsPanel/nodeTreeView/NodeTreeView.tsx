@@ -138,7 +138,7 @@ const NodeTreeView = () => {
     }
 
     return data;
-  }, [validNodeTree]);
+  }, [validNodeTree, expandedItems]);
 
   // node view state handlers
   const { cb_expandNode } = useNodeViewState(focusedItemRef.current);
