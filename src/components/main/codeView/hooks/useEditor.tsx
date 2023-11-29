@@ -58,6 +58,35 @@ export default function useEditor() {
   const firstSelection = useRef<CodeSelection | null>(null);
   const [selection, setSelection] = useState<CodeSelection | null>(null);
   const isFirst = useRef<boolean>(true);
+  const [editUndoToggle, setEditUndoToggle] = useState({
+    action: "none",
+    toggle: false,
+  });
+
+  const handleEditorDidMount = (editor: editor.IStandaloneCodeEditor) => {
+    monacoRef.current = editor;
+    setMonacoEditorRef(editor);
+    //override undo/redo (it is done using state variables instead of direct calling as inside the command the closure was not updating for function even after using useCallback with dependencies)
+    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyZ, () => {
+      setEditUndoToggle((prev) => ({
+        action: "undo",
+        toggle: !prev.toggle,
+      }));
+    });
+    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyY, () => {
+      setEditUndoToggle((prev) => ({
+        action: "redo",
+        toggle: !prev.toggle,
+      }));
+    });
+
+    editor.onDidChangeCursorPosition((event) => {
+      if (event.source === "mouse") {
+        updateSelection();
+      }
+    });
+    decorationCollectionRef.current = editor.createDecorationsCollection();
+  };
 
   const updateSelection = useCallback(() => {
     const monacoEditor = getCurrentEditorInstance();
@@ -98,25 +127,6 @@ export default function useEditor() {
       setSelection(null);
     }
   }, [selection, parseFileFlag]);
-
-  const handleEditorDidMount = (editor: editor.IStandaloneCodeEditor) => {
-    monacoRef.current = editor;
-    setMonacoEditorRef(editor);
-    //override undo/redo
-    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyZ, () => {
-      onUndo();
-    });
-    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyY, () => {
-      onRedo();
-    });
-
-    editor.onDidChangeCursorPosition((event) => {
-      if (event.source === "mouse") {
-        updateSelection();
-      }
-    });
-    decorationCollectionRef.current = editor.createDecorationsCollection();
-  };
 
   const updateLanguage = (extension: string) => {
     const language = getLanguageFromExtension(extension);
@@ -185,6 +195,13 @@ export default function useEditor() {
   useEffect(() => {
     dispatch(setCodeViewTabSize(DefaultTabSize));
   }, []);
+  useEffect(() => {
+    if (editUndoToggle.action === "undo") {
+      onUndo();
+    } else if (editUndoToggle.action === "redo") {
+      onRedo();
+    }
+  }, [editUndoToggle]);
 
   return {
     getCurrentEditorInstance,
