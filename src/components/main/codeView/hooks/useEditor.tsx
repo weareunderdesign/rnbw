@@ -19,7 +19,8 @@ function getLanguageFromExtension(extension: string) {
 
 export default function useEditor() {
   const dispatch = useDispatch();
-  const { setMonacoEditorRef, parseFileFlag } = useContext(MainContext);
+  const { setMonacoEditorRef, parseFileFlag, onRedo, onUndo } =
+    useContext(MainContext);
 
   const [language, setLanguage] = useState("html");
   const [focusedNode, setFocusedNode] = useState<TNode>();
@@ -102,8 +103,12 @@ export default function useEditor() {
     monacoRef.current = editor;
     setMonacoEditorRef(editor);
     //override undo/redo
-    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyZ, () => {});
-    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyY, () => {});
+    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyZ, () => {
+      onUndo();
+    });
+    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyY, () => {
+      onRedo();
+    });
 
     editor.onDidChangeCursorPosition((event) => {
       if (event.source === "mouse") {
