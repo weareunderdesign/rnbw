@@ -42,12 +42,15 @@ export const useFavicon = (
     }
 
     if (currentFileUid !== "" && isFirst.current === true && !focusedItem) {
-      isFirst.current = selectFirstNode(
+      const firstNode = selectFirstNode(
         validNodeTree,
         selectNodeTreeNodes,
         expandNodeTreeNodes,
         dispatch,
       );
+      if (firstNode) {
+        isFirst.current = firstNode;
+      }
     }
   }, [validNodeTree]);
 };

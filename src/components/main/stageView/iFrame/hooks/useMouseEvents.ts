@@ -64,16 +64,6 @@ export const useMouseEvents = ({
     "a",
   ];
 
-  const { onDblClick } = useTextEditing({
-    contentEditableUidRef,
-    contentRef,
-    isEditing,
-    mostRecentSelectedNode,
-    focusedItemRef,
-    dblClickTimestamp,
-    externalDblclick,
-  });
-
   const dispatch = useDispatch();
   const {
     prevRenderableFileUid,
@@ -117,24 +107,6 @@ export const useMouseEvents = ({
       isLinkTag,
       linkElement,
     };
-  }
-
-  function handleLinkTag(ele: HTMLElement) {
-    const { isLinkTag, linkElement } = isOrContainLinkElement(ele);
-    if (isLinkTag && linkElement) {
-      const uid: TNodeUid | null = linkElement.getAttribute(StageNodeIdAttr);
-      if (uid !== null) {
-        if (uid === linkTagUid.current) {
-          const href = linkElement.getAttribute("href");
-          href && dispatch(setLinkToOpen(href));
-          linkTagUid.current = "";
-        } else {
-          linkTagUid.current = uid;
-        }
-      }
-    } else {
-      linkTagUid.current = "";
-    }
   }
 
   function findEleOrItsNearestParentWithUid(ele: HTMLElement) {
@@ -214,7 +186,7 @@ export const useMouseEvents = ({
   );
 
   const onMouseLeave = (e: MouseEvent) => {
-    setHoveredNodeUid("");
+    dispatch(setHoveredNodeUid(""));
   };
 
   const onClick = useCallback(

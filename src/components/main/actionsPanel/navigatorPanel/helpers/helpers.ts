@@ -1,8 +1,9 @@
+import { RootNodeUid } from "@_constants/main";
 import { TFileNode, TFileNodeData } from "@_node/file";
 import { THtmlNodeData } from "@_node/node";
-import { TNode, TNodeTreeData } from "@_node/types";
+import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import { TProject, TWorkspace } from "@_redux/main/fileTree";
-import { focusNodeTreeNode } from "@_redux/main/nodeTree";
+import { focusNodeTreeNode, setSelectedNodeUids } from "@_redux/main/nodeTree";
 import {
   ActionCreatorWithPayload,
   AnyAction,
@@ -61,9 +62,22 @@ export const selectFirstNode = (
       }
     }
     if (firstNodeId !== "0") {
+      const _expandedItems: TNodeUid[] = [];
+      let node = validNodeTree[firstNodeId];
+      if (!node) {
+        return;
+      }
+      while (node.uid !== RootNodeUid) {
+        _expandedItems.push(node.uid);
+        node = validNodeTree[node.parentUid as TNodeUid];
+      }
+      _expandedItems.shift();
+      dispatch(expandNodeTreeNodes(_expandedItems));
+
       dispatch(focusNodeTreeNode(firstNodeId));
       dispatch(selectNodeTreeNodes([firstNodeId]));
-      dispatch(expandNodeTreeNodes(Object.keys(validNodeTree)));
+      dispatch(setSelectedNodeUids([firstNodeId]));
+
       return false;
     }
   }
