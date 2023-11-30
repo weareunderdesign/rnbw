@@ -6,7 +6,6 @@ import { TFileNodeData } from "@_node/file";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { getValidNodeUids } from "@_node/helpers";
 import { TNode, TNodeUid } from "@_node/types";
-import { AppState } from "@_redux/_root";
 import { MainContext } from "@_redux/main";
 import { selectFileTreeNodes, setCurrentFileUid } from "@_redux/main/fileTree";
 import {
@@ -22,7 +21,6 @@ import {
   setActivePanel,
   setNavigatorDropdownType,
 } from "@_redux/main/processor";
-import { setLinkToOpen } from "@_redux/main/stageView";
 import { useAppState } from "@_redux/useAppState";
 
 import { useSetSelectItem, useTextEditing } from "./";
@@ -42,14 +40,11 @@ export interface IUseMouseEventsProps {
 
 export const useMouseEvents = ({
   externalDblclick,
-  linkTagUid,
   selectedItemsRef,
   mostRecentSelectedNode,
   focusedItemRef,
   contentRef,
   contentEditableUidRef,
-  isEditing,
-  dblClickTimestamp, // isDblClick,
 }: IUseMouseEventsProps) => {
   const firstClickEditableTags = [
     "p",
@@ -85,29 +80,6 @@ export const useMouseEvents = ({
     focusedItemRef,
     contentRef,
   });
-
-  // MouseEvents Helpers
-  function isOrContainLinkElement(ele: HTMLElement): {
-    isLinkTag: boolean;
-    linkElement: HTMLElement;
-  } {
-    let isLinkTag = false;
-    let linkElement = ele;
-    while (true) {
-      if (linkElement.tagName === "A") {
-        isLinkTag = true;
-        break;
-      }
-      const parentEle = linkElement.parentElement;
-      if (!parentEle) break;
-
-      linkElement = parentEle;
-    }
-    return {
-      isLinkTag,
-      linkElement,
-    };
-  }
 
   function findEleOrItsNearestParentWithUid(ele: HTMLElement) {
     let newFocusedElement: HTMLElement = ele;
@@ -154,10 +126,6 @@ export const useMouseEvents = ({
     }
 
     return multiple;
-  }
-
-  function isEditableElement(ele: HTMLElement) {
-    return firstClickEditableTags.includes(ele.tagName.toLowerCase());
   }
 
   // MouseEvents Handlers
@@ -223,12 +191,10 @@ export const useMouseEvents = ({
             dispatch(focusNodeTreeNode(_uid));
             dispatch(selectNodeTreeNodes([_uid]));
             dispatch(setSelectedNodeUids([_uid]));
-            // dispatch(expandNodeTreeNodes([_uid]));
           }
         }, 100);
       } else {
         externalDblclick.current = true;
-        // handleLinkTag(ele);
 
         let _uid: TNodeUid | null = ele.getAttribute(StageNodeIdAttr);
         let isWC = false;
@@ -242,26 +208,8 @@ export const useMouseEvents = ({
         }
 
         if (_uid) {
-          dispatch(focusNodeTreeNode(_uid));
-          dispatch(selectNodeTreeNodes([_uid]));
-          dispatch(setSelectedNodeUids([_uid]));
+          handleSelectofSingleOrMultipleElements(e, _uid);
         }
-        const areMultiple = handleSelectofSingleOrMultipleElements(e, _uid);
-
-        const isEditable = isEditableElement(ele);
-
-        const canEditOnSingleClickConfig = {
-          isSingle: !areMultiple,
-          isEditable,
-          isFocused: _uid === focusedItem,
-          isNotAWC: !isWC,
-          isNotAlreadyEditingEle: contentEditableUidRef.current !== _uid,
-        };
-
-        //check if all the keys have true value
-        let canEditOnSingleClick = Object.values(
-          canEditOnSingleClickConfig,
-        ).every((val) => val === true);
       }
 
       dispatch(setActivePanel("stage"));
