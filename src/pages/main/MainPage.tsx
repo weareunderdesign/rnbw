@@ -1426,6 +1426,10 @@ export default function MainPage() {
           closeAllPanel,
           monacoEditorRef,
           setMonacoEditorRef,
+
+          //undo/Redo
+          onUndo,
+          onRedo,
         }}
       >
         <div

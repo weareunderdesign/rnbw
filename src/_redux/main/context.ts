@@ -37,4 +37,8 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   // non-parse file
   parseFileFlag: true,
   setParseFile: () => {},
+
+  //undo/redo
+  onUndo: () => {},
+  onRedo: () => {},
 });
