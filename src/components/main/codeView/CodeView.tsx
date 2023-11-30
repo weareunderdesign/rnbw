@@ -45,7 +45,6 @@ export default function CodeView(props: CodeViewProps) {
     validNodeTree,
   } = useAppState();
   const {
-    parseFileFlag,
     isContentProgrammaticallyChanged,
     setIsContentProgrammaticallyChanged,
     monacoEditorRef,
@@ -135,9 +134,6 @@ export default function CodeView(props: CodeViewProps) {
   }, [validNodeTree, nFocusedItem, activePanel]);
 
   useEffect(() => {
-    if (!parseFileFlag) {
-      return;
-    }
     const monacoEditor = getCurrentEditorInstance();
     if (!monacoEditor) return;
 
@@ -166,10 +162,9 @@ export default function CodeView(props: CodeViewProps) {
       revealed.current = true;
     }
     focusedItemRef.current = nFocusedItem;
-  }, [nFocusedItem, parseFileFlag]);
+  }, [nFocusedItem]);
 
   useEffect(() => {
-    if (!parseFileFlag) return;
     if (!selection) return;
 
     const _file = fileTree[currentFileUid];
@@ -194,7 +189,7 @@ export default function CodeView(props: CodeViewProps) {
         setFocusedNode(newFocusedNode);
       }
     }
-  }, [selection, parseFileFlag]);
+  }, [selection]);
 
   useEffect(() => {
     if (focusedNode) {
@@ -300,7 +295,6 @@ export default function CodeView(props: CodeViewProps) {
     language,
     theme,
     handleEditorDidMount,
-    parseFileFlag,
     currentFileContent,
     debouncedOnChange,
     longDebouncedOnChange,

@@ -19,7 +19,7 @@ function getLanguageFromExtension(extension: string) {
 
 export default function useEditor() {
   const dispatch = useDispatch();
-  const { setMonacoEditorRef, parseFileFlag, onRedo, onUndo } =
+  const { setMonacoEditorRef, onRedo, onUndo } =
     useContext(MainContext);
 
   const [language, setLanguage] = useState("html");
@@ -90,7 +90,6 @@ export default function useEditor() {
 
   const updateSelection = useCallback(() => {
     const monacoEditor = getCurrentEditorInstance();
-    if (!parseFileFlag) return;
     const _selection = monacoEditor?.getSelection();
 
     if (_selection) {
@@ -126,7 +125,7 @@ export default function useEditor() {
     } else {
       setSelection(null);
     }
-  }, [selection, parseFileFlag]);
+  }, [selection]);
 
   const updateLanguage = (extension: string) => {
     const language = getLanguageFromExtension(extension);

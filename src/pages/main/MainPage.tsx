@@ -242,9 +242,6 @@ export default function MainPage() {
     isContentProgrammaticallyChanged.current = value;
   };
 
-  // TODO Begin
-  const [parseFileFlag, setParseFile] = useState<boolean>(true);
-
   const guideRef = useRef<HTMLAnchorElement>(null);
   // TODO End
 
@@ -1417,9 +1414,6 @@ export default function MainPage() {
           // load project
           importProject,
 
-          // non html editable
-          parseFileFlag,
-          setParseFile,
           // close all panel
           closeAllPanel,
           monacoEditorRef,

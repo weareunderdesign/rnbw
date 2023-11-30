@@ -35,12 +35,7 @@ export const IFrame = () => {
     needToReloadIframe,
     iframeSrc,
   } = useAppState();
-  const {
-    setCodeViewOffsetTop,
-    // toasts
-    parseFileFlag,
-    setParseFile,
-  } = useContext(MainContext);
+  const { setCodeViewOffsetTop } = useContext(MainContext);
   // -------------------------------------------------------------- sync --------------------------------------------------------------
   const [contentRef, setContentRef] = useState<HTMLIFrameElement | null>(null);
   const isEditing = useRef<boolean>(false);
@@ -435,7 +430,7 @@ export const IFrame = () => {
               position: "absolute",
               width: "100%",
               height: "100vh",
-              ...(!parseFileFlag && { overflow: "hidden" }),
+              ...(true && { overflow: "hidden" }),
             }}
           />
         )}
@@ -444,8 +439,6 @@ export const IFrame = () => {
   }, [
     iframeSrc,
     needToReloadIframe,
-    parseFileFlag,
     prevRenderableFileUid,
-    setParseFile,
   ]);
 };

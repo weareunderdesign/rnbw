@@ -6,15 +6,11 @@ import { TFileNodeData } from "@_node/file";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { getValidNodeUids } from "@_node/helpers";
 import { TNode, TNodeUid } from "@_node/types";
-import { AppState } from "@_redux/_root";
 import { MainContext } from "@_redux/main";
 import { selectFileTreeNodes, setCurrentFileUid } from "@_redux/main/fileTree";
+import { setHoveredNodeUid } from "@_redux/main/nodeTree";
 import {
-  focusNodeTreeNode,
-  selectNodeTreeNodes,
-  setHoveredNodeUid,
-} from "@_redux/main/nodeTree";
-import {
+  NodeTree_Event_ClearActionType,
   setCurrentFileContent,
   setSelectedNodeUids,
 } from "@_redux/main/nodeTree/event";
@@ -22,10 +18,9 @@ import {
   setActivePanel,
   setNavigatorDropdownType,
 } from "@_redux/main/processor";
-import { setLinkToOpen } from "@_redux/main/stageView";
 import { useAppState } from "@_redux/useAppState";
 
-import { useSetSelectItem, useTextEditing } from "./";
+import { useSetSelectItem } from "./";
 
 export interface IUseMouseEventsProps {
   externalDblclick: React.MutableRefObject<boolean>;
@@ -67,18 +62,13 @@ export const useMouseEvents = ({
   const dispatch = useDispatch();
   const {
     prevRenderableFileUid,
+    currentFileUid,
     nodeTree,
     hoveredNodeUid,
     nFocusedItem: focusedItem,
     fileTree,
     navigatorDropdownType,
   } = useAppState();
-
-  const {
-    // toasts
-    parseFileFlag,
-    setParseFile,
-  } = useContext(MainContext);
 
   const { setFocusedSelectedItems } = useSetSelectItem({
     mostRecentSelectedNode,
@@ -193,12 +183,15 @@ export const useMouseEvents = ({
     (e: MouseEvent) => {
       const ele = e.target as HTMLElement;
 
-      // update file reducer
-      const file = fileTree[prevRenderableFileUid];
-      const fileData = file.data as TFileNodeData;
-      dispatch(setCurrentFileUid(prevRenderableFileUid));
-      dispatch(setCurrentFileContent(fileData.content));
-      dispatch(selectFileTreeNodes([prevRenderableFileUid]));
+      // update file
+      if (currentFileUid !== prevRenderableFileUid) {
+        const file = fileTree[prevRenderableFileUid];
+        const fileData = file.data as TFileNodeData;
+        dispatch(setCurrentFileUid(prevRenderableFileUid));
+        dispatch(setCurrentFileContent(fileData.content));
+        dispatch(selectFileTreeNodes([prevRenderableFileUid]));
+        dispatch({ type: NodeTree_Event_ClearActionType });
+      }
 
       // update node select status
       let _uid: TNodeUid | null = ele.getAttribute(StageNodeIdAttr);
@@ -241,7 +234,7 @@ export const useMouseEvents = ({
       navigatorDropdownType !== null &&
         dispatch(setNavigatorDropdownType(null));
     },
-    [fileTree, prevRenderableFileUid, navigatorDropdownType],
+    [fileTree, prevRenderableFileUid, currentFileUid, navigatorDropdownType],
   );
 
   return {

@@ -10,27 +10,23 @@ import {
   collapseNodeTreeNodes,
   expandNodeTreeNodes,
   NodeTree_Event_ClearActionType,
+  setCurrentFileContent,
   setSelectedNodeUids,
 } from "@_redux/main/nodeTree";
-import { setNavigatorDropdownType } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
+import { TFileNodeData } from "@_node/index";
 
 export function useNodeViewState(focusItemValue: TNodeUid | null) {
   const dispatch = useDispatch();
   const {
-    validNodeTree,
+    fileTree,
+    currentFileUid,
     prevRenderableFileUid,
-    nFocusedItem: focusedItem,
+    validNodeTree,
     nSelectedItems: selectedItems,
     nSelectedItemsObj: selectedItemsObj,
   } = useAppState();
   const { addRunningActions, removeRunningActions } = useContext(MainContext);
-
-  const {
-    // toasts
-    parseFileFlag,
-    setParseFile,
-  } = useContext(MainContext);
 
   const cb_focusNode = useCallback((uid: TNodeUid) => {}, []);
 
@@ -57,23 +53,27 @@ export function useNodeViewState(focusItemValue: TNodeUid | null) {
 
       dispatch(setSelectedNodeUids(_uids));
 
-      if (!parseFileFlag) {
-        const uid = prevRenderableFileUid;
-        setParseFile(true);
-        dispatch(setNavigatorDropdownType("project"));
-        dispatch({ type: NodeTree_Event_ClearActionType });
-        dispatch(setCurrentFileUid(uid));
+      // update file
+      if (currentFileUid !== prevRenderableFileUid) {
+        const file = fileTree[prevRenderableFileUid];
+        const fileData = file.data as TFileNodeData;
+        dispatch(setCurrentFileUid(prevRenderableFileUid));
+        dispatch(setCurrentFileContent(fileData.content));
         dispatch(selectFileTreeNodes([prevRenderableFileUid]));
+        dispatch({ type: NodeTree_Event_ClearActionType });
       }
+
       removeRunningActions(["nodeTreeView-select"]);
     },
     [
       addRunningActions,
       removeRunningActions,
+      fileTree,
+      currentFileUid,
+      prevRenderableFileUid,
       validNodeTree,
       selectedItems,
       selectedItemsObj,
-      parseFileFlag,
     ],
   );
 
