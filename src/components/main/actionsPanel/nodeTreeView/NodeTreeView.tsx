@@ -226,10 +226,7 @@ const NodeTreeView = () => {
 
   const isDragging = useRef<boolean>(false);
 
-  const callbacks = useNodeTreeCallback(
-    focusedItemRef.current,
-    isDragging.current,
-  );
+  const callbacks = useNodeTreeCallback(focusedItemRef.current, isDragging);
 
   const dragAndDropConfig = useMemo(
     () => ({
