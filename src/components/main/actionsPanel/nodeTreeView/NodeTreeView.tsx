@@ -141,7 +141,7 @@ const NodeTreeView = () => {
   }, [validNodeTree, expandedItems]);
 
   // node view state handlers
-  const { cb_expandNode } = useNodeViewState(focusedItemRef.current);
+  const { cb_expandNode } = useNodeViewState();
 
   const onPanelClick = useCallback(() => {
     dispatch(setActivePanel("node"));

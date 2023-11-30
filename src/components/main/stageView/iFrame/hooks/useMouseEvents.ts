@@ -37,14 +37,11 @@ export interface IUseMouseEventsProps {
 
 export const useMouseEvents = ({
   externalDblclick,
-  linkTagUid,
   selectedItemsRef,
   mostRecentSelectedNode,
   focusedItemRef,
   contentRef,
   contentEditableUidRef,
-  isEditing,
-  dblClickTimestamp, // isDblClick,
 }: IUseMouseEventsProps) => {
   const firstClickEditableTags = [
     "p",
@@ -75,29 +72,6 @@ export const useMouseEvents = ({
     focusedItemRef,
     contentRef,
   });
-
-  // MouseEvents Helpers
-  function isOrContainLinkElement(ele: HTMLElement): {
-    isLinkTag: boolean;
-    linkElement: HTMLElement;
-  } {
-    let isLinkTag = false;
-    let linkElement = ele;
-    while (true) {
-      if (linkElement.tagName === "A") {
-        isLinkTag = true;
-        break;
-      }
-      const parentEle = linkElement.parentElement;
-      if (!parentEle) break;
-
-      linkElement = parentEle;
-    }
-    return {
-      isLinkTag,
-      linkElement,
-    };
-  }
 
   function findEleOrItsNearestParentWithUid(ele: HTMLElement) {
     let newFocusedElement: HTMLElement = ele;
@@ -144,10 +118,6 @@ export const useMouseEvents = ({
     }
 
     return multiple;
-  }
-
-  function isEditableElement(ele: HTMLElement) {
-    return firstClickEditableTags.includes(ele.tagName.toLowerCase());
   }
 
   // MouseEvents Handlers
@@ -208,29 +178,7 @@ export const useMouseEvents = ({
       }
       _uid && dispatch(setSelectedNodeUids([_uid]));
 
-      true
-        ? null
-        : (() => {
-            const areMultiple = handleSelectofSingleOrMultipleElements(e, _uid);
-
-            const isEditable = isEditableElement(ele);
-
-            const canEditOnSingleClickConfig = {
-              isSingle: !areMultiple,
-              isEditable,
-              isFocused: _uid === focusedItem,
-              isNotAWC: !isWC,
-              isNotAlreadyEditingEle: contentEditableUidRef.current !== _uid,
-            };
-
-            //check if all the keys have true value
-            let canEditOnSingleClick = Object.values(
-              canEditOnSingleClickConfig,
-            ).every((val) => val === true);
-          })();
-
       dispatch(setActivePanel("stage"));
-
       navigatorDropdownType !== null &&
         dispatch(setNavigatorDropdownType(null));
     },
