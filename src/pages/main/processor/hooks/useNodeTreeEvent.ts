@@ -39,10 +39,31 @@ export const useNodeTreeEvent = () => {
 
     nExpandedItems,
 
+    didUndo,
+    didRedo,
+
     syncConfigs,
   } = useAppState();
   const { addRunningActions, removeRunningActions, monacoEditorRef } =
     useContext(MainContext);
+
+  useEffect(() => {
+    console.log("useProcessorUpdate - selectedNodeUids", {
+      selectedNodeUids,
+      currentFileContent,
+    });
+
+    if (didUndo || didRedo) {
+      dispatch(selectNodeTreeNodes(selectedNodeUids));
+      dispatch(
+        focusNodeTreeNode(
+          selectedNodeUids.length > 0
+            ? selectedNodeUids[selectedNodeUids.length - 1]
+            : "",
+        ),
+      );
+    }
+  }, [selectedNodeUids]);
 
   useEffect(() => {
     console.log("useProcessorUpdate - currentFileContent", {
