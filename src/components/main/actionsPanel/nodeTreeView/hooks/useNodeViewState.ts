@@ -15,13 +15,15 @@ import {
 } from "@_redux/main/nodeTree";
 import { useAppState } from "@_redux/useAppState";
 import { TFileNodeData } from "@_node/index";
+import { LogAllow } from "@_constants/global";
 
-export function useNodeViewState(focusItemValue: TNodeUid | null) {
+export function useNodeViewState() {
   const dispatch = useDispatch();
   const {
     fileTree,
     currentFileUid,
     prevRenderableFileUid,
+
     validNodeTree,
     nSelectedItems: selectedItems,
     nSelectedItemsObj: selectedItemsObj,
@@ -32,7 +34,7 @@ export function useNodeViewState(focusItemValue: TNodeUid | null) {
 
   const cb_selectNode = useCallback(
     (uids: TNodeUid[]) => {
-      console.log("useNodeViewState - select", uids);
+      LogAllow && console.log("node tree select", uids);
 
       addRunningActions(["nodeTreeView-select"]);
       // validate
@@ -53,14 +55,14 @@ export function useNodeViewState(focusItemValue: TNodeUid | null) {
 
       dispatch(setSelectedNodeUids(_uids));
 
-      // update file
+      // update file - WIP
       if (currentFileUid !== prevRenderableFileUid) {
         const file = fileTree[prevRenderableFileUid];
         const fileData = file.data as TFileNodeData;
         dispatch(setCurrentFileUid(prevRenderableFileUid));
         dispatch(setCurrentFileContent(fileData.content));
         dispatch(selectFileTreeNodes([prevRenderableFileUid]));
-        dispatch({ type: NodeTree_Event_ClearActionType });
+        // dispatch({ type: NodeTree_Event_ClearActionType });
       }
 
       removeRunningActions(["nodeTreeView-select"]);

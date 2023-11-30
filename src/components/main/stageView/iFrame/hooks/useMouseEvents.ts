@@ -183,14 +183,14 @@ export const useMouseEvents = ({
     (e: MouseEvent) => {
       const ele = e.target as HTMLElement;
 
-      // update file
+      // update file - WIP
       if (currentFileUid !== prevRenderableFileUid) {
         const file = fileTree[prevRenderableFileUid];
         const fileData = file.data as TFileNodeData;
         dispatch(setCurrentFileUid(prevRenderableFileUid));
         dispatch(setCurrentFileContent(fileData.content));
         dispatch(selectFileTreeNodes([prevRenderableFileUid]));
-        dispatch({ type: NodeTree_Event_ClearActionType });
+        // dispatch({ type: NodeTree_Event_ClearActionType });
       }
 
       // update node select status

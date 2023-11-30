@@ -12,7 +12,6 @@ import {
 import { MainContext } from "@_redux/main";
 import { setDoingFileAction, setFileTreeNode } from "@_redux/main/fileTree";
 import {
-  expandNodeTreeNodes,
   focusNodeTreeNode,
   selectNodeTreeNodes,
   setExpandedNodeTreeNodes,
