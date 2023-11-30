@@ -16,8 +16,9 @@ import { setSelectedNodeUids } from "@_redux/main/nodeTree";
 import { useAppState } from "@_redux/useAppState";
 import { Editor, loader } from "@monaco-editor/react";
 
-import { useCmdk, useEditor, useEditorWrapper } from "./hooks";
+import { useCmdk, useEditor } from "./hooks";
 import { CodeViewProps } from "./types";
+import { setActivePanel } from "@_redux/main/processor";
 
 loader.config({ monaco });
 
@@ -55,8 +56,11 @@ export default function CodeView(props: CodeViewProps) {
     codeSelection,
     getNodeUidByCodeSelection,
   } = useEditor();
-  const { editorWrapperRef, onPanelClick } = useEditorWrapper();
   useCmdk();
+
+  const onPanelClick = useCallback(() => {
+    dispatch(setActivePanel("code"));
+  }, []);
 
   // language sync
   useEffect(() => {
@@ -170,7 +174,6 @@ export default function CodeView(props: CodeViewProps) {
             (props.codeViewDragging ? " dragging" : "")
           }
           onClick={onPanelClick}
-          ref={editorWrapperRef}
         >
           <Editor
             onMount={handleEditorDidMount}
@@ -189,6 +192,7 @@ export default function CodeView(props: CodeViewProps) {
     );
   }, [
     props,
+    onPanelClick,
     showCodeView,
 
     handleEditorDidMount,
