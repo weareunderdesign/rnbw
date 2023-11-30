@@ -178,7 +178,26 @@ export const useMouseEvents = ({
       }
       _uid && dispatch(setSelectedNodeUids([_uid]));
 
+      // WIP
+      /* const areMultiple = handleSelectofSingleOrMultipleElements(e, _uid);
+
+      const isEditable = isEditableElement(ele);
+
+      const canEditOnSingleClickConfig = {
+        isSingle: !areMultiple,
+        isEditable,
+        isFocused: _uid === focusedItem,
+        isNotAWC: !isWC,
+        isNotAlreadyEditingEle: contentEditableUidRef.current !== _uid,
+      };
+
+      //check if all the keys have true value
+      let canEditOnSingleClick = Object.values(
+        canEditOnSingleClickConfig,
+      ).every((val) => val === true); */
+
       dispatch(setActivePanel("stage"));
+
       navigatorDropdownType !== null &&
         dispatch(setNavigatorDropdownType(null));
     },

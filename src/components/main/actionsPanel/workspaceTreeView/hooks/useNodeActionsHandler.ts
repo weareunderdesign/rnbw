@@ -482,8 +482,6 @@ export const useNodeActionsHandler = (
       const nodeData = node.data as TFileNodeData;
 
       if (RednerableFileTypes[nodeData.ext]) {
-        dispatch(setPrevRenderableFileUid(uid));
-
         // set initial content of the html if file content is empty
         if (
           nodeData.ext === "html" &&

@@ -10,7 +10,11 @@ import {
   writeFile,
 } from "@_node/file";
 import { MainContext } from "@_redux/main";
-import { setDoingFileAction, setFileTreeNode } from "@_redux/main/fileTree";
+import {
+  setDoingFileAction,
+  setFileTreeNode,
+  setPrevRenderableFileUid,
+} from "@_redux/main/fileTree";
 import {
   focusNodeTreeNode,
   selectNodeTreeNodes,
@@ -86,6 +90,8 @@ export const useNodeTreeEvent = () => {
     // code-view is already synced
     // ---
 
+    console.log({ prevRenderableFileUid, currentFileUid });
+
     // sync node-tree
     (() => {
       dispatch(setNodeTree(nodeTree));
@@ -109,6 +115,7 @@ export const useNodeTreeEvent = () => {
 
       // update expand status of nodes
       if (prevRenderableFileUid !== currentFileUid) {
+        dispatch(setPrevRenderableFileUid(currentFileUid));
         const uids = Object.keys(_validNodeTree);
         dispatch(setExpandedNodeTreeNodes(true ? uids.slice(0, 50) : uids));
       } else {

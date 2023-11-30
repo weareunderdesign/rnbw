@@ -34,8 +34,6 @@ export function useNodeViewState() {
 
   const cb_selectNode = useCallback(
     (uids: TNodeUid[]) => {
-      LogAllow && console.log("node tree select", uids);
-
       addRunningActions(["nodeTreeView-select"]);
       // validate
       const _uids = getValidNodeUids(validNodeTree, uids);
