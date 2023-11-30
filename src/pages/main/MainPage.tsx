@@ -55,7 +55,6 @@ import {
   FileTree_Event_UndoActionType,
   setFileAction,
 } from "@_redux/main/fileTree/event";
-import { setNewFocusedNodeUid } from "@_redux/main/nodeTree";
 import {
   NodeTree_Event_RedoActionType,
   NodeTree_Event_UndoActionType,
@@ -1227,8 +1226,7 @@ export default function MainPage() {
   // toogle code view
   const toogleCodeView = useCallback(() => {
     dispatch(setShowCodeView(!showCodeView));
-    dispatch(setNewFocusedNodeUid(nFocusedItem));
-  }, [showCodeView, nFocusedItem]);
+  }, [showCodeView]);
 
   // toogle actions panel
   const toogleActionsPanel = useCallback(() => {

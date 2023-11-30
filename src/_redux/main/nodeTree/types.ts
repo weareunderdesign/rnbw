@@ -8,6 +8,4 @@ export type TNodeTreeReducerState = {
 
   nodeTreeViewState: TTreeViewState;
   hoveredNodeUid: TNodeUid;
-
-  newFocusedNodeUid: TNodeUid;
 };

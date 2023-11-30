@@ -192,90 +192,56 @@ export const useMouseEvents = ({
   const onClick = useCallback(
     (e: MouseEvent) => {
       const ele = e.target as HTMLElement;
-      if (!parseFileFlag) {
-        const file = fileTree[prevRenderableFileUid];
-        const uid = prevRenderableFileUid;
-        const fileData = file.data as TFileNodeData;
-        dispatch(setNavigatorDropdownType("project"));
-        setParseFile(true);
-        dispatch(setCurrentFileUid(uid));
-        dispatch(selectFileTreeNodes([prevRenderableFileUid]));
-        dispatch(
-          setCurrentFileContent(
-            fileData.contentInApp ? fileData.contentInApp : "",
-          ),
-        );
 
-        // select clicked item
-        let _uid: TNodeUid | null = ele.getAttribute(StageNodeIdAttr);
+      // update file reducer
+      const file = fileTree[prevRenderableFileUid];
+      const fileData = file.data as TFileNodeData;
+      dispatch(setCurrentFileUid(prevRenderableFileUid));
+      dispatch(setCurrentFileContent(fileData.content));
+      dispatch(selectFileTreeNodes([prevRenderableFileUid]));
+
+      // update node select status
+      let _uid: TNodeUid | null = ele.getAttribute(StageNodeIdAttr);
+      let newFocusedElement = ele;
+      let isWC = false;
+      while (!_uid) {
         // for the elements which are created by js. (ex: Web Component)
-        let newFocusedElement: HTMLElement = ele;
-        while (!_uid) {
-          const parentEle = newFocusedElement.parentElement;
-          if (!parentEle) break;
+        isWC = true;
+        const parentEle = newFocusedElement.parentElement;
+        if (!parentEle) break;
 
-          _uid = parentEle.getAttribute(StageNodeIdAttr);
-          !_uid ? (newFocusedElement = parentEle) : null;
-        }
-
-        setTimeout(() => {
-          if (_uid) {
-            dispatch(focusNodeTreeNode(_uid));
-            dispatch(selectNodeTreeNodes([_uid]));
-            dispatch(setSelectedNodeUids([_uid]));
-            // dispatch(expandNodeTreeNodes([_uid]));
-          }
-        }, 100);
-      } else {
-        externalDblclick.current = true;
-        // handleLinkTag(ele);
-
-        let _uid: TNodeUid | null = ele.getAttribute(StageNodeIdAttr);
-        let isWC = false;
-        let newFocusedElement: HTMLElement = ele;
-        if (!_uid) {
-          // for the elements which are created by js. (ex: Web Component)
-          isWC = true;
-          newFocusedElement = findEleOrItsNearestParentWithUid(ele);
-
-          _uid = newFocusedElement.getAttribute(StageNodeIdAttr);
-        }
-
-        if (_uid) {
-          dispatch(focusNodeTreeNode(_uid));
-          dispatch(selectNodeTreeNodes([_uid]));
-          dispatch(setSelectedNodeUids([_uid]));
-        }
-        const areMultiple = handleSelectofSingleOrMultipleElements(e, _uid);
-
-        const isEditable = isEditableElement(ele);
-
-        const canEditOnSingleClickConfig = {
-          isSingle: !areMultiple,
-          isEditable,
-          isFocused: _uid === focusedItem,
-          isNotAWC: !isWC,
-          isNotAlreadyEditingEle: contentEditableUidRef.current !== _uid,
-        };
-
-        //check if all the keys have true value
-        let canEditOnSingleClick = Object.values(
-          canEditOnSingleClickConfig,
-        ).every((val) => val === true);
+        _uid = parentEle.getAttribute(StageNodeIdAttr);
+        !_uid ? (newFocusedElement = parentEle) : null;
       }
+      _uid && dispatch(setSelectedNodeUids([_uid]));
+
+      true
+        ? null
+        : (() => {
+            const areMultiple = handleSelectofSingleOrMultipleElements(e, _uid);
+
+            const isEditable = isEditableElement(ele);
+
+            const canEditOnSingleClickConfig = {
+              isSingle: !areMultiple,
+              isEditable,
+              isFocused: _uid === focusedItem,
+              isNotAWC: !isWC,
+              isNotAlreadyEditingEle: contentEditableUidRef.current !== _uid,
+            };
+
+            //check if all the keys have true value
+            let canEditOnSingleClick = Object.values(
+              canEditOnSingleClickConfig,
+            ).every((val) => val === true);
+          })();
 
       dispatch(setActivePanel("stage"));
 
       navigatorDropdownType !== null &&
         dispatch(setNavigatorDropdownType(null));
     },
-    [
-      focusedItem,
-      setFocusedSelectedItems,
-      nodeTree,
-      parseFileFlag,
-      navigatorDropdownType,
-    ],
+    [fileTree, prevRenderableFileUid, navigatorDropdownType],
   );
 
   return {

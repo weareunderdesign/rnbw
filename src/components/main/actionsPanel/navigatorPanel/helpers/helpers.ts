@@ -74,8 +74,6 @@ export const selectFirstNode = (
       _expandedItems.shift();
       dispatch(expandNodeTreeNodes(_expandedItems));
 
-      dispatch(focusNodeTreeNode(firstNodeId));
-      dispatch(selectNodeTreeNodes([firstNodeId]));
       dispatch(setSelectedNodeUids([firstNodeId]));
 
       return false;

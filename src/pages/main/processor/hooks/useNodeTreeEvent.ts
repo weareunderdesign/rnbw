@@ -15,6 +15,7 @@ import {
   expandNodeTreeNodes,
   focusNodeTreeNode,
   selectNodeTreeNodes,
+  setExpandedNodeTreeNodes,
   setNodeTree,
   setValidNodeTree,
 } from "@_redux/main/nodeTree";
@@ -39,34 +40,29 @@ export const useNodeTreeEvent = () => {
 
     nExpandedItems,
 
-    didUndo,
-    didRedo,
-
     syncConfigs,
   } = useAppState();
   const { addRunningActions, removeRunningActions, monacoEditorRef } =
     useContext(MainContext);
 
   useEffect(() => {
-    console.log("useProcessorUpdate - selectedNodeUids", {
+    console.log("useNodeTreeEvent - selectedNodeUids", {
       selectedNodeUids,
       currentFileContent,
     });
 
-    if (didUndo || didRedo) {
-      dispatch(selectNodeTreeNodes(selectedNodeUids));
-      dispatch(
-        focusNodeTreeNode(
-          selectedNodeUids.length > 0
-            ? selectedNodeUids[selectedNodeUids.length - 1]
-            : "",
-        ),
-      );
-    }
+    dispatch(selectNodeTreeNodes(selectedNodeUids));
+    dispatch(
+      focusNodeTreeNode(
+        selectedNodeUids.length > 0
+          ? selectedNodeUids[selectedNodeUids.length - 1]
+          : "",
+      ),
+    );
   }, [selectedNodeUids]);
 
   useEffect(() => {
-    console.log("useProcessorUpdate - currentFileContent", {
+    console.log("useNodeTreeEvent - currentFileContent", {
       selectedNodeUids,
       currentFileContent,
     });
@@ -112,19 +108,16 @@ export const useNodeTreeEvent = () => {
       });
       dispatch(setValidNodeTree(_validNodeTree));
 
-      // update expand/select status
-      // ******************************
-      // WIP: need to decide
-      // ******************************
-      const _expandedItems = nExpandedItems.filter(
-        (uid) => _validNodeTree[uid] && _validNodeTree[uid].isEntity === false,
-      );
-      dispatch(expandNodeTreeNodes([..._expandedItems]));
-
-      // when open a new file, expand items in node tree
+      // update expand status of nodes
       if (prevRenderableFileUid !== currentFileUid) {
         const uids = Object.keys(_validNodeTree);
-        dispatch(expandNodeTreeNodes(true ? uids.slice(0, 50) : uids));
+        dispatch(setExpandedNodeTreeNodes(true ? uids.slice(0, 50) : uids));
+      } else {
+        const _expandedItems = nExpandedItems.filter(
+          (uid) =>
+            _validNodeTree[uid] && _validNodeTree[uid].isEntity === false,
+        );
+        dispatch(setExpandedNodeTreeNodes([..._expandedItems]));
       }
     })();
 

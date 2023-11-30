@@ -22,7 +22,6 @@ import {
   focusNodeTreeNode,
   selectNodeTreeNodes,
   setCurrentFileContent,
-  setNewFocusedNodeUid,
 } from "@_redux/main/nodeTree";
 import { useAppState } from "@_redux/useAppState";
 import { Editor, loader } from "@monaco-editor/react";
@@ -40,7 +39,6 @@ export default function CodeView(props: CodeViewProps) {
     fileTree,
     currentFileUid,
     nFocusedItem,
-    newFocusedNodeUid,
     activePanel,
     showCodeView,
     currentFileContent,
@@ -81,13 +79,6 @@ export default function CodeView(props: CodeViewProps) {
   useEffect(() => {
     const validNodeTreeRef = getValidNodeTreeInstance();
     validNodeTreeRef.current = structuredClone(validNodeTree);
-
-    // set new focused node
-    if (newFocusedNodeUid == "") return;
-
-    setFocusedNode(validNodeTree[newFocusedNodeUid]);
-    !isFirst.current ? (focusedItemRef.current = newFocusedNodeUid) : null;
-    dispatch(setNewFocusedNodeUid(""));
   }, [validNodeTree]);
 
   useEffect(() => {

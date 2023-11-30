@@ -9,9 +9,7 @@ import { selectFileTreeNodes, setCurrentFileUid } from "@_redux/main/fileTree";
 import {
   collapseNodeTreeNodes,
   expandNodeTreeNodes,
-  focusNodeTreeNode,
   NodeTree_Event_ClearActionType,
-  selectNodeTreeNodes,
   setSelectedNodeUids,
 } from "@_redux/main/nodeTree";
 import { setNavigatorDropdownType } from "@_redux/main/processor";
@@ -34,28 +32,12 @@ export function useNodeViewState(focusItemValue: TNodeUid | null) {
     setParseFile,
   } = useContext(MainContext);
 
-  const cb_focusNode = useCallback(
-    (uid: TNodeUid) => {
-      addRunningActions(["nodeTreeView-focus"]);
-
-      // validate
-      if (focusedItem === uid) {
-        removeRunningActions(["nodeTreeView-focus"]);
-        return;
-      }
-
-      console.log("useNodeViewState - focus", uid);
-
-      dispatch(focusNodeTreeNode(uid));
-      focusItemValue = uid;
-
-      removeRunningActions(["nodeTreeView-focus"]);
-    },
-    [addRunningActions, removeRunningActions, focusedItem],
-  );
+  const cb_focusNode = useCallback((uid: TNodeUid) => {}, []);
 
   const cb_selectNode = useCallback(
     (uids: TNodeUid[]) => {
+      console.log("useNodeViewState - select", uids);
+
       addRunningActions(["nodeTreeView-select"]);
       // validate
       const _uids = getValidNodeUids(validNodeTree, uids);
@@ -73,9 +55,6 @@ export function useNodeViewState(focusItemValue: TNodeUid | null) {
         }
       }
 
-      console.log("useNodeViewState - select", _uids);
-
-      dispatch(selectNodeTreeNodes(_uids));
       dispatch(setSelectedNodeUids(_uids));
 
       if (!parseFileFlag) {
