@@ -1,5 +1,5 @@
-import useCodeView from "./useCodeView";
+import useCmdk from "./useCmdk";
 import useEditor from "./useEditor";
 import useEditorWrapper from "./useEditorWrapper";
 
-export { useCodeView, useEditor, useEditorWrapper };
+export { useCmdk, useEditor, useEditorWrapper };

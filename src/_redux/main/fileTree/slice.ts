@@ -11,6 +11,7 @@ const fileTreeReducerInitialState: TFileTreeReducerState = {
   project: { context: "idb", name: "welcome", handler: null, favicon: null },
   fileTree: {},
   initialFileUidToOpen: "",
+  prevFileUid: "",
   currentFileUid: "",
   prevRenderableFileUid: "",
 
@@ -54,6 +55,10 @@ const fileTreeSlice = createSlice({
     setCurrentFileUid(state, action: PayloadAction<TNodeUid>) {
       const currentFileUid = action.payload;
       state.currentFileUid = currentFileUid;
+    },
+    setPrevFileUid(state, action: PayloadAction<TNodeUid>) {
+      const prevFileUid = action.payload;
+      state.prevFileUid = prevFileUid;
     },
     setPrevRenderableFileUid(state, action: PayloadAction<TNodeUid>) {
       const prevRenderableFileUid = action.payload;
@@ -144,6 +149,7 @@ export const {
   setFileTreeNode,
   setInitialFileUidToOpen,
   setCurrentFileUid,
+  setPrevFileUid,
   setPrevRenderableFileUid,
 
   focusFileTreeNode,

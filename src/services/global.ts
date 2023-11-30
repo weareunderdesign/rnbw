@@ -1,15 +1,15 @@
-import { TOsType } from "@_redux/global";
+import { TOsType, TTheme } from "@_redux/global";
 
-export const isChromeOrEdge = () => {
+export const isChromeOrEdge = (): boolean => {
   const userAgent = navigator.userAgent;
 
   if (userAgent.indexOf("Chrome") > -1) {
-    return true; // Current browser is Chrome
+    return true;
   } else if (userAgent.indexOf("Edg") > -1) {
-    return true; // Current browser is Edge
+    return true;
   }
 
-  return false; // Current browser is not Chrome or Edge
+  return false;
 };
 
 export const getLineBreaker = (osType: TOsType): string => {
@@ -35,13 +35,13 @@ export const getCommandKey = (
     : false;
 };
 
-export const getSystemTheme = () => {
+export const getSystemTheme = (): TTheme => {
   if (
     window.matchMedia &&
     window.matchMedia("(prefers-color-scheme: dark)").matches
   ) {
-    return "vs-dark";
+    return "Dark";
   } else {
-    return "light";
+    return "Light";
   }
 };

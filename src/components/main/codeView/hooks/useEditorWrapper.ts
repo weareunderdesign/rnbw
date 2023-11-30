@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef } from "react";
+import { useCallback, useContext, useEffect, useRef } from "react";
 
 import { debounce } from "lodash";
 import { editor } from "monaco-editor";
@@ -23,15 +23,15 @@ const resetEditorLayout = (
   });
 };
 
-export default function useEditorWrapper() {
+const useEditorWrapper = () => {
   const dispatch = useDispatch();
   const { monacoEditorRef } = useContext(MainContext);
   const editorWrapperRef = useRef<HTMLDivElement>(null);
   const monacoEditor = monacoEditorRef.current;
-  // panel focus handler
-  function onPanelClick() {
+
+  const onPanelClick = useCallback(() => {
     dispatch(setActivePanel("code"));
-  }
+  }, []);
 
   useEffect(() => {
     const debounced = debounce(
@@ -49,4 +49,6 @@ export default function useEditorWrapper() {
   }, [monacoEditor]);
 
   return { editorWrapperRef, onPanelClick };
-}
+};
+
+export default useEditorWrapper;

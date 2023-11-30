@@ -1,4 +1,4 @@
-import { useCallback, useContext } from "react";
+import { useCallback } from "react";
 
 import { useDispatch } from "react-redux";
 
@@ -6,11 +6,9 @@ import { TFileNodeData } from "@_node/file";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { getValidNodeUids } from "@_node/helpers";
 import { TNode, TNodeUid } from "@_node/types";
-import { MainContext } from "@_redux/main";
 import { selectFileTreeNodes, setCurrentFileUid } from "@_redux/main/fileTree";
 import { setHoveredNodeUid } from "@_redux/main/nodeTree";
 import {
-  NodeTree_Event_ClearActionType,
   setCurrentFileContent,
   setSelectedNodeUids,
 } from "@_redux/main/nodeTree/event";

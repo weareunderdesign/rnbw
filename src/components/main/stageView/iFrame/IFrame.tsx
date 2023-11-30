@@ -436,9 +436,5 @@ export const IFrame = () => {
         )}
       </>
     );
-  }, [
-    iframeSrc,
-    needToReloadIframe,
-    prevRenderableFileUid,
-  ]);
+  }, [iframeSrc, needToReloadIframe, prevRenderableFileUid]);
 };

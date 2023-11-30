@@ -11,6 +11,7 @@ export const useAppState = () => {
         project,
         initialFileUidToOpen,
         currentFileUid,
+        prevFileUid,
         prevRenderableFileUid,
         fileTree,
         fileTreeViewState: {
@@ -88,6 +89,7 @@ export const useAppState = () => {
     project,
     initialFileUidToOpen,
     currentFileUid,
+    prevFileUid,
     prevRenderableFileUid,
     fileTree,
 
