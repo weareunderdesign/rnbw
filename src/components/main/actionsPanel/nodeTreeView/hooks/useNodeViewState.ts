@@ -9,13 +9,11 @@ import { selectFileTreeNodes, setCurrentFileUid } from "@_redux/main/fileTree";
 import {
   collapseNodeTreeNodes,
   expandNodeTreeNodes,
-  NodeTree_Event_ClearActionType,
   setCurrentFileContent,
   setSelectedNodeUids,
 } from "@_redux/main/nodeTree";
 import { useAppState } from "@_redux/useAppState";
 import { TFileNodeData } from "@_node/index";
-import { LogAllow } from "@_constants/global";
 
 export function useNodeViewState() {
   const dispatch = useDispatch();
@@ -30,7 +28,12 @@ export function useNodeViewState() {
   } = useAppState();
   const { addRunningActions, removeRunningActions } = useContext(MainContext);
 
-  const cb_focusNode = useCallback((uid: TNodeUid) => {}, []);
+  const cb_focusNode = useCallback(
+    (uid: TNodeUid) => {
+      removeRunningActions(["nodeTreeView-focus"]);
+    },
+    [removeRunningActions],
+  );
 
   const cb_selectNode = useCallback(
     (uids: TNodeUid[]) => {

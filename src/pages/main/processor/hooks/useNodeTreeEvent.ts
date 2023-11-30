@@ -49,10 +49,11 @@ export const useNodeTreeEvent = () => {
     useContext(MainContext);
 
   useEffect(() => {
-    console.log("useNodeTreeEvent - selectedNodeUids", {
-      selectedNodeUids,
-      currentFileContent,
-    });
+    LogAllow &&
+      console.log("useNodeTreeEvent - selectedNodeUids", {
+        selectedNodeUids,
+        currentFileContent,
+      });
 
     dispatch(selectNodeTreeNodes(selectedNodeUids));
     dispatch(
@@ -65,10 +66,11 @@ export const useNodeTreeEvent = () => {
   }, [selectedNodeUids]);
 
   useEffect(() => {
-    console.log("useNodeTreeEvent - currentFileContent", {
-      selectedNodeUids,
-      currentFileContent,
-    });
+    LogAllow &&
+      console.log("useNodeTreeEvent - currentFileContent", {
+        selectedNodeUids,
+        currentFileContent,
+      });
 
     // validate
     if (!fileTree[currentFileUid]) return;
@@ -89,8 +91,6 @@ export const useNodeTreeEvent = () => {
     // ---
     // code-view is already synced
     // ---
-
-    console.log({ prevRenderableFileUid, currentFileUid });
 
     // sync node-tree
     (() => {

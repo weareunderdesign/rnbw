@@ -1160,6 +1160,8 @@ export default function MainPage() {
 
   // History - Undo/Redo
   const onUndo = useCallback(() => {
+    console.log({ doingAction, doingFileAction, iframeLoading });
+
     if (doingAction || doingFileAction || iframeLoading) return;
 
     if (activePanel === "file") {
