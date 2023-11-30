@@ -45,22 +45,6 @@ export const useNodeTreeEvent = () => {
     useContext(MainContext);
 
   useEffect(() => {
-    console.log("useProcessorUpdate - selectedNodeUids", {
-      selectedNodeUids,
-      currentFileContent,
-    });
-
-    dispatch(selectNodeTreeNodes(selectedNodeUids));
-    dispatch(
-      focusNodeTreeNode(
-        selectedNodeUids.length > 0
-          ? selectedNodeUids[selectedNodeUids.length - 1]
-          : "",
-      ),
-    );
-  }, [selectedNodeUids]);
-
-  useEffect(() => {
     console.log("useProcessorUpdate - currentFileContent", {
       selectedNodeUids,
       currentFileContent,

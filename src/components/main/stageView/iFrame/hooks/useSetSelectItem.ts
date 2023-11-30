@@ -11,6 +11,7 @@ import {
   expandNodeTreeNodes,
   focusNodeTreeNode,
   selectNodeTreeNodes,
+  setSelectedNodeUids,
 } from "@_redux/main/nodeTree";
 import { useAppState } from "@_redux/useAppState";
 
@@ -51,12 +52,17 @@ export const useSetSelectItem = ({
         node = nodeTree[node.parentUid as TNodeUid];
       }
       _expandedItems.shift();
+
       dispatch(expandNodeTreeNodes(_expandedItems));
 
       dispatch(focusNodeTreeNode(uid));
-      _selectedItems
-        ? dispatch(selectNodeTreeNodes(_selectedItems))
-        : dispatch(selectNodeTreeNodes([uid]));
+      if (_selectedItems) {
+        dispatch(selectNodeTreeNodes(_selectedItems));
+        dispatch(setSelectedNodeUids(_selectedItems));
+      } else {
+        dispatch(selectNodeTreeNodes([uid]));
+        dispatch(setSelectedNodeUids([uid]));
+      }
 
       focusedItemRef.current = uid;
 
