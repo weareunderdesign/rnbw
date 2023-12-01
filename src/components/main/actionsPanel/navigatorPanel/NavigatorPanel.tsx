@@ -28,7 +28,6 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
     filesReferenceData,
     // open project
     importProject,
-    setParseFile,
   } = useContext(MainContext);
 
   const [faviconFallback, setFaviconFallback] = useState(false);
@@ -112,7 +111,6 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
     importProject,
     favicon,
     unsavedProject,
-    setParseFile,
     theme,
     faviconFallback,
   ]);

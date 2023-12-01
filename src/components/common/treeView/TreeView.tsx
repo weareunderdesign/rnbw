@@ -34,38 +34,32 @@ export default function TreeView(props: TreeViewProps) {
   }, [info.id, focusedItem, expandedItems, selectedItems]);
 
   return (
-    <>
-      <div style={{ width, height }}>
-        <ControlledTreeEnvironment
-          {...props.renderers}
-          {...props.callbacks}
-          {...props.props}
-          items={data}
-          getItemTitle={(item) => item.data.displayName}
-          viewState={viewState}
-          keyboardBindings={{
-            primaryAction: ["Space"],
-            moveFocusToFirstItem: [],
-            moveFocusToLastItem: [],
-            expandSiblings: [],
-            renameItem: ["F2"],
-            abortRenameItem: ["Escape"],
-            toggleSelectItem: [],
-            abortSearch: [],
-            startSearch: [],
-            selectAll: [],
-            startProgrammaticDnd: [],
-            abortProgrammaticDnd: [],
-            completeProgrammaticDnd: [],
-          }}
-        >
-          <Tree
-            treeId={info.id}
-            treeLabel={info.label}
-            rootItem={RootNodeUid}
-          />
-        </ControlledTreeEnvironment>
-      </div>
-    </>
+    <div style={{ width, height }}>
+      <ControlledTreeEnvironment
+        {...props.renderers}
+        {...props.callbacks}
+        {...props.props}
+        items={data}
+        getItemTitle={(item) => item.data.displayName}
+        viewState={viewState}
+        keyboardBindings={{
+          primaryAction: ["Space"],
+          moveFocusToFirstItem: [],
+          moveFocusToLastItem: [],
+          expandSiblings: [],
+          renameItem: ["F2"],
+          abortRenameItem: ["Escape"],
+          toggleSelectItem: [],
+          abortSearch: [],
+          startSearch: [],
+          selectAll: [],
+          startProgrammaticDnd: [],
+          abortProgrammaticDnd: [],
+          completeProgrammaticDnd: [],
+        }}
+      >
+        <Tree treeId={info.id} treeLabel={info.label} rootItem={RootNodeUid} />
+      </ControlledTreeEnvironment>
+    </div>
   );
 }

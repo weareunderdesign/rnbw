@@ -12,14 +12,14 @@ import { getValidNodeUids } from "@_node/helpers";
 
 export const useNodeTreeCallback = (
   focusItemValue: TNodeUid | null,
-  isDragging: boolean,
+  isDragging: React.MutableRefObject<boolean>,
 ) => {
   const { validNodeTree } = useAppState();
   const { htmlReferenceData } = useContext(MainContext);
 
   const { onMove } = useNodeActionsHandlers();
   const { cb_focusNode, cb_selectNode, cb_expandNode, cb_collapseNode } =
-    useNodeViewState(focusItemValue);
+    useNodeViewState();
 
   const onSelectItems = (items: TreeItemIndex[]) => {
     cb_selectNode(items as TNodeUid[]);
@@ -91,7 +91,7 @@ export const useNodeTreeCallback = (
       position,
     });
 
-    isDragging = false;
+    isDragging.current = false;
   };
 
   return {

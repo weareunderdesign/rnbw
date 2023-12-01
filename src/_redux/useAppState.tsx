@@ -11,6 +11,7 @@ export const useAppState = () => {
         project,
         initialFileUidToOpen,
         currentFileUid,
+        prevFileUid,
         prevRenderableFileUid,
         fileTree,
         fileTreeViewState: {
@@ -40,7 +41,6 @@ export const useAppState = () => {
           selectedItemsObj: nSelectedItemsObj,
         },
         hoveredNodeUid,
-        newFocusedNodeUid,
       },
       nodeEvent: {
         past: nodeEventPast,
@@ -89,6 +89,7 @@ export const useAppState = () => {
     project,
     initialFileUidToOpen,
     currentFileUid,
+    prevFileUid,
     prevRenderableFileUid,
     fileTree,
 
@@ -117,8 +118,6 @@ export const useAppState = () => {
     nSelectedItems,
     nSelectedItemsObj,
     hoveredNodeUid,
-
-    newFocusedNodeUid,
 
     currentFileContent,
     selectedNodeUids,

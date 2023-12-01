@@ -9,28 +9,16 @@ import React, {
 import * as monaco from "monaco-editor";
 import { useDispatch } from "react-redux";
 
-import {
-  CodeViewSyncDelay,
-  CodeViewSyncDelay_Long,
-  RootNodeUid,
-} from "@_constants/main";
-import { useTheme } from "@_hooks/useTheme";
+import { RootNodeUid } from "@_constants/main";
 import { TFileNodeData, TNodeUid } from "@_node/index";
 import { MainContext } from "@_redux/main";
-import {
-  expandNodeTreeNodes,
-  focusNodeTreeNode,
-  selectNodeTreeNodes,
-  setCurrentFileContent,
-  setNewFocusedNodeUid,
-} from "@_redux/main/nodeTree";
+import { setSelectedNodeUids } from "@_redux/main/nodeTree";
 import { useAppState } from "@_redux/useAppState";
 import { Editor, loader } from "@monaco-editor/react";
 
-import { useEditor, useEditorWrapper } from "./hooks";
+import { useCmdk, useEditor } from "./hooks";
 import { CodeViewProps } from "./types";
-import { debounce } from "lodash";
-import { useCmdk } from "./hooks/useCmdk";
+import { setActivePanel } from "@_redux/main/processor";
 
 loader.config({ monaco });
 
@@ -39,100 +27,75 @@ export default function CodeView(props: CodeViewProps) {
   const {
     fileTree,
     currentFileUid,
+    currentFileContent,
+
+    validNodeTree,
     nFocusedItem,
-    newFocusedNodeUid,
+
     activePanel,
     showCodeView,
-    currentFileContent,
-    validNodeTree,
   } = useAppState();
   const {
-    parseFileFlag,
     isContentProgrammaticallyChanged,
     setIsContentProgrammaticallyChanged,
     monacoEditorRef,
   } = useContext(MainContext);
 
-  // ----------------------------------------------------------custom Hooks---------------------------------------------------------------
-  const { theme } = useTheme();
   const {
-    getCurrentEditorInstance,
-    getValidNodeTreeInstance,
     handleEditorDidMount,
+    handleOnChange,
+
+    theme,
+
     language,
     updateLanguage,
+
     editorConfigs,
-    findNodeBySelection,
-    focusedNode,
-    setFocusedNode,
-    codeContent,
-    setCodeContent,
-    selection,
+    setWordWrap,
+
+    codeSelection,
+    getNodeUidByCodeSelection,
   } = useEditor();
-  const { editorWrapperRef, onPanelClick } = useEditorWrapper();
-  //-----------------------------------------
-  const isFirst = useRef<boolean>(true);
-
-  const previewDiv = useRef(null);
-
-  // -------------------------------------------------------------- sync --------------------------------------------------------------
   useCmdk();
-  // build node tree reference
+
+  const onPanelClick = useCallback(() => {
+    dispatch(setActivePanel("code"));
+  }, []);
+
+  // language sync
   useEffect(() => {
-    const validNodeTreeRef = getValidNodeTreeInstance();
-    validNodeTreeRef.current = structuredClone(validNodeTree);
+    const file = fileTree[currentFileUid];
+    if (!file) return;
 
-    // set new focused node
-    if (newFocusedNodeUid == "") return;
-
-    setFocusedNode(validNodeTree[newFocusedNodeUid]);
-    !isFirst.current ? (focusedItemRef.current = newFocusedNodeUid) : null;
-    dispatch(setNewFocusedNodeUid(""));
-  }, [validNodeTree]);
-
-  useEffect(() => {
-    const _file = fileTree[currentFileUid];
-
-    if (!_file) return;
-
-    const fileData = _file.data as TFileNodeData;
+    const fileData = file.data as TFileNodeData;
     const extension = fileData.ext;
     extension && updateLanguage(extension);
+  }, [fileTree, currentFileUid]);
 
-    setCodeContent(fileData.content);
-  }, [currentFileUid, fileTree]);
-
-  // focusedItem - code select
+  // focusedItem -> code select
   const focusedItemRef = useRef<TNodeUid>("");
-  const revealed = useRef<boolean>(false);
-
-  const hightlightFocusedNodeCodeBlock = useCallback(() => {
+  const hightlightFocusedNodeSourceCode = useCallback(() => {
     const monacoEditor = monacoEditorRef.current;
     if (!monacoEditor) return;
+
     const node = validNodeTree[nFocusedItem];
-
     const sourceCodeLocation = node.data.sourceCodeLocation;
-    if (!sourceCodeLocation) {
-      return;
-    }
+    if (!sourceCodeLocation) return;
 
-    let {
+    const {
       startLine: startLineNumber,
       startCol: startColumn,
       endCol: endColumn,
       endLine: endLineNumber,
     } = sourceCodeLocation;
 
-    if (activePanel !== "code") {
-      monacoEditor.setSelection({
-        startLineNumber,
-        startColumn,
-        endLineNumber,
-        endColumn,
-      });
-    }
-
-    monacoEditor?.revealRangeInCenter(
+    monacoEditor.setSelection({
+      startLineNumber,
+      startColumn,
+      endLineNumber,
+      endColumn,
+    });
+    monacoEditor.revealRangeInCenter(
       {
         startLineNumber,
         startColumn,
@@ -142,105 +105,43 @@ export default function CodeView(props: CodeViewProps) {
       1,
     );
   }, [validNodeTree, nFocusedItem, activePanel]);
-
   useEffect(() => {
-    if (!parseFileFlag) {
-      return;
-    }
-    const monacoEditor = getCurrentEditorInstance();
+    if (focusedItemRef.current === nFocusedItem) return;
+    focusedItemRef.current = nFocusedItem;
+
+    const monacoEditor = monacoEditorRef.current;
     if (!monacoEditor) return;
 
-    if (nFocusedItem === RootNodeUid) return;
-    if (!validNodeTree[nFocusedItem]) {
+    if (nFocusedItem === RootNodeUid || !validNodeTree[nFocusedItem]) {
       monacoEditor.setSelection({
         startLineNumber: 1,
         startColumn: 1,
         endLineNumber: 1,
         endColumn: 1,
       });
-      return;
-    }
-
-    if (isFirst.current) {
-      const firstTimer = setInterval(() => {
-        const monacoEditor = getCurrentEditorInstance();
-        if (monacoEditor) {
-          hightlightFocusedNodeCodeBlock();
-          revealed.current = false;
-          clearInterval(firstTimer);
-        }
-      }, 0);
     } else {
-      hightlightFocusedNodeCodeBlock();
-      revealed.current = true;
+      hightlightFocusedNodeSourceCode();
     }
-    focusedItemRef.current = nFocusedItem;
-  }, [nFocusedItem, parseFileFlag]);
+  }, [nFocusedItem]);
 
+  // code select -> selectedUids
   useEffect(() => {
-    if (!parseFileFlag) return;
-    if (!selection) return;
+    if (!codeSelection) return;
 
-    const _file = fileTree[currentFileUid];
-    if (!_file) return;
+    const file = fileTree[currentFileUid];
+    if (!file) return;
 
-    const validNodeTreeRef = getValidNodeTreeInstance();
-    // this means, code view is already opened before file read
-    if (!validNodeTreeRef.current[RootNodeUid]) return;
+    if (!validNodeTree[RootNodeUid]) return;
 
-    // avoid loop when reveal focused node's code block
-    if (revealed.current === true) {
-      revealed.current = false;
-      return;
+    const focusedNodeUid = getNodeUidByCodeSelection(
+      codeSelection,
+      validNodeTree,
+    );
+    if (focusedNodeUid && focusedItemRef.current !== focusedNodeUid) {
+      focusedItemRef.current = focusedNodeUid;
+      focusedNodeUid && dispatch(setSelectedNodeUids([focusedNodeUid]));
     }
-
-    if (selection) {
-      let newFocusedNode = findNodeBySelection(
-        selection,
-        validNodeTreeRef.current,
-      );
-      if (newFocusedNode) {
-        setFocusedNode(newFocusedNode);
-      }
-    }
-  }, [selection, parseFileFlag]);
-
-  useEffect(() => {
-    if (focusedNode) {
-      if (focusedNode.uid === focusedItemRef.current) return;
-      // expand path to the uid
-      const _expandedItems: TNodeUid[] = [];
-      let node = validNodeTree[focusedNode.uid];
-      if (!node) {
-        return;
-      }
-      while (node.uid !== RootNodeUid) {
-        _expandedItems.push(node.uid);
-        node = validNodeTree[node.parentUid as TNodeUid];
-      }
-      _expandedItems.shift();
-      dispatch(expandNodeTreeNodes(_expandedItems));
-      dispatch(focusNodeTreeNode(focusedNode.uid));
-      dispatch(selectNodeTreeNodes([focusedNode.uid]));
-      focusedItemRef.current = focusedNode.uid;
-    }
-  }, [focusedNode]);
-
-  const onChange = useCallback((value: string) => {
-    dispatch(setCurrentFileContent(value));
-  }, []);
-  const debouncedOnChange = useCallback(
-    debounce((value) => {
-      onChange(value);
-      setIsContentProgrammaticallyChanged(false);
-    }, CodeViewSyncDelay),
-    [],
-  );
-  const longDebouncedOnChange = useCallback(
-    debounce(onChange, CodeViewSyncDelay_Long),
-    [],
-  );
-  //-------------------------------------------------------------- other --------------------------------------------------------------
+  }, [codeSelection]);
 
   return useMemo(() => {
     return (
@@ -273,45 +174,33 @@ export default function CodeView(props: CodeViewProps) {
             (props.codeViewDragging ? " dragging" : "")
           }
           onClick={onPanelClick}
-          ref={editorWrapperRef}
         >
           <Editor
+            onMount={handleEditorDidMount}
+            theme={theme}
             language={language}
             defaultValue={""}
-            value={codeContent}
-            theme={theme}
-            onMount={handleEditorDidMount}
-            onChange={(value) => {
-              if (!value) return;
-
-              if (isContentProgrammaticallyChanged.current) {
-                debouncedOnChange(value);
-              } else {
-                longDebouncedOnChange(value);
-              }
-            }}
+            value={currentFileContent}
+            onChange={handleOnChange}
             loading={""}
             options={
               editorConfigs as monaco.editor.IStandaloneEditorConstructionOptions
             }
           />
         </div>
-        <div
-          ref={previewDiv}
-          id="codeview_change_preview"
-          style={{ display: "none" }}
-        />
       </>
     );
   }, [
     props,
     onPanelClick,
-    language,
-    theme,
+    showCodeView,
+
     handleEditorDidMount,
-    parseFileFlag,
+    handleOnChange,
+
+    theme,
+    language,
     currentFileContent,
-    debouncedOnChange,
-    longDebouncedOnChange,
+    editorConfigs,
   ]);
 }

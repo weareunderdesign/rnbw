@@ -138,10 +138,10 @@ const NodeTreeView = () => {
     }
 
     return data;
-  }, [validNodeTree]);
+  }, [validNodeTree, expandedItems]);
 
   // node view state handlers
-  const { cb_expandNode } = useNodeViewState(focusedItemRef.current);
+  const { cb_expandNode } = useNodeViewState();
 
   const onPanelClick = useCallback(() => {
     dispatch(setActivePanel("node"));
@@ -226,10 +226,7 @@ const NodeTreeView = () => {
 
   const isDragging = useRef<boolean>(false);
 
-  const callbacks = useNodeTreeCallback(
-    focusedItemRef.current,
-    isDragging.current,
-  );
+  const callbacks = useNodeTreeCallback(focusedItemRef.current, isDragging);
 
   const dragAndDropConfig = useMemo(
     () => ({
@@ -292,15 +289,6 @@ const NodeTreeView = () => {
               overflow: "hidden",
               whiteSpace: "nowrap",
             };
-
-            const treeViewRef = useRef<HTMLHeadingElement | any>(null);
-            useEffect(() => {
-              if (props.context.isSelected) {
-                setTimeout(() => {
-                  treeViewRef?.current?.click();
-                }, 500);
-              }
-            }, []);
 
             const onClick = useCallback(
               (e: React.MouseEvent) => {
@@ -411,7 +399,6 @@ const NodeTreeView = () => {
                   }}
                   {...props.context.itemContainerWithoutChildrenProps}
                   {...props.context.interactiveElementProps}
-                  ref={treeViewRef}
                   onClick={onClick}
                   onDoubleClick={onDoubleClick}
                   onMouseEnter={onMouseEnter}

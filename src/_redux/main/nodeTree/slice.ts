@@ -16,8 +16,6 @@ const nodeTreeReducerInitialState: TNodeTreeReducerState = {
     selectedItemsObj: {},
   },
   hoveredNodeUid: "",
-
-  newFocusedNodeUid: "",
 };
 const nodeTreeSlice = createSlice({
   name: "nodeTree",
@@ -33,8 +31,16 @@ const nodeTreeSlice = createSlice({
     },
 
     focusNodeTreeNode(state, action: PayloadAction<TNodeUid>) {
-      const uid = action.payload;
-      state.nodeTreeViewState.focusedItem = uid;
+      const focusedItem = action.payload;
+      state.nodeTreeViewState.focusedItem = focusedItem;
+    },
+    setExpandedNodeTreeNodes(state, action: PayloadAction<TNodeUid[]>) {
+      const expandedItems = action.payload;
+      state.nodeTreeViewState.expandedItems = expandedItems;
+      state.nodeTreeViewState.expandedItemsObj = {};
+      for (const uid of expandedItems) {
+        state.nodeTreeViewState.expandedItemsObj[uid] = true;
+      }
     },
     expandNodeTreeNodes(state, action: PayloadAction<TNodeUid[]>) {
       const uids = action.payload;
@@ -55,10 +61,10 @@ const nodeTreeSlice = createSlice({
       );
     },
     selectNodeTreeNodes(state, action: PayloadAction<TNodeUid[]>) {
-      const uids = action.payload;
-      state.nodeTreeViewState.selectedItems = uids;
+      const selectedItems = action.payload;
+      state.nodeTreeViewState.selectedItems = selectedItems;
       state.nodeTreeViewState.selectedItemsObj = {};
-      for (const uid of uids) {
+      for (const uid of selectedItems) {
         state.nodeTreeViewState.selectedItemsObj[uid] = true;
       }
     },
@@ -124,11 +130,6 @@ const nodeTreeSlice = createSlice({
     clearNodeTreeViewState(state) {
       state.nodeTreeViewState = nodeTreeReducerInitialState.nodeTreeViewState;
     },
-
-    setNewFocusedNodeUid(state, action: PayloadAction<TNodeUid>) {
-      const newFocusedNodeUid = action.payload;
-      state.newFocusedNodeUid = newFocusedNodeUid;
-    },
   },
 });
 export const {
@@ -136,13 +137,12 @@ export const {
   setValidNodeTree,
 
   focusNodeTreeNode,
+  setExpandedNodeTreeNodes,
   expandNodeTreeNodes,
   collapseNodeTreeNodes,
   selectNodeTreeNodes,
   updateNodeTreeTreeViewState,
   setHoveredNodeUid,
   clearNodeTreeViewState,
-
-  setNewFocusedNodeUid,
 } = nodeTreeSlice.actions;
 export const NodeTreeReducer = nodeTreeSlice.reducer;

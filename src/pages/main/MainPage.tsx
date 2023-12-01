@@ -55,7 +55,6 @@ import {
   FileTree_Event_UndoActionType,
   setFileAction,
 } from "@_redux/main/fileTree/event";
-import { setNewFocusedNodeUid } from "@_redux/main/nodeTree";
 import {
   NodeTree_Event_RedoActionType,
   NodeTree_Event_UndoActionType,
@@ -242,9 +241,6 @@ export default function MainPage() {
   const setIsContentProgrammaticallyChanged = (value: boolean) => {
     isContentProgrammaticallyChanged.current = value;
   };
-
-  // TODO Begin
-  const [parseFileFlag, setParseFile] = useState<boolean>(true);
 
   const guideRef = useRef<HTMLAnchorElement>(null);
   // TODO End
@@ -1194,7 +1190,7 @@ export default function MainPage() {
     nodeEventPastLength,
   ]);
   const onRedo = useCallback(() => {
-    if (doingAction || iframeLoading || doingFileAction) return;
+    if (doingAction || doingFileAction || iframeLoading) return;
 
     if (activePanel === "file") {
       if (fileEventFutureLength === 0) {
@@ -1227,8 +1223,7 @@ export default function MainPage() {
   // toogle code view
   const toogleCodeView = useCallback(() => {
     dispatch(setShowCodeView(!showCodeView));
-    dispatch(setNewFocusedNodeUid(nFocusedItem));
-  }, [showCodeView, nFocusedItem]);
+  }, [showCodeView]);
 
   // toogle actions panel
   const toogleActionsPanel = useCallback(() => {
@@ -1350,15 +1345,6 @@ export default function MainPage() {
     return () => clearInterval(hoveredMenuItemDetecter);
   }, [cmdkOpen]);
 
-  // file changed - reload the monaco-editor to clear history
-  const [needToReloadCodeView, setNeedToReloadCodeView] = useState(false);
-  useEffect(() => {
-    setNeedToReloadCodeView(true);
-  }, [currentFileUid]);
-  useEffect(() => {
-    needToReloadCodeView && setNeedToReloadCodeView(false);
-  }, [needToReloadCodeView]);
-
   // drag & dragend code view event
   const dragCodeView = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -1419,13 +1405,14 @@ export default function MainPage() {
           // load project
           importProject,
 
-          // non html editable
-          parseFileFlag,
-          setParseFile,
           // close all panel
           closeAllPanel,
           monacoEditorRef,
           setMonacoEditorRef,
+
+          //undo/Redo
+          onUndo,
+          onRedo,
         }}
       >
         <div
@@ -1441,27 +1428,25 @@ export default function MainPage() {
             width={`${actionsPanelWidth}px`}
             height={`calc(100vh - ${actionsPanelOffsetTop * 2}px)`}
           />
-          {!needToReloadCodeView ? (
-            <CodeView
-              offsetTop={`${codeViewOffsetTop}`}
-              offsetBottom={codeViewOffsetBottom}
-              offsetLeft={
-                showActionsPanel
-                  ? actionsPanelOffsetLeft * 2 + actionsPanelWidth
-                  : codeViewOffsetLeft
-              }
-              width={`calc(100vw - ${
-                (showActionsPanel
-                  ? actionsPanelWidth + actionsPanelOffsetLeft * 2
-                  : codeViewOffsetLeft) + codeViewOffsetLeft
-              }px)`}
-              height={`${codeViewHeight}vh`}
-              dropCodeView={dropCodeView}
-              dragCodeView={dragCodeView}
-              dragEndCodeView={dragEndCodeView}
-              codeViewDragging={codeViewDragging}
-            />
-          ) : null}
+          <CodeView
+            offsetTop={`${codeViewOffsetTop}`}
+            offsetBottom={codeViewOffsetBottom}
+            offsetLeft={
+              showActionsPanel
+                ? actionsPanelOffsetLeft * 2 + actionsPanelWidth
+                : codeViewOffsetLeft
+            }
+            width={`calc(100vw - ${
+              (showActionsPanel
+                ? actionsPanelWidth + actionsPanelOffsetLeft * 2
+                : codeViewOffsetLeft) + codeViewOffsetLeft
+            }px)`}
+            height={`${codeViewHeight}vh`}
+            dropCodeView={dropCodeView}
+            dragCodeView={dragCodeView}
+            dragEndCodeView={dragEndCodeView}
+            codeViewDragging={codeViewDragging}
+          />
         </div>
 
         <Command.Dialog

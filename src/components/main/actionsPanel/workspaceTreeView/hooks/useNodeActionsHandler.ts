@@ -480,7 +480,6 @@ export const useNodeActionsHandler = (
       dispatch({ type: NodeTree_Event_ClearActionType });
 
       const nodeData = node.data as TFileNodeData;
-
       if (RednerableFileTypes[nodeData.ext]) {
         dispatch(setPrevRenderableFileUid(uid));
 

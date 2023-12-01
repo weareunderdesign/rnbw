@@ -6,7 +6,6 @@ import { setActivePanel } from "@_redux/main/processor";
 
 import IFrame from "./iFrame";
 import { StageViewProps } from "./types";
-import { useAppState } from "@_redux/useAppState";
 
 export default function StageView(props: StageViewProps) {
   const dispatch = useDispatch();

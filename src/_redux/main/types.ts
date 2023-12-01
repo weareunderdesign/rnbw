@@ -67,9 +67,9 @@ export type TMainContext = {
   ) => void;
   closeAllPanel: () => void;
 
-  // non-html editable
-  parseFileFlag: boolean;
-  setParseFile: (parseFile: boolean) => void;
+  //undo/redo
+  onUndo: () => void;
+  onRedo: () => void;
 };
 
 export type IEditorRef = React.RefObject<editor.IStandaloneCodeEditor | null>;

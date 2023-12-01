@@ -34,7 +34,8 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
 
   // close all panel
   closeAllPanel: () => {},
-  // non-parse file
-  parseFileFlag: true,
-  setParseFile: () => {},
+
+  //undo/redo
+  onUndo: () => {},
+  onRedo: () => {},
 });

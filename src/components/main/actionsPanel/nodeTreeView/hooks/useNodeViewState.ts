@@ -9,49 +9,30 @@ import { selectFileTreeNodes, setCurrentFileUid } from "@_redux/main/fileTree";
 import {
   collapseNodeTreeNodes,
   expandNodeTreeNodes,
-  focusNodeTreeNode,
-  NodeTree_Event_ClearActionType,
-  selectNodeTreeNodes,
+  setCurrentFileContent,
   setSelectedNodeUids,
 } from "@_redux/main/nodeTree";
-import { setNavigatorDropdownType } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
+import { TFileNodeData } from "@_node/index";
 
-export function useNodeViewState(focusItemValue: TNodeUid | null) {
+export function useNodeViewState() {
   const dispatch = useDispatch();
   const {
-    validNodeTree,
+    fileTree,
+    currentFileUid,
     prevRenderableFileUid,
-    nFocusedItem: focusedItem,
+
+    validNodeTree,
     nSelectedItems: selectedItems,
     nSelectedItemsObj: selectedItemsObj,
   } = useAppState();
   const { addRunningActions, removeRunningActions } = useContext(MainContext);
 
-  const {
-    // toasts
-    parseFileFlag,
-    setParseFile,
-  } = useContext(MainContext);
-
   const cb_focusNode = useCallback(
     (uid: TNodeUid) => {
-      addRunningActions(["nodeTreeView-focus"]);
-
-      // validate
-      if (focusedItem === uid) {
-        removeRunningActions(["nodeTreeView-focus"]);
-        return;
-      }
-
-      console.log("useNodeViewState - focus", uid);
-
-      dispatch(focusNodeTreeNode(uid));
-      focusItemValue = uid;
-
       removeRunningActions(["nodeTreeView-focus"]);
     },
-    [addRunningActions, removeRunningActions, focusedItem],
+    [removeRunningActions],
   );
 
   const cb_selectNode = useCallback(
@@ -73,28 +54,29 @@ export function useNodeViewState(focusItemValue: TNodeUid | null) {
         }
       }
 
-      console.log("useNodeViewState - select", _uids);
-
-      dispatch(selectNodeTreeNodes(_uids));
       dispatch(setSelectedNodeUids(_uids));
 
-      if (!parseFileFlag) {
-        const uid = prevRenderableFileUid;
-        setParseFile(true);
-        dispatch(setNavigatorDropdownType("project"));
-        dispatch({ type: NodeTree_Event_ClearActionType });
-        dispatch(setCurrentFileUid(uid));
+      // update file - WIP
+      if (currentFileUid !== prevRenderableFileUid) {
+        const file = fileTree[prevRenderableFileUid];
+        const fileData = file.data as TFileNodeData;
+        dispatch(setCurrentFileUid(prevRenderableFileUid));
+        dispatch(setCurrentFileContent(fileData.content));
         dispatch(selectFileTreeNodes([prevRenderableFileUid]));
+        // dispatch({ type: NodeTree_Event_ClearActionType });
       }
+
       removeRunningActions(["nodeTreeView-select"]);
     },
     [
       addRunningActions,
       removeRunningActions,
+      fileTree,
+      currentFileUid,
+      prevRenderableFileUid,
       validNodeTree,
       selectedItems,
       selectedItemsObj,
-      parseFileFlag,
     ],
   );
 
