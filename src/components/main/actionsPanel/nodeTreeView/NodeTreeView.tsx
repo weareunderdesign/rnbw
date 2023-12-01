@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from "react";
 
 import cx from "classnames";
@@ -39,6 +40,48 @@ import { ItemTitle } from "./nodeTreeComponents/ItemTitle";
 import { useAppState } from "@_redux/useAppState";
 
 const AutoExpandDelay = 1 * 1000;
+const spanStyles: React.CSSProperties = {
+  width: "calc(100% - 32px)",
+  textOverflow: "ellipsis",
+  overflow: "hidden",
+  whiteSpace: "nowrap",
+};
+
+const NodeIcon = ({
+  htmlElementReferenceData,
+  nodeName,
+  componentTitle,
+}: {
+  htmlElementReferenceData: THtmlElementsReference;
+  nodeName: string;
+  componentTitle?: React.ReactNode;
+}) => {
+  let icon = "component";
+  let name = componentTitle;
+  if (htmlElementReferenceData) {
+    icon = useMemo(() => {
+      return htmlElementReferenceData["Icon"];
+    }, [htmlElementReferenceData]);
+
+    console.log(icon, "##### icon");
+
+    name = htmlElementReferenceData["Name"];
+  } else if (nodeName === "!--...--" || nodeName === "comment") {
+    icon = "bubble";
+    name = "comment";
+  }
+
+  return (
+    <>
+      <div className="icon-xs">
+        <SVGIconI {...{ class: "icon-xs" }}>{icon}</SVGIconI>
+      </div>
+      <span className="text-s justify-stretch" style={spanStyles}>
+        {name}
+      </span>
+    </>
+  );
+};
 
 const NodeTreeView = () => {
   const dispatch = useDispatch();
@@ -280,15 +323,9 @@ const NodeTreeView = () => {
                       ? "!DOCTYPE"
                       : nodeData.nodeName
                   ];
-                return refData;
-              }, []);
 
-            const spanStyles: React.CSSProperties = {
-              width: "calc(100% - 32px)",
-              textOverflow: "ellipsis",
-              overflow: "hidden",
-              whiteSpace: "nowrap",
-            };
+                return refData;
+              }, [props.item.data, htmlReferenceData]);
 
             const onClick = useCallback(
               (e: React.MouseEvent) => {
@@ -378,6 +415,7 @@ const NodeTreeView = () => {
                 {...props.context.itemContainerWithChildrenProps}
               >
                 <div
+                  key={`NodeTreeView-${props.item.index}`}
                   id={`NodeTreeView-${props.item.index}`}
                   className={cx(
                     "justify-stretch",
@@ -410,39 +448,13 @@ const NodeTreeView = () => {
                   <div className="gap-s padding-xs" style={{ width: "100%" }}>
                     {props.arrow}
 
-                    {htmlElementReferenceData ? (
-                      <SVGIconI {...{ class: "icon-xs" }}>
-                        {htmlElementReferenceData["Icon"]}
-                      </SVGIconI>
-                    ) : props.item.data.name === "!--...--" ||
-                      props.item.data.name === "comment" ? (
-                      <div className="icon-xs">
-                        <SVGIconI {...{ class: "icon-xs" }}>bubble</SVGIconI>
-                      </div>
-                    ) : (
-                      <div className="icon-xs">
-                        <SVGIconI {...{ class: "icon-xs" }}>component</SVGIconI>
-                      </div>
-                    )}
-
-                    {htmlElementReferenceData ? (
-                      <span
-                        className="text-s justify-stretch"
-                        style={spanStyles}
-                      >
-                        {htmlElementReferenceData["Name"]}
-                      </span>
-                    ) : props.item.data.name === "!--...--" ||
-                      props.item.data.name === "comment" ? (
-                      <span
-                        className="text-s justify-stretch"
-                        style={spanStyles}
-                      >
-                        comment
-                      </span>
-                    ) : (
-                      props.title
-                    )}
+                    <NodeIcon
+                      {...{
+                        htmlElementReferenceData,
+                        nodeName: props.item.data.name,
+                        componentTitle: props.title,
+                      }}
+                    />
                   </div>
                 </div>
 
