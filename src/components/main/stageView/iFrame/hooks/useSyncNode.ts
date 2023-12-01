@@ -1,16 +1,22 @@
 import { useEffect, useRef } from "react";
 
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
-import { TNodeUid } from "@_node/types";
+import { TNodeTreeData, TNodeUid } from "@_node/types";
 
 import { useAppState } from "@_redux/useAppState";
 
 export const useSyncNode = (contentRef: HTMLIFrameElement | null) => {
   const {
+    nodeTree,
     nFocusedItem: focusedItem,
     nSelectedItems: selectedItems,
     hoveredNodeUid,
   } = useAppState();
+
+  const nodeTreeRef = useRef<TNodeTreeData>(nodeTree);
+  useEffect(() => {
+    nodeTreeRef.current = structuredClone(nodeTree);
+  }, [nodeTree]);
 
   // hoveredNodeUid -> stage-view
   const hoveredItemRef = useRef<TNodeUid>(hoveredNodeUid);
@@ -110,8 +116,10 @@ export const useSyncNode = (contentRef: HTMLIFrameElement | null) => {
           : null; */
       newSelectedElement?.setAttribute("rnbwdev-rnbw-element-select", "");
     });
+
     selectedItemsRef.current = [...selectedItems];
+    console.log(selectedItemsRef.current);
   }, [selectedItems]);
 
-  return { hoveredItemRef, focusedItemRef, selectedItemsRef };
+  return { nodeTreeRef, hoveredItemRef, focusedItemRef, selectedItemsRef };
 };

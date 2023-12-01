@@ -26,11 +26,13 @@ export const IFrame = () => {
 
   // hooks
   const { onKeyDown } = useCmdk();
-  const { hoveredItemRef, focusedItemRef, selectedItemsRef } =
+  const { nodeTreeRef, hoveredItemRef, focusedItemRef, selectedItemsRef } =
     useSyncNode(contentRef);
+
   const { onMouseEnter, onMouseMove, onMouseLeave, onClick, onDblClick } =
     useMouseEvents({
       contentRef,
+      nodeTreeRef,
       focusedItemRef,
       selectedItemsRef,
       contentEditableUidRef,
