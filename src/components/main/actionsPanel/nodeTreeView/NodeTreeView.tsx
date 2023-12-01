@@ -407,7 +407,7 @@ const NodeTreeView = () => {
                     <NodeIcon
                       {...{
                         htmlElementReferenceData,
-                        nodeName: props.item.data.name,
+                        nodeName: props.item.data.data.nodeName,
                         componentTitle: props.title,
                       }}
                     />
