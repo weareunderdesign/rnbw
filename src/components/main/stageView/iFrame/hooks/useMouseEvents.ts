@@ -1,17 +1,15 @@
 import { useCallback } from "react";
-
 import { useDispatch } from "react-redux";
-
-import { StageNodeIdAttr, TFileNodeData } from "@_node/file";
+import { StageNodeIdAttr } from "@_node/file";
 import { getValidNodeUids } from "@_node/helpers";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
 import { setHoveredNodeUid } from "@_redux/main/nodeTree";
 import { setSelectedNodeUids } from "@_redux/main/nodeTree/event";
-
 import { getValidElementWithUid, selectAllText } from "../helpers";
 import { THtmlNodeData } from "@_node/node";
+import { setActivePanel } from "@_redux/main/processor";
 
-export interface IUseMouseEventsProps {
+interface IUseMouseEventsProps {
   contentRef: HTMLIFrameElement | null;
   nodeTreeRef: React.MutableRefObject<TNodeTreeData>;
   focusedItemRef: React.MutableRefObject<TNodeUid>;
@@ -42,6 +40,8 @@ export const useMouseEvents = ({
   };
 
   const onClick = useCallback((e: MouseEvent) => {
+    dispatch(setActivePanel("stage"));
+
     const uid = getValidElementWithUid(e.target as HTMLElement);
     if (uid) {
       if (e.shiftKey) {
@@ -56,6 +56,8 @@ export const useMouseEvents = ({
     }
   }, []);
   const onDblClick = useCallback((e: MouseEvent) => {
+    dispatch(setActivePanel("stage"));
+
     const ele = e.target as HTMLElement;
     const uid: TNodeUid | null = ele.getAttribute(StageNodeIdAttr);
 

@@ -8,16 +8,15 @@ import {
   setNeedToReloadIframe,
 } from "@_redux/main/stageView";
 
-import { useMouseEvents } from "./hooks";
+import { useCmdk, useMouseEvents, useSyncNode } from "./hooks";
 import { useAppState } from "@_redux/useAppState";
 import { jss, styles } from "./constants";
 import { LogAllow } from "@_constants/global";
-import { useSyncNode } from "./hooks/useSyncNode";
-import { useCmdk } from "./hooks/useCmdk";
+import { markSelectedElements } from "./helpers";
 
 export const IFrame = () => {
   const dispatch = useDispatch();
-  const { needToReloadIframe, iframeSrc } = useAppState();
+  const { needToReloadIframe, iframeSrc, iframeLoading } = useAppState();
 
   const [contentRef, setContentRef] = useState<HTMLIFrameElement | null>(null);
   const contentEditableUidRef = useRef<TNodeUid>("");
@@ -94,6 +93,9 @@ export const IFrame = () => {
             e.preventDefault();
           });
         }
+
+        // mark selected elements on load
+        markSelectedElements(contentRef, selectedItemsRef.current);
 
         dispatch(setIframeLoading(false));
       };

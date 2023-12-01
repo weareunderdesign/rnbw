@@ -13,6 +13,76 @@ export const getValidElementWithUid = (ele: HTMLElement): TNodeUid | null => {
   return uid;
 };
 
+export const markSelectedElements = (
+  contentRef: HTMLIFrameElement | null,
+  uids: TNodeUid[],
+) => {
+  uids.map((uid) => {
+    // if it's a web component, should select its first child element
+    let selectedElement = contentRef?.contentWindow?.document?.querySelector(
+      `[${StageNodeIdAttr}="${uid}"]`,
+    );
+    const isValid: null | string = selectedElement?.firstElementChild
+      ? selectedElement?.firstElementChild.getAttribute(StageNodeIdAttr)
+      : "";
+    isValid === null
+      ? (selectedElement = selectedElement?.firstElementChild)
+      : null;
+    selectedElement?.setAttribute("rnbwdev-rnbw-element-select", "");
+  });
+};
+export const unmarkSelectedElements = (
+  contentRef: HTMLIFrameElement | null,
+  uids: TNodeUid[],
+) => {
+  uids.map((uid) => {
+    // if it's a web component, should select its first child element
+    let selectedElement = contentRef?.contentWindow?.document?.querySelector(
+      `[${StageNodeIdAttr}="${uid}"]`,
+    );
+    const isValid: null | string = selectedElement?.firstElementChild
+      ? selectedElement?.firstElementChild.getAttribute(StageNodeIdAttr)
+      : "";
+    isValid === null
+      ? (selectedElement = selectedElement?.firstElementChild)
+      : null;
+    selectedElement?.removeAttribute("rnbwdev-rnbw-element-select");
+  });
+};
+
+export const markHoverdElement = (
+  contentRef: HTMLIFrameElement | null,
+  uid: TNodeUid,
+) => {
+  // if it's a web component, should select its first child element
+  let selectedElement = contentRef?.contentWindow?.document?.querySelector(
+    `[${StageNodeIdAttr}="${uid}"]`,
+  );
+  const isValid: null | string = selectedElement?.firstElementChild
+    ? selectedElement?.firstElementChild.getAttribute(StageNodeIdAttr)
+    : "";
+  isValid === null
+    ? (selectedElement = selectedElement?.firstElementChild)
+    : null;
+  selectedElement?.setAttribute("rnbwdev-rnbw-element-hover", "");
+};
+export const unmarkHoverdElement = (
+  contentRef: HTMLIFrameElement | null,
+  uid: TNodeUid,
+) => {
+  // if it's a web component, should select its first child element
+  let selectedElement = contentRef?.contentWindow?.document?.querySelector(
+    `[${StageNodeIdAttr}="${uid}"]`,
+  );
+  const isValid: null | string = selectedElement?.firstElementChild
+    ? selectedElement?.firstElementChild.getAttribute(StageNodeIdAttr)
+    : "";
+  isValid === null
+    ? (selectedElement = selectedElement?.firstElementChild)
+    : null;
+  selectedElement?.removeAttribute("rnbwdev-rnbw-element-hover");
+};
+
 export const selectAllText = (
   contentRef: HTMLIFrameElement | null,
   ele: HTMLElement,

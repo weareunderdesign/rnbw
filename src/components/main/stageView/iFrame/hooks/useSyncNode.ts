@@ -4,6 +4,12 @@ import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
 
 import { useAppState } from "@_redux/useAppState";
+import {
+  markHoverdElement,
+  markSelectedElements,
+  unmarkHoverdElement,
+  unmarkSelectedElements,
+} from "../helpers";
 
 export const useSyncNode = (contentRef: HTMLIFrameElement | null) => {
   const {
@@ -24,16 +30,9 @@ export const useSyncNode = (contentRef: HTMLIFrameElement | null) => {
     if (hoveredItemRef.current === hoveredNodeUid) return;
 
     // remove current hovered effect
-    let curHoveredElement = contentRef?.contentWindow?.document?.querySelector(
-      `[${StageNodeIdAttr}="${hoveredItemRef.current}"]`,
-    );
-    curHoveredElement?.removeAttribute("rnbwdev-rnbw-element-hover");
-
+    unmarkHoverdElement(contentRef, hoveredItemRef.current);
     // mark new hovered item
-    let newHoveredElement = contentRef?.contentWindow?.document?.querySelector(
-      `[${StageNodeIdAttr}="${hoveredNodeUid}"]`,
-    );
-    newHoveredElement?.setAttribute("rnbwdev-rnbw-element-hover", "");
+    markHoverdElement(contentRef, hoveredNodeUid);
 
     hoveredItemRef.current = hoveredNodeUid;
   }, [hoveredNodeUid]);
@@ -43,20 +42,19 @@ export const useSyncNode = (contentRef: HTMLIFrameElement | null) => {
   useEffect(() => {
     if (focusedItemRef.current === focusedItem) return;
 
-    const newFocusedElement =
-      contentRef?.contentWindow?.document?.querySelector(
-        `[${StageNodeIdAttr}="${focusedItem}"]`,
-      );
+    const focusedElement = contentRef?.contentWindow?.document?.querySelector(
+      `[${StageNodeIdAttr}="${focusedItem}"]`,
+    );
 
     true
-      ? newFocusedElement?.scrollIntoView({
+      ? focusedElement?.scrollIntoView({
           block: "nearest",
           inline: "start",
           behavior: "smooth",
         })
       : setTimeout(
           () =>
-            newFocusedElement?.scrollIntoView({
+            focusedElement?.scrollIntoView({
               block: "nearest",
               inline: "start",
               behavior: "smooth",
@@ -87,38 +85,11 @@ export const useSyncNode = (contentRef: HTMLIFrameElement | null) => {
     }
 
     // remove original selected effect
-    selectedItemsRef.current.map((uid) => {
-      // for the elements which are created by js. (ex: Web Component)
-      let curselectedElement =
-        contentRef?.contentWindow?.document?.querySelector(
-          `[${StageNodeIdAttr}="${uid}"]`,
-        );
-      /* const isValid: null | string = curselectedElement?.firstElementChild
-          ? curselectedElement?.firstElementChild.getAttribute(StageNodeIdAttr)
-          : "";
-        isValid === null
-          ? (curselectedElement = curselectedElement?.firstElementChild)
-          : null; */
-      curselectedElement?.removeAttribute("rnbwdev-rnbw-element-select");
-    });
+    unmarkSelectedElements(contentRef, selectedItemsRef.current);
     // mark new selected items
-    selectedItems.map((uid) => {
-      // for the elements which are created by js. (ex: Web Component)
-      let newSelectedElement =
-        contentRef?.contentWindow?.document?.querySelector(
-          `[${StageNodeIdAttr}="${uid}"]`,
-        );
-      /* const isValid: null | string = newSelectedElement?.firstElementChild
-          ? newSelectedElement?.firstElementChild.getAttribute(StageNodeIdAttr)
-          : "";
-        isValid === null
-          ? (newSelectedElement = newSelectedElement?.firstElementChild)
-          : null; */
-      newSelectedElement?.setAttribute("rnbwdev-rnbw-element-select", "");
-    });
+    markSelectedElements(contentRef, selectedItems);
 
     selectedItemsRef.current = [...selectedItems];
-    console.log(selectedItemsRef.current);
   }, [selectedItems]);
 
   return { nodeTreeRef, hoveredItemRef, focusedItemRef, selectedItemsRef };

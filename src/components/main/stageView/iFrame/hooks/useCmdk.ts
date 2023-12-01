@@ -75,7 +75,7 @@ export const useCmdk = () => {
 
       dispatch(setCurrentCommand({ action }));
     },
-    [cmdkReferenceData, nodeTree],
+    [cmdkReferenceData, nodeTree, osType],
   );
 
   return { onKeyDown };
