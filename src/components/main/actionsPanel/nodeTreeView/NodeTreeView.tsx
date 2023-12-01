@@ -4,13 +4,12 @@ import React, {
   useEffect,
   useMemo,
   useRef,
-  useState,
 } from "react";
 
 import cx from "classnames";
 import { useDispatch } from "react-redux";
 
-import { SVGIconI, TreeView } from "@_components/common";
+import { TreeView } from "@_components/common";
 import { TreeViewData } from "@_components/common/treeView/types";
 import { RootNodeUid } from "@_constants/main";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
@@ -38,50 +37,9 @@ import { DragBetweenLine } from "./nodeTreeComponents/DragBetweenLine";
 import { ItemArrow } from "./nodeTreeComponents/ItemArrow";
 import { ItemTitle } from "./nodeTreeComponents/ItemTitle";
 import { useAppState } from "@_redux/useAppState";
+import { NodeIcon } from "./nodeTreeComponents/NodeIcon";
 
 const AutoExpandDelay = 1 * 1000;
-const spanStyles: React.CSSProperties = {
-  width: "calc(100% - 32px)",
-  textOverflow: "ellipsis",
-  overflow: "hidden",
-  whiteSpace: "nowrap",
-};
-
-const NodeIcon = ({
-  htmlElementReferenceData,
-  nodeName,
-  componentTitle,
-}: {
-  htmlElementReferenceData: THtmlElementsReference;
-  nodeName: string;
-  componentTitle?: React.ReactNode;
-}) => {
-  let icon = "component";
-  let name = componentTitle;
-  if (htmlElementReferenceData) {
-    icon = useMemo(() => {
-      return htmlElementReferenceData["Icon"];
-    }, [htmlElementReferenceData]);
-
-    console.log(icon, "##### icon");
-
-    name = htmlElementReferenceData["Name"];
-  } else if (nodeName === "!--...--" || nodeName === "comment") {
-    icon = "bubble";
-    name = "comment";
-  }
-
-  return (
-    <>
-      <div className="icon-xs">
-        <SVGIconI {...{ class: "icon-xs" }}>{icon}</SVGIconI>
-      </div>
-      <span className="text-s justify-stretch" style={spanStyles}>
-        {name}
-      </span>
-    </>
-  );
-};
 
 const NodeTreeView = () => {
   const dispatch = useDispatch();
@@ -311,7 +269,6 @@ const NodeTreeView = () => {
         renderers={{
           renderTreeContainer: (props) => <Container {...props} />,
           renderItemsContainer: (props) => <Container {...props} />,
-
           renderItem: (props) => {
             const htmlElementReferenceData =
               useMemo<THtmlElementsReference>(() => {
@@ -323,9 +280,8 @@ const NodeTreeView = () => {
                       ? "!DOCTYPE"
                       : nodeData.nodeName
                   ];
-
                 return refData;
-              }, [props.item.data, htmlReferenceData]);
+              }, [props.item.data]);
 
             const onClick = useCallback(
               (e: React.MouseEvent) => {
@@ -415,7 +371,7 @@ const NodeTreeView = () => {
                 {...props.context.itemContainerWithChildrenProps}
               >
                 <div
-                  key={`NodeTreeView-${props.item.index}`}
+                  key={`NodeTreeView-${props.item.index}${props.item.data.data.nodeName}`}
                   id={`NodeTreeView-${props.item.index}`}
                   className={cx(
                     "justify-stretch",
