@@ -13,6 +13,7 @@ import { useAppState } from "@_redux/useAppState";
 import { jss, styles } from "./constants";
 import { LogAllow } from "@_constants/global";
 import { useSyncNode } from "./hooks/useSyncNode";
+import { useCmdk } from "./hooks/useCmdk";
 
 export const IFrame = () => {
   const dispatch = useDispatch();
@@ -24,6 +25,7 @@ export const IFrame = () => {
   const linkTagUidRef = useRef<TNodeUid>("");
 
   // hooks
+  const { onKeyDown } = useCmdk();
   const { hoveredItemRef, focusedItemRef, selectedItemsRef } =
     useSyncNode(contentRef);
   const { onMouseEnter, onMouseMove, onMouseLeave, onClick, onDblClick } =
@@ -49,6 +51,9 @@ export const IFrame = () => {
         const headNode = _document?.head;
 
         if (htmlNode && headNode) {
+          // enable cmdk
+          htmlNode.addEventListener("keydown", onKeyDown);
+
           // add rnbw css
           const style = _document.createElement("style");
           style.textContent = styles;
