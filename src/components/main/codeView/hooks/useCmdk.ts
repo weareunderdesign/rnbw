@@ -1,36 +1,33 @@
-import { useContext, useEffect } from "react";
+import { useCallback, useContext, useEffect } from "react";
 
-import { MainContext } from "@_redux/main";
-
-import { useAppState } from "@_redux/useAppState";
 import { html_beautify } from "js-beautify";
 
-export const useCmdk = () => {
+import { MainContext } from "@_redux/main";
+import { useAppState } from "@_redux/useAppState";
+
+const useCmdk = () => {
   const { activePanel, currentCommand } = useAppState();
   const { monacoEditorRef } = useContext(MainContext);
 
-  const onFormatting = () => {
+  const onFormat = useCallback(() => {
     const model = monacoEditorRef.current?.getModel();
+    if (!model) return;
 
-    if (!model) {
-      console.error("Monaco Editor model is undefined");
-      return;
-    }
     const content = html_beautify(model.getValue());
     model.setValue(content);
-  };
+  }, []);
 
   useEffect(() => {
-    if (!currentCommand) return;
-
-    if (activePanel !== "node" && activePanel !== "stage") return;
+    if (!currentCommand || activePanel !== "code") return;
 
     switch (currentCommand.action) {
-      case "Formatting":
-        onFormatting();
+      case "Format":
+        onFormat();
         break;
       default:
         break;
     }
   }, [currentCommand]);
 };
+
+export default useCmdk;

@@ -5,6 +5,7 @@ import {
   setCurrentFileUid,
   setFileTree,
   setInitialFileUidToOpen,
+  setPrevFileUid,
   setPrevRenderableFileUid,
   setProject,
 } from "@_redux/main/fileTree";
@@ -108,6 +109,7 @@ export const clearProjectSession = (dispatch: Dispatch<AnyAction>) => {
   dispatch(setFileTree({}));
   dispatch(setInitialFileUidToOpen(""));
   dispatch(setCurrentFileUid(""));
+  dispatch(setPrevFileUid(""));
   dispatch(setPrevRenderableFileUid(""));
   dispatch(setCurrentFileContent(""));
   dispatch(clearFileTreeViewState());
