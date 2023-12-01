@@ -10,12 +10,7 @@ export type CodeViewProps = {
   codeViewDragging: boolean;
 };
 
-export type CursorPos = {
-  lineNumber: number;
-  column: number;
-};
-
-export type CodeSelection = {
+export type TCodeSelection = {
   startLineNumber: number;
   startColumn: number;
   endLineNumber: number;

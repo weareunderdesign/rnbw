@@ -413,10 +413,31 @@ export const updateFileInfoFromNodeTree = (
   }
   return { _needToReloadIFrame };
 };
-export function removeAttributeFromElement(
+export const removeAttributeFromElement = (
   htmlString: string,
   attributeName: string,
-) {
+) => {
   const pattern = new RegExp(`\\s*${attributeName}=["'][^"']*["']\\s*`, "g");
   return htmlString.replace(pattern, "");
-}
+};
+
+export const getNodeUidToBeSelectedAtFirst = (validNodeTree: TNodeTreeData) => {
+  let bodyNode: TNode | null = null;
+
+  const uids = getSubNodeUidsByBfs(RootNodeUid, validNodeTree);
+  for (const uid of uids) {
+    const node = validNodeTree[uid];
+    const nodeData = node.data as THtmlNodeData;
+
+    if (nodeData.tagName === "body" && nodeData.nodeName === "body") {
+      bodyNode = node;
+      break;
+    }
+  }
+
+  return bodyNode === null
+    ? uids[0]
+    : bodyNode.children.length > 0
+    ? bodyNode.children[0]
+    : bodyNode.uid;
+};

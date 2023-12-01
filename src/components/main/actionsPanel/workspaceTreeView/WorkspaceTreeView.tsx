@@ -16,7 +16,10 @@ import { AddFileActionPrefix, RootNodeUid } from "@_constants/main";
 import { _path, getNormalizedPath, TFileNodeData } from "@_node/file";
 import { TNode, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
-import { setHoveredFileUid } from "@_redux/main/fileTree";
+import {
+  setHoveredFileUid,
+  setInitialFileUidToOpen,
+} from "@_redux/main/fileTree";
 import { FileTree_Event_ClearActionType } from "@_redux/main/fileTree/event";
 import { setActivePanel, setDidRedo, setDidUndo } from "@_redux/main/processor";
 import { addClass, generateQuerySelector, removeClass } from "@_services/main";

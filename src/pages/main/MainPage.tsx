@@ -1160,8 +1160,6 @@ export default function MainPage() {
 
   // History - Undo/Redo
   const onUndo = useCallback(() => {
-    console.log({ doingAction, doingFileAction, iframeLoading });
-
     if (doingAction || doingFileAction || iframeLoading) return;
 
     if (activePanel === "file") {
@@ -1192,7 +1190,7 @@ export default function MainPage() {
     nodeEventPastLength,
   ]);
   const onRedo = useCallback(() => {
-    if (doingAction || iframeLoading || doingFileAction) return;
+    if (doingAction || doingFileAction || iframeLoading) return;
 
     if (activePanel === "file") {
       if (fileEventFutureLength === 0) {
@@ -1347,15 +1345,6 @@ export default function MainPage() {
     return () => clearInterval(hoveredMenuItemDetecter);
   }, [cmdkOpen]);
 
-  // file changed - reload the monaco-editor to clear history
-  const [needToReloadCodeView, setNeedToReloadCodeView] = useState(false);
-  useEffect(() => {
-    setNeedToReloadCodeView(true);
-  }, [currentFileUid]);
-  useEffect(() => {
-    needToReloadCodeView && setNeedToReloadCodeView(false);
-  }, [needToReloadCodeView]);
-
   // drag & dragend code view event
   const dragCodeView = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -1439,27 +1428,25 @@ export default function MainPage() {
             width={`${actionsPanelWidth}px`}
             height={`calc(100vh - ${actionsPanelOffsetTop * 2}px)`}
           />
-          {!needToReloadCodeView ? (
-            <CodeView
-              offsetTop={`${codeViewOffsetTop}`}
-              offsetBottom={codeViewOffsetBottom}
-              offsetLeft={
-                showActionsPanel
-                  ? actionsPanelOffsetLeft * 2 + actionsPanelWidth
-                  : codeViewOffsetLeft
-              }
-              width={`calc(100vw - ${
-                (showActionsPanel
-                  ? actionsPanelWidth + actionsPanelOffsetLeft * 2
-                  : codeViewOffsetLeft) + codeViewOffsetLeft
-              }px)`}
-              height={`${codeViewHeight}vh`}
-              dropCodeView={dropCodeView}
-              dragCodeView={dragCodeView}
-              dragEndCodeView={dragEndCodeView}
-              codeViewDragging={codeViewDragging}
-            />
-          ) : null}
+          <CodeView
+            offsetTop={`${codeViewOffsetTop}`}
+            offsetBottom={codeViewOffsetBottom}
+            offsetLeft={
+              showActionsPanel
+                ? actionsPanelOffsetLeft * 2 + actionsPanelWidth
+                : codeViewOffsetLeft
+            }
+            width={`calc(100vw - ${
+              (showActionsPanel
+                ? actionsPanelWidth + actionsPanelOffsetLeft * 2
+                : codeViewOffsetLeft) + codeViewOffsetLeft
+            }px)`}
+            height={`${codeViewHeight}vh`}
+            dropCodeView={dropCodeView}
+            dragCodeView={dragCodeView}
+            dragEndCodeView={dragEndCodeView}
+            codeViewDragging={codeViewDragging}
+          />
         </div>
 
         <Command.Dialog

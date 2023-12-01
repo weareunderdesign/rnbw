@@ -3,40 +3,19 @@ import { useCallback, useContext } from "react";
 import { useDispatch } from "react-redux";
 
 import { LogAllow } from "@_constants/global";
-import { TNode } from "@_node/types";
-import { AppState } from "@_redux/_root";
 import { MainContext } from "@_redux/main";
 import { setCurrentCommand } from "@_redux/main/cmdk";
 import { getCommandKey } from "@_services/global";
 import { TCmdkKeyMap } from "@_types/main";
 import { useAppState } from "@_redux/useAppState";
 
-export interface IUseCmdkProps {
-  contentEditableUidRef: React.MutableRefObject<string>;
-  mostRecentSelectedNode: React.MutableRefObject<TNode | undefined>;
-}
-
-export const useCmdk = ({
-  contentEditableUidRef,
-  mostRecentSelectedNode,
-}: IUseCmdkProps) => {
+export const useCmdk = () => {
   const dispatch = useDispatch();
   const { nodeTree, osType } = useAppState();
-  const {
-    // references
-    cmdkReferenceData,
-  } = useContext(MainContext);
+  const { cmdkReferenceData } = useContext(MainContext);
 
   const onKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      //We are trying to find a way to get node id with this event
-      if (contentEditableUidRef.current !== "") {
-        let isSaving = e.key === "s" && (e.ctrlKey || e.metaKey);
-        if (!isSaving) {
-          return;
-        }
-      }
-
       // cmdk obj for the current command
       const cmdk: TCmdkKeyMap = {
         cmd: getCommandKey(e, osType),
@@ -96,7 +75,7 @@ export const useCmdk = ({
 
       dispatch(setCurrentCommand({ action }));
     },
-    [cmdkReferenceData, nodeTree],
+    [cmdkReferenceData, nodeTree, osType],
   );
 
   return { onKeyDown };
