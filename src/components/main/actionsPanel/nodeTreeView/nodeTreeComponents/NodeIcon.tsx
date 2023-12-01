@@ -22,7 +22,6 @@ export const NodeIcon = ({
   let name = componentTitle;
   if (htmlElementReferenceData) {
     icon = htmlElementReferenceData["Icon"];
-
     name = htmlElementReferenceData["Name"];
   } else if (nodeName === "!--...--" || nodeName === "comment") {
     icon = "bubble";
