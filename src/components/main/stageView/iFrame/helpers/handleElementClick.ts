@@ -1,7 +1,8 @@
 import { THtmlNodeData } from "@_node/node";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
 
-import { handleTextPaste, selectAllText } from "./";
+import { handleTextPaste } from "./";
+import { selectAllText } from "../helpers";
 
 export const handleElementClick = (
   ele: HTMLElement,
