@@ -37,6 +37,7 @@ import {
   getNeedToExpandNodeUids,
   getNodeUidToBeSelectedAtFirst,
   getPreViewPath,
+  markChangedFolders,
 } from "../helpers";
 
 export const useNodeTreeEvent = () => {
@@ -118,6 +119,9 @@ export const useNodeTreeEvent = () => {
     fileData.contentInApp = contentInApp;
     fileData.changed = fileData.content !== fileData.orgContent;
 
+    if (fileData.changed && file.parentUid) {
+      markChangedFolders(fileTree, file, dispatch);
+    }
     // sync file-tree
     dispatch(setFileTreeNode(file));
     (async () => {

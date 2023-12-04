@@ -17,8 +17,10 @@ import { getSubNodeUidsByBfs, getValidNodeUids } from "@_node/helpers";
 import { THtmlNodeData, THtmlPageSettings } from "@_node/node";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import { TOsType } from "@_redux/global";
-import { TProject } from "@_redux/main/fileTree";
+import { TProject, setFileTreeNode } from "@_redux/main/fileTree";
 import { TCodeChange, TFileInfo } from "@_types/main";
+import { Dispatch } from "react";
+import { AnyAction } from "@reduxjs/toolkit";
 
 export const saveFileContent = async (
   project: TProject,
@@ -455,4 +457,17 @@ export const getNeedToExpandNodeUids = (
     }
   });
   return _expandedItems;
+};
+export const markChangedFolders = (
+  fileTree: TFileNodeTreeData,
+  file: TFileNode,
+  dispatch: Dispatch<AnyAction>,
+) => {
+  if (!file.parentUid) return;
+
+  const fileChanging = structuredClone(fileTree[file.parentUid]);
+  fileChanging.data.changed = true;
+  dispatch(setFileTreeNode(fileChanging));
+
+  markChangedFolders(fileTree, fileChanging, dispatch);
 };
