@@ -18,6 +18,8 @@ export const useSaveCommand = () => {
     useContext(MainContext);
 
   useEffect(() => {
+    if (!currentCommand) return;
+
     switch (currentCommand?.action) {
       case "Save":
         onSaveCurrentFile();
@@ -36,6 +38,8 @@ export const useSaveCommand = () => {
     const file = _ffTree[currentFileUid];
     const fileData = file.data;
 
+    console.log(fileData.content, fileData.orgContent);
+
     addRunningActions(["processor-save-currentFile"]);
     if (fileData.changed) {
       try {
@@ -49,4 +53,6 @@ export const useSaveCommand = () => {
   }, [project, fileTree, fileHandlers, currentFileUid]);
 
   const onSaveProject = useCallback(async () => {}, []);
+
+  return { onSaveCurrentFile, onSaveProject };
 };

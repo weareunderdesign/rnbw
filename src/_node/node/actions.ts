@@ -1,6 +1,5 @@
 import { editor, Range } from "monaco-editor";
 import {
-  THtmlNodeData,
   TNodeApiPayload,
   TNodeReferenceData,
   TNodeTreeData,

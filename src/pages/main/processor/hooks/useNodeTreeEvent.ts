@@ -37,10 +37,13 @@ import {
   getNodeUidToBeSelectedAtFirst,
   getPreViewPath,
 } from "../helpers";
+import { setCurrentCommand } from "@_redux/main/cmdk";
 
 export const useNodeTreeEvent = () => {
   const dispatch = useDispatch();
   const {
+    currentCommand,
+
     fileTree,
     initialFileUidToOpen,
     currentFileUid,
@@ -111,6 +114,11 @@ export const useNodeTreeEvent = () => {
     fileData.content = currentFileContent;
     fileData.contentInApp = contentInApp;
     fileData.changed = fileData.content !== fileData.orgContent;
+
+    // for "Save" command while text-editing
+    if (currentCommand?.action === "SaveForce") {
+      dispatch(setCurrentCommand({ action: "Save" }));
+    }
 
     // sync file-tree
     dispatch(setFileTreeNode(file));

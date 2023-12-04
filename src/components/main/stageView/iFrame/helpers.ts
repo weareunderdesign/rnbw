@@ -97,12 +97,14 @@ export const editHtmlContent = ({
   contentEditableUid,
   codeViewInstanceModel,
   setIsContentProgrammaticallyChanged,
+  cb,
 }: {
   iframeRef: HTMLIFrameElement;
   nodeTree: TNodeTreeData;
   contentEditableUid: TNodeUid;
   codeViewInstanceModel: editor.ITextModel;
   setIsContentProgrammaticallyChanged: (value: boolean) => void;
+  cb?: () => void;
 }) => {
   const contentEditableElement =
     iframeRef.contentWindow?.document.querySelector(
@@ -120,7 +122,10 @@ export const editHtmlContent = ({
         content: contentEditableElement.innerHTML,
         codeViewInstanceModel,
       },
-      () => setIsContentProgrammaticallyChanged(false),
+      () => {
+        setIsContentProgrammaticallyChanged(false);
+      },
+      cb,
     );
   }
 };
