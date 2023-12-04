@@ -4,15 +4,12 @@ import morphdom from "morphdom";
 import { useDispatch } from "react-redux";
 
 import { LogAllow } from "@_constants/global";
-import { RootNodeUid } from "@_constants/main";
 import {
   parseFile,
   PreserveRnbwNode,
   StageNodeIdAttr,
   writeFile,
 } from "@_node/file";
-import { getSubNodeUidsByBfs } from "@_node/helpers";
-import { TNodeTreeData } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import {
   setDoingFileAction,
@@ -62,11 +59,11 @@ export const useNodeTreeEvent = () => {
   const { addRunningActions, removeRunningActions } = useContext(MainContext);
 
   useEffect(() => {
-    /* LogAllow &&
+    LogAllow &&
       console.log("useNodeTreeEvent - selectedNodeUids", {
         selectedNodeUids,
         currentFileContent,
-      }); */
+      });
 
     // focus node
     dispatch(
@@ -86,20 +83,22 @@ export const useNodeTreeEvent = () => {
     );
   }, [selectedNodeUids]);
 
-  /* useEffect(() => {
+  useEffect(() => {
+    return;
+
     // validate expanded node uids
     const _expandedItems = nExpandedItems.filter(
       (uid) => validNodeTree[uid] && validNodeTree[uid].isEntity === false,
     );
     dispatch(setExpandedNodeTreeNodes([..._expandedItems]));
-  }, [validNodeTree]); */
+  }, [validNodeTree]);
 
   useEffect(() => {
-    /* LogAllow &&
+    LogAllow &&
       console.log("useNodeTreeEvent - currentFileContent", {
         selectedNodeUids,
         currentFileContent,
-      }); */
+      });
 
     // validate
     if (!fileTree[currentFileUid]) return;
@@ -116,11 +115,10 @@ export const useNodeTreeEvent = () => {
     fileData.content = currentFileContent;
     fileData.contentInApp = contentInApp;
     fileData.changed = fileData.content !== fileData.orgContent;
-
     if (fileData.changed && file.parentUid) {
       markChangedFolders(fileTree, file, dispatch);
     }
-    
+
     // when "Save" while text-editing, we need to call "Save" command after file-content updated.
     // after fileTree has been updated exactly. so when "Save" while text-editing, we first call "SaveForce"
     if (currentCommand?.action === "SaveForce") {
