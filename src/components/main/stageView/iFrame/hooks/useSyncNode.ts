@@ -24,20 +24,17 @@ export const useSyncNode = (contentRef: HTMLIFrameElement | null) => {
     nodeTreeRef.current = structuredClone(nodeTree);
   }, [nodeTree]);
 
-  // hoveredNodeUid -> stage-view
+  // hoveredNodeUid -> stageView
   const hoveredItemRef = useRef<TNodeUid>(hoveredNodeUid);
   useEffect(() => {
     if (hoveredItemRef.current === hoveredNodeUid) return;
 
-    // remove current hovered effect
     unmarkHoverdElement(contentRef, hoveredItemRef.current);
-    // mark new hovered item
     markHoverdElement(contentRef, hoveredNodeUid);
-
     hoveredItemRef.current = hoveredNodeUid;
   }, [hoveredNodeUid]);
 
-  // focusedItem -> scroll to
+  // focusedItem -> scrollTo
   const focusedItemRef = useRef<TNodeUid>(focusedItem);
   useEffect(() => {
     if (focusedItemRef.current === focusedItem) return;
@@ -45,27 +42,19 @@ export const useSyncNode = (contentRef: HTMLIFrameElement | null) => {
     const focusedElement = contentRef?.contentWindow?.document?.querySelector(
       `[${StageNodeIdAttr}="${focusedItem}"]`,
     );
-
-    true
-      ? focusedElement?.scrollIntoView({
+    setTimeout(
+      () =>
+        focusedElement?.scrollIntoView({
           block: "nearest",
           inline: "start",
           behavior: "smooth",
-        })
-      : setTimeout(
-          () =>
-            focusedElement?.scrollIntoView({
-              block: "nearest",
-              inline: "start",
-              behavior: "smooth",
-            }),
-          50,
-        );
-
+        }),
+      50,
+    );
     focusedItemRef.current = focusedItem;
   }, [focusedItem]);
 
-  // mark selected items
+  // selectedItems -> stageView
   const selectedItemsRef = useRef<TNodeUid[]>(selectedItems);
   useEffect(() => {
     // check if it's a new state
@@ -84,11 +73,8 @@ export const useSyncNode = (contentRef: HTMLIFrameElement | null) => {
       if (same) return;
     }
 
-    // remove original selected effect
     unmarkSelectedElements(contentRef, selectedItemsRef.current);
-    // mark new selected items
     markSelectedElements(contentRef, selectedItems);
-
     selectedItemsRef.current = [...selectedItems];
   }, [selectedItems]);
 

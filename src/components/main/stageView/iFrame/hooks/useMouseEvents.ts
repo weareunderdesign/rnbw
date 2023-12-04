@@ -30,6 +30,7 @@ export const useMouseEvents = ({
 }: IUseMouseEventsProps) => {
   const dispatch = useDispatch();
 
+  // hoveredNodeUid
   const onMouseEnter = useCallback((e: MouseEvent) => {}, []);
   const onMouseMove = useCallback((e: MouseEvent) => {
     const uid = getValidElementWithUid(e.target as HTMLElement);
@@ -39,6 +40,7 @@ export const useMouseEvents = ({
     dispatch(setHoveredNodeUid(""));
   };
 
+  // click, dblclick handlers
   const onClick = useCallback(
     (e: MouseEvent) => {
       dispatch(setActivePanel("stage"));

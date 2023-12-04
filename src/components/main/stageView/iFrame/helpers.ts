@@ -83,6 +83,7 @@ export const unmarkHoverdElement = (
   selectedElement?.removeAttribute("rnbwdev-rnbw-element-hover");
 };
 
+// -----------------------
 export const selectAllText = (
   contentRef: HTMLIFrameElement | null,
   ele: HTMLElement,
