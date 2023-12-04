@@ -115,7 +115,8 @@ export const useNodeTreeEvent = () => {
     fileData.contentInApp = contentInApp;
     fileData.changed = fileData.content !== fileData.orgContent;
 
-    // for "Save" command while text-editing
+    // when "Save" while text-editing, we need to call "Save" command after file-content updated.
+    // after fileTree has been updated exactly. so when "Save" while text-editing, we first call "SaveForce"
     if (currentCommand?.action === "SaveForce") {
       dispatch(setCurrentCommand({ action: "Save" }));
     }
