@@ -42,16 +42,6 @@ const nodeTreeSlice = createSlice({
         state.nodeTreeViewState.expandedItemsObj[uid] = true;
       }
     },
-    setAppendExpandedNodeTreeNodes(state, action: PayloadAction<TNodeUid[]>) {
-      const expandedItems = action.payload;
-      state.nodeTreeViewState.expandedItems = [
-        ...state.nodeTreeViewState.expandedItems,
-        ...expandedItems,
-      ];
-      for (const uid of expandedItems) {
-        state.nodeTreeViewState.expandedItemsObj[uid] = true;
-      }
-    },
     expandNodeTreeNodes(state, action: PayloadAction<TNodeUid[]>) {
       const uids = action.payload;
       for (const uid of uids) {
@@ -148,7 +138,6 @@ export const {
 
   focusNodeTreeNode,
   setExpandedNodeTreeNodes,
-  setAppendExpandedNodeTreeNodes,
   expandNodeTreeNodes,
   collapseNodeTreeNodes,
   selectNodeTreeNodes,

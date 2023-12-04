@@ -22,6 +22,7 @@ import {
   setPrevRenderableFileUid,
 } from "@_redux/main/fileTree";
 import {
+  expandNodeTreeNodes,
   focusNodeTreeNode,
   selectNodeTreeNodes,
   setExpandedNodeTreeNodes,
@@ -32,8 +33,11 @@ import {
 import { setIframeSrc, setNeedToReloadIframe } from "@_redux/main/stageView";
 import { useAppState } from "@_redux/useAppState";
 
-import { getNodeUidToBeSelectedAtFirst, getPreViewPath } from "../helpers";
-import { getExpandedItems } from "@_components/main/actionsPanel/navigatorPanel/helpers";
+import {
+  getNeedToExpandNodeUids,
+  getNodeUidToBeSelectedAtFirst,
+  getPreViewPath,
+} from "../helpers";
 
 export const useNodeTreeEvent = () => {
   const dispatch = useDispatch();
@@ -47,6 +51,7 @@ export const useNodeTreeEvent = () => {
     currentFileContent,
     selectedNodeUids,
 
+    validNodeTree,
     nExpandedItems,
 
     syncConfigs,
@@ -61,6 +66,7 @@ export const useNodeTreeEvent = () => {
         currentFileContent,
       });
 
+    // focus/select nodes
     dispatch(selectNodeTreeNodes(selectedNodeUids));
     dispatch(
       focusNodeTreeNode(
@@ -69,7 +75,22 @@ export const useNodeTreeEvent = () => {
           : "",
       ),
     );
+
+    // expand nodes
+    const expandedItems = getNeedToExpandNodeUids(
+      validNodeTree,
+      selectedNodeUids,
+    );
+    dispatch(expandNodeTreeNodes(expandedItems));
   }, [selectedNodeUids]);
+
+  useEffect(() => {
+    // validate expanded node uids
+    const _expandedItems = nExpandedItems.filter(
+      (uid) => validNodeTree[uid] && validNodeTree[uid].isEntity === false,
+    );
+    dispatch(setExpandedNodeTreeNodes([..._expandedItems]));
+  }, [validNodeTree]);
 
   useEffect(() => {
     LogAllow &&
@@ -134,29 +155,16 @@ export const useNodeTreeEvent = () => {
       });
       dispatch(setValidNodeTree(_validNodeTree));
 
-      // select initial-node to select when open a new project
+      // select initial-node
       if (initialFileUidToOpen !== "" && fileTree[initialFileUidToOpen]) {
+        // it's a new project
         dispatch(setInitialFileUidToOpen(""));
         const uid = getNodeUidToBeSelectedAtFirst(_validNodeTree);
         dispatch(setSelectedNodeUids([uid]));
-        const expandedItems = getExpandedItems(_validNodeTree, [uid]);
-        dispatch(setExpandedNodeTreeNodes(expandedItems));
-      }
-
-      // update expand status
-      if (prevFileUid !== currentFileUid) {
-        // expand all of nodes when it's a new file
-        dispatch(setPrevFileUid(currentFileUid));
-        const uids = Object.keys(_validNodeTree);
-        // dispatch(setExpandedNodeTreeNodes(true ? uids.slice(0, 50) : uids));
-        //TODO: why we do this (it should only expand the children of the selected nodes)
-      } else {
-        // validate expanded node uids
-        const _expandedItems = nExpandedItems.filter(
-          (uid) =>
-            _validNodeTree[uid] && _validNodeTree[uid].isEntity === false,
-        );
-        dispatch(setExpandedNodeTreeNodes([..._expandedItems]));
+      } else if (prevFileUid !== currentFileUid) {
+        // it's a new file
+        const uid = getNodeUidToBeSelectedAtFirst(_validNodeTree);
+        dispatch(setSelectedNodeUids([uid]));
       }
     })();
 

@@ -441,3 +441,20 @@ export const getNodeUidToBeSelectedAtFirst = (validNodeTree: TNodeTreeData) => {
     ? bodyNode.children[0]
     : bodyNode.uid;
 };
+
+export const getNeedToExpandNodeUids = (
+  validNodeTree: TNodeTreeData,
+  selectedNodeUids: TNodeUid[],
+): TNodeUid[] => {
+  const _expandedItems: TNodeUid[] = [];
+  let node = validNodeTree[selectedNodeUids[0]];
+  if (!node) {
+    return _expandedItems;
+  }
+  while (node.uid !== RootNodeUid) {
+    _expandedItems.push(node.uid);
+    node = validNodeTree[node.parentUid as TNodeUid];
+  }
+  _expandedItems.shift();
+  return _expandedItems;
+};
