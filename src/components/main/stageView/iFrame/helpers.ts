@@ -1,6 +1,8 @@
 import { StageNodeIdAttr, TNodeUid } from "@_node/index";
 
-export const getValidElementWithUid = (ele: HTMLElement): TNodeUid | null => {
+export const getValidElementWithUid = (
+  ele: HTMLElement,
+): { uid: TNodeUid | null; element: HTMLElement } => {
   let validElement = ele;
   let uid: TNodeUid | null = validElement.getAttribute(StageNodeIdAttr);
   while (!uid) {
@@ -10,7 +12,7 @@ export const getValidElementWithUid = (ele: HTMLElement): TNodeUid | null => {
     uid = parentElement.getAttribute(StageNodeIdAttr);
     validElement = parentElement;
   }
-  return uid;
+  return { uid, element: validElement };
 };
 
 export const markSelectedElements = (

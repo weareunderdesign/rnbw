@@ -19,7 +19,6 @@ import {
   setFileTreeNode,
   setInitialFileUidToOpen,
   setPrevFileUid,
-  setPrevRenderableFileUid,
 } from "@_redux/main/fileTree";
 import {
   expandNodeTreeNodes,
@@ -46,7 +45,6 @@ export const useNodeTreeEvent = () => {
     initialFileUidToOpen,
     currentFileUid,
     prevFileUid,
-    prevRenderableFileUid,
 
     currentFileContent,
     selectedNodeUids,
@@ -56,15 +54,14 @@ export const useNodeTreeEvent = () => {
 
     syncConfigs,
   } = useAppState();
-  const { addRunningActions, removeRunningActions, monacoEditorRef } =
-    useContext(MainContext);
+  const { addRunningActions, removeRunningActions } = useContext(MainContext);
 
   useEffect(() => {
-    LogAllow &&
+    /* LogAllow &&
       console.log("useNodeTreeEvent - selectedNodeUids", {
         selectedNodeUids,
         currentFileContent,
-      });
+      }); */
 
     // focus node
     dispatch(
@@ -74,10 +71,8 @@ export const useNodeTreeEvent = () => {
           : "",
       ),
     );
-
     // select nodes
     dispatch(selectNodeTreeNodes(selectedNodeUids));
-
     // expand nodes
     dispatch(
       expandNodeTreeNodes(
@@ -86,21 +81,20 @@ export const useNodeTreeEvent = () => {
     );
   }, [selectedNodeUids]);
 
-  useEffect(() => {
-    return;
+  /* useEffect(() => {
     // validate expanded node uids
     const _expandedItems = nExpandedItems.filter(
       (uid) => validNodeTree[uid] && validNodeTree[uid].isEntity === false,
     );
     dispatch(setExpandedNodeTreeNodes([..._expandedItems]));
-  }, [validNodeTree]);
+  }, [validNodeTree]); */
 
   useEffect(() => {
-    LogAllow &&
+    /* LogAllow &&
       console.log("useNodeTreeEvent - currentFileContent", {
         selectedNodeUids,
         currentFileContent,
-      });
+      }); */
 
     // validate
     if (!fileTree[currentFileUid]) return;

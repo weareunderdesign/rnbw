@@ -33,7 +33,7 @@ export const useMouseEvents = ({
   // hoveredNodeUid
   const onMouseEnter = useCallback((e: MouseEvent) => {}, []);
   const onMouseMove = useCallback((e: MouseEvent) => {
-    const uid = getValidElementWithUid(e.target as HTMLElement);
+    const { uid } = getValidElementWithUid(e.target as HTMLElement);
     uid && dispatch(setHoveredNodeUid(uid));
   }, []);
   const onMouseLeave = (e: MouseEvent) => {
@@ -45,53 +45,71 @@ export const useMouseEvents = ({
     (e: MouseEvent) => {
       dispatch(setActivePanel("stage"));
 
-      const uid = getValidElementWithUid(e.target as HTMLElement);
+      const { uid, element } = getValidElementWithUid(e.target as HTMLElement);
       if (uid) {
-        let uids = [uid];
-        if (e.shiftKey) {
-          const validUids = getValidNodeUids(
-            nodeTreeRef.current,
-            Array(...new Set([...selectedItemsRef.current, uid])),
-          );
-          uids = validUids;
+        // update selectedNodeUids
+        (() => {
+          const uids = e.shiftKey
+            ? getValidNodeUids(
+                nodeTreeRef.current,
+                Array(...new Set([...selectedItemsRef.current, uid])),
+              )
+            : [uid];
+
+          // check if it's a new state
+          let same = false;
+          if (selectedItemsRef.current.length === uids.length) {
+            same = true;
+            for (
+              let index = 0, len = selectedItemsRef.current.length;
+              index < len;
+              ++index
+            ) {
+              if (selectedItemsRef.current[index] !== uids[index]) {
+                same = false;
+                break;
+              }
+            }
+          }
+
+          !same && dispatch(setSelectedNodeUids(uids));
+        })();
+
+        // content-editable operation
+        if (
+          contentEditableUidRef.current &&
+          contentEditableUidRef.current !== uid &&
+          contentRef
+        ) {
+          const contentEditableElement =
+            contentRef.contentWindow?.document.querySelector(
+              `[${StageNodeIdAttr}="${contentEditableUidRef.current}"]`,
+            );
+          if (contentEditableElement) {
+            contentEditableElement.setAttribute("contenteditable", "false");
+            contentEditableUidRef.current = "";
+
+            const node = nodeTreeRef.current[uid];
+            console.log(
+              "content-edited node",
+              node,
+              contentEditableElement.innerHTML,
+            );
+          }
         }
-        dispatch(setSelectedNodeUids(uids));
-      }
-
-      if (contentEditableUidRef.current && contentRef) {
-        const _document = contentRef.contentWindow?.document;
-        const ele = _document?.querySelector(
-          `[${StageNodeIdAttr}="${contentEditableUidRef.current}"]`,
-        ) as HTMLElement;
-        ele && ele.setAttribute("contenteditable", "false");
-        contentEditableUidRef.current = "";
-
-        //TODO: complete the functionality to update the code from the stage
-        // const editableNode = nodeTreeRef.current[contentEditableUidRef.current];
-        // if (!editableNode || !editableNode.data.sourceCodeLocation) return;
-
-        // const codeViewInstance = monacoEditorRef.current;
-        // const codeViewInstanceModel = codeViewInstance?.getModel();
-        // if (!codeViewInstance || !codeViewInstanceModel) {
-        //   LogAllow &&
-        //     console.error(
-        //       `Monaco Editor ${!codeViewInstance ? "" : "Model"} is undefined`,
-        //     );
-        //   return;
-        // }
-
-        // setIsContentProgrammaticallyChanged(true);
       }
     },
     [contentRef],
   );
   const onDblClick = useCallback((e: MouseEvent) => {
-    dispatch(setActivePanel("stage"));
-
     const ele = e.target as HTMLElement;
     const uid: TNodeUid | null = ele.getAttribute(StageNodeIdAttr);
 
     if (!uid) {
+      // when dbl-click on a web component
+      /* const { uid: validUid, element: validElement } = getValidElementWithUid(
+        e.target as HTMLElement,
+      ); */
       isEditingRef.current = false;
     } else {
       const node = nodeTreeRef.current[uid];
