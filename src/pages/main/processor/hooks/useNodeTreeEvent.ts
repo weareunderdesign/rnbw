@@ -33,6 +33,7 @@ import { setIframeSrc, setNeedToReloadIframe } from "@_redux/main/stageView";
 import { useAppState } from "@_redux/useAppState";
 
 import { getNodeUidToBeSelectedAtFirst, getPreViewPath } from "../helpers";
+import { getExpandedItems } from "@_components/main/actionsPanel/navigatorPanel/helpers";
 
 export const useNodeTreeEvent = () => {
   const dispatch = useDispatch();
@@ -138,6 +139,8 @@ export const useNodeTreeEvent = () => {
         dispatch(setInitialFileUidToOpen(""));
         const uid = getNodeUidToBeSelectedAtFirst(_validNodeTree);
         dispatch(setSelectedNodeUids([uid]));
+        const expandedItems = getExpandedItems(_validNodeTree, [uid]);
+        dispatch(setExpandedNodeTreeNodes(expandedItems));
       }
 
       // update expand status
@@ -145,7 +148,8 @@ export const useNodeTreeEvent = () => {
         // expand all of nodes when it's a new file
         dispatch(setPrevFileUid(currentFileUid));
         const uids = Object.keys(_validNodeTree);
-        dispatch(setExpandedNodeTreeNodes(true ? uids.slice(0, 50) : uids));
+        // dispatch(setExpandedNodeTreeNodes(true ? uids.slice(0, 50) : uids));
+        //TODO: why we do this (it should only expand the children of the selected nodes)
       } else {
         // validate expanded node uids
         const _expandedItems = nExpandedItems.filter(

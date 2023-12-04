@@ -3,11 +3,16 @@ import { useDispatch } from "react-redux";
 import { StageNodeIdAttr } from "@_node/file";
 import { getValidNodeUids } from "@_node/helpers";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
-import { setHoveredNodeUid } from "@_redux/main/nodeTree";
+import {
+  setAppendExpandedNodeTreeNodes,
+  setExpandedNodeTreeNodes,
+  setHoveredNodeUid,
+} from "@_redux/main/nodeTree";
 import { setSelectedNodeUids } from "@_redux/main/nodeTree/event";
 import { getValidElementWithUid, selectAllText } from "../helpers";
 import { THtmlNodeData } from "@_node/node";
 import { setActivePanel } from "@_redux/main/processor";
+import { getExpandedItems } from "@_components/main/actionsPanel/navigatorPanel/helpers";
 
 interface IUseMouseEventsProps {
   contentRef: HTMLIFrameElement | null;
@@ -45,15 +50,17 @@ export const useMouseEvents = ({
 
       const uid = getValidElementWithUid(e.target as HTMLElement);
       if (uid) {
+        let uids = [uid];
         if (e.shiftKey) {
           const validUids = getValidNodeUids(
             nodeTreeRef.current,
             Array(...new Set([...selectedItemsRef.current, uid])),
           );
-          dispatch(setSelectedNodeUids(validUids));
-        } else {
-          dispatch(setSelectedNodeUids([uid]));
+          uids = validUids;
         }
+        dispatch(setSelectedNodeUids(uids));
+        const expandedItems = getExpandedItems(nodeTreeRef.current, uids);
+        dispatch(setAppendExpandedNodeTreeNodes(expandedItems));
       }
 
       if (contentEditableUidRef.current && contentRef) {

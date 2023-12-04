@@ -3,7 +3,7 @@ import { TFileNode, TFileNodeData } from "@_node/file";
 import { THtmlNodeData } from "@_node/node";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import { TProject, TWorkspace } from "@_redux/main/fileTree";
-import { focusNodeTreeNode, setSelectedNodeUids } from "@_redux/main/nodeTree";
+import { setSelectedNodeUids } from "@_redux/main/nodeTree";
 import {
   ActionCreatorWithPayload,
   AnyAction,
@@ -62,16 +62,7 @@ export const selectFirstNode = (
       }
     }
     if (firstNodeId !== "0") {
-      const _expandedItems: TNodeUid[] = [];
-      let node = validNodeTree[firstNodeId];
-      if (!node) {
-        return;
-      }
-      while (node.uid !== RootNodeUid) {
-        _expandedItems.push(node.uid);
-        node = validNodeTree[node.parentUid as TNodeUid];
-      }
-      _expandedItems.shift();
+      const _expandedItems = getExpandedItems(validNodeTree, [firstNodeId]);
       dispatch(expandNodeTreeNodes(_expandedItems));
 
       console.log({ firstNodeId });
@@ -83,6 +74,22 @@ export const selectFirstNode = (
   return true;
 };
 
+export const getExpandedItems = (
+  validNodeTree: TNodeTreeData,
+  selectedNodeUids: TNodeUid[],
+): TNodeUid[] => {
+  const _expandedItems: TNodeUid[] = [];
+  let node = validNodeTree[selectedNodeUids[0]];
+  if (!node) {
+    return _expandedItems;
+  }
+  while (node.uid !== RootNodeUid) {
+    _expandedItems.push(node.uid);
+    node = validNodeTree[node.parentUid as TNodeUid];
+  }
+  _expandedItems.shift();
+  return _expandedItems;
+};
 export const setWorkspaceFavicon = (
   validNodeTree: TNodeTreeData,
   project: TProject,
