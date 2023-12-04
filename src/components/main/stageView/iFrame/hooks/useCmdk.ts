@@ -63,7 +63,7 @@ export const useCmdk = () => {
       if (action === null) return;
 
       LogAllow && console.log("action to be run by cmdk: ", action);
-      debugger;
+
       // prevent chrome default short keys
       if (
         action === "Save" ||
