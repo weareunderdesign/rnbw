@@ -5,15 +5,18 @@ import { getValidNodeUids } from "@_node/helpers";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
 import { setHoveredNodeUid } from "@_redux/main/nodeTree";
 import { setSelectedNodeUids } from "@_redux/main/nodeTree/event";
-import { getValidElementWithUid, selectAllText } from "../helpers";
-import { THtmlNodeData, doNodeActions } from "@_node/node";
+import {
+  editHtmlContent,
+  getValidElementWithUid,
+  selectAllText,
+} from "../helpers";
+import { THtmlNodeData } from "@_node/node";
 import { setActivePanel } from "@_redux/main/processor";
-import { callNodeApi } from "@_node/apis";
 import { MainContext } from "@_redux/main";
 import { LogAllow } from "@_constants/global";
 
 interface IUseMouseEventsProps {
-  contentRef: HTMLIFrameElement | null;
+  iframeRefState: HTMLIFrameElement | null;
   nodeTreeRef: React.MutableRefObject<TNodeTreeData>;
   focusedItemRef: React.MutableRefObject<TNodeUid>;
   selectedItemsRef: React.MutableRefObject<TNodeUid[]>;
@@ -23,7 +26,7 @@ interface IUseMouseEventsProps {
 }
 
 export const useMouseEvents = ({
-  contentRef,
+  iframeRefState,
   nodeTreeRef,
   focusedItemRef,
   selectedItemsRef,
@@ -84,45 +87,35 @@ export const useMouseEvents = ({
         if (
           contentEditableUidRef.current &&
           contentEditableUidRef.current !== uid &&
-          contentRef
+          iframeRefState
         ) {
-          const contentEditableElement =
-            contentRef.contentWindow?.document.querySelector(
-              `[${StageNodeIdAttr}="${contentEditableUidRef.current}"]`,
-            );
-          if (contentEditableElement) {
-            const contentEditableUid = contentEditableUidRef.current;
-            contentEditableElement.setAttribute("contenteditable", "false");
-            contentEditableUidRef.current = "";
+          isEditingRef.current = false;
+          const contentEditableUid = contentEditableUidRef.current;
+          contentEditableUidRef.current = "";
 
-            const codeViewInstance = monacoEditorRef.current;
-            const codeViewInstanceModel = codeViewInstance?.getModel();
-            if (!codeViewInstance || !codeViewInstanceModel) {
-              LogAllow &&
-                console.error(
-                  `Monaco Editor ${
-                    !codeViewInstance ? "" : "Model"
-                  } is undefined`,
-                );
-              return;
-            }
-
-            setIsContentProgrammaticallyChanged(true);
-            callNodeApi(
-              {
-                action: "text-edit",
-                nodeTree: nodeTreeRef.current,
-                targetUid: contentEditableUid,
-                content: contentEditableElement.innerHTML,
-                codeViewInstanceModel,
-              },
-              () => setIsContentProgrammaticallyChanged(false),
-            );
+          const codeViewInstance = monacoEditorRef.current;
+          const codeViewInstanceModel = codeViewInstance?.getModel();
+          if (!codeViewInstance || !codeViewInstanceModel) {
+            LogAllow &&
+              console.error(
+                `Monaco Editor ${
+                  !codeViewInstance ? "" : "Model"
+                } is undefined`,
+              );
+            return;
           }
+
+          editHtmlContent({
+            iframeRefState,
+            nodeTree: nodeTreeRef.current,
+            contentEditableUid,
+            codeViewInstanceModel,
+            setIsContentProgrammaticallyChanged,
+          });
         }
       }
     },
-    [contentRef],
+    [iframeRefState],
   );
   const onDblClick = useCallback((e: MouseEvent) => {
     const ele = e.target as HTMLElement;
@@ -140,11 +133,14 @@ export const useMouseEvents = ({
       if (["html", "head", "body", "img", "div"].includes(nodeData.name))
         return;
 
-      isEditingRef.current = true;
-      contentEditableUidRef.current = uid;
-      ele.setAttribute("contenteditable", "true");
-      ele.focus();
-      selectAllText(contentRef, ele);
+      const { startTag, endTag } = nodeData.sourceCodeLocation;
+      if (startTag && endTag) {
+        isEditingRef.current = true;
+        contentEditableUidRef.current = uid;
+        ele.setAttribute("contenteditable", "true");
+        ele.focus();
+        selectAllText(iframeRefState, ele);
+      }
     }
   }, []);
 

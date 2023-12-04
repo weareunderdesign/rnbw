@@ -11,7 +11,7 @@ import {
   unmarkSelectedElements,
 } from "../helpers";
 
-export const useSyncNode = (contentRef: HTMLIFrameElement | null) => {
+export const useSyncNode = (iframeRefState: HTMLIFrameElement | null) => {
   const {
     nodeTree,
     nFocusedItem: focusedItem,
@@ -29,8 +29,8 @@ export const useSyncNode = (contentRef: HTMLIFrameElement | null) => {
   useEffect(() => {
     if (hoveredItemRef.current === hoveredNodeUid) return;
 
-    unmarkHoverdElement(contentRef, hoveredItemRef.current);
-    markHoverdElement(contentRef, hoveredNodeUid);
+    unmarkHoverdElement(iframeRefState, hoveredItemRef.current);
+    markHoverdElement(iframeRefState, hoveredNodeUid);
     hoveredItemRef.current = hoveredNodeUid;
   }, [hoveredNodeUid]);
 
@@ -39,9 +39,10 @@ export const useSyncNode = (contentRef: HTMLIFrameElement | null) => {
   useEffect(() => {
     if (focusedItemRef.current === focusedItem) return;
 
-    const focusedElement = contentRef?.contentWindow?.document?.querySelector(
-      `[${StageNodeIdAttr}="${focusedItem}"]`,
-    );
+    const focusedElement =
+      iframeRefState?.contentWindow?.document?.querySelector(
+        `[${StageNodeIdAttr}="${focusedItem}"]`,
+      );
     setTimeout(
       () =>
         focusedElement?.scrollIntoView({
@@ -73,8 +74,8 @@ export const useSyncNode = (contentRef: HTMLIFrameElement | null) => {
       if (same) return;
     }
 
-    unmarkSelectedElements(contentRef, selectedItemsRef.current);
-    markSelectedElements(contentRef, selectedItems);
+    unmarkSelectedElements(iframeRefState, selectedItemsRef.current);
+    markSelectedElements(iframeRefState, selectedItems);
     selectedItemsRef.current = [...selectedItems];
   }, [selectedItems]);
 

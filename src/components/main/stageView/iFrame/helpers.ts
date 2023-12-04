@@ -1,4 +1,10 @@
-import { StageNodeIdAttr, TNodeUid } from "@_node/index";
+import {
+  StageNodeIdAttr,
+  TNodeTreeData,
+  TNodeUid,
+  callNodeApi,
+} from "@_node/index";
+import { editor } from "monaco-editor";
 
 export const getValidElementWithUid = (
   ele: HTMLElement,
@@ -16,14 +22,15 @@ export const getValidElementWithUid = (
 };
 
 export const markSelectedElements = (
-  contentRef: HTMLIFrameElement | null,
+  iframeRefState: HTMLIFrameElement | null,
   uids: TNodeUid[],
 ) => {
   uids.map((uid) => {
     // if it's a web component, should select its first child element
-    let selectedElement = contentRef?.contentWindow?.document?.querySelector(
-      `[${StageNodeIdAttr}="${uid}"]`,
-    );
+    let selectedElement =
+      iframeRefState?.contentWindow?.document?.querySelector(
+        `[${StageNodeIdAttr}="${uid}"]`,
+      );
     const isValid: null | string = selectedElement?.firstElementChild
       ? selectedElement?.firstElementChild.getAttribute(StageNodeIdAttr)
       : "";
@@ -34,14 +41,15 @@ export const markSelectedElements = (
   });
 };
 export const unmarkSelectedElements = (
-  contentRef: HTMLIFrameElement | null,
+  iframeRefState: HTMLIFrameElement | null,
   uids: TNodeUid[],
 ) => {
   uids.map((uid) => {
     // if it's a web component, should select its first child element
-    let selectedElement = contentRef?.contentWindow?.document?.querySelector(
-      `[${StageNodeIdAttr}="${uid}"]`,
-    );
+    let selectedElement =
+      iframeRefState?.contentWindow?.document?.querySelector(
+        `[${StageNodeIdAttr}="${uid}"]`,
+      );
     const isValid: null | string = selectedElement?.firstElementChild
       ? selectedElement?.firstElementChild.getAttribute(StageNodeIdAttr)
       : "";
@@ -53,11 +61,11 @@ export const unmarkSelectedElements = (
 };
 
 export const markHoverdElement = (
-  contentRef: HTMLIFrameElement | null,
+  iframeRefState: HTMLIFrameElement | null,
   uid: TNodeUid,
 ) => {
   // if it's a web component, should select its first child element
-  let selectedElement = contentRef?.contentWindow?.document?.querySelector(
+  let selectedElement = iframeRefState?.contentWindow?.document?.querySelector(
     `[${StageNodeIdAttr}="${uid}"]`,
   );
   const isValid: null | string = selectedElement?.firstElementChild
@@ -69,11 +77,11 @@ export const markHoverdElement = (
   selectedElement?.setAttribute("rnbwdev-rnbw-element-hover", "");
 };
 export const unmarkHoverdElement = (
-  contentRef: HTMLIFrameElement | null,
+  iframeRefState: HTMLIFrameElement | null,
   uid: TNodeUid,
 ) => {
   // if it's a web component, should select its first child element
-  let selectedElement = contentRef?.contentWindow?.document?.querySelector(
+  let selectedElement = iframeRefState?.contentWindow?.document?.querySelector(
     `[${StageNodeIdAttr}="${uid}"]`,
   );
   const isValid: null | string = selectedElement?.firstElementChild
@@ -85,15 +93,49 @@ export const unmarkHoverdElement = (
   selectedElement?.removeAttribute("rnbwdev-rnbw-element-hover");
 };
 
+export const editHtmlContent = ({
+  iframeRefState,
+  nodeTree,
+  contentEditableUid,
+  codeViewInstanceModel,
+  setIsContentProgrammaticallyChanged,
+}: {
+  iframeRefState: HTMLIFrameElement;
+  nodeTree: TNodeTreeData;
+  contentEditableUid: TNodeUid;
+  codeViewInstanceModel: editor.ITextModel;
+  setIsContentProgrammaticallyChanged: (value: boolean) => void;
+}) => {
+  const contentEditableElement =
+    iframeRefState.contentWindow?.document.querySelector(
+      `[${StageNodeIdAttr}="${contentEditableUid}"]`,
+    );
+  if (contentEditableElement) {
+    contentEditableElement.setAttribute("contenteditable", "false");
+
+    setIsContentProgrammaticallyChanged(true);
+    callNodeApi(
+      {
+        action: "text-edit",
+        nodeTree,
+        targetUid: contentEditableUid,
+        content: contentEditableElement.innerHTML,
+        codeViewInstanceModel,
+      },
+      () => setIsContentProgrammaticallyChanged(false),
+    );
+  }
+};
+
 // -----------------------
 export const selectAllText = (
-  contentRef: HTMLIFrameElement | null,
+  iframeRefState: HTMLIFrameElement | null,
   ele: HTMLElement,
 ) => {
-  const range = contentRef?.contentWindow?.document.createRange();
+  const range = iframeRefState?.contentWindow?.document.createRange();
   if (range) {
     range.selectNodeContents(ele);
-    const selection = contentRef?.contentWindow?.getSelection();
+    const selection = iframeRefState?.contentWindow?.getSelection();
     selection?.removeAllRanges();
     selection?.addRange(range);
   }

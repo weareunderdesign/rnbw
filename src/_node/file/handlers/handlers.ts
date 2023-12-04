@@ -80,6 +80,8 @@ const parseHtml = (content: string): THtmlParserResponse => {
         endLine = 0,
         endCol = 0,
         endOffset = 0,
+        startTag,
+        endTag,
       } = node.sourceCodeLocation || {};
 
       nodeTree[parentUid].children.push(uid);
@@ -110,8 +112,10 @@ const parseHtml = (content: string): THtmlParserResponse => {
             startCol,
             startOffset,
             endLine,
-            endCol: endCol,
+            endCol,
             endOffset,
+            startTag,
+            endTag,
           },
         },
       };

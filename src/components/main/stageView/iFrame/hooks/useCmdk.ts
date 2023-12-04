@@ -8,14 +8,62 @@ import { setCurrentCommand } from "@_redux/main/cmdk";
 import { getCommandKey } from "@_services/global";
 import { TCmdkKeyMap } from "@_types/main";
 import { useAppState } from "@_redux/useAppState";
+import { TNodeTreeData, TNodeUid } from "@_node/types";
+import { editHtmlContent } from "../helpers";
 
-export const useCmdk = () => {
+interface IUseCmdkProps {
+  iframeRef: React.MutableRefObject<HTMLIFrameElement | null>;
+  nodeTreeRef: React.MutableRefObject<TNodeTreeData>;
+  contentEditableUidRef: React.MutableRefObject<TNodeUid>;
+  isEditingRef: React.MutableRefObject<boolean>;
+}
+
+export const useCmdk = ({
+  iframeRef,
+  nodeTreeRef,
+  contentEditableUidRef,
+  isEditingRef,
+}: IUseCmdkProps) => {
   const dispatch = useDispatch();
   const { nodeTree, osType } = useAppState();
-  const { cmdkReferenceData } = useContext(MainContext);
+  const {
+    cmdkReferenceData,
+    monacoEditorRef,
+    setIsContentProgrammaticallyChanged,
+  } = useContext(MainContext);
 
   const onKeyDown = useCallback(
     (e: KeyboardEvent) => {
+      // for content-editing
+      if (isEditingRef.current) {
+        if (e.code === "Escape" && iframeRef.current) {
+          isEditingRef.current = false;
+          const contentEditableUid = contentEditableUidRef.current;
+          contentEditableUidRef.current = "";
+
+          const codeViewInstance = monacoEditorRef.current;
+          const codeViewInstanceModel = codeViewInstance?.getModel();
+          if (!codeViewInstance || !codeViewInstanceModel) {
+            LogAllow &&
+              console.error(
+                `Monaco Editor ${
+                  !codeViewInstance ? "" : "Model"
+                } is undefined`,
+              );
+            return;
+          }
+
+          editHtmlContent({
+            iframeRefState: iframeRef.current,
+            nodeTree: nodeTreeRef.current,
+            contentEditableUid,
+            codeViewInstanceModel,
+            setIsContentProgrammaticallyChanged,
+          });
+        }
+        return;
+      }
+
       // cmdk obj for the current command
       const cmdk: TCmdkKeyMap = {
         cmd: getCommandKey(e, osType),

@@ -31,6 +31,8 @@ export type TNodeSourceCodeLocation = {
   endLine: number;
   endCol: number;
   endOffset: number;
+  startTag?: Omit<TNodeSourceCodeLocation, "startTag" | "endTag">;
+  endTag?: Omit<TNodeSourceCodeLocation, "startTag" | "endTag">;
 };
 
 export type TNodeActionType =

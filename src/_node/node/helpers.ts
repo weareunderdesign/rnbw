@@ -63,11 +63,17 @@ export const replaceContent = ({
   codeViewInstanceModel: editor.ITextModel;
 }) => {
   const focusedNode = nodeTree[focusedItem];
-  const { startLine, startCol, endLine, endCol } =
-    focusedNode.data.sourceCodeLocation;
-  const edit = {
-    range: new Range(startLine, startCol, endLine, endCol),
-    text: content,
-  };
-  codeViewInstanceModel.applyEdits([edit]);
+  const { startTag, endTag } = focusedNode.data.sourceCodeLocation;
+  if (startTag && endTag) {
+    const edit = {
+      range: new Range(
+        startTag.endLine,
+        startTag.endCol,
+        endTag.startLine,
+        endTag.startCol,
+      ),
+      text: content,
+    };
+    codeViewInstanceModel.applyEdits([edit]);
+  }
 };
