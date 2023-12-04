@@ -32,50 +32,6 @@ export const getFileExtension = (node: TNode) =>
     (node.data as TFileNodeData).ext.length,
   );
 
-export const selectFirstNode = (
-  validNodeTree: TNodeTreeData,
-  selectNodeTreeNodes: ActionCreatorWithPayload<string[]>,
-  expandNodeTreeNodes: ActionCreatorWithPayload<string[]>,
-  dispatch: Dispatch<AnyAction>,
-) => {
-  let bodyId = "0";
-
-  for (let x in validNodeTree) {
-    if (
-      validNodeTree[x].data.tagName === "body" &&
-      validNodeTree[x].data.nodeName === "body"
-    ) {
-      bodyId = validNodeTree[x].uid;
-      break;
-    }
-  }
-
-  if (bodyId !== "0") {
-    let firstNodeId = "0";
-    for (let x in validNodeTree) {
-      if (
-        validNodeTree[x].data.tagName &&
-        validNodeTree[x].parentUid === bodyId
-      ) {
-        firstNodeId = validNodeTree[x].uid;
-        break;
-      }
-    }
-    if (firstNodeId !== "0") {
-      const _expandedItems = getNeedToExpandNodeUids(validNodeTree, [
-        firstNodeId,
-      ]);
-      dispatch(expandNodeTreeNodes(_expandedItems));
-
-      console.log({ firstNodeId });
-      dispatch(setSelectedNodeUids([firstNodeId]));
-
-      return false;
-    }
-  }
-  return true;
-};
-
 export const setWorkspaceFavicon = (
   validNodeTree: TNodeTreeData,
   project: TProject,
