@@ -75,10 +75,8 @@ export const useNodeTreeEvent = () => {
           : "",
       ),
     );
-
     // select nodes
     dispatch(selectNodeTreeNodes(selectedNodeUids));
-
     // expand nodes
     dispatch(
       expandNodeTreeNodes(
@@ -140,7 +138,6 @@ export const useNodeTreeEvent = () => {
 
     // sync node-tree
     dispatch(setNodeTree(nodeTree));
-
     const _validNodeTree = getValidNodeTree(nodeTree);
     dispatch(setValidNodeTree(_validNodeTree));
 
