@@ -31,6 +31,8 @@ export type TNodeSourceCodeLocation = {
   endLine: number;
   endCol: number;
   endOffset: number;
+  startTag?: Omit<TNodeSourceCodeLocation, "startTag" | "endTag">;
+  endTag?: Omit<TNodeSourceCodeLocation, "startTag" | "endTag">;
 };
 
 export type TNodeActionType =
@@ -43,6 +45,7 @@ export type TNodeActionType =
   | "move"
   | "rename" // "turn into" for node tree - "rename" for file tree
   | "group"
-  | "ungroup";
+  | "ungroup"
+  | "text-edit";
 
 export type TNodeReferenceData = THtmlReferenceData;
