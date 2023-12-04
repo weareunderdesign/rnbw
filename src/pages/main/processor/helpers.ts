@@ -17,7 +17,7 @@ import { getSubNodeUidsByBfs, getValidNodeUids } from "@_node/helpers";
 import { THtmlNodeData, THtmlPageSettings } from "@_node/node";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import { TOsType } from "@_redux/global";
-import { TProject, setFileTreeNode } from "@_redux/main/fileTree";
+import { TProject, setFileTreeNodes } from "@_redux/main/fileTree";
 import { TCodeChange, TFileInfo } from "@_types/main";
 import { Dispatch } from "react";
 import { AnyAction } from "@reduxjs/toolkit";
@@ -463,11 +463,13 @@ export const markChangedFolders = (
   file: TFileNode,
   dispatch: Dispatch<AnyAction>,
 ) => {
-  if (!file.parentUid) return;
+  const parentFiles: TFileNode[] = [];
+  while (file.parentUid) {
+    const parentFile = structuredClone(fileTree[file.parentUid]);
+    parentFile.data.changed = true;
+    parentFiles.push(parentFile);
+    file = parentFile;
+  }
 
-  const fileChanging = structuredClone(fileTree[file.parentUid]);
-  fileChanging.data.changed = true;
-  dispatch(setFileTreeNode(fileChanging));
-
-  markChangedFolders(fileTree, fileChanging, dispatch);
+  if (parentFiles.length) dispatch(setFileTreeNodes(parentFiles));
 };

@@ -16,7 +16,7 @@ import { TNodeTreeData } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import {
   setDoingFileAction,
-  setFileTreeNode,
+  setFileTreeNodes,
   setInitialFileUidToOpen,
   setPrevFileUid,
   setPrevRenderableFileUid,
@@ -123,7 +123,7 @@ export const useNodeTreeEvent = () => {
       markChangedFolders(fileTree, file, dispatch);
     }
     // sync file-tree
-    dispatch(setFileTreeNode(file));
+    dispatch(setFileTreeNodes([file]));
     (async () => {
       // update idb
       dispatch(setDoingFileAction(true));
