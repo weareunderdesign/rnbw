@@ -22,15 +22,14 @@ export const getValidElementWithUid = (
 };
 
 export const markSelectedElements = (
-  iframeRefState: HTMLIFrameElement | null,
+  iframeRef: HTMLIFrameElement | null,
   uids: TNodeUid[],
 ) => {
   uids.map((uid) => {
     // if it's a web component, should select its first child element
-    let selectedElement =
-      iframeRefState?.contentWindow?.document?.querySelector(
-        `[${StageNodeIdAttr}="${uid}"]`,
-      );
+    let selectedElement = iframeRef?.contentWindow?.document?.querySelector(
+      `[${StageNodeIdAttr}="${uid}"]`,
+    );
     const isValid: null | string = selectedElement?.firstElementChild
       ? selectedElement?.firstElementChild.getAttribute(StageNodeIdAttr)
       : "";
@@ -41,15 +40,14 @@ export const markSelectedElements = (
   });
 };
 export const unmarkSelectedElements = (
-  iframeRefState: HTMLIFrameElement | null,
+  iframeRef: HTMLIFrameElement | null,
   uids: TNodeUid[],
 ) => {
   uids.map((uid) => {
     // if it's a web component, should select its first child element
-    let selectedElement =
-      iframeRefState?.contentWindow?.document?.querySelector(
-        `[${StageNodeIdAttr}="${uid}"]`,
-      );
+    let selectedElement = iframeRef?.contentWindow?.document?.querySelector(
+      `[${StageNodeIdAttr}="${uid}"]`,
+    );
     const isValid: null | string = selectedElement?.firstElementChild
       ? selectedElement?.firstElementChild.getAttribute(StageNodeIdAttr)
       : "";
@@ -61,11 +59,11 @@ export const unmarkSelectedElements = (
 };
 
 export const markHoverdElement = (
-  iframeRefState: HTMLIFrameElement | null,
+  iframeRef: HTMLIFrameElement | null,
   uid: TNodeUid,
 ) => {
   // if it's a web component, should select its first child element
-  let selectedElement = iframeRefState?.contentWindow?.document?.querySelector(
+  let selectedElement = iframeRef?.contentWindow?.document?.querySelector(
     `[${StageNodeIdAttr}="${uid}"]`,
   );
   const isValid: null | string = selectedElement?.firstElementChild
@@ -77,11 +75,11 @@ export const markHoverdElement = (
   selectedElement?.setAttribute("rnbwdev-rnbw-element-hover", "");
 };
 export const unmarkHoverdElement = (
-  iframeRefState: HTMLIFrameElement | null,
+  iframeRef: HTMLIFrameElement | null,
   uid: TNodeUid,
 ) => {
   // if it's a web component, should select its first child element
-  let selectedElement = iframeRefState?.contentWindow?.document?.querySelector(
+  let selectedElement = iframeRef?.contentWindow?.document?.querySelector(
     `[${StageNodeIdAttr}="${uid}"]`,
   );
   const isValid: null | string = selectedElement?.firstElementChild
@@ -94,20 +92,20 @@ export const unmarkHoverdElement = (
 };
 
 export const editHtmlContent = ({
-  iframeRefState,
+  iframeRef,
   nodeTree,
   contentEditableUid,
   codeViewInstanceModel,
   setIsContentProgrammaticallyChanged,
 }: {
-  iframeRefState: HTMLIFrameElement;
+  iframeRef: HTMLIFrameElement;
   nodeTree: TNodeTreeData;
   contentEditableUid: TNodeUid;
   codeViewInstanceModel: editor.ITextModel;
   setIsContentProgrammaticallyChanged: (value: boolean) => void;
 }) => {
   const contentEditableElement =
-    iframeRefState.contentWindow?.document.querySelector(
+    iframeRef.contentWindow?.document.querySelector(
       `[${StageNodeIdAttr}="${contentEditableUid}"]`,
     );
   if (contentEditableElement) {
@@ -127,20 +125,20 @@ export const editHtmlContent = ({
   }
 };
 
-// -----------------------
 export const selectAllText = (
-  iframeRefState: HTMLIFrameElement | null,
+  iframeRef: HTMLIFrameElement | null,
   ele: HTMLElement,
 ) => {
-  const range = iframeRefState?.contentWindow?.document.createRange();
+  const range = iframeRef?.contentWindow?.document.createRange();
   if (range) {
     range.selectNodeContents(ele);
-    const selection = iframeRefState?.contentWindow?.getSelection();
+    const selection = iframeRef?.contentWindow?.getSelection();
     selection?.removeAllRanges();
     selection?.addRange(range);
   }
 };
 
+// -----------------------
 export const openNewPage = (ele: HTMLElement) => {
   if (ele.tagName !== "A") return;
 

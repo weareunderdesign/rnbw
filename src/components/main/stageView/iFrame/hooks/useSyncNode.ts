@@ -10,8 +10,9 @@ import {
   unmarkHoverdElement,
   unmarkSelectedElements,
 } from "../helpers";
+import { ShortDelay } from "@_constants/main";
 
-export const useSyncNode = (iframeRefState: HTMLIFrameElement | null) => {
+export const useSyncNode = (iframeRef: HTMLIFrameElement | null) => {
   const {
     nodeTree,
     nFocusedItem: focusedItem,
@@ -29,8 +30,8 @@ export const useSyncNode = (iframeRefState: HTMLIFrameElement | null) => {
   useEffect(() => {
     if (hoveredItemRef.current === hoveredNodeUid) return;
 
-    unmarkHoverdElement(iframeRefState, hoveredItemRef.current);
-    markHoverdElement(iframeRefState, hoveredNodeUid);
+    unmarkHoverdElement(iframeRef, hoveredItemRef.current);
+    markHoverdElement(iframeRef, hoveredNodeUid);
     hoveredItemRef.current = hoveredNodeUid;
   }, [hoveredNodeUid]);
 
@@ -39,10 +40,9 @@ export const useSyncNode = (iframeRefState: HTMLIFrameElement | null) => {
   useEffect(() => {
     if (focusedItemRef.current === focusedItem) return;
 
-    const focusedElement =
-      iframeRefState?.contentWindow?.document?.querySelector(
-        `[${StageNodeIdAttr}="${focusedItem}"]`,
-      );
+    const focusedElement = iframeRef?.contentWindow?.document?.querySelector(
+      `[${StageNodeIdAttr}="${focusedItem}"]`,
+    );
     setTimeout(
       () =>
         focusedElement?.scrollIntoView({
@@ -50,7 +50,7 @@ export const useSyncNode = (iframeRefState: HTMLIFrameElement | null) => {
           inline: "start",
           behavior: "smooth",
         }),
-      50,
+      ShortDelay,
     );
     focusedItemRef.current = focusedItem;
   }, [focusedItem]);
@@ -74,8 +74,8 @@ export const useSyncNode = (iframeRefState: HTMLIFrameElement | null) => {
       if (same) return;
     }
 
-    unmarkSelectedElements(iframeRefState, selectedItemsRef.current);
-    markSelectedElements(iframeRefState, selectedItems);
+    unmarkSelectedElements(iframeRef, selectedItemsRef.current);
+    markSelectedElements(iframeRef, selectedItems);
     selectedItemsRef.current = [...selectedItems];
   }, [selectedItems]);
 

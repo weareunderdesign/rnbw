@@ -20,7 +20,7 @@ export const IFrame = () => {
 
   const [iframeRefState, setIframeRefState] =
     useState<HTMLIFrameElement | null>(null);
-  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const iframeRefRef = useRef<HTMLIFrameElement | null>(null);
 
   const contentEditableUidRef = useRef<TNodeUid>("");
   const isEditingRef = useRef(false);
@@ -30,14 +30,14 @@ export const IFrame = () => {
   const { nodeTreeRef, hoveredItemRef, focusedItemRef, selectedItemsRef } =
     useSyncNode(iframeRefState);
   const { onKeyDown } = useCmdk({
-    iframeRef,
+    iframeRefRef,
     nodeTreeRef,
     contentEditableUidRef,
     isEditingRef,
   });
   const { onMouseEnter, onMouseMove, onMouseLeave, onClick, onDblClick } =
     useMouseEvents({
-      iframeRefState,
+      iframeRefRef,
       nodeTreeRef,
       focusedItemRef,
       selectedItemsRef,
@@ -48,7 +48,7 @@ export const IFrame = () => {
 
   // init iframe
   useEffect(() => {
-    iframeRef.current = iframeRefState;
+    iframeRefRef.current = iframeRefState;
     if (iframeRefState) {
       dispatch(setIframeLoading(true));
 

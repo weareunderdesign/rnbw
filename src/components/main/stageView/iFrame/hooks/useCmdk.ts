@@ -12,14 +12,14 @@ import { TNodeTreeData, TNodeUid } from "@_node/types";
 import { editHtmlContent } from "../helpers";
 
 interface IUseCmdkProps {
-  iframeRef: React.MutableRefObject<HTMLIFrameElement | null>;
+  iframeRefRef: React.MutableRefObject<HTMLIFrameElement | null>;
   nodeTreeRef: React.MutableRefObject<TNodeTreeData>;
   contentEditableUidRef: React.MutableRefObject<TNodeUid>;
   isEditingRef: React.MutableRefObject<boolean>;
 }
 
 export const useCmdk = ({
-  iframeRef,
+  iframeRefRef,
   nodeTreeRef,
   contentEditableUidRef,
   isEditingRef,
@@ -36,7 +36,7 @@ export const useCmdk = ({
     (e: KeyboardEvent) => {
       // for content-editing
       if (isEditingRef.current) {
-        if (e.code === "Escape" && iframeRef.current) {
+        if (e.code === "Escape" && iframeRefRef.current) {
           isEditingRef.current = false;
           const contentEditableUid = contentEditableUidRef.current;
           contentEditableUidRef.current = "";
@@ -54,7 +54,7 @@ export const useCmdk = ({
           }
 
           editHtmlContent({
-            iframeRefState: iframeRef.current,
+            iframeRef: iframeRefRef.current,
             nodeTree: nodeTreeRef.current,
             contentEditableUid,
             codeViewInstanceModel,
