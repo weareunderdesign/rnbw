@@ -44,9 +44,11 @@ const fileTreeSlice = createSlice({
       const fileTree = action.payload;
       state.fileTree = fileTree;
     },
-    setFileTreeNode(state, action: PayloadAction<TFileNode>) {
-      const fileNode = action.payload;
-      state.fileTree[fileNode.uid] = fileNode;
+    setFileTreeNodes(state, action: PayloadAction<TFileNode[]>) {
+      const fileNodes = action.payload;
+      for (const fileNode of fileNodes) {
+        state.fileTree[fileNode.uid] = fileNode;
+      }
     },
     setInitialFileUidToOpen(state, action: PayloadAction<TNodeUid>) {
       const initialFileUidToOpen = action.payload;
@@ -146,7 +148,7 @@ export const {
   setWorkspace,
   setProject,
   setFileTree,
-  setFileTreeNode,
+  setFileTreeNodes,
   setInitialFileUidToOpen,
   setCurrentFileUid,
   setPrevFileUid,

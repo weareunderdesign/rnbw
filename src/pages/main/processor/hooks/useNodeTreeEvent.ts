@@ -16,7 +16,7 @@ import { TNodeTreeData } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import {
   setDoingFileAction,
-  setFileTreeNode,
+  setFileTreeNodes,
   setInitialFileUidToOpen,
   setPrevFileUid,
 } from "@_redux/main/fileTree";
@@ -36,6 +36,7 @@ import {
   getNeedToExpandNodeUids,
   getNodeUidToBeSelectedAtFirst,
   getPreViewPath,
+  markChangedFolders,
 } from "../helpers";
 import { setCurrentCommand } from "@_redux/main/cmdk";
 
@@ -115,6 +116,10 @@ export const useNodeTreeEvent = () => {
     fileData.contentInApp = contentInApp;
     fileData.changed = fileData.content !== fileData.orgContent;
 
+    if (fileData.changed && file.parentUid) {
+      markChangedFolders(fileTree, file, dispatch);
+    }
+    
     // when "Save" while text-editing, we need to call "Save" command after file-content updated.
     // after fileTree has been updated exactly. so when "Save" while text-editing, we first call "SaveForce"
     if (currentCommand?.action === "SaveForce") {
@@ -122,7 +127,7 @@ export const useNodeTreeEvent = () => {
     }
 
     // sync file-tree
-    dispatch(setFileTreeNode(file));
+    dispatch(setFileTreeNodes([file]));
     (async () => {
       // update idb
       dispatch(setDoingFileAction(true));

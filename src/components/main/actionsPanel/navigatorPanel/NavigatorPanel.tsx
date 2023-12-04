@@ -82,7 +82,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
           ) : navigatorDropdownType === "workspace" ? (
             <></>
           ) : navigatorDropdownType === "project" ? (
-            <ProjectPanel />
+            <ProjectPanel unsavedProject={unsavedProject} />
           ) : (
             <></>
           )}
