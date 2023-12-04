@@ -30,21 +30,33 @@ export type TNodeApiPayload = TNodeApiPayloadBase &
   ) &
   // selectedUids
   (| {
-        action: Extract<TNodeActionType, "add" | "paste" | "rename">;
+        action: Extract<
+          TNodeActionType,
+          "add" | "paste" | "rename" | "text-edit"
+        >;
         selectedUids?: never;
       }
     | {
-        action: Exclude<TNodeActionType, "add" | "paste" | "rename">;
+        action: Exclude<
+          TNodeActionType,
+          "add" | "paste" | "rename" | "text-edit"
+        >;
         selectedUids: TNodeUid[];
       }
   ) &
   // targetUid
   (| {
-        action: Extract<TNodeActionType, "add" | "paste" | "move" | "rename">;
+        action: Extract<
+          TNodeActionType,
+          "add" | "paste" | "move" | "rename" | "text-edit"
+        >;
         targetUid: TNodeUid;
       }
     | {
-        action: Exclude<TNodeActionType, "add" | "paste" | "move" | "rename">;
+        action: Exclude<
+          TNodeActionType,
+          "add" | "paste" | "move" | "rename" | "text-edit"
+        >;
         targetUid?: never;
       }
   ) &
@@ -58,5 +70,15 @@ export type TNodeApiPayload = TNodeApiPayloadBase &
         action: Exclude<TNodeActionType, "move">;
         isBetween?: never;
         position?: never;
+      }
+  ) &
+  // content - only for text-edit
+  (| {
+        action: Extract<TNodeActionType, "text-edit">;
+        content: TNodeUid;
+      }
+    | {
+        action: Exclude<TNodeActionType, "text-edit">;
+        content?: never;
       }
   );

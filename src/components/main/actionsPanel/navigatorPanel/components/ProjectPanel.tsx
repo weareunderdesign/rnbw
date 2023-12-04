@@ -1,11 +1,13 @@
-import React from "react";
+import React, { FC } from "react";
 
 import { SVGIconI } from "@_components/common";
 
 import { useNavigatorPanelHandlers } from "../hooks";
 import { useAppState } from "@_redux/useAppState";
 
-export const ProjectPanel = () => {
+export const ProjectPanel: FC<{ unsavedProject: boolean }> = ({
+  unsavedProject,
+}) => {
   const { project } = useAppState();
   const { onProjectClick } = useNavigatorPanelHandlers();
 
@@ -14,6 +16,13 @@ export const ProjectPanel = () => {
       <div className="gap-s align-center" onClick={onProjectClick}>
         <SVGIconI {...{ class: "icon-xs" }}>folder</SVGIconI>
         <span className="text-s">{project.name}</span>
+        {unsavedProject && (
+          <div
+            className="radius-s foreground-primary"
+            title="unsaved file"
+            style={{ width: "6px", height: "6px" }}
+          />
+        )}
       </div>
       <span className="text-s opacity-m">/</span>
     </>

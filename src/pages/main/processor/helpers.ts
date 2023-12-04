@@ -9,7 +9,9 @@ import {
 import { getSubNodeUidsByBfs } from "@_node/helpers";
 import { THtmlNodeData } from "@_node/node";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
-import { TProject } from "@_redux/main/fileTree";
+import { TProject, setFileTreeNodes } from "@_redux/main/fileTree";
+import { Dispatch } from "react";
+import { AnyAction } from "@reduxjs/toolkit";
 
 export const saveFileContent = async (
   project: TProject,
@@ -72,6 +74,20 @@ export const getNeedToExpandNodeUids = (
     }
   });
   return _expandedItems;
+};
+export const markChangedFolders = (
+  fileTree: TFileNodeTreeData,
+  file: TFileNode,
+  dispatch: Dispatch<AnyAction>,
+) => {
+  const parentFiles: TFileNode[] = [];
+  while (file.parentUid) {
+    const parentFile = structuredClone(fileTree[file.parentUid]);
+    parentFile.data.changed = true;
+    parentFiles.push(parentFile);
+    file = parentFile;
+  }
+  parentFiles.length && dispatch(setFileTreeNodes(parentFiles));
 };
 export const getValidNodeTree = (nodeTree: TNodeTreeData): TNodeTreeData => {
   const _nodeTree = structuredClone(nodeTree);

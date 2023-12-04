@@ -16,10 +16,9 @@ import { TNodeTreeData } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import {
   setDoingFileAction,
-  setFileTreeNode,
+  setFileTreeNodes,
   setInitialFileUidToOpen,
   setPrevFileUid,
-  setPrevRenderableFileUid,
 } from "@_redux/main/fileTree";
 import {
   expandNodeTreeNodes,
@@ -38,16 +37,19 @@ import {
   getNodeUidToBeSelectedAtFirst,
   getPreviewPath,
   getValidNodeTree,
+  markChangedFolders,
 } from "../helpers";
+import { setCurrentCommand } from "@_redux/main/cmdk";
 
 export const useNodeTreeEvent = () => {
   const dispatch = useDispatch();
   const {
+    currentCommand,
+
     fileTree,
     initialFileUidToOpen,
     currentFileUid,
     prevFileUid,
-    prevRenderableFileUid,
 
     currentFileContent,
     selectedNodeUids,
@@ -57,15 +59,14 @@ export const useNodeTreeEvent = () => {
 
     syncConfigs,
   } = useAppState();
-  const { addRunningActions, removeRunningActions, monacoEditorRef } =
-    useContext(MainContext);
+  const { addRunningActions, removeRunningActions } = useContext(MainContext);
 
   useEffect(() => {
-    LogAllow &&
+    /* LogAllow &&
       console.log("useNodeTreeEvent - selectedNodeUids", {
         selectedNodeUids,
         currentFileContent,
-      });
+      }); */
 
     // focus node
     dispatch(
@@ -85,21 +86,20 @@ export const useNodeTreeEvent = () => {
     );
   }, [selectedNodeUids]);
 
-  useEffect(() => {
-    return;
+  /* useEffect(() => {
     // validate expanded node uids
     const _expandedItems = nExpandedItems.filter(
       (uid) => validNodeTree[uid] && validNodeTree[uid].isEntity === false,
     );
     dispatch(setExpandedNodeTreeNodes([..._expandedItems]));
-  }, [validNodeTree]);
+  }, [validNodeTree]); */
 
   useEffect(() => {
-    LogAllow &&
+    /* LogAllow &&
       console.log("useNodeTreeEvent - currentFileContent", {
         selectedNodeUids,
         currentFileContent,
-      });
+      }); */
 
     // validate
     if (!fileTree[currentFileUid]) return;
@@ -117,8 +117,18 @@ export const useNodeTreeEvent = () => {
     fileData.contentInApp = contentInApp;
     fileData.changed = fileData.content !== fileData.orgContent;
 
+    if (fileData.changed && file.parentUid) {
+      markChangedFolders(fileTree, file, dispatch);
+    }
+    
+    // when "Save" while text-editing, we need to call "Save" command after file-content updated.
+    // after fileTree has been updated exactly. so when "Save" while text-editing, we first call "SaveForce"
+    if (currentCommand?.action === "SaveForce") {
+      dispatch(setCurrentCommand({ action: "Save" }));
+    }
+
     // sync file-tree
-    dispatch(setFileTreeNode(file));
+    dispatch(setFileTreeNodes([file]));
     (async () => {
       // update idb
       dispatch(setDoingFileAction(true));

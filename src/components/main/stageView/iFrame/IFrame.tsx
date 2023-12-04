@@ -16,21 +16,28 @@ import { markSelectedElements } from "./helpers";
 
 export const IFrame = () => {
   const dispatch = useDispatch();
-  const { needToReloadIframe, iframeSrc, iframeLoading } = useAppState();
+  const { needToReloadIframe, iframeSrc } = useAppState();
 
-  const [contentRef, setContentRef] = useState<HTMLIFrameElement | null>(null);
+  const [iframeRefState, setIframeRefState] =
+    useState<HTMLIFrameElement | null>(null);
+  const iframeRefRef = useRef<HTMLIFrameElement | null>(null);
+
   const contentEditableUidRef = useRef<TNodeUid>("");
   const isEditingRef = useRef(false);
   const linkTagUidRef = useRef<TNodeUid>("");
 
   // hooks
-  const { onKeyDown } = useCmdk();
   const { nodeTreeRef, hoveredItemRef, focusedItemRef, selectedItemsRef } =
-    useSyncNode(contentRef);
-
+    useSyncNode(iframeRefState);
+  const { onKeyDown } = useCmdk({
+    iframeRefRef,
+    nodeTreeRef,
+    contentEditableUidRef,
+    isEditingRef,
+  });
   const { onMouseEnter, onMouseMove, onMouseLeave, onClick, onDblClick } =
     useMouseEvents({
-      contentRef,
+      iframeRefRef,
       nodeTreeRef,
       focusedItemRef,
       selectedItemsRef,
@@ -41,13 +48,14 @@ export const IFrame = () => {
 
   // init iframe
   useEffect(() => {
-    if (contentRef) {
+    iframeRefRef.current = iframeRefState;
+    if (iframeRefState) {
       dispatch(setIframeLoading(true));
 
-      contentRef.onload = () => {
+      iframeRefState.onload = () => {
         LogAllow && console.log("iframe loaded");
 
-        const _document = contentRef?.contentWindow?.document;
+        const _document = iframeRefState?.contentWindow?.document;
         const htmlNode = _document?.documentElement;
         const headNode = _document?.head;
 
@@ -95,12 +103,12 @@ export const IFrame = () => {
         }
 
         // mark selected elements on load
-        markSelectedElements(contentRef, selectedItemsRef.current);
+        markSelectedElements(iframeRefState, selectedItemsRef.current);
 
         dispatch(setIframeLoading(false));
       };
     }
-  }, [contentRef]);
+  }, [iframeRefState]);
 
   // reload iframe
   useEffect(() => {
@@ -112,7 +120,7 @@ export const IFrame = () => {
       <>
         {iframeSrc && !needToReloadIframe && (
           <iframe
-            ref={setContentRef}
+            ref={setIframeRefState}
             id={"iframeId"}
             src={iframeSrc}
             style={{
