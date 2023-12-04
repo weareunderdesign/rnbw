@@ -39,22 +39,50 @@ export const useMouseEvents = ({
     dispatch(setHoveredNodeUid(""));
   };
 
-  const onClick = useCallback((e: MouseEvent) => {
-    dispatch(setActivePanel("stage"));
+  const onClick = useCallback(
+    (e: MouseEvent) => {
+      dispatch(setActivePanel("stage"));
 
-    const uid = getValidElementWithUid(e.target as HTMLElement);
-    if (uid) {
-      if (e.shiftKey) {
-        const validUids = getValidNodeUids(
-          nodeTreeRef.current,
-          Array(...new Set([...selectedItemsRef.current, uid])),
-        );
-        dispatch(setSelectedNodeUids(validUids));
-      } else {
-        dispatch(setSelectedNodeUids([uid]));
+      const uid = getValidElementWithUid(e.target as HTMLElement);
+      if (uid) {
+        let uids = [uid];
+        if (e.shiftKey) {
+          const validUids = getValidNodeUids(
+            nodeTreeRef.current,
+            Array(...new Set([...selectedItemsRef.current, uid])),
+          );
+          uids = validUids;
+        }
+        dispatch(setSelectedNodeUids(uids));
       }
-    }
-  }, []);
+
+      if (contentEditableUidRef.current && contentRef) {
+        const _document = contentRef.contentWindow?.document;
+        const ele = _document?.querySelector(
+          `[${StageNodeIdAttr}="${contentEditableUidRef.current}"]`,
+        ) as HTMLElement;
+        ele && ele.setAttribute("contenteditable", "false");
+        contentEditableUidRef.current = "";
+
+        //TODO: complete the functionality to update the code from the stage
+        // const editableNode = nodeTreeRef.current[contentEditableUidRef.current];
+        // if (!editableNode || !editableNode.data.sourceCodeLocation) return;
+
+        // const codeViewInstance = monacoEditorRef.current;
+        // const codeViewInstanceModel = codeViewInstance?.getModel();
+        // if (!codeViewInstance || !codeViewInstanceModel) {
+        //   LogAllow &&
+        //     console.error(
+        //       `Monaco Editor ${!codeViewInstance ? "" : "Model"} is undefined`,
+        //     );
+        //   return;
+        // }
+
+        // setIsContentProgrammaticallyChanged(true);
+      }
+    },
+    [contentRef],
+  );
   const onDblClick = useCallback((e: MouseEvent) => {
     dispatch(setActivePanel("stage"));
 
@@ -81,7 +109,6 @@ export const useMouseEvents = ({
     onMouseLeave,
     onMouseMove,
     onMouseEnter,
-
     onClick,
     onDblClick,
   };

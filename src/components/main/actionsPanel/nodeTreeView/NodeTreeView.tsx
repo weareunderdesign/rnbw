@@ -9,7 +9,7 @@ import React, {
 import cx from "classnames";
 import { useDispatch } from "react-redux";
 
-import { SVGIconI, TreeView } from "@_components/common";
+import { TreeView } from "@_components/common";
 import { TreeViewData } from "@_components/common/treeView/types";
 import { RootNodeUid } from "@_constants/main";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
@@ -37,6 +37,7 @@ import { DragBetweenLine } from "./nodeTreeComponents/DragBetweenLine";
 import { ItemArrow } from "./nodeTreeComponents/ItemArrow";
 import { ItemTitle } from "./nodeTreeComponents/ItemTitle";
 import { useAppState } from "@_redux/useAppState";
+import { NodeIcon } from "./nodeTreeComponents/NodeIcon";
 
 const AutoExpandDelay = 1 * 1000;
 
@@ -268,7 +269,6 @@ const NodeTreeView = () => {
         renderers={{
           renderTreeContainer: (props) => <Container {...props} />,
           renderItemsContainer: (props) => <Container {...props} />,
-
           renderItem: (props) => {
             const htmlElementReferenceData =
               useMemo<THtmlElementsReference>(() => {
@@ -281,14 +281,7 @@ const NodeTreeView = () => {
                       : nodeData.nodeName
                   ];
                 return refData;
-              }, []);
-
-            const spanStyles: React.CSSProperties = {
-              width: "calc(100% - 32px)",
-              textOverflow: "ellipsis",
-              overflow: "hidden",
-              whiteSpace: "nowrap",
-            };
+              }, [props.item.data]);
 
             const onClick = useCallback(
               (e: React.MouseEvent) => {
@@ -378,6 +371,7 @@ const NodeTreeView = () => {
                 {...props.context.itemContainerWithChildrenProps}
               >
                 <div
+                  key={`NodeTreeView-${props.item.index}${props.item.data.data.nodeName}`}
                   id={`NodeTreeView-${props.item.index}`}
                   className={cx(
                     "justify-stretch",
@@ -410,39 +404,13 @@ const NodeTreeView = () => {
                   <div className="gap-s padding-xs" style={{ width: "100%" }}>
                     {props.arrow}
 
-                    {htmlElementReferenceData ? (
-                      <SVGIconI {...{ class: "icon-xs" }}>
-                        {htmlElementReferenceData["Icon"]}
-                      </SVGIconI>
-                    ) : props.item.data.name === "!--...--" ||
-                      props.item.data.name === "comment" ? (
-                      <div className="icon-xs">
-                        <SVGIconI {...{ class: "icon-xs" }}>bubble</SVGIconI>
-                      </div>
-                    ) : (
-                      <div className="icon-xs">
-                        <SVGIconI {...{ class: "icon-xs" }}>component</SVGIconI>
-                      </div>
-                    )}
-
-                    {htmlElementReferenceData ? (
-                      <span
-                        className="text-s justify-stretch"
-                        style={spanStyles}
-                      >
-                        {htmlElementReferenceData["Name"]}
-                      </span>
-                    ) : props.item.data.name === "!--...--" ||
-                      props.item.data.name === "comment" ? (
-                      <span
-                        className="text-s justify-stretch"
-                        style={spanStyles}
-                      >
-                        comment
-                      </span>
-                    ) : (
-                      props.title
-                    )}
+                    <NodeIcon
+                      {...{
+                        htmlElementReferenceData,
+                        nodeName: props.item.data.data.nodeName,
+                        componentTitle: props.title,
+                      }}
+                    />
                   </div>
                 </div>
 
