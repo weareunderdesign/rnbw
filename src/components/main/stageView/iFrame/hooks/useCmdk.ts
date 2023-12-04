@@ -110,6 +110,10 @@ export const useCmdk = ({
                 } is undefined`,
               );
           } else {
+            action === "Save" &&
+              LogAllow &&
+              console.log("action to be run by cmdk: ", action);
+
             editHtmlContent({
               iframeRef: iframeRefRef.current,
               nodeTree: nodeTreeRef.current,
