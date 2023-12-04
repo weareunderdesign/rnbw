@@ -1634,7 +1634,7 @@ export default function MainPage() {
                                   command.Description,
                               }}
                               onSelect={() => {
-                                console.log("onSelect", command);
+                                LogAllow && console.log("onSelect", command);
 
                                 // keep modal open when toogling theme or go "Add" menu from "Actions" menu
                                 command.Name !== "Theme" &&

@@ -38,8 +38,6 @@ export const useSaveCommand = () => {
     const file = _ffTree[currentFileUid];
     const fileData = file.data;
 
-    console.log(fileData.content, fileData.orgContent);
-
     addRunningActions(["processor-save-currentFile"]);
     if (fileData.changed) {
       try {
