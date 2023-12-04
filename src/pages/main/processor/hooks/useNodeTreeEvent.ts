@@ -35,7 +35,8 @@ import { useAppState } from "@_redux/useAppState";
 import {
   getNeedToExpandNodeUids,
   getNodeUidToBeSelectedAtFirst,
-  getPreViewPath,
+  getPreviewPath,
+  getValidNodeTree,
   markChangedFolders,
 } from "../helpers";
 import { setCurrentCommand } from "@_redux/main/cmdk";
@@ -132,7 +133,7 @@ export const useNodeTreeEvent = () => {
       // update idb
       dispatch(setDoingFileAction(true));
       try {
-        const previewPath = getPreViewPath(fileTree, file, fileData);
+        const previewPath = getPreviewPath(fileTree, file);
         await writeFile(previewPath, fileData.contentInApp as string);
         if (fileData.ext === "html") {
           dispatch(setIframeSrc(`rnbw${previewPath}`));
@@ -146,40 +147,19 @@ export const useNodeTreeEvent = () => {
     // ---
 
     // sync node-tree
-    (() => {
-      dispatch(setNodeTree(nodeTree));
+    dispatch(setNodeTree(nodeTree));
+    const _validNodeTree = getValidNodeTree(nodeTree);
+    dispatch(setValidNodeTree(_validNodeTree));
 
-      // build valid-node-tree
-      const _nodeTree = structuredClone(nodeTree);
-      const _validNodeTree: TNodeTreeData = {};
-      const uids = getSubNodeUidsByBfs(RootNodeUid, _nodeTree);
-      uids.reverse();
-      uids.map((uid) => {
-        const node = _nodeTree[uid];
-        if (!node.data.valid) return;
-
-        node.children = node.children.filter(
-          (c_uid) => _nodeTree[c_uid].data.valid,
-        );
-        node.isEntity = node.children.length === 0;
-        _validNodeTree[uid] = node;
-      });
-      dispatch(setValidNodeTree(_validNodeTree));
-
-      // select initial-node
-      if (initialFileUidToOpen !== "" && fileTree[initialFileUidToOpen]) {
-        // it's a new project
-        LogAllow && console.log("it's a new project");
-        dispatch(setInitialFileUidToOpen(""));
-        const uid = getNodeUidToBeSelectedAtFirst(_validNodeTree);
-        dispatch(setSelectedNodeUids([uid]));
-      } else if (prevFileUid !== currentFileUid) {
-        // it's a new file
-        LogAllow && console.log("it's a new file");
-        const uid = getNodeUidToBeSelectedAtFirst(_validNodeTree);
-        dispatch(setSelectedNodeUids([uid]));
-      }
-    })();
+    const uid = getNodeUidToBeSelectedAtFirst(_validNodeTree);
+    if (initialFileUidToOpen !== "" && fileTree[initialFileUidToOpen]) {
+      LogAllow && console.log("it's a new project");
+      dispatch(setInitialFileUidToOpen(""));
+      dispatch(setSelectedNodeUids([uid]));
+    } else if (prevFileUid !== currentFileUid) {
+      LogAllow && console.log("it's a new file");
+      dispatch(setSelectedNodeUids([uid]));
+    }
 
     // sync stage-view
     if (prevFileUid !== currentFileUid) {
