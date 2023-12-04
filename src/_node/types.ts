@@ -43,6 +43,7 @@ export type TNodeActionType =
   | "move"
   | "rename" // "turn into" for node tree - "rename" for file tree
   | "group"
-  | "ungroup";
+  | "ungroup"
+  | "text-edit";
 
 export type TNodeReferenceData = THtmlReferenceData;

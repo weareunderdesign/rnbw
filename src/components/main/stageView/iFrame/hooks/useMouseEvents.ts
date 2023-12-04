@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useContext } from "react";
 import { useDispatch } from "react-redux";
 import { StageNodeIdAttr } from "@_node/file";
 import { getValidNodeUids } from "@_node/helpers";
@@ -6,8 +6,11 @@ import { TNodeTreeData, TNodeUid } from "@_node/types";
 import { setHoveredNodeUid } from "@_redux/main/nodeTree";
 import { setSelectedNodeUids } from "@_redux/main/nodeTree/event";
 import { getValidElementWithUid, selectAllText } from "../helpers";
-import { THtmlNodeData } from "@_node/node";
+import { THtmlNodeData, doNodeActions } from "@_node/node";
 import { setActivePanel } from "@_redux/main/processor";
+import { callNodeApi } from "@_node/apis";
+import { MainContext } from "@_redux/main";
+import { LogAllow } from "@_constants/global";
 
 interface IUseMouseEventsProps {
   contentRef: HTMLIFrameElement | null;
@@ -29,6 +32,8 @@ export const useMouseEvents = ({
   linkTagUidRef,
 }: IUseMouseEventsProps) => {
   const dispatch = useDispatch();
+  const { monacoEditorRef, setIsContentProgrammaticallyChanged } =
+    useContext(MainContext);
 
   // hoveredNodeUid
   const onMouseEnter = useCallback((e: MouseEvent) => {}, []);
@@ -86,14 +91,32 @@ export const useMouseEvents = ({
               `[${StageNodeIdAttr}="${contentEditableUidRef.current}"]`,
             );
           if (contentEditableElement) {
+            const contentEditableUid = contentEditableUidRef.current;
             contentEditableElement.setAttribute("contenteditable", "false");
             contentEditableUidRef.current = "";
 
-            const node = nodeTreeRef.current[uid];
-            console.log(
-              "content-edited node",
-              node,
-              contentEditableElement.innerHTML,
+            const codeViewInstance = monacoEditorRef.current;
+            const codeViewInstanceModel = codeViewInstance?.getModel();
+            if (!codeViewInstance || !codeViewInstanceModel) {
+              LogAllow &&
+                console.error(
+                  `Monaco Editor ${
+                    !codeViewInstance ? "" : "Model"
+                  } is undefined`,
+                );
+              return;
+            }
+
+            setIsContentProgrammaticallyChanged(true);
+            callNodeApi(
+              {
+                action: "text-edit",
+                nodeTree: nodeTreeRef.current,
+                targetUid: contentEditableUid,
+                content: contentEditableElement.innerHTML,
+                codeViewInstanceModel,
+              },
+              () => setIsContentProgrammaticallyChanged(false),
             );
           }
         }

@@ -51,3 +51,23 @@ export const pasteCode = ({
   };
   codeViewInstanceModel.applyEdits([edit]);
 };
+export const replaceContent = ({
+  nodeTree,
+  focusedItem,
+  content,
+  codeViewInstanceModel,
+}: {
+  nodeTree: TNodeTreeData;
+  focusedItem: TNodeUid;
+  content: string;
+  codeViewInstanceModel: editor.ITextModel;
+}) => {
+  const focusedNode = nodeTree[focusedItem];
+  const { startLine, startCol, endLine, endCol } =
+    focusedNode.data.sourceCodeLocation;
+  const edit = {
+    range: new Range(startLine, startCol, endLine, endCol),
+    text: content,
+  };
+  codeViewInstanceModel.applyEdits([edit]);
+};
