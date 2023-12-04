@@ -66,8 +66,7 @@ export const useNodeTreeEvent = () => {
         currentFileContent,
       });
 
-    // focus/select nodes
-    dispatch(selectNodeTreeNodes(selectedNodeUids));
+    // focus node
     dispatch(
       focusNodeTreeNode(
         selectedNodeUids.length > 0
@@ -76,15 +75,19 @@ export const useNodeTreeEvent = () => {
       ),
     );
 
+    // select nodes
+    dispatch(selectNodeTreeNodes(selectedNodeUids));
+
     // expand nodes
-    const expandedItems = getNeedToExpandNodeUids(
-      validNodeTree,
-      selectedNodeUids,
+    dispatch(
+      expandNodeTreeNodes(
+        getNeedToExpandNodeUids(validNodeTree, selectedNodeUids),
+      ),
     );
-    dispatch(expandNodeTreeNodes(expandedItems));
   }, [selectedNodeUids]);
 
   useEffect(() => {
+    return;
     // validate expanded node uids
     const _expandedItems = nExpandedItems.filter(
       (uid) => validNodeTree[uid] && validNodeTree[uid].isEntity === false,
@@ -158,11 +161,13 @@ export const useNodeTreeEvent = () => {
       // select initial-node
       if (initialFileUidToOpen !== "" && fileTree[initialFileUidToOpen]) {
         // it's a new project
+        LogAllow && console.log("it's a new project");
         dispatch(setInitialFileUidToOpen(""));
         const uid = getNodeUidToBeSelectedAtFirst(_validNodeTree);
         dispatch(setSelectedNodeUids([uid]));
       } else if (prevFileUid !== currentFileUid) {
         // it's a new file
+        LogAllow && console.log("it's a new file");
         const uid = getNodeUidToBeSelectedAtFirst(_validNodeTree);
         dispatch(setSelectedNodeUids([uid]));
       }
