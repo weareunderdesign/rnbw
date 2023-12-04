@@ -1,16 +1,24 @@
-import { useCallback } from "react";
+import { useCallback, useContext } from "react";
 import { useDispatch } from "react-redux";
 import { StageNodeIdAttr } from "@_node/file";
 import { getValidNodeUids } from "@_node/helpers";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
 import { setHoveredNodeUid } from "@_redux/main/nodeTree";
 import { setSelectedNodeUids } from "@_redux/main/nodeTree/event";
-import { getValidElementWithUid, selectAllText } from "../helpers";
+import {
+  editHtmlContent,
+  getValidElementWithUid,
+  selectAllText,
+} from "../helpers";
 import { THtmlNodeData } from "@_node/node";
 import { setActivePanel } from "@_redux/main/processor";
+import { MainContext } from "@_redux/main";
+import { LogAllow } from "@_constants/global";
+import { debounce } from "lodash";
+import { ShortDelay } from "@_constants/main";
 
 interface IUseMouseEventsProps {
-  contentRef: HTMLIFrameElement | null;
+  iframeRefRef: React.MutableRefObject<HTMLIFrameElement | null>;
   nodeTreeRef: React.MutableRefObject<TNodeTreeData>;
   focusedItemRef: React.MutableRefObject<TNodeUid>;
   selectedItemsRef: React.MutableRefObject<TNodeUid[]>;
@@ -20,7 +28,7 @@ interface IUseMouseEventsProps {
 }
 
 export const useMouseEvents = ({
-  contentRef,
+  iframeRefRef,
   nodeTreeRef,
   focusedItemRef,
   selectedItemsRef,
@@ -29,67 +37,92 @@ export const useMouseEvents = ({
   linkTagUidRef,
 }: IUseMouseEventsProps) => {
   const dispatch = useDispatch();
+  const { monacoEditorRef, setIsContentProgrammaticallyChanged } =
+    useContext(MainContext);
 
+  // hoveredNodeUid
   const onMouseEnter = useCallback((e: MouseEvent) => {}, []);
   const onMouseMove = useCallback((e: MouseEvent) => {
-    const uid = getValidElementWithUid(e.target as HTMLElement);
+    const { uid } = getValidElementWithUid(e.target as HTMLElement);
     uid && dispatch(setHoveredNodeUid(uid));
   }, []);
   const onMouseLeave = (e: MouseEvent) => {
     dispatch(setHoveredNodeUid(""));
   };
 
-  const onClick = useCallback(
-    (e: MouseEvent) => {
-      dispatch(setActivePanel("stage"));
-
-      const uid = getValidElementWithUid(e.target as HTMLElement);
-      if (uid) {
-        let uids = [uid];
-        if (e.shiftKey) {
-          const validUids = getValidNodeUids(
-            nodeTreeRef.current,
-            Array(...new Set([...selectedItemsRef.current, uid])),
-          );
-          uids = validUids;
-        }
-        dispatch(setSelectedNodeUids(uids));
-      }
-
-      if (contentEditableUidRef.current && contentRef) {
-        const _document = contentRef.contentWindow?.document;
-        const ele = _document?.querySelector(
-          `[${StageNodeIdAttr}="${contentEditableUidRef.current}"]`,
-        ) as HTMLElement;
-        ele && ele.setAttribute("contenteditable", "false");
-        contentEditableUidRef.current = "";
-
-        //TODO: complete the functionality to update the code from the stage
-        // const editableNode = nodeTreeRef.current[contentEditableUidRef.current];
-        // if (!editableNode || !editableNode.data.sourceCodeLocation) return;
-
-        // const codeViewInstance = monacoEditorRef.current;
-        // const codeViewInstanceModel = codeViewInstance?.getModel();
-        // if (!codeViewInstance || !codeViewInstanceModel) {
-        //   LogAllow &&
-        //     console.error(
-        //       `Monaco Editor ${!codeViewInstance ? "" : "Model"} is undefined`,
-        //     );
-        //   return;
-        // }
-
-        // setIsContentProgrammaticallyChanged(true);
-      }
-    },
-    [contentRef],
-  );
-  const onDblClick = useCallback((e: MouseEvent) => {
+  // click, dblclick handlers
+  const onClick = useCallback((e: MouseEvent) => {
     dispatch(setActivePanel("stage"));
 
+    const { uid, element } = getValidElementWithUid(e.target as HTMLElement);
+    if (uid) {
+      // update selectedNodeUids
+      (() => {
+        const uids = e.shiftKey
+          ? getValidNodeUids(
+              nodeTreeRef.current,
+              Array(...new Set([...selectedItemsRef.current, uid])),
+            )
+          : [uid];
+
+        // check if it's a new state
+        let same = false;
+        if (selectedItemsRef.current.length === uids.length) {
+          same = true;
+          for (
+            let index = 0, len = selectedItemsRef.current.length;
+            index < len;
+            ++index
+          ) {
+            if (selectedItemsRef.current[index] !== uids[index]) {
+              same = false;
+              break;
+            }
+          }
+        }
+
+        !same && dispatch(setSelectedNodeUids(uids));
+      })();
+
+      // content-editable operation
+      if (
+        contentEditableUidRef.current &&
+        contentEditableUidRef.current !== uid &&
+        iframeRefRef.current
+      ) {
+        isEditingRef.current = false;
+        const contentEditableUid = contentEditableUidRef.current;
+        contentEditableUidRef.current = "";
+
+        const codeViewInstance = monacoEditorRef.current;
+        const codeViewInstanceModel = codeViewInstance?.getModel();
+        if (!codeViewInstance || !codeViewInstanceModel) {
+          LogAllow &&
+            console.error(
+              `Monaco Editor ${!codeViewInstance ? "" : "Model"} is undefined`,
+            );
+          return;
+        }
+
+        editHtmlContent({
+          iframeRef: iframeRefRef.current,
+          nodeTree: nodeTreeRef.current,
+          contentEditableUid,
+          codeViewInstanceModel,
+          setIsContentProgrammaticallyChanged,
+        });
+      }
+    }
+  }, []);
+  const onDblClick = useCallback((e: MouseEvent) => {
     const ele = e.target as HTMLElement;
     const uid: TNodeUid | null = ele.getAttribute(StageNodeIdAttr);
 
     if (!uid) {
+      // when dbl-click on a web component
+      /* const { uid: validUid, element: validElement } = getValidElementWithUid(
+        e.target as HTMLElement,
+      ); */
       isEditingRef.current = false;
     } else {
       const node = nodeTreeRef.current[uid];
@@ -97,11 +130,14 @@ export const useMouseEvents = ({
       if (["html", "head", "body", "img", "div"].includes(nodeData.name))
         return;
 
-      isEditingRef.current = true;
-      contentEditableUidRef.current = uid;
-      ele.setAttribute("contenteditable", "true");
-      ele.focus();
-      selectAllText(contentRef, ele);
+      const { startTag, endTag } = nodeData.sourceCodeLocation;
+      if (startTag && endTag) {
+        isEditingRef.current = true;
+        contentEditableUidRef.current = uid;
+        ele.setAttribute("contenteditable", "true");
+        ele.focus();
+        setTimeout(() => selectAllText(iframeRefRef.current, ele), ShortDelay);
+      }
     }
   }, []);
 

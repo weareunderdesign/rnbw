@@ -10,6 +10,7 @@ import {
 } from "@_redux/main/processor";
 import { isUnsavedProject } from "@_node/file/helpers";
 import { useAppState } from "@_redux/useAppState";
+import { LogAllow } from "@_constants/global";
 
 export const useNavigatorPanelHandlers = () => {
   const dispatch = useDispatch();
@@ -50,7 +51,7 @@ export const useNavigatorPanelHandlers = () => {
 
   const onOpenProject = useCallback(
     (project: TProject) => {
-      console.log("open project", { project });
+      LogAllow && console.log("open project", { project });
       // confirm files' changes
       if (fileTree && isUnsavedProject(fileTree)) {
         const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`;

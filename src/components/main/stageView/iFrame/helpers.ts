@@ -1,6 +1,14 @@
-import { StageNodeIdAttr, TNodeUid } from "@_node/index";
+import {
+  StageNodeIdAttr,
+  TNodeTreeData,
+  TNodeUid,
+  callNodeApi,
+} from "@_node/index";
+import { editor } from "monaco-editor";
 
-export const getValidElementWithUid = (ele: HTMLElement): TNodeUid | null => {
+export const getValidElementWithUid = (
+  ele: HTMLElement,
+): { uid: TNodeUid | null; element: HTMLElement } => {
   let validElement = ele;
   let uid: TNodeUid | null = validElement.getAttribute(StageNodeIdAttr);
   while (!uid) {
@@ -10,16 +18,16 @@ export const getValidElementWithUid = (ele: HTMLElement): TNodeUid | null => {
     uid = parentElement.getAttribute(StageNodeIdAttr);
     validElement = parentElement;
   }
-  return uid;
+  return { uid, element: validElement };
 };
 
 export const markSelectedElements = (
-  contentRef: HTMLIFrameElement | null,
+  iframeRef: HTMLIFrameElement | null,
   uids: TNodeUid[],
 ) => {
   uids.map((uid) => {
     // if it's a web component, should select its first child element
-    let selectedElement = contentRef?.contentWindow?.document?.querySelector(
+    let selectedElement = iframeRef?.contentWindow?.document?.querySelector(
       `[${StageNodeIdAttr}="${uid}"]`,
     );
     const isValid: null | string = selectedElement?.firstElementChild
@@ -32,12 +40,12 @@ export const markSelectedElements = (
   });
 };
 export const unmarkSelectedElements = (
-  contentRef: HTMLIFrameElement | null,
+  iframeRef: HTMLIFrameElement | null,
   uids: TNodeUid[],
 ) => {
   uids.map((uid) => {
     // if it's a web component, should select its first child element
-    let selectedElement = contentRef?.contentWindow?.document?.querySelector(
+    let selectedElement = iframeRef?.contentWindow?.document?.querySelector(
       `[${StageNodeIdAttr}="${uid}"]`,
     );
     const isValid: null | string = selectedElement?.firstElementChild
@@ -51,11 +59,11 @@ export const unmarkSelectedElements = (
 };
 
 export const markHoverdElement = (
-  contentRef: HTMLIFrameElement | null,
+  iframeRef: HTMLIFrameElement | null,
   uid: TNodeUid,
 ) => {
   // if it's a web component, should select its first child element
-  let selectedElement = contentRef?.contentWindow?.document?.querySelector(
+  let selectedElement = iframeRef?.contentWindow?.document?.querySelector(
     `[${StageNodeIdAttr}="${uid}"]`,
   );
   const isValid: null | string = selectedElement?.firstElementChild
@@ -67,11 +75,11 @@ export const markHoverdElement = (
   selectedElement?.setAttribute("rnbwdev-rnbw-element-hover", "");
 };
 export const unmarkHoverdElement = (
-  contentRef: HTMLIFrameElement | null,
+  iframeRef: HTMLIFrameElement | null,
   uid: TNodeUid,
 ) => {
   // if it's a web component, should select its first child element
-  let selectedElement = contentRef?.contentWindow?.document?.querySelector(
+  let selectedElement = iframeRef?.contentWindow?.document?.querySelector(
     `[${StageNodeIdAttr}="${uid}"]`,
   );
   const isValid: null | string = selectedElement?.firstElementChild
@@ -83,19 +91,59 @@ export const unmarkHoverdElement = (
   selectedElement?.removeAttribute("rnbwdev-rnbw-element-hover");
 };
 
+export const editHtmlContent = ({
+  iframeRef,
+  nodeTree,
+  contentEditableUid,
+  codeViewInstanceModel,
+  setIsContentProgrammaticallyChanged,
+  cb,
+}: {
+  iframeRef: HTMLIFrameElement;
+  nodeTree: TNodeTreeData;
+  contentEditableUid: TNodeUid;
+  codeViewInstanceModel: editor.ITextModel;
+  setIsContentProgrammaticallyChanged: (value: boolean) => void;
+  cb?: () => void;
+}) => {
+  const contentEditableElement =
+    iframeRef.contentWindow?.document.querySelector(
+      `[${StageNodeIdAttr}="${contentEditableUid}"]`,
+    );
+  if (contentEditableElement) {
+    contentEditableElement.setAttribute("contenteditable", "false");
+
+    setIsContentProgrammaticallyChanged(true);
+    callNodeApi(
+      {
+        action: "text-edit",
+        nodeTree,
+        targetUid: contentEditableUid,
+        content: contentEditableElement.innerHTML,
+        codeViewInstanceModel,
+      },
+      () => {
+        setIsContentProgrammaticallyChanged(false);
+      },
+      cb,
+    );
+  }
+};
+
 export const selectAllText = (
-  contentRef: HTMLIFrameElement | null,
+  iframeRef: HTMLIFrameElement | null,
   ele: HTMLElement,
 ) => {
-  const range = contentRef?.contentWindow?.document.createRange();
+  const range = iframeRef?.contentWindow?.document.createRange();
   if (range) {
     range.selectNodeContents(ele);
-    const selection = contentRef?.contentWindow?.getSelection();
+    const selection = iframeRef?.contentWindow?.getSelection();
     selection?.removeAllRanges();
     selection?.addRange(range);
   }
 };
 
+// -----------------------
 export const openNewPage = (ele: HTMLElement) => {
   if (ele.tagName !== "A") return;
 
