@@ -145,6 +145,7 @@ export const useNodeTreeEvent = () => {
         ),
       );
     } else {
+      LogAllow && console.log("it's a rnbw-change");
       if (isSelectedNodeUidsChanged.current) {
         isSelectedNodeUidsChanged.current = false;
         const validExpandedItems = nExpandedItems.filter(
