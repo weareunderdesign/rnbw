@@ -21,7 +21,6 @@ import {
   expandNodeTreeNodes,
   focusNodeTreeNode,
   selectNodeTreeNodes,
-  setCurrentFileContent,
   setExpandedNodeTreeNodes,
   setNodeTree,
   setSelectedNodeUids,
