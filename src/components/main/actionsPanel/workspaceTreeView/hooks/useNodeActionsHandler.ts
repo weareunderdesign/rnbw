@@ -37,6 +37,7 @@ import {
 import { useInvalidNodes } from "./useInvalidNodes";
 import { useTemporaryNodes } from "./useTemporaryNodes";
 import { useAppState } from "@_redux/useAppState";
+import { clearFileSession } from "@_pages/main/helper";
 
 export const useNodeActionsHandler = (
   openFileUid: React.MutableRefObject<string>,
@@ -476,8 +477,7 @@ export const useNodeActionsHandler = (
         return;
       }
 
-      dispatch(clearNodeTreeViewState());
-      dispatch({ type: NodeTree_Event_ClearActionType });
+      clearFileSession(dispatch);
 
       const nodeData = node.data as TFileNodeData;
       if (RednerableFileTypes[nodeData.ext]) {
