@@ -60,6 +60,10 @@ export const useNodeTreeEvent = () => {
 
   const isSelectedNodeUidsChanged = useRef(false);
   const isCurrentFileContentChanged = useRef(false);
+  useEffect(() => {
+    isSelectedNodeUidsChanged.current = false;
+    isCurrentFileContentChanged.current = false;
+  }, [selectedNodeUids, currentFileContent]);
 
   useEffect(() => {
     isSelectedNodeUidsChanged.current = true;
@@ -147,7 +151,6 @@ export const useNodeTreeEvent = () => {
     } else {
       LogAllow && console.log("it's a rnbw-change");
       if (isSelectedNodeUidsChanged.current) {
-        isSelectedNodeUidsChanged.current = false;
         const validExpandedItems = nExpandedItems.filter(
           (uid) =>
             _validNodeTree[uid] && _validNodeTree[uid].isEntity === false,
@@ -271,6 +274,5 @@ export const useNodeTreeEvent = () => {
       );
       dispatch(expandNodeTreeNodes(needToExpandItems));
     }
-    isCurrentFileContentChanged.current = false;
   }, [selectedNodeUids]);
 };
