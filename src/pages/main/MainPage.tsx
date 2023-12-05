@@ -939,6 +939,8 @@ export default function MainPage() {
             osType,
           );
 
+          clearProjectSession(dispatch);
+
           // build nohost idb
           handlerArr && buildNohostIDB(handlerArr);
 
@@ -976,6 +978,8 @@ export default function MainPage() {
         try {
           const { _fileTree, _initialFileUidToOpen } =
             await loadIDBProject(DefaultProjectPath);
+
+          clearProjectSession(dispatch);
 
           dispatch(
             setProject({
@@ -1057,14 +1061,12 @@ export default function MainPage() {
               _preferPolyfill: false,
               mode: "readwrite",
             } as CustomDirectoryPickerOptions);
-            clearProjectSession(dispatch);
             await importProject(fsType, projectHandle);
           } catch (err) {
             reject(err);
           }
         } else if (fsType === "idb") {
           try {
-            clearProjectSession(dispatch);
             await importProject(fsType, null);
           } catch (err) {
             reject(err);
@@ -1676,7 +1678,6 @@ export default function MainPage() {
                                       }
                                     }
                                   }
-                                  clearProjectSession(dispatch);
                                   importProject(projectContext, projectHandler);
                                 } else if (
                                   currentCmdkPage === "Add" &&
