@@ -8,11 +8,30 @@ import { setCurrentCommand } from "@_redux/main/cmdk";
 import { getCommandKey } from "@_services/global";
 import { TCmdkKeyMap } from "@_types/main";
 import { useAppState } from "@_redux/useAppState";
+import { TNodeTreeData, TNodeUid } from "@_node/types";
+import { editHtmlContent } from "../helpers";
+import { ShortDelay } from "@_constants/main";
 
-export const useCmdk = () => {
+interface IUseCmdkProps {
+  iframeRefRef: React.MutableRefObject<HTMLIFrameElement | null>;
+  nodeTreeRef: React.MutableRefObject<TNodeTreeData>;
+  contentEditableUidRef: React.MutableRefObject<TNodeUid>;
+  isEditingRef: React.MutableRefObject<boolean>;
+}
+
+export const useCmdk = ({
+  iframeRefRef,
+  nodeTreeRef,
+  contentEditableUidRef,
+  isEditingRef,
+}: IUseCmdkProps) => {
   const dispatch = useDispatch();
   const { nodeTree, osType } = useAppState();
-  const { cmdkReferenceData } = useContext(MainContext);
+  const {
+    cmdkReferenceData,
+    monacoEditorRef,
+    setIsContentProgrammaticallyChanged,
+  } = useContext(MainContext);
 
   const onKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -60,9 +79,6 @@ export const useCmdk = () => {
           break; // Match found, exit the outer loop
         }
       }
-      if (action === null) return;
-
-      LogAllow && console.log("action to be run by cmdk: ", action);
 
       // prevent chrome default short keys
       if (
@@ -74,7 +90,49 @@ export const useCmdk = () => {
         e.preventDefault();
       }
 
-      dispatch(setCurrentCommand({ action }));
+      if (isEditingRef.current) {
+        // for content-editing
+        if (
+          (e.code === "Escape" || action === "Save") &&
+          iframeRefRef.current
+        ) {
+          isEditingRef.current = false;
+          const contentEditableUid = contentEditableUidRef.current;
+          contentEditableUidRef.current = "";
+
+          const codeViewInstance = monacoEditorRef.current;
+          const codeViewInstanceModel = codeViewInstance?.getModel();
+          if (!codeViewInstance || !codeViewInstanceModel) {
+            LogAllow &&
+              console.error(
+                `Monaco Editor ${
+                  !codeViewInstance ? "" : "Model"
+                } is undefined`,
+              );
+          } else {
+            action === "Save" &&
+              LogAllow &&
+              console.log("action to be run by cmdk: ", action);
+
+            editHtmlContent({
+              iframeRef: iframeRefRef.current,
+              nodeTree: nodeTreeRef.current,
+              contentEditableUid,
+              codeViewInstanceModel,
+              setIsContentProgrammaticallyChanged,
+              cb:
+                action === "Save"
+                  ? () => dispatch(setCurrentCommand({ action: "SaveForce" }))
+                  : undefined,
+            });
+          }
+        }
+      } else {
+        if (action) {
+          LogAllow && console.log("action to be run by cmdk: ", action);
+          dispatch(setCurrentCommand({ action }));
+        }
+      }
     },
     [cmdkReferenceData, nodeTree, osType],
   );

@@ -1,5 +1,3 @@
-import { useDispatch } from "react-redux";
-
 import {
   clearFileTreeViewState,
   setCurrentFileUid,
@@ -20,9 +18,13 @@ import {
   setCurrentFileContent,
 } from "@_redux/main/nodeTree/event";
 import { setIframeSrc } from "@_redux/main/stageView";
-import { TCmdkReferenceData } from "@_types/main";
+import { TCmdkReferenceData, TFilesReference } from "@_types/main";
 import { Dispatch } from "react";
 import { AnyAction } from "@reduxjs/toolkit";
+import { RootNodeUid } from "@_constants/main";
+
+import { _path } from "@_node/file";
+import { TNodeUid } from "@_node/types";
 
 export const addDefaultCmdkActions = (
   cmdkReferenceData: TCmdkReferenceData,
@@ -125,4 +127,154 @@ export const clearFileSession = (dispatch: Dispatch<AnyAction>) => {
   dispatch({ type: NodeTree_Event_ClearActionType });
 
   dispatch(setIframeSrc(null));
+};
+
+export const elementsCmdk = ({
+  nodeTree,
+  nFocusedItem,
+  htmlReferenceData,
+  data,
+  cmdkSearchContent,
+  groupName,
+}: any) => {
+  let flag = true;
+  for (let x in nodeTree) {
+    if (nodeTree[x].displayName === "html") {
+      flag = false;
+    }
+  }
+
+  if (!flag) {
+    const htmlNode = nodeTree[nFocusedItem];
+    if (htmlNode && htmlNode.parentUid && htmlNode.parentUid !== RootNodeUid) {
+      const parentNode = nodeTree[htmlNode.parentUid as TNodeUid];
+      const refData = htmlReferenceData.elements[parentNode.displayName];
+      if (refData) {
+        if (refData.Contain === "All") {
+          Object.keys(htmlReferenceData.elements).map((tag: string) => {
+            const tagRef = htmlReferenceData.elements[tag];
+            if (tagRef !== undefined) {
+              data["Elements"].push({
+                Featured: tagRef && tagRef.Featured === "Yes" ? true : false,
+                Name: tagRef.Name,
+                Icon: tagRef.Icon,
+                Description: tagRef.Description,
+                "Keyboard Shortcut": [
+                  {
+                    cmd: false,
+                    shift: false,
+                    alt: false,
+                    key: "",
+                    click: false,
+                  },
+                ],
+                Group: groupName,
+                Context: `Node-${tagRef.Tag}`,
+              });
+            }
+          });
+        } else if (refData.Contain === "None") {
+          // do nothing
+        } else {
+          const tagList = refData.Contain.replace(/ /g, "").split(",");
+          tagList.map((tag: string) => {
+            const pureTag = tag.slice(1, tag.length - 1);
+            const tagRef = htmlReferenceData.elements[pureTag];
+            if (tagRef !== undefined) {
+              data["Elements"].push({
+                Featured: tagRef && tagRef.Featured === "Yes" ? true : false,
+                Name: tagRef.Name,
+                Icon: tagRef.Icon,
+                Description: tagRef.Description,
+                "Keyboard Shortcut": [
+                  {
+                    cmd: false,
+                    shift: false,
+                    alt: false,
+                    key: "",
+                    click: false,
+                  },
+                ],
+                Group: groupName,
+                Context: `Node-${tagRef.Tag}`,
+              });
+            }
+          });
+        }
+      }
+    }
+  } else {
+    data["Elements"] = [];
+    let tagRef = htmlReferenceData.elements["html"];
+    tagRef &&
+      data["Elements"].push({
+        Featured: tagRef && tagRef.Featured === "Yes" ? true : false,
+        Name: tagRef.Name.toUpperCase(),
+        Icon: tagRef.Icon,
+        Description: tagRef.Description,
+        "Keyboard Shortcut": [
+          {
+            cmd: false,
+            shift: false,
+            alt: false,
+            key: "",
+            click: false,
+          },
+        ],
+        Group: groupName,
+        Context: `Node-${tagRef.Tag}`,
+      });
+  }
+  if (
+    data["Elements"].length > 0 &&
+    data["Elements"].filter(
+      (element: any) => element.Featured || !!cmdkSearchContent,
+    ).length > 0
+  ) {
+    data["Elements"] = data["Elements"].filter(
+      (element: any) => element.Featured || !!cmdkSearchContent,
+    );
+  }
+  if (data["Elements"].length === 0) {
+    delete data["Elements"];
+  }
+};
+
+export const fileCmdk = ({
+  fileTree,
+  fFocusedItem,
+  filesRef,
+  data,
+  cmdkSearchContent,
+  groupName,
+}: any) => {
+  const fileNode = fileTree[fFocusedItem];
+  if (fileNode) {
+    filesRef.map((fileRef: TFilesReference) => {
+      fileRef.Name &&
+        data["Files"].push({
+          Featured: fileRef.Featured === "Yes",
+          Name: fileRef.Name,
+          Icon: fileRef.Icon,
+          Description: fileRef.Description,
+          "Keyboard Shortcut": [
+            {
+              cmd: false,
+              shift: false,
+              alt: false,
+              key: "",
+              click: false,
+            },
+          ],
+          Group: groupName,
+          Context: `File-${fileRef.Extension}`,
+        });
+    });
+  }
+  data["Files"] = data["Files"].filter(
+    (element: any) => element.Featured || !!cmdkSearchContent,
+  );
+  if (data["Files"].length === 0) {
+    delete data["Files"];
+  }
 };

@@ -10,8 +10,9 @@ import {
   unmarkHoverdElement,
   unmarkSelectedElements,
 } from "../helpers";
+import { ShortDelay } from "@_constants/main";
 
-export const useSyncNode = (contentRef: HTMLIFrameElement | null) => {
+export const useSyncNode = (iframeRef: HTMLIFrameElement | null) => {
   const {
     nodeTree,
     nFocusedItem: focusedItem,
@@ -24,48 +25,37 @@ export const useSyncNode = (contentRef: HTMLIFrameElement | null) => {
     nodeTreeRef.current = structuredClone(nodeTree);
   }, [nodeTree]);
 
-  // hoveredNodeUid -> stage-view
+  // hoveredNodeUid -> stageView
   const hoveredItemRef = useRef<TNodeUid>(hoveredNodeUid);
   useEffect(() => {
     if (hoveredItemRef.current === hoveredNodeUid) return;
 
-    // remove current hovered effect
-    unmarkHoverdElement(contentRef, hoveredItemRef.current);
-    // mark new hovered item
-    markHoverdElement(contentRef, hoveredNodeUid);
-
+    unmarkHoverdElement(iframeRef, hoveredItemRef.current);
+    markHoverdElement(iframeRef, hoveredNodeUid);
     hoveredItemRef.current = hoveredNodeUid;
   }, [hoveredNodeUid]);
 
-  // focusedItem -> scroll to
+  // focusedItem -> scrollTo
   const focusedItemRef = useRef<TNodeUid>(focusedItem);
   useEffect(() => {
     if (focusedItemRef.current === focusedItem) return;
 
-    const focusedElement = contentRef?.contentWindow?.document?.querySelector(
+    const focusedElement = iframeRef?.contentWindow?.document?.querySelector(
       `[${StageNodeIdAttr}="${focusedItem}"]`,
     );
-
-    true
-      ? focusedElement?.scrollIntoView({
+    setTimeout(
+      () =>
+        focusedElement?.scrollIntoView({
           block: "nearest",
           inline: "start",
           behavior: "smooth",
-        })
-      : setTimeout(
-          () =>
-            focusedElement?.scrollIntoView({
-              block: "nearest",
-              inline: "start",
-              behavior: "smooth",
-            }),
-          50,
-        );
-
+        }),
+      ShortDelay,
+    );
     focusedItemRef.current = focusedItem;
   }, [focusedItem]);
 
-  // mark selected items
+  // selectedItems -> stageView
   const selectedItemsRef = useRef<TNodeUid[]>(selectedItems);
   useEffect(() => {
     // check if it's a new state
@@ -84,11 +74,8 @@ export const useSyncNode = (contentRef: HTMLIFrameElement | null) => {
       if (same) return;
     }
 
-    // remove original selected effect
-    unmarkSelectedElements(contentRef, selectedItemsRef.current);
-    // mark new selected items
-    markSelectedElements(contentRef, selectedItems);
-
+    unmarkSelectedElements(iframeRef, selectedItemsRef.current);
+    markSelectedElements(iframeRef, selectedItems);
     selectedItemsRef.current = [...selectedItems];
   }, [selectedItems]);
 

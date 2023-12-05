@@ -20,7 +20,7 @@ import {
   AddActionPrefix,
   DefaultProjectPath,
   RecentProjectCount,
-  RootNodeUid,
+  RenameActionPrefix,
 } from "@_constants/main";
 import {
   buildNohostIDB,
@@ -31,7 +31,6 @@ import {
   TFileHandlerCollection,
   TFileNodeData,
 } from "@_node/file";
-import { TNodeUid } from "@_node/types";
 import { setOsType, setTheme } from "@_redux/global";
 import { MainContext } from "@_redux/main";
 import {
@@ -91,7 +90,12 @@ import {
 } from "@_types/main";
 
 import { getCommandKey, isChromeOrEdge } from "../../services/global";
-import { addDefaultCmdkActions, clearProjectSession } from "./helper";
+import {
+  addDefaultCmdkActions,
+  clearProjectSession,
+  elementsCmdk,
+  fileCmdk,
+} from "./helper";
 import { useProcessor } from "./processor";
 
 export default function MainPage() {
@@ -575,142 +579,47 @@ export default function MainPage() {
     };
 
     // Files
-    const fileNode = fileTree[fFocusedItem];
-    if (fileNode) {
-      filesRef.map((fileRef: TFilesReference) => {
-        fileRef.Name &&
-          data["Files"].push({
-            Featured: fileRef.Featured === "Yes",
-            Name: fileRef.Name,
-            Icon: fileRef.Icon,
-            Description: fileRef.Description,
-            "Keyboard Shortcut": [
-              {
-                cmd: false,
-                shift: false,
-                alt: false,
-                key: "",
-                click: false,
-              },
-            ],
-            Group: "Add",
-            Context: `File-${fileRef.Extension}`,
-          });
-      });
-    }
-    data["Files"] = data["Files"].filter(
-      (element) => element.Featured || !!cmdkSearchContent,
-    );
-    if (data["Files"].length === 0) {
-      delete data["Files"];
-    }
+    fileCmdk({
+      fileTree,
+      fFocusedItem,
+      filesRef,
+      data,
+      cmdkSearchContent,
+      groupName: "Add",
+    });
 
     // Elements
-    let flag = true;
-    for (let x in nodeTree) {
-      if (nodeTree[x].displayName === "html") {
-        flag = false;
-      }
-    }
+    elementsCmdk({
+      nodeTree,
+      nFocusedItem,
+      htmlReferenceData,
+      data,
+      cmdkSearchContent,
+      groupName: "Add",
+    });
 
-    if (!flag) {
-      const htmlNode = nodeTree[nFocusedItem];
-      if (
-        htmlNode &&
-        htmlNode.parentUid &&
-        htmlNode.parentUid !== RootNodeUid
-      ) {
-        const parentNode = nodeTree[htmlNode.parentUid as TNodeUid];
-        const refData = htmlReferenceData.elements[parentNode.displayName];
-        if (refData) {
-          if (refData.Contain === "All") {
-            Object.keys(htmlReferenceData.elements).map((tag: string) => {
-              const tagRef = htmlReferenceData.elements[tag];
-              if (tagRef !== undefined) {
-                data["Elements"].push({
-                  Featured: tagRef && tagRef.Featured === "Yes" ? true : false,
-                  Name: tagRef.Name,
-                  Icon: tagRef.Icon,
-                  Description: tagRef.Description,
-                  "Keyboard Shortcut": [
-                    {
-                      cmd: false,
-                      shift: false,
-                      alt: false,
-                      key: "",
-                      click: false,
-                    },
-                  ],
-                  Group: "Add",
-                  Context: `Node-${tagRef.Tag}`,
-                });
-              }
-            });
-          } else if (refData.Contain === "None") {
-            // do nothing
-          } else {
-            const tagList = refData.Contain.replace(/ /g, "").split(",");
-            tagList.map((tag: string) => {
-              const pureTag = tag.slice(1, tag.length - 1);
-              const tagRef = htmlReferenceData.elements[pureTag];
-              if (tagRef !== undefined) {
-                data["Elements"].push({
-                  Featured: tagRef && tagRef.Featured === "Yes" ? true : false,
-                  Name: tagRef.Name,
-                  Icon: tagRef.Icon,
-                  Description: tagRef.Description,
-                  "Keyboard Shortcut": [
-                    {
-                      cmd: false,
-                      shift: false,
-                      alt: false,
-                      key: "",
-                      click: false,
-                    },
-                  ],
-                  Group: "Add",
-                  Context: `Node-${tagRef.Tag}`,
-                });
-              }
-            });
-          }
-        }
-      }
-    } else {
-      data["Elements"] = [];
-      let tagRef = htmlReferenceData.elements["html"];
-      tagRef &&
-        data["Elements"].push({
-          Featured: tagRef && tagRef.Featured === "Yes" ? true : false,
-          Name: tagRef.Name.toUpperCase(),
-          Icon: tagRef.Icon,
-          Description: tagRef.Description,
-          "Keyboard Shortcut": [
-            {
-              cmd: false,
-              shift: false,
-              alt: false,
-              key: "",
-              click: false,
-            },
-          ],
-          Group: "Add",
-          Context: `Node-${tagRef.Tag}`,
-        });
-    }
-    if (
-      data["Elements"].length > 0 &&
-      data["Elements"].filter(
-        (element) => element.Featured || !!cmdkSearchContent,
-      ).length > 0
-    ) {
-      data["Elements"] = data["Elements"].filter(
-        (element) => element.Featured || !!cmdkSearchContent,
-      );
-    }
-    if (data["Elements"].length === 0) {
-      delete data["Elements"];
-    }
+    // Recent
+    delete data["Recent"];
+
+    return data;
+  }, [fileTree, fFocusedItem, nodeTree, nFocusedItem, htmlReferenceData]);
+
+  const cmdkReferenceRename = useMemo<TCmdkGroupData>(() => {
+    const data: TCmdkGroupData = {
+      Files: [],
+      Elements: [],
+      Recent: [],
+    };
+
+    // Elements
+    elementsCmdk({
+      nodeTree,
+      nFocusedItem,
+      htmlReferenceData,
+      data,
+      cmdkSearchContent,
+      groupName: "Turn into",
+    });
 
     // Recent
     delete data["Recent"];
@@ -890,6 +799,9 @@ export default function MainPage() {
         break;
       case "Download":
         onDownload();
+        break;
+      case "Turn into":
+        onTurnInto();
         break;
       default:
         return;
@@ -1142,6 +1054,11 @@ export default function MainPage() {
     dispatch(setCmdkOpen(true));
   }, [cmdkPages]);
 
+  const onTurnInto = useCallback(() => {
+    dispatch(setCmdkPages([...cmdkPages, "Turn into"]));
+    dispatch(setCmdkOpen(true));
+  }, [cmdkPages]);
+
   const onDownload = useCallback(async () => {
     if (project.context !== "idb") return;
 
@@ -1328,7 +1245,9 @@ export default function MainPage() {
         setValidMenuItemCount(menuItems.length);
 
         const description =
-          currentCmdkPage === "Add" || currentCmdkPage === "Jumpstart"
+          currentCmdkPage === "Add" ||
+          currentCmdkPage === "Turn into" ||
+          currentCmdkPage === "Jumpstart"
             ? document
                 .querySelector('.rnbw-cmdk-menu-item[aria-selected="true"]')
                 ?.getAttribute("rnbw-cmdk-menu-item-description")
@@ -1504,6 +1423,8 @@ export default function MainPage() {
                   ? "Do something..."
                   : currentCmdkPage === "Add"
                   ? "Add something..."
+                  : currentCmdkPage === "Turn into"
+                  ? "Turn into..."
                   : ""
               }
             />
@@ -1512,12 +1433,16 @@ export default function MainPage() {
           {/* modal content */}
           <div
             className={
-              currentCmdkPage !== "Add" && currentCmdkPage !== "Jumpstart"
+              currentCmdkPage !== "Add" &&
+              currentCmdkPage !== "Jumpstart" &&
+              currentCmdkPage !== "Turn into"
                 ? ""
                 : "box-l direction-column align-stretch box"
             }
             style={{
-              ...(currentCmdkPage !== "Add" && currentCmdkPage !== "Jumpstart"
+              ...(currentCmdkPage !== "Add" &&
+              currentCmdkPage !== "Jumpstart" &&
+              currentCmdkPage !== "Turn into"
                 ? { width: "100%" }
                 : {}),
               ...(validMenuItemCount === 0
@@ -1546,6 +1471,8 @@ export default function MainPage() {
                       ? cmdkReferenceActions
                       : currentCmdkPage === "Add"
                       ? cmdkReferenceAdd
+                      : currentCmdkPage === "Turn into"
+                      ? cmdkReferenceRename
                       : {},
                   ).map((groupName: string) => {
                     let groupNameShow: boolean = false;
@@ -1602,6 +1529,8 @@ export default function MainPage() {
                           ? cmdkReferenceActions[groupName]
                           : currentCmdkPage === "Add"
                           ? cmdkReferenceAdd[groupName]
+                          : currentCmdkPage === "Turn into"
+                          ? cmdkReferenceRename[groupName]
                           : []
                         )?.map((command: TCmdkReference, index) => {
                           const context: TCmdkContext =
@@ -1610,6 +1539,7 @@ export default function MainPage() {
                             currentCmdkPage === "Jumpstart" ||
                             (currentCmdkPage === "Actions" &&
                               (command.Name === "Add" ||
+                                command.Name === "Turn into" ||
                                 context.all === true ||
                                 (activePanel === "file" &&
                                   (context["file"] === true || false)) ||
@@ -1622,8 +1552,8 @@ export default function MainPage() {
                                     ).ext === "html" &&
                                     context["html"] === true) ||
                                     false)))) ||
-                            currentCmdkPage === "Add";
-
+                            currentCmdkPage === "Add" ||
+                            currentCmdkPage === "Turn into";
                           return show ? (
                             <Command.Item
                               key={`${command.Name}-${command.Context}-${index}`}
@@ -1634,11 +1564,12 @@ export default function MainPage() {
                                   command.Description,
                               }}
                               onSelect={() => {
-                                console.log("onSelect", command);
+                                LogAllow && console.log("onSelect", command);
 
                                 // keep modal open when toogling theme or go "Add" menu from "Actions" menu
                                 command.Name !== "Theme" &&
                                   command.Name !== "Add" &&
+                                  command.Name !== "Turn into" &&
                                   dispatch(setCmdkOpen(false));
 
                                 if (command.Name === "Guide") {
@@ -1647,6 +1578,12 @@ export default function MainPage() {
                                   dispatch(
                                     setCurrentCommand({
                                       action: `${AddActionPrefix}-${command.Context}`,
+                                    }),
+                                  );
+                                } else if (command.Group === "Turn into") {
+                                  dispatch(
+                                    setCurrentCommand({
+                                      action: `${RenameActionPrefix}-${command.Context}`,
                                     }),
                                   );
                                 } else if (
@@ -1679,8 +1616,10 @@ export default function MainPage() {
                                   clearProjectSession(dispatch);
                                   importProject(projectContext, projectHandler);
                                 } else if (
-                                  currentCmdkPage === "Add" &&
-                                  command.Group === "Recent"
+                                  (currentCmdkPage === "Add" &&
+                                    command.Group === "Recent") ||
+                                  (currentCmdkPage === "Turn into" &&
+                                    command.Group === "Recent")
                                 ) {
                                 } else {
                                   dispatch(

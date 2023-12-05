@@ -17,7 +17,7 @@ import {
 } from "@_constants/main";
 import { THtmlReferenceData } from "@_types/main";
 import { LogAllow } from "@_constants/global";
-import { copyCode, pasteCode } from "./helpers";
+import { copyCode, pasteCode, replaceContent } from "./helpers";
 
 const add = ({
   actionName,
@@ -301,6 +301,20 @@ const ungroup = ({
   });
 };
 
+const edit = ({
+  nodeTree,
+  focusedItem,
+  content,
+  codeViewInstanceModel,
+}: {
+  nodeTree: TNodeTreeData;
+  focusedItem: TNodeUid;
+  content: string;
+  codeViewInstanceModel: editor.ITextModel;
+}) => {
+  replaceContent({ nodeTree, focusedItem, content, codeViewInstanceModel });
+};
+
 export const doNodeActions = async (
   params: TNodeApiPayload,
   fb?: (...params: any[]) => void,
@@ -319,6 +333,7 @@ export const doNodeActions = async (
       targetUid,
       isBetween,
       position,
+      content,
 
       codeViewInstanceModel,
       codeViewTabSize = DefaultTabSize,
@@ -404,12 +419,20 @@ export const doNodeActions = async (
           codeViewInstanceModel,
         });
         break;
+      case "text-edit":
+        edit({
+          nodeTree,
+          focusedItem: targetUid,
+          content,
+          codeViewInstanceModel,
+        });
+        break;
       default:
         break;
     }
 
-    const content = html_beautify(codeViewInstanceModel.getValue());
-    codeViewInstanceModel.setValue(content);
+    const code = html_beautify(codeViewInstanceModel.getValue());
+    codeViewInstanceModel.setValue(code);
 
     cb && cb();
   } catch (err) {

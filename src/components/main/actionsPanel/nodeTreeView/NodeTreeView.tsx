@@ -11,7 +11,7 @@ import { useDispatch } from "react-redux";
 
 import { TreeView } from "@_components/common";
 import { TreeViewData } from "@_components/common/treeView/types";
-import { RootNodeUid } from "@_constants/main";
+import { RootNodeUid, ShortDelay } from "@_constants/main";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { TFileNodeData, THtmlNodeData } from "@_node/index";
 import { TNode, TNodeUid } from "@_node/types";
@@ -39,7 +39,7 @@ import { ItemTitle } from "./nodeTreeComponents/ItemTitle";
 import { useAppState } from "@_redux/useAppState";
 import { NodeIcon } from "./nodeTreeComponents/NodeIcon";
 
-const AutoExpandDelay = 1 * 1000;
+const AutoExpandDelayOnDnD = 1 * 1000;
 
 const NodeTreeView = () => {
   const dispatch = useDispatch();
@@ -102,7 +102,7 @@ const NodeTreeView = () => {
           inline: "start",
           behavior: "auto",
         }),
-      50,
+      ShortDelay,
     );
 
     const newFocusedElement = document
@@ -117,7 +117,7 @@ const NodeTreeView = () => {
           inline: "start",
           behavior: "smooth",
         }),
-      100,
+      ShortDelay,
     );
 
     focusedItemRef.current = focusedItem;
@@ -352,7 +352,7 @@ const NodeTreeView = () => {
               if (!props.context.isExpanded) {
                 setTimeout(
                   () => cb_expandNode(props.item.index as TNodeUid),
-                  AutoExpandDelay,
+                  AutoExpandDelayOnDnD,
                 );
               }
               // e.dataTransfer.effectAllowed = 'move'
