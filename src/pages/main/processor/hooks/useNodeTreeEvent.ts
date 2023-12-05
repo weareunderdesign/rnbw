@@ -54,22 +54,15 @@ export const useNodeTreeEvent = () => {
     validNodeTree,
     nExpandedItems,
 
-    didRedo,
-    didUndo,
-
     syncConfigs,
   } = useAppState();
   const { addRunningActions, removeRunningActions } = useContext(MainContext);
 
   const isSelectedNodeUidsChanged = useRef(false);
+  const isCurrentFileContentChanged = useRef(false);
 
   useEffect(() => {
-    LogAllow &&
-      console.log("useNodeTreeEvent - selectedNodeUids", {
-        selectedNodeUids,
-        currentFileContent,
-      });
-
+    isSelectedNodeUidsChanged.current = true;
     // focus node
     dispatch(
       focusNodeTreeNode(
@@ -80,17 +73,10 @@ export const useNodeTreeEvent = () => {
     );
     // select nodes
     dispatch(selectNodeTreeNodes(selectedNodeUids));
-
-    isSelectedNodeUidsChanged.current = true;
   }, [selectedNodeUids]);
 
   useEffect(() => {
-    LogAllow &&
-      console.log("useNodeTreeEvent - currentFileContent", {
-        selectedNodeUids,
-        currentFileContent,
-      });
-
+    isCurrentFileContentChanged.current = true;
     // validate
     if (!fileTree[currentFileUid]) return;
 
@@ -274,4 +260,16 @@ export const useNodeTreeEvent = () => {
 
     removeRunningActions(["processor-update"]);
   }, [currentFileContent]);
+
+  // expand nodes that need to be expanded when it's just select-event
+  useEffect(() => {
+    if (!isCurrentFileContentChanged.current) {
+      const needToExpandItems = getNeedToExpandNodeUids(
+        validNodeTree,
+        selectedNodeUids,
+      );
+      dispatch(expandNodeTreeNodes(needToExpandItems));
+    }
+    isCurrentFileContentChanged.current = false;
+  }, [selectedNodeUids]);
 };
