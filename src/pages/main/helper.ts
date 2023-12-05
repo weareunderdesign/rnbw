@@ -111,10 +111,11 @@ export const clearProjectSession = (dispatch: Dispatch<AnyAction>) => {
   dispatch(setPrevRenderableFileUid(""));
   dispatch(clearFileTreeViewState());
   dispatch({ type: FileTree_Event_ClearActionType });
+
+  clearFileSession(dispatch);
 };
 
 export const clearFileSession = (dispatch: Dispatch<AnyAction>) => {
-  console.log("clearFileSession");
   dispatch(setNodeTree({}));
   dispatch(setValidNodeTree({}));
   dispatch(clearNodeTreeViewState());
