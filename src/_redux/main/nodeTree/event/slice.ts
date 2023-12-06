@@ -5,6 +5,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import {
   NodeTree_Event_ClearActionType,
+  NodeTree_Event_JumpToPastActionType,
   NodeTree_Event_RedoActionType,
   NodeTree_Event_StoreLimit,
   NodeTree_Event_UndoActionType,
@@ -36,4 +37,5 @@ export const NodeEventReducer = undoable(nodeEventSlice.reducer, {
   undoType: NodeTree_Event_UndoActionType,
   redoType: NodeTree_Event_RedoActionType,
   clearHistoryType: NodeTree_Event_ClearActionType,
+  jumpToPastType: NodeTree_Event_JumpToPastActionType,
 });

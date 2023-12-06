@@ -10,7 +10,6 @@ import { TCmdkKeyMap } from "@_types/main";
 import { useAppState } from "@_redux/useAppState";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
 import { editHtmlContent } from "../helpers";
-import { ShortDelay } from "@_constants/main";
 
 interface IUseCmdkProps {
   iframeRefRef: React.MutableRefObject<HTMLIFrameElement | null>;

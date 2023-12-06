@@ -1,18 +1,15 @@
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useRef } from "react";
 
 import morphdom from "morphdom";
 import { useDispatch } from "react-redux";
 
 import { LogAllow } from "@_constants/global";
-import { RootNodeUid } from "@_constants/main";
 import {
   parseFile,
   PreserveRnbwNode,
   StageNodeIdAttr,
   writeFile,
 } from "@_node/file";
-import { getSubNodeUidsByBfs } from "@_node/helpers";
-import { TNodeTreeData } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import {
   setDoingFileAction,
@@ -61,13 +58,15 @@ export const useNodeTreeEvent = () => {
   } = useAppState();
   const { addRunningActions, removeRunningActions } = useContext(MainContext);
 
+  const isSelectedNodeUidsChanged = useRef(false);
+  const isCurrentFileContentChanged = useRef(false);
   useEffect(() => {
-    /* LogAllow &&
-      console.log("useNodeTreeEvent - selectedNodeUids", {
-        selectedNodeUids,
-        currentFileContent,
-      }); */
+    isSelectedNodeUidsChanged.current = false;
+    isCurrentFileContentChanged.current = false;
+  }, [selectedNodeUids, currentFileContent]);
 
+  useEffect(() => {
+    isSelectedNodeUidsChanged.current = true;
     // focus node
     dispatch(
       focusNodeTreeNode(
@@ -78,29 +77,10 @@ export const useNodeTreeEvent = () => {
     );
     // select nodes
     dispatch(selectNodeTreeNodes(selectedNodeUids));
-    // expand nodes
-    dispatch(
-      expandNodeTreeNodes(
-        getNeedToExpandNodeUids(validNodeTree, selectedNodeUids),
-      ),
-    );
   }, [selectedNodeUids]);
 
-  /* useEffect(() => {
-    // validate expanded node uids
-    const _expandedItems = nExpandedItems.filter(
-      (uid) => validNodeTree[uid] && validNodeTree[uid].isEntity === false,
-    );
-    dispatch(setExpandedNodeTreeNodes([..._expandedItems]));
-  }, [validNodeTree]); */
-
   useEffect(() => {
-    /* LogAllow &&
-      console.log("useNodeTreeEvent - currentFileContent", {
-        selectedNodeUids,
-        currentFileContent,
-      }); */
-
+    isCurrentFileContentChanged.current = true;
     // validate
     if (!fileTree[currentFileUid]) return;
 
@@ -116,13 +96,12 @@ export const useNodeTreeEvent = () => {
     fileData.content = currentFileContent;
     fileData.contentInApp = contentInApp;
     fileData.changed = fileData.content !== fileData.orgContent;
-
     if (fileData.changed && file.parentUid) {
       markChangedFolders(fileTree, file, dispatch);
     }
-    
+
     // when "Save" while text-editing, we need to call "Save" command after file-content updated.
-    // after fileTree has been updated exactly. so when "Save" while text-editing, we first call "SaveForce"
+    // after fileTree has been updated exactly. so when "Save" while text-editing, we should call "SaveForce" first.
     if (currentCommand?.action === "SaveForce") {
       dispatch(setCurrentCommand({ action: "Save" }));
     }
@@ -156,14 +135,41 @@ export const useNodeTreeEvent = () => {
       LogAllow && console.log("it's a new project");
       dispatch(setInitialFileUidToOpen(""));
       dispatch(setSelectedNodeUids([uid]));
+      dispatch(
+        setExpandedNodeTreeNodes(
+          getNeedToExpandNodeUids(_validNodeTree, [uid]),
+        ),
+      );
     } else if (prevFileUid !== currentFileUid) {
       LogAllow && console.log("it's a new file");
       dispatch(setSelectedNodeUids([uid]));
+      dispatch(
+        setExpandedNodeTreeNodes(
+          getNeedToExpandNodeUids(_validNodeTree, [uid]),
+        ),
+      );
+    } else {
+      LogAllow && console.log("it's a rnbw-change");
+      if (isSelectedNodeUidsChanged.current) {
+        const validExpandedItems = nExpandedItems.filter(
+          (uid) =>
+            _validNodeTree[uid] && _validNodeTree[uid].isEntity === false,
+        );
+        const needToExpandItems = getNeedToExpandNodeUids(
+          _validNodeTree,
+          selectedNodeUids,
+        );
+        dispatch(
+          setExpandedNodeTreeNodes([
+            ...validExpandedItems,
+            ...needToExpandItems,
+          ]),
+        );
+      }
     }
 
     // sync stage-view
     if (prevFileUid !== currentFileUid) {
-      // reload if it's a new file.
       LogAllow && console.log("need to refresh iframe");
       dispatch(setNeedToReloadIframe(true));
     } else {
@@ -258,4 +264,15 @@ export const useNodeTreeEvent = () => {
 
     removeRunningActions(["processor-update"]);
   }, [currentFileContent]);
+
+  // expand nodes that need to be expanded when it's just select-event
+  useEffect(() => {
+    if (!isCurrentFileContentChanged.current) {
+      const needToExpandItems = getNeedToExpandNodeUids(
+        validNodeTree,
+        selectedNodeUids,
+      );
+      dispatch(expandNodeTreeNodes(needToExpandItems));
+    }
+  }, [selectedNodeUids]);
 };
