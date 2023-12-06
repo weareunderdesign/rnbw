@@ -68,6 +68,7 @@ export const getNeedToExpandNodeUids = (
   const _expandedItems: TNodeUid[] = [];
   selectedNodeUids.map((uid) => {
     let node = validNodeTree[uid];
+    if (!node) return;
     while (node.uid !== RootNodeUid) {
       _expandedItems.push(node.uid);
       node = validNodeTree[node.parentUid as TNodeUid];
