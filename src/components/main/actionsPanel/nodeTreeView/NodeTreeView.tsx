@@ -11,7 +11,7 @@ import { useDispatch } from "react-redux";
 
 import { TreeView } from "@_components/common";
 import { TreeViewData } from "@_components/common/treeView/types";
-import { RootNodeUid, ShortDelay } from "@_constants/main";
+import { RootNodeUid } from "@_constants/main";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { TFileNodeData, THtmlNodeData } from "@_node/index";
 import { TNode, TNodeUid } from "@_node/types";
@@ -38,6 +38,8 @@ import { ItemArrow } from "./nodeTreeComponents/ItemArrow";
 import { ItemTitle } from "./nodeTreeComponents/ItemTitle";
 import { useAppState } from "@_redux/useAppState";
 import { NodeIcon } from "./nodeTreeComponents/NodeIcon";
+import { debouncedScrollToElem } from "@_components/main/stageView/iFrame/helpers";
+import { debounce } from "lodash";
 
 const AutoExpandDelayOnDnD = 1 * 1000;
 
@@ -89,37 +91,14 @@ const NodeTreeView = () => {
 
   // scroll to the focused item
   const focusedItemRef = useRef<TNodeUid>(focusedItem);
+  const debouncedScroll = useMemo(() => debouncedScrollToElem(), []);
   useEffect(() => {
     if (focusedItemRef.current === focusedItem) return;
 
     const focusedElement = document.querySelector(
       `#NodeTreeView-${focusedItem}`,
     );
-    setTimeout(
-      () =>
-        focusedElement?.scrollIntoView({
-          block: "nearest",
-          inline: "start",
-          behavior: "auto",
-        }),
-      ShortDelay,
-    );
-
-    const newFocusedElement = document
-      .getElementsByTagName("iframe")[0]
-      ?.contentWindow?.document?.querySelector(
-        `[${StageNodeIdAttr}="${focusedItem}"]`,
-      );
-    setTimeout(
-      () =>
-        newFocusedElement?.scrollIntoView({
-          block: "nearest",
-          inline: "start",
-          behavior: "smooth",
-        }),
-      ShortDelay,
-    );
-
+    debouncedScroll(focusedElement, "auto");
     focusedItemRef.current = focusedItem;
   }, [focusedItem]);
 
@@ -348,12 +327,16 @@ const NodeTreeView = () => {
 
               isDragging.current = true;
             };
+
+            const debouncedExpand = useCallback(
+              debounce((index: TNodeUid) => {
+                cb_expandNode(index);
+              }, AutoExpandDelayOnDnD),
+              [],
+            );
             const onDragEnter = (e: React.DragEvent) => {
               if (!props.context.isExpanded) {
-                setTimeout(
-                  () => cb_expandNode(props.item.index as TNodeUid),
-                  AutoExpandDelayOnDnD,
-                );
+                debouncedExpand(props.item.index as TNodeUid);
               }
               // e.dataTransfer.effectAllowed = 'move'
             };
