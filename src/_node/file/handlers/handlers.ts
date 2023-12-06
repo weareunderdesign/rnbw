@@ -3,7 +3,12 @@ import * as parse5 from "parse5";
 import { RainbowAppName } from "@_constants/global";
 import { RootNodeUid } from "@_constants/main";
 
-import { TFileParserResponse, TNodeUid } from "../../";
+import {
+  TFileNodeData,
+  TFileNodeTreeData,
+  TFileParserResponse,
+  TNodeUid,
+} from "../../";
 import {
   THtmlDomNode,
   THtmlNode,
@@ -161,4 +166,28 @@ export const fileHandlers: {
   [ext: string]: (content: string) => TFileParserResponse;
 } = {
   html: parseHtml,
+};
+
+export const triggerFileChangeAlert = () => {
+  const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`;
+  if (!window.confirm(message)) {
+    return;
+  }
+};
+
+export const confirmFileChanges = (fileTree: TFileNodeTreeData) => {
+  if (fileTree) {
+    // confirm files' changes
+    let hasChangedFile = false;
+    for (let x in fileTree) {
+      const _file = fileTree[x];
+      const _fileData = _file.data as TFileNodeData;
+      if (_file && _fileData.changed) {
+        hasChangedFile = true;
+      }
+    }
+    if (hasChangedFile) {
+      triggerFileChangeAlert();
+    }
+  }
 };

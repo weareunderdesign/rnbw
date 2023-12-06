@@ -24,6 +24,7 @@ import {
 } from "@_constants/main";
 import {
   buildNohostIDB,
+  confirmFileChanges,
   downloadProject,
   initIDBProject,
   loadIDBProject,
@@ -990,23 +991,7 @@ export default function MainPage() {
     [importProject],
   );
   const onNew = useCallback(async () => {
-    if (fileTree) {
-      // confirm if ffTree is changed
-      let hasChangedFile = false;
-      for (let x in fileTree) {
-        const _file = fileTree[x];
-        const _fileData = _file.data as TFileNodeData;
-        if (_file && _fileData.changed) {
-          hasChangedFile = true;
-        }
-      }
-      if (hasChangedFile) {
-        const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`;
-        if (!window.confirm(message)) {
-          return;
-        }
-      }
-    }
+    confirmFileChanges(fileTree);
 
     dispatch(setDoingFileAction(true));
     try {
@@ -1018,23 +1003,7 @@ export default function MainPage() {
     dispatch(setDoingFileAction(false));
   }, [onImportProject, fileTree]);
   const onOpen = useCallback(async () => {
-    if (fileTree) {
-      // confirm files' changes
-      let hasChangedFile = false;
-      for (let x in fileTree) {
-        const _file = fileTree[x];
-        const _fileData = _file.data as TFileNodeData;
-        if (_file && _fileData.changed) {
-          hasChangedFile = true;
-        }
-      }
-      if (hasChangedFile) {
-        const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`;
-        if (!window.confirm(message)) {
-          return;
-        }
-      }
-    }
+    confirmFileChanges(fileTree);
 
     dispatch(setDoingFileAction(true));
     try {
