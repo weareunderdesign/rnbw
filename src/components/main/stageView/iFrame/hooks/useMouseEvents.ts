@@ -14,7 +14,6 @@ import { THtmlNodeData } from "@_node/node";
 import { setActivePanel } from "@_redux/main/processor";
 import { MainContext } from "@_redux/main";
 import { LogAllow } from "@_constants/global";
-import { debounce } from "lodash";
 import { ShortDelay } from "@_constants/main";
 
 interface IUseMouseEventsProps {

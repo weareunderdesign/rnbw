@@ -36,11 +36,13 @@ const nodeTreeSlice = createSlice({
     },
     setExpandedNodeTreeNodes(state, action: PayloadAction<TNodeUid[]>) {
       const expandedItems = action.payload;
-      state.nodeTreeViewState.expandedItems = expandedItems;
       state.nodeTreeViewState.expandedItemsObj = {};
       for (const uid of expandedItems) {
         state.nodeTreeViewState.expandedItemsObj[uid] = true;
       }
+      state.nodeTreeViewState.expandedItems = Object.keys(
+        state.nodeTreeViewState.expandedItemsObj,
+      );
     },
     expandNodeTreeNodes(state, action: PayloadAction<TNodeUid[]>) {
       const uids = action.payload;

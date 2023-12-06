@@ -15,7 +15,7 @@ import {
 } from "@_redux/main/nodeTree";
 import {
   NodeTree_Event_ClearActionType,
-  setCurrentFileContent,
+  NodeTree_Event_JumpToPastActionType,
 } from "@_redux/main/nodeTree/event";
 import { setIframeSrc } from "@_redux/main/stageView";
 import { TCmdkReferenceData, TFilesReference } from "@_types/main";
@@ -113,7 +113,6 @@ export const clearProjectSession = (dispatch: Dispatch<AnyAction>) => {
   dispatch(setCurrentFileUid(""));
   dispatch(setPrevFileUid(""));
   dispatch(setPrevRenderableFileUid(""));
-  dispatch(setCurrentFileContent(""));
   dispatch(clearFileTreeViewState());
   dispatch({ type: FileTree_Event_ClearActionType });
 
@@ -125,6 +124,7 @@ export const clearFileSession = (dispatch: Dispatch<AnyAction>) => {
   dispatch(setValidNodeTree({}));
   dispatch(clearNodeTreeViewState());
   dispatch({ type: NodeTree_Event_ClearActionType });
+  dispatch({ type: NodeTree_Event_JumpToPastActionType, payload: 0 });
 
   dispatch(setIframeSrc(null));
 };

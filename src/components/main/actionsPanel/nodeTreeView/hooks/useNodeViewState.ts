@@ -58,11 +58,11 @@ export function useNodeViewState() {
 
       // update file - WIP
       if (currentFileUid !== prevRenderableFileUid) {
-        const file = fileTree[prevRenderableFileUid];
-        const fileData = file.data as TFileNodeData;
-        dispatch(setCurrentFileUid(prevRenderableFileUid));
-        dispatch(setCurrentFileContent(fileData.content));
-        dispatch(selectFileTreeNodes([prevRenderableFileUid]));
+        // const file = fileTree[prevRenderableFileUid];
+        // const fileData = file.data as TFileNodeData;
+        // dispatch(setCurrentFileUid(prevRenderableFileUid));
+        // dispatch(setCurrentFileContent(fileData.content));
+        // dispatch(selectFileTreeNodes([prevRenderableFileUid]));
         // dispatch({ type: NodeTree_Event_ClearActionType });
       }
 
