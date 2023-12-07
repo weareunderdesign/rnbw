@@ -154,16 +154,3 @@ export const openNewPage = (ele: HTMLElement) => {
     window.open(anchorElement.href, "_blank", "noreferrer");
   }
 };
-
-export const debouncedScrollToElem = () => {
-  return debounce(
-    (element: Element | null | undefined, behavior: ScrollBehavior) => {
-      element?.scrollIntoView({
-        block: "nearest",
-        inline: "start",
-        behavior,
-      });
-    },
-    ShortDelay,
-  );
-};

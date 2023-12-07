@@ -21,7 +21,7 @@ import { setIframeSrc } from "@_redux/main/stageView";
 import { TCmdkReferenceData, TFilesReference } from "@_types/main";
 import { Dispatch } from "react";
 import { AnyAction } from "@reduxjs/toolkit";
-import { RootNodeUid } from "@_constants/main";
+import { RootNodeUid, ShortDelay } from "@_constants/main";
 
 import { _path } from "@_node/file";
 import { TNodeUid } from "@_node/types";
@@ -277,4 +277,12 @@ export const fileCmdk = ({
   if (data["Files"].length === 0) {
     delete data["Files"];
   }
+};
+
+export const scrollToElement = (element: Element, behavior: ScrollBehavior) => {
+  element.scrollIntoView({
+    block: "nearest",
+    inline: "start",
+    behavior,
+  });
 };

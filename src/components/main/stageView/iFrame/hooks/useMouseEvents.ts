@@ -116,10 +116,9 @@ export const useMouseEvents = ({
   }, []);
 
   const debouncedSelectAllText = useCallback(
-    debounce((ref, ele) => selectAllText(ref, ele), ShortDelay),
+    debounce(selectAllText, ShortDelay),
     [],
   );
-
   const onDblClick = useCallback((e: MouseEvent) => {
     const ele = e.target as HTMLElement;
     const uid: TNodeUid | null = ele.getAttribute(StageNodeIdAttr);
