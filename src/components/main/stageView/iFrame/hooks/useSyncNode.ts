@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
@@ -10,6 +10,8 @@ import {
   unmarkHoverdElement,
   unmarkSelectedElements,
 } from "../helpers";
+import { debounce } from "lodash";
+import { scrollToElement } from "@_pages/main/helper";
 import { ShortDelay } from "@_constants/main";
 
 export const useSyncNode = (iframeRef: HTMLIFrameElement | null) => {
@@ -37,21 +39,19 @@ export const useSyncNode = (iframeRef: HTMLIFrameElement | null) => {
 
   // focusedItem -> scrollTo
   const focusedItemRef = useRef<TNodeUid>(focusedItem);
+
+  const debouncedScrollToElement = useCallback(
+    debounce(scrollToElement, ShortDelay),
+    [],
+  );
   useEffect(() => {
     if (focusedItemRef.current === focusedItem) return;
 
     const focusedElement = iframeRef?.contentWindow?.document?.querySelector(
       `[${StageNodeIdAttr}="${focusedItem}"]`,
     );
-    setTimeout(
-      () =>
-        focusedElement?.scrollIntoView({
-          block: "nearest",
-          inline: "start",
-          behavior: "smooth",
-        }),
-      ShortDelay,
-    );
+    focusedElement && debouncedScrollToElement(focusedElement, "smooth");
+
     focusedItemRef.current = focusedItem;
   }, [focusedItem]);
 

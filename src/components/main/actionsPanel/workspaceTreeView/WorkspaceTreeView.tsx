@@ -16,10 +16,7 @@ import { AddFileActionPrefix, RootNodeUid, ShortDelay } from "@_constants/main";
 import { _path, getNormalizedPath, TFileNodeData } from "@_node/file";
 import { TNode, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
-import {
-  setHoveredFileUid,
-  setInitialFileUidToOpen,
-} from "@_redux/main/fileTree";
+import { setHoveredFileUid } from "@_redux/main/fileTree";
 import { FileTree_Event_ClearActionType } from "@_redux/main/fileTree/event";
 import { setActivePanel, setDidRedo, setDidUndo } from "@_redux/main/processor";
 import { addClass, generateQuerySelector, removeClass } from "@_services/main";
@@ -35,6 +32,8 @@ import {
 } from "./hooks";
 import { Container, ItemArrow } from "./workSpaceTreeComponents";
 import { useAppState } from "@_redux/useAppState";
+import { debounce } from "lodash";
+import { scrollToElement } from "@_pages/main/helper";
 
 const AutoExpandDelay = 1 * 1000;
 export default function WorkspaceTreeView() {
@@ -222,7 +221,12 @@ export default function WorkspaceTreeView() {
 
     hoveredItemRef.current = hoveredFileUid;
   }, [hoveredFileUid]);
+
   // scroll to the focused item
+  const debouncedScrollToElement = useCallback(
+    debounce(scrollToElement, ShortDelay),
+    [],
+  );
   const focusedItemRef = useRef<TNodeUid>(focusedItem);
   useEffect(() => {
     if (focusedItemRef.current === focusedItem) return;
@@ -230,18 +234,11 @@ export default function WorkspaceTreeView() {
     const focusedElement = document.querySelector(
       `#FileTreeView-${generateQuerySelector(focusedItem)}`,
     );
-    setTimeout(
-      () =>
-        focusedElement?.scrollIntoView({
-          block: "nearest",
-          inline: "start",
-          behavior: "auto",
-        }),
-      ShortDelay,
-    );
+    focusedElement && debouncedScrollToElement(focusedElement, "auto");
 
     focusedItemRef.current = focusedItem;
   }, [focusedItem]);
+
   // build fileTreeViewData
   const fileTreeViewData = useMemo(() => {
     const data: TreeViewData = {};
@@ -484,12 +481,13 @@ export default function WorkspaceTreeView() {
                 props.context.startDragging();
               };
 
-              const onDragEnter = () => {
+              const debouncedExpand = useCallback(
+                debounce(cb_expandNode, AutoExpandDelay),
+                [cb_expandNode],
+              );
+              const onDragEnter = (e: React.DragEvent) => {
                 if (!props.context.isExpanded) {
-                  setTimeout(
-                    () => cb_expandNode(props.item.index as TNodeUid),
-                    AutoExpandDelay,
-                  );
+                  debouncedExpand(props.item.index as TNodeUid);
                 }
               };
 
