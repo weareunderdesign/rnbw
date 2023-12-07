@@ -804,6 +804,9 @@ export default function MainPage() {
       case "Turn into":
         onTurnInto();
         break;
+      case "Autosave":
+        onToggleAutoSave();
+        break;
       default:
         return;
     }
@@ -1174,6 +1177,11 @@ export default function MainPage() {
     }
   }, [theme]);
 
+  const [autoSave, setAutoSave] = useState(false);
+  const onToggleAutoSave = () => {
+    setAutoSave(!autoSave);
+  };
+
   // web-tab close event handler
   useEffect(() => {
     let changed = false;
@@ -1539,6 +1547,7 @@ export default function MainPage() {
 
                                 // keep modal open when toogling theme or go "Add" menu from "Actions" menu
                                 command.Name !== "Theme" &&
+                                  command.Name !== "Autosave" &&
                                   command.Name !== "Add" &&
                                   command.Name !== "Turn into" &&
                                   dispatch(setCmdkOpen(false));
@@ -1615,6 +1624,23 @@ export default function MainPage() {
                                           /
                                         </span>
                                         <span className="text-m">{theme}</span>
+                                      </div>
+                                    </>
+                                  ) : command.Name === "Autosave" ? (
+                                    <>
+                                      <div className="padding-xs">
+                                        <div className="radius-m icon-xs align-center background-tertiary"></div>
+                                      </div>
+                                      <div className="gap-s align-center">
+                                        <span className="text-m opacity-m">
+                                          Autosave
+                                        </span>
+                                        <span className="text-s opacity-m">
+                                          /
+                                        </span>
+                                        <span className="text-m">
+                                          {autoSave ? "On" : "Off"}
+                                        </span>
                                       </div>
                                     </>
                                   ) : (
