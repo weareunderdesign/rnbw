@@ -1,4 +1,8 @@
-import { RootNodeUid, StagePreviewPathPrefix } from "@_constants/main";
+import {
+  NodePathSplitter,
+  RootNodeUid,
+  StagePreviewPathPrefix,
+} from "@_constants/main";
 import {
   TFileHandlerCollection,
   TFileNode,
@@ -6,7 +10,7 @@ import {
   TFileNodeTreeData,
   writeFile,
 } from "@_node/file";
-import { getSubNodeUidsByBfs } from "@_node/helpers";
+import { getNodeChildIndex, getSubNodeUidsByBfs } from "@_node/helpers";
 import { THtmlNodeData } from "@_node/node";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import { TProject, setFileTreeNodes } from "@_redux/main/fileTree";
@@ -68,7 +72,10 @@ export const getNeedToExpandNodeUids = (
   const _expandedItems: TNodeUid[] = [];
   selectedNodeUids.map((uid) => {
     let node = validNodeTree[uid];
+
+    // TODO
     if (!node) return;
+
     while (node.uid !== RootNodeUid) {
       _expandedItems.push(node.uid);
       node = validNodeTree[node.parentUid as TNodeUid];
@@ -104,6 +111,17 @@ export const getValidNodeTree = (nodeTree: TNodeTreeData): TNodeTreeData => {
     );
     node.isEntity = node.children.length === 0;
     _validNodeTree[uid] = node;
+  });
+
+  const validUids = getSubNodeUidsByBfs(RootNodeUid, _validNodeTree, false);
+  validUids.map((uid) => {
+    const node = _validNodeTree[uid];
+    const parentNode = _validNodeTree[node.parentUid as TNodeUid];
+    const parentNodePath =
+      node.parentUid === RootNodeUid ? RootNodeUid : parentNode.data.path;
+    node.data.path = `${parentNodePath}${NodePathSplitter}${
+      node.data.tagName
+    }-${getNodeChildIndex(parentNode, node)}`;
   });
   return _validNodeTree;
 };
