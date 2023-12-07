@@ -12,7 +12,7 @@ import { useDispatch } from "react-redux";
 
 import { SVGIconI, TreeView } from "@_components/common";
 import { TreeViewData } from "@_components/common/treeView/types";
-import { AddFileActionPrefix, RootNodeUid, ShortDelay } from "@_constants/main";
+import { AddFileActionPrefix, RootNodeUid } from "@_constants/main";
 import { _path, getNormalizedPath, TFileNodeData } from "@_node/file";
 import { TNode, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
@@ -35,6 +35,8 @@ import {
 } from "./hooks";
 import { Container, ItemArrow } from "./workSpaceTreeComponents";
 import { useAppState } from "@_redux/useAppState";
+import { debouncedScrollToElem } from "@_components/main/stageView/iFrame/helpers";
+import { debounce } from "lodash";
 
 const AutoExpandDelay = 1 * 1000;
 export default function WorkspaceTreeView() {
@@ -222,26 +224,21 @@ export default function WorkspaceTreeView() {
 
     hoveredItemRef.current = hoveredFileUid;
   }, [hoveredFileUid]);
+
   // scroll to the focused item
   const focusedItemRef = useRef<TNodeUid>(focusedItem);
+  const debouncedScroll = useMemo(() => debouncedScrollToElem(), []);
   useEffect(() => {
     if (focusedItemRef.current === focusedItem) return;
 
     const focusedElement = document.querySelector(
       `#FileTreeView-${generateQuerySelector(focusedItem)}`,
     );
-    setTimeout(
-      () =>
-        focusedElement?.scrollIntoView({
-          block: "nearest",
-          inline: "start",
-          behavior: "auto",
-        }),
-      ShortDelay,
-    );
+    debouncedScroll(focusedElement, "auto");
 
     focusedItemRef.current = focusedItem;
   }, [focusedItem]);
+
   // build fileTreeViewData
   const fileTreeViewData = useMemo(() => {
     const data: TreeViewData = {};
@@ -484,12 +481,15 @@ export default function WorkspaceTreeView() {
                 props.context.startDragging();
               };
 
-              const onDragEnter = () => {
+              const debouncedExpand = useCallback(
+                debounce((index: TNodeUid) => {
+                  cb_expandNode(index);
+                }, AutoExpandDelay),
+                [],
+              );
+              const onDragEnter = (e: React.DragEvent) => {
                 if (!props.context.isExpanded) {
-                  setTimeout(
-                    () => cb_expandNode(props.item.index as TNodeUid),
-                    AutoExpandDelay,
-                  );
+                  debouncedExpand(props.item.index as TNodeUid);
                 }
               };
 

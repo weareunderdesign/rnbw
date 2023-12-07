@@ -1,9 +1,11 @@
+import { ShortDelay } from "@_constants/main";
 import {
   StageNodeIdAttr,
   TNodeTreeData,
   TNodeUid,
   callNodeApi,
 } from "@_node/index";
+import { debounce } from "lodash";
 import { editor } from "monaco-editor";
 
 export const getValidElementWithUid = (
@@ -151,4 +153,17 @@ export const openNewPage = (ele: HTMLElement) => {
   if (anchorElement.href) {
     window.open(anchorElement.href, "_blank", "noreferrer");
   }
+};
+
+export const debouncedScrollToElem = () => {
+  return debounce(
+    (element: Element | null | undefined, behavior: ScrollBehavior) => {
+      element?.scrollIntoView({
+        block: "nearest",
+        inline: "start",
+        behavior,
+      });
+    },
+    ShortDelay,
+  );
 };

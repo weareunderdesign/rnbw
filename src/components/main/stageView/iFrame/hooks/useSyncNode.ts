@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
@@ -7,10 +7,10 @@ import { useAppState } from "@_redux/useAppState";
 import {
   markHoverdElement,
   markSelectedElements,
+  debouncedScrollToElem,
   unmarkHoverdElement,
   unmarkSelectedElements,
 } from "../helpers";
-import { ShortDelay } from "@_constants/main";
 
 export const useSyncNode = (iframeRef: HTMLIFrameElement | null) => {
   const {
@@ -37,21 +37,15 @@ export const useSyncNode = (iframeRef: HTMLIFrameElement | null) => {
 
   // focusedItem -> scrollTo
   const focusedItemRef = useRef<TNodeUid>(focusedItem);
+  const debouncedScroll = useMemo(() => debouncedScrollToElem(), []);
   useEffect(() => {
     if (focusedItemRef.current === focusedItem) return;
 
     const focusedElement = iframeRef?.contentWindow?.document?.querySelector(
       `[${StageNodeIdAttr}="${focusedItem}"]`,
     );
-    setTimeout(
-      () =>
-        focusedElement?.scrollIntoView({
-          block: "nearest",
-          inline: "start",
-          behavior: "smooth",
-        }),
-      ShortDelay,
-    );
+    debouncedScroll(focusedElement, "smooth");
+
     focusedItemRef.current = focusedItem;
   }, [focusedItem]);
 

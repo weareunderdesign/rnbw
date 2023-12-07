@@ -15,6 +15,7 @@ import { setActivePanel } from "@_redux/main/processor";
 import { MainContext } from "@_redux/main";
 import { LogAllow } from "@_constants/global";
 import { ShortDelay } from "@_constants/main";
+import { debounce } from "lodash";
 
 interface IUseMouseEventsProps {
   iframeRefRef: React.MutableRefObject<HTMLIFrameElement | null>;
@@ -113,6 +114,12 @@ export const useMouseEvents = ({
       }
     }
   }, []);
+
+  const debouncedSelectAllText = useCallback(
+    debounce((ref, ele) => selectAllText(ref, ele), ShortDelay),
+    [],
+  );
+
   const onDblClick = useCallback((e: MouseEvent) => {
     const ele = e.target as HTMLElement;
     const uid: TNodeUid | null = ele.getAttribute(StageNodeIdAttr);
@@ -135,7 +142,7 @@ export const useMouseEvents = ({
         contentEditableUidRef.current = uid;
         ele.setAttribute("contenteditable", "true");
         ele.focus();
-        setTimeout(() => selectAllText(iframeRefRef.current, ele), ShortDelay);
+        debouncedSelectAllText(iframeRefRef.current, ele);
       }
     }
   }, []);
