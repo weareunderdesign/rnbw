@@ -150,22 +150,15 @@ export const useNodeTreeEvent = () => {
       );
     } else {
       LogAllow && console.log("it's a rnbw-change");
-      if (isSelectedNodeUidsChanged.current) {
-        const validExpandedItems = nExpandedItems.filter(
-          (uid) =>
-            _validNodeTree[uid] && _validNodeTree[uid].isEntity === false,
-        );
-        const needToExpandItems = getNeedToExpandNodeUids(
-          _validNodeTree,
-          selectedNodeUids,
-        );
-        dispatch(
-          setExpandedNodeTreeNodes([
-            ...validExpandedItems,
-            ...needToExpandItems,
-          ]),
-        );
-      }
+      const validExpandedItems = nExpandedItems.filter(
+        (uid) => _validNodeTree[uid] && _validNodeTree[uid].isEntity === false,
+      );
+      const needToExpandItems = isSelectedNodeUidsChanged.current
+        ? getNeedToExpandNodeUids(_validNodeTree, selectedNodeUids)
+        : [];
+      dispatch(
+        setExpandedNodeTreeNodes([...validExpandedItems, ...needToExpandItems]),
+      );
     }
 
     // sync stage-view
