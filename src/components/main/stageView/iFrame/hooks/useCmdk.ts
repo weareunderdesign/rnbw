@@ -114,6 +114,7 @@ export const useCmdk = ({
               console.log("action to be run by cmdk: ", action);
 
             editHtmlContent({
+              dispatch,
               iframeRef: iframeRefRef.current,
               nodeTree: nodeTreeRef.current,
               contentEditableUid,

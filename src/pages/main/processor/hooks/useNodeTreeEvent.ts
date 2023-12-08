@@ -37,6 +37,7 @@ import {
   markChangedFolders,
 } from "../helpers";
 import { setCurrentCommand } from "@_redux/main/cmdk";
+import { getNodeUidsFromPaths } from "@_node/helpers";
 
 export const useNodeTreeEvent = () => {
   const dispatch = useDispatch();
@@ -52,6 +53,7 @@ export const useNodeTreeEvent = () => {
     selectedNodeUids,
 
     validNodeTree,
+    needToSelectNodePaths,
     nExpandedItems,
 
     syncConfigs,
@@ -156,6 +158,11 @@ export const useNodeTreeEvent = () => {
       const needToExpandItems = isSelectedNodeUidsChanged.current
         ? getNeedToExpandNodeUids(_validNodeTree, selectedNodeUids)
         : [];
+
+      // update selectedUids from paths
+      // const uids = getNodeUidsFromPaths(_validNodeTree, needToSelectNodePaths);
+      // dispatch(setSelectedNodeUids(uids));
+
       dispatch(
         setExpandedNodeTreeNodes([...validExpandedItems, ...needToExpandItems]),
       );

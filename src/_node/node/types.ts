@@ -6,8 +6,11 @@ import {
   TNodeUid,
 } from "..";
 import { editor } from "monaco-editor";
+import { Dispatch } from "react";
+import { AnyAction } from "@reduxjs/toolkit";
 
 export type TNodeApiPayloadBase = {
+  dispatch: Dispatch<AnyAction>;
   fileExt?: string;
   codeViewTabSize?: number;
   action: TNodeActionType;

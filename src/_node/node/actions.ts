@@ -1,5 +1,6 @@
 import { editor, Range } from "monaco-editor";
 import {
+  getNodeChildIndex,
   TNodeApiPayload,
   TNodeReferenceData,
   TNodeTreeData,
@@ -13,11 +14,13 @@ import {
 import {
   AddNodeActionPrefix,
   DefaultTabSize,
+  NodePathSplitter,
   RenameNodeActionPrefix,
 } from "@_constants/main";
 import { THtmlReferenceData } from "@_types/main";
 import { LogAllow } from "@_constants/global";
 import { copyCode, pasteCode, replaceContent } from "./helpers";
+import { getValidNodeTree } from "@_pages/main/processor/helpers";
 
 const add = ({
   actionName,
@@ -31,7 +34,7 @@ const add = ({
   nodeTree: TNodeTreeData;
   focusedItem: TNodeUid;
   codeViewInstanceModel: editor.ITextModel;
-}) => {
+}): string[] => {
   const tagName = actionName.slice(
     AddNodeActionPrefix.length + 2,
     actionName.length - 1,
@@ -61,6 +64,16 @@ const add = ({
     text: codeViewText,
   };
   codeViewInstanceModel.applyEdits([edit]);
+
+  const validNodeTree = getValidNodeTree(nodeTree);
+  const targetNode = validNodeTree[focusedItem];
+  const targetParentNode = validNodeTree[targetNode.parentUid as TNodeUid];
+  const targetNodeChildIndex = getNodeChildIndex(targetParentNode, targetNode);
+  const newNodePath = `${
+    targetParentNode.data.path
+  }${NodePathSplitter}${tagName}-${targetNodeChildIndex + 1}`;
+
+  return [newNodePath];
 };
 const remove = ({
   nodeTree,
@@ -322,6 +335,8 @@ export const doNodeActions = async (
 ) => {
   try {
     const {
+      dispatch,
+
       fileExt = "html",
 
       actionName,
@@ -341,9 +356,11 @@ export const doNodeActions = async (
       osType = "Windows",
     } = params;
 
+    let needToSelectNodePaths: string[] = [];
+
     switch (action) {
       case "add":
-        add({
+        needToSelectNodePaths = add({
           actionName,
           referenceData,
           nodeTree,

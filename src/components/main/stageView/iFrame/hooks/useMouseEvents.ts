@@ -105,6 +105,7 @@ export const useMouseEvents = ({
         }
 
         editHtmlContent({
+          dispatch,
           iframeRef: iframeRefRef.current,
           nodeTree: nodeTreeRef.current,
           contentEditableUid,
