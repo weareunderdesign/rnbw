@@ -22,6 +22,7 @@ import {
   focusNodeTreeNode,
   selectNodeTreeNodes,
   setExpandedNodeTreeNodes,
+  setNeedToSelectNodeUids,
   setNodeTree,
   setSelectedNodeUids,
   setValidNodeTree,
@@ -163,14 +164,14 @@ export const useNodeTreeEvent = () => {
         setExpandedNodeTreeNodes([...validExpandedItems, ...needToExpandItems]),
       );
 
-      // select from paths
       if (!isSelectedNodeUidsChanged.current) {
+        // this means we called `callNodeApi` and we need to select predicted `needToSelectNodeUids`
+        // in the case, `callNodeApi -> setCurrentFileContent` and `setNeedToSelectNodeUids` dispatch actions are considered as an one event in the node-event-history.
         const needToSelectNodeUids = getNodeUidsFromPaths(
           _validNodeTree,
           needToSelectNodePaths,
         );
-        console.log({ needToSelectNodeUids });
-        // dispatch(setSelectedNodeUids(needToSelectNodeUids));
+        dispatch(setNeedToSelectNodeUids(needToSelectNodeUids));
       }
     }
 

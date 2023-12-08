@@ -28,14 +28,31 @@ const nodeEventSlice = createSlice({
       const selectedNodeUids = action.payload;
       state.selectedNodeUids = [...selectedNodeUids];
     },
+    setNeedToSelectNodeUids(state, action: PayloadAction<TNodeUid[]>) {
+      const needToSelectNodeUids = action.payload;
+      state.selectedNodeUids = needToSelectNodeUids;
+    },
   },
 });
-export const { setCurrentFileContent, setSelectedNodeUids } =
-  nodeEventSlice.actions;
+export const {
+  setCurrentFileContent,
+  setSelectedNodeUids,
+  setNeedToSelectNodeUids,
+} = nodeEventSlice.actions;
 export const NodeEventReducer = undoable(nodeEventSlice.reducer, {
   limit: NodeTree_Event_StoreLimit,
   undoType: NodeTree_Event_UndoActionType,
   redoType: NodeTree_Event_RedoActionType,
   clearHistoryType: NodeTree_Event_ClearActionType,
   jumpToPastType: NodeTree_Event_JumpToPastActionType,
+
+  groupBy: (action, currentState, previousHistory) => {
+    if (
+      action.type === "nodeEvent/setCurrentFileContent" ||
+      action.type === "nodeEvent/setNeedToSelectNodeUids"
+    ) {
+      return "node-action";
+    }
+    return null;
+  },
 });
