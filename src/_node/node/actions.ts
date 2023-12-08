@@ -69,6 +69,7 @@ const add = ({
 
   // predict needToSelectNodePaths
   const needToSelectNodePaths = (() => {
+    const needToSelectNodePaths: string[] = [];
     const validNodeTree = getValidNodeTree(nodeTree);
     const targetNode = validNodeTree[focusedItem];
     const targetParentNode = validNodeTree[targetNode.parentUid as TNodeUid];
@@ -79,7 +80,8 @@ const add = ({
     const newNodePath = `${
       targetParentNode.data.path
     }${NodePathSplitter}${tagName}-${targetNodeChildIndex + 1}`;
-    return [newNodePath];
+    needToSelectNodePaths.push(newNodePath);
+    return needToSelectNodePaths;
   })();
   return needToSelectNodePaths;
 };
