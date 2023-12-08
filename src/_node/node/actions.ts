@@ -119,7 +119,7 @@ const cut = ({
   // predict needToSelectNodePaths
   return [];
 };
-const copy = ({
+const copy = async ({
   nodeTree,
   uids,
   codeViewInstanceModel,
@@ -127,12 +127,19 @@ const copy = ({
   nodeTree: TNodeTreeData;
   uids: TNodeUid[];
   codeViewInstanceModel: editor.ITextModel;
-}): string[] => {
-  const copiedCode = copyCode({ nodeTree, uids, codeViewInstanceModel });
-  window.navigator.clipboard.writeText(copiedCode);
+}): Promise<string[]> => {
+  return new Promise<string[]>(async (resolve, reject) => {
+    try {
+      const copiedCode = copyCode({ nodeTree, uids, codeViewInstanceModel });
+      await window.navigator.clipboard.writeText(copiedCode);
 
-  // predict needToSelectNodePaths
-  return [];
+      // predict needToSelectNodePaths
+      resolve([]);
+    } catch (err) {
+      LogAllow && console.error("Error writing to clipboard:", err);
+      reject(err);
+    }
+  });
 };
 const paste = async ({
   nodeTree,
@@ -143,25 +150,23 @@ const paste = async ({
   focusedItem: TNodeUid;
   codeViewInstanceModel: editor.ITextModel;
 }): Promise<string[]> => {
-  return new Promise<string[]>((resolve, reject) => {
-    window.navigator.clipboard
-      .readText()
-      .then((code) => {
-        pasteCode({
-          nodeTree,
-          focusedItem,
-          codeViewInstanceModel,
-          code,
-        });
-
-        // predict needToSelectNodePaths
-        const needToSelectNodePaths: string[] = [];
-        resolve(needToSelectNodePaths);
-      })
-      .catch((error) => {
-        LogAllow && console.error("Error reading from clipboard:", error);
-        reject(error);
+  return new Promise<string[]>(async (resolve, reject) => {
+    try {
+      const code = await window.navigator.clipboard.readText();
+      pasteCode({
+        nodeTree,
+        focusedItem,
+        codeViewInstanceModel,
+        code,
       });
+
+      // predict needToSelectNodePaths
+      const needToSelectNodePaths: string[] = [];
+      resolve(needToSelectNodePaths);
+    } catch (err) {
+      LogAllow && console.error("Error reading from clipboard:", err);
+      reject(err);
+    }
   });
 };
 
@@ -425,7 +430,7 @@ export const doNodeActions = async (
         });
         break;
       case "copy":
-        needToSelectNodePaths = copy({
+        needToSelectNodePaths = await copy({
           nodeTree,
           uids: selectedUids,
           codeViewInstanceModel,
