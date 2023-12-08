@@ -97,7 +97,7 @@ import {
   elementsCmdk,
   fileCmdk,
 } from "./helper";
-import { useProcessor } from "./processor";
+import Processor from "./processor";
 
 export default function MainPage() {
   // ***************************************** Reducer Begin *****************************************
@@ -231,8 +231,8 @@ export default function MainPage() {
 
   const iframeRefRef = useRef<HTMLIFrameElement | null>(null);
   const setIframeRefRef = (iframeRef: HTMLIFrameElement | null) => {
-    console.log(iframeRef);
     iframeRefRef.current = iframeRef;
+    console.log(iframeRefRef.current);
   };
 
   const [filesReferenceData, setFilesReferenceData] =
@@ -1282,8 +1282,6 @@ export default function MainPage() {
     navigatorDropdownType !== null && dispatch(setNavigatorDropdownType(null));
   }, [navigatorDropdownType]);
 
-  useProcessor();
-
   return (
     <>
       <MainContext.Provider
@@ -1322,6 +1320,7 @@ export default function MainPage() {
           onRedo,
         }}
       >
+        <Processor></Processor>
         <div
           id="MainPage"
           className={"view background-primary"}

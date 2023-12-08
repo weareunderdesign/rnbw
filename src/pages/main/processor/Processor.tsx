@@ -1,10 +1,14 @@
+import React from "react";
 import { useFileTreeEvent, useHms } from "./hooks";
 import { useNodeTreeEvent } from "./hooks";
 import { useSaveCommand } from "./hooks";
 
-export const useProcessor = () => {
+const Processor = () => {
   useHms();
   useFileTreeEvent();
   useNodeTreeEvent();
   useSaveCommand();
+  return <></>;
 };
+
+export default Processor;

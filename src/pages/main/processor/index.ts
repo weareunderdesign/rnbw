@@ -1,1 +1,2 @@
-export { useProcessor } from "./useProcessor";
+import Processor from "./Processor";
+export default Processor;
