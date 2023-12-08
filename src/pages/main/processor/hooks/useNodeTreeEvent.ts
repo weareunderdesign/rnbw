@@ -131,56 +131,6 @@ export const useNodeTreeEvent = () => {
     // code-view is already synced
     // ---
 
-    // sync node-tree
-    dispatch(setNodeTree(nodeTree));
-    const _validNodeTree = getValidNodeTree(nodeTree);
-    dispatch(setValidNodeTree(_validNodeTree));
-
-    const uid = getNodeUidToBeSelectedAtFirst(_validNodeTree);
-    if (initialFileUidToOpen !== "" && fileTree[initialFileUidToOpen]) {
-      LogAllow && console.log("it's a new project");
-      dispatch(setInitialFileUidToOpen(""));
-      dispatch(setSelectedNodeUids([uid]));
-      dispatch(
-        setExpandedNodeTreeNodes(
-          getNeedToExpandNodeUids(_validNodeTree, [uid]),
-        ),
-      );
-    } else if (prevFileUid !== currentFileUid) {
-      LogAllow && console.log("it's a new file");
-      dispatch(setSelectedNodeUids([uid]));
-      dispatch(
-        setExpandedNodeTreeNodes(
-          getNeedToExpandNodeUids(_validNodeTree, [uid]),
-        ),
-      );
-    } else {
-      LogAllow && console.log("it's a rnbw-change");
-      const validExpandedItems = nExpandedItems.filter(
-        (uid) => _validNodeTree[uid] && _validNodeTree[uid].isEntity === false,
-      );
-      const needToExpandItems: TNodeUid[] = isSelectedNodeUidsChanged.current
-        ? getNeedToExpandNodeUids(_validNodeTree, selectedNodeUids)
-        : [];
-      dispatch(
-        setExpandedNodeTreeNodes([...validExpandedItems, ...needToExpandItems]),
-      );
-
-      if (!isSelectedNodeUidsChanged.current) {
-        // this means we called `callNodeApi` and we need to select predicted `needToSelectNodeUids`
-        // in the case, `callNodeApi -> setCurrentFileContent` and `setNeedToSelectNodeUids` dispatch actions are considered as an one event in the node-event-history.
-        const needToSelectNodeUids = getNodeUidsFromPaths(
-          _validNodeTree,
-          needToSelectNodePaths,
-        );
-        dispatch(setNeedToSelectNodeUids(needToSelectNodeUids));
-
-        // mark selected elements on stage-view
-        // this part is for when the selectedNodeUids is not changed from the same code-format
-        markSelectedElements(iframeRefRef.current, needToSelectNodeUids);
-      }
-    }
-
     // sync stage-view
     if (prevFileUid !== currentFileUid) {
       LogAllow && console.log("need to refresh iframe");
@@ -267,6 +217,57 @@ export const useNodeTreeEvent = () => {
             },
           });
         }
+      }
+    }
+
+    // sync node-tree
+    dispatch(setNodeTree(nodeTree));
+    const _validNodeTree = getValidNodeTree(nodeTree);
+    dispatch(setValidNodeTree(_validNodeTree));
+
+    const uid = getNodeUidToBeSelectedAtFirst(_validNodeTree);
+    if (initialFileUidToOpen !== "" && fileTree[initialFileUidToOpen]) {
+      LogAllow && console.log("it's a new project");
+      dispatch(setInitialFileUidToOpen(""));
+      dispatch(setSelectedNodeUids([uid]));
+      dispatch(
+        setExpandedNodeTreeNodes(
+          getNeedToExpandNodeUids(_validNodeTree, [uid]),
+        ),
+      );
+    } else if (prevFileUid !== currentFileUid) {
+      LogAllow && console.log("it's a new file");
+      dispatch(setSelectedNodeUids([uid]));
+      dispatch(
+        setExpandedNodeTreeNodes(
+          getNeedToExpandNodeUids(_validNodeTree, [uid]),
+        ),
+      );
+    } else {
+      LogAllow && console.log("it's a rnbw-change");
+      const validExpandedItems = nExpandedItems.filter(
+        (uid) => _validNodeTree[uid] && _validNodeTree[uid].isEntity === false,
+      );
+      const needToExpandItems: TNodeUid[] = isSelectedNodeUidsChanged.current
+        ? getNeedToExpandNodeUids(_validNodeTree, selectedNodeUids)
+        : [];
+      dispatch(
+        setExpandedNodeTreeNodes([...validExpandedItems, ...needToExpandItems]),
+      );
+
+      if (!isSelectedNodeUidsChanged.current) {
+        // this means we called `callNodeApi` and we need to select predicted `needToSelectNodeUids`
+        // in the case, `callNodeApi -> setCurrentFileContent` and `setNeedToSelectNodeUids` dispatch actions are considered as an one event in the node-event-history.
+        const needToSelectNodeUids = getNodeUidsFromPaths(
+          _validNodeTree,
+          needToSelectNodePaths,
+        );
+        dispatch(setNeedToSelectNodeUids(needToSelectNodeUids));
+
+        // remark selected elements on stage-view
+        // it is removed through dom-diff
+        // this part is for when the selectedNodeUids is not changed cuz of the same code-format
+        markSelectedElements(iframeRefRef.current, needToSelectNodeUids);
       }
     }
 

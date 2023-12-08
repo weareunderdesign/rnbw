@@ -232,7 +232,6 @@ export default function MainPage() {
   const iframeRefRef = useRef<HTMLIFrameElement | null>(null);
   const setIframeRefRef = (iframeRef: HTMLIFrameElement | null) => {
     iframeRefRef.current = iframeRef;
-    console.log(iframeRefRef.current);
   };
 
   const [filesReferenceData, setFilesReferenceData] =
