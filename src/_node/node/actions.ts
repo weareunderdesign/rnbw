@@ -399,7 +399,21 @@ const group = ({
   codeViewInstanceModel.applyEdits([edit]);
 
   // predict needToSelectNodePaths
-  const needToSelectNodePaths: string[] = [];
+  const needToSelectNodePaths = (() => {
+    const needToSelectNodePaths: string[] = [];
+    const validNodeTree = getValidNodeTree(nodeTree);
+    const sortedUids = sortUidsByMinStartIndex(uids, validNodeTree);
+    const targetNode = validNodeTree[sortedUids[0]];
+    const targetParentNode = validNodeTree[targetNode.parentUid as TNodeUid];
+    const targetNodeChildIndex = getNodeChildIndex(
+      targetParentNode,
+      targetNode,
+    );
+    const newNodeTagName = "div";
+    const newNodePath = `${targetParentNode.data.path}${NodePathSplitter}${newNodeTagName}-${targetNodeChildIndex}`;
+    needToSelectNodePaths.push(newNodePath);
+    return needToSelectNodePaths;
+  })();
   return needToSelectNodePaths;
 };
 const ungroup = ({
