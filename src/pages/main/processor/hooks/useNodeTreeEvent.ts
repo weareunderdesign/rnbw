@@ -38,6 +38,7 @@ import {
 } from "../helpers";
 import { setCurrentCommand } from "@_redux/main/cmdk";
 import { getNodeUidsFromPaths } from "@_node/helpers";
+import { TNodeUid } from "@_node/types";
 
 export const useNodeTreeEvent = () => {
   const dispatch = useDispatch();
@@ -155,17 +156,22 @@ export const useNodeTreeEvent = () => {
       const validExpandedItems = nExpandedItems.filter(
         (uid) => _validNodeTree[uid] && _validNodeTree[uid].isEntity === false,
       );
-      const needToExpandItems = isSelectedNodeUidsChanged.current
+      const needToExpandItems: TNodeUid[] = isSelectedNodeUidsChanged.current
         ? getNeedToExpandNodeUids(_validNodeTree, selectedNodeUids)
         : [];
-
-      // update selectedUids from paths
-      // const uids = getNodeUidsFromPaths(_validNodeTree, needToSelectNodePaths);
-      // dispatch(setSelectedNodeUids(uids));
-
       dispatch(
         setExpandedNodeTreeNodes([...validExpandedItems, ...needToExpandItems]),
       );
+
+      // select from paths
+      if (!isSelectedNodeUidsChanged.current) {
+        const needToSelectNodeUids = getNodeUidsFromPaths(
+          _validNodeTree,
+          needToSelectNodePaths,
+        );
+        console.log({ needToSelectNodeUids });
+        // dispatch(setSelectedNodeUids(needToSelectNodeUids));
+      }
     }
 
     // sync stage-view

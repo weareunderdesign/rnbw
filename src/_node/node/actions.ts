@@ -21,6 +21,7 @@ import { THtmlReferenceData } from "@_types/main";
 import { LogAllow } from "@_constants/global";
 import { copyCode, pasteCode, replaceContent } from "./helpers";
 import { getValidNodeTree } from "@_pages/main/processor/helpers";
+import { setNeedToSelectNodePaths } from "@_redux/main/nodeTree";
 
 const add = ({
   actionName,
@@ -447,6 +448,8 @@ export const doNodeActions = async (
       default:
         break;
     }
+
+    dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
     const code = html_beautify(codeViewInstanceModel.getValue());
     codeViewInstanceModel.setValue(code);
