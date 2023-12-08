@@ -40,6 +40,7 @@ import {
 import { setCurrentCommand } from "@_redux/main/cmdk";
 import { getNodeUidsFromPaths } from "@_node/helpers";
 import { TNodeUid } from "@_node/types";
+import { markSelectedElements } from "@_components/main/stageView/iFrame/helpers";
 
 export const useNodeTreeEvent = () => {
   const dispatch = useDispatch();
@@ -60,7 +61,8 @@ export const useNodeTreeEvent = () => {
 
     syncConfigs,
   } = useAppState();
-  const { addRunningActions, removeRunningActions } = useContext(MainContext);
+  const { addRunningActions, removeRunningActions, iframeRefRef } =
+    useContext(MainContext);
 
   const isSelectedNodeUidsChanged = useRef(false);
   const isCurrentFileContentChanged = useRef(false);
@@ -172,6 +174,10 @@ export const useNodeTreeEvent = () => {
           needToSelectNodePaths,
         );
         dispatch(setNeedToSelectNodeUids(needToSelectNodeUids));
+
+        // mark selected elements on stage-view
+        // this part is for when the selectedNodeUids is not changed from the same code-format
+        markSelectedElements(iframeRefRef.current, needToSelectNodeUids);
       }
     }
 
