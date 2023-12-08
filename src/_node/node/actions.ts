@@ -142,7 +142,16 @@ const copy = async ({
       await window.navigator.clipboard.writeText(copiedCode);
 
       // predict needToSelectNodePaths
-      resolve([]);
+      const needToSelectNodePaths = (() => {
+        const needToSelectNodePaths: string[] = [];
+        const validNodeTree = getValidNodeTree(nodeTree);
+        uids.map((uid) => {
+          const node = validNodeTree[uid];
+          needToSelectNodePaths.push(node.data.path);
+        });
+        return needToSelectNodePaths;
+      })();
+      resolve(needToSelectNodePaths);
     } catch (err) {
       LogAllow && console.error("Error writing to clipboard:", err);
       reject(err);
