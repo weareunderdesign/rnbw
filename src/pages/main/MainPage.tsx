@@ -229,6 +229,12 @@ export default function MainPage() {
     monacoEditorRef.current = editorInstance;
   };
 
+  const iframeRefRef = useRef<HTMLIFrameElement | null>(null);
+  const setIframeRefRef = (iframeRef: HTMLIFrameElement | null) => {
+    console.log(iframeRef);
+    iframeRefRef.current = iframeRef;
+  };
+
   const [filesReferenceData, setFilesReferenceData] =
     useState<TFilesReferenceData>({});
   const [htmlReferenceData, setHtmlReferenceData] =
@@ -1307,6 +1313,9 @@ export default function MainPage() {
           closeAllPanel,
           monacoEditorRef,
           setMonacoEditorRef,
+
+          iframeRefRef,
+          setIframeRefRef,
 
           //undo/Redo
           onUndo,

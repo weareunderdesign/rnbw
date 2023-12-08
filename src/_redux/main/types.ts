@@ -11,6 +11,7 @@ import {
 
 import { TProjectContext } from "./fileTree";
 import { StageViewSyncConfigs } from "./stageView";
+import { MutableRefObject } from "react";
 
 export type TEventHistoryInfo = {
   future: number;
@@ -53,6 +54,9 @@ export type TMainContext = {
   setMonacoEditorRef: (
     editorInstance: editor.IStandaloneCodeEditor | null,
   ) => void;
+
+  iframeRefRef: MutableRefObject<HTMLIFrameElement | null>;
+  setIframeRefRef: (iframeRef: HTMLIFrameElement | null) => void;
 
   // code view
   isContentProgrammaticallyChanged: React.RefObject<boolean>;

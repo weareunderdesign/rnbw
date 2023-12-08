@@ -1,4 +1,4 @@
-import { Context, createContext } from "react";
+import { Context, createContext, useRef } from "react";
 
 import { TMainContext } from "./types";
 
@@ -20,6 +20,9 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
 
   monacoEditorRef: { current: null },
   setMonacoEditorRef: () => {},
+
+  iframeRefRef: { current: null },
+  setIframeRefRef: () => {},
 
   // code view
   isContentProgrammaticallyChanged: {

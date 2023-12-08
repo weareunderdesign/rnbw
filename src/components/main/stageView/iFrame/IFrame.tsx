@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import { useDispatch } from "react-redux";
 import { PreserveRnbwNode } from "@_node/file/handlers/constants";
@@ -13,14 +13,15 @@ import { useAppState } from "@_redux/useAppState";
 import { jss, styles } from "./constants";
 import { LogAllow } from "@_constants/global";
 import { markSelectedElements } from "./helpers";
+import { MainContext } from "@_redux/main";
 
 export const IFrame = () => {
   const dispatch = useDispatch();
   const { needToReloadIframe, iframeSrc } = useAppState();
+  const { iframeRefRef, setIframeRefRef } = useContext(MainContext);
 
   const [iframeRefState, setIframeRefState] =
     useState<HTMLIFrameElement | null>(null);
-  const iframeRefRef = useRef<HTMLIFrameElement | null>(null);
 
   const contentEditableUidRef = useRef<TNodeUid>("");
   const isEditingRef = useRef(false);
@@ -48,7 +49,7 @@ export const IFrame = () => {
 
   // init iframe
   useEffect(() => {
-    iframeRefRef.current = iframeRefState;
+    setIframeRefRef(iframeRefState);
     if (iframeRefState) {
       dispatch(setIframeLoading(true));
 
