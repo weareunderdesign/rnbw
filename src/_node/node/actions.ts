@@ -445,7 +445,31 @@ const ungroup = ({
   });
 
   // predict needToSelectNodePaths
-  const needToSelectNodePaths: string[] = [];
+  const needToSelectNodePaths = (() => {
+    const needToSelectNodePaths: string[] = [];
+    const validNodeTree = getValidNodeTree(nodeTree);
+    const sortedUids = sortUidsByMinStartIndex(uids, validNodeTree);
+    const addedChildCount: { [uid: TNodeUid]: number } = {};
+    sortedUids.map((uid) => {
+      const containerNode = validNodeTree[uid];
+      const parentNode = validNodeTree[containerNode.parentUid as TNodeUid];
+      const containerNodeChildIndex = getNodeChildIndex(
+        parentNode,
+        containerNode,
+      );
+      addedChildCount[parentNode.uid] = addedChildCount[parentNode.uid] || 0;
+      containerNode.children.map((childUid, index) => {
+        const childNode = validNodeTree[childUid];
+        const newNodePath = `${parentNode.data.path}${NodePathSplitter}${
+          childNode.data.tagName
+        }-${addedChildCount[parentNode.uid] + containerNodeChildIndex + index}`;
+        needToSelectNodePaths.push(newNodePath);
+      });
+      addedChildCount[parentNode.uid] += containerNode.children.length - 1;
+    });
+    console.log(needToSelectNodePaths);
+    return needToSelectNodePaths;
+  })();
   return needToSelectNodePaths;
 };
 
