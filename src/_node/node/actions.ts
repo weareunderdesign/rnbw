@@ -355,10 +355,25 @@ const rename = ({
   });
   const codeToAdd = `${openingTag}${code}${closingTag}`;
   remove({ nodeTree, uids: [focusedItem], codeViewInstanceModel });
-  pasteCode({ nodeTree, focusedItem, codeViewInstanceModel, code: codeToAdd });
+  pasteCode({
+    nodeTree,
+    focusedItem,
+    addToBefore: true,
+    codeViewInstanceModel,
+    code: codeToAdd,
+  });
 
   // predict needToSelectNodePaths
-  const needToSelectNodePaths: string[] = [];
+  const needToSelectNodePaths = (() => {
+    const needToSelectNodePaths: string[] = [];
+    const validNodeTree = getValidNodeTree(nodeTree);
+    const focusedNode = validNodeTree[focusedItem];
+    const parentNode = validNodeTree[focusedNode.parentUid as TNodeUid];
+    const focusedNodeChildIndex = getNodeChildIndex(parentNode, focusedNode);
+    const newNodePath = `${parentNode.data.path}${NodePathSplitter}${tagName}-${focusedNodeChildIndex}`;
+    needToSelectNodePaths.push(newNodePath);
+    return needToSelectNodePaths;
+  })();
   return needToSelectNodePaths;
 };
 
