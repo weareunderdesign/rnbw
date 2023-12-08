@@ -1,6 +1,7 @@
 import { editor, Range } from "monaco-editor";
 import {
   getNodeChildIndex,
+  getSubNodeUidsByBfs,
   TNodeApiPayload,
   TNodeReferenceData,
   TNodeTreeData,
@@ -67,15 +68,20 @@ const add = ({
   codeViewInstanceModel.applyEdits([edit]);
 
   // predict needToSelectNodePaths
-  const validNodeTree = getValidNodeTree(nodeTree);
-  const targetNode = validNodeTree[focusedItem];
-  const targetParentNode = validNodeTree[targetNode.parentUid as TNodeUid];
-  const targetNodeChildIndex = getNodeChildIndex(targetParentNode, targetNode);
-  const newNodePath = `${
-    targetParentNode.data.path
-  }${NodePathSplitter}${tagName}-${targetNodeChildIndex + 1}`;
-
-  return [newNodePath];
+  const needToSelectNodePaths = (() => {
+    const validNodeTree = getValidNodeTree(nodeTree);
+    const targetNode = validNodeTree[focusedItem];
+    const targetParentNode = validNodeTree[targetNode.parentUid as TNodeUid];
+    const targetNodeChildIndex = getNodeChildIndex(
+      targetParentNode,
+      targetNode,
+    );
+    const newNodePath = `${
+      targetParentNode.data.path
+    }${NodePathSplitter}${tagName}-${targetNodeChildIndex + 1}`;
+    return [newNodePath];
+  })();
+  return needToSelectNodePaths;
 };
 const remove = ({
   nodeTree,
@@ -197,7 +203,25 @@ const duplicate = ({
   });
 
   // predict needToSelectNodePaths
-  const needToSelectNodePaths: string[] = [];
+  const needToSelectNodePaths = (() => {
+    const needToSelectNodePaths: string[] = [];
+    const validNodeTree = getValidNodeTree(nodeTree);
+    const sortedUids = sortUidsByMinStartIndex(uids, validNodeTree);
+    const addedChildCount: { [uid: TNodeUid]: number } = {};
+    sortedUids.map((uid) => {
+      const node = validNodeTree[uid];
+      const parentNode = validNodeTree[node.parentUid as TNodeUid];
+      const nodeChildeIndex = getNodeChildIndex(parentNode, node);
+
+      addedChildCount[node.parentUid as TNodeUid] =
+        (addedChildCount[node.parentUid as TNodeUid] || 0) + 1;
+      const newNodePath = `${parentNode.data.path}${NodePathSplitter}${
+        node.data.tagName
+      }-${nodeChildeIndex + addedChildCount[node.parentUid as TNodeUid]}`;
+      needToSelectNodePaths.push(newNodePath);
+    });
+    return needToSelectNodePaths;
+  })();
   return needToSelectNodePaths;
 };
 const move = ({
