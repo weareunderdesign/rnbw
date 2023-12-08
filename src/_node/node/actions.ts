@@ -463,7 +463,16 @@ const edit = ({
   replaceContent({ nodeTree, focusedItem, content, codeViewInstanceModel });
 
   // predict needToSelectNodePaths
-  const needToSelectNodePaths: string[] = [];
+  const needToSelectNodePaths = (() => {
+    const needToSelectNodePaths: string[] = [];
+    const validNodeTree = getValidNodeTree(nodeTree);
+    const focusedNode = validNodeTree[focusedItem];
+    const parentNode = validNodeTree[focusedNode.parentUid as TNodeUid];
+    const focusedNodeChildIndex = getNodeChildIndex(parentNode, focusedNode);
+    const newNodePath = `${parentNode.data.path}${NodePathSplitter}${focusedNode.data.tagName}-${focusedNodeChildIndex}`;
+    needToSelectNodePaths.push(newNodePath);
+    return needToSelectNodePaths;
+  })();
   return needToSelectNodePaths;
 };
 
