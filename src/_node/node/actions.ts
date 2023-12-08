@@ -265,7 +265,35 @@ const move = ({
   });
 
   // predict needToSelectNodePaths
-  const needToSelectNodePaths: string[] = [];
+  const needToSelectNodePaths = (() => {
+    const needToSelectNodePaths: string[] = [];
+    const validNodeTree = getValidNodeTree(nodeTree);
+    const targetNode = validNodeTree[targetUid];
+
+    let directChildCount = 0;
+    uids.map((uid) => {
+      const node = validNodeTree[uid];
+      if (node.parentUid === targetUid) {
+        const nodeChildeIndex = getNodeChildIndex(targetNode, node);
+        isBetween
+          ? nodeChildeIndex < position
+            ? directChildCount++
+            : null
+          : directChildCount++;
+      }
+    });
+
+    uids.map((uid, index) => {
+      const node = validNodeTree[uid];
+      const newNodeChildIndex =
+        (isBetween ? position : targetNode.children.length) -
+        directChildCount +
+        index;
+      const newNodePath = `${targetNode.data.path}${NodePathSplitter}${node.data.tagName}-${newNodeChildIndex}`;
+      needToSelectNodePaths.push(newNodePath);
+    });
+    return needToSelectNodePaths;
+  })();
   return needToSelectNodePaths;
 };
 
