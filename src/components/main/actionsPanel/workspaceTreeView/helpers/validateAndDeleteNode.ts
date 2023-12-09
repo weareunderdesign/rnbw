@@ -1,11 +1,17 @@
-import { TFileHandlerCollection, TFileNodeData } from "@_node/file";
-import { TNodeTreeData, TNodeUid } from "@_node/types";
+import {
+  TFileHandlerCollection,
+  TFileNodeData,
+  TFileNodeTreeData,
+} from "@_node/file";
+import { TNodeUid } from "@_node/types";
+import { setFileTree } from "@_redux/main/fileTree";
 import { verifyFileHandlerPermission } from "@_services/main";
 
 export const validateAndDeleteNode = async (
   uid: string,
-  ffTree: TNodeTreeData,
+  ffTree: TFileNodeTreeData,
   fileHandlers: TFileHandlerCollection,
+  dispatch?: any,
 ) => {
   const node = ffTree[uid];
 
@@ -32,9 +38,15 @@ export const validateAndDeleteNode = async (
     const entryName =
       nodeData.kind === "directory"
         ? nodeData.name
-        : `${nodeData.name}${nodeData.ext}`;
+        : `${nodeData.name}.${nodeData.ext}`;
+
     await parentHandler.removeEntry(entryName, { recursive: true });
-    return true;
+
+    // const _ffTree = structuredClone(ffTree);
+    // delete _ffTree[uid];
+
+    // dispatch(setFileTree(_ffTree));
+    // return true;
   } catch (err) {
     return false;
   }
