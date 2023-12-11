@@ -124,7 +124,32 @@ const cut = ({
   remove({ nodeTree, uids, codeViewInstanceModel });
 
   // predict needToSelectNodePaths
-  return [];
+  const needToSelectNodePaths = (() => {
+    const needToSelectNodePaths: string[] = [];
+    const validNodeTree = getValidNodeTree(nodeTree);
+    const sortedUids = sortUidsByMinStartIndex(uids, validNodeTree);
+    const removedChildCount: { [uid: TNodeUid]: number } = {};
+    sortedUids.map((uid) => {
+      const node = validNodeTree[uid];
+      const parentNode = validNodeTree[node.parentUid as TNodeUid];
+      const grandParentNode = validNodeTree[parentNode.parentUid as TNodeUid];
+      const parentNodeChildeIndex = getNodeChildIndex(
+        grandParentNode,
+        parentNode,
+      );
+
+      removedChildCount[parentNode.uid] =
+        (removedChildCount[parentNode.uid] || 0) + 1;
+      removedChildCount[grandParentNode.uid] =
+        removedChildCount[grandParentNode.uid] || 0;
+      const newNodePath = `${grandParentNode.data.path}${NodePathSplitter}${
+        parentNode.data.tagName
+      }-${parentNodeChildeIndex - removedChildCount[grandParentNode.uid]}`;
+      needToSelectNodePaths.push(newNodePath);
+    });
+    return needToSelectNodePaths;
+  })();
+  return needToSelectNodePaths;
 };
 const copy = async ({
   nodeTree,
