@@ -1,11 +1,9 @@
-import { ShortDelay } from "@_constants/main";
 import {
   StageNodeIdAttr,
   TNodeTreeData,
   TNodeUid,
   callNodeApi,
 } from "@_node/index";
-import { debounce } from "lodash";
 import { editor } from "monaco-editor";
 
 export const getValidElementWithUid = (
@@ -114,6 +112,7 @@ export const editHtmlContent = ({
     );
   if (contentEditableElement) {
     contentEditableElement.setAttribute("contenteditable", "false");
+    const content = contentEditableElement.textContent;
 
     setIsContentProgrammaticallyChanged(true);
     callNodeApi(
@@ -121,7 +120,7 @@ export const editHtmlContent = ({
         action: "text-edit",
         nodeTree,
         targetUid: contentEditableUid,
-        content: contentEditableElement.innerHTML,
+        content: content ? content : "",
         codeViewInstanceModel,
       },
       () => {
