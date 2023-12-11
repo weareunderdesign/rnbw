@@ -80,7 +80,7 @@ export const getNodeUidsFromPaths = (
     if (pathsObj[path]) _uids.push(uid);
   });
 
-  return _uids;
+  return getValidNodeUids(validNodeTree, _uids);
 };
 export const getValidNodeUids = (
   tree: TNodeTreeData,
