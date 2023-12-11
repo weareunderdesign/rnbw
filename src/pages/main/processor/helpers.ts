@@ -80,11 +80,14 @@ export const markChangedFolders = (
   fileTree: TFileNodeTreeData,
   file: TFileNode,
   dispatch: Dispatch<AnyAction>,
+  value: boolean,
 ) => {
   const parentFiles: TFileNode[] = [];
   while (file.parentUid) {
     const parentFile = structuredClone(fileTree[file.parentUid]);
-    parentFile.data.changed = true;
+
+    // Depending on value folders are marked or unmarked
+    parentFile.data.changed = value;
     parentFiles.push(parentFile);
     file = parentFile;
   }
