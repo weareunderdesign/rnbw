@@ -96,8 +96,8 @@ export const useNodeTreeEvent = () => {
     fileData.content = currentFileContent;
     fileData.contentInApp = contentInApp;
     fileData.changed = fileData.content !== fileData.orgContent;
-    if (fileData.changed && file.parentUid) {
-      markChangedFolders(fileTree, file, dispatch);
+    if (file.parentUid) {
+      markChangedFolders(fileTree, file, dispatch, fileData.changed);
     }
 
     // when "Save" while text-editing, we need to call "Save" command after file-content updated.

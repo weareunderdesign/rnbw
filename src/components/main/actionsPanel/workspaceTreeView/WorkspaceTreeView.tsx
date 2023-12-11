@@ -615,7 +615,7 @@ export default function WorkspaceTreeView() {
                           className="radius-s foreground-primary"
                           title="unsaved file"
                           style={{ width: "6px", height: "6px" }}
-                        ></div>
+                        />
                       )}
                   </span>
                 </>
