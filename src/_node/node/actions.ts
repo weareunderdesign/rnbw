@@ -1,7 +1,6 @@
 import { editor, Range } from "monaco-editor";
 import {
   getNodeChildIndex,
-  getSubNodeUidsByBfs,
   TNodeApiPayload,
   TNodeReferenceData,
   TNodeTreeData,
@@ -178,7 +177,38 @@ const paste = async ({
       });
 
       // predict needToSelectNodePaths
-      const needToSelectNodePaths: string[] = [];
+      const needToSelectNodePaths = (() => {
+        const needToSelectNodePaths: string[] = [];
+        const validNodeTree = getValidNodeTree(nodeTree);
+        const focusedNode = validNodeTree[focusedItem];
+        const parentNode = validNodeTree[focusedNode.parentUid as TNodeUid];
+        const focusedNodeChildIndex = getNodeChildIndex(
+          parentNode,
+          focusedNode,
+        );
+
+        let addedChildCount = 0;
+        const divElement = window.document.createElement("div");
+        divElement.innerHTML = code;
+        if (divElement.hasChildNodes()) {
+          for (const childNode of divElement.childNodes) {
+            const nodeName = childNode.nodeName;
+            if (nodeName !== "#text") {
+              const tagName = String(nodeName).toLowerCase();
+              ++addedChildCount;
+              const newNodePath = `${
+                parentNode.data.path
+              }${NodePathSplitter}${tagName}-${
+                focusedNodeChildIndex + addedChildCount
+              }`;
+              needToSelectNodePaths.push(newNodePath);
+            }
+          }
+        }
+        divElement.remove();
+
+        return needToSelectNodePaths;
+      })();
       resolve(needToSelectNodePaths);
     } catch (err) {
       LogAllow && console.error("Error reading from clipboard:", err);
