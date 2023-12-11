@@ -33,6 +33,7 @@ export const useAppState = () => {
       nodeTree: {
         nodeTree,
         validNodeTree,
+        needToSelectNodePaths,
         nodeTreeViewState: {
           focusedItem: nFocusedItem,
           expandedItems: nExpandedItems,
@@ -111,6 +112,8 @@ export const useAppState = () => {
 
     nodeTree,
     validNodeTree,
+
+    needToSelectNodePaths,
 
     nFocusedItem,
     nExpandedItems,

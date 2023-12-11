@@ -2,15 +2,16 @@ import { useCallback, useContext } from "react";
 
 import { getMany } from "idb-keyval";
 import { useDispatch } from "react-redux";
+
+import { LogAllow } from "@_constants/global";
+import { isUnsavedProject } from "@_node/file/helpers";
 import { MainContext } from "@_redux/main";
 import { TProject } from "@_redux/main/fileTree";
 import {
   setActivePanel,
   setNavigatorDropdownType,
 } from "@_redux/main/processor";
-import { isUnsavedProject } from "@_node/file/helpers";
 import { useAppState } from "@_redux/useAppState";
-import { LogAllow } from "@_constants/global";
 
 export const useNavigatorPanelHandlers = () => {
   const dispatch = useDispatch();

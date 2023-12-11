@@ -12,6 +12,7 @@ import {
 } from "@_node/file";
 import { getValidNodeUids } from "@_node/helpers";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
+import { clearFileSession } from "@_pages/main/helper";
 import { MainContext } from "@_redux/main";
 import {
   expandFileTreeNodes,
@@ -20,15 +21,12 @@ import {
   setPrevRenderableFileUid,
 } from "@_redux/main/fileTree";
 import { setFileAction, TFileAction } from "@_redux/main/fileTree/event";
-import { clearNodeTreeViewState } from "@_redux/main/nodeTree";
-import {
-  NodeTree_Event_ClearActionType,
-  setCurrentFileContent,
-} from "@_redux/main/nodeTree/event";
+import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
 import {
   setNavigatorDropdownType,
   setShowCodeView,
 } from "@_redux/main/processor";
+import { useAppState } from "@_redux/useAppState";
 import { verifyFileHandlerPermission } from "@_services/main";
 import { TFileNodeType } from "@_types/main";
 
@@ -41,8 +39,6 @@ import {
 } from "../helpers";
 import { useInvalidNodes } from "./useInvalidNodes";
 import { useTemporaryNodes } from "./useTemporaryNodes";
-import { useAppState } from "@_redux/useAppState";
-import { clearFileSession } from "@_pages/main/helper";
 
 export const useNodeActionsHandler = (
   openFileUid: React.MutableRefObject<string>,

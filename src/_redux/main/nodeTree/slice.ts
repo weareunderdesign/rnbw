@@ -8,6 +8,8 @@ const nodeTreeReducerInitialState: TNodeTreeReducerState = {
   nodeTree: {},
   validNodeTree: {},
 
+  needToSelectNodePaths: [],
+
   nodeTreeViewState: {
     focusedItem: "",
     expandedItems: [],
@@ -28,6 +30,11 @@ const nodeTreeSlice = createSlice({
     setValidNodeTree(state, actions: PayloadAction<TNodeTreeData>) {
       const validNodeTree = actions.payload;
       state.validNodeTree = validNodeTree;
+    },
+
+    setNeedToSelectNodePaths(state, action: PayloadAction<string[]>) {
+      const needToSelectNodePaths = action.payload;
+      state.needToSelectNodePaths = needToSelectNodePaths;
     },
 
     focusNodeTreeNode(state, action: PayloadAction<TNodeUid>) {
@@ -137,6 +144,8 @@ const nodeTreeSlice = createSlice({
 export const {
   setNodeTree,
   setValidNodeTree,
+
+  setNeedToSelectNodePaths,
 
   focusNodeTreeNode,
   setExpandedNodeTreeNodes,

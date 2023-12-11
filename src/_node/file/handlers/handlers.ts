@@ -3,12 +3,7 @@ import * as parse5 from "parse5";
 import { RainbowAppName } from "@_constants/global";
 import { RootNodeUid } from "@_constants/main";
 
-import {
-  TFileNodeData,
-  TFileNodeTreeData,
-  TFileParserResponse,
-  TNodeUid,
-} from "../../";
+import { TFileParserResponse, TNodeUid } from "../../";
 import {
   THtmlDomNode,
   THtmlNode,

@@ -3,6 +3,7 @@ import { useContext, useEffect, useRef } from "react";
 import morphdom from "morphdom";
 import { useDispatch } from "react-redux";
 
+import { markSelectedElements } from "@_components/main/stageView/iFrame/helpers";
 import { LogAllow } from "@_constants/global";
 import {
   parseFile,
@@ -10,7 +11,10 @@ import {
   StageNodeIdAttr,
   writeFile,
 } from "@_node/file";
+import { getNodeUidsFromPaths } from "@_node/helpers";
+import { TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
+import { setCurrentCommand } from "@_redux/main/cmdk";
 import {
   setDoingFileAction,
   setFileTreeNodes,
@@ -22,6 +26,7 @@ import {
   focusNodeTreeNode,
   selectNodeTreeNodes,
   setExpandedNodeTreeNodes,
+  setNeedToSelectNodeUids,
   setNodeTree,
   setSelectedNodeUids,
   setValidNodeTree,
@@ -36,7 +41,6 @@ import {
   getValidNodeTree,
   markChangedFolders,
 } from "../helpers";
-import { setCurrentCommand } from "@_redux/main/cmdk";
 
 export const useNodeTreeEvent = () => {
   const dispatch = useDispatch();
@@ -52,11 +56,13 @@ export const useNodeTreeEvent = () => {
     selectedNodeUids,
 
     validNodeTree,
+    needToSelectNodePaths,
     nExpandedItems,
 
     syncConfigs,
   } = useAppState();
-  const { addRunningActions, removeRunningActions } = useContext(MainContext);
+  const { addRunningActions, removeRunningActions, iframeRefRef } =
+    useContext(MainContext);
 
   const isSelectedNodeUidsChanged = useRef(false);
   const isCurrentFileContentChanged = useRef(false);
@@ -124,49 +130,6 @@ export const useNodeTreeEvent = () => {
     // ---
     // code-view is already synced
     // ---
-
-    // sync node-tree
-    dispatch(setNodeTree(nodeTree));
-    const _validNodeTree = getValidNodeTree(nodeTree);
-    dispatch(setValidNodeTree(_validNodeTree));
-
-    const uid = getNodeUidToBeSelectedAtFirst(_validNodeTree);
-    if (initialFileUidToOpen !== "" && fileTree[initialFileUidToOpen]) {
-      LogAllow && console.log("it's a new project");
-      dispatch(setInitialFileUidToOpen(""));
-      dispatch(setSelectedNodeUids([uid]));
-      dispatch(
-        setExpandedNodeTreeNodes(
-          getNeedToExpandNodeUids(_validNodeTree, [uid]),
-        ),
-      );
-    } else if (prevFileUid !== currentFileUid) {
-      LogAllow && console.log("it's a new file");
-      dispatch(setSelectedNodeUids([uid]));
-      dispatch(
-        setExpandedNodeTreeNodes(
-          getNeedToExpandNodeUids(_validNodeTree, [uid]),
-        ),
-      );
-    } else {
-      LogAllow && console.log("it's a rnbw-change");
-      if (isSelectedNodeUidsChanged.current) {
-        const validExpandedItems = nExpandedItems.filter(
-          (uid) =>
-            _validNodeTree[uid] && _validNodeTree[uid].isEntity === false,
-        );
-        const needToExpandItems = getNeedToExpandNodeUids(
-          _validNodeTree,
-          selectedNodeUids,
-        );
-        dispatch(
-          setExpandedNodeTreeNodes([
-            ...validExpandedItems,
-            ...needToExpandItems,
-          ]),
-        );
-      }
-    }
 
     // sync stage-view
     if (prevFileUid !== currentFileUid) {
@@ -254,6 +217,57 @@ export const useNodeTreeEvent = () => {
             },
           });
         }
+      }
+    }
+
+    // sync node-tree
+    dispatch(setNodeTree(nodeTree));
+    const _validNodeTree = getValidNodeTree(nodeTree);
+    dispatch(setValidNodeTree(_validNodeTree));
+
+    const uid = getNodeUidToBeSelectedAtFirst(_validNodeTree);
+    if (initialFileUidToOpen !== "" && fileTree[initialFileUidToOpen]) {
+      LogAllow && console.log("it's a new project");
+      dispatch(setInitialFileUidToOpen(""));
+      dispatch(setSelectedNodeUids([uid]));
+      dispatch(
+        setExpandedNodeTreeNodes(
+          getNeedToExpandNodeUids(_validNodeTree, [uid]),
+        ),
+      );
+    } else if (prevFileUid !== currentFileUid) {
+      LogAllow && console.log("it's a new file");
+      dispatch(setSelectedNodeUids([uid]));
+      dispatch(
+        setExpandedNodeTreeNodes(
+          getNeedToExpandNodeUids(_validNodeTree, [uid]),
+        ),
+      );
+    } else {
+      LogAllow && console.log("it's a rnbw-change");
+      const validExpandedItems = nExpandedItems.filter(
+        (uid) => _validNodeTree[uid] && _validNodeTree[uid].isEntity === false,
+      );
+      const needToExpandItems: TNodeUid[] = isSelectedNodeUidsChanged.current
+        ? getNeedToExpandNodeUids(_validNodeTree, selectedNodeUids)
+        : [];
+      dispatch(
+        setExpandedNodeTreeNodes([...validExpandedItems, ...needToExpandItems]),
+      );
+
+      if (!isSelectedNodeUidsChanged.current) {
+        // this means we called `callNodeApi` and we need to select predicted `needToSelectNodeUids`
+        // in the case, `callNodeApi -> setCurrentFileContent` and `setNeedToSelectNodeUids` dispatch actions are considered as an one event in the node-event-history.
+        const needToSelectNodeUids = getNodeUidsFromPaths(
+          _validNodeTree,
+          needToSelectNodePaths,
+        );
+        dispatch(setNeedToSelectNodeUids(needToSelectNodeUids));
+
+        // remark selected elements on stage-view
+        // it is removed through dom-diff
+        // this part is for when the selectedNodeUids is not changed cuz of the same code-format
+        markSelectedElements(iframeRefRef.current, needToSelectNodeUids);
       }
     }
 

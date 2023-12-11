@@ -1,14 +1,7 @@
-import { RootNodeUid } from "@_constants/main";
 import { TFileNode, TFileNodeData } from "@_node/file";
 import { THtmlNodeData } from "@_node/node";
-import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
+import { TNode, TNodeTreeData } from "@_node/types";
 import { TProject, TWorkspace } from "@_redux/main/fileTree";
-import { setSelectedNodeUids } from "@_redux/main/nodeTree";
-import {
-  ActionCreatorWithPayload,
-  AnyAction,
-  Dispatch,
-} from "@reduxjs/toolkit";
 
 export const isHomeIcon = (node: TNode) =>
   node.data.type == "html" &&

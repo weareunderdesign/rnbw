@@ -7,6 +7,7 @@ import React, {
 } from "react";
 
 import cx from "classnames";
+import { debounce } from "lodash";
 import { DraggingPositionItem } from "react-complex-tree";
 import { useDispatch } from "react-redux";
 
@@ -15,10 +16,12 @@ import { TreeViewData } from "@_components/common/treeView/types";
 import { AddFileActionPrefix, RootNodeUid, ShortDelay } from "@_constants/main";
 import { _path, getNormalizedPath, TFileNodeData } from "@_node/file";
 import { TNode, TNodeUid } from "@_node/types";
+import { scrollToElement } from "@_pages/main/helper";
 import { MainContext } from "@_redux/main";
 import { setHoveredFileUid } from "@_redux/main/fileTree";
 import { FileTree_Event_ClearActionType } from "@_redux/main/fileTree/event";
 import { setActivePanel, setDidRedo, setDidUndo } from "@_redux/main/processor";
+import { useAppState } from "@_redux/useAppState";
 import { addClass, generateQuerySelector, removeClass } from "@_services/main";
 import { TFilesReference } from "@_types/main";
 
@@ -31,9 +34,6 @@ import {
   useTemporaryNodes,
 } from "./hooks";
 import { Container, ItemArrow } from "./workSpaceTreeComponents";
-import { useAppState } from "@_redux/useAppState";
-import { debounce } from "lodash";
-import { scrollToElement } from "@_pages/main/helper";
 
 const AutoExpandDelay = 1 * 1000;
 export default function WorkspaceTreeView() {

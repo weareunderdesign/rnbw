@@ -1,10 +1,10 @@
 import { useContext, useEffect } from "react";
 
+import { isAddNodeAction, isRenameNodeAction } from "@_node/helpers";
 import { MainContext } from "@_redux/main";
+import { useAppState } from "@_redux/useAppState";
 
 import { useNodeActionsHandlers } from "./useNodeActionsHandlers";
-import { useAppState } from "@_redux/useAppState";
-import { isAddNodeAction, isRenameNodeAction } from "@_node/helpers";
 
 export const useCmdk = () => {
   const { activePanel, currentCommand } = useAppState();

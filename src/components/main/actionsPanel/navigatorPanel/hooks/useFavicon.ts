@@ -4,9 +4,9 @@ import { useDispatch } from "react-redux";
 
 import { RootNodeUid } from "@_constants/main";
 import { setWorkspace } from "@_redux/main/fileTree";
+import { useAppState } from "@_redux/useAppState";
 
 import { setWorkspaceFavicon } from "../helpers/";
-import { useAppState } from "@_redux/useAppState";
 
 export const useFavicon = (
   setFaviconFallback: React.Dispatch<React.SetStateAction<boolean>>,

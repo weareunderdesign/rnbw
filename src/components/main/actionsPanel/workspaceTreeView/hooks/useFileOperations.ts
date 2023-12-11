@@ -3,6 +3,7 @@ import { useCallback, useContext } from "react";
 import { TFileNodeData } from "@_node/file";
 import { TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
+import { useAppState } from "@_redux/useAppState";
 import { verifyFileHandlerPermission } from "@_services/main";
 import { TFileNodeType } from "@_types/main";
 
@@ -13,7 +14,6 @@ import {
 } from "../helpers";
 import { useInvalidNodes } from "./useInvalidNodes";
 import { useTemporaryNodes } from "./useTemporaryNodes";
-import { useAppState } from "@_redux/useAppState";
 
 export const useFileOperations = () => {
   const { project, fileTree } = useAppState();

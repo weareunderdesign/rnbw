@@ -10,11 +10,11 @@ import {
   updateFileTreeViewState,
 } from "@_redux/main/fileTree";
 import { setFileAction, TFileAction } from "@_redux/main/fileTree/event";
+import { useAppState } from "@_redux/useAppState";
 import { verifyFileHandlerPermission } from "@_services/main";
 
 import { useInvalidNodes } from "../hooks";
 import { moveActions } from "./moveActions";
-import { useAppState } from "@_redux/useAppState";
 
 export const renameNode = async (
   ext: string,

@@ -1,3 +1,8 @@
+import { Dispatch } from "react";
+
+import { RootNodeUid } from "@_constants/main";
+import { _path } from "@_node/file";
+import { TNodeUid } from "@_node/types";
 import {
   clearFileTreeViewState,
   setCurrentFileUid,
@@ -19,12 +24,7 @@ import {
 } from "@_redux/main/nodeTree/event";
 import { setIframeSrc } from "@_redux/main/stageView";
 import { TCmdkReferenceData, TFilesReference } from "@_types/main";
-import { Dispatch } from "react";
 import { AnyAction } from "@reduxjs/toolkit";
-import { RootNodeUid, ShortDelay } from "@_constants/main";
-
-import { _path } from "@_node/file";
-import { TNodeUid } from "@_node/types";
 
 export const addDefaultCmdkActions = (
   cmdkReferenceData: TCmdkReferenceData,

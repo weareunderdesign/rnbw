@@ -3,12 +3,13 @@ import { useCallback, useContext } from "react";
 import { useDispatch } from "react-redux";
 
 import { LogAllow } from "@_constants/global";
+import { TNodeTreeData, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { setCurrentCommand } from "@_redux/main/cmdk";
+import { useAppState } from "@_redux/useAppState";
 import { getCommandKey } from "@_services/global";
 import { TCmdkKeyMap } from "@_types/main";
-import { useAppState } from "@_redux/useAppState";
-import { TNodeTreeData, TNodeUid } from "@_node/types";
+
 import { editHtmlContent } from "../helpers";
 
 interface IUseCmdkProps {
@@ -114,6 +115,7 @@ export const useCmdk = ({
               console.log("action to be run by cmdk: ", action);
 
             editHtmlContent({
+              dispatch,
               iframeRef: iframeRefRef.current,
               nodeTree: nodeTreeRef.current,
               contentEditableUid,

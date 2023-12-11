@@ -2,13 +2,13 @@ import { useContext } from "react";
 
 import { DraggingPosition, TreeItem, TreeItemIndex } from "react-complex-tree";
 
+import { getValidNodeUids } from "@_node/helpers";
 import { TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
-
-import { useNodeViewState } from "./useNodeViewState";
-import { useNodeActionsHandlers } from "./useNodeActionsHandlers";
 import { useAppState } from "@_redux/useAppState";
-import { getValidNodeUids } from "@_node/helpers";
+
+import { useNodeActionsHandlers } from "./useNodeActionsHandlers";
+import { useNodeViewState } from "./useNodeViewState";
 
 export const useNodeTreeCallback = (
   focusItemValue: TNodeUid | null,

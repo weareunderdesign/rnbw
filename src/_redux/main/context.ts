@@ -21,6 +21,9 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   monacoEditorRef: { current: null },
   setMonacoEditorRef: () => {},
 
+  iframeRefRef: { current: null },
+  setIframeRefRef: () => {},
+
   // code view
   isContentProgrammaticallyChanged: {
     current: false,

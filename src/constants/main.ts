@@ -29,6 +29,7 @@ export const RecentProjectCount = 10;
 
 export const ShortDelay = 50;
 
+export const NodePathSplitter: string = "?";
+
 // ----------------------
-export const NodeUidSplitter: string = "?";
 export const TmpNodeUid = "tmp:node:uid";

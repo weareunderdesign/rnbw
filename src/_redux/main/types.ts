@@ -1,16 +1,16 @@
+import { MutableRefObject } from "react";
+
 import { editor } from "monaco-editor";
 
 import { TFileHandlerCollection } from "@_node/file";
 import { TNodeUid } from "@_node/types";
 import {
   TCmdkReferenceData,
-  TCodeChange,
   TFilesReferenceData,
   THtmlReferenceData,
 } from "@_types/main";
 
 import { TProjectContext } from "./fileTree";
-import { StageViewSyncConfigs } from "./stageView";
 
 export type TEventHistoryInfo = {
   future: number;
@@ -53,6 +53,9 @@ export type TMainContext = {
   setMonacoEditorRef: (
     editorInstance: editor.IStandaloneCodeEditor | null,
   ) => void;
+
+  iframeRefRef: MutableRefObject<HTMLIFrameElement | null>;
+  setIframeRefRef: (iframeRef: HTMLIFrameElement | null) => void;
 
   // code view
   isContentProgrammaticallyChanged: React.RefObject<boolean>;

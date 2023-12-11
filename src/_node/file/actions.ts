@@ -1,5 +1,6 @@
 import { LogAllow } from "@_constants/global";
-import { TFileApiPayload, TNodeApiPayload } from "..";
+
+import { TFileApiPayload } from "../";
 
 const add = () => {};
 const remove = () => {};
