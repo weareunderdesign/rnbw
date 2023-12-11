@@ -6,6 +6,7 @@ import { useDispatch } from "react-redux";
 import { RednerableFileTypes, RootNodeUid, TmpNodeUid } from "@_constants/main";
 import {
   createDirectory,
+  loadLocalProject,
   TFileNodeData,
   triggerFileChangeAlert,
   writeFile,
@@ -20,11 +21,7 @@ import {
   setPrevRenderableFileUid,
 } from "@_redux/main/fileTree";
 import { setFileAction, TFileAction } from "@_redux/main/fileTree/event";
-import { clearNodeTreeViewState } from "@_redux/main/nodeTree";
-import {
-  NodeTree_Event_ClearActionType,
-  setCurrentFileContent,
-} from "@_redux/main/nodeTree/event";
+import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
 import {
   setNavigatorDropdownType,
   setShowCodeView,
@@ -63,6 +60,7 @@ export const useNodeActionsHandler = (
     removeRunningActions,
     fileHandlers,
     htmlReferenceData,
+    currentProjectFileHandle,
   } = useContext(MainContext);
 
   const { removeInvalidNodes, setInvalidNodes, invalidNodes } =
@@ -320,6 +318,13 @@ export const useNodeActionsHandler = (
     }
 
     removeInvalidNodes(...uids);
+    const { _fileTree } = await loadLocalProject(
+      currentProjectFileHandle as FileSystemDirectoryHandle,
+      osType,
+      true,
+      fileTree,
+    );
+    dispatch(setFileTree(_fileTree));
     removeRunningActions(["fileTreeView-delete"]);
   }, [
     addRunningActions,
@@ -331,6 +336,7 @@ export const useNodeActionsHandler = (
     project.context,
     fileTree,
     fileHandlers,
+    currentProjectFileHandle,
     currentFileUid,
   ]);
 
