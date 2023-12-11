@@ -115,6 +115,7 @@ export const editHtmlContent = ({
     );
   if (contentEditableElement) {
     contentEditableElement.setAttribute("contenteditable", "false");
+    const content = contentEditableElement.textContent;
 
     setIsContentProgrammaticallyChanged(true);
     callNodeApi(
@@ -123,7 +124,7 @@ export const editHtmlContent = ({
         action: "text-edit",
         nodeTree,
         targetUid: contentEditableUid,
-        content: contentEditableElement.innerHTML,
+        content: content ? content : "",
         codeViewInstanceModel,
       },
       () => {
