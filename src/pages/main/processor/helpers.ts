@@ -1,3 +1,5 @@
+import { Dispatch } from "react";
+
 import {
   NodePathSplitter,
   RootNodeUid,
@@ -13,8 +15,7 @@ import {
 import { getNodeChildIndex, getSubNodeUidsByBfs } from "@_node/helpers";
 import { THtmlNodeData } from "@_node/node";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
-import { TProject, setFileTreeNodes } from "@_redux/main/fileTree";
-import { Dispatch } from "react";
+import { setFileTreeNodes, TProject } from "@_redux/main/fileTree";
 import { AnyAction } from "@reduxjs/toolkit";
 
 export const saveFileContent = async (

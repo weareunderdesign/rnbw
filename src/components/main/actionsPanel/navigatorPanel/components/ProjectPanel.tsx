@@ -1,9 +1,9 @@
 import React, { FC } from "react";
 
 import { SVGIconI } from "@_components/common";
+import { useAppState } from "@_redux/useAppState";
 
 import { useNavigatorPanelHandlers } from "../hooks";
-import { useAppState } from "@_redux/useAppState";
 
 export const ProjectPanel: FC<{ unsavedProject: boolean }> = ({
   unsavedProject,

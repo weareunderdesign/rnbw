@@ -13,12 +13,12 @@ import { RootNodeUid } from "@_constants/main";
 import { TFileNodeData, TNodeUid } from "@_node/index";
 import { MainContext } from "@_redux/main";
 import { setSelectedNodeUids } from "@_redux/main/nodeTree";
+import { setActivePanel } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 import { Editor, loader } from "@monaco-editor/react";
 
 import { useCmdk, useEditor } from "./hooks";
 import { CodeViewProps } from "./types";
-import { setActivePanel } from "@_redux/main/processor";
 
 loader.config({ monaco });
 

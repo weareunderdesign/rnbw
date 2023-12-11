@@ -1,4 +1,4 @@
-import { TFileNode, TFileNodeData, TFileNodeTreeData } from "@_node/index";
+import { TFileNode, TFileNodeTreeData } from "@_node/index";
 import { TNodeUid } from "@_node/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 

@@ -1,4 +1,4 @@
-import { Context, createContext, useRef } from "react";
+import { Context, createContext } from "react";
 
 import { TMainContext } from "./types";
 

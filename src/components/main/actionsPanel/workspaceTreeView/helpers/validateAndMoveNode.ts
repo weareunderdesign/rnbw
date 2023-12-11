@@ -3,12 +3,12 @@ import { useContext } from "react";
 import { TFileNodeData } from "@_node/file";
 import { TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
+import { useAppState } from "@_redux/useAppState";
 import { verifyFileHandlerPermission } from "@_services/main";
 
 import { useInvalidNodes } from "../hooks";
 import { generateNewNameMoveNode } from "./generateNewNameMoveNode";
 import { moveActions } from "./moveActions";
-import { useAppState } from "@_redux/useAppState";
 
 export const validateAndMoveNode = async (
   uid: string,

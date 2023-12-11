@@ -1,13 +1,16 @@
+import { Dispatch } from "react";
+
+import { editor } from "monaco-editor";
+
 import { TOsType } from "@_redux/global";
+import { AnyAction } from "@reduxjs/toolkit";
+
 import {
   TNodeActionType,
   TNodeReferenceData,
   TNodeTreeData,
   TNodeUid,
-} from "..";
-import { editor } from "monaco-editor";
-import { Dispatch } from "react";
-import { AnyAction } from "@reduxjs/toolkit";
+} from "../";
 
 export type TNodeApiPayloadBase = {
   dispatch: Dispatch<AnyAction>;

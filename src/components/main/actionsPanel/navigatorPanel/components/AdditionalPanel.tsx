@@ -4,10 +4,10 @@ import cx from "classnames";
 
 import { SVGIcon } from "@_components/common";
 import { TProject } from "@_redux/main/fileTree";
+import { useAppState } from "@_redux/useAppState";
 
 import { isSelected } from "../helpers";
 import { useNavigatorPanelHandlers } from "../hooks";
-import { useAppState } from "@_redux/useAppState";
 
 interface AdditionalPanelProps {
   navigatorPanel: HTMLDivElement | null;

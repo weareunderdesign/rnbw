@@ -1,5 +1,7 @@
 import JSZip from "jszip";
 
+import { TOsType } from "@_redux/global";
+
 import {
   TBasicNodeData,
   TNode,
@@ -7,7 +9,6 @@ import {
   TNodeTreeData,
   TNodeUid,
 } from "../";
-import { TOsType } from "@_redux/global";
 
 export type TFileNode = TNode & {
   data: TFileNodeData;

@@ -3,10 +3,10 @@ import React, { useContext, useMemo } from "react";
 import { SVGIconI } from "@_components/common";
 import { RootNodeUid } from "@_constants/main";
 import { MainContext } from "@_redux/main";
+import { useAppState } from "@_redux/useAppState";
 
 import { getFileExtension, getFileNameFromPath, isHomeIcon } from "../helpers";
 import { useNavigatorPanelHandlers } from "../hooks";
-import { useAppState } from "@_redux/useAppState";
 
 export const DefaultPanel = () => {
   const { project, fileTree, currentFileUid } = useAppState();

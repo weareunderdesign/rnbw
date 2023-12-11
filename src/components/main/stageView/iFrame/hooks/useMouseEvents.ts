@@ -1,21 +1,24 @@
 import { useCallback, useContext } from "react";
+
+import { debounce } from "lodash";
 import { useDispatch } from "react-redux";
+
+import { LogAllow } from "@_constants/global";
+import { ShortDelay } from "@_constants/main";
 import { StageNodeIdAttr } from "@_node/file";
 import { getValidNodeUids } from "@_node/helpers";
+import { THtmlNodeData } from "@_node/node";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
+import { MainContext } from "@_redux/main";
 import { setHoveredNodeUid } from "@_redux/main/nodeTree";
 import { setSelectedNodeUids } from "@_redux/main/nodeTree/event";
+import { setActivePanel } from "@_redux/main/processor";
+
 import {
   editHtmlContent,
   getValidElementWithUid,
   selectAllText,
 } from "../helpers";
-import { THtmlNodeData } from "@_node/node";
-import { setActivePanel } from "@_redux/main/processor";
-import { MainContext } from "@_redux/main";
-import { LogAllow } from "@_constants/global";
-import { ShortDelay } from "@_constants/main";
-import { debounce } from "lodash";
 
 interface IUseMouseEventsProps {
   iframeRefRef: React.MutableRefObject<HTMLIFrameElement | null>;

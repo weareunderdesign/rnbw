@@ -3,6 +3,7 @@ import { useContext, useEffect, useRef } from "react";
 import morphdom from "morphdom";
 import { useDispatch } from "react-redux";
 
+import { markSelectedElements } from "@_components/main/stageView/iFrame/helpers";
 import { LogAllow } from "@_constants/global";
 import {
   parseFile,
@@ -10,7 +11,10 @@ import {
   StageNodeIdAttr,
   writeFile,
 } from "@_node/file";
+import { getNodeUidsFromPaths } from "@_node/helpers";
+import { TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
+import { setCurrentCommand } from "@_redux/main/cmdk";
 import {
   setDoingFileAction,
   setFileTreeNodes,
@@ -37,10 +41,6 @@ import {
   getValidNodeTree,
   markChangedFolders,
 } from "../helpers";
-import { setCurrentCommand } from "@_redux/main/cmdk";
-import { getNodeUidsFromPaths } from "@_node/helpers";
-import { TNodeUid } from "@_node/types";
-import { markSelectedElements } from "@_components/main/stageView/iFrame/helpers";
 
 export const useNodeTreeEvent = () => {
   const dispatch = useDispatch();

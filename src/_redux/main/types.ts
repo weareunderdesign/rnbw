@@ -1,17 +1,16 @@
+import { MutableRefObject } from "react";
+
 import { editor } from "monaco-editor";
 
 import { TFileHandlerCollection } from "@_node/file";
 import { TNodeUid } from "@_node/types";
 import {
   TCmdkReferenceData,
-  TCodeChange,
   TFilesReferenceData,
   THtmlReferenceData,
 } from "@_types/main";
 
 import { TProjectContext } from "./fileTree";
-import { StageViewSyncConfigs } from "./stageView";
-import { MutableRefObject } from "react";
 
 export type TEventHistoryInfo = {
   future: number;

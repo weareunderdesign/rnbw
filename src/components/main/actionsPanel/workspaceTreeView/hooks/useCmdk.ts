@@ -4,11 +4,11 @@ import { useDispatch } from "react-redux";
 
 import { AddFileActionPrefix } from "@_constants/main";
 import { setClipboardData } from "@_redux/main/processor";
+import { useAppState } from "@_redux/useAppState";
 import { TFileNodeType } from "@_types/main";
 
 import { useInvalidNodes } from "./useInvalidNodes";
 import { useNodeActionsHandler } from "./useNodeActionsHandler";
-import { useAppState } from "@_redux/useAppState";
 
 export const useCmdk = (openFileUid: React.MutableRefObject<string>) => {
   const dispatch = useDispatch();

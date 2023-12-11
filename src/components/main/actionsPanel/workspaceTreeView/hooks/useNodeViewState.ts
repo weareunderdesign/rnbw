@@ -11,9 +11,9 @@ import {
   focusFileTreeNode,
   selectFileTreeNodes,
 } from "@_redux/main/fileTree";
+import { useAppState } from "@_redux/useAppState";
 
 import { useInvalidNodes } from "./";
-import { useAppState } from "@_redux/useAppState";
 
 export const useNodeViewState = () => {
   const dispatch = useDispatch();

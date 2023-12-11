@@ -1,7 +1,9 @@
-import { RootNodeUid } from "@_constants/main";
+import {
+  AddNodeActionPrefix,
+  RenameNodeActionPrefix,
+  RootNodeUid,
+} from "@_constants/main";
 import { THtmlReferenceData } from "@_types/main";
-
-import { AddNodeActionPrefix, RenameNodeActionPrefix } from "@_constants/main";
 
 import { THtmlNodeData } from "./node";
 import {

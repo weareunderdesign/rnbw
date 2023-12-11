@@ -1,7 +1,7 @@
 import undoable from "redux-undo";
 
 import { TNodeUid } from "@_node/types";
-import { createSlice, current, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import {
   NodeTree_Event_ClearActionType,

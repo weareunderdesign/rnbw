@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 
 import LoadingBar from "react-top-loading-bar";
 
-import { LoaderProps } from "./types";
 import { useAppState } from "@_redux/useAppState";
+
+import { LoaderProps } from "./types";
 
 export const Loader = ({ show }: LoaderProps) => {
   const { theme } = useAppState();

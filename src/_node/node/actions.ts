@@ -1,27 +1,29 @@
-import { editor, Range } from "monaco-editor";
-import {
-  getNodeChildIndex,
-  TNodeApiPayload,
-  TNodeReferenceData,
-  TNodeTreeData,
-  TNodeUid,
-} from "..";
 import { html_beautify } from "js-beautify";
+import { editor, Range } from "monaco-editor";
+
 import {
   sortUidsByMaxEndIndex,
   sortUidsByMinStartIndex,
 } from "@_components/main/actionsPanel/nodeTreeView/helpers";
+import { LogAllow } from "@_constants/global";
 import {
   AddNodeActionPrefix,
   DefaultTabSize,
   NodePathSplitter,
   RenameNodeActionPrefix,
 } from "@_constants/main";
-import { THtmlReferenceData } from "@_types/main";
-import { LogAllow } from "@_constants/global";
-import { copyCode, pasteCode, replaceContent } from "./helpers";
 import { getValidNodeTree } from "@_pages/main/processor/helpers";
 import { setNeedToSelectNodePaths } from "@_redux/main/nodeTree";
+import { THtmlReferenceData } from "@_types/main";
+
+import {
+  getNodeChildIndex,
+  TNodeApiPayload,
+  TNodeReferenceData,
+  TNodeTreeData,
+  TNodeUid,
+} from "../";
+import { copyCode, pasteCode, replaceContent } from "./helpers";
 
 const add = ({
   actionName,

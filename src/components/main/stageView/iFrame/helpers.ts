@@ -1,11 +1,12 @@
+import { editor } from "monaco-editor";
+
 import {
+  callNodeApi,
   StageNodeIdAttr,
   TNodeTreeData,
   TNodeUid,
-  callNodeApi,
 } from "@_node/index";
 import { AnyAction, Dispatch } from "@reduxjs/toolkit";
-import { editor } from "monaco-editor";
 
 export const getValidElementWithUid = (
   ele: HTMLElement,

@@ -5,15 +5,12 @@ import { useDispatch } from "react-redux";
 import { getValidNodeUids } from "@_node/helpers";
 import { TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
-import { selectFileTreeNodes, setCurrentFileUid } from "@_redux/main/fileTree";
 import {
   collapseNodeTreeNodes,
   expandNodeTreeNodes,
-  setCurrentFileContent,
   setSelectedNodeUids,
 } from "@_redux/main/nodeTree";
 import { useAppState } from "@_redux/useAppState";
-import { TFileNodeData } from "@_node/index";
 
 export function useNodeViewState() {
   const dispatch = useDispatch();
