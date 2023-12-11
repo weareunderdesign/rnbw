@@ -1,7 +1,7 @@
 import undoable from "redux-undo";
 
 import { TNodeUid } from "@_node/types";
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, current, PayloadAction } from "@reduxjs/toolkit";
 
 import {
   NodeTree_Event_ClearActionType,
@@ -47,11 +47,12 @@ export const NodeEventReducer = undoable(nodeEventSlice.reducer, {
   jumpToPastType: NodeTree_Event_JumpToPastActionType,
 
   groupBy: (action, currentState, previousHistory) => {
-    if (
-      action.type === "nodeEvent/setCurrentFileContent" ||
-      action.type === "nodeEvent/setNeedToSelectNodeUids"
-    ) {
-      return "node-action";
+    if (previousHistory.index) {
+      if (action.type === "nodeEvent/setCurrentFileContent") {
+        return `node-action-${previousHistory.index}`;
+      } else if (action.type === "nodeEvent/setNeedToSelectNodeUids") {
+        return `node-action-${previousHistory.index - 1}`;
+      }
     }
     return null;
   },
