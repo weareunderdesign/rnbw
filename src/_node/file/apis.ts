@@ -40,7 +40,7 @@ export const initIDBProject = async (projectPath: string): Promise<void> => {
   return new Promise<void>(async (resolve, reject) => {
     // remove original
     try {
-      await removeIDBDirectory(projectPath);
+      await removeIDBDirectoryOrFile(projectPath);
     } catch (err) {
       LogAllow && console.error("error while remove IDB project", err);
     }
@@ -132,7 +132,7 @@ export const loadIDBProject = async (
             const c_uid = _path.join(p_uid, entry) as string;
             const c_path = _path.join(p_path, entry) as string;
 
-            const stats = await getIDBStat(c_path);
+            const stats = await getIDBDirectoryOrFileStat(c_path);
             const c_kind = stats.type === "DIRECTORY" ? "directory" : "file";
 
             const nameArr = entry.split(".");
@@ -408,7 +408,9 @@ export const buildNohostIDB = async (
     }
   });
 };
-export const downloadProject = async (projectPath: string): Promise<void> => {
+export const downloadIDBProject = async (
+  projectPath: string,
+): Promise<void> => {
   return new Promise<void>(async (resolve, reject) => {
     try {
       const zip = new JSZip();
@@ -434,7 +436,7 @@ export const downloadProject = async (projectPath: string): Promise<void> => {
 
             // build handler
             const c_path = _path.join(path, entry) as string;
-            const stats = await getIDBStat(c_path);
+            const stats = await getIDBDirectoryOrFileStat(c_path);
             const c_name = entry;
             const c_kind = stats.type === "DIRECTORY" ? "directory" : "file";
 
@@ -460,7 +462,7 @@ export const downloadProject = async (projectPath: string): Promise<void> => {
 
       resolve();
     } catch (err) {
-      console.error("error in downloadProject API");
+      console.error("error in downloadIDBProject API");
       reject(err);
     }
   });
@@ -490,7 +492,7 @@ export const writeIDBFile = async (
     });
   });
 };
-export const removeIDBDirectory = async (path: string): Promise<void> => {
+export const removeIDBDirectoryOrFile = async (path: string): Promise<void> => {
   return new Promise<void>((resolve, reject) => {
     _sh.rm(path, { recursive: true }, (err: any) => {
       err ? reject(err) : resolve();
@@ -504,7 +506,7 @@ export const readIDBDirectory = async (path: string): Promise<string[]> => {
     });
   });
 };
-export const getIDBStat = async (path: string): Promise<any> => {
+export const getIDBDirectoryOrFileStat = async (path: string): Promise<any> => {
   return new Promise<any>((resolve, reject) => {
     _fs.stat(path, (err: any, stats: any) => {
       err ? reject(err) : resolve(stats);

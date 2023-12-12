@@ -8,7 +8,7 @@ import { LogAllow } from "@_constants/global";
 import { DefaultProjectPath } from "@_constants/main";
 import {
   confirmFileChanges,
-  downloadProject,
+  downloadIDBProject,
   initIDBProject,
 } from "@_node/index";
 import { setTheme } from "@_redux/global";
@@ -126,7 +126,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
   const onDownload = useCallback(async () => {
     if (project.context !== "idb") return;
     try {
-      await downloadProject(DefaultProjectPath);
+      await downloadIDBProject(DefaultProjectPath);
     } catch (err) {
       LogAllow && console.log("failed to download project");
     }

@@ -332,10 +332,9 @@ export const useNodeActionsHandler = ({
     invalidNodes,
     addInvalidNodes,
     removeInvalidNodes,
-    project.context,
+    project,
     fileTree,
     fileHandlers,
-    currentFileUid,
   ]);
 
   const cb_moveNode = useCallback(

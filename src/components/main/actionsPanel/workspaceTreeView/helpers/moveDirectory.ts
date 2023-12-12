@@ -1,9 +1,9 @@
 import {
   createIDBDirectory,
-  getIDBStat,
+  getIDBDirectoryOrFileStat,
   readIDBDirectory,
   readIDBFile,
-  removeIDBDirectory,
+  removeIDBDirectoryOrFile,
   TFileNodeData,
   writeIDBFile,
 } from "@_node/file";
@@ -33,7 +33,7 @@ export const moveDirectory = async (
       entries.map(async (entry) => {
         const c_orgPath = `${orgPath}/${entry}`;
         const c_newPath = `${newPath}/${entry}`;
-        const stats = await getIDBStat(c_orgPath);
+        const stats = await getIDBDirectoryOrFileStat(c_orgPath);
         const c_kind = stats.type === "DIRECTORY" ? "directory" : "file";
         if (c_kind === "directory") {
           dirs.push({ orgPath: c_orgPath, newPath: c_newPath });
@@ -45,5 +45,5 @@ export const moveDirectory = async (
   }
 
   // handle copy(optional)
-  !copy && (await removeIDBDirectory(nodeData.path));
+  !copy && (await removeIDBDirectoryOrFile(nodeData.path));
 };
