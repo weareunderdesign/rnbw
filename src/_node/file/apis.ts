@@ -25,12 +25,14 @@ import {
   TFileNodeData,
   TFileNodeTreeData,
   TFileParserResponse,
+  TNodeTreeData,
   TNodeUid,
   TProjectLoaderResponse,
 } from "../";
 import { fileHandlers } from "./handlers/handlers";
 import { getInitialFileUidToOpen, sortFilesByASC } from "./helpers";
 import { TFileHandlerInfo, TFileHandlerInfoObj, TZipFileInfo } from "./types";
+import { FileSystemFileHandle } from "file-system-access";
 
 export const _fs = window.Filer.fs;
 export const _path = window.Filer.path;
@@ -40,7 +42,7 @@ export const initIDBProject = async (projectPath: string): Promise<void> => {
   return new Promise<void>(async (resolve, reject) => {
     // remove original
     try {
-      await removeIDBDirectoryOrFile(projectPath);
+      await _removeIDBDirectoryOrFile(projectPath);
     } catch (err) {
       LogAllow && console.error("error while remove IDB project", err);
     }
@@ -67,7 +69,7 @@ export const createIDBProject = async (projectPath: string): Promise<void> => {
       });
 
       // create project directory
-      await createIDBDirectory(projectPath);
+      await _createIDBDirectory(projectPath);
 
       // create index.html
       const indexHtmlPath = `${projectPath}/index.html`;
@@ -76,7 +78,7 @@ export const createIDBProject = async (projectPath: string): Promise<void> => {
         ? `<html>\n` + htmlElementsReferenceData["html"].Content + `\n</html>`
         : `<html><head><title>Untitled</title></head><body><div><h1>Heading 1</h1></div></body></html>`;
       const indexHtmlContent = doctype + html;
-      await writeIDBFile(indexHtmlPath, indexHtmlContent);
+      await _writeIDBFile(indexHtmlPath, indexHtmlContent);
 
       resolve();
     } catch (err) {
@@ -121,7 +123,7 @@ export const loadIDBProject = async (
         const { uid: p_uid, path: p_path } =
           dirHandlers.shift() as TFileHandlerInfo;
 
-        const entries = await readIDBDirectory(p_path);
+        const entries = await _readIDBDirectory(p_path);
         await Promise.all(
           entries.map(async (entry) => {
             // skip stage preview files & hidden files
@@ -132,7 +134,7 @@ export const loadIDBProject = async (
             const c_uid = _path.join(p_uid, entry) as string;
             const c_path = _path.join(p_path, entry) as string;
 
-            const stats = await getIDBDirectoryOrFileStat(c_path);
+            const stats = await _getIDBDirectoryOrFileStat(c_path);
             const c_kind = stats.type === "DIRECTORY" ? "directory" : "file";
 
             const nameArr = entry.split(".");
@@ -140,7 +142,7 @@ export const loadIDBProject = async (
             const c_name = nameArr.join(".");
 
             const c_content =
-              c_kind === "directory" ? undefined : await readIDBFile(c_path);
+              c_kind === "directory" ? undefined : await _readIDBFile(c_path);
 
             const c_handlerInfo: TFileHandlerInfo = {
               uid: c_uid,
@@ -387,13 +389,13 @@ export const buildNohostIDB = async (
           const { kind, path, content } = _handler;
           if (kind === "directory") {
             try {
-              await createIDBDirectory(path);
+              await _createIDBDirectory(path);
             } catch (err) {
               console.error("error in buildNohostIDB API", err);
             }
           } else {
             try {
-              await writeIDBFile(path, content as Uint8Array);
+              await _writeIDBFile(path, content as Uint8Array);
             } catch (err) {
               console.error("error in buildNohostIDB API", err);
             }
@@ -428,7 +430,7 @@ export const downloadIDBProject = async (
       while (dirHandlers.length) {
         const { path, zip } = dirHandlers.shift() as TZipFileInfo;
 
-        const entries = await readIDBDirectory(path);
+        const entries = await _readIDBDirectory(path);
         await Promise.all(
           entries.map(async (entry) => {
             // skip stage preview files
@@ -436,7 +438,7 @@ export const downloadIDBProject = async (
 
             // build handler
             const c_path = _path.join(path, entry) as string;
-            const stats = await getIDBDirectoryOrFileStat(c_path);
+            const stats = await _getIDBDirectoryOrFileStat(c_path);
             const c_name = entry;
             const c_kind = stats.type === "DIRECTORY" ? "directory" : "file";
 
@@ -444,7 +446,7 @@ export const downloadIDBProject = async (
             if (c_kind === "directory") {
               c_zip = zip?.folder(c_name);
             } else {
-              const content = await readIDBFile(c_path);
+              const content = await _readIDBFile(c_path);
               c_zip = zip?.file(c_name, content);
             }
 
@@ -468,21 +470,21 @@ export const downloadIDBProject = async (
   });
 };
 
-export const createIDBDirectory = async (path: string): Promise<void> => {
+export const _createIDBDirectory = async (path: string): Promise<void> => {
   return new Promise<void>((resolve, reject) => {
     _fs.mkdir(path, (err: any) => {
       err ? reject(err) : resolve();
     });
   });
 };
-export const readIDBFile = async (path: string): Promise<Uint8Array> => {
+export const _readIDBFile = async (path: string): Promise<Uint8Array> => {
   return new Promise<Uint8Array>((resolve, reject) => {
     _fs.readFile(path, (err: any, data: Buffer) => {
       err ? reject(err) : resolve(data);
     });
   });
 };
-export const writeIDBFile = async (
+export const _writeIDBFile = async (
   path: string,
   content: Uint8Array | string,
 ): Promise<void> => {
@@ -492,21 +494,25 @@ export const writeIDBFile = async (
     });
   });
 };
-export const removeIDBDirectoryOrFile = async (path: string): Promise<void> => {
+export const _removeIDBDirectoryOrFile = async (
+  path: string,
+): Promise<void> => {
   return new Promise<void>((resolve, reject) => {
     _sh.rm(path, { recursive: true }, (err: any) => {
       err ? reject(err) : resolve();
     });
   });
 };
-export const readIDBDirectory = async (path: string): Promise<string[]> => {
+export const _readIDBDirectory = async (path: string): Promise<string[]> => {
   return new Promise<string[]>((resolve, reject) => {
     _fs.readdir(path, (err: any, files: string[]) => {
       err ? reject(err) : resolve(files);
     });
   });
 };
-export const getIDBDirectoryOrFileStat = async (path: string): Promise<any> => {
+export const _getIDBDirectoryOrFileStat = async (
+  path: string,
+): Promise<any> => {
   return new Promise<any>((resolve, reject) => {
     _fs.stat(path, (err: any, stats: any) => {
       err ? reject(err) : resolve(stats);
@@ -532,3 +538,4 @@ export const parseFile = (
     ? fileHandlers[ext](content)
     : { contentInApp: "", nodeTree: {}, htmlDom: null };
 };
+

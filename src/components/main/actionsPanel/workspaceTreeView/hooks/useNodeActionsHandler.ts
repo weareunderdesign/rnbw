@@ -5,11 +5,12 @@ import { useDispatch } from "react-redux";
 
 import { RednerableFileTypes, RootNodeUid, TmpNodeUid } from "@_constants/main";
 import {
-  createIDBDirectory,
+  _createIDBDirectory,
+  removeLocalSingleDirectoryOrFile,
   TFileNodeData,
   triggerAlert,
   triggerFileChangeAlert,
-  writeIDBFile,
+  _writeIDBFile,
 } from "@_node/file";
 import { getValidNodeUids } from "@_node/helpers";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
@@ -35,7 +36,6 @@ import {
   duplicateNode,
   generateNewName,
   renameNode,
-  validateAndDeleteNode,
   validateAndMoveNode,
 } from "../helpers";
 
@@ -112,9 +112,9 @@ export const useNodeActionsHandler = ({
         // create the directory or file with generated name
         try {
           if (ffType === "*folder") {
-            await createIDBDirectory(`${parentNodeData.path}/${newName}`);
+            await _createIDBDirectory(`${parentNodeData.path}/${newName}`);
           } else {
-            await writeIDBFile(`${parentNodeData.path}/${newName}`, "");
+            await _writeIDBFile(`${parentNodeData.path}/${newName}`, "");
           }
         } catch (err) {
           removeRunningActions(["fileTreeView-create"]);
@@ -308,14 +308,18 @@ export const useNodeActionsHandler = ({
 
     if (project.context === "local") {
       const allDone = await Promise.all(
-        uids.map((uid) => validateAndDeleteNode(uid, fileTree, fileHandlers)),
+        uids.map((uid) =>
+          removeLocalSingleDirectoryOrFile(uid, fileTree, fileHandlers),
+        ),
       ).then((results) => results.every(Boolean));
 
       if (!allDone) {
       }
     } else if (project.context === "idb") {
       const allDone = await Promise.all(
-        uids.map((uid) => validateAndDeleteNode(uid, fileTree, fileHandlers)),
+        uids.map((uid) =>
+          removeLocalSingleDirectoryOrFile(uid, fileTree, fileHandlers),
+        ),
       ).then((results) => results.every(Boolean));
 
       if (!allDone) {
