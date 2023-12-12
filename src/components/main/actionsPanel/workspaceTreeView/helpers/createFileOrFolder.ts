@@ -13,7 +13,7 @@ export const createFileOrFolder = async (
   parentUid: TNodeUid,
   name: string,
   type: TFileNodeType,
-  project: TProject,
+  project: Omit<TProject, "handler">,
   ffTree: TNodeTreeData,
   fileHandlers: TFileHandlerCollection,
 ) => {

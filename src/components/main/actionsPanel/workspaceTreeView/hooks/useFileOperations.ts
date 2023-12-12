@@ -20,9 +20,9 @@ export const useFileOperations = () => {
   const { addRunningActions, removeRunningActions, fileHandlers } =
     useContext(MainContext);
 
-  const { invalidNodes, removeInvalidNodes, setInvalidNodes } =
+  const { invalidNodes, removeInvalidNodes, addInvalidNodes } =
     useInvalidNodes();
-  const { setTemporaryNodes, removeTemporaryNodes } = useTemporaryNodes();
+  const { addTemporaryNodes, removeTemporaryNodes } = useTemporaryNodes();
 
   const { moveIDBFF, moveLocalFF } = moveActions(() => {});
 
@@ -62,7 +62,7 @@ export const useFileOperations = () => {
   const _delete = useCallback(
     async (uids: TNodeUid[]) => {
       addRunningActions(["fileTreeView-delete"]);
-      setInvalidNodes(...uids);
+      addInvalidNodes(...uids);
 
       await Promise.all(
         uids.map(async (uid) => {
@@ -86,7 +86,7 @@ export const useFileOperations = () => {
       addRunningActions,
       removeRunningActions,
       project.context,
-      setInvalidNodes,
+      addInvalidNodes,
       removeInvalidNodes,
       fileTree,
       fileHandlers,
@@ -106,8 +106,8 @@ export const useFileOperations = () => {
         const parentNodeData = parentNode.data as TFileNodeData;
 
         const newUid = `${parentNode.uid}/${newName}`;
-        setTemporaryNodes(uid);
-        setInvalidNodes(newUid);
+        addTemporaryNodes(uid);
+        addInvalidNodes(newUid);
 
         if (project.context === "local") {
           const handler = fileHandlers[uid],
@@ -134,9 +134,9 @@ export const useFileOperations = () => {
       addRunningActions,
       removeRunningActions,
       project.context,
-      setTemporaryNodes,
+      addTemporaryNodes,
       removeTemporaryNodes,
-      setInvalidNodes,
+      addInvalidNodes,
       removeInvalidNodes,
       fileTree,
       fileHandlers,
@@ -165,7 +165,7 @@ export const useFileOperations = () => {
           const newUid = `${targetUid}/${nodeData.name}`;
           _invalidNodes[uid] = true;
           _invalidNodes[newUid] = true;
-          setInvalidNodes(...Object.keys(_invalidNodes));
+          addInvalidNodes(...Object.keys(_invalidNodes));
 
           if (project.context === "local") {
             const handler = fileHandlers[uid],
@@ -196,7 +196,7 @@ export const useFileOperations = () => {
 
           delete _invalidNodes[uid];
           delete _invalidNodes[newUid];
-          setInvalidNodes(...Object.keys(_invalidNodes));
+          addInvalidNodes(...Object.keys(_invalidNodes));
         }),
       );
       removeRunningActions(["fileTreeView-move"]);
@@ -206,7 +206,7 @@ export const useFileOperations = () => {
       removeRunningActions,
       project.context,
       invalidNodes,
-      setInvalidNodes,
+      addInvalidNodes,
       fileTree,
       fileHandlers,
     ],
@@ -235,7 +235,7 @@ export const useFileOperations = () => {
           const newUid = `${targetUid}/${name}`;
           _invalidNodes[uid] = true;
           _invalidNodes[newUid] = true;
-          setInvalidNodes(...Object.keys(_invalidNodes));
+          addInvalidNodes(...Object.keys(_invalidNodes));
 
           if (project.context === "local") {
             const handler = fileHandlers[uid],
@@ -269,7 +269,7 @@ export const useFileOperations = () => {
 
           delete _invalidNodes[uid];
           delete _invalidNodes[newUid];
-          setInvalidNodes(...Object.keys(_invalidNodes));
+          addInvalidNodes(...Object.keys(_invalidNodes));
         }),
       );
       removeRunningActions(["fileTreeView-duplicate"]);
@@ -279,7 +279,7 @@ export const useFileOperations = () => {
       removeRunningActions,
       project.context,
       invalidNodes,
-      setInvalidNodes,
+      addInvalidNodes,
       fileTree,
       fileHandlers,
     ],

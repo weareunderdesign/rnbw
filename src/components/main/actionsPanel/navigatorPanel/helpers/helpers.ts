@@ -8,10 +8,11 @@ export const isHomeIcon = (node: TNode) =>
   node.data.name == "index" &&
   node.parentUid === "ROOT";
 
-export const isSelected = (_project: TProject, project: TProject) => {
-  return _project.context === project.context &&
-    _project.name === project.name &&
-    _project.handler === project.handler
+export const isSelected = (
+  _project: Omit<TProject, "handler">,
+  project: Omit<TProject, "handler">,
+) => {
+  return _project.context === project.context && _project.name === project.name
     ? "selected"
     : "";
 };
@@ -27,7 +28,7 @@ export const getFileExtension = (node: TNode) =>
 
 export const setWorkspaceFavicon = (
   validNodeTree: TNodeTreeData,
-  project: TProject,
+  project: Omit<TProject, "handler">,
   workspace: TWorkspace,
   setWorkspace: (ws: TWorkspace) => void,
 ) => {

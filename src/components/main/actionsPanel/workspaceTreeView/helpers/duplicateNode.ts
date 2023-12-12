@@ -13,7 +13,7 @@ export const duplicateNode = async (
   ffTree: TNodeTreeData,
   fileHandlers: TFileHandlerCollection,
   addMessage: (message: TToast) => void,
-  setInvalidNodes: any,
+  addInvalidNodes: any,
   invalidNodes: { [uid: string]: boolean },
 ) => {
   const { moveLocalFF } = moveActions(addMessage);
@@ -42,7 +42,7 @@ export const duplicateNode = async (
   );
 
   const newUid = `${node.parentUid}/${newName}`;
-  setInvalidNodes({ ...invalidNodes, [uid]: true, [newUid]: true });
+  addInvalidNodes({ ...invalidNodes, [uid]: true, [newUid]: true });
 
   try {
     await moveLocalFF(
@@ -58,7 +58,7 @@ export const duplicateNode = async (
 
   delete invalidNodes[uid];
   delete invalidNodes[newUid];
-  setInvalidNodes({ ...invalidNodes });
+  addInvalidNodes({ ...invalidNodes });
 
   return { uid, name: newName };
 };

@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 
 import { useDispatch } from "react-redux";
 
@@ -9,17 +9,19 @@ import { TFileNodeType } from "@_types/main";
 
 import { useInvalidNodes } from "./useInvalidNodes";
 import { useNodeActionsHandler } from "./useNodeActionsHandler";
+import { isAddFileAction } from "@_node/helpers";
 
 export const useCmdk = (openFileUid: React.MutableRefObject<string>) => {
   const dispatch = useDispatch();
-
   const {
+    activePanel,
     currentFileUid,
     fFocusedItem: focusedItem,
     fSelectedItems: selectedItems,
     clipboardData,
     fileTree,
     nodeTree,
+    currentCommand,
   } = useAppState();
 
   const { createTmpFFNode, cb_deleteNode, cb_moveNode, cb_duplicateNode } =
@@ -93,6 +95,35 @@ export const useCmdk = (openFileUid: React.MutableRefObject<string>) => {
   const onDuplicate = useCallback(() => {
     cb_duplicateNode();
   }, [cb_duplicateNode]);
+
+  useEffect(() => {
+    if (!currentCommand) return;
+    if (isAddFileAction(currentCommand.action)) {
+      onAddNode(currentCommand.action);
+      return;
+    }
+    if (activePanel !== "file") return;
+
+    switch (currentCommand.action) {
+      case "Delete":
+        onDelete();
+        break;
+      case "Cut":
+        onCut();
+        break;
+      case "Copy":
+        onCopy();
+        break;
+      case "Paste":
+        onPaste();
+        break;
+      case "Duplicate":
+        onDuplicate();
+        break;
+      default:
+        break;
+    }
+  }, [currentCommand]);
 
   return {
     onAddNode,

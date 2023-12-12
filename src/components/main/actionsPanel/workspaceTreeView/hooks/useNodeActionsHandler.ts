@@ -61,9 +61,9 @@ export const useNodeActionsHandler = (
     htmlReferenceData,
   } = useContext(MainContext);
 
-  const { removeInvalidNodes, setInvalidNodes, invalidNodes } =
+  const { invalidNodes, addInvalidNodes, removeInvalidNodes } =
     useInvalidNodes();
-  const { temporaryNodes, setTemporaryNodes, removeTemporaryNodes } =
+  const { temporaryNodes, addTemporaryNodes, removeTemporaryNodes } =
     useTemporaryNodes();
 
   const createFFNode = useCallback(
@@ -166,7 +166,7 @@ export const useNodeActionsHandler = (
       tmpTree[tmpNode.uid] = tmpNode;
       // setFFTree(tmpTree)
 
-      setInvalidNodes(tmpNode.uid);
+      addInvalidNodes(tmpNode.uid);
       await createFFNode(
         node.uid as TNodeUid,
         tmpNode.data.type,
@@ -184,7 +184,7 @@ export const useNodeActionsHandler = (
       fileTree,
       focusedItem,
       expandedItemsObj,
-      setInvalidNodes,
+      addInvalidNodes,
       createFFNode,
       removeInvalidNodes,
     ],
@@ -196,9 +196,9 @@ export const useNodeActionsHandler = (
         removeInvalidNodes(uid);
         return;
       }
-      setInvalidNodes(uid);
+      addInvalidNodes(uid);
     },
-    [invalidNodes, setInvalidNodes, removeInvalidNodes],
+    [invalidNodes, addInvalidNodes, removeInvalidNodes],
   );
   const cb_abortRenamingNode = useCallback(
     (item: TreeItem) => {
@@ -234,7 +234,7 @@ export const useNodeActionsHandler = (
       addRunningActions,
       removeRunningActions,
       project.context,
-      setInvalidNodes,
+      addInvalidNodes,
       removeInvalidNodes,
       fileTree,
       fileHandlers,
@@ -259,7 +259,7 @@ export const useNodeActionsHandler = (
           }
         }
 
-        setTemporaryNodes(_file.uid);
+        addTemporaryNodes(_file.uid);
         await _cb_renameNode(
           _file.uid,
           newName,
@@ -278,7 +278,7 @@ export const useNodeActionsHandler = (
     [
       invalidNodes,
       _cb_renameNode,
-      setTemporaryNodes,
+      addTemporaryNodes,
       removeTemporaryNodes,
       fileTree,
       fileHandlers,
@@ -296,7 +296,7 @@ export const useNodeActionsHandler = (
     if (!window.confirm(message)) return;
 
     addRunningActions(["fileTreeView-delete"]);
-    setInvalidNodes(...uids);
+    addInvalidNodes(...uids);
 
     if (project.context === "local") {
       const allDone = await Promise.all(
@@ -322,7 +322,7 @@ export const useNodeActionsHandler = (
     removeRunningActions,
     selectedItems,
     invalidNodes,
-    setInvalidNodes,
+    addInvalidNodes,
     removeInvalidNodes,
     project.context,
     fileTree,
@@ -380,7 +380,7 @@ export const useNodeActionsHandler = (
       removeRunningActions,
       project.context,
       invalidNodes,
-      setInvalidNodes,
+      addInvalidNodes,
       fileTree,
       fileHandlers,
     ],
@@ -423,7 +423,7 @@ export const useNodeActionsHandler = (
           fileTree,
           fileHandlers,
           () => {},
-          setInvalidNodes,
+          addInvalidNodes,
           invalidNodes,
         );
         if (result) {
@@ -453,7 +453,7 @@ export const useNodeActionsHandler = (
     removeRunningActions,
     project.context,
     invalidNodes,
-    setInvalidNodes,
+    addInvalidNodes,
     selectedItems,
     fileTree,
     fileHandlers,

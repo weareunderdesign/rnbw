@@ -38,10 +38,12 @@ export const _sh = new _fs.Shell();
 
 export const initIDBProject = async (projectPath: string): Promise<void> => {
   return new Promise<void>(async (resolve, reject) => {
-    // remove original project
+    // remove original
     try {
       await removeFileSystem(projectPath);
-    } catch (err) {}
+    } catch (err) {
+      LogAllow && console.error("error while remove IDB project", err);
+    }
 
     // create a new project
     try {
@@ -55,9 +57,6 @@ export const initIDBProject = async (projectPath: string): Promise<void> => {
 export const createIDBProject = async (projectPath: string): Promise<void> => {
   return new Promise<void>(async (resolve, reject) => {
     try {
-      // create root directory
-      await createDirectory(projectPath);
-
       const htmlElementsReferenceData: THtmlElementsReferenceData = {};
       htmlRefElements.map((htmlRefElement: THtmlElementsReference) => {
         const pureTag =
@@ -67,27 +66,25 @@ export const createIDBProject = async (projectPath: string): Promise<void> => {
         htmlElementsReferenceData[pureTag] = htmlRefElement;
       });
 
+      // create project directory
+      await createDirectory(projectPath);
+
       // create index.html
       const indexHtmlPath = `${projectPath}/index.html`;
-      let doctype = "<!DOCTYPE html>\n";
-      let html = htmlElementsReferenceData["html"].Content
+      const doctype = "<!DOCTYPE html>\n";
+      const html = htmlElementsReferenceData["html"].Content
         ? `<html>\n` + htmlElementsReferenceData["html"].Content + `\n</html>`
-        : "";
-
-      // test
-      html = `<head><title>Untitled</title></head><body><div><h1>Heading 1</h1></div></body>`;
-
+        : `<html><head><title>Untitled</title></head><body><div><h1>Heading 1</h1></div></body></html>`;
       const indexHtmlContent = doctype + html;
-
       await writeFile(indexHtmlPath, indexHtmlContent);
 
       resolve();
     } catch (err) {
+      LogAllow && console.error("error while create IDB project", err);
       reject(err);
     }
   });
 };
-
 export const loadIDBProject = async (
   projectPath: string,
   isReload: boolean = false,
@@ -95,7 +92,7 @@ export const loadIDBProject = async (
 ): Promise<TProjectLoaderResponse> => {
   return new Promise<TProjectLoaderResponse>(async (resolve, reject) => {
     try {
-      let deletedUidsObj: { [uid: TNodeUid]: true } = {};
+      const deletedUidsObj: { [uid: TNodeUid]: true } = {};
       if (isReload) {
         getSubNodeUidsByBfs(
           RootNodeUid,
@@ -215,12 +212,11 @@ export const loadIDBProject = async (
       resolve({
         _fileTree,
         _initialFileUidToOpen,
-
         deletedUidsObj,
         deletedUids: Object.keys(deletedUidsObj),
       });
     } catch (err) {
-      LogAllow && console.log("ERROR from loadIDBProject API", err);
+      LogAllow && console.error("error in loadIDBProject API", err);
       reject(err);
     }
   });
@@ -237,7 +233,7 @@ export const loadLocalProject = async (
       if (!(await verifyFileHandlerPermission(projectHandle)))
         throw "project handler permission error";
 
-      let deletedUidsObj: { [uid: TNodeUid]: true } = {};
+      const deletedUidsObj: { [uid: TNodeUid]: true } = {};
       if (isReload) {
         getSubNodeUidsByBfs(
           RootNodeUid,
@@ -370,15 +366,13 @@ export const loadLocalProject = async (
       resolve({
         handlerArr,
         _fileHandlers,
-
         _fileTree,
         _initialFileUidToOpen,
-
         deletedUidsObj,
         deletedUids: Object.keys(deletedUidsObj),
       });
     } catch (err) {
-      LogAllow && console.log("ERROR from loadLocalProject API", err);
+      LogAllow && console.log("error in loadLocalProject API", err);
       reject(err);
     }
   });
@@ -387,7 +381,6 @@ export const buildNohostIDB = async (
   handlerArr: TFileHandlerInfo[],
 ): Promise<void> => {
   return new Promise<void>(async (resolve, reject) => {
-    // build nohost idb
     try {
       await Promise.all(
         handlerArr.map(async (_handler) => {
@@ -396,13 +389,13 @@ export const buildNohostIDB = async (
             try {
               await createDirectory(path);
             } catch (err) {
-              console.log(err);
+              console.error("error in buildNohostIDB API", err);
             }
           } else {
             try {
               await writeFile(path, content as Uint8Array);
             } catch (err) {
-              console.log(err);
+              console.error("error in buildNohostIDB API", err);
             }
           }
         }),
@@ -410,12 +403,11 @@ export const buildNohostIDB = async (
 
       resolve();
     } catch (err) {
-      LogAllow && console.log("ERROR from buildNohostIDB API", err);
+      LogAllow && console.error("error in buildNohostIDB API", err);
       reject(err);
     }
   });
 };
-
 export const downloadProject = async (projectPath: string): Promise<void> => {
   return new Promise<void>(async (resolve, reject) => {
     try {
@@ -468,6 +460,7 @@ export const downloadProject = async (projectPath: string): Promise<void> => {
 
       resolve();
     } catch (err) {
+      console.error("error in downloadProject API");
       reject(err);
     }
   });
@@ -529,7 +522,6 @@ export const getNormalizedPath = (
   const normalizedPath = _path.normalize(path);
   return { isAbsolutePath, normalizedPath };
 };
-
 export const parseFile = (
   ext: string,
   content: string,
