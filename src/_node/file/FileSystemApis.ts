@@ -1,22 +1,4 @@
-import { Buffer } from "buffer";
-import FileSaver from "file-saver";
-import JSZip from "jszip";
-
-import { LogAllow } from "@_constants/global";
-import {
-  ParsableFileTypes,
-  RootNodeUid,
-  StagePreviewPathPrefix,
-} from "@_constants/main";
-import { TOsType } from "@_redux/global";
-// @ts-ignore
-import htmlRefElements from "@_ref/rfrncs/HTML Elements.csv";
-import { SystemDirectories } from "@_ref/SystemDirectories";
 import { verifyFileHandlerPermission } from "@_services/main";
-import {
-  THtmlElementsReference,
-  THtmlElementsReferenceData,
-} from "@_types/main";
 
 import {
   _createIDBDirectory,
@@ -25,19 +7,11 @@ import {
   _readIDBFile,
   _removeIDBDirectoryOrFile,
   _writeIDBFile,
-  getSubNodeUidsByBfs,
   TFileHandlerCollection,
-  TFileNode,
   TFileNodeData,
   TFileNodeTreeData,
-  TFileParserResponse,
-  TNodeTreeData,
   TNodeUid,
-  TProjectLoaderResponse,
 } from "../";
-import { fileHandlers } from "./handlers/handlers";
-import { getInitialFileUidToOpen, sortFilesByASC } from "./helpers";
-import { TFileHandlerInfo, TFileHandlerInfoObj, TZipFileInfo } from "./types";
 import { FileSystemFileHandle } from "file-system-access";
 
 export const _fs = window.Filer.fs;
