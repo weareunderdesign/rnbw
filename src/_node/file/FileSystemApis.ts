@@ -7,6 +7,7 @@ import {
   _readIDBFile,
   _removeIDBDirectoryOrFile,
   _writeIDBFile,
+  getFileNameAndExtensionFromFullname,
   TFileHandlerCollection,
   TFileNodeData,
   TFileNodeTreeData,
@@ -135,7 +136,7 @@ export const removeIDBSingleDirectoryOrFile = async ({
   }
 };
 
-export const _moveLocalDirectory = async (
+const _moveLocalDirectory = async (
   source: FileSystemDirectoryHandle,
   destination: FileSystemDirectoryHandle,
   parentHandler: FileSystemDirectoryHandle,
@@ -178,24 +179,16 @@ export const _moveLocalDirectory = async (
     !isCopy &&
       (await parentHandler.removeEntry(source.name, { recursive: true }));
   } catch (err) {
-    throw "Error while moving a directory.";
+    throw "Error while moving a local directory.";
   }
 };
-export const _moveLocalFile = async (
+const _moveLocalFile = async (
   handler: FileSystemHandle,
   parentHandler: FileSystemDirectoryHandle,
   targetHandler: FileSystemDirectoryHandle,
   newName: string,
   isCopy: boolean,
 ) => {
-  let exists = true;
-  try {
-    await targetHandler.getFileHandle(newName, { create: false });
-  } catch (err) {
-    exists = false;
-  }
-  if (exists) throw "File with the name already exists.";
-
   try {
     const newFile = await targetHandler.getFileHandle(newName, {
       create: true,
@@ -208,7 +201,7 @@ export const _moveLocalFile = async (
     !isCopy &&
       (await parentHandler.removeEntry(handler.name, { recursive: true }));
   } catch (err) {
-    throw "Error while moving a file.";
+    throw "Error while moving a local file.";
   }
 };
 export const moveLocalSingleDirectoryOrFile = async ({
@@ -273,7 +266,7 @@ export const moveLocalSingleDirectoryOrFile = async ({
     return false;
   }
 };
-export const _moveIDBDirectory = async (
+const _moveIDBDirectory = async (
   nodeData: TFileNodeData,
   targetNodeData: TFileNodeData,
   newName: string,
@@ -311,23 +304,15 @@ export const _moveIDBDirectory = async (
 
     !isCopy && (await _removeIDBDirectoryOrFile(nodeData.path));
   } catch (err) {
-    throw "Error while moving a directory.";
+    throw "Error while moving an idb directory.";
   }
 };
-export const _moveIDBFile = async (
+const _moveIDBFile = async (
   nodeData: TFileNodeData,
   targetNodeData: TFileNodeData,
   newName: string,
   isCopy: boolean,
 ) => {
-  let exists = true;
-  try {
-    await _getIDBDirectoryOrFileStat(_path.join(targetNodeData.path, newName));
-  } catch (err) {
-    exists = false;
-  }
-  if (exists) throw "File with the name already exists.";
-
   try {
     await _writeIDBFile(
       _path.join(targetNodeData.path, newName),
@@ -336,7 +321,7 @@ export const _moveIDBFile = async (
 
     !isCopy && (await _removeIDBDirectoryOrFile(nodeData.path));
   } catch (err) {
-    throw "Error while moving a file.";
+    throw "Error while moving an idb file.";
   }
 };
 export const moveIDBSingleDirectoryOrFile = async ({
@@ -372,15 +357,88 @@ export const moveIDBSingleDirectoryOrFile = async ({
   }
 };
 
+export const generateNewNameForLocalDirectoryOrFile = async ({
+  nodeData,
+  parentHandler,
+}: {
+  nodeData: TFileNodeData;
+  parentHandler: FileSystemDirectoryHandle;
+}): Promise<string> => {
+  let newName = nodeData.name;
+  const { baseName, ext } = getFileNameAndExtensionFromFullname(nodeData.name);
+  let exists = true;
+  let index = -1;
+  while (exists) {
+    try {
+      if (nodeData.kind === "directory") {
+        await parentHandler.getDirectoryHandle(newName, { create: false });
+      } else {
+        await parentHandler.getFileHandle(newName, { create: false });
+      }
+    } catch (err) {
+      exists = false;
+    }
+
+    if (exists) {
+      ++index;
+      newName =
+        nodeData.kind === "directory"
+          ? index === 0
+            ? `${baseName} copy`
+            : `${baseName} copy (${index})`
+          : index === 0
+          ? `${baseName} copy.${ext}`
+          : `${baseName} copy (${index}).${ext}`;
+    }
+  }
+  return newName;
+};
+export const generateNewNameForIDBDirectoryOrFile = async ({
+  nodeData,
+  targetNodeData,
+}: {
+  nodeData: TFileNodeData;
+  targetNodeData: TFileNodeData;
+}): Promise<string> => {
+  let newName = nodeData.name;
+  const { baseName, ext } = getFileNameAndExtensionFromFullname(nodeData.name);
+  let exists = true;
+  let index = -1;
+  while (exists) {
+    try {
+      await _getIDBDirectoryOrFileStat(
+        _path.join(targetNodeData.path, newName),
+      );
+    } catch (err) {
+      exists = false;
+    }
+
+    if (exists) {
+      ++index;
+      newName =
+        nodeData.kind === "directory"
+          ? index === 0
+            ? `${baseName} copy`
+            : `${baseName} copy (${index})`
+          : index === 0
+          ? `${baseName} copy.${ext}`
+          : `${baseName} copy (${index}).${ext}`;
+    }
+  }
+  return newName;
+};
+
 export const FileSystemApis = {
   local: {
     createSingleDirectoryOrFile: createLocalSingleDirectoryOrFile,
     removeSingleDirectoryOrFile: removeLocalSingleDirectoryOrFile,
     moveSingleDirectoryOrFile: moveLocalSingleDirectoryOrFile,
+    generateNewName: generateNewNameForLocalDirectoryOrFile,
   },
   idb: {
     createSingleDirectoryOrFile: createIDBSingleDirectoryOrFile,
     removeSingleDirectoryOrFile: removeIDBSingleDirectoryOrFile,
     moveSingleDirectoryOrFile: moveIDBSingleDirectoryOrFile,
+    generateNewName: generateNewNameForIDBDirectoryOrFile,
   },
 };

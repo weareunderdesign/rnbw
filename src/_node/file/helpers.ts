@@ -70,3 +70,12 @@ export const triggerFileChangeAlert = () => {
 export const confirmFileChanges = (fileTree: TFileNodeTreeData) => {
   isUnsavedProject(fileTree) && triggerFileChangeAlert();
 };
+
+export const getFileNameAndExtensionFromFullname = (
+  name: string,
+): { baseName: string; ext: string } => {
+  const nameArr = name.split(".");
+  const ext = nameArr.length > 1 ? (nameArr.pop() as string) : "";
+  const baseName = nameArr.join(".");
+  return { baseName, ext };
+};
