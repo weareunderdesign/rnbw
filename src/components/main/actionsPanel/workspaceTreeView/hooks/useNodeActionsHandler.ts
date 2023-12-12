@@ -6,7 +6,7 @@ import { useDispatch } from "react-redux";
 import { RednerableFileTypes, RootNodeUid, TmpNodeUid } from "@_constants/main";
 import {
   _createIDBDirectory,
-  removeLocalSingleDirectoryOrFile,
+  removeSingleLocalDirectoryOrFile,
   TFileNodeData,
   triggerAlert,
   triggerFileChangeAlert,
@@ -309,7 +309,7 @@ export const useNodeActionsHandler = ({
     if (project.context === "local") {
       const allDone = await Promise.all(
         uids.map((uid) =>
-          removeLocalSingleDirectoryOrFile(uid, fileTree, fileHandlers),
+          removeSingleLocalDirectoryOrFile(uid, fileTree, fileHandlers),
         ),
       ).then((results) => results.every(Boolean));
 
@@ -318,7 +318,7 @@ export const useNodeActionsHandler = ({
     } else if (project.context === "idb") {
       const allDone = await Promise.all(
         uids.map((uid) =>
-          removeLocalSingleDirectoryOrFile(uid, fileTree, fileHandlers),
+          removeSingleLocalDirectoryOrFile(uid, fileTree, fileHandlers),
         ),
       ).then((results) => results.every(Boolean));
 

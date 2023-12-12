@@ -538,4 +538,3 @@ export const parseFile = (
     ? fileHandlers[ext](content)
     : { contentInApp: "", nodeTree: {}, htmlDom: null };
 };
-

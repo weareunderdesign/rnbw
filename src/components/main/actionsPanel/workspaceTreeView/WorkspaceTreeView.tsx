@@ -154,7 +154,7 @@ export default function WorkspaceTreeView() {
           uids.push(`${targetUid}/${name}`);
         });
         _delete(uids);
-      } else if (type === "delete") {
+      } else if (type === "remove") {
       }
     } else {
       const { type, param1, param2 } = lastFileAction;
@@ -185,7 +185,7 @@ export default function WorkspaceTreeView() {
           names.push(_uid.name);
         });
         _copy(uids, names, targetUids);
-      } else if (type === "delete") {
+      } else if (type === "remove") {
       }
     }
 

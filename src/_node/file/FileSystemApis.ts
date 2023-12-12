@@ -15,12 +15,10 @@ import {
 } from "../";
 import { FileSystemFileHandle } from "file-system-access";
 
-export const _fs = window.Filer.fs;
-export const _path = window.Filer.path;
-export const _sh = new _fs.Shell();
+const _path = window.Filer.path;
 
 // true: success, false: fail
-export const createLocalSingleDirectoryOrFile = async ({
+const createLocalSingleDirectoryOrFile = async ({
   parentUid,
   name,
   kind,
@@ -50,7 +48,7 @@ export const createLocalSingleDirectoryOrFile = async ({
     return false;
   }
 };
-export const createIDBSingleDirectoryOrFile = async ({
+const createIDBSingleDirectoryOrFile = async ({
   parentUid,
   name,
   kind,
@@ -77,7 +75,7 @@ export const createIDBSingleDirectoryOrFile = async ({
   }
 };
 
-export const removeLocalSingleDirectoryOrFile = async ({
+const removeSingleLocalDirectoryOrFile = async ({
   uid,
   fileTree,
   fileHandlers,
@@ -109,7 +107,7 @@ export const removeLocalSingleDirectoryOrFile = async ({
     return false;
   }
 };
-export const removeIDBSingleDirectoryOrFile = async ({
+const removeSingleIDBDirectoryOrFile = async ({
   uid,
   fileTree,
 }: {
@@ -204,7 +202,7 @@ const _moveLocalFile = async (
     throw "Error while moving a local file.";
   }
 };
-export const moveLocalSingleDirectoryOrFile = async ({
+const moveLocalSingleDirectoryOrFile = async ({
   uid,
   targetUid,
   newName,
@@ -324,7 +322,7 @@ const _moveIDBFile = async (
     throw "Error while moving an idb file.";
   }
 };
-export const moveIDBSingleDirectoryOrFile = async ({
+const moveIDBSingleDirectoryOrFile = async ({
   uid,
   targetUid,
   newName,
@@ -357,7 +355,7 @@ export const moveIDBSingleDirectoryOrFile = async ({
   }
 };
 
-export const generateNewNameForLocalDirectoryOrFile = async ({
+const generateNewNameForLocalDirectoryOrFile = async ({
   nodeData,
   parentHandler,
 }: {
@@ -393,7 +391,7 @@ export const generateNewNameForLocalDirectoryOrFile = async ({
   }
   return newName;
 };
-export const generateNewNameForIDBDirectoryOrFile = async ({
+const generateNewNameForIDBDirectoryOrFile = async ({
   nodeData,
   targetNodeData,
 }: {
@@ -431,13 +429,13 @@ export const generateNewNameForIDBDirectoryOrFile = async ({
 export const FileSystemApis = {
   local: {
     createSingleDirectoryOrFile: createLocalSingleDirectoryOrFile,
-    removeSingleDirectoryOrFile: removeLocalSingleDirectoryOrFile,
+    removeSingleDirectoryOrFile: removeSingleLocalDirectoryOrFile,
     moveSingleDirectoryOrFile: moveLocalSingleDirectoryOrFile,
     generateNewName: generateNewNameForLocalDirectoryOrFile,
   },
   idb: {
     createSingleDirectoryOrFile: createIDBSingleDirectoryOrFile,
-    removeSingleDirectoryOrFile: removeIDBSingleDirectoryOrFile,
+    removeSingleDirectoryOrFile: removeSingleIDBDirectoryOrFile,
     moveSingleDirectoryOrFile: moveIDBSingleDirectoryOrFile,
     generateNewName: generateNewNameForIDBDirectoryOrFile,
   },

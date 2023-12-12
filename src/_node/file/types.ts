@@ -9,6 +9,7 @@ import {
   TNodeTreeData,
   TNodeUid,
 } from "../";
+import { TFileActionType, TProjectContext } from "@_redux/main/fileTree";
 
 export type TFileNode = TNode & {
   data: TFileNodeData;
@@ -69,10 +70,22 @@ export type TProjectLoaderResponse = {
   deletedUidsObj: { [uid: TNodeUid]: true };
 };
 
-export type TFileApiPayload = {
-  action: TNodeActionType;
+export type TFileApiPayloadBase = {
+  projectContext: TProjectContext;
+  action: TFileActionType;
+  fileTree: TFileNodeTreeData;
   osType?: TOsType;
 };
+export type TFileApiPayload = TFileApiPayloadBase &
+  (
+    | { projectContext: "local"; fileHandlers: TFileHandlerCollection }
+    | { projectContext: "idb"; fileHandlers?: never }
+  ) &
+  (
+    | { action: Extract<TFileActionType, "remove">; uids: TNodeUid[] }
+    | { action: Exclude<TFileActionType, "remove">; uids?: never }
+  );
+
 // --------------------
 export type TFile = {
   uid: TNodeUid;

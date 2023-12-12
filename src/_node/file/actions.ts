@@ -1,12 +1,47 @@
 import { LogAllow } from "@_constants/global";
 
-import { TFileApiPayload } from "../";
+import {
+  TFileApiPayload,
+  TFileHandlerCollection,
+  TFileNodeTreeData,
+  TNodeUid,
+} from "../";
+import { TProjectContext } from "@_redux/main/fileTree";
+import { FileSystemApis } from "./FileSystemApis";
 
-const add = () => {};
-const remove = () => {};
+const create = () => {};
+const remove = async ({
+  projectContext,
+  uids,
+  fileTree,
+  fileHandlers,
+}: {
+  projectContext: TProjectContext;
+  uids: TNodeUid[];
+  fileTree: TFileNodeTreeData;
+  fileHandlers?: TFileHandlerCollection;
+}): Promise<boolean> => {
+  return new Promise<boolean>((resolve, reject) => {
+    try {
+      let Alldone = true;
+      uids.map((uid) => {
+        const done = FileSystemApis[projectContext].removeSingleDirectoryOrFile(
+          {
+            uid,
+            fileTree,
+            fileHandlers: fileHandlers || {},
+          },
+        );
+        if (!done) Alldone = false;
+      });
+      resolve(Alldone);
+    } catch (err) {
+      reject(err);
+    }
+  });
+};
 const cut = () => {};
 const copy = () => {};
-const paste = () => {};
 const duplicate = () => {};
 const move = () => {};
 const rename = () => {};
@@ -18,23 +53,32 @@ export const doFileActions = async (
 ): Promise<void> => {
   return new Promise((resolve, reject) => {
     try {
-      const { action, osType = "Windows" } = params;
+      const {
+        projectContext,
+        action,
+        uids,
+        fileTree,
+        fileHandlers,
+        osType = "Windows",
+      } = params;
 
       switch (action) {
-        case "add":
-          add();
+        case "create":
+          create();
           break;
         case "remove":
-          remove();
+          remove({
+            projectContext,
+            uids,
+            fileTree,
+            fileHandlers,
+          });
           break;
         case "cut":
           cut();
           break;
         case "copy":
           copy();
-          break;
-        case "paste":
-          paste();
           break;
         case "duplicate":
           duplicate();

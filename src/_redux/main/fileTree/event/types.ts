@@ -9,7 +9,7 @@ export type TFileAction = {
 };
 export type TFileActionType =
   | "create"
-  | "delete"
+  | "remove"
   | "move"
   | "rename"
   | "duplicate"
