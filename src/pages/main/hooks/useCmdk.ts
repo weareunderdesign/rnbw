@@ -20,6 +20,7 @@ import {
 import {
   FileTree_Event_RedoActionType,
   FileTree_Event_UndoActionType,
+  TProjectContext,
   setDoingFileAction,
 } from "@_redux/main/fileTree";
 import {
@@ -38,10 +39,15 @@ import { getCommandKey } from "@_services/global";
 import { TCmdkKeyMap, TCmdkReferenceData } from "@_types/main";
 
 import { setSystemTheme } from "../helper";
-import { useCmdkReferenceData } from "./useCmdkReferenceData";
-import { useHandlers } from "./useHandlers";
 
-export const useCmdk = () => {
+interface IUseCmdk {
+  cmdkReferenceData: TCmdkReferenceData;
+  importProject: (
+    fsType: TProjectContext,
+    projectHandle?: FileSystemDirectoryHandle | null | undefined,
+  ) => Promise<void>;
+}
+export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
   const dispatch = useDispatch();
   const {
     osType,
@@ -63,8 +69,6 @@ export const useCmdk = () => {
     cmdkPages,
     currentCommand,
   } = useAppState();
-  const { cmdkReferenceData } = useCmdkReferenceData();
-  const { importProject } = useHandlers();
 
   const onClear = useCallback(async () => {
     window.localStorage.clear();

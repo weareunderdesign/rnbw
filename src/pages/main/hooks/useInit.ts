@@ -2,16 +2,19 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { LogAllow } from "@_constants/global";
 import { setOsType, setTheme } from "@_redux/global";
-import { setDoingFileAction } from "@_redux/main/fileTree";
+import { TProjectContext, setDoingFileAction } from "@_redux/main/fileTree";
 import { isChromeOrEdge } from "@_services/global";
 import { setSystemTheme } from "../helper";
-import { useHandlers } from "./useHandlers";
-import { useCmdk } from "./useCmdk";
 
-export const useInit = () => {
+interface IUseInit {
+  importProject: (
+    fsType: TProjectContext,
+    projectHandle?: FileSystemDirectoryHandle | null | undefined,
+  ) => Promise<void>;
+  onNew: () => Promise<void>;
+}
+export const useInit = ({ importProject, onNew }: IUseInit) => {
   const dispatch = useDispatch();
-  const { importProject } = useHandlers();
-  const { onNew } = useCmdk();
 
   // detect os
   useEffect(() => {

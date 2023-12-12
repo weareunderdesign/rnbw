@@ -75,8 +75,14 @@ export default function MainPage() {
     fileHandlers,
     setFileHandlers,
   } = useFileHandlers();
-  const { recentProjectContexts, recentProjectNames, recentProjectHandlers } =
-    useRecentProjects();
+  const {
+    recentProjectContexts,
+    recentProjectNames,
+    recentProjectHandlers,
+    setRecentProjectContexts,
+    setRecentProjectNames,
+    setRecentProjectHandlers,
+  } = useRecentProjects();
   const { filesReferenceData, htmlReferenceData } = useReferenceData();
   const {
     cmdkReferenceData,
@@ -85,10 +91,35 @@ export default function MainPage() {
     cmdkReferneceRecentProject,
     cmdkReferenceAdd,
     cmdkReferenceRename,
-  } = useCmdkReferenceData();
-  const { importProject, closeNavigator } = useHandlers();
-  const { onJumpstart, onClear, onUndo, onRedo } = useCmdk();
-  useInit();
+  } = useCmdkReferenceData({
+    addRunningActions,
+    removeRunningActions,
+
+    recentProjectContexts,
+    recentProjectNames,
+    recentProjectHandlers,
+    setRecentProjectContexts,
+    setRecentProjectNames,
+    setRecentProjectHandlers,
+
+    htmlReferenceData,
+  });
+  const { importProject, closeNavigator } = useHandlers({
+    setCurrentProjectFileHandle,
+    setFileHandlers,
+
+    recentProjectContexts,
+    recentProjectNames,
+    recentProjectHandlers,
+    setRecentProjectContexts,
+    setRecentProjectNames,
+    setRecentProjectHandlers,
+  });
+  const { onJumpstart, onNew, onClear, onUndo, onRedo } = useCmdk({
+    cmdkReferenceData,
+    importProject,
+  });
+  useInit({ importProject, onNew });
   const {
     monacoEditorRef,
     setMonacoEditorRef,

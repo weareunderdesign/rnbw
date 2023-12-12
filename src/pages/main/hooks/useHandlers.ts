@@ -24,21 +24,37 @@ import {
 import { useAppState } from "@_redux/useAppState";
 
 import { clearProjectSession } from "../helper";
-import { useFileHandlers } from "./useFileHandlers";
-import { useRecentProjects } from "./useRecentProjects";
 
-export const useHandlers = () => {
+interface IUseHandlers {
+  setCurrentProjectFileHandle: React.Dispatch<
+    React.SetStateAction<FileSystemDirectoryHandle | null>
+  >;
+  setFileHandlers: React.Dispatch<React.SetStateAction<TFileHandlerCollection>>;
+
+  recentProjectContexts: TProjectContext[];
+  recentProjectNames: string[];
+  recentProjectHandlers: (FileSystemDirectoryHandle | null)[];
+  setRecentProjectContexts: React.Dispatch<
+    React.SetStateAction<TProjectContext[]>
+  >;
+  setRecentProjectNames: React.Dispatch<React.SetStateAction<string[]>>;
+  setRecentProjectHandlers: React.Dispatch<
+    React.SetStateAction<(FileSystemDirectoryHandle | null)[]>
+  >;
+}
+export const useHandlers = ({
+  setCurrentProjectFileHandle,
+  setFileHandlers,
+
+  recentProjectContexts,
+  recentProjectNames,
+  recentProjectHandlers,
+  setRecentProjectContexts,
+  setRecentProjectNames,
+  setRecentProjectHandlers,
+}: IUseHandlers) => {
   const dispatch = useDispatch();
   const { osType, navigatorDropdownType } = useAppState();
-  const { setCurrentProjectFileHandle, setFileHandlers } = useFileHandlers();
-  const {
-    recentProjectContexts,
-    recentProjectNames,
-    recentProjectHandlers,
-    setRecentProjectContexts,
-    setRecentProjectNames,
-    setRecentProjectHandlers,
-  } = useRecentProjects();
 
   const saveRecentProject = useCallback(
     async (

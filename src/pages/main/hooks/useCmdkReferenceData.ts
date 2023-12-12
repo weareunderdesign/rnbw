@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { getMany } from "idb-keyval";
-import { useDispatch } from "react-redux";
 
 import { LogAllow } from "@_constants/global";
-import { TFileHandlerCollection } from "@_node/index";
-import { setWorkspace, TProject, TProjectContext } from "@_redux/main/fileTree";
+import { TProjectContext } from "@_redux/main/fileTree";
 import { useAppState } from "@_redux/useAppState";
 // @ts-ignore
 import cmdkRefActions from "@_ref/cmdk.ref/Actions.csv";
@@ -29,23 +27,39 @@ import {
   fileCmdk,
   getKeyObjectsFromCommand,
 } from "../helper";
-import { useRecentProjects } from "./useRecentProjects";
-import { useRunningActions } from "./useRunningActions";
-import { useReferenceData } from "./useReferenceData";
 
-export const useCmdkReferenceData = () => {
+interface IUseCmdkReferenceData {
+  addRunningActions: (actionNames: string[]) => void;
+  removeRunningActions: (actionNames: string[]) => void;
+
+  recentProjectContexts: TProjectContext[];
+  recentProjectNames: string[];
+  recentProjectHandlers: (FileSystemDirectoryHandle | null)[];
+  setRecentProjectContexts: React.Dispatch<
+    React.SetStateAction<TProjectContext[]>
+  >;
+  setRecentProjectNames: React.Dispatch<React.SetStateAction<string[]>>;
+  setRecentProjectHandlers: React.Dispatch<
+    React.SetStateAction<(FileSystemDirectoryHandle | null)[]>
+  >;
+
+  htmlReferenceData: THtmlReferenceData;
+}
+export const useCmdkReferenceData = ({
+  addRunningActions,
+  removeRunningActions,
+
+  recentProjectContexts,
+  recentProjectNames,
+  recentProjectHandlers,
+  setRecentProjectContexts,
+  setRecentProjectNames,
+  setRecentProjectHandlers,
+
+  htmlReferenceData,
+}: IUseCmdkReferenceData) => {
   const { fileTree, fFocusedItem, nodeTree, nFocusedItem, cmdkSearchContent } =
     useAppState();
-  const { addRunningActions, removeRunningActions } = useRunningActions();
-  const { htmlReferenceData } = useReferenceData();
-  const {
-    recentProjectContexts,
-    recentProjectNames,
-    recentProjectHandlers,
-    setRecentProjectContexts,
-    setRecentProjectNames,
-    setRecentProjectHandlers,
-  } = useRecentProjects();
 
   const [cmdkReferenceData, setCmdkReferenceData] =
     useState<TCmdkReferenceData>({});
