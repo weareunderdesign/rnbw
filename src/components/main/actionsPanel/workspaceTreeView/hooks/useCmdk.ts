@@ -124,13 +124,4 @@ export const useCmdk = (openFileUid: React.MutableRefObject<string>) => {
         break;
     }
   }, [currentCommand]);
-
-  return {
-    onAddNode,
-    onDelete,
-    onCut,
-    onCopy,
-    onPaste,
-    onDuplicate,
-  };
 };

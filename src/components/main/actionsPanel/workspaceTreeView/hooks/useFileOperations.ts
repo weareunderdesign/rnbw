@@ -58,7 +58,6 @@ export const useFileOperations = () => {
       fileHandlers,
     ],
   );
-
   const _delete = useCallback(
     async (uids: TNodeUid[]) => {
       addRunningActions(["fileTreeView-delete"]);

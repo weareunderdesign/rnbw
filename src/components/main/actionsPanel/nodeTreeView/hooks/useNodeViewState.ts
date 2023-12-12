@@ -40,7 +40,7 @@ export function useNodeViewState() {
       if (_uids.length === selectedItems.length) {
         let same = true;
         for (const _uid of _uids) {
-          if (selectedItemsObj[_uid] === undefined) {
+          if (!selectedItemsObj[_uid]) {
             same = false;
             break;
           }
