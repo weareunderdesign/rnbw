@@ -48,10 +48,10 @@ export const getInitialFileUidToOpen = (handlerObj: TFileHandlerInfoObj) => {
 };
 
 export const isUnsavedProject = (fileTree: TFileNodeTreeData) => {
-  for (let uid in fileTree) {
-    const _file = fileTree[uid];
-    const _fileData = _file.data as TFileNodeData;
-    if (_fileData && _fileData.changed) {
+  for (const uid in fileTree) {
+    const file = fileTree[uid];
+    const fileData = file.data as TFileNodeData;
+    if (fileData && fileData.changed) {
       return true;
     }
   }

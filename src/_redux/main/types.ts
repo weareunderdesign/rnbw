@@ -41,11 +41,12 @@ export type TMainContext = {
   htmlReferenceData: THtmlReferenceData;
   cmdkReferenceData: TCmdkReferenceData;
 
+  projectHandlers: TFileHandlerCollection;
+  setProjectHandlers: (projectHandlerObj: TFileHandlerCollection) => void;
   currentProjectFileHandle: FileSystemDirectoryHandle | null;
   setCurrentProjectFileHandle: (
     fileHandler: FileSystemDirectoryHandle | null,
   ) => void;
-
   fileHandlers: TFileHandlerCollection;
   setFileHandlers: (fileHandlerObj: TFileHandlerCollection) => void;
 
@@ -53,24 +54,15 @@ export type TMainContext = {
   setMonacoEditorRef: (
     editorInstance: editor.IStandaloneCodeEditor | null,
   ) => void;
-
   iframeRefRef: MutableRefObject<HTMLIFrameElement | null>;
   setIframeRefRef: (iframeRef: HTMLIFrameElement | null) => void;
-
-  // code view
   isContentProgrammaticallyChanged: React.RefObject<boolean>;
   setIsContentProgrammaticallyChanged: (value: boolean) => void;
 
-  setCodeViewOffsetTop: (offsetTop: string) => void;
-
-  // import project
   importProject: (
     fsType: TProjectContext,
     projectHandle?: FileSystemDirectoryHandle | null,
   ) => void;
-  closeAllPanel: () => void;
-
-  //undo/redo
   onUndo: () => void;
   onRedo: () => void;
 };

@@ -19,7 +19,7 @@ import { setFileTreeNodes, TProject } from "@_redux/main/fileTree";
 import { AnyAction } from "@reduxjs/toolkit";
 
 export const saveFileContent = async (
-  project: TProject,
+  project: Omit<TProject, "handler">,
   fileHandlers: TFileHandlerCollection,
   uid: string,
   fileData: TFileNodeData,
