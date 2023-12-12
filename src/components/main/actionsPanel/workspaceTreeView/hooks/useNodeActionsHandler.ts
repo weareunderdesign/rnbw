@@ -6,7 +6,6 @@ import { useDispatch } from "react-redux";
 import { RednerableFileTypes, RootNodeUid, TmpNodeUid } from "@_constants/main";
 import {
   _createIDBDirectory,
-  removeSingleLocalDirectoryOrFile,
   TFileNodeData,
   triggerAlert,
   triggerFileChangeAlert,
@@ -38,6 +37,7 @@ import {
   renameNode,
   validateAndMoveNode,
 } from "../helpers";
+import { callFileApi } from "@_node/apis";
 
 interface IUseNodeActionsHandler {
   invalidNodes: {
@@ -305,28 +305,18 @@ export const useNodeActionsHandler = ({
 
     addRunningActions(["fileTreeView-delete"]);
     addInvalidNodes(...uids);
-
-    if (project.context === "local") {
-      const allDone = await Promise.all(
-        uids.map((uid) =>
-          removeSingleLocalDirectoryOrFile(uid, fileTree, fileHandlers),
-        ),
-      ).then((results) => results.every(Boolean));
-
-      if (!allDone) {
-      }
-    } else if (project.context === "idb") {
-      const allDone = await Promise.all(
-        uids.map((uid) =>
-          removeSingleLocalDirectoryOrFile(uid, fileTree, fileHandlers),
-        ),
-      ).then((results) => results.every(Boolean));
-
-      if (!allDone) {
-        // addMessage(deletingWarning);
-      }
-    }
-
+    const allDone = callFileApi(
+      {
+        projectContext: project.context,
+        action: "remove",
+        fileTree,
+        fileHandlers,
+        uids,
+      },
+      () => {},
+      () => {},
+    );
+    console.log({ allDone });
     removeInvalidNodes(...uids);
     removeRunningActions(["fileTreeView-delete"]);
   }, [

@@ -71,16 +71,17 @@ export type TProjectLoaderResponse = {
 };
 
 export type TFileApiPayloadBase = {
+  // addInvalidNodes: (...uids: string[]) => void;
+  // removeInvalidNodes: (...uids: string[]) => void;
+  // addTemporaryNodes: (...uids: string[]) => void;
+  // removeTemporaryNodes: (...uids: string[]) => void;
   projectContext: TProjectContext;
   action: TFileActionType;
   fileTree: TFileNodeTreeData;
+  fileHandlers?: TFileHandlerCollection;
   osType?: TOsType;
 };
 export type TFileApiPayload = TFileApiPayloadBase &
-  (
-    | { projectContext: "local"; fileHandlers: TFileHandlerCollection }
-    | { projectContext: "idb"; fileHandlers?: never }
-  ) &
   (
     | { action: Extract<TFileActionType, "remove">; uids: TNodeUid[] }
     | { action: Exclude<TFileActionType, "remove">; uids?: never }
