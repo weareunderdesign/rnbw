@@ -1,4 +1,3 @@
-import React from "react";
 import { useCallback } from "react";
 import { setMany } from "idb-keyval";
 import { useDispatch } from "react-redux";

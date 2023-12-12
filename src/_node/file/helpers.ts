@@ -58,13 +58,15 @@ export const isUnsavedProject = (fileTree: TFileNodeTreeData) => {
   return false;
 };
 
-export const triggerFileChangeAlert = () => {
-  const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`;
-  if (!window.confirm(message)) {
+export const triggerAlert = (msg: string) => {
+  if (!window.confirm(msg)) {
     return;
   }
 };
-
+export const triggerFileChangeAlert = () => {
+  const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`;
+  triggerAlert(message);
+};
 export const confirmFileChanges = (fileTree: TFileNodeTreeData) => {
   isUnsavedProject(fileTree) && triggerFileChangeAlert();
 };

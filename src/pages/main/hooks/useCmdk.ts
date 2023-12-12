@@ -21,7 +21,6 @@ import {
   FileTree_Event_RedoActionType,
   FileTree_Event_UndoActionType,
   setDoingFileAction,
-  TProjectContext,
 } from "@_redux/main/fileTree";
 import {
   NodeTree_Event_RedoActionType,
@@ -299,7 +298,9 @@ export const useCmdk = () => {
       if (
         action === "Save" ||
         action === "Download" ||
-        action === "Duplicate"
+        action === "Duplicate" ||
+        action === "Group" ||
+        action === "UnGroup"
       ) {
         e.preventDefault();
       }

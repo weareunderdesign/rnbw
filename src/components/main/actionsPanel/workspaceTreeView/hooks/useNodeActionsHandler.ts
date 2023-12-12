@@ -7,6 +7,7 @@ import { RednerableFileTypes, RootNodeUid, TmpNodeUid } from "@_constants/main";
 import {
   createDirectory,
   TFileNodeData,
+  triggerAlert,
   triggerFileChangeAlert,
   writeFile,
 } from "@_node/file";
@@ -244,28 +245,23 @@ export const useNodeActionsHandler = (
     async (item: TreeItem, newName: string) => {
       const node = item.data as TNode;
       const nodeData = node.data as TFileNodeData;
-      if (!invalidNodes[node.uid]) return;
+      if (invalidNodes[node.uid]) return;
 
       if (nodeData.valid) {
-        const _file = fileTree[node.uid];
-        const _fileData = _file.data as TFileNodeData;
-
-        if (_file && _fileData.changed) {
-          // confirm
+        const file = fileTree[node.uid];
+        const fileData = file.data;
+        if (file && fileData.changed) {
           const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`;
-          if (!window.confirm(message)) {
-            removeInvalidNodes(node.uid);
-            return;
-          }
+          triggerAlert(message);
         }
 
-        addTemporaryNodes(_file.uid);
+        addTemporaryNodes(file.uid);
         await _cb_renameNode(
-          _file.uid,
+          file.uid,
           newName,
-          _fileData.kind === "directory" ? "*folder" : _fileData.ext,
+          fileData.kind === "directory" ? "*folder" : fileData.ext,
         );
-        removeTemporaryNodes(_file.uid);
+        removeTemporaryNodes(file.uid);
       } else {
         await createFFNode(
           node.parentUid as TNodeUid,
@@ -293,7 +289,7 @@ export const useNodeActionsHandler = (
     if (uids.length === 0) return;
 
     const message = `Are you sure you want to delete them? This action cannot be undone!`;
-    if (!window.confirm(message)) return;
+    triggerAlert(message);
 
     addRunningActions(["fileTreeView-delete"]);
     addInvalidNodes(...uids);

@@ -20,7 +20,7 @@ export const useFileOperations = () => {
   const { addRunningActions, removeRunningActions, fileHandlers } =
     useContext(MainContext);
 
-  const { invalidNodes, removeInvalidNodes, addInvalidNodes } =
+  const { invalidNodes, addInvalidNodes, removeInvalidNodes } =
     useInvalidNodes();
   const { addTemporaryNodes, removeTemporaryNodes } = useTemporaryNodes();
 
