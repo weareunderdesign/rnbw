@@ -12,9 +12,12 @@ import {
 } from "@_redux/main/fileTree";
 import { useAppState } from "@_redux/useAppState";
 
-import { useInvalidNodes } from "./";
-
-export const useNodeViewState = () => {
+interface IUseNodeViewState {
+  invalidNodes: {
+    [uid: string]: true;
+  };
+}
+export const useNodeViewState = ({ invalidNodes }: IUseNodeViewState) => {
   const dispatch = useDispatch();
   const {
     fileTree,
@@ -23,7 +26,6 @@ export const useNodeViewState = () => {
     fSelectedItems: selectedItems,
     fSelectedItemsObj: selectedItemsObj,
   } = useAppState();
-  const { invalidNodes } = useInvalidNodes();
 
   const cb_focusNode = useCallback(
     (uid: TNodeUid) => {

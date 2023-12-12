@@ -38,12 +38,29 @@ import {
   validateAndDeleteNode,
   validateAndMoveNode,
 } from "../helpers";
-import { useInvalidNodes } from "./useInvalidNodes";
-import { useTemporaryNodes } from "./useTemporaryNodes";
 
-export const useNodeActionsHandler = (
-  openFileUid: React.MutableRefObject<string>,
-) => {
+interface IUseNodeActionsHandler {
+  invalidNodes: {
+    [uid: string]: true;
+  };
+  addInvalidNodes: (...uids: string[]) => void;
+  removeInvalidNodes: (...uids: string[]) => void;
+  temporaryNodes: {
+    [uid: string]: true;
+  };
+  addTemporaryNodes: (...uids: string[]) => void;
+  removeTemporaryNodes: (...uids: string[]) => void;
+  openFileUid: React.MutableRefObject<string>;
+}
+export const useNodeActionsHandler = ({
+  invalidNodes,
+  addInvalidNodes,
+  removeInvalidNodes,
+  temporaryNodes,
+  addTemporaryNodes,
+  removeTemporaryNodes,
+  openFileUid,
+}: IUseNodeActionsHandler) => {
   const dispatch = useDispatch();
   const {
     project,
@@ -61,11 +78,6 @@ export const useNodeActionsHandler = (
     fileHandlers,
     htmlReferenceData,
   } = useContext(MainContext);
-
-  const { invalidNodes, addInvalidNodes, removeInvalidNodes } =
-    useInvalidNodes();
-  const { temporaryNodes, addTemporaryNodes, removeTemporaryNodes } =
-    useTemporaryNodes();
 
   const createFFNode = useCallback(
     async (parentUid: TNodeUid, ffType: TFileNodeType, ffName: string) => {

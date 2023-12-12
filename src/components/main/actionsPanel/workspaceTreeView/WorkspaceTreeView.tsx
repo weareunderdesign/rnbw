@@ -12,17 +12,14 @@ import { DraggingPositionItem } from "react-complex-tree";
 import { useDispatch } from "react-redux";
 
 import { SVGIconI, TreeView } from "@_components/common";
-import { TreeViewData } from "@_components/common/treeView/types";
-import { AddFileActionPrefix, RootNodeUid, ShortDelay } from "@_constants/main";
 import { _path, getNormalizedPath, TFileNodeData } from "@_node/file";
 import { TNode, TNodeUid } from "@_node/types";
-import { scrollToElement } from "@_pages/main/helper";
 import { MainContext } from "@_redux/main";
 import { setHoveredFileUid } from "@_redux/main/fileTree";
 import { FileTree_Event_ClearActionType } from "@_redux/main/fileTree/event";
 import { setActivePanel, setDidRedo, setDidUndo } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
-import { addClass, generateQuerySelector, removeClass } from "@_services/main";
+import { generateQuerySelector } from "@_services/main";
 import { TFilesReference } from "@_types/main";
 
 import {
@@ -35,7 +32,6 @@ import {
   useTemporaryNodes,
 } from "./hooks";
 import { Container, ItemArrow } from "./workSpaceTreeComponents";
-import { isAddFileAction } from "@_node/helpers";
 
 const AutoExpandDelayOnDnD = 1 * 1000;
 export default function WorkspaceTreeView() {
@@ -81,7 +77,42 @@ export default function WorkspaceTreeView() {
     useTemporaryNodes();
   const { focusedItemRef, fileTreeViewData } = useSync();
 
-  const { _create, _delete, _copy, _cut, _rename } = useFileOperations();
+  const { cb_collapseNode, cb_expandNode, cb_focusNode, cb_selectNode } =
+    useNodeViewState({ invalidNodes });
+  const { _create, _delete, _copy, _cut, _rename } = useFileOperations({
+    invalidNodes,
+    addInvalidNodes,
+    removeInvalidNodes,
+    temporaryNodes,
+    addTemporaryNodes,
+    removeTemporaryNodes,
+  });
+  const openFileUid = useRef<TNodeUid>("");
+  const {
+    cb_startRenamingNode,
+    cb_abortRenamingNode,
+    cb_renameNode,
+    cb_moveNode,
+    cb_readNode,
+  } = useNodeActionsHandler({
+    invalidNodes,
+    addInvalidNodes,
+    removeInvalidNodes,
+    temporaryNodes,
+    addTemporaryNodes,
+    removeTemporaryNodes,
+    openFileUid,
+  });
+  useCmdk({
+    invalidNodes,
+    addInvalidNodes,
+    removeInvalidNodes,
+    temporaryNodes,
+    addTemporaryNodes,
+    removeTemporaryNodes,
+    openFileUid,
+  });
+
   useEffect(() => {
     if (!didUndo && !didRedo) return;
 
@@ -161,10 +192,6 @@ export default function WorkspaceTreeView() {
     dispatch(setDidUndo(false));
     dispatch(setDidRedo(false));
   }, [didUndo, didRedo]);
-  // -------------------------------------------------------------- sync --------------------------------------------------------------
-
-  const { cb_collapseNode, cb_expandNode, cb_focusNode, cb_selectNode } =
-    useNodeViewState();
 
   // open default initial html file
   useEffect(() => {
@@ -180,15 +207,6 @@ export default function WorkspaceTreeView() {
       cb_readNode(initialFileUidToOpen);
     }
   }, [initialFileUidToOpen]);
-
-  const openFileUid = useRef<TNodeUid>("");
-  const {
-    cb_startRenamingNode,
-    cb_abortRenamingNode,
-    cb_renameNode,
-    cb_moveNode,
-    cb_readNode,
-  } = useNodeActionsHandler(openFileUid);
 
   useEffect(() => {
     if (
@@ -232,8 +250,6 @@ export default function WorkspaceTreeView() {
       openFile(fileUidToOpen);
     }
   }, [linkToOpen]);
-  // -------------------------------------------------------------- cmdk --------------------------------------------------------------
-  useCmdk(openFileUid);
 
   const onPanelClick = useCallback(() => {
     dispatch(setActivePanel("file"));

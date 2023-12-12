@@ -12,17 +12,30 @@ import {
   deleteFileOrFolder,
   moveActions,
 } from "../helpers";
-import { useInvalidNodes } from "./useInvalidNodes";
-import { useTemporaryNodes } from "./useTemporaryNodes";
 
-export const useFileOperations = () => {
+interface IUseFileOperations {
+  invalidNodes: {
+    [uid: string]: true;
+  };
+  addInvalidNodes: (...uids: string[]) => void;
+  removeInvalidNodes: (...uids: string[]) => void;
+  temporaryNodes: {
+    [uid: string]: true;
+  };
+  addTemporaryNodes: (...uids: string[]) => void;
+  removeTemporaryNodes: (...uids: string[]) => void;
+}
+export const useFileOperations = ({
+  invalidNodes,
+  addInvalidNodes,
+  removeInvalidNodes,
+  temporaryNodes,
+  addTemporaryNodes,
+  removeTemporaryNodes,
+}: IUseFileOperations) => {
   const { project, fileTree } = useAppState();
   const { addRunningActions, removeRunningActions, fileHandlers } =
     useContext(MainContext);
-
-  const { invalidNodes, addInvalidNodes, removeInvalidNodes } =
-    useInvalidNodes();
-  const { addTemporaryNodes, removeTemporaryNodes } = useTemporaryNodes();
 
   const { moveIDBFF, moveLocalFF } = moveActions(() => {});
 

@@ -7,11 +7,31 @@ import { setClipboardData } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 import { TFileNodeType } from "@_types/main";
 
-import { useInvalidNodes } from "./useInvalidNodes";
 import { useNodeActionsHandler } from "./useNodeActionsHandler";
 import { isAddFileAction } from "@_node/helpers";
 
-export const useCmdk = (openFileUid: React.MutableRefObject<string>) => {
+interface IUseCmdk {
+  invalidNodes: {
+    [uid: string]: true;
+  };
+  addInvalidNodes: (...uids: string[]) => void;
+  removeInvalidNodes: (...uids: string[]) => void;
+  temporaryNodes: {
+    [uid: string]: true;
+  };
+  addTemporaryNodes: (...uids: string[]) => void;
+  removeTemporaryNodes: (...uids: string[]) => void;
+  openFileUid: React.MutableRefObject<string>;
+}
+export const useCmdk = ({
+  invalidNodes,
+  addInvalidNodes,
+  removeInvalidNodes,
+  temporaryNodes,
+  addTemporaryNodes,
+  removeTemporaryNodes,
+  openFileUid,
+}: IUseCmdk) => {
   const dispatch = useDispatch();
   const {
     activePanel,
@@ -25,9 +45,15 @@ export const useCmdk = (openFileUid: React.MutableRefObject<string>) => {
   } = useAppState();
 
   const { createTmpFFNode, cb_deleteNode, cb_moveNode, cb_duplicateNode } =
-    useNodeActionsHandler(openFileUid);
-
-  const { invalidNodes } = useInvalidNodes();
+    useNodeActionsHandler({
+      invalidNodes,
+      addInvalidNodes,
+      removeInvalidNodes,
+      temporaryNodes,
+      addTemporaryNodes,
+      removeTemporaryNodes,
+      openFileUid,
+    });
 
   const onAddNode = useCallback(
     (actionName: string) => {
