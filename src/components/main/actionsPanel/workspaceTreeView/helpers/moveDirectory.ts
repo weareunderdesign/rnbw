@@ -1,11 +1,11 @@
 import {
-  createDirectory,
-  getStat,
-  readDir,
-  readFile,
-  removeFileSystem,
+  createIDBDirectory,
+  getIDBStat,
+  readIDBDirectory,
+  readIDBFile,
+  removeIDBDirectory,
   TFileNodeData,
-  writeFile,
+  writeIDBFile,
 } from "@_node/file";
 
 export const moveDirectory = async (
@@ -26,24 +26,24 @@ export const moveDirectory = async (
       orgPath: string;
       newPath: string;
     };
-    await createDirectory(newPath);
+    await createIDBDirectory(newPath);
 
-    const entries = await readDir(orgPath);
+    const entries = await readIDBDirectory(orgPath);
     await Promise.all(
       entries.map(async (entry) => {
         const c_orgPath = `${orgPath}/${entry}`;
         const c_newPath = `${newPath}/${entry}`;
-        const stats = await getStat(c_orgPath);
+        const stats = await getIDBStat(c_orgPath);
         const c_kind = stats.type === "DIRECTORY" ? "directory" : "file";
         if (c_kind === "directory") {
           dirs.push({ orgPath: c_orgPath, newPath: c_newPath });
         } else {
-          await writeFile(c_newPath, await readFile(c_orgPath));
+          await writeIDBFile(c_newPath, await readIDBFile(c_orgPath));
         }
       }),
     );
   }
 
   // handle copy(optional)
-  !copy && (await removeFileSystem(nodeData.path));
+  !copy && (await removeIDBDirectory(nodeData.path));
 };

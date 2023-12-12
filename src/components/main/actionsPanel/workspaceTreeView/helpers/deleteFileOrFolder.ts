@@ -1,5 +1,5 @@
 import {
-  removeFileSystem,
+  removeIDBDirectory,
   TFileHandlerCollection,
   TFileNodeData,
 } from "@_node/file";
@@ -46,7 +46,7 @@ export const deleteFileOrFolder = async (
           nodeData.kind === "directory"
             ? nodeData.name
             : `${nodeData.name}${nodeData.ext}`;
-        await removeFileSystem(`${parentNodeData.path}/${entryName}`);
+        await removeIDBDirectory(`${parentNodeData.path}/${entryName}`);
       } catch (err) {
         console.error(err);
       }

@@ -10,7 +10,7 @@ import {
   TFileNode,
   TFileNodeData,
   TFileNodeTreeData,
-  writeFile,
+  writeIDBFile,
 } from "@_node/file";
 import { getNodeChildIndex, getSubNodeUidsByBfs } from "@_node/helpers";
 import { THtmlNodeData } from "@_node/node";
@@ -33,7 +33,7 @@ export const saveFileContent = async (
     await writableStream.close();
   }
 
-  await writeFile(fileData.path, fileData.content);
+  await writeIDBFile(fileData.path, fileData.content);
   fileData.changed = false;
   fileData.orgContent = fileData.content;
 };

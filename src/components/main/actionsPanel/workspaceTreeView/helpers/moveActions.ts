@@ -1,9 +1,9 @@
 import {
-  getStat,
-  readFile,
-  removeFileSystem,
+  getIDBStat,
+  readIDBFile,
+  removeIDBDirectory,
   TFileNodeData,
-  writeFile,
+  writeIDBFile,
 } from "@_node/file";
 import { TToast } from "@_types/global";
 
@@ -73,7 +73,7 @@ export const moveActions = (addMessage: (message: TToast) => void) => {
       // validate if the new name exists
       let exists = true;
       try {
-        await getStat(`${targetNodeData.path}/${newName}`);
+        await getIDBStat(`${targetNodeData.path}/${newName}`);
         exists = true;
       } catch (err) {
         exists = false;
@@ -106,7 +106,7 @@ export const moveActions = (addMessage: (message: TToast) => void) => {
       // validate if the new name exists
       let exists = true;
       try {
-        await getStat(`${targetNodeData.path}/${newName}`);
+        await getIDBStat(`${targetNodeData.path}/${newName}`);
         exists = true;
       } catch (err) {
         exists = false;
@@ -122,13 +122,13 @@ export const moveActions = (addMessage: (message: TToast) => void) => {
 
       // create a new file with the new name and write the content
       try {
-        await writeFile(
+        await writeIDBFile(
           `${targetNodeData.path}/${newName}`,
-          await readFile(nodeData.path),
+          await readIDBFile(nodeData.path),
         );
 
         // handle copy(optional)
-        !copy && (await removeFileSystem(nodeData.path));
+        !copy && (await removeIDBDirectory(nodeData.path));
       } catch (err) {
         throw "error";
       }

@@ -5,11 +5,11 @@ import { useDispatch } from "react-redux";
 
 import { RednerableFileTypes, RootNodeUid, TmpNodeUid } from "@_constants/main";
 import {
-  createDirectory,
+  createIDBDirectory,
   TFileNodeData,
   triggerAlert,
   triggerFileChangeAlert,
-  writeFile,
+  writeIDBFile,
 } from "@_node/file";
 import { getValidNodeUids } from "@_node/helpers";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
@@ -112,9 +112,9 @@ export const useNodeActionsHandler = ({
         // create the directory or file with generated name
         try {
           if (ffType === "*folder") {
-            await createDirectory(`${parentNodeData.path}/${newName}`);
+            await createIDBDirectory(`${parentNodeData.path}/${newName}`);
           } else {
-            await writeFile(`${parentNodeData.path}/${newName}`, "");
+            await writeIDBFile(`${parentNodeData.path}/${newName}`, "");
           }
         } catch (err) {
           removeRunningActions(["fileTreeView-create"]);
