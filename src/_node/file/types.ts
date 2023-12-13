@@ -83,13 +83,13 @@ export type TFileApiPayload = TFileApiPayloadBase &
     | { action: Exclude<TFileActionType, "remove">; uids?: never }
   );
 
+export type TZipFileInfo = {
+  path: string;
+  zip: JSZip | null | undefined;
+};
+
 // --------------------
 export type TFile = {
   uid: TNodeUid;
   content: string;
-};
-
-export type TZipFileInfo = {
-  path: string;
-  zip: JSZip | null | undefined;
 };
