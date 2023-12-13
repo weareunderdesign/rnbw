@@ -10,7 +10,7 @@ import {
   TFileNode,
   TFileNodeData,
   TFileNodeTreeData,
-  writeFile,
+  _writeIDBFile,
 } from "@_node/file";
 import { getNodeChildIndex, getSubNodeUidsByBfs } from "@_node/helpers";
 import { THtmlNodeData } from "@_node/node";
@@ -19,7 +19,7 @@ import { setFileTreeNodes, TProject } from "@_redux/main/fileTree";
 import { AnyAction } from "@reduxjs/toolkit";
 
 export const saveFileContent = async (
-  project: TProject,
+  project: Omit<TProject, "handler">,
   fileHandlers: TFileHandlerCollection,
   uid: string,
   fileData: TFileNodeData,
@@ -33,7 +33,7 @@ export const saveFileContent = async (
     await writableStream.close();
   }
 
-  await writeFile(fileData.path, fileData.content);
+  await _writeIDBFile(fileData.path, fileData.content);
   fileData.changed = false;
   fileData.orgContent = fileData.content;
 };

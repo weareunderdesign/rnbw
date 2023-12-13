@@ -8,6 +8,8 @@ import {
 } from "./types";
 
 const processorReducerInitialState: TProcessorReducerState = {
+  doingAction: false,
+
   navigatorDropdownType: null,
   favicon: "",
 
@@ -17,6 +19,8 @@ const processorReducerInitialState: TProcessorReducerState = {
   showActionsPanel: true,
   showCodeView: true,
 
+  autoSave: false,
+
   didUndo: false,
   didRedo: false,
 };
@@ -24,15 +28,19 @@ const processorSlice = createSlice({
   name: "processor",
   initialState: processorReducerInitialState,
   reducers: {
+    setDoingAction(state, action: PayloadAction<boolean>) {
+      const doingAction = action.payload;
+      state.doingAction = doingAction;
+    },
     setNavigatorDropdownType(
       state,
-      actions: PayloadAction<TNavigatorDropdownType>,
+      action: PayloadAction<TNavigatorDropdownType>,
     ) {
-      const navigatorDropdownType = actions.payload;
+      const navigatorDropdownType = action.payload;
       state.navigatorDropdownType = navigatorDropdownType;
     },
-    setFavicon(state, actions: PayloadAction<string>) {
-      const favicon = actions.payload;
+    setFavicon(state, action: PayloadAction<string>) {
+      const favicon = action.payload;
       state.favicon = favicon;
     },
 
@@ -54,6 +62,11 @@ const processorSlice = createSlice({
       state.showCodeView = showCodeView;
     },
 
+    setAutoSave(state, action: PayloadAction<boolean>) {
+      const autoSave = action.payload;
+      state.autoSave = autoSave;
+    },
+
     setDidUndo(state, action: PayloadAction<boolean>) {
       const didUndo = action.payload;
       state.didUndo = didUndo;
@@ -65,6 +78,8 @@ const processorSlice = createSlice({
   },
 });
 export const {
+  setDoingAction,
+
   setNavigatorDropdownType,
   setFavicon,
 
@@ -73,6 +88,8 @@ export const {
 
   setShowActionsPanel,
   setShowCodeView,
+
+  setAutoSave,
 
   setDidUndo,
   setDidRedo,

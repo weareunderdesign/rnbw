@@ -3,31 +3,25 @@ import { useCallback, useState } from "react";
 import { TNodeUid } from "@_node/types";
 
 export const useInvalidNodes = () => {
-  const [invalidNodes, _setInvalidNodes] = useState<{
+  const [invalidNodes, _addInvalidNodes] = useState<{
     [uid: TNodeUid]: true;
   }>({});
-
-  const setInvalidNodes = useCallback(
+  const addInvalidNodes = useCallback(
     (...uids: TNodeUid[]) => {
       const _invalidNodes = { ...invalidNodes };
       uids.map((uid) => (_invalidNodes[uid] = true));
-      _setInvalidNodes(_invalidNodes);
+      _addInvalidNodes(_invalidNodes);
     },
     [invalidNodes],
   );
-
   const removeInvalidNodes = useCallback(
     (...uids: TNodeUid[]) => {
       const _invalidNodes = { ...invalidNodes };
       uids.map((uid) => delete _invalidNodes[uid]);
-      _setInvalidNodes(_invalidNodes);
+      _addInvalidNodes(_invalidNodes);
     },
     [invalidNodes],
   );
 
-  return {
-    setInvalidNodes,
-    removeInvalidNodes,
-    invalidNodes,
-  };
+  return { invalidNodes, addInvalidNodes, removeInvalidNodes };
 };

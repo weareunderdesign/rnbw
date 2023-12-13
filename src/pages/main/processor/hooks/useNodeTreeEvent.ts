@@ -9,7 +9,7 @@ import {
   parseFile,
   PreserveRnbwNode,
   StageNodeIdAttr,
-  writeFile,
+  _writeIDBFile,
 } from "@_node/file";
 import { getNodeUidsFromPaths } from "@_node/helpers";
 import { TNodeUid } from "@_node/types";
@@ -119,7 +119,7 @@ export const useNodeTreeEvent = () => {
       dispatch(setDoingFileAction(true));
       try {
         const previewPath = getPreviewPath(fileTree, file);
-        await writeFile(previewPath, fileData.contentInApp as string);
+        await _writeIDBFile(previewPath, fileData.contentInApp as string);
         if (fileData.ext === "html") {
           dispatch(setIframeSrc(`rnbw${previewPath}`));
         }
@@ -244,7 +244,6 @@ export const useNodeTreeEvent = () => {
         ),
       );
     } else {
-      LogAllow && console.log("it's a rnbw-change");
       const validExpandedItems = nExpandedItems.filter(
         (uid) => _validNodeTree[uid] && _validNodeTree[uid].isEntity === false,
       );

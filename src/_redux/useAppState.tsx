@@ -57,12 +57,14 @@ export const useAppState = () => {
       },
       codeView: { codeViewTabSize },
       processor: {
+        doingAction,
         navigatorDropdownType,
         favicon,
         activePanel,
         clipboardData,
         showActionsPanel,
         showCodeView,
+        autoSave,
         didUndo,
         didRedo,
       },
@@ -138,6 +140,8 @@ export const useAppState = () => {
 
     codeViewTabSize,
 
+    doingAction,
+
     navigatorDropdownType,
     favicon,
 
@@ -146,6 +150,8 @@ export const useAppState = () => {
 
     showActionsPanel,
     showCodeView,
+
+    autoSave,
 
     didUndo,
     didRedo,

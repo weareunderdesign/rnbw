@@ -19,7 +19,7 @@ export const validateAndMoveNode = async (
 
   const { fileHandlers } = useContext(MainContext);
 
-  const { setInvalidNodes }: any = useInvalidNodes();
+  const { addInvalidNodes }: any = useInvalidNodes();
 
   const { moveIDBFF, moveLocalFF } = moveActions(() => {});
 
@@ -55,7 +55,7 @@ export const validateAndMoveNode = async (
   )}`;
 
   // update invalidNodes
-  setInvalidNodes((prevState: Record<string, boolean>) => ({
+  addInvalidNodes((prevState: Record<string, boolean>) => ({
     ...prevState,
     [uid]: true,
     [newUid]: true,
@@ -75,7 +75,7 @@ export const validateAndMoveNode = async (
     return false;
   } finally {
     // update invalidNodes
-    setInvalidNodes((prevState: Record<string, boolean>) => {
+    addInvalidNodes((prevState: Record<string, boolean>) => {
       delete prevState[uid];
       delete prevState[newUid];
       return { ...prevState };

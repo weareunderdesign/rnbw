@@ -1,4 +1,4 @@
-import React, { FC, useRef } from "react";
+import React, { FC, useContext, useRef } from "react";
 
 import cx from "classnames";
 
@@ -8,6 +8,7 @@ import { useAppState } from "@_redux/useAppState";
 
 import { isSelected } from "../helpers";
 import { useNavigatorPanelHandlers } from "../hooks";
+import { MainContext } from "@_redux/main";
 
 interface AdditionalPanelProps {
   navigatorPanel: HTMLDivElement | null;
@@ -16,13 +17,8 @@ interface AdditionalPanelProps {
 export const AdditionalPanel: FC<AdditionalPanelProps> = ({
   navigatorPanel,
 }) => {
-  const {
-    workspace,
-    project,
-    fileTree,
-    currentFileUid,
-    navigatorDropdownType,
-  } = useAppState();
+  const { workspace, project, navigatorDropdownType } = useAppState();
+  const { projectHandlers } = useContext(MainContext);
 
   const navigatorDropDownRef = useRef<HTMLDivElement | null>(null);
 
@@ -30,10 +26,13 @@ export const AdditionalPanel: FC<AdditionalPanelProps> = ({
 
   const onClick = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-    project: TProject,
+    project: Omit<TProject, "handler">,
   ) => {
     e.stopPropagation();
-    onOpenProject(project);
+    onOpenProject({
+      ...project,
+      handler: projectHandlers[project.name] as FileSystemDirectoryHandle,
+    });
   };
 
   return (

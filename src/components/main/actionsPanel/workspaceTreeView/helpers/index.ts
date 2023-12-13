@@ -6,7 +6,6 @@ export * from "./createFileOrFolder";
 export * from "./deleteFileOrFolder";
 export * from "./generateNewName";
 export * from "./renameNode";
-export * from "./validateAndDeleteNode";
 export * from "./validateAndMoveNode";
 export * from "./generateNewNameMoveNode";
 export * from "./duplicateNode";
