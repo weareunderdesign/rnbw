@@ -14,6 +14,7 @@ import {
   TFileNodeData,
   _writeIDBFile,
   confirmAlert,
+  loadLocalProject,
 } from "@_node/file";
 import { getValidNodeUids } from "@_node/helpers";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
