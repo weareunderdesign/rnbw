@@ -23,7 +23,7 @@ const remove = async ({
 }): Promise<boolean> => {
   return new Promise<boolean>((resolve, reject) => {
     try {
-      let Alldone = true;
+      let allDone = true;
       uids.map((uid) => {
         const done = FileSystemApis[projectContext].removeSingleDirectoryOrFile(
           {
@@ -32,9 +32,9 @@ const remove = async ({
             fileHandlers: fileHandlers || {},
           },
         );
-        if (!done) Alldone = false;
+        if (!done) allDone = false;
       });
-      resolve(Alldone);
+      resolve(allDone);
     } catch (err) {
       reject(err);
     }
@@ -50,54 +50,52 @@ export const doFileActions = async (
   params: TFileApiPayload,
   fb?: (...params: any[]) => void,
   cb?: (...params: any[]) => void,
-): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    try {
-      const {
-        projectContext,
-        action,
-        uids,
-        fileTree,
-        fileHandlers,
-        osType = "Windows",
-      } = params;
+) => {
+  try {
+    const {
+      projectContext,
+      action,
+      uids,
+      fileTree,
+      fileHandlers,
+      osType = "Windows",
+    } = params;
 
-      switch (action) {
-        case "create":
-          create();
-          break;
-        case "remove":
-          remove({
-            projectContext,
-            uids,
-            fileTree,
-            fileHandlers,
-          });
-          break;
-        case "cut":
-          cut();
-          break;
-        case "copy":
-          copy();
-          break;
-        case "duplicate":
-          duplicate();
-          break;
-        case "move":
-          move();
-          break;
-        case "rename":
-          rename();
-          break;
-        default:
-          break;
-      }
-
-      resolve();
-    } catch (err) {
-      LogAllow && console.error(err);
-      fb && fb();
-      reject();
+    let allDone = true;
+    switch (action) {
+      case "create":
+        create();
+        break;
+      case "remove":
+        allDone = await remove({
+          projectContext,
+          uids,
+          fileTree,
+          fileHandlers,
+        });
+        break;
+      case "cut":
+        cut();
+        break;
+      case "copy":
+        copy();
+        break;
+      case "duplicate":
+        duplicate();
+        break;
+      case "move":
+        move();
+        break;
+      case "rename":
+        rename();
+        break;
+      default:
+        break;
     }
-  });
+
+    cb && cb(allDone);
+  } catch (err) {
+    LogAllow && console.error(err);
+    fb && fb();
+  }
 };

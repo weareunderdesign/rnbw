@@ -305,7 +305,7 @@ export const useNodeActionsHandler = ({
 
     addRunningActions(["fileTreeView-delete"]);
     addInvalidNodes(...uids);
-    const allDone = callFileApi(
+    callFileApi(
       {
         projectContext: project.context,
         action: "remove",
@@ -313,10 +313,15 @@ export const useNodeActionsHandler = ({
         fileHandlers,
         uids,
       },
-      () => {},
-      () => {},
+      () => {
+        console.error("error while removing file system");
+      },
+      (allDone: boolean) => {
+        console.log(
+          allDone ? "all is successfully removed" : "some is not removed",
+        );
+      },
     );
-    console.log({ allDone });
     removeInvalidNodes(...uids);
     removeRunningActions(["fileTreeView-delete"]);
   }, [
