@@ -4,34 +4,24 @@ import React, {
   useMemo,
   useRef,
   useState,
-} from 'react';
+} from "react";
 
-import cx from 'classnames';
-import { Command } from 'cmdk';
-import {
-  CustomDirectoryPickerOptions,
-} from 'file-system-access/lib/showDirectoryPicker';
-import {
-  delMany,
-  getMany,
-  setMany,
-} from 'idb-keyval';
-import { editor } from 'monaco-editor';
-import { useDispatch } from 'react-redux';
+import cx from "classnames";
+import { Command } from "cmdk";
+import { CustomDirectoryPickerOptions } from "file-system-access/lib/showDirectoryPicker";
+import { delMany, getMany, setMany } from "idb-keyval";
+import { editor } from "monaco-editor";
+import { useDispatch } from "react-redux";
 
-import { SVGIcon } from '@_components/common';
-import {
-  ActionsPanel,
-  CodeView,
-  StageView,
-} from '@_components/main';
-import { LogAllow } from '@_constants/global';
+import { SVGIcon } from "@_components/common";
+import { ActionsPanel, CodeView, StageView } from "@_components/main";
+import { LogAllow } from "@_constants/global";
 import {
   AddActionPrefix,
   DefaultProjectPath,
   RecentProjectCount,
   RenameActionPrefix,
-} from '@_constants/main';
+} from "@_constants/main";
 import {
   buildNohostIDB,
   confirmFileChanges,
@@ -41,19 +31,16 @@ import {
   loadLocalProject,
   TFileHandlerCollection,
   TFileNodeData,
-} from '@_node/file';
-import {
-  setOsType,
-  setTheme,
-} from '@_redux/global';
-import { MainContext } from '@_redux/main';
+} from "@_node/file";
+import { setOsType, setTheme } from "@_redux/global";
+import { MainContext } from "@_redux/main";
 import {
   setCmdkOpen,
   setCmdkPages,
   setCmdkSearchContent,
   setCurrentCmdkPage,
   setCurrentCommand,
-} from '@_redux/main/cmdk';
+} from "@_redux/main/cmdk";
 import {
   setDoingFileAction,
   setFileTree,
@@ -62,32 +49,32 @@ import {
   setWorkspace,
   TProject,
   TProjectContext,
-} from '@_redux/main/fileTree';
+} from "@_redux/main/fileTree";
 import {
   FileTree_Event_RedoActionType,
   FileTree_Event_UndoActionType,
   setFileAction,
-} from '@_redux/main/fileTree/event';
+} from "@_redux/main/fileTree/event";
 import {
   NodeTree_Event_RedoActionType,
   NodeTree_Event_UndoActionType,
-} from '@_redux/main/nodeTree/event';
+} from "@_redux/main/nodeTree/event";
 import {
   setDidRedo,
   setDidUndo,
   setNavigatorDropdownType,
   setShowActionsPanel,
   setShowCodeView,
-} from '@_redux/main/processor';
-import { useAppState } from '@_redux/useAppState';
+} from "@_redux/main/processor";
+import { useAppState } from "@_redux/useAppState";
 // @ts-ignore
-import cmdkRefActions from '@_ref/cmdk.ref/Actions.csv';
+import cmdkRefActions from "@_ref/cmdk.ref/Actions.csv";
 // @ts-ignore
-import cmdkRefJumpstart from '@_ref/cmdk.ref/Jumpstart.csv';
+import cmdkRefJumpstart from "@_ref/cmdk.ref/Jumpstart.csv";
 // @ts-ignore
-import filesRef from '@_ref/rfrncs/Files.csv';
+import filesRef from "@_ref/rfrncs/Files.csv";
 // @ts-ignore
-import htmlRefElements from '@_ref/rfrncs/HTML Elements.csv';
+import htmlRefElements from "@_ref/rfrncs/HTML Elements.csv";
 import {
   TCmdkContext,
   TCmdkContextScope,
@@ -101,19 +88,16 @@ import {
   THtmlElementsReferenceData,
   THtmlReferenceData,
   TSession,
-} from '@_types/main';
+} from "@_types/main";
 
-import {
-  getCommandKey,
-  isChromeOrEdge,
-} from '../../services/global';
+import { getCommandKey, isChromeOrEdge } from "../../services/global";
 import {
   addDefaultCmdkActions,
   clearProjectSession,
   elementsCmdk,
   fileCmdk,
-} from './helper';
-import Processor from './processor';
+} from "./helper";
+import Processor from "./processor";
 
 export default function MainPage() {
   // ***************************************** Reducer Begin *****************************************
@@ -704,6 +688,11 @@ export default function MainPage() {
         e.stopPropagation();
         // return
       }
+      if (e.key === "j" || e.key === "a" || e.key === "w") {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
       if (cmdkOpen) return;
 
       // skip inline rename input in file-tree-view
@@ -1047,11 +1036,13 @@ export default function MainPage() {
   const onAdd = useCallback(() => {
     dispatch(setCmdkPages([...cmdkPages, "Add"]));
     dispatch(setCmdkOpen(true));
+    dispatch(setCmdkSearchContent(""));
   }, [cmdkPages]);
 
   const onTurnInto = useCallback(() => {
     dispatch(setCmdkPages([...cmdkPages, "Turn into"]));
     dispatch(setCmdkOpen(true));
+    dispatch(setCmdkSearchContent(""));
   }, [cmdkPages]);
 
   const onDownload = useCallback(async () => {
