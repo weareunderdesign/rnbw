@@ -305,7 +305,7 @@ export const useNodeActionsHandler = ({
 
     addRunningActions(["fileTreeView-delete"]);
     addInvalidNodes(...uids);
-    callFileApi(
+    await callFileApi(
       {
         projectContext: project.context,
         action: "remove",
