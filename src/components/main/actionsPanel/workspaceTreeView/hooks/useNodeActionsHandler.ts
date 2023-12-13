@@ -3,13 +3,17 @@ import { useCallback, useContext } from "react";
 import { TreeItem } from "react-complex-tree";
 import { useDispatch } from "react-redux";
 
-import { RednerableFileTypes, RootNodeUid, TmpNodeUid } from "@_constants/main";
+import {
+  FileChangeAlertMessage,
+  RednerableFileTypes,
+  RootNodeUid,
+  TmpNodeUid,
+} from "@_constants/main";
 import {
   _createIDBDirectory,
   TFileNodeData,
-  triggerAlert,
-  triggerFileChangeAlert,
   _writeIDBFile,
+  confirmAlert,
 } from "@_node/file";
 import { getValidNodeUids } from "@_node/helpers";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
@@ -264,7 +268,7 @@ export const useNodeActionsHandler = ({
         const fileData = file.data;
         if (file && fileData.changed) {
           const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`;
-          triggerAlert(message);
+          if (!confirmAlert(message)) return;
         }
 
         addTemporaryNodes(file.uid);
@@ -360,9 +364,7 @@ export const useNodeActionsHandler = ({
         return _file && _fileData.changed;
       });
 
-      if (hasChangedFile) {
-        triggerFileChangeAlert();
-      }
+      if (hasChangedFile && !confirmAlert(FileChangeAlertMessage)) return;
 
       addRunningActions(["fileTreeView-move"]);
 

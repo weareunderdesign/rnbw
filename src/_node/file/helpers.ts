@@ -1,4 +1,4 @@
-import { RootNodeUid } from "@_constants/main";
+import { FileChangeAlertMessage, RootNodeUid } from "@_constants/main";
 
 import {
   TFileHandlerInfoObj,
@@ -58,17 +58,16 @@ export const isUnsavedProject = (fileTree: TFileNodeTreeData) => {
   return false;
 };
 
-export const triggerAlert = (msg: string) => {
+export const confirmAlert = (msg: string): boolean => {
   if (!window.confirm(msg)) {
-    return;
+    return false;
   }
+  return true;
 };
-export const triggerFileChangeAlert = () => {
-  const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`;
-  triggerAlert(message);
-};
-export const confirmFileChanges = (fileTree: TFileNodeTreeData) => {
-  isUnsavedProject(fileTree) && triggerFileChangeAlert();
+export const confirmFileChanges = (fileTree: TFileNodeTreeData): boolean => {
+  return isUnsavedProject(fileTree)
+    ? confirmAlert(FileChangeAlertMessage)
+    : true;
 };
 
 export const getFileNameAndExtensionFromFullname = (

@@ -84,7 +84,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     dispatch(setCmdkOpen(true));
   }, [cmdkOpen]);
   const onNew = useCallback(async () => {
-    confirmFileChanges(fileTree);
+    if (!confirmFileChanges(fileTree)) return;
 
     dispatch(setDoingFileAction(true));
     try {
@@ -96,7 +96,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     dispatch(setDoingFileAction(false));
   }, [fileTree, importProject]);
   const onOpen = useCallback(async () => {
-    confirmFileChanges(fileTree);
+    if (!confirmFileChanges(fileTree)) return;
 
     dispatch(setDoingFileAction(true));
     try {

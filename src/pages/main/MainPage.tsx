@@ -458,8 +458,12 @@ export default function MainPage() {
                                     recentProjectContexts[index];
                                   const projectHandler =
                                     recentProjectHandlers[index];
-                                  confirmFileChanges(fileTree);
-                                  importProject(projectContext, projectHandler);
+
+                                  confirmFileChanges(fileTree) &&
+                                    importProject(
+                                      projectContext,
+                                      projectHandler,
+                                    );
                                 } else if (
                                   (currentCmdkPage === "Add" &&
                                     command.Group === "Recent") ||
