@@ -1,4 +1,4 @@
-import { doFileActions, doNodeActions } from ".";
+import { doFileActions, doNodeActions } from "./";
 
 export const callNodeApi = doNodeActions;
 export const callFileApi = doFileActions;

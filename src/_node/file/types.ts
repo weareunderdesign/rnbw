@@ -1,5 +1,7 @@
 import JSZip from "jszip";
 
+import { TOsType } from "@_redux/global";
+
 import {
   TBasicNodeData,
   TNode,
@@ -7,7 +9,7 @@ import {
   TNodeTreeData,
   TNodeUid,
 } from "../";
-import { TOsType } from "@_redux/global";
+import { TFileActionType, TProjectContext } from "@_redux/main/fileTree";
 
 export type TFileNode = TNode & {
   data: TFileNodeData;
@@ -68,17 +70,26 @@ export type TProjectLoaderResponse = {
   deletedUidsObj: { [uid: TNodeUid]: true };
 };
 
-export type TFileApiPayload = {
-  action: TNodeActionType;
+export type TFileApiPayloadBase = {
+  projectContext: TProjectContext;
+  action: TFileActionType;
+  fileTree: TFileNodeTreeData;
+  fileHandlers?: TFileHandlerCollection;
   osType?: TOsType;
 };
-// --------------------
-export type TFile = {
-  uid: TNodeUid;
-  content: string;
-};
+export type TFileApiPayload = TFileApiPayloadBase &
+  (
+    | { action: Extract<TFileActionType, "remove">; uids: TNodeUid[] }
+    | { action: Exclude<TFileActionType, "remove">; uids?: never }
+  );
 
 export type TZipFileInfo = {
   path: string;
   zip: JSZip | null | undefined;
+};
+
+// --------------------
+export type TFile = {
+  uid: TNodeUid;
+  content: string;
 };

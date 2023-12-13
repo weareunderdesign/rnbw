@@ -1,5 +1,6 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 
+import { debounce } from "lodash";
 import { editor, KeyCode, KeyMod } from "monaco-editor";
 import { useDispatch } from "react-redux";
 
@@ -9,17 +10,15 @@ import {
   DefaultTabSize,
   RootNodeUid,
 } from "@_constants/main";
-
 import { getSubNodeUidsByBfs } from "@_node/helpers";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { setCodeViewTabSize } from "@_redux/main/codeView";
-
-import { TCodeSelection } from "../types";
-import { getCodeViewTheme, getLanguageFromExtension } from "../helpers";
-import { useAppState } from "@_redux/useAppState";
 import { setCurrentFileContent } from "@_redux/main/nodeTree";
-import { debounce } from "lodash";
+import { useAppState } from "@_redux/useAppState";
+
+import { getCodeViewTheme, getLanguageFromExtension } from "../helpers";
+import { TCodeSelection } from "../types";
 
 const useEditor = () => {
   const dispatch = useDispatch();

@@ -3,12 +3,12 @@ import { useContext } from "react";
 import { TFileNodeData } from "@_node/file";
 import { TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
+import { useAppState } from "@_redux/useAppState";
 import { verifyFileHandlerPermission } from "@_services/main";
 
 import { useInvalidNodes } from "../hooks";
 import { generateNewNameMoveNode } from "./generateNewNameMoveNode";
 import { moveActions } from "./moveActions";
-import { useAppState } from "@_redux/useAppState";
 
 export const validateAndMoveNode = async (
   uid: string,
@@ -19,7 +19,7 @@ export const validateAndMoveNode = async (
 
   const { fileHandlers } = useContext(MainContext);
 
-  const { setInvalidNodes }: any = useInvalidNodes();
+  const { addInvalidNodes }: any = useInvalidNodes();
 
   const { moveIDBFF, moveLocalFF } = moveActions(() => {});
 
@@ -55,7 +55,7 @@ export const validateAndMoveNode = async (
   )}`;
 
   // update invalidNodes
-  setInvalidNodes((prevState: Record<string, boolean>) => ({
+  addInvalidNodes((prevState: Record<string, boolean>) => ({
     ...prevState,
     [uid]: true,
     [newUid]: true,
@@ -75,7 +75,7 @@ export const validateAndMoveNode = async (
     return false;
   } finally {
     // update invalidNodes
-    setInvalidNodes((prevState: Record<string, boolean>) => {
+    addInvalidNodes((prevState: Record<string, boolean>) => {
       delete prevState[uid];
       delete prevState[newUid];
       return { ...prevState };

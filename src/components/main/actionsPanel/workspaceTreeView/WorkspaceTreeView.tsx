@@ -7,19 +7,19 @@ import React, {
 } from "react";
 
 import cx from "classnames";
+import { debounce } from "lodash";
 import { DraggingPositionItem } from "react-complex-tree";
 import { useDispatch } from "react-redux";
 
 import { SVGIconI, TreeView } from "@_components/common";
-import { TreeViewData } from "@_components/common/treeView/types";
-import { AddFileActionPrefix, RootNodeUid, ShortDelay } from "@_constants/main";
 import { _path, getNormalizedPath, TFileNodeData } from "@_node/file";
 import { TNode, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { setHoveredFileUid } from "@_redux/main/fileTree";
 import { FileTree_Event_ClearActionType } from "@_redux/main/fileTree/event";
 import { setActivePanel, setDidRedo, setDidUndo } from "@_redux/main/processor";
-import { addClass, generateQuerySelector, removeClass } from "@_services/main";
+import { useAppState } from "@_redux/useAppState";
+import { generateQuerySelector } from "@_services/main";
 import { TFilesReference } from "@_types/main";
 
 import {
@@ -28,14 +28,12 @@ import {
   useInvalidNodes,
   useNodeActionsHandler,
   useNodeViewState,
+  useSync,
   useTemporaryNodes,
 } from "./hooks";
 import { Container, ItemArrow } from "./workSpaceTreeComponents";
-import { useAppState } from "@_redux/useAppState";
-import { debounce } from "lodash";
-import { scrollToElement } from "@_pages/main/helper";
 
-const AutoExpandDelay = 1 * 1000;
+const AutoExpandDelayOnDnD = 1 * 1000;
 export default function WorkspaceTreeView() {
   const dispatch = useDispatch();
   const {
@@ -55,69 +53,65 @@ export default function WorkspaceTreeView() {
     fSelectedItemsObj: selectedItemsObj,
     hoveredFileUid,
 
-    doingFileAction,
     lastFileAction,
 
     fileAction,
-    fileEventPast,
-    fileEventPastLength,
-    fileEventFuture,
-    fileEventFutureLength,
-
-    nodeTree,
-    validNodeTree,
-
-    nFocusedItem,
-    nExpandedItems,
-    nExpandedItemsObj,
-    nSelectedItems,
-    nSelectedItemsObj,
-    hoveredNodeUid,
-
-    currentFileContent,
-    selectedNodeUids,
-
-    nodeEventPast,
-    nodeEventPastLength,
-
-    nodeEventFuture,
-    nodeEventFutureLength,
-
-    iframeSrc,
-    iframeLoading,
-    needToReloadIframe,
     linkToOpen,
 
-    codeViewTabSize,
-
     navigatorDropdownType,
-    favicon,
 
     activePanel,
-    clipboardData,
-
-    showActionsPanel,
-    showCodeView,
 
     didUndo,
     didRedo,
-
-    cmdkOpen,
-    cmdkPages,
-    currentCmdkPage,
-
-    cmdkSearchContent,
     currentCommand,
   } = useAppState();
   const { addRunningActions, removeRunningActions, filesReferenceData } =
     useContext(MainContext);
 
   // invalid - can't do any actions on the nodes
-  const { invalidNodes } = useInvalidNodes();
+  const { invalidNodes, addInvalidNodes, removeInvalidNodes } =
+    useInvalidNodes();
   // temporary - don't display the nodes
-  const { setTemporaryNodes, removeTemporaryNodes } = useTemporaryNodes();
-  // -------------------------------------------------------------- hms --------------------------------------------------------------
-  const { _copy, _create, _cut, _delete, _rename } = useFileOperations();
+  const { temporaryNodes, addTemporaryNodes, removeTemporaryNodes } =
+    useTemporaryNodes();
+  const { focusedItemRef, fileTreeViewData } = useSync();
+
+  const { cb_collapseNode, cb_expandNode, cb_focusNode, cb_selectNode } =
+    useNodeViewState({ invalidNodes });
+  const { _create, _delete, _copy, _cut, _rename } = useFileOperations({
+    invalidNodes,
+    addInvalidNodes,
+    removeInvalidNodes,
+    temporaryNodes,
+    addTemporaryNodes,
+    removeTemporaryNodes,
+  });
+  const openFileUid = useRef<TNodeUid>("");
+  const {
+    cb_startRenamingNode,
+    cb_abortRenamingNode,
+    cb_renameNode,
+    cb_moveNode,
+    cb_readNode,
+  } = useNodeActionsHandler({
+    invalidNodes,
+    addInvalidNodes,
+    removeInvalidNodes,
+    temporaryNodes,
+    addTemporaryNodes,
+    removeTemporaryNodes,
+    openFileUid,
+  });
+  useCmdk({
+    invalidNodes,
+    addInvalidNodes,
+    removeInvalidNodes,
+    temporaryNodes,
+    addTemporaryNodes,
+    removeTemporaryNodes,
+    openFileUid,
+  });
 
   useEffect(() => {
     if (!didUndo && !didRedo) return;
@@ -132,7 +126,7 @@ export default function WorkspaceTreeView() {
         const { orgName, newName } = param2;
         const currentUid = `${parentUid}/${newName}`;
         (async () => {
-          setTemporaryNodes(currentUid);
+          addTemporaryNodes(currentUid);
           await _rename(currentUid, orgName);
           removeTemporaryNodes(currentUid);
         })();
@@ -160,7 +154,7 @@ export default function WorkspaceTreeView() {
           uids.push(`${targetUid}/${name}`);
         });
         _delete(uids);
-      } else if (type === "delete") {
+      } else if (type === "remove") {
       }
     } else {
       const { type, param1, param2 } = lastFileAction;
@@ -170,7 +164,7 @@ export default function WorkspaceTreeView() {
         const { uid } = param1;
         const { newName } = param2;
         (async () => {
-          setTemporaryNodes(uid);
+          addTemporaryNodes(uid);
           await _rename(uid, newName);
           removeTemporaryNodes(uid);
         })();
@@ -191,73 +185,13 @@ export default function WorkspaceTreeView() {
           names.push(_uid.name);
         });
         _copy(uids, names, targetUids);
-      } else if (type === "delete") {
+      } else if (type === "remove") {
       }
     }
 
     dispatch(setDidUndo(false));
     dispatch(setDidRedo(false));
   }, [didUndo, didRedo]);
-  // -------------------------------------------------------------- sync --------------------------------------------------------------
-  // outline the hovered item
-  const hoveredItemRef = useRef<TNodeUid>(hoveredFileUid);
-  useEffect(() => {
-    if (hoveredItemRef.current === hoveredFileUid) return;
-
-    const curHoveredElement = document.querySelector(
-      `#FileTreeView-${generateQuerySelector(hoveredItemRef.current)}`,
-    );
-    curHoveredElement?.setAttribute(
-      "class",
-      removeClass(curHoveredElement.getAttribute("class") || "", "outline"),
-    );
-    const newHoveredElement = document.querySelector(
-      `#FileTreeView-${generateQuerySelector(hoveredFileUid)}`,
-    );
-    newHoveredElement?.setAttribute(
-      "class",
-      addClass(newHoveredElement.getAttribute("class") || "", "outline"),
-    );
-
-    hoveredItemRef.current = hoveredFileUid;
-  }, [hoveredFileUid]);
-
-  // scroll to the focused item
-  const debouncedScrollToElement = useCallback(
-    debounce(scrollToElement, ShortDelay),
-    [],
-  );
-  const focusedItemRef = useRef<TNodeUid>(focusedItem);
-  useEffect(() => {
-    if (focusedItemRef.current === focusedItem) return;
-
-    const focusedElement = document.querySelector(
-      `#FileTreeView-${generateQuerySelector(focusedItem)}`,
-    );
-    focusedElement && debouncedScrollToElement(focusedElement, "auto");
-
-    focusedItemRef.current = focusedItem;
-  }, [focusedItem]);
-
-  // build fileTreeViewData
-  const fileTreeViewData = useMemo(() => {
-    const data: TreeViewData = {};
-    for (const uid in fileTree) {
-      const node: TNode = fileTree[uid];
-      data[uid] = {
-        index: uid,
-        data: node,
-        children: node.children,
-        isFolder: !node.isEntity,
-        canMove: uid !== RootNodeUid,
-        canRename: uid !== RootNodeUid,
-      };
-    }
-    return data;
-  }, [fileTree]);
-
-  const { cb_collapseNode, cb_expandNode, cb_focusNode, cb_selectNode } =
-    useNodeViewState();
 
   // open default initial html file
   useEffect(() => {
@@ -273,15 +207,6 @@ export default function WorkspaceTreeView() {
       cb_readNode(initialFileUidToOpen);
     }
   }, [initialFileUidToOpen]);
-
-  const openFileUid = useRef<TNodeUid>("");
-  const {
-    cb_startRenamingNode,
-    cb_abortRenamingNode,
-    cb_renameNode,
-    cb_moveNode,
-    cb_readNode,
-  } = useNodeActionsHandler(openFileUid);
 
   useEffect(() => {
     if (
@@ -325,47 +250,8 @@ export default function WorkspaceTreeView() {
       openFile(fileUidToOpen);
     }
   }, [linkToOpen]);
-  // -------------------------------------------------------------- cmdk --------------------------------------------------------------
-  const { onDelete, onCut, onCopy, onPaste, onDuplicate, onAddNode } =
-    useCmdk(openFileUid);
 
-  useEffect(() => {
-    if (!currentCommand) return;
-
-    if (isAddFileAction(currentCommand.action)) {
-      onAddNode(currentCommand.action);
-      return;
-    }
-
-    if (activePanel !== "file") return;
-
-    switch (currentCommand.action) {
-      case "Cut":
-        onCut();
-        break;
-      case "Copy":
-        onCopy();
-        break;
-      case "Paste":
-        onPaste();
-        break;
-      case "Delete":
-        onDelete();
-        break;
-      case "Duplicate":
-        onDuplicate();
-        break;
-      default:
-        break;
-    }
-  }, [currentCommand]);
-
-  const isAddFileAction = (actionName: string): boolean => {
-    return actionName.startsWith(AddFileActionPrefix) ? true : false;
-  };
-
-  // -------------------------------------------------------------- own --------------------------------------------------------------
-  const onPanelClick = useCallback((e: React.MouseEvent) => {
+  const onPanelClick = useCallback(() => {
     dispatch(setActivePanel("file"));
   }, []);
 
@@ -482,7 +368,7 @@ export default function WorkspaceTreeView() {
               };
 
               const debouncedExpand = useCallback(
-                debounce(cb_expandNode, AutoExpandDelay),
+                debounce(cb_expandNode, AutoExpandDelayOnDnD),
                 [cb_expandNode],
               );
               const onDragEnter = (e: React.DragEvent) => {
@@ -615,7 +501,7 @@ export default function WorkspaceTreeView() {
                           className="radius-s foreground-primary"
                           title="unsaved file"
                           style={{ width: "6px", height: "6px" }}
-                        ></div>
+                        />
                       )}
                   </span>
                 </>

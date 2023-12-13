@@ -1,5 +1,6 @@
 import { editor, Range } from "monaco-editor";
-import { TNodeTreeData, TNodeUid } from "..";
+
+import { TNodeTreeData, TNodeUid } from "../";
 
 export const copyCode = ({
   nodeTree,

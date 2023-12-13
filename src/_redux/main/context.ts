@@ -12,30 +12,23 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   },
   cmdkReferenceData: {},
 
+  projectHandlers: {},
+  setProjectHandlers: () => {},
   currentProjectFileHandle: null,
   setCurrentProjectFileHandle: () => {},
-
   fileHandlers: {},
   setFileHandlers: () => {},
 
   monacoEditorRef: { current: null },
   setMonacoEditorRef: () => {},
-
-  // code view
+  iframeRefRef: { current: null },
+  setIframeRefRef: () => {},
   isContentProgrammaticallyChanged: {
     current: false,
   },
   setIsContentProgrammaticallyChanged: () => {},
 
-  setCodeViewOffsetTop: () => {},
-
-  // import project
   importProject: () => {},
-
-  // close all panel
-  closeAllPanel: () => {},
-
-  //undo/redo
   onUndo: () => {},
   onRedo: () => {},
 });

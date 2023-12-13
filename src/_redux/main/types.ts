@@ -1,16 +1,16 @@
+import { MutableRefObject } from "react";
+
 import { editor } from "monaco-editor";
 
 import { TFileHandlerCollection } from "@_node/file";
 import { TNodeUid } from "@_node/types";
 import {
   TCmdkReferenceData,
-  TCodeChange,
   TFilesReferenceData,
   THtmlReferenceData,
 } from "@_types/main";
 
 import { TProjectContext } from "./fileTree";
-import { StageViewSyncConfigs } from "./stageView";
 
 export type TEventHistoryInfo = {
   future: number;
@@ -41,11 +41,12 @@ export type TMainContext = {
   htmlReferenceData: THtmlReferenceData;
   cmdkReferenceData: TCmdkReferenceData;
 
+  projectHandlers: TFileHandlerCollection;
+  setProjectHandlers: (projectHandlerObj: TFileHandlerCollection) => void;
   currentProjectFileHandle: FileSystemDirectoryHandle | null;
   setCurrentProjectFileHandle: (
     fileHandler: FileSystemDirectoryHandle | null,
   ) => void;
-
   fileHandlers: TFileHandlerCollection;
   setFileHandlers: (fileHandlerObj: TFileHandlerCollection) => void;
 
@@ -53,21 +54,15 @@ export type TMainContext = {
   setMonacoEditorRef: (
     editorInstance: editor.IStandaloneCodeEditor | null,
   ) => void;
-
-  // code view
+  iframeRefRef: MutableRefObject<HTMLIFrameElement | null>;
+  setIframeRefRef: (iframeRef: HTMLIFrameElement | null) => void;
   isContentProgrammaticallyChanged: React.RefObject<boolean>;
   setIsContentProgrammaticallyChanged: (value: boolean) => void;
 
-  setCodeViewOffsetTop: (offsetTop: string) => void;
-
-  // import project
   importProject: (
     fsType: TProjectContext,
     projectHandle?: FileSystemDirectoryHandle | null,
   ) => void;
-  closeAllPanel: () => void;
-
-  //undo/redo
   onUndo: () => void;
   onRedo: () => void;
 };

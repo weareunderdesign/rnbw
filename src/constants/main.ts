@@ -29,6 +29,8 @@ export const RecentProjectCount = 10;
 
 export const ShortDelay = 50;
 
+export const NodePathSplitter: string = "?";
+
+export const FileChangeAlertMessage = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`;
 // ----------------------
-export const NodeUidSplitter: string = "?";
 export const TmpNodeUid = "tmp:node:uid";

@@ -6,6 +6,8 @@ export type TNodeTreeReducerState = {
   nodeTree: TNodeTreeData;
   validNodeTree: TNodeTreeData;
 
+  needToSelectNodePaths: string[];
+
   nodeTreeViewState: TTreeViewState;
   hoveredNodeUid: TNodeUid;
 };

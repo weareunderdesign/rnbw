@@ -1,13 +1,15 @@
 import { useCallback, useContext } from "react";
-import { MainContext } from "@_redux/main";
 
-import { useAppState } from "@_redux/useAppState";
+import { useDispatch } from "react-redux";
+
 import { LogAllow } from "@_constants/global";
 import { callNodeApi } from "@_node/apis";
-
 import { TNodeUid } from "@_node/types";
+import { MainContext } from "@_redux/main";
+import { useAppState } from "@_redux/useAppState";
 
 export const useNodeActionsHandlers = () => {
+  const dispatch = useDispatch();
   const {
     nodeTree,
     validNodeTree,
@@ -42,6 +44,7 @@ export const useNodeActionsHandlers = () => {
       setIsContentProgrammaticallyChanged(true);
       callNodeApi(
         {
+          dispatch,
           action: "add",
           actionName,
           referenceData: htmlReferenceData,
@@ -71,6 +74,7 @@ export const useNodeActionsHandlers = () => {
     setIsContentProgrammaticallyChanged(true);
     callNodeApi(
       {
+        dispatch,
         action: "cut",
         nodeTree,
         selectedUids: selectedItems,
@@ -96,6 +100,7 @@ export const useNodeActionsHandlers = () => {
     setIsContentProgrammaticallyChanged(true);
     callNodeApi(
       {
+        dispatch,
         action: "copy",
         nodeTree,
         selectedUids: selectedItems,
@@ -126,6 +131,7 @@ export const useNodeActionsHandlers = () => {
     setIsContentProgrammaticallyChanged(true);
     callNodeApi(
       {
+        dispatch,
         action: "paste",
         nodeTree: validNodeTree,
         targetUid: focusedItem,
@@ -151,6 +157,7 @@ export const useNodeActionsHandlers = () => {
     setIsContentProgrammaticallyChanged(true);
     callNodeApi(
       {
+        dispatch,
         action: "remove",
         nodeTree,
         selectedUids: selectedItems,
@@ -176,6 +183,7 @@ export const useNodeActionsHandlers = () => {
     setIsContentProgrammaticallyChanged(true);
     callNodeApi(
       {
+        dispatch,
         action: "duplicate",
         nodeTree,
         selectedUids: selectedItems,
@@ -210,6 +218,7 @@ export const useNodeActionsHandlers = () => {
       setIsContentProgrammaticallyChanged(true);
       callNodeApi(
         {
+          dispatch,
           action: "move",
           nodeTree,
           selectedUids,
@@ -242,6 +251,7 @@ export const useNodeActionsHandlers = () => {
       setIsContentProgrammaticallyChanged(true);
       callNodeApi(
         {
+          dispatch,
           action: "rename",
           actionName,
           referenceData: htmlReferenceData,
@@ -271,6 +281,7 @@ export const useNodeActionsHandlers = () => {
     setIsContentProgrammaticallyChanged(true);
     callNodeApi(
       {
+        dispatch,
         action: "group",
         nodeTree: validNodeTree,
         selectedUids: selectedItems,
@@ -295,6 +306,7 @@ export const useNodeActionsHandlers = () => {
     setIsContentProgrammaticallyChanged(true);
     callNodeApi(
       {
+        dispatch,
         action: "ungroup",
         nodeTree: validNodeTree,
         selectedUids: selectedItems,

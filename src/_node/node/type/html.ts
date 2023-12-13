@@ -21,6 +21,7 @@ export type THtmlNodeData = TNodeData & {
 
   attribs: THtmlNodeAttribs;
 
+  path?: string;
   sourceCodeLocation: TNodeSourceCodeLocation;
 };
 

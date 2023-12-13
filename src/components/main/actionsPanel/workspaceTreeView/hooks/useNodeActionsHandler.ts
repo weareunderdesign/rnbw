@@ -3,16 +3,21 @@ import { useCallback, useContext } from "react";
 import { TreeItem } from "react-complex-tree";
 import { useDispatch } from "react-redux";
 
-import { RednerableFileTypes, RootNodeUid, TmpNodeUid } from "@_constants/main";
 import {
-  createDirectory,
-  loadLocalProject,
+  FileChangeAlertMessage,
+  RednerableFileTypes,
+  RootNodeUid,
+  TmpNodeUid,
+} from "@_constants/main";
+import {
+  _createIDBDirectory,
   TFileNodeData,
-  triggerFileChangeAlert,
-  writeFile,
+  _writeIDBFile,
+  confirmAlert,
 } from "@_node/file";
 import { getValidNodeUids } from "@_node/helpers";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
+import { clearFileSession } from "@_pages/main/helper";
 import { MainContext } from "@_redux/main";
 import {
   expandFileTreeNodes,
@@ -26,6 +31,7 @@ import {
   setNavigatorDropdownType,
   setShowCodeView,
 } from "@_redux/main/processor";
+import { useAppState } from "@_redux/useAppState";
 import { verifyFileHandlerPermission } from "@_services/main";
 import { TFileNodeType } from "@_types/main";
 
@@ -33,17 +39,32 @@ import {
   duplicateNode,
   generateNewName,
   renameNode,
-  validateAndDeleteNode,
   validateAndMoveNode,
 } from "../helpers";
-import { useInvalidNodes } from "./useInvalidNodes";
-import { useTemporaryNodes } from "./useTemporaryNodes";
-import { useAppState } from "@_redux/useAppState";
-import { clearFileSession } from "@_pages/main/helper";
+import { callFileApi } from "@_node/apis";
 
-export const useNodeActionsHandler = (
-  openFileUid: React.MutableRefObject<string>,
-) => {
+interface IUseNodeActionsHandler {
+  invalidNodes: {
+    [uid: string]: true;
+  };
+  addInvalidNodes: (...uids: string[]) => void;
+  removeInvalidNodes: (...uids: string[]) => void;
+  temporaryNodes: {
+    [uid: string]: true;
+  };
+  addTemporaryNodes: (...uids: string[]) => void;
+  removeTemporaryNodes: (...uids: string[]) => void;
+  openFileUid: React.MutableRefObject<string>;
+}
+export const useNodeActionsHandler = ({
+  invalidNodes,
+  addInvalidNodes,
+  removeInvalidNodes,
+  temporaryNodes,
+  addTemporaryNodes,
+  removeTemporaryNodes,
+  openFileUid,
+}: IUseNodeActionsHandler) => {
   const dispatch = useDispatch();
   const {
     project,
@@ -62,11 +83,6 @@ export const useNodeActionsHandler = (
     htmlReferenceData,
     currentProjectFileHandle,
   } = useContext(MainContext);
-
-  const { removeInvalidNodes, setInvalidNodes, invalidNodes } =
-    useInvalidNodes();
-  const { temporaryNodes, setTemporaryNodes, removeTemporaryNodes } =
-    useTemporaryNodes();
 
   const createFFNode = useCallback(
     async (parentUid: TNodeUid, ffType: TFileNodeType, ffName: string) => {
@@ -101,9 +117,9 @@ export const useNodeActionsHandler = (
         // create the directory or file with generated name
         try {
           if (ffType === "*folder") {
-            await createDirectory(`${parentNodeData.path}/${newName}`);
+            await _createIDBDirectory(`${parentNodeData.path}/${newName}`);
           } else {
-            await writeFile(`${parentNodeData.path}/${newName}`, "");
+            await _writeIDBFile(`${parentNodeData.path}/${newName}`, "");
           }
         } catch (err) {
           removeRunningActions(["fileTreeView-create"]);
@@ -168,7 +184,7 @@ export const useNodeActionsHandler = (
       tmpTree[tmpNode.uid] = tmpNode;
       // setFFTree(tmpTree)
 
-      setInvalidNodes(tmpNode.uid);
+      addInvalidNodes(tmpNode.uid);
       await createFFNode(
         node.uid as TNodeUid,
         tmpNode.data.type,
@@ -186,7 +202,7 @@ export const useNodeActionsHandler = (
       fileTree,
       focusedItem,
       expandedItemsObj,
-      setInvalidNodes,
+      addInvalidNodes,
       createFFNode,
       removeInvalidNodes,
     ],
@@ -198,9 +214,9 @@ export const useNodeActionsHandler = (
         removeInvalidNodes(uid);
         return;
       }
-      setInvalidNodes(uid);
+      addInvalidNodes(uid);
     },
-    [invalidNodes, setInvalidNodes, removeInvalidNodes],
+    [invalidNodes, addInvalidNodes, removeInvalidNodes],
   );
   const cb_abortRenamingNode = useCallback(
     (item: TreeItem) => {
@@ -236,7 +252,7 @@ export const useNodeActionsHandler = (
       addRunningActions,
       removeRunningActions,
       project.context,
-      setInvalidNodes,
+      addInvalidNodes,
       removeInvalidNodes,
       fileTree,
       fileHandlers,
@@ -246,28 +262,23 @@ export const useNodeActionsHandler = (
     async (item: TreeItem, newName: string) => {
       const node = item.data as TNode;
       const nodeData = node.data as TFileNodeData;
-      if (!invalidNodes[node.uid]) return;
+      if (invalidNodes[node.uid]) return;
 
       if (nodeData.valid) {
-        const _file = fileTree[node.uid];
-        const _fileData = _file.data as TFileNodeData;
-
-        if (_file && _fileData.changed) {
-          // confirm
+        const file = fileTree[node.uid];
+        const fileData = file.data;
+        if (file && fileData.changed) {
           const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`;
-          if (!window.confirm(message)) {
-            removeInvalidNodes(node.uid);
-            return;
-          }
+          if (!confirmAlert(message)) return;
         }
 
-        setTemporaryNodes(_file.uid);
+        addTemporaryNodes(file.uid);
         await _cb_renameNode(
-          _file.uid,
+          file.uid,
           newName,
-          _fileData.kind === "directory" ? "*folder" : _fileData.ext,
+          fileData.kind === "directory" ? "*folder" : fileData.ext,
         );
-        removeTemporaryNodes(_file.uid);
+        removeTemporaryNodes(file.uid);
       } else {
         await createFFNode(
           node.parentUid as TNodeUid,
@@ -280,7 +291,7 @@ export const useNodeActionsHandler = (
     [
       invalidNodes,
       _cb_renameNode,
-      setTemporaryNodes,
+      addTemporaryNodes,
       removeTemporaryNodes,
       fileTree,
       fileHandlers,
@@ -295,28 +306,29 @@ export const useNodeActionsHandler = (
     if (uids.length === 0) return;
 
     const message = `Are you sure you want to delete them? This action cannot be undone!`;
-    if (!window.confirm(message)) return;
-
-    addRunningActions(["fileTreeView-delete"]);
-    setInvalidNodes(...uids);
-
-    if (project.context === "local") {
-      const allDone = await Promise.all(
-        uids.map((uid) => validateAndDeleteNode(uid, fileTree, fileHandlers)),
-      ).then((results) => results.every(Boolean));
-
-      if (!allDone) {
-      }
-    } else if (project.context === "idb") {
-      const allDone = await Promise.all(
-        uids.map((uid) => validateAndDeleteNode(uid, fileTree, fileHandlers)),
-      ).then((results) => results.every(Boolean));
-
-      if (!allDone) {
-        // addMessage(deletingWarning);
-      }
+    if (!window.confirm(message)) {
+      return;
     }
 
+    addRunningActions(["fileTreeView-delete"]);
+    addInvalidNodes(...uids);
+    await callFileApi(
+      {
+        projectContext: project.context,
+        action: "remove",
+        fileTree,
+        fileHandlers,
+        uids,
+      },
+      () => {
+        console.error("error while removing file system");
+      },
+      (allDone: boolean) => {
+        console.log(
+          allDone ? "all is successfully removed" : "some is not removed",
+        );
+      },
+    );
     removeInvalidNodes(...uids);
     const { _fileTree } = await loadLocalProject(
       currentProjectFileHandle as FileSystemDirectoryHandle,
@@ -327,17 +339,15 @@ export const useNodeActionsHandler = (
     dispatch(setFileTree(_fileTree));
     removeRunningActions(["fileTreeView-delete"]);
   }, [
-    addRunningActions,
-    removeRunningActions,
     selectedItems,
     invalidNodes,
-    setInvalidNodes,
+    addRunningActions,
+    removeRunningActions,
+    addInvalidNodes,
     removeInvalidNodes,
-    project.context,
+    project,
     fileTree,
     fileHandlers,
-    currentProjectFileHandle,
-    currentFileUid,
   ]);
 
   const cb_moveNode = useCallback(
@@ -362,9 +372,7 @@ export const useNodeActionsHandler = (
         return _file && _fileData.changed;
       });
 
-      if (hasChangedFile) {
-        triggerFileChangeAlert();
-      }
+      if (hasChangedFile && !confirmAlert(FileChangeAlertMessage)) return;
 
       addRunningActions(["fileTreeView-move"]);
 
@@ -390,7 +398,7 @@ export const useNodeActionsHandler = (
       removeRunningActions,
       project.context,
       invalidNodes,
-      setInvalidNodes,
+      addInvalidNodes,
       fileTree,
       fileHandlers,
     ],
@@ -433,7 +441,7 @@ export const useNodeActionsHandler = (
           fileTree,
           fileHandlers,
           () => {},
-          setInvalidNodes,
+          addInvalidNodes,
           invalidNodes,
         );
         if (result) {
@@ -463,7 +471,7 @@ export const useNodeActionsHandler = (
     removeRunningActions,
     project.context,
     invalidNodes,
-    setInvalidNodes,
+    addInvalidNodes,
     selectedItems,
     fileTree,
     fileHandlers,

@@ -3,27 +3,25 @@ import { useCallback, useState } from "react";
 import { TNodeUid } from "@_node/types";
 
 export const useTemporaryNodes = () => {
-  const [temporaryNodes, _setTemporaryNodes] = useState<{
+  const [temporaryNodes, _addTemporaryNodes] = useState<{
     [uid: TNodeUid]: true;
   }>({});
-
-  const setTemporaryNodes = useCallback(
+  const addTemporaryNodes = useCallback(
     (...uids: TNodeUid[]) => {
       const _temporaryNodes = { ...temporaryNodes };
-      uids.forEach((uid) => (_temporaryNodes[uid] = true));
-      _setTemporaryNodes(_temporaryNodes);
+      uids.map((uid) => (_temporaryNodes[uid] = true));
+      _addTemporaryNodes(_temporaryNodes);
     },
     [temporaryNodes],
   );
-
   const removeTemporaryNodes = useCallback(
     (...uids: TNodeUid[]) => {
       const _temporaryNodes = { ...temporaryNodes };
-      uids.forEach((uid) => delete _temporaryNodes[uid]);
-      _setTemporaryNodes(_temporaryNodes);
+      uids.map((uid) => delete _temporaryNodes[uid]);
+      _addTemporaryNodes(_temporaryNodes);
     },
     [temporaryNodes],
   );
 
-  return { temporaryNodes, setTemporaryNodes, removeTemporaryNodes };
+  return { temporaryNodes, addTemporaryNodes, removeTemporaryNodes };
 };

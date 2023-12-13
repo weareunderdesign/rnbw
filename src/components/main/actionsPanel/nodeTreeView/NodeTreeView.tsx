@@ -7,6 +7,7 @@ import React, {
 } from "react";
 
 import cx from "classnames";
+import { debounce } from "lodash";
 import { useDispatch } from "react-redux";
 
 import { TreeView } from "@_components/common";
@@ -15,6 +16,7 @@ import { RootNodeUid, ShortDelay } from "@_constants/main";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { TFileNodeData, THtmlNodeData } from "@_node/index";
 import { TNode, TNodeUid } from "@_node/types";
+import { scrollToElement } from "@_pages/main/helper";
 import { MainContext } from "@_redux/main";
 import {
   expandFileTreeNodes,
@@ -25,6 +27,7 @@ import {
   setActivePanel,
   setNavigatorDropdownType,
 } from "@_redux/main/processor";
+import { useAppState } from "@_redux/useAppState";
 import { getCommandKey } from "@_services/global";
 import { addClass, removeClass } from "@_services/main";
 import { THtmlElementsReference } from "@_types/main";
@@ -36,10 +39,7 @@ import { Container } from "./nodeTreeComponents/Container";
 import { DragBetweenLine } from "./nodeTreeComponents/DragBetweenLine";
 import { ItemArrow } from "./nodeTreeComponents/ItemArrow";
 import { ItemTitle } from "./nodeTreeComponents/ItemTitle";
-import { useAppState } from "@_redux/useAppState";
 import { NodeIcon } from "./nodeTreeComponents/NodeIcon";
-import { debounce } from "lodash";
-import { scrollToElement } from "@_pages/main/helper";
 
 const AutoExpandDelayOnDnD = 1 * 1000;
 

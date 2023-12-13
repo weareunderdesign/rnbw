@@ -10,11 +10,11 @@ import {
   updateFileTreeViewState,
 } from "@_redux/main/fileTree";
 import { setFileAction, TFileAction } from "@_redux/main/fileTree/event";
+import { useAppState } from "@_redux/useAppState";
 import { verifyFileHandlerPermission } from "@_services/main";
 
 import { useInvalidNodes } from "../hooks";
 import { moveActions } from "./moveActions";
-import { useAppState } from "@_redux/useAppState";
 
 export const renameNode = async (
   ext: string,
@@ -30,7 +30,7 @@ export const renameNode = async (
 
   const { removeRunningActions, fileHandlers } = useContext(MainContext);
 
-  const { removeInvalidNodes, setInvalidNodes } = useInvalidNodes();
+  const { removeInvalidNodes, addInvalidNodes } = useInvalidNodes();
 
   const { moveIDBFF, moveLocalFF } = moveActions(() => {});
 
@@ -54,7 +54,7 @@ export const renameNode = async (
       return;
     }
 
-    setInvalidNodes(newUid);
+    addInvalidNodes(newUid);
 
     try {
       await moveLocalFF(
@@ -74,7 +74,7 @@ export const renameNode = async (
       return;
     }
   } else if (project.context === "idb") {
-    setInvalidNodes(newUid);
+    addInvalidNodes(newUid);
 
     try {
       await moveIDBFF(nodeData, parentNodeData, _newName, false, true);

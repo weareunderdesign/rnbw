@@ -35,7 +35,7 @@ export const useSaveCommand = () => {
     if (!fileTree[RootNodeUid]) return;
 
     const _ffTree = structuredClone(fileTree);
-    const file = _ffTree[currentFileUid];
+    let file = _ffTree[currentFileUid];
     const fileData = file.data;
 
     addRunningActions(["processor-save-currentFile"]);
@@ -43,6 +43,11 @@ export const useSaveCommand = () => {
       try {
         await saveFileContent(project, fileHandlers, currentFileUid, fileData);
       } catch (err) {}
+
+      while (file) {
+        file.data.changed = false;
+        file = _ffTree[file.parentUid!];
+      }
     }
     removeRunningActions(["processor-save-currentFile"]);
 

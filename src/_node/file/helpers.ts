@@ -1,4 +1,4 @@
-import { RootNodeUid } from "@_constants/main";
+import { FileChangeAlertMessage, RootNodeUid } from "@_constants/main";
 
 import {
   TFileHandlerInfoObj,
@@ -48,23 +48,33 @@ export const getInitialFileUidToOpen = (handlerObj: TFileHandlerInfoObj) => {
 };
 
 export const isUnsavedProject = (fileTree: TFileNodeTreeData) => {
-  for (let uid in fileTree) {
-    const _file = fileTree[uid];
-    const _fileData = _file.data as TFileNodeData;
-    if (_fileData && _fileData.changed) {
+  for (const uid in fileTree) {
+    const file = fileTree[uid];
+    const fileData = file.data as TFileNodeData;
+    if (fileData && fileData.changed) {
       return true;
     }
   }
   return false;
 };
 
-export const triggerFileChangeAlert = () => {
-  const message = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`;
-  if (!window.confirm(message)) {
-    return;
+export const confirmAlert = (msg: string): boolean => {
+  if (!window.confirm(msg)) {
+    return false;
   }
+  return true;
+};
+export const confirmFileChanges = (fileTree: TFileNodeTreeData): boolean => {
+  return isUnsavedProject(fileTree)
+    ? confirmAlert(FileChangeAlertMessage)
+    : true;
 };
 
-export const confirmFileChanges = (fileTree: TFileNodeTreeData) => {
-  isUnsavedProject(fileTree) && triggerFileChangeAlert();
+export const getFileNameAndExtensionFromFullname = (
+  name: string,
+): { baseName: string; ext: string } => {
+  const nameArr = name.split(".");
+  const ext = nameArr.length > 1 ? (nameArr.pop() as string) : "";
+  const baseName = nameArr.join(".");
+  return { baseName, ext };
 };

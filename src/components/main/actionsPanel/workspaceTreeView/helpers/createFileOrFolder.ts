@@ -1,8 +1,8 @@
 import {
-  createDirectory,
+  _createIDBDirectory,
   TFileHandlerCollection,
   TFileNodeData,
-  writeFile,
+  _writeIDBFile,
 } from "@_node/file";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
 import { TProject } from "@_redux/main/fileTree";
@@ -13,7 +13,7 @@ export const createFileOrFolder = async (
   parentUid: TNodeUid,
   name: string,
   type: TFileNodeType,
-  project: TProject,
+  project: Omit<TProject, "handler">,
   ffTree: TNodeTreeData,
   fileHandlers: TFileHandlerCollection,
 ) => {
@@ -37,9 +37,9 @@ export const createFileOrFolder = async (
       }
     } else if (project.context === "idb") {
       if (type === "*folder") {
-        await createDirectory(`${parentNodeData.path}/${name}`);
+        await _createIDBDirectory(`${parentNodeData.path}/${name}`);
       } else {
-        await writeFile(`${parentNodeData.path}/${name}`, "");
+        await _writeIDBFile(`${parentNodeData.path}/${name}`, "");
       }
     }
   } catch (err) {

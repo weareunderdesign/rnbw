@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import { MainContext } from "@_redux/main";
+import { useAppState } from "@_redux/useAppState";
 
 import { AdditionalPanel, DefaultPanel, ProjectPanel } from "./components";
 import {
@@ -11,7 +12,6 @@ import {
 } from "./constants";
 import { useFavicon, useNavigatorPanelHandlers } from "./hooks";
 import { NavigatorPanelProps } from "./types";
-import { useAppState } from "@_redux/useAppState";
 
 export default function NavigatorPanel(props: NavigatorPanelProps) {
   const {

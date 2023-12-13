@@ -1,22 +1,28 @@
-import { editor, Range } from "monaco-editor";
-import {
-  TNodeApiPayload,
-  TNodeReferenceData,
-  TNodeTreeData,
-  TNodeUid,
-} from "..";
 import { html_beautify } from "js-beautify";
+import { editor, Range } from "monaco-editor";
+
 import {
   sortUidsByMaxEndIndex,
   sortUidsByMinStartIndex,
 } from "@_components/main/actionsPanel/nodeTreeView/helpers";
+import { LogAllow } from "@_constants/global";
 import {
   AddNodeActionPrefix,
   DefaultTabSize,
+  NodePathSplitter,
   RenameNodeActionPrefix,
 } from "@_constants/main";
+import { getValidNodeTree } from "@_pages/main/processor/helpers";
+import { setNeedToSelectNodePaths } from "@_redux/main/nodeTree";
 import { THtmlReferenceData } from "@_types/main";
-import { LogAllow } from "@_constants/global";
+
+import {
+  getNodeChildIndex,
+  TNodeApiPayload,
+  TNodeReferenceData,
+  TNodeTreeData,
+  TNodeUid,
+} from "../";
 import { copyCode, pasteCode, replaceContent } from "./helpers";
 
 const add = ({
@@ -31,7 +37,7 @@ const add = ({
   nodeTree: TNodeTreeData;
   focusedItem: TNodeUid;
   codeViewInstanceModel: editor.ITextModel;
-}) => {
+}): string[] => {
   const tagName = actionName.slice(
     AddNodeActionPrefix.length + 2,
     actionName.length - 1,
@@ -61,6 +67,24 @@ const add = ({
     text: codeViewText,
   };
   codeViewInstanceModel.applyEdits([edit]);
+
+  // predict needToSelectNodePaths
+  const needToSelectNodePaths = (() => {
+    const needToSelectNodePaths: string[] = [];
+    const validNodeTree = getValidNodeTree(nodeTree);
+    const targetNode = validNodeTree[focusedItem];
+    const targetParentNode = validNodeTree[targetNode.parentUid as TNodeUid];
+    const targetNodeChildIndex = getNodeChildIndex(
+      targetParentNode,
+      targetNode,
+    );
+    const newNodePath = `${
+      targetParentNode.data.path
+    }${NodePathSplitter}${tagName}-${targetNodeChildIndex + 1}`;
+    needToSelectNodePaths.push(newNodePath);
+    return needToSelectNodePaths;
+  })();
+  return needToSelectNodePaths;
 };
 const remove = ({
   nodeTree,
@@ -70,7 +94,7 @@ const remove = ({
   nodeTree: TNodeTreeData;
   uids: TNodeUid[];
   codeViewInstanceModel: editor.ITextModel;
-}) => {
+}): string[] => {
   const sortedUids = sortUidsByMaxEndIndex(uids, nodeTree);
   sortedUids.forEach((uid) => {
     const node = nodeTree[uid];
@@ -84,6 +108,9 @@ const remove = ({
       codeViewInstanceModel.applyEdits([edit]);
     }
   });
+
+  // predict needToSelectNodePaths
+  return [];
 };
 
 const cut = ({
@@ -94,11 +121,39 @@ const cut = ({
   nodeTree: TNodeTreeData;
   uids: TNodeUid[];
   codeViewInstanceModel: editor.ITextModel;
-}) => {
+}): string[] => {
   copy({ nodeTree, uids, codeViewInstanceModel });
   remove({ nodeTree, uids, codeViewInstanceModel });
+
+  // predict needToSelectNodePaths
+  const needToSelectNodePaths = (() => {
+    const needToSelectNodePaths: string[] = [];
+    const validNodeTree = getValidNodeTree(nodeTree);
+    const sortedUids = sortUidsByMinStartIndex(uids, validNodeTree);
+    const removedChildCount: { [uid: TNodeUid]: number } = {};
+    sortedUids.map((uid) => {
+      const node = validNodeTree[uid];
+      const parentNode = validNodeTree[node.parentUid as TNodeUid];
+      const grandParentNode = validNodeTree[parentNode.parentUid as TNodeUid];
+      const parentNodeChildeIndex = getNodeChildIndex(
+        grandParentNode,
+        parentNode,
+      );
+
+      removedChildCount[parentNode.uid] =
+        (removedChildCount[parentNode.uid] || 0) + 1;
+      removedChildCount[grandParentNode.uid] =
+        removedChildCount[grandParentNode.uid] || 0;
+      const newNodePath = `${grandParentNode.data.path}${NodePathSplitter}${
+        parentNode.data.tagName
+      }-${parentNodeChildeIndex - removedChildCount[grandParentNode.uid]}`;
+      needToSelectNodePaths.push(newNodePath);
+    });
+    return needToSelectNodePaths;
+  })();
+  return needToSelectNodePaths;
 };
-const copy = ({
+const copy = async ({
   nodeTree,
   uids,
   codeViewInstanceModel,
@@ -106,9 +161,28 @@ const copy = ({
   nodeTree: TNodeTreeData;
   uids: TNodeUid[];
   codeViewInstanceModel: editor.ITextModel;
-}) => {
-  const copiedCode = copyCode({ nodeTree, uids, codeViewInstanceModel });
-  window.navigator.clipboard.writeText(copiedCode);
+}): Promise<string[]> => {
+  return new Promise<string[]>(async (resolve, reject) => {
+    try {
+      const copiedCode = copyCode({ nodeTree, uids, codeViewInstanceModel });
+      await window.navigator.clipboard.writeText(copiedCode);
+
+      // predict needToSelectNodePaths
+      const needToSelectNodePaths = (() => {
+        const needToSelectNodePaths: string[] = [];
+        const validNodeTree = getValidNodeTree(nodeTree);
+        uids.map((uid) => {
+          const node = validNodeTree[uid];
+          needToSelectNodePaths.push(node.data.path);
+        });
+        return needToSelectNodePaths;
+      })();
+      resolve(needToSelectNodePaths);
+    } catch (err) {
+      LogAllow && console.error("Error writing to clipboard:", err);
+      reject(err);
+    }
+  });
 };
 const paste = async ({
   nodeTree,
@@ -118,20 +192,56 @@ const paste = async ({
   nodeTree: TNodeTreeData;
   focusedItem: TNodeUid;
   codeViewInstanceModel: editor.ITextModel;
-}) => {
-  await window.navigator.clipboard
-    .readText()
-    .then((code) => {
+}): Promise<string[]> => {
+  return new Promise<string[]>(async (resolve, reject) => {
+    try {
+      const code = await window.navigator.clipboard.readText();
       pasteCode({
         nodeTree,
         focusedItem,
         codeViewInstanceModel,
         code,
       });
-    })
-    .catch((error) => {
-      LogAllow && console.error("Error reading from clipboard:", error);
-    });
+
+      // predict needToSelectNodePaths
+      const needToSelectNodePaths = (() => {
+        const needToSelectNodePaths: string[] = [];
+        const validNodeTree = getValidNodeTree(nodeTree);
+        const focusedNode = validNodeTree[focusedItem];
+        const parentNode = validNodeTree[focusedNode.parentUid as TNodeUid];
+        const focusedNodeChildIndex = getNodeChildIndex(
+          parentNode,
+          focusedNode,
+        );
+
+        let addedChildCount = 0;
+        const divElement = window.document.createElement("div");
+        divElement.innerHTML = code;
+        if (divElement.hasChildNodes()) {
+          for (const childNode of divElement.childNodes) {
+            const nodeName = childNode.nodeName;
+            if (nodeName !== "#text") {
+              const tagName = String(nodeName).toLowerCase();
+              ++addedChildCount;
+              const newNodePath = `${
+                parentNode.data.path
+              }${NodePathSplitter}${tagName}-${
+                focusedNodeChildIndex + addedChildCount
+              }`;
+              needToSelectNodePaths.push(newNodePath);
+            }
+          }
+        }
+        divElement.remove();
+
+        return needToSelectNodePaths;
+      })();
+      resolve(needToSelectNodePaths);
+    } catch (err) {
+      LogAllow && console.error("Error reading from clipboard:", err);
+      reject(err);
+    }
+  });
 };
 
 const duplicate = ({
@@ -142,7 +252,7 @@ const duplicate = ({
   nodeTree: TNodeTreeData;
   uids: TNodeUid[];
   codeViewInstanceModel: editor.ITextModel;
-}) => {
+}): string[] => {
   const sortedUids = sortUidsByMaxEndIndex(uids, nodeTree);
   sortedUids.forEach((uid) => {
     const node = nodeTree[uid];
@@ -159,6 +269,28 @@ const duplicate = ({
       codeViewInstanceModel.applyEdits([edit]);
     }
   });
+
+  // predict needToSelectNodePaths
+  const needToSelectNodePaths = (() => {
+    const needToSelectNodePaths: string[] = [];
+    const validNodeTree = getValidNodeTree(nodeTree);
+    const sortedUids = sortUidsByMinStartIndex(uids, validNodeTree);
+    const addedChildCount: { [uid: TNodeUid]: number } = {};
+    sortedUids.map((uid) => {
+      const node = validNodeTree[uid];
+      const parentNode = validNodeTree[node.parentUid as TNodeUid];
+      const nodeChildeIndex = getNodeChildIndex(parentNode, node);
+
+      addedChildCount[node.parentUid as TNodeUid] =
+        (addedChildCount[node.parentUid as TNodeUid] || 0) + 1;
+      const newNodePath = `${parentNode.data.path}${NodePathSplitter}${
+        node.data.tagName
+      }-${nodeChildeIndex + addedChildCount[node.parentUid as TNodeUid]}`;
+      needToSelectNodePaths.push(newNodePath);
+    });
+    return needToSelectNodePaths;
+  })();
+  return needToSelectNodePaths;
 };
 const move = ({
   nodeTree,
@@ -174,7 +306,7 @@ const move = ({
   isBetween: boolean;
   position: number;
   codeViewInstanceModel: editor.ITextModel;
-}) => {
+}): string[] => {
   const targetNode = nodeTree[targetUid];
   const childCount = targetNode.children.length;
   const focusedItem = isBetween
@@ -199,6 +331,38 @@ const move = ({
       remove({ nodeTree, uids: [uid], codeViewInstanceModel });
     }
   });
+
+  // predict needToSelectNodePaths
+  const needToSelectNodePaths = (() => {
+    const needToSelectNodePaths: string[] = [];
+    const validNodeTree = getValidNodeTree(nodeTree);
+    const targetNode = validNodeTree[targetUid];
+
+    let directChildCount = 0;
+    uids.map((uid) => {
+      const node = validNodeTree[uid];
+      if (node.parentUid === targetUid) {
+        const nodeChildeIndex = getNodeChildIndex(targetNode, node);
+        isBetween
+          ? nodeChildeIndex < position
+            ? directChildCount++
+            : null
+          : directChildCount++;
+      }
+    });
+
+    uids.map((uid, index) => {
+      const node = validNodeTree[uid];
+      const newNodeChildIndex =
+        (isBetween ? position : targetNode.children.length) -
+        directChildCount +
+        index;
+      const newNodePath = `${targetNode.data.path}${NodePathSplitter}${node.data.tagName}-${newNodeChildIndex}`;
+      needToSelectNodePaths.push(newNodePath);
+    });
+    return needToSelectNodePaths;
+  })();
+  return needToSelectNodePaths;
 };
 
 const rename = ({
@@ -213,7 +377,7 @@ const rename = ({
   nodeTree: TNodeTreeData;
   focusedItem: TNodeUid;
   codeViewInstanceModel: editor.ITextModel;
-}) => {
+}): string[] => {
   const tagName = actionName.slice(
     RenameNodeActionPrefix.length + 2,
     actionName.length - 1,
@@ -248,7 +412,26 @@ const rename = ({
   });
   const codeToAdd = `${openingTag}${code}${closingTag}`;
   remove({ nodeTree, uids: [focusedItem], codeViewInstanceModel });
-  pasteCode({ nodeTree, focusedItem, codeViewInstanceModel, code: codeToAdd });
+  pasteCode({
+    nodeTree,
+    focusedItem,
+    addToBefore: true,
+    codeViewInstanceModel,
+    code: codeToAdd,
+  });
+
+  // predict needToSelectNodePaths
+  const needToSelectNodePaths = (() => {
+    const needToSelectNodePaths: string[] = [];
+    const validNodeTree = getValidNodeTree(nodeTree);
+    const focusedNode = validNodeTree[focusedItem];
+    const parentNode = validNodeTree[focusedNode.parentUid as TNodeUid];
+    const focusedNodeChildIndex = getNodeChildIndex(parentNode, focusedNode);
+    const newNodePath = `${parentNode.data.path}${NodePathSplitter}${tagName}-${focusedNodeChildIndex}`;
+    needToSelectNodePaths.push(newNodePath);
+    return needToSelectNodePaths;
+  })();
+  return needToSelectNodePaths;
 };
 
 const group = ({
@@ -259,7 +442,7 @@ const group = ({
   nodeTree: TNodeTreeData;
   uids: TNodeUid[];
   codeViewInstanceModel: editor.ITextModel;
-}) => {
+}): string[] => {
   const sortedUids = sortUidsByMinStartIndex(uids, nodeTree);
   const code = copyCode({ nodeTree, uids: sortedUids, codeViewInstanceModel });
   remove({ nodeTree, uids, codeViewInstanceModel });
@@ -271,6 +454,24 @@ const group = ({
     text: `<div>${code}</div>`,
   };
   codeViewInstanceModel.applyEdits([edit]);
+
+  // predict needToSelectNodePaths
+  const needToSelectNodePaths = (() => {
+    const needToSelectNodePaths: string[] = [];
+    const validNodeTree = getValidNodeTree(nodeTree);
+    const sortedUids = sortUidsByMinStartIndex(uids, validNodeTree);
+    const targetNode = validNodeTree[sortedUids[0]];
+    const targetParentNode = validNodeTree[targetNode.parentUid as TNodeUid];
+    const targetNodeChildIndex = getNodeChildIndex(
+      targetParentNode,
+      targetNode,
+    );
+    const newNodeTagName = "div";
+    const newNodePath = `${targetParentNode.data.path}${NodePathSplitter}${newNodeTagName}-${targetNodeChildIndex}`;
+    needToSelectNodePaths.push(newNodePath);
+    return needToSelectNodePaths;
+  })();
+  return needToSelectNodePaths;
 };
 const ungroup = ({
   nodeTree,
@@ -280,7 +481,7 @@ const ungroup = ({
   nodeTree: TNodeTreeData;
   uids: TNodeUid[];
   codeViewInstanceModel: editor.ITextModel;
-}) => {
+}): string[] => {
   const sortedUids = sortUidsByMaxEndIndex(uids, nodeTree);
   sortedUids.map((uid) => {
     const node = nodeTree[uid];
@@ -299,6 +500,34 @@ const ungroup = ({
     };
     codeViewInstanceModel.applyEdits([edit]);
   });
+
+  // predict needToSelectNodePaths
+  const needToSelectNodePaths = (() => {
+    const needToSelectNodePaths: string[] = [];
+    const validNodeTree = getValidNodeTree(nodeTree);
+    const sortedUids = sortUidsByMinStartIndex(uids, validNodeTree);
+    const addedChildCount: { [uid: TNodeUid]: number } = {};
+    sortedUids.map((uid) => {
+      const containerNode = validNodeTree[uid];
+      const parentNode = validNodeTree[containerNode.parentUid as TNodeUid];
+      const containerNodeChildIndex = getNodeChildIndex(
+        parentNode,
+        containerNode,
+      );
+      addedChildCount[parentNode.uid] = addedChildCount[parentNode.uid] || 0;
+      containerNode.children.map((childUid, index) => {
+        const childNode = validNodeTree[childUid];
+        const newNodePath = `${parentNode.data.path}${NodePathSplitter}${
+          childNode.data.tagName
+        }-${addedChildCount[parentNode.uid] + containerNodeChildIndex + index}`;
+        needToSelectNodePaths.push(newNodePath);
+      });
+      addedChildCount[parentNode.uid] += containerNode.children.length - 1;
+    });
+    console.log(needToSelectNodePaths);
+    return needToSelectNodePaths;
+  })();
+  return needToSelectNodePaths;
 };
 
 const edit = ({
@@ -311,8 +540,21 @@ const edit = ({
   focusedItem: TNodeUid;
   content: string;
   codeViewInstanceModel: editor.ITextModel;
-}) => {
+}): string[] => {
   replaceContent({ nodeTree, focusedItem, content, codeViewInstanceModel });
+
+  // predict needToSelectNodePaths
+  const needToSelectNodePaths = (() => {
+    const needToSelectNodePaths: string[] = [];
+    const validNodeTree = getValidNodeTree(nodeTree);
+    const focusedNode = validNodeTree[focusedItem];
+    const parentNode = validNodeTree[focusedNode.parentUid as TNodeUid];
+    const focusedNodeChildIndex = getNodeChildIndex(parentNode, focusedNode);
+    const newNodePath = `${parentNode.data.path}${NodePathSplitter}${focusedNode.data.tagName}-${focusedNodeChildIndex}`;
+    needToSelectNodePaths.push(newNodePath);
+    return needToSelectNodePaths;
+  })();
+  return needToSelectNodePaths;
 };
 
 export const doNodeActions = async (
@@ -322,6 +564,8 @@ export const doNodeActions = async (
 ) => {
   try {
     const {
+      dispatch,
+
       fileExt = "html",
 
       actionName,
@@ -341,9 +585,11 @@ export const doNodeActions = async (
       osType = "Windows",
     } = params;
 
+    let needToSelectNodePaths: string[] = [];
+
     switch (action) {
       case "add":
-        add({
+        needToSelectNodePaths = add({
           actionName,
           referenceData,
           nodeTree,
@@ -352,42 +598,42 @@ export const doNodeActions = async (
         });
         break;
       case "remove":
-        remove({
+        needToSelectNodePaths = remove({
           nodeTree,
           uids: selectedUids,
           codeViewInstanceModel,
         });
         break;
       case "cut":
-        cut({
+        needToSelectNodePaths = cut({
           nodeTree,
           uids: selectedUids,
           codeViewInstanceModel,
         });
         break;
       case "copy":
-        copy({
+        needToSelectNodePaths = await copy({
           nodeTree,
           uids: selectedUids,
           codeViewInstanceModel,
         });
         break;
       case "paste":
-        await paste({
+        needToSelectNodePaths = await paste({
           nodeTree,
           focusedItem: targetUid,
           codeViewInstanceModel,
         });
         break;
       case "duplicate":
-        duplicate({
+        needToSelectNodePaths = duplicate({
           nodeTree,
           uids: selectedUids,
           codeViewInstanceModel,
         });
         break;
       case "move":
-        move({
+        needToSelectNodePaths = move({
           nodeTree,
           uids: selectedUids,
           targetUid,
@@ -397,7 +643,7 @@ export const doNodeActions = async (
         });
         break;
       case "rename":
-        rename({
+        needToSelectNodePaths = rename({
           actionName,
           referenceData,
           nodeTree,
@@ -406,21 +652,21 @@ export const doNodeActions = async (
         });
         break;
       case "group":
-        group({
+        needToSelectNodePaths = group({
           nodeTree,
           uids: selectedUids,
           codeViewInstanceModel,
         });
         break;
       case "ungroup":
-        ungroup({
+        needToSelectNodePaths = ungroup({
           nodeTree,
           uids: selectedUids,
           codeViewInstanceModel,
         });
         break;
       case "text-edit":
-        edit({
+        needToSelectNodePaths = edit({
           nodeTree,
           focusedItem: targetUid,
           content,
@@ -430,6 +676,8 @@ export const doNodeActions = async (
       default:
         break;
     }
+
+    dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
     const code = html_beautify(codeViewInstanceModel.getValue());
     codeViewInstanceModel.setValue(code);

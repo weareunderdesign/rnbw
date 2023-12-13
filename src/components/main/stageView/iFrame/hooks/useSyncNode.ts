@@ -1,18 +1,19 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
+import { debounce } from "lodash";
+
+import { ShortDelay } from "@_constants/main";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
-
+import { scrollToElement } from "@_pages/main/helper";
 import { useAppState } from "@_redux/useAppState";
+
 import {
   markHoverdElement,
   markSelectedElements,
   unmarkHoverdElement,
   unmarkSelectedElements,
 } from "../helpers";
-import { debounce } from "lodash";
-import { scrollToElement } from "@_pages/main/helper";
-import { ShortDelay } from "@_constants/main";
 
 export const useSyncNode = (iframeRef: HTMLIFrameElement | null) => {
   const {

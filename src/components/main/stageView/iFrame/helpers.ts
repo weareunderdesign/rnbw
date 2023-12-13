@@ -1,12 +1,12 @@
-import { ShortDelay } from "@_constants/main";
+import { editor } from "monaco-editor";
+
 import {
+  callNodeApi,
   StageNodeIdAttr,
   TNodeTreeData,
   TNodeUid,
-  callNodeApi,
 } from "@_node/index";
-import { debounce } from "lodash";
-import { editor } from "monaco-editor";
+import { AnyAction, Dispatch } from "@reduxjs/toolkit";
 
 export const getValidElementWithUid = (
   ele: HTMLElement,
@@ -94,6 +94,7 @@ export const unmarkHoverdElement = (
 };
 
 export const editHtmlContent = ({
+  dispatch,
   iframeRef,
   nodeTree,
   contentEditableUid,
@@ -101,6 +102,7 @@ export const editHtmlContent = ({
   setIsContentProgrammaticallyChanged,
   cb,
 }: {
+  dispatch: Dispatch<AnyAction>;
   iframeRef: HTMLIFrameElement;
   nodeTree: TNodeTreeData;
   contentEditableUid: TNodeUid;
@@ -114,14 +116,16 @@ export const editHtmlContent = ({
     );
   if (contentEditableElement) {
     contentEditableElement.setAttribute("contenteditable", "false");
+    const content = contentEditableElement.textContent;
 
     setIsContentProgrammaticallyChanged(true);
     callNodeApi(
       {
+        dispatch,
         action: "text-edit",
         nodeTree,
         targetUid: contentEditableUid,
-        content: contentEditableElement.innerHTML,
+        content: content ? content : "",
         codeViewInstanceModel,
       },
       () => {

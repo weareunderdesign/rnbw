@@ -1,11 +1,12 @@
 import React, { useMemo } from "react";
 
+import { useAppState } from "@_redux/useAppState";
+
 import NavigatorPanel from "./navigatorPanel";
 import NodeTreeView from "./nodeTreeView";
 import SettingsPanel from "./settingsPanel";
 import { ActionsPanelProps } from "./types";
 import WorkspaceTreeView from "./workspaceTreeView";
-import { useAppState } from "@_redux/useAppState";
 
 export default function ActionsPanel({ ...props }: ActionsPanelProps) {
   const { showActionsPanel } = useAppState();

@@ -33,6 +33,7 @@ export const useAppState = () => {
       nodeTree: {
         nodeTree,
         validNodeTree,
+        needToSelectNodePaths,
         nodeTreeViewState: {
           focusedItem: nFocusedItem,
           expandedItems: nExpandedItems,
@@ -56,12 +57,14 @@ export const useAppState = () => {
       },
       codeView: { codeViewTabSize },
       processor: {
+        doingAction,
         navigatorDropdownType,
         favicon,
         activePanel,
         clipboardData,
         showActionsPanel,
         showCodeView,
+        autoSave,
         didUndo,
         didRedo,
       },
@@ -112,6 +115,8 @@ export const useAppState = () => {
     nodeTree,
     validNodeTree,
 
+    needToSelectNodePaths,
+
     nFocusedItem,
     nExpandedItems,
     nExpandedItemsObj,
@@ -135,6 +140,8 @@ export const useAppState = () => {
 
     codeViewTabSize,
 
+    doingAction,
+
     navigatorDropdownType,
     favicon,
 
@@ -143,6 +150,8 @@ export const useAppState = () => {
 
     showActionsPanel,
     showCodeView,
+
+    autoSave,
 
     didUndo,
     didRedo,
