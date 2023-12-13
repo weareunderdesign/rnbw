@@ -15,6 +15,7 @@ import { setTheme } from "@_redux/global";
 import {
   setCmdkOpen,
   setCmdkPages,
+  setCmdkSearchContent,
   setCurrentCommand,
 } from "@_redux/main/cmdk";
 import {
@@ -118,10 +119,12 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
   const onAdd = useCallback(() => {
     dispatch(setCmdkPages([...cmdkPages, "Add"]));
     dispatch(setCmdkOpen(true));
+    dispatch(setCmdkSearchContent(""));
   }, [cmdkPages]);
   const onTurnInto = useCallback(() => {
     dispatch(setCmdkPages([...cmdkPages, "Turn into"]));
     dispatch(setCmdkOpen(true));
+    dispatch(setCmdkSearchContent(""));
   }, [cmdkPages]);
   const onDownload = useCallback(async () => {
     if (project.context !== "idb") return;
@@ -241,6 +244,10 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
         onClear();
       }
       if (cmdk.cmd && cmdk.key === "KeyG") {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (e.key === "j" || e.key === "a" || e.key === "w") {
         e.preventDefault();
         e.stopPropagation();
       }
