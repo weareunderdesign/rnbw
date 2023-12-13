@@ -301,7 +301,9 @@ export const useNodeActionsHandler = ({
     if (uids.length === 0) return;
 
     const message = `Are you sure you want to delete them? This action cannot be undone!`;
-    triggerAlert(message);
+    if (!window.confirm(message)) {
+      return;
+    }
 
     addRunningActions(["fileTreeView-delete"]);
     addInvalidNodes(...uids);
@@ -325,10 +327,10 @@ export const useNodeActionsHandler = ({
     removeInvalidNodes(...uids);
     removeRunningActions(["fileTreeView-delete"]);
   }, [
-    addRunningActions,
-    removeRunningActions,
     selectedItems,
     invalidNodes,
+    addRunningActions,
+    removeRunningActions,
     addInvalidNodes,
     removeInvalidNodes,
     project,

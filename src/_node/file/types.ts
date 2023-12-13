@@ -71,10 +71,6 @@ export type TProjectLoaderResponse = {
 };
 
 export type TFileApiPayloadBase = {
-  // addInvalidNodes: (...uids: string[]) => void;
-  // removeInvalidNodes: (...uids: string[]) => void;
-  // addTemporaryNodes: (...uids: string[]) => void;
-  // removeTemporaryNodes: (...uids: string[]) => void;
   projectContext: TProjectContext;
   action: TFileActionType;
   fileTree: TFileNodeTreeData;
