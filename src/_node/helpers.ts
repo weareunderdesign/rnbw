@@ -1,5 +1,7 @@
 import {
+  AddFileActionPrefix,
   AddNodeActionPrefix,
+  RenameFileActionPrefix,
   RenameNodeActionPrefix,
   RootNodeUid,
 } from "@_constants/main";
@@ -166,6 +168,12 @@ export const isAddNodeAction = (actionName: string): boolean => {
 };
 export const isRenameNodeAction = (actionName: string): boolean => {
   return actionName.startsWith(RenameNodeActionPrefix) ? true : false;
+};
+export const isAddFileAction = (actionName: string): boolean => {
+  return actionName.startsWith(AddFileActionPrefix) ? true : false;
+};
+export const isRenameFileAction = (actionName: string): boolean => {
+  return actionName.startsWith(RenameFileActionPrefix) ? true : false;
 };
 
 // -------------------------------

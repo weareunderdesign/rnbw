@@ -8,7 +8,7 @@ import { TFileTreeReducerState, TProject, TWorkspace } from "./types";
 
 const fileTreeReducerInitialState: TFileTreeReducerState = {
   workspace: { name: "local", projects: [] },
-  project: { context: "idb", name: "welcome", handler: null, favicon: null },
+  project: { context: "idb", name: "welcome", favicon: null },
   fileTree: {},
   initialFileUidToOpen: "",
   prevFileUid: "",
@@ -36,7 +36,7 @@ const fileTreeSlice = createSlice({
       const workspace = action.payload;
       state.workspace = workspace;
     },
-    setProject(state, action: PayloadAction<TProject>) {
+    setProject(state, action: PayloadAction<Omit<TProject, "handler">>) {
       const project = action.payload;
       state.project = project;
     },

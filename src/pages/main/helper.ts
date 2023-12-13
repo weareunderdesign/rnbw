@@ -23,7 +23,12 @@ import {
   NodeTree_Event_JumpToPastActionType,
 } from "@_redux/main/nodeTree/event";
 import { setIframeSrc } from "@_redux/main/stageView";
-import { TCmdkReferenceData, TFilesReference } from "@_types/main";
+import {
+  TCmdkKeyMap,
+  TCmdkReference,
+  TCmdkReferenceData,
+  TFilesReference,
+} from "@_types/main";
 import { AnyAction } from "@reduxjs/toolkit";
 
 export const addDefaultCmdkActions = (
@@ -98,13 +103,11 @@ export const addDefaultCmdkActions = (
     Context: "all",
   };
 };
-
 export const clearProjectSession = (dispatch: Dispatch<AnyAction>) => {
   dispatch(
     setProject({
       context: "idb",
       name: "",
-      handler: null,
       favicon: null,
     }),
   );
@@ -118,7 +121,6 @@ export const clearProjectSession = (dispatch: Dispatch<AnyAction>) => {
 
   clearFileSession(dispatch);
 };
-
 export const clearFileSession = (dispatch: Dispatch<AnyAction>) => {
   dispatch(setNodeTree({}));
   dispatch(setValidNodeTree({}));
@@ -128,7 +130,72 @@ export const clearFileSession = (dispatch: Dispatch<AnyAction>) => {
 
   dispatch(setIframeSrc(null));
 };
-
+export const getKeyObjectsFromCommand = (command: TCmdkReference) => {
+  const shortcuts = (command["Keyboard Shortcut"] as string)?.split(" ");
+  const keyObjects: TCmdkKeyMap[] = [];
+  shortcuts?.forEach((shortcut) => {
+    const keys = shortcut.split("+");
+    const keyObj = {
+      cmd: false,
+      shift: false,
+      alt: false,
+      key: "",
+      click: false,
+    };
+    keys?.forEach((key) => {
+      if (
+        key === "cmd" ||
+        key === "shift" ||
+        key === "alt" ||
+        key === "click"
+      ) {
+        keyObj[key] = true;
+      } else {
+        keyObj.key = key;
+      }
+    });
+    keyObjects.push(keyObj);
+  });
+  return keyObjects;
+};
+export const fileCmdk = ({
+  fileTree,
+  fFocusedItem,
+  filesRef,
+  data,
+  cmdkSearchContent,
+  groupName,
+}: any) => {
+  const fileNode = fileTree[fFocusedItem];
+  if (fileNode) {
+    filesRef.map((fileRef: TFilesReference) => {
+      fileRef.Name &&
+        data["Files"].push({
+          Featured: fileRef.Featured === "Yes",
+          Name: fileRef.Name,
+          Icon: fileRef.Icon,
+          Description: fileRef.Description,
+          "Keyboard Shortcut": [
+            {
+              cmd: false,
+              shift: false,
+              alt: false,
+              key: "",
+              click: false,
+            },
+          ],
+          Group: groupName,
+          Context: `File-${fileRef.Extension}`,
+        });
+    });
+  }
+  data["Files"] = data["Files"].filter(
+    (element: any) => element.Featured || !!cmdkSearchContent,
+  );
+  if (data["Files"].length === 0) {
+    delete data["Files"];
+  }
+};
 export const elementsCmdk = ({
   nodeTree,
   nFocusedItem,
@@ -239,50 +306,20 @@ export const elementsCmdk = ({
     delete data["Elements"];
   }
 };
-
-export const fileCmdk = ({
-  fileTree,
-  fFocusedItem,
-  filesRef,
-  data,
-  cmdkSearchContent,
-  groupName,
-}: any) => {
-  const fileNode = fileTree[fFocusedItem];
-  if (fileNode) {
-    filesRef.map((fileRef: TFilesReference) => {
-      fileRef.Name &&
-        data["Files"].push({
-          Featured: fileRef.Featured === "Yes",
-          Name: fileRef.Name,
-          Icon: fileRef.Icon,
-          Description: fileRef.Description,
-          "Keyboard Shortcut": [
-            {
-              cmd: false,
-              shift: false,
-              alt: false,
-              key: "",
-              click: false,
-            },
-          ],
-          Group: groupName,
-          Context: `File-${fileRef.Extension}`,
-        });
-    });
-  }
-  data["Files"] = data["Files"].filter(
-    (element: any) => element.Featured || !!cmdkSearchContent,
-  );
-  if (data["Files"].length === 0) {
-    delete data["Files"];
-  }
-};
-
 export const scrollToElement = (element: Element, behavior: ScrollBehavior) => {
   element.scrollIntoView({
     block: "nearest",
     inline: "start",
     behavior,
   });
+};
+export const setSystemTheme = () => {
+  if (
+    window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches
+  ) {
+    document.documentElement.setAttribute("data-theme", "dark");
+  } else {
+    document.documentElement.setAttribute("data-theme", "light");
+  }
 };

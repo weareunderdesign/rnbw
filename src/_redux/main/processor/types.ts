@@ -1,6 +1,8 @@
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 
 export type TProcessorReducerState = {
+  doingAction: boolean;
+
   navigatorDropdownType: TNavigatorDropdownType;
   favicon: string;
 
@@ -9,6 +11,8 @@ export type TProcessorReducerState = {
 
   showActionsPanel: boolean;
   showCodeView: boolean;
+
+  autoSave: boolean;
 
   didUndo: boolean;
   didRedo: boolean;

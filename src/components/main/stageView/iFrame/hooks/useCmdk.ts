@@ -85,7 +85,8 @@ export const useCmdk = ({
         action === "Save" ||
         action === "Download" ||
         action === "Duplicate" ||
-        action === "Group"
+        action === "Group" ||
+        action === "UnGroup"
       ) {
         e.preventDefault();
       }

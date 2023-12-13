@@ -6,7 +6,7 @@ import { TFileAction } from "./event";
 
 export type TFileTreeReducerState = {
   workspace: TWorkspace;
-  project: TProject;
+  project: Omit<TProject, "handler">;
   fileTree: TFileNodeTreeData;
   initialFileUidToOpen: TNodeUid;
   prevFileUid: TNodeUid;
@@ -22,7 +22,7 @@ export type TFileTreeReducerState = {
 
 export type TWorkspace = {
   name: string;
-  projects: TProject[];
+  projects: Omit<TProject, "handler">[];
 };
 
 export type TProject = {
