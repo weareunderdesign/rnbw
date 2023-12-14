@@ -19,6 +19,7 @@ import { Editor, loader } from "@monaco-editor/react";
 
 import { useCmdk, useEditor } from "./hooks";
 import { CodeViewProps } from "./types";
+import { getNodeUidByCodeSelection } from "./helpers";
 
 loader.config({ monaco });
 
@@ -35,11 +36,7 @@ export default function CodeView(props: CodeViewProps) {
     activePanel,
     showCodeView,
   } = useAppState();
-  const {
-    isContentProgrammaticallyChanged,
-    setIsContentProgrammaticallyChanged,
-    monacoEditorRef,
-  } = useContext(MainContext);
+  const { isCodeTyping, monacoEditorRef } = useContext(MainContext);
 
   const {
     handleEditorDidMount,
@@ -54,7 +51,6 @@ export default function CodeView(props: CodeViewProps) {
     setWordWrap,
 
     codeSelection,
-    getNodeUidByCodeSelection,
   } = useEditor();
   useCmdk();
 
@@ -126,7 +122,7 @@ export default function CodeView(props: CodeViewProps) {
 
   // code select -> selectedUids
   useEffect(() => {
-    if (!codeSelection) return;
+    if (!codeSelection || isCodeTyping.current) return;
 
     const file = fileTree[currentFileUid];
     if (!file) return;

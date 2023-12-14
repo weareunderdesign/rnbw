@@ -1,22 +1,27 @@
-import { useRef } from "react";
+import { useCallback, useRef } from "react";
 
 import { editor } from "monaco-editor";
 
 export const useReferneces = () => {
   const monacoEditorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
-  const setMonacoEditorRef = (
-    editorInstance: editor.IStandaloneCodeEditor | null,
-  ) => {
-    monacoEditorRef.current = editorInstance;
-  };
+  const setMonacoEditorRef = useCallback(
+    (editorInstance: editor.IStandaloneCodeEditor | null) => {
+      monacoEditorRef.current = editorInstance;
+    },
+    [],
+  );
   const iframeRefRef = useRef<HTMLIFrameElement | null>(null);
-  const setIframeRefRef = (iframeRef: HTMLIFrameElement | null) => {
+  const setIframeRefRef = useCallback((iframeRef: HTMLIFrameElement | null) => {
     iframeRefRef.current = iframeRef;
-  };
-  const isContentProgrammaticallyChanged = useRef<boolean>(false);
-  const setIsContentProgrammaticallyChanged = (value: boolean) => {
+  }, []);
+  const isContentProgrammaticallyChanged = useRef(false);
+  const setIsContentProgrammaticallyChanged = useCallback((value: boolean) => {
     isContentProgrammaticallyChanged.current = value;
-  };
+  }, []);
+  const isCodeTyping = useRef(false);
+  const setIsCodeTyping = useCallback((value: boolean) => {
+    isCodeTyping.current = value;
+  }, []);
 
   return {
     monacoEditorRef,
@@ -25,5 +30,7 @@ export const useReferneces = () => {
     setIframeRefRef,
     isContentProgrammaticallyChanged,
     setIsContentProgrammaticallyChanged,
+    isCodeTyping,
+    setIsCodeTyping,
   };
 };

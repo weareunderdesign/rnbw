@@ -127,6 +127,8 @@ export default function MainPage() {
     setIframeRefRef,
     isContentProgrammaticallyChanged,
     setIsContentProgrammaticallyChanged,
+    isCodeTyping,
+    setIsCodeTyping,
   } = useReferneces();
   const { validMenuItemCount, hoveredMenuItemDescription } = useCmdkModal();
   const {
@@ -188,6 +190,8 @@ export default function MainPage() {
           setIframeRefRef,
           isContentProgrammaticallyChanged,
           setIsContentProgrammaticallyChanged,
+          isCodeTyping,
+          setIsCodeTyping,
 
           importProject,
           onUndo,

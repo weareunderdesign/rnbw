@@ -4,11 +4,10 @@ import { isAddNodeAction, isRenameNodeAction } from "@_node/helpers";
 import { MainContext } from "@_redux/main";
 import { useAppState } from "@_redux/useAppState";
 
-import { useNodeActionsHandlers } from "./useNodeActionsHandlers";
+import { useNodeActionHandlers } from "./useNodeActionHandlers";
 
 export const useCmdk = () => {
   const { activePanel, currentCommand } = useAppState();
-  const {} = useContext(MainContext);
 
   const {
     onAddNode,
@@ -20,7 +19,7 @@ export const useCmdk = () => {
     onTurnInto,
     onGroup,
     onUngroup,
-  } = useNodeActionsHandlers();
+  } = useNodeActionHandlers();
 
   useEffect(() => {
     if (!currentCommand) return;

@@ -3,12 +3,14 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import { TUpdateTreeViewStatePayload } from "../types";
 import { TNodeTreeReducerState } from "./types";
+import { TCodeSelection } from "@_components/main/codeView";
 
 const nodeTreeReducerInitialState: TNodeTreeReducerState = {
   nodeTree: {},
   validNodeTree: {},
 
-  needToSelectNodePaths: [],
+  needToSelectNodePaths: null,
+  needToSelectCode: null,
 
   nodeTreeViewState: {
     focusedItem: "",
@@ -32,9 +34,13 @@ const nodeTreeSlice = createSlice({
       state.validNodeTree = validNodeTree;
     },
 
-    setNeedToSelectNodePaths(state, action: PayloadAction<string[]>) {
+    setNeedToSelectNodePaths(state, action: PayloadAction<string[] | null>) {
       const needToSelectNodePaths = action.payload;
       state.needToSelectNodePaths = needToSelectNodePaths;
+    },
+    setNeedToSelectCode(state, action: PayloadAction<TCodeSelection | null>) {
+      const needToSelectCode = action.payload;
+      state.needToSelectCode = needToSelectCode;
     },
 
     focusNodeTreeNode(state, action: PayloadAction<TNodeUid>) {
@@ -146,6 +152,7 @@ export const {
   setValidNodeTree,
 
   setNeedToSelectNodePaths,
+  setNeedToSelectCode,
 
   focusNodeTreeNode,
   setExpandedNodeTreeNodes,

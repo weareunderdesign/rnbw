@@ -42,6 +42,17 @@ import { ItemTitle } from "./nodeTreeComponents/ItemTitle";
 import { NodeIcon } from "./nodeTreeComponents/NodeIcon";
 
 const AutoExpandDelayOnDnD = 1 * 1000;
+const dragAndDropConfig = {
+  canDragAndDrop: true,
+  canDropOnFolder: true,
+  canDropOnNonFolder: true,
+  canReorderItems: true,
+};
+const searchConfig = {
+  canSearch: false,
+  canSearchByStartingTyping: false,
+  canRename: false,
+};
 
 const NodeTreeView = () => {
   const dispatch = useDispatch();
@@ -211,22 +222,6 @@ const NodeTreeView = () => {
   const isDragging = useRef<boolean>(false);
 
   const callbacks = useNodeTreeCallback(focusedItemRef.current, isDragging);
-
-  const dragAndDropConfig = useMemo(
-    () => ({
-      canDragAndDrop: true,
-      canDropOnFolder: true,
-      canDropOnNonFolder: true,
-      canReorderItems: true,
-    }),
-    [],
-  );
-
-  const searchConfig = {
-    canSearch: false,
-    canSearchByStartingTyping: false,
-    canRename: false,
-  };
 
   return currentFileUid !== "" ? (
     <div

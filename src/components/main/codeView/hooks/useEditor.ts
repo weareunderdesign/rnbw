@@ -1,4 +1,11 @@
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { debounce } from "lodash";
 import { editor, KeyCode, KeyMod } from "monaco-editor";
@@ -8,13 +15,13 @@ import {
   CodeViewSyncDelay,
   CodeViewSyncDelay_Long,
   DefaultTabSize,
-  RootNodeUid,
 } from "@_constants/main";
-import { getSubNodeUidsByBfs } from "@_node/helpers";
-import { TNodeTreeData, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { setCodeViewTabSize } from "@_redux/main/codeView";
-import { setCurrentFileContent } from "@_redux/main/nodeTree";
+import {
+  setCurrentFileContent,
+  setNeedToSelectCode,
+} from "@_redux/main/nodeTree";
 import { useAppState } from "@_redux/useAppState";
 
 import { getCodeViewTheme, getLanguageFromExtension } from "../helpers";
@@ -26,9 +33,9 @@ const useEditor = () => {
   const {
     monacoEditorRef,
     setMonacoEditorRef,
-
     isContentProgrammaticallyChanged,
     setIsContentProgrammaticallyChanged,
+    setIsCodeTyping,
 
     onUndo,
     onRedo,
@@ -79,51 +86,15 @@ const useEditor = () => {
   const [codeSelection, _setCodeSelection] = useState<TCodeSelection | null>(
     null,
   );
+  const codeSelectionRef = useRef<TCodeSelection | null>(null);
+  useEffect(() => {
+    codeSelectionRef.current = codeSelection;
+  }, [codeSelection]);
   const setCodeSelection = useCallback(() => {
     const monacoEditor = monacoEditorRef.current;
     const _selection = monacoEditor?.getSelection();
     _setCodeSelection(_selection ? _selection : null);
   }, []);
-  const getNodeUidByCodeSelection = useCallback(
-    (
-      selection: TCodeSelection,
-      validNodeTree: TNodeTreeData,
-    ): TNodeUid | null => {
-      let focusedItem: TNodeUid | null = null;
-      if (selection) {
-        const uids = getSubNodeUidsByBfs(RootNodeUid, validNodeTree);
-        uids.reverse();
-        for (const uid of uids) {
-          const node = validNodeTree[uid];
-          const sourceCodeLocation = node.data.sourceCodeLocation;
-          if (!sourceCodeLocation) continue;
-
-          const {
-            startLine: startLineNumber,
-            startCol: startColumn,
-            endCol: endColumn,
-            endLine: endLineNumber,
-          } = sourceCodeLocation;
-
-          const containFront =
-            selection.startLineNumber === startLineNumber
-              ? selection.startColumn > startColumn
-              : selection.startLineNumber > startLineNumber;
-          const containBack =
-            selection.endLineNumber === endLineNumber
-              ? selection.endColumn < endColumn
-              : selection.endLineNumber < endLineNumber;
-
-          if (containFront && containBack) {
-            focusedItem = uid;
-            break;
-          }
-        }
-      }
-      return focusedItem;
-    },
-    [],
-  );
 
   // handlerEditorDidMount
   const handleEditorDidMount = useCallback(
@@ -150,24 +121,30 @@ const useEditor = () => {
         })),
       );
 
-      editor.onDidChangeCursorPosition(
-        (event) => event.source === "mouse" && setCodeSelection(),
-      );
+      editor.onDidChangeCursorPosition((event) => {
+        (event.source === "mouse" || event.source === "keyboard") &&
+          setCodeSelection();
+      });
     },
     [setCodeSelection],
   );
-  // handleOnChange
-  const handleOnChange = useCallback((value: string | undefined) => {
-    if (value === undefined) return;
 
-    if (isContentProgrammaticallyChanged.current) {
-      debouncedOnChange(value);
-    } else {
-      longDebouncedOnChange(value);
-    }
-  }, []);
+  // handleOnChange
   const onChange = useCallback((value: string) => {
     dispatch(setCurrentFileContent(value));
+    dispatch(
+      setNeedToSelectCode(
+        codeSelectionRef.current
+          ? {
+              startLineNumber: codeSelectionRef.current.startLineNumber,
+              startColumn: codeSelectionRef.current.startColumn,
+              endLineNumber: codeSelectionRef.current.endLineNumber,
+              endColumn: codeSelectionRef.current.endColumn,
+            }
+          : null,
+      ),
+    );
+    setIsCodeTyping(false);
   }, []);
   const debouncedOnChange = useCallback(
     debounce((value) => {
@@ -179,6 +156,20 @@ const useEditor = () => {
   const longDebouncedOnChange = useCallback(
     debounce(onChange, CodeViewSyncDelay_Long),
     [onChange],
+  );
+  const handleOnChange = useCallback(
+    (value: string | undefined) => {
+      if (value === undefined) return;
+
+      setIsCodeTyping(true);
+
+      if (isContentProgrammaticallyChanged.current) {
+        debouncedOnChange(value);
+      } else {
+        longDebouncedOnChange(value);
+      }
+    },
+    [debouncedOnChange, longDebouncedOnChange],
   );
 
   // undo/redo
@@ -207,7 +198,6 @@ const useEditor = () => {
     setWordWrap,
 
     codeSelection,
-    getNodeUidByCodeSelection,
   };
 };
 

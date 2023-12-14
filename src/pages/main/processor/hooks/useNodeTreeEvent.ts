@@ -26,6 +26,8 @@ import {
   focusNodeTreeNode,
   selectNodeTreeNodes,
   setExpandedNodeTreeNodes,
+  setNeedToSelectCode,
+  setNeedToSelectNodePaths,
   setNeedToSelectNodeUids,
   setNodeTree,
   setSelectedNodeUids,
@@ -41,6 +43,7 @@ import {
   getValidNodeTree,
   markChangedFolders,
 } from "../helpers";
+import { getNodeUidByCodeSelection } from "@_components/main/codeView";
 
 export const useNodeTreeEvent = () => {
   const dispatch = useDispatch();
@@ -57,6 +60,7 @@ export const useNodeTreeEvent = () => {
 
     validNodeTree,
     needToSelectNodePaths,
+    needToSelectCode,
     nExpandedItems,
 
     syncConfigs,
@@ -255,18 +259,39 @@ export const useNodeTreeEvent = () => {
       );
 
       if (!isSelectedNodeUidsChanged.current) {
-        // this means we called `callNodeApi` and we need to select predicted `needToSelectNodeUids`
-        // in the case, `callNodeApi -> setCurrentFileContent` and `setNeedToSelectNodeUids` dispatch actions are considered as an one event in the node-event-history.
-        const needToSelectNodeUids = getNodeUidsFromPaths(
-          _validNodeTree,
-          needToSelectNodePaths,
-        );
-        dispatch(setNeedToSelectNodeUids(needToSelectNodeUids));
+        // this change is from 'node actions' or 'typing in code-view'
+        let _selectedNodeUids: TNodeUid[] = [];
+        if (needToSelectCode) {
+          LogAllow && console.log("it's a rnbw-change from code-view");
+          // it's a typing change in code-view and we need to select currently `cursored node` in code-view.
+          // in the case, `callNodeApi -> setCurrentFileContent` and `setNeedToSelectNodeUids` dispatch actions are considered as an one event in the node-event-history.
+          const needToSelectNodeUid = getNodeUidByCodeSelection(
+            needToSelectCode,
+            _validNodeTree,
+          );
+          needToSelectNodeUid &&
+            _selectedNodeUids.push(needToSelectNodeUid) &&
+            dispatch(setNeedToSelectNodeUids([needToSelectNodeUid]));
+          dispatch(setNeedToSelectCode(null));
+        }
+
+        if (needToSelectNodePaths) {
+          LogAllow && console.log("it's a rnbw-change from node-actions");
+          // this means we called `callNodeApi` and we need to select predicted `needToSelectNodeUids`
+          // in the case, `callNodeApi -> setCurrentFileContent` and `setNeedToSelectNodeUids` dispatch actions are considered as an one event in the node-event-history.
+          const needToSelectNodeUids = getNodeUidsFromPaths(
+            _validNodeTree,
+            needToSelectNodePaths,
+          );
+          _selectedNodeUids.push(...needToSelectNodeUids);
+          dispatch(setNeedToSelectNodeUids(needToSelectNodeUids));
+          dispatch(setNeedToSelectNodePaths(null));
+        }
 
         // remark selected elements on stage-view
         // it is removed through dom-diff
         // this part is for when the selectedNodeUids is not changed cuz of the same code-format
-        markSelectedElements(iframeRefRef.current, needToSelectNodeUids);
+        markSelectedElements(iframeRefRef.current, _selectedNodeUids);
       }
     }
 
