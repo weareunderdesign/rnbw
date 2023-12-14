@@ -358,10 +358,10 @@ const moveIDBSingleDirectoryOrFile = async ({
 
 const generateNewNameForLocalDirectoryOrFile = async ({
   nodeData,
-  parentHandler,
+  targetHandler,
 }: {
   nodeData: TFileNodeData;
-  parentHandler: FileSystemDirectoryHandle;
+  targetHandler: FileSystemDirectoryHandle;
 }): Promise<string> => {
   let newName = nodeData.name;
   const { baseName, ext } = getFileNameAndExtensionFromFullname(nodeData.name);
@@ -370,9 +370,9 @@ const generateNewNameForLocalDirectoryOrFile = async ({
   while (exists) {
     try {
       if (nodeData.kind === "directory") {
-        await parentHandler.getDirectoryHandle(newName, { create: false });
+        await targetHandler.getDirectoryHandle(newName, { create: false });
       } else {
-        await parentHandler.getFileHandle(newName, { create: false });
+        await targetHandler.getFileHandle(newName, { create: false });
       }
     } catch (err) {
       exists = false;
