@@ -300,7 +300,6 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     [osType, cmdkReferenceData],
   );
   useEffect(() => {
-    console.log("keydowneventlistnere added");
     document.addEventListener("keydown", KeyDownEventListener);
     return () => document.removeEventListener("keydown", KeyDownEventListener);
   }, [KeyDownEventListener]);
