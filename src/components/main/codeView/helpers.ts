@@ -45,20 +45,14 @@ export const getNodeUidByCodeSelection = (
         endLine: endLineNumber,
       } = sourceCodeLocation;
 
-      const containFront = nodeData.valid
-        ? selection.startLineNumber === startLineNumber
+      const containFront =
+        selection.startLineNumber === startLineNumber
           ? selection.startColumn > startColumn
-          : selection.startLineNumber > startLineNumber
-        : selection.startLineNumber === startLineNumber
-        ? selection.startColumn >= startColumn
-        : selection.startLineNumber > startLineNumber;
-      const containBack = nodeData.valid
-        ? selection.endLineNumber === endLineNumber
-          ? selection.endColumn < endColumn
-          : selection.endLineNumber < endLineNumber
-        : selection.endLineNumber === endLineNumber
-        ? selection.endColumn <= endColumn
-        : selection.endLineNumber < endLineNumber;
+          : selection.startLineNumber > startLineNumber;
+      const containBack =
+        selection.endLineNumber === endLineNumber
+          ? selection.endColumn <= endColumn
+          : selection.endLineNumber < endLineNumber;
 
       if (containFront && containBack) {
         focusedItem = nodeData.valid
