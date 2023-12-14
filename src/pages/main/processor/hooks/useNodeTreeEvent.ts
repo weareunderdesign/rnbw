@@ -44,6 +44,7 @@ import {
   markChangedFolders,
 } from "../helpers";
 import { getNodeUidByCodeSelection } from "@_components/main/codeView";
+import { setEditingNodeUidInCodeView } from "@_redux/main/codeView";
 
 export const useNodeTreeEvent = () => {
   const dispatch = useDispatch();
@@ -261,19 +262,6 @@ export const useNodeTreeEvent = () => {
       if (!isSelectedNodeUidsChanged.current) {
         // this change is from 'node actions' or 'typing in code-view'
         let _selectedNodeUids: TNodeUid[] = [];
-        if (needToSelectCode) {
-          LogAllow && console.log("it's a rnbw-change from code-view");
-          // it's a typing change in code-view and we need to select currently `cursored node` in code-view.
-          // in the case, `callNodeApi -> setCurrentFileContent` and `setNeedToSelectNodeUids` dispatch actions are considered as an one event in the node-event-history.
-          const needToSelectNodeUid = getNodeUidByCodeSelection(
-            needToSelectCode,
-            _validNodeTree,
-          );
-          needToSelectNodeUid &&
-            _selectedNodeUids.push(needToSelectNodeUid) &&
-            dispatch(setNeedToSelectNodeUids([needToSelectNodeUid]));
-          dispatch(setNeedToSelectCode(null));
-        }
 
         if (needToSelectNodePaths) {
           LogAllow && console.log("it's a rnbw-change from node-actions");
@@ -286,6 +274,19 @@ export const useNodeTreeEvent = () => {
           _selectedNodeUids.push(...needToSelectNodeUids);
           dispatch(setNeedToSelectNodeUids(needToSelectNodeUids));
           dispatch(setNeedToSelectNodePaths(null));
+        } else if (needToSelectCode) {
+          LogAllow && console.log("it's a rnbw-change from code-view");
+          // it's a typing change in code-view and we need to select currently `cursored node` in code-view.
+          // in the case, `callNodeApi -> setCurrentFileContent` and `setNeedToSelectNodeUids` dispatch actions are considered as an one event in the node-event-history.
+          const needToSelectNodeUid = getNodeUidByCodeSelection(
+            needToSelectCode,
+            _validNodeTree,
+          );
+          dispatch(setEditingNodeUidInCodeView(needToSelectNodeUid || ""));
+          needToSelectNodeUid &&
+            _selectedNodeUids.push(needToSelectNodeUid) &&
+            dispatch(setNeedToSelectNodeUids([needToSelectNodeUid]));
+          dispatch(setNeedToSelectCode(null));
         }
 
         // remark selected elements on stage-view

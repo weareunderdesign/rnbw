@@ -20,6 +20,7 @@ import { Editor, loader } from "@monaco-editor/react";
 import { useCmdk, useEditor } from "./hooks";
 import { CodeViewProps } from "./types";
 import { getNodeUidByCodeSelection } from "./helpers";
+import { setEditingNodeUidInCodeView } from "@_redux/main/codeView";
 
 loader.config({ monaco });
 
@@ -35,6 +36,8 @@ export default function CodeView(props: CodeViewProps) {
 
     activePanel,
     showCodeView,
+
+    editingNodeUidInCodeView,
   } = useAppState();
   const { isCodeTyping, monacoEditorRef } = useContext(MainContext);
 
@@ -107,6 +110,13 @@ export default function CodeView(props: CodeViewProps) {
 
     const monacoEditor = monacoEditorRef.current;
     if (!monacoEditor) return;
+
+    // skip typing in code-view
+    if (editingNodeUidInCodeView === nFocusedItem) {
+      focusedItemRef.current = nFocusedItem;
+      dispatch(setEditingNodeUidInCodeView(""));
+      return;
+    }
 
     if (nFocusedItem === RootNodeUid || !validNodeTree[nFocusedItem]) {
       monacoEditor.setSelection({
