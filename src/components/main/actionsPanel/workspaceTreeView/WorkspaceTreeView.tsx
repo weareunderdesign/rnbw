@@ -12,7 +12,8 @@ import { DraggingPositionItem } from "react-complex-tree";
 import { useDispatch } from "react-redux";
 
 import { SVGIconI, TreeView } from "@_components/common";
-import { _path, getNormalizedPath, TFileNodeData } from "@_node/file";
+import { getNormalizedPath, TFileNodeData } from "@_node/file";
+import { _path } from "@_node/file/nohostApis";
 import { TNode, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { setHoveredFileUid } from "@_redux/main/fileTree";
@@ -77,9 +78,9 @@ export default function WorkspaceTreeView() {
     useTemporaryNodes();
   const { focusedItemRef, fileTreeViewData } = useSync();
 
-  const { cb_collapseNode, cb_expandNode, cb_focusNode, cb_selectNode } =
+  const { cb_focusNode, cb_selectNode, cb_expandNode, cb_collapseNode } =
     useNodeViewState({ invalidNodes });
-  const { _create, _delete, _copy, _cut, _rename } = useFileOperations({
+  const { _create, _delete, _cut, _copy, _rename } = useFileOperations({
     invalidNodes,
     addInvalidNodes,
     removeInvalidNodes,

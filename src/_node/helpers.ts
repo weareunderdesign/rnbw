@@ -7,7 +7,6 @@ import {
 } from "@_constants/main";
 import { THtmlReferenceData } from "@_types/main";
 
-import { THtmlNodeData } from "./node";
 import {
   TBasicNodeData,
   TNode,
@@ -15,6 +14,7 @@ import {
   TNodeTreeData,
   TNodeUid,
 } from "./types";
+import { THtmlNodeData } from "./node";
 
 export const getSubNodeUidsByBfs = (
   uid: TNodeUid,

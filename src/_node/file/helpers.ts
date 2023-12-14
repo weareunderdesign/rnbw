@@ -5,6 +5,7 @@ import {
   TFileNodeData,
   TFileNodeTreeData,
   TNodeUid,
+  _path,
 } from "../";
 
 export const sortFilesByASC = (handlerObj: TFileHandlerInfoObj) => {
@@ -22,7 +23,6 @@ export const sortFilesByASC = (handlerObj: TFileHandlerInfoObj) => {
     });
   });
 };
-
 export const getInitialFileUidToOpen = (handlerObj: TFileHandlerInfoObj) => {
   let firstHtmlUid: TNodeUid = "",
     indexHtmlUid: TNodeUid = "",
@@ -46,7 +46,6 @@ export const getInitialFileUidToOpen = (handlerObj: TFileHandlerInfoObj) => {
 
   return initialFileUidToOpen;
 };
-
 export const isUnsavedProject = (fileTree: TFileNodeTreeData) => {
   for (const uid in fileTree) {
     const file = fileTree[uid];
@@ -57,7 +56,6 @@ export const isUnsavedProject = (fileTree: TFileNodeTreeData) => {
   }
   return false;
 };
-
 export const confirmAlert = (msg: string): boolean => {
   if (!window.confirm(msg)) {
     return false;
@@ -69,7 +67,6 @@ export const confirmFileChanges = (fileTree: TFileNodeTreeData): boolean => {
     ? confirmAlert(FileChangeAlertMessage)
     : true;
 };
-
 export const getFileNameAndExtensionFromFullname = (
   name: string,
 ): { baseName: string; ext: string } => {
@@ -77,4 +74,14 @@ export const getFileNameAndExtensionFromFullname = (
   const ext = nameArr.length > 1 ? (nameArr.pop() as string) : "";
   const baseName = nameArr.join(".");
   return { baseName, ext };
+};
+export const getNormalizedPath = (
+  path: string,
+): { isAbsolutePath: boolean; normalizedPath: string } => {
+  if (path.startsWith("https://") || path.startsWith("http://")) {
+    return { isAbsolutePath: true, normalizedPath: path };
+  }
+  const isAbsolutePath = _path.isAbsolute(path);
+  const normalizedPath = _path.normalize(path);
+  return { isAbsolutePath, normalizedPath };
 };

@@ -1,8 +1,8 @@
 import {
-  _removeIDBDirectoryOrFile,
   TFileHandlerCollection,
   TFileNodeData,
 } from "@_node/file";
+import { _removeIDBDirectoryOrFile } from "@_node/file/nohostApis";
 import { TNodeUid } from "@_node/types";
 import { verifyFileHandlerPermission } from "@_services/main";
 

@@ -1,9 +1,8 @@
 import {
-  _createIDBDirectory,
   TFileHandlerCollection,
   TFileNodeData,
-  _writeIDBFile,
 } from "@_node/file";
+import { _createIDBDirectory, _writeIDBFile } from "@_node/file/nohostApis";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
 import { TProject } from "@_redux/main/fileTree";
 import { verifyFileHandlerPermission } from "@_services/main";
