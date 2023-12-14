@@ -3,12 +3,13 @@ import { useCallback, useContext } from "react";
 import { useDispatch } from "react-redux";
 
 import { LogAllow } from "@_constants/global";
-import { callNodeApi } from "@_node/apis";
 import { TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { useAppState } from "@_redux/useAppState";
+import { doNodeActions } from "@_node/node";
+import { callNodeApi } from "@_node/apis";
 
-export const useNodeActionsHandlers = () => {
+export const useNodeActionHandlers = () => {
   const dispatch = useDispatch();
   const {
     nodeTree,
@@ -57,7 +58,6 @@ export const useNodeActionsHandlers = () => {
     },
     [nodeTree, focusedItem],
   );
-
   const onCut = useCallback(() => {
     if (selectedItems.length === 0) return;
 
@@ -83,7 +83,6 @@ export const useNodeActionsHandlers = () => {
       () => setIsContentProgrammaticallyChanged(false),
     );
   }, [selectedItems, nodeTree]);
-
   const onCopy = useCallback(() => {
     if (selectedItems.length === 0) return;
 
@@ -109,7 +108,6 @@ export const useNodeActionsHandlers = () => {
       () => setIsContentProgrammaticallyChanged(false),
     );
   }, [selectedItems, nodeTree]);
-
   const onPaste = useCallback(() => {
     const focusedNode = validNodeTree[focusedItem];
     if (!focusedNode || !focusedNode.data.sourceCodeLocation) {
@@ -140,7 +138,6 @@ export const useNodeActionsHandlers = () => {
       () => setIsContentProgrammaticallyChanged(false),
     );
   }, [validNodeTree, focusedItem]);
-
   const onDelete = useCallback(() => {
     if (selectedItems.length === 0) return;
 
@@ -166,7 +163,6 @@ export const useNodeActionsHandlers = () => {
       () => setIsContentProgrammaticallyChanged(false),
     );
   }, [selectedItems, nodeTree]);
-
   const onDuplicate = useCallback(() => {
     if (selectedItems.length === 0) return;
 
@@ -192,7 +188,6 @@ export const useNodeActionsHandlers = () => {
       () => setIsContentProgrammaticallyChanged(false),
     );
   }, [selectedItems, nodeTree]);
-
   const onMove = useCallback(
     ({
       selectedUids,
@@ -232,7 +227,6 @@ export const useNodeActionsHandlers = () => {
     },
     [nodeTree],
   );
-
   const onTurnInto = useCallback(
     (actionName: string) => {
       const focusedNode = nodeTree[focusedItem];
@@ -264,7 +258,6 @@ export const useNodeActionsHandlers = () => {
     },
     [nodeTree, focusedItem],
   );
-
   const onGroup = useCallback(() => {
     if (selectedItems.length === 0) return;
 

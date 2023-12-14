@@ -127,6 +127,8 @@ export default function MainPage() {
     setIframeRefRef,
     isContentProgrammaticallyChanged,
     setIsContentProgrammaticallyChanged,
+    isCodeTyping,
+    setIsCodeTyping,
   } = useReferneces();
   const { validMenuItemCount, hoveredMenuItemDescription } = useCmdkModal();
   const {
@@ -188,6 +190,8 @@ export default function MainPage() {
           setIframeRefRef,
           isContentProgrammaticallyChanged,
           setIsContentProgrammaticallyChanged,
+          isCodeTyping,
+          setIsCodeTyping,
 
           importProject,
           onUndo,
@@ -249,7 +253,6 @@ export default function MainPage() {
               (e.code === "Backspace" && !cmdkSearchContent)
             ) {
               if (e.code === "Escape" && cmdkPages.length === 1) {
-                dispatch(setCmdkPages([]));
                 dispatch(setCmdkOpen(false));
               } else {
                 cmdkPages.length !== 1 &&

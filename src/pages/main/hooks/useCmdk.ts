@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 import { CustomDirectoryPickerOptions } from "file-system-access/lib/showDirectoryPicker";
 import { delMany } from "idb-keyval";
@@ -12,11 +12,7 @@ import {
   initIDBProject,
 } from "@_node/index";
 import { setTheme } from "@_redux/global";
-import {
-  setCmdkOpen,
-  setCmdkPages,
-  setCurrentCommand,
-} from "@_redux/main/cmdk";
+import { setCmdkPages, setCurrentCommand } from "@_redux/main/cmdk";
 import {
   FileTree_Event_RedoActionType,
   FileTree_Event_UndoActionType,
@@ -70,6 +66,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     currentCommand,
   } = useAppState();
 
+  // handlers
   const onClear = useCallback(async () => {
     window.localStorage.clear();
     await delMany([
@@ -81,7 +78,6 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
   const onJumpstart = useCallback(() => {
     if (cmdkOpen) return;
     dispatch(setCmdkPages(["Jumpstart"]));
-    dispatch(setCmdkOpen(true));
   }, [cmdkOpen]);
   const onNew = useCallback(async () => {
     if (!confirmFileChanges(fileTree)) return;
@@ -113,15 +109,12 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
   const onActions = useCallback(() => {
     if (cmdkOpen) return;
     dispatch(setCmdkPages(["Actions"]));
-    dispatch(setCmdkOpen(true));
   }, [cmdkOpen]);
   const onAdd = useCallback(() => {
     dispatch(setCmdkPages([...cmdkPages, "Add"]));
-    dispatch(setCmdkOpen(true));
   }, [cmdkPages]);
   const onTurnInto = useCallback(() => {
     dispatch(setCmdkPages([...cmdkPages, "Turn into"]));
-    dispatch(setCmdkOpen(true));
   }, [cmdkPages]);
   const onDownload = useCallback(async () => {
     if (project.context !== "idb") return;
@@ -232,33 +225,20 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
         key: e.code,
         click: false,
       };
-
-      if (e.key === "Escape") {
-        closeAllPanel();
-        return;
-      }
+      // extra cmdk
       if (cmdk.cmd && cmdk.shift && cmdk.key === "KeyR") {
         onClear();
+        return;
       }
-      if (cmdk.cmd && cmdk.key === "KeyG") {
-        e.preventDefault();
-        e.stopPropagation();
+      if (e.key === "Escape") {
+        !cmdkOpen && closeAllPanel();
+        return;
       }
-      if (cmdkOpen) return;
-
       // skip inline rename input in file-tree-view
       const targetId = e.target && (e.target as HTMLElement).id;
       if (targetId === "FileTreeView-RenameInput") {
         return;
       }
-
-      // skip monaco-editor shortkeys and general coding
-      if (activePanel === "code") {
-        if (!(cmdk.cmd && !cmdk.shift && !cmdk.alt && cmdk.key === "KeyS")) {
-          return;
-        }
-      }
-
       // detect action
       let action: string | null = null;
       for (const actionName in cmdkReferenceData) {
@@ -294,24 +274,16 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
           break; // Match found, exit the outer loop
         }
       }
-      if (action === null) return;
-
-      LogAllow && console.log("action to be run by cmdk: ", action);
-
-      // prevent chrome default short keys
-      if (
-        action === "Save" ||
-        action === "Download" ||
-        action === "Duplicate" ||
-        action === "Group" ||
-        action === "UnGroup"
-      ) {
-        e.preventDefault();
+      if (action) {
+        if (!cmdkOpen) {
+          LogAllow && console.log("action to be run by cmdk: ", action);
+          dispatch(setCurrentCommand({ action }));
+        }
       }
 
-      dispatch(setCurrentCommand({ action }));
+      action && e.preventDefault();
     },
-    [cmdkOpen, cmdkReferenceData, activePanel, osType],
+    [osType, cmdkOpen, cmdkReferenceData],
   );
   useEffect(() => {
     document.addEventListener("keydown", KeyDownEventListener);

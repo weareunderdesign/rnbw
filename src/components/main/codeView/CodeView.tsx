@@ -19,6 +19,8 @@ import { Editor, loader } from "@monaco-editor/react";
 
 import { useCmdk, useEditor } from "./hooks";
 import { CodeViewProps } from "./types";
+import { getNodeUidByCodeSelection } from "./helpers";
+import { setEditingNodeUidInCodeView } from "@_redux/main/codeView";
 
 loader.config({ monaco });
 
@@ -29,17 +31,16 @@ export default function CodeView(props: CodeViewProps) {
     currentFileUid,
     currentFileContent,
 
+    nodeTree,
     validNodeTree,
     nFocusedItem,
 
     activePanel,
     showCodeView,
+
+    editingNodeUidInCodeView,
   } = useAppState();
-  const {
-    isContentProgrammaticallyChanged,
-    setIsContentProgrammaticallyChanged,
-    monacoEditorRef,
-  } = useContext(MainContext);
+  const { isCodeTyping, monacoEditorRef } = useContext(MainContext);
 
   const {
     handleEditorDidMount,
@@ -54,7 +55,6 @@ export default function CodeView(props: CodeViewProps) {
     setWordWrap,
 
     codeSelection,
-    getNodeUidByCodeSelection,
   } = useEditor();
   useCmdk();
 
@@ -112,6 +112,13 @@ export default function CodeView(props: CodeViewProps) {
     const monacoEditor = monacoEditorRef.current;
     if (!monacoEditor) return;
 
+    // skip typing in code-view
+    if (editingNodeUidInCodeView === nFocusedItem) {
+      focusedItemRef.current = nFocusedItem;
+      dispatch(setEditingNodeUidInCodeView(""));
+      return;
+    }
+
     if (nFocusedItem === RootNodeUid || !validNodeTree[nFocusedItem]) {
       monacoEditor.setSelection({
         startLineNumber: 1,
@@ -126,7 +133,7 @@ export default function CodeView(props: CodeViewProps) {
 
   // code select -> selectedUids
   useEffect(() => {
-    if (!codeSelection) return;
+    if (!codeSelection || isCodeTyping.current) return;
 
     const file = fileTree[currentFileUid];
     if (!file) return;
@@ -135,6 +142,7 @@ export default function CodeView(props: CodeViewProps) {
 
     const focusedNodeUid = getNodeUidByCodeSelection(
       codeSelection,
+      nodeTree,
       validNodeTree,
     );
     if (focusedNodeUid && focusedItemRef.current !== focusedNodeUid) {

@@ -12,6 +12,7 @@ import {
   deleteFileOrFolder,
   moveActions,
 } from "../helpers";
+import { LogAllow } from "@_constants/global";
 
 interface IUseFileOperations {
   invalidNodes: {
@@ -273,7 +274,7 @@ export const useFileOperations = ({
                 true,
               );
             } catch (err) {
-              console.log(err);
+              LogAllow && console.log(err);
             }
           } else if (project.context === "idb") {
             await moveIDBFF(nodeData, targetNodeData, nodeData.name, true);

@@ -27,6 +27,10 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
     current: false,
   },
   setIsContentProgrammaticallyChanged: () => {},
+  isCodeTyping: {
+    current: false,
+  },
+  setIsCodeTyping: () => {},
 
   importProject: () => {},
   onUndo: () => {},

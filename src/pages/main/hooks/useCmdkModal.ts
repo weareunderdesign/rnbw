@@ -1,26 +1,30 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { useDispatch } from "react-redux";
 
 import {
+  setCmdkOpen,
   setCmdkPages,
   setCmdkSearchContent,
   setCurrentCmdkPage,
 } from "@_redux/main/cmdk";
 import { useAppState } from "@_redux/useAppState";
+import { debounce } from "lodash";
+import { ShortDelay } from "@_constants/main";
 
 export const useCmdkModal = () => {
   const dispatch = useDispatch();
   const { cmdkOpen, cmdkPages, currentCmdkPage } = useAppState();
 
-  useEffect(() => {
-    dispatch(setCurrentCmdkPage([...cmdkPages].pop() || ""));
-  }, [cmdkPages]);
-
   const [validMenuItemCount, setValidMenuItemCount] = useState<number>();
   const [hoveredMenuItemDescription, setHoverMenuItemDescription] = useState<
     string | null | undefined
   >();
+
+  useEffect(() => {
+    cmdkPages.length && dispatch(setCmdkOpen(true));
+    dispatch(setCurrentCmdkPage([...cmdkPages].pop() || ""));
+  }, [cmdkPages]);
   useEffect(() => {
     let hoveredMenuItemDetecter: NodeJS.Timeout;
     if (cmdkOpen) {

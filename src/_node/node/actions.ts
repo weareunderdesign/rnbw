@@ -524,7 +524,6 @@ const ungroup = ({
       });
       addedChildCount[parentNode.uid] += containerNode.children.length - 1;
     });
-    console.log(needToSelectNodePaths);
     return needToSelectNodePaths;
   })();
   return needToSelectNodePaths;

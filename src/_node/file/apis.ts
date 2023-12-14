@@ -19,24 +19,29 @@ import {
 } from "@_types/main";
 
 import {
+  fileHandlers,
   getSubNodeUidsByBfs,
   TFileHandlerCollection,
   TFileNode,
   TFileNodeData,
   TFileNodeTreeData,
   TFileParserResponse,
-  TNodeTreeData,
   TNodeUid,
   TProjectLoaderResponse,
 } from "../";
-import { fileHandlers } from "./handlers/handlers";
 import { getInitialFileUidToOpen, sortFilesByASC } from "./helpers";
 import { TFileHandlerInfo, TFileHandlerInfoObj, TZipFileInfo } from "./types";
 import { FileSystemFileHandle } from "file-system-access";
 
-export const _fs = window.Filer.fs;
-export const _path = window.Filer.path;
-export const _sh = new _fs.Shell();
+import {
+  _createIDBDirectory,
+  _getIDBDirectoryOrFileStat,
+  _readIDBDirectory,
+  _readIDBFile,
+  _removeIDBDirectoryOrFile,
+  _writeIDBFile,
+  _path,
+} from "./nohostApis";
 
 export const initIDBProject = async (projectPath: string): Promise<void> => {
   return new Promise<void>(async (resolve, reject) => {
@@ -470,66 +475,6 @@ export const downloadIDBProject = async (
   });
 };
 
-export const _createIDBDirectory = async (path: string): Promise<void> => {
-  return new Promise<void>((resolve, reject) => {
-    _fs.mkdir(path, (err: any) => {
-      err ? reject(err) : resolve();
-    });
-  });
-};
-export const _readIDBFile = async (path: string): Promise<Uint8Array> => {
-  return new Promise<Uint8Array>((resolve, reject) => {
-    _fs.readFile(path, (err: any, data: Buffer) => {
-      err ? reject(err) : resolve(data);
-    });
-  });
-};
-export const _writeIDBFile = async (
-  path: string,
-  content: Uint8Array | string,
-): Promise<void> => {
-  return new Promise<void>((resolve, reject) => {
-    _fs.writeFile(path, content, (err: any) => {
-      err ? reject(err) : resolve();
-    });
-  });
-};
-export const _removeIDBDirectoryOrFile = async (
-  path: string,
-): Promise<void> => {
-  return new Promise<void>((resolve, reject) => {
-    _sh.rm(path, { recursive: true }, (err: any) => {
-      err ? reject(err) : resolve();
-    });
-  });
-};
-export const _readIDBDirectory = async (path: string): Promise<string[]> => {
-  return new Promise<string[]>((resolve, reject) => {
-    _fs.readdir(path, (err: any, files: string[]) => {
-      err ? reject(err) : resolve(files);
-    });
-  });
-};
-export const _getIDBDirectoryOrFileStat = async (
-  path: string,
-): Promise<any> => {
-  return new Promise<any>((resolve, reject) => {
-    _fs.stat(path, (err: any, stats: any) => {
-      err ? reject(err) : resolve(stats);
-    });
-  });
-};
-
-export const getNormalizedPath = (
-  path: string,
-): { isAbsolutePath: boolean; normalizedPath: string } => {
-  if (path.startsWith("https://") || path.startsWith("http://")) {
-    return { isAbsolutePath: true, normalizedPath: path };
-  }
-  const isAbsolutePath = _path.isAbsolute(path);
-  const normalizedPath = _path.normalize(path);
-  return { isAbsolutePath, normalizedPath };
-};
 export const parseFile = (
   ext: string,
   content: string,

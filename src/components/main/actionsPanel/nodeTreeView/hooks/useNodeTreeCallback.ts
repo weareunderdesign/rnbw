@@ -7,7 +7,7 @@ import { TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { useAppState } from "@_redux/useAppState";
 
-import { useNodeActionsHandlers } from "./useNodeActionsHandlers";
+import { useNodeActionHandlers } from "./useNodeActionHandlers";
 import { useNodeViewState } from "./useNodeViewState";
 
 export const useNodeTreeCallback = (
@@ -17,7 +17,7 @@ export const useNodeTreeCallback = (
   const { validNodeTree } = useAppState();
   const { htmlReferenceData } = useContext(MainContext);
 
-  const { onMove } = useNodeActionsHandlers();
+  const { onMove } = useNodeActionHandlers();
   const { cb_focusNode, cb_selectNode, cb_expandNode, cb_collapseNode } =
     useNodeViewState();
 

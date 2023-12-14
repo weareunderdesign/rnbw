@@ -10,13 +10,13 @@ import {
   TFileNode,
   TFileNodeData,
   TFileNodeTreeData,
-  _writeIDBFile,
 } from "@_node/file";
 import { getNodeChildIndex, getSubNodeUidsByBfs } from "@_node/helpers";
 import { THtmlNodeData } from "@_node/node";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import { setFileTreeNodes, TProject } from "@_redux/main/fileTree";
 import { AnyAction } from "@reduxjs/toolkit";
+import { _writeIDBFile } from "@_node/file/nohostApis";
 
 export const saveFileContent = async (
   project: Omit<TProject, "handler">,

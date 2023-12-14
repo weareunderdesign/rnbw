@@ -34,6 +34,7 @@ export const useAppState = () => {
         nodeTree,
         validNodeTree,
         needToSelectNodePaths,
+        needToSelectCode,
         nodeTreeViewState: {
           focusedItem: nFocusedItem,
           expandedItems: nExpandedItems,
@@ -55,7 +56,7 @@ export const useAppState = () => {
         linkToOpen,
         syncConfigs,
       },
-      codeView: { codeViewTabSize },
+      codeView: { editingNodeUid: editingNodeUidInCodeView, codeViewTabSize },
       processor: {
         doingAction,
         navigatorDropdownType,
@@ -116,6 +117,7 @@ export const useAppState = () => {
     validNodeTree,
 
     needToSelectNodePaths,
+    needToSelectCode,
 
     nFocusedItem,
     nExpandedItems,
@@ -138,6 +140,7 @@ export const useAppState = () => {
     linkToOpen,
     syncConfigs,
 
+    editingNodeUidInCodeView,
     codeViewTabSize,
 
     doingAction,
