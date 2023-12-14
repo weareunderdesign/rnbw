@@ -56,7 +56,7 @@ export const useAppState = () => {
         linkToOpen,
         syncConfigs,
       },
-      codeView: { codeViewTabSize },
+      codeView: { editingNodeUid: editingNodeUidInCodeView, codeViewTabSize },
       processor: {
         doingAction,
         navigatorDropdownType,
@@ -140,6 +140,7 @@ export const useAppState = () => {
     linkToOpen,
     syncConfigs,
 
+    editingNodeUidInCodeView,
     codeViewTabSize,
 
     doingAction,

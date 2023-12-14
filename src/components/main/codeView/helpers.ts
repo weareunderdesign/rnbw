@@ -25,15 +25,17 @@ export const getCodeViewTheme = (theme: TTheme) => {
 
 export const getNodeUidByCodeSelection = (
   selection: TCodeSelection,
+  nodeTree: TNodeTreeData,
   validNodeTree: TNodeTreeData,
 ): TNodeUid | null => {
   let focusedItem: TNodeUid | null = null;
   if (selection) {
-    const uids = getSubNodeUidsByBfs(RootNodeUid, validNodeTree);
+    const uids = getSubNodeUidsByBfs(RootNodeUid, nodeTree);
     uids.reverse();
     for (const uid of uids) {
-      const node = validNodeTree[uid];
-      const sourceCodeLocation = node.data.sourceCodeLocation;
+      const node = nodeTree[uid];
+      const nodeData = node.data;
+      const sourceCodeLocation = nodeData.sourceCodeLocation;
       if (!sourceCodeLocation) continue;
 
       const {
@@ -49,11 +51,15 @@ export const getNodeUidByCodeSelection = (
           : selection.startLineNumber > startLineNumber;
       const containBack =
         selection.endLineNumber === endLineNumber
-          ? selection.endColumn < endColumn
+          ? selection.endColumn <= endColumn
           : selection.endLineNumber < endLineNumber;
 
       if (containFront && containBack) {
-        focusedItem = uid;
+        focusedItem = nodeData.valid
+          ? uid
+          : validNodeTree[node.parentUid as TNodeUid].children.length
+          ? null
+          : node.parentUid;
         break;
       }
     }
