@@ -12,11 +12,7 @@ import {
   initIDBProject,
 } from "@_node/index";
 import { setTheme } from "@_redux/global";
-import {
-  setCmdkOpen,
-  setCmdkPages,
-  setCurrentCommand,
-} from "@_redux/main/cmdk";
+import { setCmdkPages, setCurrentCommand } from "@_redux/main/cmdk";
 import {
   FileTree_Event_RedoActionType,
   FileTree_Event_UndoActionType,
@@ -81,7 +77,6 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
   const onJumpstart = useCallback(() => {
     if (cmdkOpen) return;
     dispatch(setCmdkPages(["Jumpstart"]));
-    dispatch(setCmdkOpen(true));
   }, [cmdkOpen]);
   const onNew = useCallback(async () => {
     if (!confirmFileChanges(fileTree)) return;
@@ -113,15 +108,12 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
   const onActions = useCallback(() => {
     if (cmdkOpen) return;
     dispatch(setCmdkPages(["Actions"]));
-    dispatch(setCmdkOpen(true));
   }, [cmdkOpen]);
   const onAdd = useCallback(() => {
     dispatch(setCmdkPages([...cmdkPages, "Add"]));
-    dispatch(setCmdkOpen(true));
   }, [cmdkPages]);
   const onTurnInto = useCallback(() => {
     dispatch(setCmdkPages([...cmdkPages, "Turn into"]));
-    dispatch(setCmdkOpen(true));
   }, [cmdkPages]);
   const onDownload = useCallback(async () => {
     if (project.context !== "idb") return;

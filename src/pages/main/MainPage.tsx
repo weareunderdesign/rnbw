@@ -253,7 +253,6 @@ export default function MainPage() {
               (e.code === "Backspace" && !cmdkSearchContent)
             ) {
               if (e.code === "Escape" && cmdkPages.length === 1) {
-                dispatch(setCmdkPages([]));
                 dispatch(setCmdkOpen(false));
               } else {
                 cmdkPages.length !== 1 &&
