@@ -21,13 +21,8 @@ export const useCmdkModal = () => {
     string | null | undefined
   >();
 
-  const debouncedCmdkOpen = useCallback(
-    debounce(() => dispatch(setCmdkOpen(true)), ShortDelay),
-    [],
-  );
   useEffect(() => {
-    cmdkPages.length && debouncedCmdkOpen();
-    // cmdkPages.length && dispatch(setCmdkOpen(true));
+    cmdkPages.length && dispatch(setCmdkOpen(true));
     dispatch(setCurrentCmdkPage([...cmdkPages].pop() || ""));
   }, [cmdkPages]);
   useEffect(() => {

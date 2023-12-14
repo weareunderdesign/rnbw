@@ -274,22 +274,14 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
           break; // Match found, exit the outer loop
         }
       }
-      // prevent chrome default short keys
-      if (
-        action === "Save" ||
-        action === "Download" ||
-        action === "Duplicate" ||
-        action === "Group" ||
-        action === "UnGroup"
-      ) {
-        e.preventDefault();
+      if (action) {
+        if (!cmdkOpen) {
+          LogAllow && console.log("action to be run by cmdk: ", action);
+          dispatch(setCurrentCommand({ action }));
+        }
       }
 
-      if (cmdkOpen) return;
-      if (action) {
-        LogAllow && console.log("action to be run by cmdk: ", action);
-        dispatch(setCurrentCommand({ action }));
-      }
+      action && e.preventDefault();
     },
     [osType, cmdkOpen, cmdkReferenceData],
   );

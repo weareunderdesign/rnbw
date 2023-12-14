@@ -78,17 +78,6 @@ export const useCmdk = ({
           break; // Match found, exit the outer loop
         }
       }
-      // prevent chrome default short keys
-      if (
-        action === "Save" ||
-        action === "Download" ||
-        action === "Duplicate" ||
-        action === "Group" ||
-        action === "UnGroup"
-      ) {
-        e.preventDefault();
-      }
-
       if (isEditingRef.current) {
         // for content-editing
         if (
@@ -133,6 +122,8 @@ export const useCmdk = ({
           dispatch(setCurrentCommand({ action }));
         }
       }
+
+      action && e.preventDefault();
     },
     [osType, cmdkReferenceData],
   );
