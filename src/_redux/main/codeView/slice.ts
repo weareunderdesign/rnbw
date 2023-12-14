@@ -4,14 +4,14 @@ import { TCodeViewReducerState } from "./types";
 import { TNodeUid } from "@_node/types";
 
 const codeViewReducerInitialState: TCodeViewReducerState = {
-  editingNodeUid: "",
+  editingNodeUid: null,
   codeViewTabSize: 4,
 };
 const codeViewSlice = createSlice({
   name: "codeView",
   initialState: codeViewReducerInitialState,
   reducers: {
-    setEditingNodeUidInCodeView(state, action: PayloadAction<TNodeUid>) {
+    setEditingNodeUidInCodeView(state, action: PayloadAction<TNodeUid | null>) {
       const editingNodeUid = action.payload;
       state.editingNodeUid = editingNodeUid;
     },

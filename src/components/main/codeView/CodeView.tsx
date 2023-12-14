@@ -31,6 +31,7 @@ export default function CodeView(props: CodeViewProps) {
     currentFileUid,
     currentFileContent,
 
+    nodeTree,
     validNodeTree,
     nFocusedItem,
 
@@ -141,6 +142,7 @@ export default function CodeView(props: CodeViewProps) {
 
     const focusedNodeUid = getNodeUidByCodeSelection(
       codeSelection,
+      nodeTree,
       validNodeTree,
     );
     if (focusedNodeUid && focusedItemRef.current !== focusedNodeUid) {

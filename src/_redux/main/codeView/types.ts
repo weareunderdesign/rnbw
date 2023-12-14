@@ -1,6 +1,6 @@
 import { TNodeUid } from "@_node/types";
 
 export type TCodeViewReducerState = {
-  editingNodeUid: TNodeUid;
+  editingNodeUid: TNodeUid | null;
   codeViewTabSize: number;
 };

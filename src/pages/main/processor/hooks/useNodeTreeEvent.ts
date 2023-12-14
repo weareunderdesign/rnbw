@@ -280,9 +280,10 @@ export const useNodeTreeEvent = () => {
           // in the case, `callNodeApi -> setCurrentFileContent` and `setNeedToSelectNodeUids` dispatch actions are considered as an one event in the node-event-history.
           const needToSelectNodeUid = getNodeUidByCodeSelection(
             needToSelectCode,
+            nodeTree,
             _validNodeTree,
           );
-          dispatch(setEditingNodeUidInCodeView(needToSelectNodeUid || ""));
+          dispatch(setEditingNodeUidInCodeView(needToSelectNodeUid));
           needToSelectNodeUid &&
             _selectedNodeUids.push(needToSelectNodeUid) &&
             dispatch(setNeedToSelectNodeUids([needToSelectNodeUid]));
