@@ -221,12 +221,14 @@ const NodeTreeView = () => {
     }),
     [],
   );
-
-  const searchConfig = {
-    canSearch: false,
-    canSearchByStartingTyping: false,
-    canRename: false,
-  };
+  const searchConfig = useMemo(
+    () => ({
+      canSearch: false,
+      canSearchByStartingTyping: false,
+      canRename: false,
+    }),
+    [],
+  );
 
   return currentFileUid !== "" ? (
     <div

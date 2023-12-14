@@ -1,5 +1,9 @@
 import { TTheme } from "@_redux/global";
 import { getSystemTheme } from "@_services/global";
+import { TCodeSelection } from "./types";
+import { TNodeTreeData, TNodeUid } from "@_node/types";
+import { getSubNodeUidsByBfs } from "@_node/helpers";
+import { RootNodeUid } from "@_constants/main";
 
 export const getLanguageFromExtension = (extension: string) => {
   if (!!extension) return extension;
@@ -17,4 +21,42 @@ export const getCodeViewTheme = (theme: TTheme) => {
   } else if (_theme === "Light") {
     return "light";
   }
+};
+
+export const getNodeUidByCodeSelection = (
+  selection: TCodeSelection,
+  validNodeTree: TNodeTreeData,
+): TNodeUid | null => {
+  let focusedItem: TNodeUid | null = null;
+  if (selection) {
+    const uids = getSubNodeUidsByBfs(RootNodeUid, validNodeTree);
+    uids.reverse();
+    for (const uid of uids) {
+      const node = validNodeTree[uid];
+      const sourceCodeLocation = node.data.sourceCodeLocation;
+      if (!sourceCodeLocation) continue;
+
+      const {
+        startLine: startLineNumber,
+        startCol: startColumn,
+        endCol: endColumn,
+        endLine: endLineNumber,
+      } = sourceCodeLocation;
+
+      const containFront =
+        selection.startLineNumber === startLineNumber
+          ? selection.startColumn > startColumn
+          : selection.startLineNumber > startLineNumber;
+      const containBack =
+        selection.endLineNumber === endLineNumber
+          ? selection.endColumn < endColumn
+          : selection.endLineNumber < endLineNumber;
+
+      if (containFront && containBack) {
+        focusedItem = uid;
+        break;
+      }
+    }
+  }
+  return focusedItem;
 };
