@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 import { CustomDirectoryPickerOptions } from "file-system-access/lib/showDirectoryPicker";
 import { delMany } from "idb-keyval";
@@ -66,6 +66,13 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     currentCommand,
   } = useAppState();
 
+  // refs
+  const cmdkOpenRef = useRef(false);
+  useEffect(() => {
+    cmdkOpenRef.current = cmdkOpen;
+  }, [cmdkOpen]);
+
+  // handlers
   const onClear = useCallback(async () => {
     window.localStorage.clear();
     await delMany([
@@ -224,33 +231,20 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
         key: e.code,
         click: false,
       };
-
-      if (e.key === "Escape") {
-        closeAllPanel();
-        return;
-      }
+      // extra cmdk
       if (cmdk.cmd && cmdk.shift && cmdk.key === "KeyR") {
         onClear();
+        return;
       }
-      if (cmdk.cmd && cmdk.key === "KeyG") {
-        e.preventDefault();
-        e.stopPropagation();
+      if (e.key === "Escape") {
+        !cmdkOpenRef.current && closeAllPanel();
+        return;
       }
-      if (cmdkOpen) return;
-
       // skip inline rename input in file-tree-view
       const targetId = e.target && (e.target as HTMLElement).id;
       if (targetId === "FileTreeView-RenameInput") {
         return;
       }
-
-      // skip monaco-editor shortkeys and general coding
-      if (activePanel === "code") {
-        if (!(cmdk.cmd && !cmdk.shift && !cmdk.alt && cmdk.key === "KeyS")) {
-          return;
-        }
-      }
-
       // detect action
       let action: string | null = null;
       for (const actionName in cmdkReferenceData) {
@@ -286,10 +280,6 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
           break; // Match found, exit the outer loop
         }
       }
-      if (action === null) return;
-
-      LogAllow && console.log("action to be run by cmdk: ", action);
-
       // prevent chrome default short keys
       if (
         action === "Save" ||
@@ -301,11 +291,16 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
         e.preventDefault();
       }
 
-      dispatch(setCurrentCommand({ action }));
+      if (cmdkOpenRef.current) return;
+      if (action) {
+        LogAllow && console.log("action to be run by cmdk: ", action);
+        dispatch(setCurrentCommand({ action }));
+      }
     },
-    [cmdkOpen, cmdkReferenceData, activePanel, osType],
+    [osType, cmdkReferenceData],
   );
   useEffect(() => {
+    console.log("keydowneventlistnere added");
     document.addEventListener("keydown", KeyDownEventListener);
     return () => document.removeEventListener("keydown", KeyDownEventListener);
   }, [KeyDownEventListener]);
