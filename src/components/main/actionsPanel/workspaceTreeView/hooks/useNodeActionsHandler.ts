@@ -42,6 +42,7 @@ import {
   validateAndMoveNode,
 } from "../helpers";
 import { callFileApi } from "@_node/apis";
+import { LogAllow } from "@_constants/global";
 
 interface IUseNodeActionsHandler {
   invalidNodes: {
@@ -320,12 +321,13 @@ export const useNodeActionsHandler = ({
         uids,
       },
       () => {
-        console.error("error while removing file system");
+        LogAllow && console.error("error while removing file system");
       },
       (allDone: boolean) => {
-        console.log(
-          allDone ? "all is successfully removed" : "some is not removed",
-        );
+        LogAllow &&
+          console.log(
+            allDone ? "all is successfully removed" : "some is not removed",
+          );
       },
     );
     removeInvalidNodes(...uids);
