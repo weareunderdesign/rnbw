@@ -44,8 +44,6 @@ interface IUseCmdk {
   ) => Promise<void>;
 }
 export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
-  useEffect(() => {});
-
   const dispatch = useDispatch();
   const {
     osType,
