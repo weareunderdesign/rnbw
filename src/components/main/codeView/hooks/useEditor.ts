@@ -1,4 +1,11 @@
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { debounce } from "lodash";
 import { editor, KeyCode, KeyMod } from "monaco-editor";
@@ -79,6 +86,10 @@ const useEditor = () => {
   const [codeSelection, _setCodeSelection] = useState<TCodeSelection | null>(
     null,
   );
+  const codeSelectionRef = useRef<TCodeSelection | null>(null);
+  useEffect(() => {
+    codeSelectionRef.current = codeSelection;
+  }, [codeSelection]);
   const setCodeSelection = useCallback(() => {
     const monacoEditor = monacoEditorRef.current;
     const _selection = monacoEditor?.getSelection();
@@ -119,25 +130,22 @@ const useEditor = () => {
   );
 
   // handleOnChange
-  const onChange = useCallback(
-    (value: string) => {
-      dispatch(setCurrentFileContent(value));
-      dispatch(
-        setNeedToSelectCode(
-          codeSelection
-            ? {
-                startLineNumber: codeSelection.startLineNumber,
-                startColumn: codeSelection.startColumn,
-                endLineNumber: codeSelection.endLineNumber,
-                endColumn: codeSelection.endColumn,
-              }
-            : null,
-        ),
-      );
-      setIsCodeTyping(false);
-    },
-    [codeSelection],
-  );
+  const onChange = useCallback((value: string) => {
+    dispatch(setCurrentFileContent(value));
+    dispatch(
+      setNeedToSelectCode(
+        codeSelectionRef.current
+          ? {
+              startLineNumber: codeSelectionRef.current.startLineNumber,
+              startColumn: codeSelectionRef.current.startColumn,
+              endLineNumber: codeSelectionRef.current.endLineNumber,
+              endColumn: codeSelectionRef.current.endColumn,
+            }
+          : null,
+      ),
+    );
+    setIsCodeTyping(false);
+  }, []);
   const debouncedOnChange = useCallback(
     debounce((value) => {
       onChange(value);
