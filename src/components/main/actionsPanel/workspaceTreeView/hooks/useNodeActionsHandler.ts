@@ -84,6 +84,7 @@ export const useNodeActionsHandler = ({
     fileHandlers,
     htmlReferenceData,
     currentProjectFileHandle,
+    reloadCurrentProject,
   } = useContext(MainContext);
 
   const createFFNode = useCallback(
@@ -326,6 +327,7 @@ export const useNodeActionsHandler = ({
         LogAllow && console.error("error while removing file system");
       },
       (allDone: boolean) => {
+        reloadCurrentProject(fileTree, currentProjectFileHandle);
         LogAllow &&
           console.log(
             allDone ? "all is successfully removed" : "some is not removed",
@@ -333,13 +335,6 @@ export const useNodeActionsHandler = ({
       },
     );
     removeInvalidNodes(...uids);
-    const { _fileTree } = await loadLocalProject(
-      currentProjectFileHandle as FileSystemDirectoryHandle,
-      osType,
-      true,
-      fileTree,
-    );
-    dispatch(setFileTree(_fileTree));
     removeRunningActions(["fileTreeView-delete"]);
   }, [
     selectedItems,
