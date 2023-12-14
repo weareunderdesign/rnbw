@@ -66,7 +66,6 @@ export const getNodeUidByCodeSelection = (
           : validNodeTree[node.parentUid as TNodeUid].children.length
           ? null
           : node.parentUid;
-        console.log(uid, focusedItem);
         break;
       }
     }
