@@ -1,21 +1,22 @@
 import { verifyFileHandlerPermission } from "@_services/main";
 
 import {
-  _createIDBDirectory,
-  _getIDBDirectoryOrFileStat,
-  _readIDBDirectory,
-  _readIDBFile,
-  _removeIDBDirectoryOrFile,
-  _writeIDBFile,
   getFileNameAndExtensionFromFullname,
   TFileHandlerCollection,
   TFileNodeData,
   TFileNodeTreeData,
   TNodeUid,
 } from "../";
+import {
+  _createIDBDirectory,
+  _getIDBDirectoryOrFileStat,
+  _readIDBDirectory,
+  _readIDBFile,
+  _removeIDBDirectoryOrFile,
+  _writeIDBFile,
+  _path,
+} from "./nohostApis";
 import { FileSystemFileHandle } from "file-system-access";
-
-const _path = window.Filer.path;
 
 // true: success, false: fail
 const createLocalSingleDirectoryOrFile = async ({

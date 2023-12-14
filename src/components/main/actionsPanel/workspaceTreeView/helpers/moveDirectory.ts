@@ -1,12 +1,12 @@
+import { TFileNodeData } from "@_node/file";
 import {
   _createIDBDirectory,
   _getIDBDirectoryOrFileStat,
   _readIDBDirectory,
   _readIDBFile,
   _removeIDBDirectoryOrFile,
-  TFileNodeData,
   _writeIDBFile,
-} from "@_node/file";
+} from "@_node/file/nohostApis";
 
 export const moveDirectory = async (
   orgPath: string,
