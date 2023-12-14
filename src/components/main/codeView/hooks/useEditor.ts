@@ -110,28 +110,30 @@ const useEditor = () => {
         })),
       );
 
-      editor.onDidChangeCursorPosition(
-        (event) => event.source === "mouse" && setCodeSelection(),
-      );
+      editor.onDidChangeCursorPosition((event) => {
+        (event.source === "mouse" || event.source === "keyboard") &&
+          setCodeSelection();
+      });
     },
     [setCodeSelection],
   );
+
   // handleOnChange
-  const handleOnChange = useCallback((value: string | undefined) => {
-    if (value === undefined) return;
-
-    setIsCodeTyping(true);
-
-    if (isContentProgrammaticallyChanged.current) {
-      debouncedOnChange(value);
-    } else {
-      longDebouncedOnChange(value);
-    }
-  }, []);
   const onChange = useCallback(
     (value: string) => {
       dispatch(setCurrentFileContent(value));
-      dispatch(setNeedToSelectCode(codeSelection));
+      dispatch(
+        setNeedToSelectCode(
+          codeSelection
+            ? {
+                startLineNumber: codeSelection.startLineNumber,
+                startColumn: codeSelection.startColumn,
+                endLineNumber: codeSelection.endLineNumber,
+                endColumn: codeSelection.endColumn,
+              }
+            : null,
+        ),
+      );
       setIsCodeTyping(false);
     },
     [codeSelection],
@@ -146,6 +148,20 @@ const useEditor = () => {
   const longDebouncedOnChange = useCallback(
     debounce(onChange, CodeViewSyncDelay_Long),
     [onChange],
+  );
+  const handleOnChange = useCallback(
+    (value: string | undefined) => {
+      if (value === undefined) return;
+
+      setIsCodeTyping(true);
+
+      if (isContentProgrammaticallyChanged.current) {
+        debouncedOnChange(value);
+      } else {
+        longDebouncedOnChange(value);
+      }
+    },
+    [debouncedOnChange, longDebouncedOnChange],
   );
 
   // undo/redo
