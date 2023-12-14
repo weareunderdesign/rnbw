@@ -122,7 +122,7 @@ export default function CodeView(props: CodeViewProps) {
 
   // code select -> selectedUids
   useEffect(() => {
-    if (!codeSelection || isCodeTyping) return;
+    if (!codeSelection || isCodeTyping.current) return;
 
     const file = fileTree[currentFileUid];
     if (!file) return;

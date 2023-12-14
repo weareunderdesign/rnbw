@@ -261,18 +261,17 @@ export const useNodeTreeEvent = () => {
       if (!isSelectedNodeUidsChanged.current) {
         // this change is from 'node actions' or 'typing in code-view'
         let _selectedNodeUids: TNodeUid[] = [];
-
         if (needToSelectCode) {
           LogAllow && console.log("it's a rnbw-change from code-view");
           // it's a typing change in code-view and we need to select currently `cursored node` in code-view.
           // in the case, `callNodeApi -> setCurrentFileContent` and `setNeedToSelectNodeUids` dispatch actions are considered as an one event in the node-event-history.
-          const focusedNodeUid = getNodeUidByCodeSelection(
+          const needToSelectNodeUid = getNodeUidByCodeSelection(
             needToSelectCode,
             _validNodeTree,
           );
-          focusedNodeUid &&
-            _selectedNodeUids.push(focusedNodeUid) &&
-            dispatch(setNeedToSelectNodeUids([focusedNodeUid]));
+          needToSelectNodeUid &&
+            _selectedNodeUids.push(needToSelectNodeUid) &&
+            dispatch(setNeedToSelectNodeUids([needToSelectNodeUid]));
           dispatch(setNeedToSelectCode(null));
         }
 

@@ -197,11 +197,7 @@ export default function WorkspaceTreeView() {
   // open default initial html file
   useEffect(() => {
     if (initialFileUidToOpen !== "" && fileTree[initialFileUidToOpen]) {
-      addRunningActions([
-        "fileTreeView-focus",
-        "fileTreeView-select",
-        "fileTreeView-read",
-      ]);
+      addRunningActions(["fileTreeView-read"]);
 
       cb_focusNode(initialFileUidToOpen);
       cb_selectNode([initialFileUidToOpen]);

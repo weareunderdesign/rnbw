@@ -96,8 +96,6 @@ export const useNodeActionHandlers = () => {
       return;
     }
 
-    console.log(callNodeApi);
-
     setIsContentProgrammaticallyChanged(true);
     callNodeApi(
       {
