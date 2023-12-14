@@ -44,6 +44,8 @@ interface IUseCmdk {
   ) => Promise<void>;
 }
 export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
+  useEffect(() => {});
+
   const dispatch = useDispatch();
   const {
     osType,
@@ -65,12 +67,6 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     cmdkPages,
     currentCommand,
   } = useAppState();
-
-  // refs
-  const cmdkOpenRef = useRef(false);
-  useEffect(() => {
-    cmdkOpenRef.current = cmdkOpen;
-  }, [cmdkOpen]);
 
   // handlers
   const onClear = useCallback(async () => {
@@ -237,7 +233,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
         return;
       }
       if (e.key === "Escape") {
-        !cmdkOpenRef.current && closeAllPanel();
+        !cmdkOpen && closeAllPanel();
         return;
       }
       // skip inline rename input in file-tree-view
@@ -291,13 +287,13 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
         e.preventDefault();
       }
 
-      if (cmdkOpenRef.current) return;
+      if (cmdkOpen) return;
       if (action) {
         LogAllow && console.log("action to be run by cmdk: ", action);
         dispatch(setCurrentCommand({ action }));
       }
     },
-    [osType, cmdkReferenceData],
+    [osType, cmdkOpen, cmdkReferenceData],
   );
   useEffect(() => {
     document.addEventListener("keydown", KeyDownEventListener);
