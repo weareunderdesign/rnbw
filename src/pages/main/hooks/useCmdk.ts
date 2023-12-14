@@ -239,6 +239,12 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
       if (targetId === "FileTreeView-RenameInput") {
         return;
       }
+      // skip monaco-editor shortkeys and general coding
+      if (activePanel === "code") {
+        if (!(cmdk.cmd && !cmdk.shift && !cmdk.alt && cmdk.key === "KeyS")) {
+          return;
+        }
+      }
       // detect action
       let action: string | null = null;
       for (const actionName in cmdkReferenceData) {
@@ -283,7 +289,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
 
       action && e.preventDefault();
     },
-    [osType, cmdkOpen, cmdkReferenceData],
+    [osType, cmdkOpen, activePanel, cmdkReferenceData],
   );
   useEffect(() => {
     document.addEventListener("keydown", KeyDownEventListener);
