@@ -9,6 +9,7 @@ import {
   loadIDBProject,
   loadLocalProject,
   TFileHandlerCollection,
+  TFileNodeTreeData,
 } from "@_node/file";
 import {
   setDoingFileAction,
@@ -180,12 +181,26 @@ export const useHandlers = ({
     },
     [osType, saveRecentProject],
   );
+  const reloadCurrentProject = async (
+    fileTree: TFileNodeTreeData,
+    currentProjectFileHandle: FileSystemDirectoryHandle | null,
+  ) => {
+    const { _fileTree, _initialFileUidToOpen } = await loadLocalProject(
+      currentProjectFileHandle as FileSystemDirectoryHandle,
+      osType,
+      true,
+      fileTree,
+    );
+    dispatch(setFileTree(_fileTree));
+    dispatch(setInitialFileUidToOpen(_initialFileUidToOpen));
+  };
   const closeNavigator = useCallback(() => {
     navigatorDropdownType !== null && dispatch(setNavigatorDropdownType(null));
   }, [navigatorDropdownType]);
 
   return {
     importProject,
+    reloadCurrentProject,
     closeNavigator,
   };
 };

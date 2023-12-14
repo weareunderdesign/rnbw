@@ -33,6 +33,7 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   setIsCodeTyping: () => {},
 
   importProject: () => {},
+  reloadCurrentProject: () => {},
   onUndo: () => {},
   onRedo: () => {},
 });

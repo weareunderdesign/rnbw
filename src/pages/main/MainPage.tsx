@@ -104,7 +104,7 @@ export default function MainPage() {
 
     htmlReferenceData,
   });
-  const { importProject, closeNavigator } = useHandlers({
+  const { importProject, closeNavigator, reloadCurrentProject } = useHandlers({
     setCurrentProjectFileHandle,
     setFileHandlers,
 
@@ -194,6 +194,7 @@ export default function MainPage() {
           setIsCodeTyping,
 
           importProject,
+          reloadCurrentProject,
           onUndo,
           onRedo,
         }}

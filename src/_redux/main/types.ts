@@ -2,7 +2,7 @@ import { MutableRefObject } from "react";
 
 import { editor } from "monaco-editor";
 
-import { TFileHandlerCollection } from "@_node/file";
+import { TFileHandlerCollection, TFileNodeTreeData } from "@_node/file";
 import { TNodeUid } from "@_node/types";
 import {
   TCmdkReferenceData,
@@ -65,6 +65,11 @@ export type TMainContext = {
     fsType: TProjectContext,
     projectHandle?: FileSystemDirectoryHandle | null,
   ) => void;
+  reloadCurrentProject: (
+    fileTree: TFileNodeTreeData,
+    currentProjectFileHandle: FileSystemDirectoryHandle | null,
+  ) => void;
+
   onUndo: () => void;
   onRedo: () => void;
 };

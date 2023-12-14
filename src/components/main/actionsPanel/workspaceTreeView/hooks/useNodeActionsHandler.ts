@@ -14,6 +14,7 @@ import {
   TFileNodeData,
   _writeIDBFile,
   confirmAlert,
+  loadLocalProject,
 } from "@_node/file";
 import { getValidNodeUids } from "@_node/helpers";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
@@ -82,6 +83,8 @@ export const useNodeActionsHandler = ({
     removeRunningActions,
     fileHandlers,
     htmlReferenceData,
+    currentProjectFileHandle,
+    reloadCurrentProject,
   } = useContext(MainContext);
 
   const createFFNode = useCallback(
@@ -324,6 +327,7 @@ export const useNodeActionsHandler = ({
         LogAllow && console.error("error while removing file system");
       },
       (allDone: boolean) => {
+        reloadCurrentProject(fileTree, currentProjectFileHandle);
         LogAllow &&
           console.log(
             allDone ? "all is successfully removed" : "some is not removed",
