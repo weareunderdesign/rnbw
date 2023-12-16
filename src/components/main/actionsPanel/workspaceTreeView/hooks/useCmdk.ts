@@ -44,7 +44,7 @@ export const useCmdk = ({
     currentCommand,
   } = useAppState();
 
-  const { createTmpFFNode, cb_deleteNode, cb_moveNode, cb_duplicateNode } =
+  const { createTmpFFNode, onDelete, onCut, cb_moveNode, cb_duplicateNode } =
     useNodeActionsHandler({
       invalidNodes,
       addInvalidNodes,
@@ -64,15 +64,12 @@ export const useCmdk = ({
     },
     [createTmpFFNode],
   );
-  const onDelete = useCallback(() => {
-    cb_deleteNode();
-  }, [cb_deleteNode]);
 
-  const onCut = useCallback(() => {
+  const onCopy = useCallback(() => {
     dispatch(
       setClipboardData({
         panel: "file",
-        type: "cut",
+        type: "copy",
         uids: selectedItems,
         fileType: fileTree[currentFileUid].data.type,
         data: [],
@@ -80,18 +77,6 @@ export const useCmdk = ({
         prevNodeTree: nodeTree,
       }),
     );
-  }, [selectedItems, fileTree[currentFileUid], nodeTree]);
-
-  const onCopy = useCallback(() => {
-    setClipboardData({
-      panel: "file",
-      type: "copy",
-      uids: selectedItems,
-      fileType: fileTree[currentFileUid].data.type,
-      data: [],
-      fileUid: currentFileUid,
-      prevNodeTree: nodeTree,
-    });
   }, [selectedItems, fileTree[currentFileUid], nodeTree]);
 
   const onPaste = useCallback(() => {
@@ -103,15 +88,17 @@ export const useCmdk = ({
     if (uids.length === 0) return;
 
     if (clipboardData.type === "cut") {
-      setClipboardData({
-        panel: "file",
-        type: "cut",
-        uids: [],
-        fileType: "html",
-        data: [],
-        fileUid: "",
-        prevNodeTree: {},
-      });
+      dispatch(
+        setClipboardData({
+          panel: "file",
+          type: "cut",
+          uids: [],
+          fileType: "html",
+          data: [],
+          fileUid: "",
+          prevNodeTree: {},
+        }),
+      );
       cb_moveNode(uids, focusedItem);
     } else if (clipboardData.type === "copy") {
       cb_moveNode(uids, focusedItem, true);

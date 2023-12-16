@@ -2,7 +2,7 @@ import { useContext } from "react";
 
 import { useDispatch } from "react-redux";
 
-import { TFileNodeData } from "@_node/file";
+import { TFileNodeData, moveIDBFF, moveLocalFF } from "@_node/file";
 import { TNode, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import {
@@ -14,7 +14,6 @@ import { useAppState } from "@_redux/useAppState";
 import { verifyFileHandlerPermission } from "@_services/main";
 
 import { useInvalidNodes } from "../hooks";
-import { moveActions } from "./moveActions";
 
 export const renameNode = async (
   ext: string,
@@ -31,8 +30,6 @@ export const renameNode = async (
   const { removeRunningActions, fileHandlers } = useContext(MainContext);
 
   const { removeInvalidNodes, addInvalidNodes } = useInvalidNodes();
-
-  const { moveIDBFF, moveLocalFF } = moveActions(() => {});
 
   const _orgName =
     ext === "*folder" ? `${nodeData.name}` : `${nodeData.name}${nodeData.ext}`;
@@ -77,7 +74,7 @@ export const renameNode = async (
     addInvalidNodes(newUid);
 
     try {
-      await moveIDBFF(nodeData, parentNodeData, _newName, false, true);
+      await moveIDBFF(nodeData, parentNodeData, _newName, false);
       removeInvalidNodes(newUid);
     } catch (err) {
       // addMessage(renamingError);

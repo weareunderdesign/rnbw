@@ -10,6 +10,9 @@ import {
   TNodeUid,
 } from "../";
 import { TFileActionType, TProjectContext } from "@_redux/main/fileTree";
+import { AnyAction } from "@reduxjs/toolkit";
+import { Dispatch } from "react";
+import { TClipboardData } from "@_redux/main/processor";
 
 export type TFileNode = TNode & {
   data: TFileNodeData;
@@ -79,8 +82,40 @@ export type TFileApiPayloadBase = {
 };
 export type TFileApiPayload = TFileApiPayloadBase &
   (
-    | { action: Extract<TFileActionType, "remove">; uids: TNodeUid[] }
-    | { action: Exclude<TFileActionType, "remove">; uids?: never }
+    | {
+        action: Extract<TFileActionType, "remove" | "cut" | "move">;
+        uids: TNodeUid[];
+      }
+    | {
+        action: Exclude<TFileActionType, "remove" | "cut" | "move">;
+        uids?: never;
+      }
+  ) &
+  (
+    | { action: Extract<TFileActionType, "cut">; currentFileUid: string }
+    | { action: Exclude<TFileActionType, "cut">; currentFileUid?: never }
+  ) &
+  (
+    | { action: Extract<TFileActionType, "cut">; nodeTree: TNodeTreeData }
+    | { action: Exclude<TFileActionType, "cut">; nodeTree?: never }
+  ) &
+  (
+    | { action: Extract<TFileActionType, "cut">; dispatch: Dispatch<AnyAction> }
+    | { action: Exclude<TFileActionType, "cut">; dispatch?: never }
+  ) &
+  (
+    | {
+        action: Extract<TFileActionType, "move">;
+        clipboardData: TClipboardData | null;
+      }
+    | { action: Exclude<TFileActionType, "move">; clipboardData?: never }
+  ) &
+  (
+    | {
+        action: Extract<TFileActionType, "move">;
+        targetNode: TFileNode;
+      }
+    | { action: Exclude<TFileActionType, "move">; targetNode?: never }
   );
 
 export type TZipFileInfo = {
