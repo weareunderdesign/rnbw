@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useContext, useEffect } from "react";
 
 import { useDispatch } from "react-redux";
 
@@ -9,6 +9,8 @@ import { TFileNodeType } from "@_types/main";
 
 import { useNodeActionsHandler } from "./useNodeActionsHandler";
 import { isAddFileAction } from "@_node/helpers";
+import { TFileApiPayload, doFileActions } from "@_node/index";
+import { MainContext } from "@_redux/main";
 
 interface IUseCmdk {
   invalidNodes: {
@@ -44,7 +46,8 @@ export const useCmdk = ({
     currentCommand,
   } = useAppState();
 
-  const { createTmpFFNode, onDelete, onCut, cb_moveNode, cb_duplicateNode } =
+  const { fileHandlers } = useContext(MainContext);
+  const { createTmpFFNode, onCut, cb_moveNode, cb_duplicateNode } =
     useNodeActionsHandler({
       invalidNodes,
       addInvalidNodes,
@@ -66,48 +69,53 @@ export const useCmdk = ({
   );
 
   const onCopy = useCallback(() => {
-    dispatch(
-      setClipboardData({
-        panel: "file",
-        type: "copy",
-        uids: selectedItems,
-        fileType: fileTree[currentFileUid].data.type,
-        data: [],
-        fileUid: currentFileUid,
-        prevNodeTree: nodeTree,
-      }),
-    );
+    const params: TFileApiPayload = {
+      projectContext: "idb",
+      action: "copy",
+      uids: selectedItems,
+      fileTree,
+      fileHandlers,
+      dispatch,
+      currentFileUid,
+      nodeTree,
+    };
+    doFileActions(params);
   }, [selectedItems, fileTree[currentFileUid], nodeTree]);
 
   const onPaste = useCallback(() => {
     if (clipboardData?.panel !== "file") return;
-
+    const params: TFileApiPayload = {
+      projectContext: "idb",
+      fileHandlers,
+      uids: selectedItems,
+      clipboardData,
+      fileTree,
+      action: "move",
+      targetNode: fileTree[focusedItem],
+    };
     // validate
     if (invalidNodes[focusedItem]) return;
     const uids = clipboardData.uids.filter((uid) => !invalidNodes[uid]);
     if (uids.length === 0) return;
-
-    if (clipboardData.type === "cut") {
-      dispatch(
-        setClipboardData({
-          panel: "file",
-          type: "cut",
-          uids: [],
-          fileType: "html",
-          data: [],
-          fileUid: "",
-          prevNodeTree: {},
-        }),
-      );
-      cb_moveNode(uids, focusedItem);
-    } else if (clipboardData.type === "copy") {
-      cb_moveNode(uids, focusedItem, true);
-    }
+    doFileActions(params);
   }, [clipboardData, invalidNodes, focusedItem, cb_moveNode]);
 
   const onDuplicate = useCallback(() => {
-    cb_duplicateNode();
+    if (clipboardData?.panel !== "file") return;
+    onCopy();
+    onPaste();
   }, [cb_duplicateNode]);
+
+  const onDelete = useCallback(() => {
+    const params: TFileApiPayload = {
+      projectContext: "idb",
+      action: "remove",
+      uids: selectedItems,
+      fileTree,
+      fileHandlers,
+    };
+    doFileActions(params);
+  }, [selectedItems, fileTree[currentFileUid], nodeTree]);
 
   useEffect(() => {
     if (!currentCommand) return;

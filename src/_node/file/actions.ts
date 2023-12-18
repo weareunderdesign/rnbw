@@ -49,57 +49,6 @@ const remove = async ({
     }
   });
 };
-const cut = ({
-  dispatch,
-  uids,
-  fileTree,
-  currentFileUid,
-  nodeTree,
-}: {
-  dispatch: Dispatch<AnyAction>;
-  uids: TNodeUid[];
-  fileTree: TFileNodeTreeData;
-  currentFileUid: string;
-  nodeTree: TNodeTreeData;
-}) => {
-  dispatch(
-    setClipboardData({
-      panel: "file",
-      type: "cut",
-      uids,
-      fileType: fileTree[currentFileUid].data.type,
-      data: [],
-      fileUid: currentFileUid,
-      prevNodeTree: nodeTree,
-    }),
-  );
-};
-
-const copy = ({
-  dispatch,
-  uids,
-  fileTree,
-  currentFileUid,
-  nodeTree,
-}: {
-  dispatch: Dispatch<AnyAction>;
-  uids: TNodeUid[];
-  fileTree: TFileNodeTreeData;
-  currentFileUid: string;
-  nodeTree: TNodeTreeData;
-}) => {
-  dispatch(
-    setClipboardData({
-      panel: "file",
-      type: "copy",
-      uids,
-      fileType: fileTree[currentFileUid].data.type,
-      data: [],
-      fileUid: currentFileUid,
-      prevNodeTree: nodeTree,
-    }),
-  );
-};
 
 const duplicate = () => {};
 const move = async ({
@@ -177,6 +126,58 @@ const move = async ({
       }
     });
   });
+};
+
+const cut = ({
+  dispatch,
+  uids,
+  fileTree,
+  currentFileUid,
+  nodeTree,
+}: {
+  dispatch: Dispatch<AnyAction>;
+  uids: TNodeUid[];
+  fileTree: TFileNodeTreeData;
+  currentFileUid: string;
+  nodeTree: TNodeTreeData;
+}) => {
+  dispatch(
+    setClipboardData({
+      panel: "file",
+      type: "cut",
+      uids,
+      fileType: fileTree[currentFileUid].data.type,
+      data: [],
+      fileUid: currentFileUid,
+      prevNodeTree: nodeTree,
+    }),
+  );
+};
+
+const copy = ({
+  dispatch,
+  uids,
+  fileTree,
+  currentFileUid,
+  nodeTree,
+}: {
+  dispatch: Dispatch<AnyAction>;
+  uids: TNodeUid[];
+  fileTree: TFileNodeTreeData;
+  currentFileUid: string;
+  nodeTree: TNodeTreeData;
+}) => {
+  dispatch(
+    setClipboardData({
+      panel: "file",
+      type: "copy",
+      uids,
+      fileType: fileTree[currentFileUid].data.type,
+      data: [],
+      fileUid: currentFileUid,
+      prevNodeTree: nodeTree,
+    }),
+  );
 };
 
 const rename = () => {};
