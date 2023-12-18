@@ -123,7 +123,7 @@ export const useCmdk = ({
         }
       }
 
-      action && e.preventDefault();
+      !isEditingRef.current && action && e.preventDefault();
     },
     [osType, cmdkReferenceData],
   );
