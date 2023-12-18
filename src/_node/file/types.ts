@@ -83,25 +83,37 @@ export type TFileApiPayloadBase = {
 export type TFileApiPayload = TFileApiPayloadBase &
   (
     | {
-        action: Extract<TFileActionType, "remove" | "cut" | "move">;
+        action: Extract<TFileActionType, "remove" | "cut" | "move" | "copy">;
         uids: TNodeUid[];
       }
     | {
-        action: Exclude<TFileActionType, "remove" | "cut" | "move">;
+        action: Exclude<TFileActionType, "remove" | "cut" | "move" | "copy">;
         uids?: never;
       }
   ) &
   (
-    | { action: Extract<TFileActionType, "cut">; currentFileUid: string }
-    | { action: Exclude<TFileActionType, "cut">; currentFileUid?: never }
+    | {
+        action: Extract<TFileActionType, "cut" | "copy">;
+        currentFileUid: string;
+      }
+    | {
+        action: Exclude<TFileActionType, "cut" | "copy">;
+        currentFileUid?: never;
+      }
   ) &
   (
-    | { action: Extract<TFileActionType, "cut">; nodeTree: TNodeTreeData }
-    | { action: Exclude<TFileActionType, "cut">; nodeTree?: never }
+    | {
+        action: Extract<TFileActionType, "cut" | "copy">;
+        nodeTree: TNodeTreeData;
+      }
+    | { action: Exclude<TFileActionType, "cut" | "copy">; nodeTree?: never }
   ) &
   (
-    | { action: Extract<TFileActionType, "cut">; dispatch: Dispatch<AnyAction> }
-    | { action: Exclude<TFileActionType, "cut">; dispatch?: never }
+    | {
+        action: Extract<TFileActionType, "cut" | "copy">;
+        dispatch: Dispatch<AnyAction>;
+      }
+    | { action: Exclude<TFileActionType, "cut" | "copy">; dispatch?: never }
   ) &
   (
     | {

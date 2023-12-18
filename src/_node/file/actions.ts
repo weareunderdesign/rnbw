@@ -74,7 +74,33 @@ const cut = ({
     }),
   );
 };
-const copy = () => {};
+
+const copy = ({
+  dispatch,
+  uids,
+  fileTree,
+  currentFileUid,
+  nodeTree,
+}: {
+  dispatch: Dispatch<AnyAction>;
+  uids: TNodeUid[];
+  fileTree: TFileNodeTreeData;
+  currentFileUid: string;
+  nodeTree: TNodeTreeData;
+}) => {
+  dispatch(
+    setClipboardData({
+      panel: "file",
+      type: "copy",
+      uids,
+      fileType: fileTree[currentFileUid].data.type,
+      data: [],
+      fileUid: currentFileUid,
+      prevNodeTree: nodeTree,
+    }),
+  );
+};
+
 const duplicate = () => {};
 const move = async ({
   projectContext,
@@ -167,7 +193,6 @@ export const doFileActions = async (
       uids,
       fileTree,
       fileHandlers,
-      osType = "Windows",
       dispatch,
       currentFileUid,
       nodeTree,
@@ -198,7 +223,7 @@ export const doFileActions = async (
         });
         break;
       case "copy":
-        copy();
+        copy({ dispatch, uids, fileTree, currentFileUid, nodeTree });
         break;
       case "duplicate":
         duplicate();
