@@ -11,6 +11,7 @@ import { useNodeActionsHandler } from "./useNodeActionsHandler";
 import { isAddFileAction } from "@_node/helpers";
 import { TFileApiPayload, doFileActions } from "@_node/index";
 import { MainContext } from "@_redux/main";
+import { LogAllow } from "@_constants/global";
 
 interface IUseCmdk {
   invalidNodes: {
@@ -46,7 +47,8 @@ export const useCmdk = ({
     currentCommand,
   } = useAppState();
 
-  const { fileHandlers } = useContext(MainContext);
+  const { fileHandlers, reloadCurrentProject, currentProjectFileHandle } =
+    useContext(MainContext);
   const { createTmpFFNode, onCut, cb_moveNode, cb_duplicateNode } =
     useNodeActionsHandler({
       invalidNodes,
@@ -97,7 +99,19 @@ export const useCmdk = ({
     if (invalidNodes[focusedItem]) return;
     const uids = clipboardData.uids.filter((uid) => !invalidNodes[uid]);
     if (uids.length === 0) return;
-    doFileActions(params);
+    doFileActions(
+      params,
+      () => {
+        LogAllow && console.error("error while removing file system");
+      },
+      (allDone: boolean) => {
+        reloadCurrentProject(fileTree, currentProjectFileHandle);
+        LogAllow &&
+          console.log(
+            allDone ? "all is successfully removed" : "some is not removed",
+          );
+      },
+    );
   }, [clipboardData, invalidNodes, focusedItem, cb_moveNode]);
 
   const onDuplicate = useCallback(() => {
