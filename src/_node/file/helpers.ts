@@ -108,7 +108,7 @@ export const moveFile = async (
 
   let exists = true;
   try {
-    const handlerExists = await targetHandler.getFileHandle(newName, {
+    await targetHandler.getFileHandle(newName, {
       create: false,
     });
     exists = true;

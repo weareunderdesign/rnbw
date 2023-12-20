@@ -84,7 +84,8 @@ const move = async ({
         parentNode.uid
       ] as FileSystemDirectoryHandle;
       let targetHandler = null;
-      if (targetNode.data.type === "file") {
+
+      if (targetNode.data.kind === "file") {
         targetHandler = fileHandlers[
           targetNode.parentUid
         ] as FileSystemDirectoryHandle;
