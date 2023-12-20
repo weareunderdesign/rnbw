@@ -104,7 +104,6 @@ const move = async ({
       const newFileName = await generateNewNameMoveNode(
         nodeData,
         targetHandler,
-        clipboardData?.type === "copy",
       );
 
       // move

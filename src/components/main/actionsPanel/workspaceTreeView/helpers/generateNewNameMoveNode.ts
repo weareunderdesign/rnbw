@@ -3,14 +3,12 @@ import { TFileNodeData } from "@_node/file";
 export const generateNewNameMoveNode = async (
   nodeData: TFileNodeData,
   targetHandler: FileSystemDirectoryHandle,
-  copy: boolean,
 ) => {
   let newName =
     nodeData.kind === "directory"
       ? nodeData.name
       : `${nodeData.name}.${nodeData.ext}`;
 
-  // if (copy) {
   if (nodeData.kind === "directory") {
     let folderName = nodeData.name;
     let exists = false;
@@ -86,7 +84,6 @@ export const generateNewNameMoveNode = async (
       newName = fileName;
     }
   }
-  // }
 
   return newName;
 };
