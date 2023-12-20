@@ -100,7 +100,7 @@ export const moveFile = async (
   targetHandler: FileSystemDirectoryHandle,
   newName: string,
   copy: boolean,
-  // showWarning?: boolean,
+  showWarning?: boolean,
   // addMessage?: (message: TToast) => void,
 ) => {
   // validate if the new name exists
@@ -108,18 +108,16 @@ export const moveFile = async (
 
   let exists = true;
   try {
-    await targetHandler.getFileHandle(newName, { create: false });
+    const handlerExists = await targetHandler.getFileHandle(newName, {
+      create: false,
+    });
     exists = true;
   } catch (err) {
     exists = false;
   }
 
   if (exists) {
-    // showWarning &&
-    //   addMessage({
-    //     type: "error",
-    //     content: "File with the same name already exists.",
-    //   });
+    showWarning && alert("File with the same name already exists.");
     return;
   }
 

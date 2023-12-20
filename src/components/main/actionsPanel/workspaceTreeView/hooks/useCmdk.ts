@@ -85,19 +85,20 @@ export const useCmdk = ({
 
   const onPaste = useCallback(() => {
     if (clipboardData?.panel !== "file") return;
+
+    // validate
+    if (invalidNodes[focusedItem]) return;
+    const uids = clipboardData.uids.filter((uid) => !invalidNodes[uid]);
+    if (uids.length === 0) return;
     const params: TFileApiPayload = {
       projectContext: "local",
       fileHandlers,
-      uids: selectedItems,
+      uids,
       clipboardData,
       fileTree,
       action: "move",
       targetNode: fileTree[focusedItem],
     };
-    // validate
-    if (invalidNodes[focusedItem]) return;
-    const uids = clipboardData.uids.filter((uid) => !invalidNodes[uid]);
-    if (uids.length === 0) return;
     doFileActions(
       params,
       () => {
@@ -143,10 +144,18 @@ export const useCmdk = ({
   }, [selectedItems, fileTree[currentFileUid], nodeTree]);
 
   const onCut = useCallback(() => {
-    if (clipboardData?.panel !== "file") return;
-    onCopy();
-    onDelete();
-  }, []);
+    const params: TFileApiPayload = {
+      projectContext: "local",
+      action: "cut",
+      uids: selectedItems,
+      fileTree,
+      fileHandlers,
+      dispatch,
+      currentFileUid,
+      nodeTree,
+    };
+    doFileActions(params);
+  }, [selectedItems, fileTree[currentFileUid], nodeTree, clipboardData]);
 
   useEffect(() => {
     if (!currentCommand) return;

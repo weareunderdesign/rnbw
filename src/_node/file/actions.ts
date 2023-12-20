@@ -83,10 +83,16 @@ const move = async ({
       const parentHandler = fileHandlers[
         parentNode.uid
       ] as FileSystemDirectoryHandle;
-      const targetHandler = fileHandlers[
-        targetNode.uid
-      ] as FileSystemDirectoryHandle;
-
+      let targetHandler = null;
+      if (targetNode.data.type === "file") {
+        targetHandler = fileHandlers[
+          targetNode.parentUid
+        ] as FileSystemDirectoryHandle;
+      } else {
+        targetHandler = fileHandlers[
+          targetNode.uid
+        ] as FileSystemDirectoryHandle;
+      }
       if (
         !(await verifyFileHandlerPermission(handler)) ||
         !(await verifyFileHandlerPermission(parentHandler)) ||
