@@ -49,16 +49,15 @@ export const useCmdk = ({
 
   const { fileHandlers, reloadCurrentProject, currentProjectFileHandle } =
     useContext(MainContext);
-  const { createTmpFFNode, onCut, cb_moveNode, cb_duplicateNode } =
-    useNodeActionsHandler({
-      invalidNodes,
-      addInvalidNodes,
-      removeInvalidNodes,
-      temporaryNodes,
-      addTemporaryNodes,
-      removeTemporaryNodes,
-      openFileUid,
-    });
+  const { createTmpFFNode } = useNodeActionsHandler({
+    invalidNodes,
+    addInvalidNodes,
+    removeInvalidNodes,
+    temporaryNodes,
+    addTemporaryNodes,
+    removeTemporaryNodes,
+    openFileUid,
+  });
 
   const onAddNode = useCallback(
     (actionName: string) => {
@@ -72,7 +71,7 @@ export const useCmdk = ({
 
   const onCopy = useCallback(() => {
     const params: TFileApiPayload = {
-      projectContext: "idb",
+      projectContext: "local",
       action: "copy",
       uids: selectedItems,
       fileTree,
@@ -87,7 +86,7 @@ export const useCmdk = ({
   const onPaste = useCallback(() => {
     if (clipboardData?.panel !== "file") return;
     const params: TFileApiPayload = {
-      projectContext: "idb",
+      projectContext: "local",
       fileHandlers,
       uids: selectedItems,
       clipboardData,
@@ -112,24 +111,42 @@ export const useCmdk = ({
           );
       },
     );
-  }, [clipboardData, invalidNodes, focusedItem, cb_moveNode]);
+  }, [clipboardData, selectedItems, fileTree[currentFileUid], nodeTree]);
 
   const onDuplicate = useCallback(() => {
     if (clipboardData?.panel !== "file") return;
     onCopy();
     onPaste();
-  }, [cb_duplicateNode]);
+  }, []);
 
   const onDelete = useCallback(() => {
     const params: TFileApiPayload = {
-      projectContext: "idb",
+      projectContext: "local",
       action: "remove",
       uids: selectedItems,
       fileTree,
       fileHandlers,
     };
-    doFileActions(params);
+    doFileActions(
+      params,
+      () => {
+        LogAllow && console.error("error while removing file system");
+      },
+      (allDone: boolean) => {
+        reloadCurrentProject(fileTree, currentProjectFileHandle);
+        LogAllow &&
+          console.log(
+            allDone ? "all is successfully removed" : "some is not removed",
+          );
+      },
+    );
   }, [selectedItems, fileTree[currentFileUid], nodeTree]);
+
+  const onCut = useCallback(() => {
+    if (clipboardData?.panel !== "file") return;
+    onCopy();
+    onDelete();
+  }, []);
 
   useEffect(() => {
     if (!currentCommand) return;

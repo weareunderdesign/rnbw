@@ -50,7 +50,6 @@ const remove = async ({
   });
 };
 
-const duplicate = () => {};
 const move = async ({
   projectContext,
   fileHandlers,
@@ -226,9 +225,7 @@ export const doFileActions = async (
       case "copy":
         copy({ dispatch, uids, fileTree, currentFileUid, nodeTree });
         break;
-      case "duplicate":
-        duplicate();
-        break;
+
       case "move":
         allDone = await move({
           projectContext,
