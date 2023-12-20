@@ -115,10 +115,9 @@ export const useCmdk = ({
   }, [clipboardData, selectedItems, fileTree[currentFileUid], nodeTree]);
 
   const onDuplicate = useCallback(() => {
-    if (clipboardData?.panel !== "file") return;
     onCopy();
     onPaste();
-  }, []);
+  }, [selectedItems, fileTree[currentFileUid], nodeTree, clipboardData]);
 
   const onDelete = useCallback(() => {
     const params: TFileApiPayload = {
