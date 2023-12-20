@@ -1,11 +1,14 @@
-import { TFileHandlerCollection, TFileNodeData } from "@_node/file";
+import {
+  TFileHandlerCollection,
+  TFileNodeData,
+  moveLocalFF,
+} from "@_node/file";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
 import { verifyFileHandlerPermission } from "@_services/main";
 import { TToast } from "@_types/global";
 
 import { duplicatingWarning, invalidDirError } from "../errors";
 import { generateNewNodeName } from "./";
-import { moveActions } from "./moveActions";
 
 export const duplicateNode = async (
   uid: TNodeUid,
@@ -16,8 +19,6 @@ export const duplicateNode = async (
   addInvalidNodes: any,
   invalidNodes: { [uid: string]: boolean },
 ) => {
-  const { moveLocalFF } = moveActions(addMessage);
-
   const node = ffTree[uid];
   if (!node) return;
 

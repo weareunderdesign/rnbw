@@ -14,7 +14,6 @@ import {
   TFileNodeData,
   _writeIDBFile,
   confirmAlert,
-  loadLocalProject,
 } from "@_node/file";
 import { getValidNodeUids } from "@_node/helpers";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
@@ -36,12 +35,7 @@ import { useAppState } from "@_redux/useAppState";
 import { verifyFileHandlerPermission } from "@_services/main";
 import { TFileNodeType } from "@_types/main";
 
-import {
-  duplicateNode,
-  generateNewName,
-  renameNode,
-  validateAndMoveNode,
-} from "../helpers";
+import { duplicateNode, generateNewName, renameNode } from "../helpers";
 import { callFileApi } from "@_node/apis";
 import { LogAllow } from "@_constants/global";
 
@@ -77,6 +71,8 @@ export const useNodeActionsHandler = ({
     fFocusedItem: focusedItem,
     fExpandedItemsObj: expandedItemsObj,
     fSelectedItems: selectedItems,
+    nodeTree,
+    clipboardData,
   } = useAppState();
   const {
     addRunningActions,
@@ -303,8 +299,27 @@ export const useNodeActionsHandler = ({
       removeInvalidNodes,
     ],
   );
+  const onCut = useCallback(async () => {
+    const uids = selectedItems.filter((uid) => !invalidNodes[uid]);
+    if (uids.length === 0) return;
 
-  const cb_deleteNode = useCallback(async () => {
+    await callFileApi(
+      {
+        projectContext: project.context,
+        dispatch,
+        action: "cut",
+        fileTree,
+        currentFileUid,
+        uids,
+        nodeTree,
+      },
+      () => {
+        LogAllow && console.error("error while cutting file system");
+      },
+    );
+  }, [selectedItems, fileTree[currentFileUid], nodeTree]);
+
+  const onDelete = useCallback(async () => {
     const uids = selectedItems.filter((uid) => !invalidNodes[uid]);
     if (uids.length === 0) return;
 
@@ -349,46 +364,56 @@ export const useNodeActionsHandler = ({
   ]);
 
   const cb_moveNode = useCallback(
-    async (uids: TNodeUid[], targetUid: TNodeUid, copy: boolean = false) => {
+    async (uids: string[], targetUid: TNodeUid, copy: boolean = false) => {
       // validate
       const targetNode = fileTree[targetUid];
-
       if (targetNode === undefined) {
         return;
       }
-
       const validatedUids = getValidNodeUids(fileTree, uids, targetUid);
-
       if (validatedUids.length === 0) {
         return;
       }
-
-      // confirm files' changes
+      // confirm files changes
       const hasChangedFile = validatedUids.some((uid) => {
         const _file = fileTree[uid];
         const _fileData = _file.data as TFileNodeData;
         return _file && _fileData.changed;
       });
-
       if (hasChangedFile && !confirmAlert(FileChangeAlertMessage)) return;
-
       addRunningActions(["fileTreeView-move"]);
-
-      const _uids = await Promise.all(
-        validatedUids.map((uid) => validateAndMoveNode(uid, targetUid, copy)),
+      addInvalidNodes(...validatedUids);
+      await callFileApi(
+        {
+          projectContext: project.context,
+          action: "move",
+          fileHandlers,
+          uids,
+          fileTree,
+          targetNode,
+          clipboardData,
+        },
+        () => {
+          LogAllow && console.error("error while pasting file system");
+        },
+        (allDone: boolean) => {
+          reloadCurrentProject(fileTree, currentProjectFileHandle);
+          LogAllow &&
+            console.log(
+              allDone ? "all is successfully past" : "some is not past",
+            );
+        },
       );
-
-      if (_uids.some((result) => !result)) {
-        // addMessage(movingError);
-      }
-
+      removeInvalidNodes(...validatedUids);
+      // if (_uids.some((result) => !result)) {
+      //   // addMessage(movingError);
+      // }
       const action: TFileAction = {
         type: copy ? "copy" : "cut",
-        param1: _uids,
-        param2: _uids.map(() => targetUid),
+        // param1: _uids,
+        // param2: _uids.map(() => targetUid),
       };
       dispatch(setFileAction(action));
-
       removeRunningActions(["fileTreeView-move"]);
     },
     [
@@ -536,7 +561,8 @@ export const useNodeActionsHandler = ({
     cb_abortRenamingNode,
     cb_renameNode,
     _cb_renameNode,
-    cb_deleteNode,
+    onCut,
+    onDelete,
     cb_moveNode,
     cb_duplicateNode,
     cb_readNode,

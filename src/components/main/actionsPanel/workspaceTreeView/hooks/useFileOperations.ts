@@ -1,17 +1,13 @@
 import { useCallback, useContext } from "react";
 
-import { TFileNodeData } from "@_node/file";
+import { TFileNodeData, moveIDBFF, moveLocalFF } from "@_node/file";
 import { TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { useAppState } from "@_redux/useAppState";
 import { verifyFileHandlerPermission } from "@_services/main";
 import { TFileNodeType } from "@_types/main";
 
-import {
-  createFileOrFolder,
-  deleteFileOrFolder,
-  moveActions,
-} from "../helpers";
+import { createFileOrFolder, deleteFileOrFolder } from "../helpers";
 import { LogAllow } from "@_constants/global";
 
 interface IUseFileOperations {
@@ -37,8 +33,6 @@ export const useFileOperations = ({
   const { project, fileTree } = useAppState();
   const { addRunningActions, removeRunningActions, fileHandlers } =
     useContext(MainContext);
-
-  const { moveIDBFF, moveLocalFF } = moveActions(() => {});
 
   const _create = useCallback(
     async (params: {
