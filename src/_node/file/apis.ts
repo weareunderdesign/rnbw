@@ -61,28 +61,33 @@ export const initIDBProject = async (projectPath: string): Promise<void> => {
     }
   });
 };
+export const getIndexHtmlContent = () => {
+  const htmlElementsReferenceData: THtmlElementsReferenceData = {};
+  htmlRefElements.map((htmlRefElement: THtmlElementsReference) => {
+    const pureTag =
+      htmlRefElement["Name"] === "Comment"
+        ? "comment"
+        : htmlRefElement["Tag"]?.slice(1, htmlRefElement["Tag"].length - 1);
+    htmlElementsReferenceData[pureTag] = htmlRefElement;
+  });
+
+  const doctype = "<!DOCTYPE html>\n";
+  const html = htmlElementsReferenceData["html"].Content
+    ? `<html>\n` + htmlElementsReferenceData["html"].Content + `\n</html>`
+    : `<html><head><title>Untitled</title></head><body><div><h1>Heading 1</h1></div></body></html>`;
+  const indexHtmlContent = doctype + html;
+  return indexHtmlContent;
+};
+
 export const createIDBProject = async (projectPath: string): Promise<void> => {
   return new Promise<void>(async (resolve, reject) => {
     try {
-      const htmlElementsReferenceData: THtmlElementsReferenceData = {};
-      htmlRefElements.map((htmlRefElement: THtmlElementsReference) => {
-        const pureTag =
-          htmlRefElement["Name"] === "Comment"
-            ? "comment"
-            : htmlRefElement["Tag"]?.slice(1, htmlRefElement["Tag"].length - 1);
-        htmlElementsReferenceData[pureTag] = htmlRefElement;
-      });
-
       // create project directory
       await _createIDBDirectory(projectPath);
 
       // create index.html
       const indexHtmlPath = `${projectPath}/index.html`;
-      const doctype = "<!DOCTYPE html>\n";
-      const html = htmlElementsReferenceData["html"].Content
-        ? `<html>\n` + htmlElementsReferenceData["html"].Content + `\n</html>`
-        : `<html><head><title>Untitled</title></head><body><div><h1>Heading 1</h1></div></body></html>`;
-      const indexHtmlContent = doctype + html;
+      const indexHtmlContent = getIndexHtmlContent();
       await _writeIDBFile(indexHtmlPath, indexHtmlContent);
 
       resolve();

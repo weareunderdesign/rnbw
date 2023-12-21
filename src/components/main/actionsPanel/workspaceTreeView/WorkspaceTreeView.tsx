@@ -33,6 +33,7 @@ import {
   useTemporaryNodes,
 } from "./hooks";
 import { Container, ItemArrow } from "./workSpaceTreeComponents";
+import { useDefaultFileCreate } from "./hooks/useDefaultFile";
 
 const AutoExpandDelayOnDnD = 1 * 1000;
 export default function WorkspaceTreeView() {
@@ -113,7 +114,7 @@ export default function WorkspaceTreeView() {
     removeTemporaryNodes,
     openFileUid,
   });
-
+  useDefaultFileCreate();
   useEffect(() => {
     if (!didUndo && !didRedo) return;
 
