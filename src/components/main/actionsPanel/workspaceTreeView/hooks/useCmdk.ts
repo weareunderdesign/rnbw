@@ -3,7 +3,6 @@ import { useCallback, useEffect } from "react";
 import { AddFileActionPrefix } from "@_constants/main";
 import { isAddFileAction } from "@_node/helpers";
 import { useAppState } from "@_redux/useAppState";
-import { TFileNodeType } from "@_types/main";
 
 import { useNodeActionsHandler } from "./useNodeActionsHandler";
 
@@ -31,7 +30,7 @@ export const useCmdk = ({
 }: IUseCmdk) => {
   const { activePanel, currentCommand } = useAppState();
 
-  const { createTmpNode, onDelete } = useNodeActionsHandler({
+  const { onAdd, onRemove } = useNodeActionsHandler({
     invalidNodes,
     addInvalidNodes,
     removeInvalidNodes,
@@ -43,12 +42,10 @@ export const useCmdk = ({
 
   const onAddNode = useCallback(
     (actionName: string) => {
-      const nodeType = actionName.slice(AddFileActionPrefix.length + 1);
-      createTmpNode(
-        nodeType === "folder" ? "*folder" : (nodeType as TFileNodeType),
-      );
+      const type = actionName.slice(AddFileActionPrefix.length + 1);
+      onAdd(type === "folder" ? true : false, type);
     },
-    [createTmpNode],
+    [onAdd],
   );
 
   useEffect(() => {
@@ -63,7 +60,7 @@ export const useCmdk = ({
 
     switch (currentCommand.action) {
       case "Delete":
-        onDelete();
+        onRemove();
         break;
       /* case "Cut":
         onCut();

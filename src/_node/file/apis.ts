@@ -118,41 +118,39 @@ export const loadIDBProject = async (
             if (entry.startsWith(StagePreviewPathPrefix) || entry[0] === ".")
               return;
 
-            try {
-              // build c_handler
-              const c_uid = _path.join(p_uid, entry) as string;
-              const c_path = _path.join(p_path, entry) as string;
-              const stats = await _getIDBDirectoryOrFileStat(c_path);
-              const c_kind = stats.type === "DIRECTORY" ? "directory" : "file";
+            // build c_handler
+            const c_uid = _path.join(p_uid, entry) as string;
+            const c_path = _path.join(p_path, entry) as string;
+            const stats = await _getIDBDirectoryOrFileStat(c_path);
+            const c_kind = stats.type === "DIRECTORY" ? "directory" : "file";
 
-              const nameArr = entry.split(".");
-              const c_ext = nameArr.length > 1 ? nameArr.pop() : undefined;
-              const c_name = nameArr.join(".");
+            const nameArr = entry.split(".");
+            const c_ext = nameArr.length > 1 ? nameArr.pop() : undefined;
+            const c_name = nameArr.join(".");
 
-              const c_content =
-                c_kind === "directory" ? undefined : await _readIDBFile(c_path);
+            const c_content =
+              c_kind === "directory" ? undefined : await _readIDBFile(c_path);
 
-              const c_handlerInfo: TFileHandlerInfo = {
-                uid: c_uid,
-                parentUid: p_uid,
-                children: [],
+            const c_handlerInfo: TFileHandlerInfo = {
+              uid: c_uid,
+              parentUid: p_uid,
+              children: [],
 
-                path: c_path,
-                kind: c_kind,
-                name: c_kind === "directory" ? entry : c_name,
+              path: c_path,
+              kind: c_kind,
+              name: c_kind === "directory" ? entry : c_name,
 
-                ext: c_ext,
-                content: c_content,
-              };
+              ext: c_ext,
+              content: c_content,
+            };
 
-              // update handlerObj & dirHandlers
-              handlerObj[c_uid] = c_handlerInfo;
-              handlerObj[p_uid].children.push(c_uid);
-              c_kind === "directory" && dirHandlers.push(c_handlerInfo);
+            // update handlerObj & dirHandlers
+            handlerObj[c_uid] = c_handlerInfo;
+            handlerObj[p_uid].children.push(c_uid);
+            c_kind === "directory" && dirHandlers.push(c_handlerInfo);
 
-              // remove c_uid from deletedUids array
-              delete deletedUidsObj[c_uid];
-            } catch (err) {}
+            // remove c_uid from deletedUids array
+            delete deletedUidsObj[c_uid];
           }),
         );
       }

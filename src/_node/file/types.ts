@@ -1,11 +1,8 @@
-import { Dispatch } from "react";
-
 import JSZip from "jszip";
 
 import { TOsType } from "@_redux/global";
 import { TFileActionType, TProjectContext } from "@_redux/main/fileTree";
 import { TClipboardData } from "@_redux/main/processor";
-import { AnyAction } from "@reduxjs/toolkit";
 
 import { TBasicNodeData, TNode, TNodeTreeData, TNodeUid } from "../";
 
@@ -79,10 +76,32 @@ export type TFileApiPayloadBase = {
   projectContext: TProjectContext;
   action: TFileActionType;
   fileTree: TFileNodeTreeData;
-  fileHandlers?: TFileHandlerCollection;
+  fileHandlers: TFileHandlerCollection;
   osType?: TOsType;
 };
 export type TFileApiPayload = TFileApiPayloadBase &
+  (
+    | {
+        action: Extract<TFileActionType, "create" | "rename">;
+        parentUid: TNodeUid;
+        name: string;
+      }
+    | {
+        action: Exclude<TFileActionType, "create" | "rename">;
+        parentUid?: never;
+        name?: never;
+      }
+  ) &
+  (
+    | {
+        action: Extract<TFileActionType, "create">;
+        kind: "file" | "directory";
+      }
+    | {
+        action: Exclude<TFileActionType, "create">;
+        kind?: never;
+      }
+  ) &
   (
     | {
         action: Extract<
@@ -101,28 +120,6 @@ export type TFileApiPayload = TFileApiPayloadBase &
   ) &
   (
     | {
-        action: Extract<TFileActionType, "cut" | "copy">;
-        currentFileUid: TNodeUid;
-        nodeTree: TNodeTreeData;
-      }
-    | {
-        action: Exclude<TFileActionType, "cut" | "copy">;
-        currentFileUid?: never;
-        nodeTree?: never;
-      }
-  ) &
-  (
-    | {
-        action: Extract<TFileActionType, "cut" | "copy" | "rename">;
-        dispatch: Dispatch<AnyAction>;
-      }
-    | {
-        action: Exclude<TFileActionType, "cut" | "copy" | "rename">;
-        dispatch?: never;
-      }
-  ) &
-  (
-    | {
         action: Extract<TFileActionType, "move">;
         clipboardData: TClipboardData | null;
       }
@@ -134,16 +131,6 @@ export type TFileApiPayload = TFileApiPayloadBase &
         targetNode: TFileNode;
       }
     | { action: Exclude<TFileActionType, "move">; targetNode?: never }
-  ) &
-  (
-    | {
-        action: Extract<TFileActionType, "rename">;
-        newName: string;
-      }
-    | {
-        action: Exclude<TFileActionType, "rename">;
-        newName?: never;
-      }
   );
 
 export type TZipFileInfo = {

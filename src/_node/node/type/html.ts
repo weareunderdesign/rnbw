@@ -42,10 +42,3 @@ export type THtmlParserResponse = {
   nodeTree: TNodeTreeData;
   htmlDom: Document;
 };
-
-// --------------------
-export type THtmlPageSettings = {
-  title: string;
-  favicon: string[];
-  scripts: TNode[];
-};

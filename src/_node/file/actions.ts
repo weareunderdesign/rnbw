@@ -14,7 +14,38 @@ import {
 } from "../";
 import { FileSystemApis } from "./FileSystemApis";
 
-const create = () => {};
+const create = async ({
+  projectContext,
+  fileTree,
+  fileHandlers,
+  parentUid,
+  name,
+  kind,
+}: {
+  projectContext: TProjectContext;
+  fileTree: TFileNodeTreeData;
+  fileHandlers: TFileHandlerCollection;
+  parentUid: TNodeUid;
+  name: string;
+  kind: "file" | "directory";
+}): Promise<boolean> => {
+  return new Promise<boolean>(async (resolve, reject) => {
+    try {
+      const done = await FileSystemApis[
+        projectContext
+      ].createSingleDirectoryOrFile({
+        fileTree,
+        fileHandlers,
+        parentUid,
+        name,
+        kind,
+      });
+      resolve(done);
+    } catch (err) {
+      reject(err);
+    }
+  });
+};
 const remove = async ({
   projectContext,
   fileTree,
@@ -23,29 +54,114 @@ const remove = async ({
 }: {
   projectContext: TProjectContext;
   fileTree: TFileNodeTreeData;
-  fileHandlers?: TFileHandlerCollection;
+  fileHandlers: TFileHandlerCollection;
   uids: TNodeUid[];
 }): Promise<boolean> => {
-  return new Promise<boolean>((resolve, reject) => {
+  return new Promise<boolean>(async (resolve, reject) => {
     try {
       let allDone = true;
-      uids.map((uid) => {
-        const done = FileSystemApis[projectContext].removeSingleDirectoryOrFile(
-          {
-            uid,
+      await Promise.all(
+        uids.map(async (uid) => {
+          const done = await FileSystemApis[
+            projectContext
+          ].removeSingleDirectoryOrFile({
             fileTree,
-            fileHandlers: fileHandlers || {},
-          },
-        );
-        if (!done) allDone = false;
-      });
+            fileHandlers,
+            uid,
+          });
+          if (!done) allDone = false;
+        }),
+      );
       resolve(allDone);
     } catch (err) {
       reject(err);
     }
   });
 };
+const rename = async ({
+  projectContext,
+  fileTree,
+  fileHandlers,
+  uids,
+  parentUid,
+  newName,
+}: {
+  projectContext: TProjectContext;
+  fileTree: TFileNodeTreeData;
+  fileHandlers: TFileHandlerCollection;
+  uids: TNodeUid[];
+  parentUid: TNodeUid;
+  newName: string;
+}): Promise<boolean> => {
+  return new Promise<boolean>(async (resolve, reject) => {
+    try {
+      const done = await FileSystemApis[
+        projectContext
+      ].moveSingleDirectoryOrFile({
+        fileTree,
+        fileHandlers,
+        uid: uids[0],
+        targetUid: parentUid,
+        newName,
+        isCopy: false,
+      });
+      resolve(done);
+    } catch (err) {
+      reject(err);
+    }
+  });
+};
 
+const cut = ({
+  dispatch,
+  uids,
+  fileTree,
+  currentFileUid,
+  nodeTree,
+}: {
+  dispatch: Dispatch<AnyAction>;
+  uids: TNodeUid[];
+  fileTree: TFileNodeTreeData;
+  currentFileUid: TNodeUid;
+  nodeTree: TNodeTreeData;
+}) => {
+  dispatch(
+    setClipboardData({
+      panel: "file",
+      type: "cut",
+      uids,
+      fileType: fileTree[currentFileUid].data.type,
+      data: [],
+      fileUid: currentFileUid,
+      prevNodeTree: nodeTree,
+    }),
+  );
+};
+const copy = ({
+  dispatch,
+  uids,
+  fileTree,
+  currentFileUid,
+  nodeTree,
+}: {
+  dispatch: Dispatch<AnyAction>;
+  uids: TNodeUid[];
+  fileTree: TFileNodeTreeData;
+  currentFileUid: string;
+  nodeTree: TNodeTreeData;
+}) => {
+  dispatch(
+    setClipboardData({
+      panel: "file",
+      type: "copy",
+      uids,
+      fileType: fileTree[currentFileUid].data.type,
+      data: [],
+      fileUid: currentFileUid,
+      prevNodeTree: nodeTree,
+    }),
+  );
+};
 const move = async ({
   projectContext,
   fileTree,
@@ -129,137 +245,7 @@ const move = async ({
     }); */
   });
 };
-const cut = ({
-  dispatch,
-  uids,
-  fileTree,
-  currentFileUid,
-  nodeTree,
-}: {
-  dispatch: Dispatch<AnyAction>;
-  uids: TNodeUid[];
-  fileTree: TFileNodeTreeData;
-  currentFileUid: TNodeUid;
-  nodeTree: TNodeTreeData;
-}) => {
-  dispatch(
-    setClipboardData({
-      panel: "file",
-      type: "cut",
-      uids,
-      fileType: fileTree[currentFileUid].data.type,
-      data: [],
-      fileUid: currentFileUid,
-      prevNodeTree: nodeTree,
-    }),
-  );
-};
-const copy = ({
-  dispatch,
-  uids,
-  fileTree,
-  currentFileUid,
-  nodeTree,
-}: {
-  dispatch: Dispatch<AnyAction>;
-  uids: TNodeUid[];
-  fileTree: TFileNodeTreeData;
-  currentFileUid: string;
-  nodeTree: TNodeTreeData;
-}) => {
-  dispatch(
-    setClipboardData({
-      panel: "file",
-      type: "copy",
-      uids,
-      fileType: fileTree[currentFileUid].data.type,
-      data: [],
-      fileUid: currentFileUid,
-      prevNodeTree: nodeTree,
-    }),
-  );
-};
-const rename = ({
-  dispatch,
-  projectContext,
-  fileHandlers,
-  fileTree,
-  uids,
-  newName,
-}: {
-  dispatch: Dispatch<AnyAction>;
-  projectContext: TProjectContext;
-  fileHandlers: any;
-  fileTree: TFileNodeTreeData;
-  uids: TNodeUid[];
-  newName: string;
-}): Promise<boolean> => {
-  return new Promise<boolean>((resolve, reject) => {
-    resolve(true);
-    /* const renameUid = uids[0];
-    const node = fileTree[renameUid];
-    if (node === undefined) {
-      return false;
-    }
-    const type = node.data.kind;
-    const nodeData = node.data as TFileNodeData;
-    const _orgName =
-      type === "directory"
-        ? `${nodeData.name}`
-        : `${nodeData.name}${nodeData.ext}`;
-
-    const _newName = type === "directory" ? `${newName}` : `${newName}`;
-    const parentUid = node.parentUid;
-    const newUid = `${parentUid}/${_newName}`;
-
-    (async () => {
-      if (projectContext === "local") {
-        const handler = fileHandlers[renameUid],
-          parentHandler = fileHandlers[
-            parentUid as TNodeUid
-          ] as FileSystemDirectoryHandle;
-
-        if (
-          !(await verifyFileHandlerPermission(handler)) ||
-          !(await verifyFileHandlerPermission(parentHandler))
-        ) {
-          return;
-        }
-
-        try {
-          await moveLocalFF(
-            handler,
-            parentHandler,
-            parentHandler,
-            _newName,
-            false,
-            true,
-          );
-          await parentHandler.removeEntry(handler.name, { recursive: true });
-          resolve(true);
-        } catch (err) {
-          return;
-        }
-      } else if (projectContext === "idb") {
-        const parentNode = fileTree[parentUid as TNodeUid];
-        if (parentNode === undefined) {
-          return false;
-        }
-        const parentNodeData = parentNode.data as TFileNodeData;
-        try {
-          await moveIDBFF(nodeData, parentNodeData, _newName, false);
-          resolve(true);
-        } catch (err) {
-          return;
-        }
-      }
-    })();
-
-    // update redux
-    dispatch(setCurrentFileUid(newUid));
-    dispatch(updateFileTreeViewState({ convertedUids: [[renameUid, newUid]] })); */
-  });
-};
+const duplicate = () => {};
 
 export const doFileActions = async (
   params: TFileApiPayload,
@@ -270,21 +256,30 @@ export const doFileActions = async (
     const {
       projectContext,
       action,
-      uids,
       fileTree,
       fileHandlers,
-      dispatch,
-      currentFileUid,
-      nodeTree,
+
+      parentUid,
+      name,
+      kind,
+
+      uids,
+
       clipboardData,
       targetNode,
-      newName,
     } = params;
 
     let allDone = true;
     switch (action) {
       case "create":
-        create();
+        allDone = await create({
+          projectContext,
+          fileTree,
+          fileHandlers,
+          parentUid,
+          name,
+          kind,
+        });
         break;
       case "remove":
         allDone = await remove({
@@ -318,14 +313,14 @@ export const doFileActions = async (
         }); */
         break;
       case "rename":
-        /* rename({
-          dispatch,
+        allDone = await rename({
           projectContext,
-          fileHandlers,
           fileTree,
+          fileHandlers,
           uids,
-          newName,
-        }); */
+          parentUid,
+          newName: name,
+        });
         break;
       default:
         break;

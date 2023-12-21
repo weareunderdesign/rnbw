@@ -146,14 +146,6 @@ export default function MainPage() {
     dropCodeView,
   } = usePanels();
 
-  // file event hms
-  useEffect(() => {
-    // reset fileAction in the new history
-    /* fileEventFutureLength === 0 &&
-      fileAction.type !== null &&
-      dispatch(setFileAction({ type: null })); */
-  }, [fileEventFutureLength]);
-
   // web-tab close event handler
   useEffect(() => {
     window.onbeforeunload = isUnsavedProject(fileTree) ? () => "changed" : null;
@@ -161,7 +153,6 @@ export default function MainPage() {
       window.onbeforeunload = null;
     };
   }, [fileTree]);
-
   // open Jumpstart menu on startup
   useEffect(() => {
     Object.keys(cmdkReferenceJumpstart).length !== 0 && onJumpstart();

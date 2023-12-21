@@ -18,6 +18,7 @@ export const RednerableFileTypes: {
 
 export const AddActionPrefix = "AddAction";
 export const AddFileActionPrefix = `${AddActionPrefix}-File`;
+export const TmpFileNodeUidWhenAddNew = "tmp:node:uid";
 export const AddNodeActionPrefix = `${AddActionPrefix}-Node`;
 
 export const RenameActionPrefix = "RenameAction";
@@ -33,4 +34,3 @@ export const NodePathSplitter: string = "?";
 
 export const FileChangeAlertMessage = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`;
 // ----------------------
-export const TmpNodeUid = "tmp:node:uid";

@@ -1,15 +1,9 @@
-import { THtmlPageSettings, TNodeUid } from "@_node/index";
 import { TProjectContext } from "@_redux/main/fileTree";
 
-export type TFileInfo = THtmlPageSettings | null | undefined;
 export type TSession = {
   "recent-project-context": TProjectContext[];
   "recent-project-name": string[];
   "recent-project-handler": (FileSystemDirectoryHandle | null)[];
-};
-export type TCodeChange = {
-  uid: TNodeUid;
-  content: string;
 };
 export type TFileNodeType = "*folder" | "html" | "";
 
