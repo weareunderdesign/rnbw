@@ -79,15 +79,22 @@ export type TFileApiPayloadBase = {
   fileTree: TFileNodeTreeData;
   fileHandlers?: TFileHandlerCollection;
   osType?: TOsType;
+  newName?: string;
 };
 export type TFileApiPayload = TFileApiPayloadBase &
   (
     | {
-        action: Extract<TFileActionType, "remove" | "cut" | "move" | "copy">;
+        action: Extract<
+          TFileActionType,
+          "remove" | "cut" | "move" | "copy" | "rename"
+        >;
         uids: TNodeUid[];
       }
     | {
-        action: Exclude<TFileActionType, "remove" | "cut" | "move" | "copy">;
+        action: Exclude<
+          TFileActionType,
+          "remove" | "cut" | "move" | "copy" | "rename"
+        >;
         uids?: never;
       }
   ) &
@@ -110,10 +117,13 @@ export type TFileApiPayload = TFileApiPayloadBase &
   ) &
   (
     | {
-        action: Extract<TFileActionType, "cut" | "copy">;
+        action: Extract<TFileActionType, "cut" | "copy" | "rename">;
         dispatch: Dispatch<AnyAction>;
       }
-    | { action: Exclude<TFileActionType, "cut" | "copy">; dispatch?: never }
+    | {
+        action: Exclude<TFileActionType, "cut" | "copy" | "rename">;
+        dispatch?: never;
+      }
   ) &
   (
     | {
@@ -128,6 +138,16 @@ export type TFileApiPayload = TFileApiPayloadBase &
         targetNode: TFileNode;
       }
     | { action: Exclude<TFileActionType, "move">; targetNode?: never }
+  ) &
+  (
+    | {
+        action: Extract<TFileActionType, "rename">;
+        newName: string;
+      }
+    | {
+        action: Exclude<TFileActionType, "rename">;
+        newName?: never;
+      }
   );
 
 export type TZipFileInfo = {
