@@ -105,7 +105,7 @@ export const useCmdk = ({
         LogAllow && console.error("error while removing file system");
       },
       (allDone: boolean) => {
-        reloadCurrentProject(fileTree, currentProjectFileHandle);
+        reloadCurrentProject();
         LogAllow &&
           console.log(
             allDone ? "all is successfully removed" : "some is not removed",
@@ -133,7 +133,7 @@ export const useCmdk = ({
         LogAllow && console.error("error while removing file system");
       },
       (allDone: boolean) => {
-        reloadCurrentProject(fileTree, currentProjectFileHandle);
+        reloadCurrentProject();
         LogAllow &&
           console.log(
             allDone ? "all is successfully removed" : "some is not removed",

@@ -8,8 +8,7 @@ import { createDefaultFile } from "../helpers/createDefaultFile";
 
 export const useDefaultFileCreate = () => {
   const { fileTree } = useAppState();
-  const { fileHandlers, reloadCurrentProject, currentProjectFileHandle } =
-    useContext(MainContext);
+  const { fileHandlers, reloadCurrentProject } = useContext(MainContext);
 
   const dispatch = useDispatch();
 
@@ -19,7 +18,7 @@ export const useDefaultFileCreate = () => {
       fileHandlers[RootNodeUid]
     ) {
       createDefaultFile(fileHandlers);
-      reloadCurrentProject(fileTree, currentProjectFileHandle);
+      reloadCurrentProject();
       dispatch(setShowActionsPanel(true));
     }
   }, [fileTree[RootNodeUid]?.children, fileHandlers[RootNodeUid]]);
