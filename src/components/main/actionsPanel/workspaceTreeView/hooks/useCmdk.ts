@@ -1,17 +1,11 @@
-import { useCallback, useContext, useEffect } from "react";
-
-import { useDispatch } from "react-redux";
+import { useCallback, useEffect } from "react";
 
 import { AddFileActionPrefix } from "@_constants/main";
-import { setClipboardData } from "@_redux/main/processor";
+import { isAddFileAction } from "@_node/helpers";
 import { useAppState } from "@_redux/useAppState";
 import { TFileNodeType } from "@_types/main";
 
 import { useNodeActionsHandler } from "./useNodeActionsHandler";
-import { isAddFileAction } from "@_node/helpers";
-import { TFileApiPayload, doFileActions } from "@_node/index";
-import { MainContext } from "@_redux/main";
-import { LogAllow } from "@_constants/global";
 
 interface IUseCmdk {
   invalidNodes: {
@@ -35,21 +29,9 @@ export const useCmdk = ({
   removeTemporaryNodes,
   openFileUid,
 }: IUseCmdk) => {
-  const dispatch = useDispatch();
-  const {
-    activePanel,
-    currentFileUid,
-    fFocusedItem: focusedItem,
-    fSelectedItems: selectedItems,
-    clipboardData,
-    fileTree,
-    nodeTree,
-    currentCommand,
-  } = useAppState();
+  const { activePanel, currentCommand } = useAppState();
 
-  const { fileHandlers, reloadCurrentProject, currentProjectFileHandle } =
-    useContext(MainContext);
-  const { createTmpFFNode } = useNodeActionsHandler({
+  const { createTmpNode, onDelete } = useNodeActionsHandler({
     invalidNodes,
     addInvalidNodes,
     removeInvalidNodes,
@@ -62,113 +44,28 @@ export const useCmdk = ({
   const onAddNode = useCallback(
     (actionName: string) => {
       const nodeType = actionName.slice(AddFileActionPrefix.length + 1);
-      createTmpFFNode(
+      createTmpNode(
         nodeType === "folder" ? "*folder" : (nodeType as TFileNodeType),
       );
     },
-    [createTmpFFNode],
+    [createTmpNode],
   );
-
-  const onCopy = useCallback(() => {
-    const params: TFileApiPayload = {
-      projectContext: "local",
-      action: "copy",
-      uids: selectedItems,
-      fileTree,
-      fileHandlers,
-      dispatch,
-      currentFileUid,
-      nodeTree,
-    };
-    doFileActions(params);
-  }, [selectedItems, fileTree[currentFileUid], nodeTree]);
-
-  const onPaste = useCallback(() => {
-    if (clipboardData?.panel !== "file") return;
-
-    // validate
-    if (invalidNodes[focusedItem]) return;
-    const uids = clipboardData.uids.filter((uid) => !invalidNodes[uid]);
-    if (uids.length === 0) return;
-    const params: TFileApiPayload = {
-      projectContext: "local",
-      fileHandlers,
-      uids,
-      clipboardData,
-      fileTree,
-      action: "move",
-      targetNode: fileTree[focusedItem],
-    };
-    doFileActions(
-      params,
-      () => {
-        LogAllow && console.error("error while removing file system");
-      },
-      (allDone: boolean) => {
-        reloadCurrentProject();
-        LogAllow &&
-          console.log(
-            allDone ? "all is successfully removed" : "some is not removed",
-          );
-      },
-    );
-  }, [clipboardData, selectedItems, fileTree[currentFileUid], nodeTree]);
-
-  const onDuplicate = useCallback(() => {
-    onCopy();
-    onPaste();
-  }, [selectedItems, fileTree[currentFileUid], nodeTree, clipboardData]);
-
-  const onDelete = useCallback(() => {
-    const params: TFileApiPayload = {
-      projectContext: "local",
-      action: "remove",
-      uids: selectedItems,
-      fileTree,
-      fileHandlers,
-    };
-    doFileActions(
-      params,
-      () => {
-        LogAllow && console.error("error while removing file system");
-      },
-      (allDone: boolean) => {
-        reloadCurrentProject();
-        LogAllow &&
-          console.log(
-            allDone ? "all is successfully removed" : "some is not removed",
-          );
-      },
-    );
-  }, [selectedItems, fileTree[currentFileUid], nodeTree]);
-
-  const onCut = useCallback(() => {
-    const params: TFileApiPayload = {
-      projectContext: "local",
-      action: "cut",
-      uids: selectedItems,
-      fileTree,
-      fileHandlers,
-      dispatch,
-      currentFileUid,
-      nodeTree,
-    };
-    doFileActions(params);
-  }, [selectedItems, fileTree[currentFileUid], nodeTree, clipboardData]);
 
   useEffect(() => {
     if (!currentCommand) return;
+
     if (isAddFileAction(currentCommand.action)) {
       onAddNode(currentCommand.action);
       return;
     }
+
     if (activePanel !== "file") return;
 
     switch (currentCommand.action) {
       case "Delete":
         onDelete();
         break;
-      case "Cut":
+      /* case "Cut":
         onCut();
         break;
       case "Copy":
@@ -179,7 +76,7 @@ export const useCmdk = ({
         break;
       case "Duplicate":
         onDuplicate();
-        break;
+        break; */
       default:
         break;
     }

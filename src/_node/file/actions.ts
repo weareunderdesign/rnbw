@@ -1,41 +1,30 @@
+import { Dispatch } from "react";
+
 import { LogAllow } from "@_constants/global";
+import { TProjectContext } from "@_redux/main/fileTree";
+import { setClipboardData, TClipboardData } from "@_redux/main/processor";
+import { AnyAction } from "@reduxjs/toolkit";
 
 import {
   TFileApiPayload,
   TFileHandlerCollection,
-  TFileNodeData,
   TFileNodeTreeData,
-  TNode,
   TNodeTreeData,
   TNodeUid,
-  moveIDBFF,
-  moveLocalFF,
 } from "../";
-import {
-  TFileAction,
-  TProjectContext,
-  setCurrentFileUid,
-  setFileAction,
-  updateFileTreeViewState,
-} from "@_redux/main/fileTree";
 import { FileSystemApis } from "./FileSystemApis";
-import { TClipboardData, setClipboardData } from "@_redux/main/processor";
-import { AnyAction } from "@reduxjs/toolkit";
-import { Dispatch } from "react";
-import { generateNewNameMoveNode } from "@_components/main/actionsPanel/workspaceTreeView/helpers";
-import { verifyFileHandlerPermission } from "@_services/main";
 
 const create = () => {};
 const remove = async ({
   projectContext,
-  uids,
   fileTree,
   fileHandlers,
+  uids,
 }: {
   projectContext: TProjectContext;
-  uids: TNodeUid[];
   fileTree: TFileNodeTreeData;
   fileHandlers?: TFileHandlerCollection;
+  uids: TNodeUid[];
 }): Promise<boolean> => {
   return new Promise<boolean>((resolve, reject) => {
     try {
@@ -59,21 +48,22 @@ const remove = async ({
 
 const move = async ({
   projectContext,
+  fileTree,
   fileHandlers,
   uids,
   clipboardData,
-  fileTree,
   targetNode,
 }: {
   projectContext: TProjectContext;
-  fileHandlers: any;
-  uids: string[];
+  fileHandlers?: TFileHandlerCollection;
+  uids: TNodeUid[];
   clipboardData: TClipboardData | null;
   fileTree: TFileNodeTreeData;
   targetNode: any;
-}) => {
+}): Promise<boolean> => {
   return new Promise<boolean>((resolve, reject) => {
-    uids.map(async (uid) => {
+    resolve(true);
+    /* uids.map(async (uid) => {
       const node = fileTree[uid];
       if (node === undefined) {
         return false;
@@ -136,10 +126,9 @@ const move = async ({
       } catch (err) {
         reject(err);
       }
-    });
+    }); */
   });
 };
-
 const cut = ({
   dispatch,
   uids,
@@ -150,7 +139,7 @@ const cut = ({
   dispatch: Dispatch<AnyAction>;
   uids: TNodeUid[];
   fileTree: TFileNodeTreeData;
-  currentFileUid: string;
+  currentFileUid: TNodeUid;
   nodeTree: TNodeTreeData;
 }) => {
   dispatch(
@@ -165,7 +154,6 @@ const cut = ({
     }),
   );
 };
-
 const copy = ({
   dispatch,
   uids,
@@ -191,7 +179,6 @@ const copy = ({
     }),
   );
 };
-
 const rename = ({
   dispatch,
   projectContext,
@@ -206,9 +193,10 @@ const rename = ({
   fileTree: TFileNodeTreeData;
   uids: TNodeUid[];
   newName: string;
-}) => {
+}): Promise<boolean> => {
   return new Promise<boolean>((resolve, reject) => {
-    const renameUid = uids[0];
+    resolve(true);
+    /* const renameUid = uids[0];
     const node = fileTree[renameUid];
     if (node === undefined) {
       return false;
@@ -267,16 +255,9 @@ const rename = ({
       }
     })();
 
-    /* const action: TFileAction = {
-      type: "rename",
-      param1: { currentFileUid: renameUid, parentUid: parentUid },
-      param2: { orgName: _orgName, newName: _newName },
-    };
-    dispatch(setFileAction(action)); */
-
     // update redux
     dispatch(setCurrentFileUid(newUid));
-    dispatch(updateFileTreeViewState({ convertedUids: [[renameUid, newUid]] }));
+    dispatch(updateFileTreeViewState({ convertedUids: [[renameUid, newUid]] })); */
   });
 };
 
@@ -314,37 +295,37 @@ export const doFileActions = async (
         });
         break;
       case "cut":
-        cut({
+        /* cut({
           dispatch,
           uids,
           fileTree,
           currentFileUid,
           nodeTree,
-        });
+        }); */
         break;
       case "copy":
-        copy({ dispatch, uids, fileTree, currentFileUid, nodeTree });
+        // copy({ dispatch, uids, fileTree, currentFileUid, nodeTree });
         break;
 
       case "move":
-        allDone = await move({
+        /* allDone = await move({
           projectContext,
           fileHandlers,
           uids,
           clipboardData,
           fileTree,
           targetNode,
-        });
+        }); */
         break;
       case "rename":
-        rename({
+        /* rename({
           dispatch,
           projectContext,
           fileHandlers,
           fileTree,
           uids,
           newName,
-        });
+        }); */
         break;
       default:
         break;

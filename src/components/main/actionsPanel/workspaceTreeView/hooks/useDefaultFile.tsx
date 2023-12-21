@@ -4,7 +4,7 @@ import { setShowActionsPanel } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 import { useContext, useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { createDefaultFile } from "../helpers/createDefaultFile";
+// import { createDefaultFile } from "../helpers/createDefaultFile";
 
 export const useDefaultFileCreate = () => {
   const { fileTree } = useAppState();
@@ -17,7 +17,7 @@ export const useDefaultFileCreate = () => {
       fileTree[RootNodeUid]?.children?.length === 0 &&
       fileHandlers[RootNodeUid]
     ) {
-      createDefaultFile(fileHandlers);
+      // createDefaultFile(fileHandlers);
       reloadCurrentProject();
       dispatch(setShowActionsPanel(true));
     }

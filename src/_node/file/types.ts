@@ -1,18 +1,13 @@
+import { Dispatch } from "react";
+
 import JSZip from "jszip";
 
 import { TOsType } from "@_redux/global";
-
-import {
-  TBasicNodeData,
-  TNode,
-  TNodeActionType,
-  TNodeTreeData,
-  TNodeUid,
-} from "../";
 import { TFileActionType, TProjectContext } from "@_redux/main/fileTree";
-import { AnyAction } from "@reduxjs/toolkit";
-import { Dispatch } from "react";
 import { TClipboardData } from "@_redux/main/processor";
+import { AnyAction } from "@reduxjs/toolkit";
+
+import { TBasicNodeData, TNode, TNodeTreeData, TNodeUid } from "../";
 
 export type TFileNode = TNode & {
   data: TFileNodeData;
@@ -86,21 +81,20 @@ export type TFileApiPayloadBase = {
   fileTree: TFileNodeTreeData;
   fileHandlers?: TFileHandlerCollection;
   osType?: TOsType;
-  newName?: string;
 };
 export type TFileApiPayload = TFileApiPayloadBase &
   (
     | {
         action: Extract<
           TFileActionType,
-          "remove" | "cut" | "move" | "copy" | "rename"
+          "remove" | "cut" | "copy" | "move" | "rename"
         >;
         uids: TNodeUid[];
       }
     | {
         action: Exclude<
           TFileActionType,
-          "remove" | "cut" | "move" | "copy" | "rename"
+          "remove" | "cut" | "copy" | "move" | "rename"
         >;
         uids?: never;
       }
@@ -108,19 +102,14 @@ export type TFileApiPayload = TFileApiPayloadBase &
   (
     | {
         action: Extract<TFileActionType, "cut" | "copy">;
-        currentFileUid: string;
+        currentFileUid: TNodeUid;
+        nodeTree: TNodeTreeData;
       }
     | {
         action: Exclude<TFileActionType, "cut" | "copy">;
         currentFileUid?: never;
+        nodeTree?: never;
       }
-  ) &
-  (
-    | {
-        action: Extract<TFileActionType, "cut" | "copy">;
-        nodeTree: TNodeTreeData;
-      }
-    | { action: Exclude<TFileActionType, "cut" | "copy">; nodeTree?: never }
   ) &
   (
     | {

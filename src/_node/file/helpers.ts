@@ -1,20 +1,22 @@
 import { FileChangeAlertMessage, RootNodeUid } from "@_constants/main";
+// @ts-ignore
+import htmlRefElements from "@_ref/rfrncs/HTML Elements.csv";
+import {
+  THtmlElementsReference,
+  THtmlElementsReferenceData,
+} from "@_types/main";
 
 import {
-  TFileHandlerInfoObj,
-  TFileNodeData,
-  TFileNodeTreeData,
-  TNodeUid,
   _getIDBDirectoryOrFileStat,
   _path,
   _readIDBFile,
   _removeIDBDirectoryOrFile,
   _writeIDBFile,
+  TFileHandlerInfoObj,
+  TFileNodeData,
+  TFileNodeTreeData,
+  TNodeUid,
 } from "../";
-import {
-  copyDirectory,
-  moveDirectory,
-} from "@_components/main/actionsPanel/workspaceTreeView/helpers";
 
 export const sortFilesByASC = (handlerObj: TFileHandlerInfoObj) => {
   // sort by ASC directory/file
@@ -93,172 +95,20 @@ export const getNormalizedPath = (
   const normalizedPath = _path.normalize(path);
   return { isAbsolutePath, normalizedPath };
 };
+export const getIndexHtmlContent = () => {
+  const htmlElementsReferenceData: THtmlElementsReferenceData = {};
+  htmlRefElements.map((htmlRefElement: THtmlElementsReference) => {
+    const pureTag =
+      htmlRefElement["Name"] === "Comment"
+        ? "comment"
+        : htmlRefElement["Tag"]?.slice(1, htmlRefElement["Tag"].length - 1);
+    htmlElementsReferenceData[pureTag] = htmlRefElement;
+  });
 
-export const moveFile = async (
-  handler: FileSystemHandle,
-  parentHandler: FileSystemDirectoryHandle,
-  targetHandler: FileSystemDirectoryHandle,
-  newName: string,
-  copy: boolean,
-  showWarning?: boolean,
-  // addMessage?: (message: TToast) => void,
-) => {
-  // validate if the new name exists
-  console.log("move file");
-
-  let exists = true;
-  try {
-    await targetHandler.getFileHandle(newName, {
-      create: false,
-    });
-    exists = true;
-  } catch (err) {
-    exists = false;
-  }
-
-  if (exists) {
-    showWarning && alert("File with the same name already exists.");
-    return;
-  }
-
-  // create a new file with the new name and write the content
-  try {
-    const newFile = await targetHandler.getFileHandle(newName, {
-      create: true,
-    });
-
-    const content = await (handler as FileSystemFileHandle).getFile();
-
-    const writableStream = await newFile.createWritable();
-    await writableStream.write(content);
-    await writableStream.close();
-
-    // handle copy(optional)
-    !copy &&
-      (await parentHandler.removeEntry(handler.name, { recursive: true }));
-  } catch (err) {
-    throw new Error("error");
-  }
-};
-export const moveLocalFF = async (
-  handler: FileSystemHandle,
-  parentHandler: FileSystemDirectoryHandle,
-  targetHandler: FileSystemDirectoryHandle,
-  newName: string,
-  copy: boolean = false,
-  showWarning: boolean = false,
-) => {
-  if (handler.kind === "directory") {
-    // validate if the new name exists
-    let exists = true;
-    try {
-      await targetHandler.getDirectoryHandle(newName, { create: false });
-      exists = true;
-    } catch (err) {
-      exists = false;
-    }
-    if (exists) {
-      // showWarning &&
-      //   addMessage({
-      //     type: "error",
-      //     content: "Folder with the same name already exists.",
-      //   });
-      return;
-    }
-
-    // move nested handler-dir to targetHandler with the newName - copy (optional)
-    try {
-      const newHandler = await targetHandler.getDirectoryHandle(newName, {
-        create: true,
-      });
-      await copyDirectory(
-        handler as FileSystemDirectoryHandle,
-        newHandler,
-        copy,
-      );
-    } catch (err) {
-      throw new Error("error");
-    }
-  } else {
-    await moveFile(
-      handler,
-      parentHandler,
-      targetHandler,
-      newName,
-      copy,
-      // showWarning,
-      // addMessage,
-    );
-  }
-};
-
-export const moveIDBFF = async (
-  nodeData: TFileNodeData,
-  targetNodeData: TFileNodeData,
-  newName: string,
-  copy: boolean = false,
-) => {
-  if (nodeData.kind === "directory") {
-    // validate if the new name exists
-    let exists = true;
-    try {
-      await _getIDBDirectoryOrFileStat(`${targetNodeData.path}/${newName}`);
-      exists = true;
-    } catch (err) {
-      exists = false;
-    }
-    if (exists) {
-      // showWarning &&
-      //   addMessage({
-      //     type: "error",
-      //     content: "Folder with the same name already exists.",
-      //   });
-      return;
-    }
-
-    // move nested handler-dir to targetHandler with the newName - copy (optional)
-    try {
-      const dirs = [
-        {
-          orgPath: nodeData.path,
-          newPath: `${targetNodeData.path}/${newName}`,
-        },
-      ];
-      for (const { orgPath, newPath } of dirs) {
-        await moveDirectory(orgPath, newPath, copy, nodeData);
-      }
-    } catch (err) {
-      throw "error";
-    }
-  } else {
-    // validate if the new name exists
-    let exists = true;
-    try {
-      await _getIDBDirectoryOrFileStat(`${targetNodeData.path}/${newName}`);
-      exists = true;
-    } catch (err) {
-      exists = false;
-    }
-    if (exists) {
-      // showWarning &&
-      //   addMessage({
-      //     type: "error",
-      //     content: "File with the same name already exists.",
-      //   });
-      return;
-    }
-
-    // create a new file with the new name and write the content
-    try {
-      await _writeIDBFile(
-        `${targetNodeData.path}/${newName}`,
-        await _readIDBFile(nodeData.path),
-      );
-
-      // handle copy(optional)
-      !copy && (await _removeIDBDirectoryOrFile(nodeData.path));
-    } catch (err) {
-      throw "error";
-    }
-  }
+  const doctype = "<!DOCTYPE html>\n";
+  const html = htmlElementsReferenceData["html"].Content
+    ? `<html>\n` + htmlElementsReferenceData["html"].Content + `\n</html>`
+    : `<html><head><title>Untitled</title></head><body><div><h1>Heading 1</h1></div></body></html>`;
+  const indexHtmlContent = doctype + html;
+  return indexHtmlContent;
 };

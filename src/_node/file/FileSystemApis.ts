@@ -1,3 +1,5 @@
+import { FileSystemFileHandle } from "file-system-access";
+
 import { verifyFileHandlerPermission } from "@_services/main";
 
 import {
@@ -10,13 +12,12 @@ import {
 import {
   _createIDBDirectory,
   _getIDBDirectoryOrFileStat,
+  _path,
   _readIDBDirectory,
   _readIDBFile,
   _removeIDBDirectoryOrFile,
   _writeIDBFile,
-  _path,
 } from "./nohostApis";
-import { FileSystemFileHandle } from "file-system-access";
 
 // true: success, false: fail
 const createLocalSingleDirectoryOrFile = async ({

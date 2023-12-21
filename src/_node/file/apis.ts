@@ -1,5 +1,6 @@
 import { Buffer } from "buffer";
 import FileSaver from "file-saver";
+import { FileSystemFileHandle } from "file-system-access";
 import JSZip from "jszip";
 
 import { LogAllow } from "@_constants/global";
@@ -9,17 +10,12 @@ import {
   StagePreviewPathPrefix,
 } from "@_constants/main";
 import { TOsType } from "@_redux/global";
-// @ts-ignore
-import htmlRefElements from "@_ref/rfrncs/HTML Elements.csv";
 import { SystemDirectories } from "@_ref/SystemDirectories";
 import { verifyFileHandlerPermission } from "@_services/main";
-import {
-  THtmlElementsReference,
-  THtmlElementsReferenceData,
-} from "@_types/main";
 
 import {
   fileHandlers,
+  getIndexHtmlContent,
   getSubNodeUidsByBfs,
   TFileHandlerCollection,
   TFileNode,
@@ -31,18 +27,16 @@ import {
   TNodeUid,
 } from "../";
 import { getInitialFileUidToOpen, sortFilesByASC } from "./helpers";
-import { TFileHandlerInfo, TFileHandlerInfoObj, TZipFileInfo } from "./types";
-import { FileSystemFileHandle } from "file-system-access";
-
 import {
   _createIDBDirectory,
   _getIDBDirectoryOrFileStat,
+  _path,
   _readIDBDirectory,
   _readIDBFile,
   _removeIDBDirectoryOrFile,
   _writeIDBFile,
-  _path,
 } from "./nohostApis";
+import { TFileHandlerInfo, TFileHandlerInfoObj, TZipFileInfo } from "./types";
 
 export const initIDBProject = async (projectPath: string): Promise<void> => {
   return new Promise<void>(async (resolve, reject) => {
@@ -50,7 +44,7 @@ export const initIDBProject = async (projectPath: string): Promise<void> => {
     try {
       await _removeIDBDirectoryOrFile(projectPath);
     } catch (err) {
-      LogAllow && console.error("error while remove IDB project", err);
+      LogAllow && console.error("error while removing IDB project", err);
     }
 
     // create a new project
@@ -62,24 +56,6 @@ export const initIDBProject = async (projectPath: string): Promise<void> => {
     }
   });
 };
-export const getIndexHtmlContent = () => {
-  const htmlElementsReferenceData: THtmlElementsReferenceData = {};
-  htmlRefElements.map((htmlRefElement: THtmlElementsReference) => {
-    const pureTag =
-      htmlRefElement["Name"] === "Comment"
-        ? "comment"
-        : htmlRefElement["Tag"]?.slice(1, htmlRefElement["Tag"].length - 1);
-    htmlElementsReferenceData[pureTag] = htmlRefElement;
-  });
-
-  const doctype = "<!DOCTYPE html>\n";
-  const html = htmlElementsReferenceData["html"].Content
-    ? `<html>\n` + htmlElementsReferenceData["html"].Content + `\n</html>`
-    : `<html><head><title>Untitled</title></head><body><div><h1>Heading 1</h1></div></body></html>`;
-  const indexHtmlContent = doctype + html;
-  return indexHtmlContent;
-};
-
 export const createIDBProject = async (projectPath: string): Promise<void> => {
   return new Promise<void>(async (resolve, reject) => {
     try {
@@ -93,11 +69,12 @@ export const createIDBProject = async (projectPath: string): Promise<void> => {
 
       resolve();
     } catch (err) {
-      LogAllow && console.error("error while create IDB project", err);
+      LogAllow && console.error("error while creating IDB project", err);
       reject(err);
     }
   });
 };
+
 export const loadIDBProject = async (
   projectPath: string,
   isReload: boolean = false,
@@ -141,40 +118,41 @@ export const loadIDBProject = async (
             if (entry.startsWith(StagePreviewPathPrefix) || entry[0] === ".")
               return;
 
-            // build c_handler
-            const c_uid = _path.join(p_uid, entry) as string;
-            const c_path = _path.join(p_path, entry) as string;
+            try {
+              // build c_handler
+              const c_uid = _path.join(p_uid, entry) as string;
+              const c_path = _path.join(p_path, entry) as string;
+              const stats = await _getIDBDirectoryOrFileStat(c_path);
+              const c_kind = stats.type === "DIRECTORY" ? "directory" : "file";
 
-            const stats = await _getIDBDirectoryOrFileStat(c_path);
-            const c_kind = stats.type === "DIRECTORY" ? "directory" : "file";
+              const nameArr = entry.split(".");
+              const c_ext = nameArr.length > 1 ? nameArr.pop() : undefined;
+              const c_name = nameArr.join(".");
 
-            const nameArr = entry.split(".");
-            const c_ext = nameArr.length > 1 ? nameArr.pop() : undefined;
-            const c_name = nameArr.join(".");
+              const c_content =
+                c_kind === "directory" ? undefined : await _readIDBFile(c_path);
 
-            const c_content =
-              c_kind === "directory" ? undefined : await _readIDBFile(c_path);
+              const c_handlerInfo: TFileHandlerInfo = {
+                uid: c_uid,
+                parentUid: p_uid,
+                children: [],
 
-            const c_handlerInfo: TFileHandlerInfo = {
-              uid: c_uid,
-              parentUid: p_uid,
-              children: [],
+                path: c_path,
+                kind: c_kind,
+                name: c_kind === "directory" ? entry : c_name,
 
-              path: c_path,
-              kind: c_kind,
-              name: c_kind === "directory" ? entry : c_name,
+                ext: c_ext,
+                content: c_content,
+              };
 
-              ext: c_ext,
-              content: c_content,
-            };
+              // update handlerObj & dirHandlers
+              handlerObj[c_uid] = c_handlerInfo;
+              handlerObj[p_uid].children.push(c_uid);
+              c_kind === "directory" && dirHandlers.push(c_handlerInfo);
 
-            // update handlerObj & dirHandlers
-            handlerObj[c_uid] = c_handlerInfo;
-            handlerObj[p_uid].children.push(c_uid);
-            c_kind === "directory" && dirHandlers.push(c_handlerInfo);
-
-            // remove c_uid from deletedUids array
-            delete deletedUidsObj[c_uid];
+              // remove c_uid from deletedUids array
+              delete deletedUidsObj[c_uid];
+            } catch (err) {}
           }),
         );
       }
@@ -406,10 +384,7 @@ export const buildNohostIDB = async (
         deletedPaths.map(async (path) => {
           try {
             await _removeIDBDirectoryOrFile(path);
-          } catch (err) {
-            LogAllow &&
-              console.error("error while deleting in buildNohostIDB API", err);
-          }
+          } catch (err) {}
         }),
       );
       await Promise.all(
@@ -418,23 +393,11 @@ export const buildNohostIDB = async (
           if (kind === "directory") {
             try {
               await _createIDBDirectory(path);
-            } catch (err) {
-              LogAllow &&
-                console.error(
-                  "error whil creating a directory in buildNohostIDB API",
-                  err,
-                );
-            }
+            } catch (err) {}
           } else {
             try {
               await _writeIDBFile(path, content as Uint8Array);
-            } catch (err) {
-              LogAllow &&
-                console.error(
-                  "error while creating a file in buildNohostIDB API",
-                  err,
-                );
-            }
+            } catch (err) {}
           }
         }),
       );
@@ -446,6 +409,7 @@ export const buildNohostIDB = async (
     }
   });
 };
+
 export const downloadIDBProject = async (
   projectPath: string,
 ): Promise<void> => {

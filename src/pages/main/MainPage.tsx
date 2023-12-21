@@ -105,6 +105,7 @@ export default function MainPage() {
     htmlReferenceData,
   });
   const { importProject, closeNavigator, reloadCurrentProject } = useHandlers({
+    currentProjectFileHandle,
     setCurrentProjectFileHandle,
     setFileHandlers,
 

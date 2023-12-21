@@ -11,28 +11,26 @@ import { debounce } from "lodash";
 import { DraggingPositionItem } from "react-complex-tree";
 import { useDispatch } from "react-redux";
 
-import { SVGIconI, TreeView } from "@_components/common";
+import { SVGIconI, SVGIconII, TreeView } from "@_components/common";
 import { getNormalizedPath, TFileNodeData } from "@_node/file";
 import { _path } from "@_node/file/nohostApis";
 import { TNode, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { setHoveredFileUid } from "@_redux/main/fileTree";
 import { FileTree_Event_ClearActionType } from "@_redux/main/fileTree/event";
-import { setActivePanel, setDidRedo, setDidUndo } from "@_redux/main/processor";
+import { setActivePanel } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 import { generateQuerySelector } from "@_services/main";
 import { TFilesReference } from "@_types/main";
 
 import {
   useCmdk,
-  useFileOperations,
   useInvalidNodes,
   useNodeActionsHandler,
   useNodeViewState,
   useSync,
   useTemporaryNodes,
 } from "./hooks";
-import { Container, ItemArrow } from "./workSpaceTreeComponents";
 import { useDefaultFileCreate } from "./hooks/useDefaultFile";
 
 const AutoExpandDelayOnDnD = 1 * 1000;
@@ -81,14 +79,6 @@ export default function WorkspaceTreeView() {
 
   const { cb_focusNode, cb_selectNode, cb_expandNode, cb_collapseNode } =
     useNodeViewState({ invalidNodes });
-  const { _create, _delete, _cut, _copy, _rename } = useFileOperations({
-    invalidNodes,
-    addInvalidNodes,
-    removeInvalidNodes,
-    temporaryNodes,
-    addTemporaryNodes,
-    removeTemporaryNodes,
-  });
   const openFileUid = useRef<TNodeUid>("");
   const {
     cb_startRenamingNode,
@@ -279,8 +269,12 @@ export default function WorkspaceTreeView() {
           expandedItems={expandedItems}
           selectedItems={selectedItems}
           renderers={{
-            renderTreeContainer: (props) => <Container {...props} />,
-            renderItemsContainer: (props) => <Container {...props} />,
+            renderTreeContainer: ({ containerProps, children }) => {
+              return <ul {...containerProps}>{children}</ul>;
+            },
+            renderItemsContainer: ({ containerProps, children }) => {
+              return <ul {...containerProps}>{children}</ul>;
+            },
 
             renderItem: (props) => {
               useEffect(() => {
@@ -469,7 +463,21 @@ export default function WorkspaceTreeView() {
                 </>
               );
             },
-            renderItemArrow: (props) => <ItemArrow {...props} />,
+            renderItemArrow: ({ item, context }) => {
+              return (
+                <>
+                  {item.isFolder ? (
+                    context.isExpanded ? (
+                      <SVGIconI {...{ class: "icon-xs" }}>down</SVGIconI>
+                    ) : (
+                      <SVGIconII {...{ class: "icon-xs" }}>right</SVGIconII>
+                    )
+                  ) : (
+                    <div className="icon-xs"></div>
+                  )}
+                </>
+              );
+            },
             renderItemTitle: (props) => {
               const fileOrDirectoryTitle = props?.title;
               const fileExt = !!props.item?.data?.data?.ext

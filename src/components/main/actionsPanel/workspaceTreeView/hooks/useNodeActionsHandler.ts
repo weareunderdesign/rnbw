@@ -1,19 +1,21 @@
-import { useCallback, useContext } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 
 import { TreeItem } from "react-complex-tree";
 import { useDispatch } from "react-redux";
 
+import { LogAllow } from "@_constants/global";
 import {
   FileChangeAlertMessage,
   RednerableFileTypes,
   RootNodeUid,
   TmpNodeUid,
 } from "@_constants/main";
+import { callFileApi } from "@_node/apis";
 import {
   _createIDBDirectory,
-  TFileNodeData,
   _writeIDBFile,
   confirmAlert,
+  TFileNodeData,
 } from "@_node/file";
 import { getValidNodeUids } from "@_node/helpers";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
@@ -22,22 +24,17 @@ import { MainContext } from "@_redux/main";
 import {
   expandFileTreeNodes,
   setCurrentFileUid,
+  setDoingFileAction,
   setFileTree,
   setPrevRenderableFileUid,
 } from "@_redux/main/fileTree";
-import { setFileAction, TFileAction } from "@_redux/main/fileTree/event";
 import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
 import {
   setNavigatorDropdownType,
   setShowCodeView,
 } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
-import { verifyFileHandlerPermission } from "@_services/main";
 import { TFileNodeType } from "@_types/main";
-
-import { duplicateNode, generateNewName, renameNode } from "../helpers";
-import { callFileApi } from "@_node/apis";
-import { LogAllow } from "@_constants/global";
 
 interface IUseNodeActionsHandler {
   invalidNodes: {
@@ -82,9 +79,60 @@ export const useNodeActionsHandler = ({
     reloadCurrentProject,
   } = useContext(MainContext);
 
+  const [reloadCurrentProjectTrigger, setReloadCurrentProjectTrigger] =
+    useState(false);
+  useEffect(() => {
+    reloadCurrentProject();
+  }, [reloadCurrentProjectTrigger]);
+
+  const onDelete = useCallback(async () => {
+    const uids = selectedItems.filter((uid) => !invalidNodes[uid]);
+    if (uids.length === 0) return;
+
+    const message = `Are you sure you want to delete them? This action cannot be undone!`;
+    if (!window.confirm(message)) {
+      return;
+    }
+
+    dispatch(setDoingFileAction(true));
+    addInvalidNodes(...uids);
+    await callFileApi(
+      {
+        projectContext: project.context,
+        action: "remove",
+        fileTree,
+        fileHandlers,
+        uids,
+      },
+      () => {
+        LogAllow && console.error("error while removing file system");
+      },
+      (allDone: boolean) => {
+        LogAllow &&
+          console.log(
+            allDone ? "all is successfully removed" : "some is not removed",
+          );
+      },
+    );
+    removeInvalidNodes(...uids);
+    dispatch(setDoingFileAction(false));
+
+    // reload the current project
+    setReloadCurrentProjectTrigger(true);
+  }, [
+    selectedItems,
+    invalidNodes,
+    addInvalidNodes,
+    removeInvalidNodes,
+    project,
+    fileTree,
+    fileHandlers,
+  ]);
+
+  // Add
   const createFFNode = useCallback(
     async (parentUid: TNodeUid, ffType: TFileNodeType, ffName: string) => {
-      let newName: string = "";
+      /* let newName: string = "";
 
       if (project.context === "local") {
         const parentHandler = fileHandlers[
@@ -123,7 +171,7 @@ export const useNodeActionsHandler = ({
           removeRunningActions(["fileTreeView-create"]);
           return;
         }
-      }
+      } */
 
       /* const action: TFileAction = {
         type: "create",
@@ -136,7 +184,7 @@ export const useNodeActionsHandler = ({
     },
     [addRunningActions, removeRunningActions, project.context, fileHandlers],
   );
-  const createTmpFFNode = useCallback(
+  const createTmpNode = useCallback(
     async (ffNodeType: TFileNodeType) => {
       const tmpTree = JSON.parse(JSON.stringify(fileTree)) as TNodeTreeData;
 
@@ -205,33 +253,8 @@ export const useNodeActionsHandler = ({
       removeInvalidNodes,
     ],
   );
-  const cb_startRenamingNode = useCallback(
-    (uid: TNodeUid) => {
-      // validate
-      if (invalidNodes[uid]) {
-        removeInvalidNodes(uid);
-        return;
-      }
-      addInvalidNodes(uid);
-    },
-    [invalidNodes, addInvalidNodes, removeInvalidNodes],
-  );
-  const cb_abortRenamingNode = useCallback(
-    (item: TreeItem) => {
-      const node = item.data as TNode;
-      const nodeData = node.data as TFileNodeData;
-      if (!nodeData.valid) {
-        const tmpTree = structuredClone(fileTree);
-        tmpTree[node.parentUid as TNodeUid].children = tmpTree[
-          node.parentUid as TNodeUid
-        ].children.filter((c_uid: TNodeUid) => c_uid !== node.uid);
-        delete tmpTree[item.data.uid];
-        dispatch(setFileTree(tmpTree));
-      }
-      removeInvalidNodes(node.uid);
-    },
-    [fileTree, removeInvalidNodes],
-  );
+
+  // Rename
   const onRename = useCallback(
     async (uid: TNodeUid, newName: string) => {
       // validate
@@ -270,6 +293,33 @@ export const useNodeActionsHandler = ({
       fileTree,
       fileHandlers,
     ],
+  );
+  const cb_startRenamingNode = useCallback(
+    (uid: TNodeUid) => {
+      // validate
+      if (invalidNodes[uid]) {
+        removeInvalidNodes(uid);
+        return;
+      }
+      addInvalidNodes(uid);
+    },
+    [invalidNodes, addInvalidNodes, removeInvalidNodes],
+  );
+  const cb_abortRenamingNode = useCallback(
+    (item: TreeItem) => {
+      const node = item.data as TNode;
+      const nodeData = node.data as TFileNodeData;
+      if (!nodeData.valid) {
+        const tmpTree = structuredClone(fileTree);
+        tmpTree[node.parentUid as TNodeUid].children = tmpTree[
+          node.parentUid as TNodeUid
+        ].children.filter((c_uid: TNodeUid) => c_uid !== node.uid);
+        delete tmpTree[item.data.uid];
+        dispatch(setFileTree(tmpTree));
+      }
+      removeInvalidNodes(node.uid);
+    },
+    [fileTree, removeInvalidNodes],
   );
   const cb_renameNode = useCallback(
     async (item: TreeItem, newName: string) => {
@@ -330,56 +380,6 @@ export const useNodeActionsHandler = ({
       },
     );
   }, [selectedItems, fileTree[currentFileUid], nodeTree]);
-
-  const onDelete = useCallback(async () => {
-    const uids = selectedItems.filter((uid) => !invalidNodes[uid]);
-    if (uids.length === 0) return;
-
-    const message = `Are you sure you want to delete them? This action cannot be undone!`;
-    if (!window.confirm(message)) {
-      return;
-    }
-
-    addRunningActions(["fileTreeView-delete"]);
-    addInvalidNodes(...uids);
-    await callFileApi(
-      {
-        projectContext: project.context,
-        action: "remove",
-        fileTree,
-        fileHandlers,
-        uids,
-      },
-      () => {
-        LogAllow && console.error("error while removing file system");
-        reloadCurrentProject();
-      },
-      (allDone: boolean) => {
-        LogAllow &&
-          console.log(
-            allDone ? "all is successfully removed" : "some is not removed",
-          );
-        const action: TFileAction = {
-          action: "remove",
-          payload: { uids },
-        };
-        reloadCurrentProject(action);
-      },
-    );
-    removeInvalidNodes(...uids);
-    removeRunningActions(["fileTreeView-delete"]);
-  }, [
-    selectedItems,
-    invalidNodes,
-    addRunningActions,
-    removeRunningActions,
-    addInvalidNodes,
-    removeInvalidNodes,
-    project,
-    fileTree,
-    fileHandlers,
-    reloadCurrentProject,
-  ]);
 
   const cb_moveNode = useCallback(
     async (uids: string[], targetUid: TNodeUid, copy: boolean = false) => {
@@ -478,7 +478,7 @@ export const useNodeActionsHandler = ({
     let allDone = true;
     await Promise.all(
       uids.map(async (uid) => {
-        const result = await duplicateNode(
+        /* const result = await duplicateNode(
           uid,
           true,
           fileTree,
@@ -492,7 +492,7 @@ export const useNodeActionsHandler = ({
           _targetUids.push(fileTree[uid].parentUid as TNodeUid);
         } else {
           allDone = false;
-        }
+        } */
       }),
     );
 
@@ -574,14 +574,15 @@ export const useNodeActionsHandler = ({
   );
 
   return {
+    onDelete,
+
     createFFNode,
-    createTmpFFNode,
+    createTmpNode,
     cb_startRenamingNode,
     cb_abortRenamingNode,
     cb_renameNode,
     onRename,
     onCut,
-    onDelete,
     cb_moveNode,
     cb_duplicateNode,
     cb_readNode,

@@ -307,6 +307,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
   }, [KeyDownEventListener]);
   useEffect(() => {
     if (!currentCommand) return;
+
     switch (currentCommand.action) {
       case "Jumpstart":
         onJumpstart();
