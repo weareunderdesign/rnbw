@@ -12,7 +12,7 @@ import { TFileAction, TFileEventReducerState } from "./types";
 
 const fileEventReducerInitialState: TFileEventReducerState = {
   fileAction: {
-    type: null,
+    action: null,
   },
 };
 const fileEventSlice = createSlice({

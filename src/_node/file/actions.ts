@@ -267,12 +267,12 @@ const rename = ({
       }
     })();
 
-    const action: TFileAction = {
+    /* const action: TFileAction = {
       type: "rename",
       param1: { currentFileUid: renameUid, parentUid: parentUid },
       param2: { orgName: _orgName, newName: _newName },
     };
-    dispatch(setFileAction(action));
+    dispatch(setFileAction(action)); */
 
     // update redux
     dispatch(setCurrentFileUid(newUid));

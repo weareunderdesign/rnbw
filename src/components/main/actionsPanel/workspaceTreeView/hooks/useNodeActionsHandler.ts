@@ -79,7 +79,6 @@ export const useNodeActionsHandler = ({
     removeRunningActions,
     fileHandlers,
     htmlReferenceData,
-    currentProjectFileHandle,
     reloadCurrentProject,
   } = useContext(MainContext);
 
@@ -126,12 +125,12 @@ export const useNodeActionsHandler = ({
         }
       }
 
-      const action: TFileAction = {
+      /* const action: TFileAction = {
         type: "create",
         param1: `${parentUid}/${newName}`,
         param2: { parentUid, name: newName, type: ffType },
       };
-      dispatch(setFileAction(action));
+      dispatch(setFileAction(action)); */
 
       removeRunningActions(["fileTreeView-create"]);
     },
@@ -254,7 +253,7 @@ export const useNodeActionsHandler = ({
           LogAllow && console.error("error while cutting file system");
         },
         (allDone: boolean) => {
-          reloadCurrentProject(fileTree, currentProjectFileHandle);
+          reloadCurrentProject();
           LogAllow &&
             console.log(
               allDone ? "all is successfully removed" : "some is not removed",
@@ -353,13 +352,18 @@ export const useNodeActionsHandler = ({
       },
       () => {
         LogAllow && console.error("error while removing file system");
+        reloadCurrentProject();
       },
       (allDone: boolean) => {
-        reloadCurrentProject(fileTree, currentProjectFileHandle);
         LogAllow &&
           console.log(
             allDone ? "all is successfully removed" : "some is not removed",
           );
+        const action: TFileAction = {
+          action: "remove",
+          payload: { uids },
+        };
+        reloadCurrentProject(action);
       },
     );
     removeInvalidNodes(...uids);
@@ -374,6 +378,7 @@ export const useNodeActionsHandler = ({
     project,
     fileTree,
     fileHandlers,
+    reloadCurrentProject,
   ]);
 
   const cb_moveNode = useCallback(
@@ -410,23 +415,25 @@ export const useNodeActionsHandler = ({
           LogAllow && console.error("error while pasting file system");
         },
         (allDone: boolean) => {
-          reloadCurrentProject(fileTree, currentProjectFileHandle);
+          reloadCurrentProject();
           LogAllow &&
             console.log(
               allDone ? "all is successfully past" : "some is not past",
             );
         },
       );
-      removeInvalidNodes(...validatedUids);
-      // if (_uids.some((result) => !result)) {
-      //   // addMessage(movingError);
-      // }
-      const action: TFileAction = {
+
+      /* if (_uids.some((result) => !result)) {
+        // addMessage(movingError);
+      } */
+
+      /* const action: TFileAction = {
         type: copy ? "copy" : "cut",
         // param1: _uids,
         // param2: _uids.map(() => targetUid),
       };
-      dispatch(setFileAction(action));
+      dispatch(setFileAction(action)); */
+
       removeRunningActions(["fileTreeView-move"]);
     },
     [
@@ -493,13 +500,12 @@ export const useNodeActionsHandler = ({
       // addMessage(duplicatingWarning);
     }
 
-    const action: TFileAction = {
+    /* const action: TFileAction = {
       type: "copy",
       param1: _uids,
       param2: _targetUids,
     };
-
-    dispatch(setFileAction(action));
+    dispatch(setFileAction(action)); */
 
     removeRunningActions(["fileTreeView-duplicate"]);
   }, [

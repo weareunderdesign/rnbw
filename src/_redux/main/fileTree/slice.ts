@@ -25,7 +25,7 @@ const fileTreeReducerInitialState: TFileTreeReducerState = {
   hoveredFileUid: "",
 
   doingFileAction: false,
-  lastFileAction: { type: null },
+  lastFileAction: { action: null },
 };
 
 const fileTreeSlice = createSlice({

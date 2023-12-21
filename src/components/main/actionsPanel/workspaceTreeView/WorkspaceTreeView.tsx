@@ -119,7 +119,7 @@ export default function WorkspaceTreeView() {
     if (!didUndo && !didRedo) return;
 
     // isHms === true ? undo : redo
-    if (didUndo) {
+    /* if (didUndo) {
       const { type, param1, param2 } = fileAction;
       if (type === "create") {
         _delete([param1]);
@@ -189,10 +189,7 @@ export default function WorkspaceTreeView() {
         _copy(uids, names, targetUids);
       } else if (type === "remove") {
       }
-    }
-
-    dispatch(setDidUndo(false));
-    dispatch(setDidRedo(false));
+    } */
   }, [didUndo, didRedo]);
 
   // open default initial html file

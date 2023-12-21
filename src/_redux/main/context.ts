@@ -34,6 +34,7 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
 
   importProject: () => {},
   reloadCurrentProject: () => {},
+
   onUndo: () => {},
   onRedo: () => {},
 });

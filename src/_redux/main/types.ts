@@ -10,7 +10,7 @@ import {
   THtmlReferenceData,
 } from "@_types/main";
 
-import { TProjectContext } from "./fileTree";
+import { TFileAction, TProjectContext } from "./fileTree";
 
 export type TEventHistoryInfo = {
   future: number;
@@ -65,10 +65,7 @@ export type TMainContext = {
     fsType: TProjectContext,
     projectHandle?: FileSystemDirectoryHandle | null,
   ) => void;
-  reloadCurrentProject: (
-    fileTree: TFileNodeTreeData,
-    currentProjectFileHandle: FileSystemDirectoryHandle | null,
-  ) => void;
+  reloadCurrentProject: (action?: TFileAction) => void;
 
   onUndo: () => void;
   onRedo: () => void;

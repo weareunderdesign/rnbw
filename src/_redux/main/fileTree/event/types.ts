@@ -1,11 +1,14 @@
+import { TNodeUid } from "@_node/types";
+
 export type TFileEventReducerState = {
   fileAction: TFileAction;
 };
 
 export type TFileAction = {
-  type: TFileActionType;
-  param1?: any;
-  param2?: any;
+  action: TFileActionType;
+  payload?: {
+    uids: TNodeUid[];
+  };
 };
 export type TFileActionType =
   | "create"

@@ -148,9 +148,9 @@ export default function MainPage() {
   // file event hms
   useEffect(() => {
     // reset fileAction in the new history
-    fileEventFutureLength === 0 &&
+    /* fileEventFutureLength === 0 &&
       fileAction.type !== null &&
-      dispatch(setFileAction({ type: null }));
+      dispatch(setFileAction({ type: null })); */
   }, [fileEventFutureLength]);
 
   // web-tab close event handler

@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useContext } from "react";
 import { setMany } from "idb-keyval";
 import { useDispatch } from "react-redux";
 
@@ -9,14 +9,17 @@ import {
   loadIDBProject,
   loadLocalProject,
   TFileHandlerCollection,
-  TFileNodeTreeData,
 } from "@_node/file";
 import {
+  setCurrentFileUid,
   setDoingFileAction,
+  setFileAction,
   setFileTree,
   setInitialFileUidToOpen,
   setProject,
+  TFileAction,
   TProjectContext,
+  updateFileTreeViewState,
 } from "@_redux/main/fileTree";
 import {
   setNavigatorDropdownType,
@@ -25,6 +28,8 @@ import {
 import { useAppState } from "@_redux/useAppState";
 
 import { clearProjectSession } from "../helper";
+import { MainContext } from "@_redux/main";
+import { setCurrentFileContent } from "@_redux/main/nodeTree";
 
 interface IUseHandlers {
   setCurrentProjectFileHandle: React.Dispatch<
@@ -55,7 +60,9 @@ export const useHandlers = ({
   setRecentProjectHandlers,
 }: IUseHandlers) => {
   const dispatch = useDispatch();
-  const { osType, navigatorDropdownType } = useAppState();
+  const { osType, navigatorDropdownType, project, fileTree, currentFileUid } =
+    useAppState();
+  const { currentProjectFileHandle } = useContext(MainContext);
 
   const saveRecentProject = useCallback(
     async (
@@ -121,7 +128,7 @@ export const useHandlers = ({
           clearProjectSession(dispatch);
 
           // build nohost idb
-          handlerArr && buildNohostIDB(handlerArr);
+          buildNohostIDB(handlerArr);
 
           dispatch(
             setProject({
@@ -136,7 +143,7 @@ export const useHandlers = ({
 
           dispatch(setFileTree(_fileTree));
           dispatch(setInitialFileUidToOpen(_initialFileUidToOpen));
-          setFileHandlers(_fileHandlers as TFileHandlerCollection);
+          setFileHandlers(_fileHandlers);
 
           if (_initialFileUidToOpen === "") {
             dispatch(setShowActionsPanel(false));
@@ -181,19 +188,72 @@ export const useHandlers = ({
     },
     [osType, saveRecentProject],
   );
-  const reloadCurrentProject = async (
-    fileTree: TFileNodeTreeData,
-    currentProjectFileHandle: FileSystemDirectoryHandle | null,
-  ) => {
-    const { _fileTree, _initialFileUidToOpen } = await loadLocalProject(
-      currentProjectFileHandle as FileSystemDirectoryHandle,
-      osType,
-      true,
-      fileTree,
-    );
-    dispatch(setFileTree(_fileTree));
-    dispatch(setInitialFileUidToOpen(_initialFileUidToOpen));
-  };
+  const reloadCurrentProject = useCallback(
+    async (action?: TFileAction) => {
+      if (project.context === "local") {
+        const {
+          handlerArr,
+          _fileHandlers,
+          _fileTree,
+          _initialFileUidToOpen,
+          deletedUidsObj,
+          deletedUids,
+        } = await loadLocalProject(
+          currentProjectFileHandle as FileSystemDirectoryHandle,
+          osType,
+          true,
+          fileTree,
+        );
+        dispatch(setFileTree(_fileTree));
+        setFileHandlers(_fileHandlers);
+        // need to open another file if the current open file is deleted
+        if (deletedUidsObj[currentFileUid]) {
+          dispatch(setCurrentFileUid(_initialFileUidToOpen));
+          dispatch(
+            setCurrentFileContent(
+              _fileTree[_initialFileUidToOpen].data.content,
+            ),
+          );
+        }
+        // update file tree view state
+        dispatch(updateFileTreeViewState({ deletedUids: deletedUids }));
+        // build nohost idb
+        buildNohostIDB(
+          handlerArr,
+          deletedUids.map((uid) => fileTree[uid].data.path),
+        );
+      } else {
+        const {
+          _fileTree,
+          _initialFileUidToOpen,
+          deletedUidsObj,
+          deletedUids,
+        } = await loadIDBProject(DefaultProjectPath, true, fileTree);
+        dispatch(setFileTree(_fileTree));
+        // need to open another file if the current open file is deleted
+        // dispatch(setCurrentFileUid(_initialFileUidToOpen));
+        if (deletedUidsObj[currentFileUid]) {
+          dispatch(setCurrentFileUid(_initialFileUidToOpen));
+          dispatch(
+            setCurrentFileContent(
+              _fileTree[_initialFileUidToOpen].data.content,
+            ),
+          );
+        }
+        // update file tree view state
+        dispatch(updateFileTreeViewState({ deletedUids: deletedUids }));
+        // update nohost idb
+        buildNohostIDB(
+          [],
+          deletedUids.map((uid) => fileTree[uid].data.path),
+        );
+      }
+
+      // add fileAction to event history
+      action && dispatch(setFileAction(action));
+    },
+    [project, osType, fileTree, currentFileUid],
+  );
   const closeNavigator = useCallback(() => {
     navigatorDropdownType !== null && dispatch(setNavigatorDropdownType(null));
   }, [navigatorDropdownType]);

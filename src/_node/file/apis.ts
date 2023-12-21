@@ -26,8 +26,9 @@ import {
   TFileNodeData,
   TFileNodeTreeData,
   TFileParserResponse,
+  TIDBProjectLoaderBaseResponse,
+  TLocalProjectLoaderBaseResponse,
   TNodeUid,
-  TProjectLoaderResponse,
 } from "../";
 import { getInitialFileUidToOpen, sortFilesByASC } from "./helpers";
 import { TFileHandlerInfo, TFileHandlerInfoObj, TZipFileInfo } from "./types";
@@ -101,8 +102,8 @@ export const loadIDBProject = async (
   projectPath: string,
   isReload: boolean = false,
   fileTree?: TFileNodeTreeData,
-): Promise<TProjectLoaderResponse> => {
-  return new Promise<TProjectLoaderResponse>(async (resolve, reject) => {
+): Promise<TIDBProjectLoaderBaseResponse> => {
+  return new Promise<TIDBProjectLoaderBaseResponse>(async (resolve, reject) => {
     try {
       const deletedUidsObj: { [uid: TNodeUid]: true } = {};
       if (isReload) {
@@ -238,160 +239,181 @@ export const loadLocalProject = async (
   osType: TOsType,
   isReload: boolean = false,
   fileTree?: TFileNodeTreeData,
-): Promise<TProjectLoaderResponse> => {
-  return new Promise<TProjectLoaderResponse>(async (resolve, reject) => {
-    try {
-      // verify project-handler permission
-      if (!(await verifyFileHandlerPermission(projectHandle)))
-        throw "project handler permission error";
+): Promise<TLocalProjectLoaderBaseResponse> => {
+  return new Promise<TLocalProjectLoaderBaseResponse>(
+    async (resolve, reject) => {
+      try {
+        // verify project-handler permission
+        if (!(await verifyFileHandlerPermission(projectHandle)))
+          throw "project handler permission error";
 
-      const deletedUidsObj: { [uid: TNodeUid]: true } = {};
-      if (isReload) {
-        getSubNodeUidsByBfs(
-          RootNodeUid,
-          fileTree as TFileNodeTreeData,
-          false,
-        ).map((uid) => {
-          deletedUidsObj[uid] = true;
-        });
-      }
-
-      // build project root-handler
-      const rootHandler: TFileHandlerInfo = {
-        uid: RootNodeUid,
-        parentUid: null,
-        children: [],
-
-        path: `/${projectHandle.name}`,
-        kind: "directory",
-        name: projectHandle.name,
-
-        handler: projectHandle,
-      };
-      const handlerArr: TFileHandlerInfo[] = [rootHandler];
-      const handlerObj: TFileHandlerInfoObj = { [RootNodeUid]: rootHandler };
-
-      // loop through the project
-      const dirHandlers: TFileHandlerInfo[] = [rootHandler];
-      while (dirHandlers.length) {
-        const {
-          uid: p_uid,
-          path: p_path,
-          handler: p_handler,
-        } = dirHandlers.shift() as TFileHandlerInfo;
-
-        for await (const entry of (
-          p_handler as FileSystemDirectoryHandle
-        ).values()) {
-          // skip system directories & hidden files
-          if (SystemDirectories[osType][entry.name] || entry.name[0] === ".")
-            continue;
-
-          // build c_handler
-          const c_uid = _path.join(p_uid, entry.name) as string;
-          const c_path = _path.join(p_path, entry.name) as string;
-
-          const c_kind = entry.kind;
-
-          const nameArr = entry.name.split(".");
-          const c_ext = nameArr.length > 1 ? nameArr.pop() : undefined;
-          const c_name = nameArr.join(".");
-
-          let c_content: Uint8Array | undefined = undefined;
-          if (c_kind === "file") {
-            const fileEntry = await (entry as FileSystemFileHandle).getFile();
-            c_content = Buffer.from(await fileEntry.arrayBuffer());
-          }
-
-          const c_handlerInfo: TFileHandlerInfo = {
-            uid: c_uid,
-            parentUid: p_uid,
-            children: [],
-
-            path: c_path,
-            kind: c_kind,
-            name: c_kind === "directory" ? entry.name : c_name,
-
-            ext: c_ext,
-            content: c_content,
-
-            handler: entry,
-          };
-
-          // update handler-arr, handler-obj
-          handlerObj[p_uid].children.push(c_uid);
-          handlerObj[c_uid] = c_handlerInfo;
-          handlerArr.push(c_handlerInfo);
-          c_kind === "directory" && dirHandlers.push(c_handlerInfo);
-
-          // remove c_uid from deletedUids array
-          delete deletedUidsObj[c_uid];
+        const deletedUidsObj: { [uid: TNodeUid]: true } = {};
+        if (isReload) {
+          getSubNodeUidsByBfs(
+            RootNodeUid,
+            fileTree as TFileNodeTreeData,
+            false,
+          ).map((uid) => {
+            deletedUidsObj[uid] = true;
+          });
         }
+
+        // build project root-handler
+        const rootHandler: TFileHandlerInfo = {
+          uid: RootNodeUid,
+          parentUid: null,
+          children: [],
+
+          path: `/${projectHandle.name}`,
+          kind: "directory",
+          name: projectHandle.name,
+
+          handler: projectHandle,
+        };
+        const handlerArr: TFileHandlerInfo[] = [rootHandler];
+        const handlerObj: TFileHandlerInfoObj = { [RootNodeUid]: rootHandler };
+
+        // loop through the project
+        const dirHandlers: TFileHandlerInfo[] = [rootHandler];
+        while (dirHandlers.length) {
+          const {
+            uid: p_uid,
+            path: p_path,
+            handler: p_handler,
+          } = dirHandlers.shift() as TFileHandlerInfo;
+
+          for await (const entry of (
+            p_handler as FileSystemDirectoryHandle
+          ).values()) {
+            // skip system directories & hidden files
+            if (SystemDirectories[osType][entry.name] || entry.name[0] === ".")
+              continue;
+
+            // build c_handler
+            const c_uid = _path.join(p_uid, entry.name) as string;
+            const c_path = _path.join(p_path, entry.name) as string;
+
+            const c_kind = entry.kind;
+
+            const nameArr = entry.name.split(".");
+            const c_ext = nameArr.length > 1 ? nameArr.pop() : undefined;
+            const c_name = nameArr.join(".");
+
+            let c_content: Uint8Array | undefined = undefined;
+            if (c_kind === "file") {
+              const fileEntry = await (entry as FileSystemFileHandle).getFile();
+              c_content = Buffer.from(await fileEntry.arrayBuffer());
+            }
+
+            const c_handlerInfo: TFileHandlerInfo = {
+              uid: c_uid,
+              parentUid: p_uid,
+              children: [],
+
+              path: c_path,
+              kind: c_kind,
+              name: c_kind === "directory" ? entry.name : c_name,
+
+              ext: c_ext,
+              content: c_content,
+
+              handler: entry,
+            };
+
+            // update handler-arr, handler-obj
+            handlerObj[p_uid].children.push(c_uid);
+            handlerObj[c_uid] = c_handlerInfo;
+            handlerArr.push(c_handlerInfo);
+            c_kind === "directory" && dirHandlers.push(c_handlerInfo);
+
+            // remove c_uid from deletedUids array
+            delete deletedUidsObj[c_uid];
+          }
+        }
+
+        // sort by ASC directory/file
+        sortFilesByASC(handlerObj);
+        // define the initialFileUidToOpen
+        let _initialFileUidToOpen = getInitialFileUidToOpen(handlerObj);
+
+        // build fileTree and fileHandlers
+        const _fileTree: TFileNodeTreeData = {};
+        const _fileHandlers: TFileHandlerCollection = {};
+        Object.keys(handlerObj).map((uid) => {
+          const {
+            parentUid,
+            children,
+            path,
+            kind,
+            name,
+            ext,
+            content,
+            handler,
+          } = handlerObj[uid];
+
+          const parsable = kind === "file" && ParsableFileTypes[ext as string];
+          const fileContent = parsable ? content?.toString() : "";
+
+          _fileTree[uid] = {
+            uid,
+            parentUid: parentUid,
+
+            displayName: name,
+
+            isEntity: kind === "file",
+            children: [...children],
+
+            data: {
+              valid: true,
+
+              path: path,
+
+              kind: kind,
+              name: name,
+              ext: ext ?? "",
+
+              orgContent: fileContent,
+              content: fileContent,
+              contentInApp: "",
+
+              changed: false,
+            } as TFileNodeData,
+          } as TFileNode;
+
+          _fileHandlers[uid] = handler as FileSystemHandle;
+        });
+
+        resolve({
+          handlerArr,
+          _fileHandlers,
+          _fileTree,
+          _initialFileUidToOpen,
+          deletedUidsObj,
+          deletedUids: Object.keys(deletedUidsObj),
+        });
+      } catch (err) {
+        LogAllow && console.log("error in loadLocalProject API", err);
+        reject(err);
       }
-
-      // sort by ASC directory/file
-      sortFilesByASC(handlerObj);
-      // define the initialFileUidToOpen
-      let _initialFileUidToOpen: TNodeUid = getInitialFileUidToOpen(handlerObj);
-
-      // build fileTree and fileHandlers
-      const _fileTree: TFileNodeTreeData = {};
-      const _fileHandlers: TFileHandlerCollection = {};
-      Object.keys(handlerObj).map((uid) => {
-        const { parentUid, children, path, kind, name, ext, content, handler } =
-          handlerObj[uid];
-
-        const parsable = kind === "file" && ParsableFileTypes[ext as string];
-        const fileContent = parsable ? content?.toString() : "";
-
-        _fileTree[uid] = {
-          uid,
-          parentUid: parentUid,
-
-          displayName: name,
-
-          isEntity: kind === "file",
-          children: [...children],
-
-          data: {
-            valid: true,
-
-            path: path,
-
-            kind: kind,
-            name: name,
-            ext: ext ?? "",
-
-            orgContent: fileContent,
-            content: fileContent,
-            contentInApp: "",
-
-            changed: false,
-          } as TFileNodeData,
-        } as TFileNode;
-
-        _fileHandlers[uid] = handler as FileSystemHandle;
-      });
-
-      resolve({
-        handlerArr,
-        _fileHandlers,
-        _fileTree,
-        _initialFileUidToOpen,
-        deletedUidsObj,
-        deletedUids: Object.keys(deletedUidsObj),
-      });
-    } catch (err) {
-      LogAllow && console.log("error in loadLocalProject API", err);
-      reject(err);
-    }
-  });
+    },
+  );
 };
 export const buildNohostIDB = async (
   handlerArr: TFileHandlerInfo[],
+  deletedPaths: TNodeUid[] = [],
 ): Promise<void> => {
   return new Promise<void>(async (resolve, reject) => {
     try {
+      await Promise.all(
+        deletedPaths.map(async (path) => {
+          try {
+            await _removeIDBDirectoryOrFile(path);
+          } catch (err) {
+            LogAllow &&
+              console.error("error while deleting in buildNohostIDB API", err);
+          }
+        }),
+      );
       await Promise.all(
         handlerArr.map(async (_handler) => {
           const { kind, path, content } = _handler;
@@ -399,13 +421,21 @@ export const buildNohostIDB = async (
             try {
               await _createIDBDirectory(path);
             } catch (err) {
-              console.error("error in buildNohostIDB API", err);
+              LogAllow &&
+                console.error(
+                  "error whil creating a directory in buildNohostIDB API",
+                  err,
+                );
             }
           } else {
             try {
               await _writeIDBFile(path, content as Uint8Array);
             } catch (err) {
-              console.error("error in buildNohostIDB API", err);
+              LogAllow &&
+                console.error(
+                  "error while creating a file in buildNohostIDB API",
+                  err,
+                );
             }
           }
         }),
