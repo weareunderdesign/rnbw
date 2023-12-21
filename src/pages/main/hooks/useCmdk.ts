@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect } from "react";
 
 import { CustomDirectoryPickerOptions } from "file-system-access/lib/showDirectoryPicker";
 import { delMany } from "idb-keyval";
@@ -16,8 +16,8 @@ import { setCmdkPages, setCurrentCommand } from "@_redux/main/cmdk";
 import {
   FileTree_Event_RedoActionType,
   FileTree_Event_UndoActionType,
-  TProjectContext,
   setDoingFileAction,
+  TProjectContext,
 } from "@_redux/main/fileTree";
 import {
   NodeTree_Event_RedoActionType,

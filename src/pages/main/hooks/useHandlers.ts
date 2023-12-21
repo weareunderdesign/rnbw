@@ -35,7 +35,6 @@ interface IUseHandlers {
     React.SetStateAction<FileSystemDirectoryHandle | null>
   >;
   setFileHandlers: React.Dispatch<React.SetStateAction<TFileHandlerCollection>>;
-
   recentProjectContexts: TProjectContext[];
   recentProjectNames: string[];
   recentProjectHandlers: (FileSystemDirectoryHandle | null)[];
@@ -51,7 +50,6 @@ export const useHandlers = ({
   currentProjectFileHandle,
   setCurrentProjectFileHandle,
   setFileHandlers,
-
   recentProjectContexts,
   recentProjectNames,
   recentProjectHandlers,

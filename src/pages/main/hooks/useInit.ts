@@ -1,9 +1,12 @@
 import { useEffect } from "react";
+
 import { useDispatch } from "react-redux";
+
 import { LogAllow } from "@_constants/global";
 import { setOsType, setTheme } from "@_redux/global";
-import { TProjectContext, setDoingFileAction } from "@_redux/main/fileTree";
+import { setDoingFileAction, TProjectContext } from "@_redux/main/fileTree";
 import { isChromeOrEdge } from "@_services/global";
+
 import { setSystemTheme } from "../helper";
 
 interface IUseInit {

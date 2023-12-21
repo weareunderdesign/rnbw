@@ -31,7 +31,6 @@ import {
 interface IUseCmdkReferenceData {
   addRunningActions: (actionNames: string[]) => void;
   removeRunningActions: (actionNames: string[]) => void;
-
   recentProjectContexts: TProjectContext[];
   recentProjectNames: string[];
   recentProjectHandlers: (FileSystemDirectoryHandle | null)[];
@@ -42,20 +41,17 @@ interface IUseCmdkReferenceData {
   setRecentProjectHandlers: React.Dispatch<
     React.SetStateAction<(FileSystemDirectoryHandle | null)[]>
   >;
-
   htmlReferenceData: THtmlReferenceData;
 }
 export const useCmdkReferenceData = ({
   addRunningActions,
   removeRunningActions,
-
   recentProjectContexts,
   recentProjectNames,
   recentProjectHandlers,
   setRecentProjectContexts,
   setRecentProjectNames,
   setRecentProjectHandlers,
-
   htmlReferenceData,
 }: IUseCmdkReferenceData) => {
   const { fileTree, fFocusedItem, nodeTree, nFocusedItem, cmdkSearchContent } =
