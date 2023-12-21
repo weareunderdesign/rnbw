@@ -356,7 +356,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
         onDownload();
         break;
       case "Turn into":
-        onTurnInto();
+        (activePanel === "stage" || activePanel === "node") && onTurnInto();
         break;
       case "Autosave":
         onToggleAutoSave();

@@ -332,11 +332,7 @@ export const loadLocalProject = async (
       // sort by ASC directory/file
       sortFilesByASC(handlerObj);
       // define the initialFileUidToOpen
-      let _initialFileUidToOpen: TNodeUid =
-        // isReload
-        // ? ""
-        // :
-        getInitialFileUidToOpen(handlerObj);
+      let _initialFileUidToOpen: TNodeUid = getInitialFileUidToOpen(handlerObj);
 
       // build fileTree and fileHandlers
       const _fileTree: TFileNodeTreeData = {};

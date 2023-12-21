@@ -233,19 +233,34 @@ export const useNodeActionsHandler = ({
     },
     [fileTree, removeInvalidNodes],
   );
-  const _cb_renameNode = useCallback(
-    async (uid: TNodeUid, newName: string, ext: string) => {
+  const onRename = useCallback(
+    async (uid: TNodeUid, newName: string) => {
       // validate
       const node = fileTree[uid];
       if (node === undefined || node.displayName === newName) return;
-      const nodeData = node.data as TFileNodeData;
       const parentNode = fileTree[node.parentUid as TNodeUid];
       if (parentNode === undefined) return;
-      const parentNodeData = parentNode.data as TFileNodeData;
-
-      addRunningActions(["fileTreeView-rename"]);
-
-      renameNode(ext, newName, nodeData, parentNode, parentNodeData, uid);
+      await callFileApi(
+        {
+          projectContext: project.context,
+          dispatch,
+          action: "rename",
+          fileTree,
+          uids: [uid],
+          newName,
+          fileHandlers,
+        },
+        () => {
+          LogAllow && console.error("error while cutting file system");
+        },
+        (allDone: boolean) => {
+          reloadCurrentProject(fileTree, currentProjectFileHandle);
+          LogAllow &&
+            console.log(
+              allDone ? "all is successfully removed" : "some is not removed",
+            );
+        },
+      );
     },
     [
       addRunningActions,
@@ -261,7 +276,8 @@ export const useNodeActionsHandler = ({
     async (item: TreeItem, newName: string) => {
       const node = item.data as TNode;
       const nodeData = node.data as TFileNodeData;
-      if (invalidNodes[node.uid]) return;
+
+      // if (invalidNodes[node.uid]) return;
 
       if (nodeData.valid) {
         const file = fileTree[node.uid];
@@ -272,11 +288,7 @@ export const useNodeActionsHandler = ({
         }
 
         addTemporaryNodes(file.uid);
-        await _cb_renameNode(
-          file.uid,
-          newName,
-          fileData.kind === "directory" ? "*folder" : fileData.ext,
-        );
+        await onRename(file.uid, newName);
         removeTemporaryNodes(file.uid);
       } else {
         await createFFNode(
@@ -289,7 +301,7 @@ export const useNodeActionsHandler = ({
     },
     [
       invalidNodes,
-      _cb_renameNode,
+      onRename,
       addTemporaryNodes,
       removeTemporaryNodes,
       fileTree,
@@ -299,6 +311,7 @@ export const useNodeActionsHandler = ({
       removeInvalidNodes,
     ],
   );
+
   const onCut = useCallback(async () => {
     const uids = selectedItems.filter((uid) => !invalidNodes[uid]);
     if (uids.length === 0) return;
@@ -560,7 +573,7 @@ export const useNodeActionsHandler = ({
     cb_startRenamingNode,
     cb_abortRenamingNode,
     cb_renameNode,
-    _cb_renameNode,
+    onRename,
     onCut,
     onDelete,
     cb_moveNode,

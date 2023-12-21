@@ -5,12 +5,19 @@ import {
   TFileHandlerCollection,
   TFileNodeData,
   TFileNodeTreeData,
+  TNode,
   TNodeTreeData,
   TNodeUid,
   moveIDBFF,
   moveLocalFF,
 } from "../";
-import { TProjectContext } from "@_redux/main/fileTree";
+import {
+  TFileAction,
+  TProjectContext,
+  setCurrentFileUid,
+  setFileAction,
+  updateFileTreeViewState,
+} from "@_redux/main/fileTree";
 import { FileSystemApis } from "./FileSystemApis";
 import { TClipboardData, setClipboardData } from "@_redux/main/processor";
 import { AnyAction } from "@reduxjs/toolkit";
@@ -185,7 +192,93 @@ const copy = ({
   );
 };
 
-const rename = () => {};
+const rename = ({
+  dispatch,
+  projectContext,
+  fileHandlers,
+  fileTree,
+  uids,
+  newName,
+}: {
+  dispatch: Dispatch<AnyAction>;
+  projectContext: TProjectContext;
+  fileHandlers: any;
+  fileTree: TFileNodeTreeData;
+  uids: TNodeUid[];
+  newName: string;
+}) => {
+  return new Promise<boolean>((resolve, reject) => {
+    const renameUid = uids[0];
+    const node = fileTree[renameUid];
+    if (node === undefined) {
+      return false;
+    }
+    const type = node.data.kind;
+    const nodeData = node.data as TFileNodeData;
+    const _orgName =
+      type === "directory"
+        ? `${nodeData.name}`
+        : `${nodeData.name}${nodeData.ext}`;
+
+    const _newName = type === "directory" ? `${newName}` : `${newName}`;
+    const parentUid = node.parentUid;
+    const newUid = `${parentUid}/${_newName}`;
+
+    (async () => {
+      if (projectContext === "local") {
+        const handler = fileHandlers[renameUid],
+          parentHandler = fileHandlers[
+            parentUid as TNodeUid
+          ] as FileSystemDirectoryHandle;
+
+        if (
+          !(await verifyFileHandlerPermission(handler)) ||
+          !(await verifyFileHandlerPermission(parentHandler))
+        ) {
+          return;
+        }
+
+        try {
+          await moveLocalFF(
+            handler,
+            parentHandler,
+            parentHandler,
+            _newName,
+            false,
+            true,
+          );
+          await parentHandler.removeEntry(handler.name, { recursive: true });
+          resolve(true);
+        } catch (err) {
+          return;
+        }
+      } else if (projectContext === "idb") {
+        const parentNode = fileTree[parentUid as TNodeUid];
+        if (parentNode === undefined) {
+          return false;
+        }
+        const parentNodeData = parentNode.data as TFileNodeData;
+        try {
+          await moveIDBFF(nodeData, parentNodeData, _newName, false);
+          resolve(true);
+        } catch (err) {
+          return;
+        }
+      }
+    })();
+
+    const action: TFileAction = {
+      type: "rename",
+      param1: { currentFileUid: renameUid, parentUid: parentUid },
+      param2: { orgName: _orgName, newName: _newName },
+    };
+    dispatch(setFileAction(action));
+
+    // update redux
+    dispatch(setCurrentFileUid(newUid));
+    dispatch(updateFileTreeViewState({ convertedUids: [[renameUid, newUid]] }));
+  });
+};
 
 export const doFileActions = async (
   params: TFileApiPayload,
@@ -204,6 +297,7 @@ export const doFileActions = async (
       nodeTree,
       clipboardData,
       targetNode,
+      newName,
     } = params;
 
     let allDone = true;
@@ -243,7 +337,14 @@ export const doFileActions = async (
         });
         break;
       case "rename":
-        rename();
+        rename({
+          dispatch,
+          projectContext,
+          fileHandlers,
+          fileTree,
+          uids,
+          newName,
+        });
         break;
       default:
         break;
