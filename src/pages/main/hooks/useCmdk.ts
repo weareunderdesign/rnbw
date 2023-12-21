@@ -185,6 +185,16 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
   const onOpenGuidePage = useCallback(() => {
     window.open("https://guide.rnbw.dev", "_blank", "noreferrer");
   }, []);
+  const onOpenSupportPage = useCallback(() => {
+    window.open(
+      "https://github.com/orgs/rnbwdev/discussions",
+      "_blank",
+      "noreferrer",
+    );
+  }, []);
+  const onOpenCommunityPage = useCallback(() => {
+    window.open("https://discord.gg/HycXz8TJkd", "_blank", "noreferrer");
+  }, []);
   const onToggleTheme = useCallback(() => {
     switch (theme) {
       case "System":
@@ -297,7 +307,6 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
   }, [KeyDownEventListener]);
   useEffect(() => {
     if (!currentCommand) return;
-
     switch (currentCommand.action) {
       case "Jumpstart":
         onJumpstart();
@@ -336,6 +345,12 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
         break;
       case "Guide":
         onOpenGuidePage();
+        break;
+      case "Support":
+        onOpenSupportPage();
+        break;
+      case "Community":
+        onOpenCommunityPage();
         break;
       case "Download":
         onDownload();
