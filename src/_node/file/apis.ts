@@ -182,9 +182,7 @@ export const loadIDBProject = async (
       // sort by ASC directory/file
       sortFilesByASC(handlerObj);
       // define the initialFileUidToOpen
-      let _initialFileUidToOpen: TNodeUid = isReload
-        ? ""
-        : getInitialFileUidToOpen(handlerObj);
+      let _initialFileUidToOpen = getInitialFileUidToOpen(handlerObj);
 
       // build fileTree
       const _fileTree: TFileNodeTreeData = {};

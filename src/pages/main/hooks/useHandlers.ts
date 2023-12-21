@@ -231,7 +231,6 @@ export const useHandlers = ({
         } = await loadIDBProject(DefaultProjectPath, true, fileTree);
         dispatch(setFileTree(_fileTree));
         // need to open another file if the current open file is deleted
-        // dispatch(setCurrentFileUid(_initialFileUidToOpen));
         if (deletedUidsObj[currentFileUid]) {
           dispatch(setCurrentFileUid(_initialFileUidToOpen));
           dispatch(
