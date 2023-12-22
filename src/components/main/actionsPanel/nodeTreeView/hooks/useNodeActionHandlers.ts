@@ -6,8 +6,7 @@ import { LogAllow } from "@_constants/global";
 import { TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { useAppState } from "@_redux/useAppState";
-import { doNodeActions } from "@_node/node";
-import { callNodeApi } from "@_node/apis";
+import { NodeActions } from "@_node/apis";
 
 export const useNodeActionHandlers = () => {
   const dispatch = useDispatch();
@@ -43,7 +42,7 @@ export const useNodeActionHandlers = () => {
       }
 
       setIsContentProgrammaticallyChanged(true);
-      callNodeApi(
+      NodeActions(
         {
           dispatch,
           action: "add",
@@ -72,7 +71,7 @@ export const useNodeActionHandlers = () => {
     }
 
     setIsContentProgrammaticallyChanged(true);
-    callNodeApi(
+    NodeActions(
       {
         dispatch,
         action: "cut",
@@ -97,7 +96,7 @@ export const useNodeActionHandlers = () => {
     }
 
     setIsContentProgrammaticallyChanged(true);
-    callNodeApi(
+    NodeActions(
       {
         dispatch,
         action: "copy",
@@ -127,7 +126,7 @@ export const useNodeActionHandlers = () => {
     }
 
     setIsContentProgrammaticallyChanged(true);
-    callNodeApi(
+    NodeActions(
       {
         dispatch,
         action: "paste",
@@ -152,7 +151,7 @@ export const useNodeActionHandlers = () => {
     }
 
     setIsContentProgrammaticallyChanged(true);
-    callNodeApi(
+    NodeActions(
       {
         dispatch,
         action: "remove",
@@ -177,7 +176,7 @@ export const useNodeActionHandlers = () => {
     }
 
     setIsContentProgrammaticallyChanged(true);
-    callNodeApi(
+    NodeActions(
       {
         dispatch,
         action: "duplicate",
@@ -211,7 +210,7 @@ export const useNodeActionHandlers = () => {
       }
 
       setIsContentProgrammaticallyChanged(true);
-      callNodeApi(
+      NodeActions(
         {
           dispatch,
           action: "move",
@@ -243,7 +242,7 @@ export const useNodeActionHandlers = () => {
       }
 
       setIsContentProgrammaticallyChanged(true);
-      callNodeApi(
+      NodeActions(
         {
           dispatch,
           action: "rename",
@@ -272,7 +271,7 @@ export const useNodeActionHandlers = () => {
     }
 
     setIsContentProgrammaticallyChanged(true);
-    callNodeApi(
+    NodeActions(
       {
         dispatch,
         action: "group",
@@ -297,7 +296,7 @@ export const useNodeActionHandlers = () => {
     }
 
     setIsContentProgrammaticallyChanged(true);
-    callNodeApi(
+    NodeActions(
       {
         dispatch,
         action: "ungroup",

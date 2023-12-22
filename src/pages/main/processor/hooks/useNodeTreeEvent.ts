@@ -265,8 +265,8 @@ export const useNodeTreeEvent = () => {
 
         if (needToSelectNodePaths) {
           LogAllow && console.log("it's a rnbw-change from node-actions");
-          // this means we called `callNodeApi` and we need to select predicted `needToSelectNodeUids`
-          // in the case, `callNodeApi -> setCurrentFileContent` and `setNeedToSelectNodeUids` dispatch actions are considered as an one event in the node-event-history.
+          // this means we called `NodeActions` and we need to select predicted `needToSelectNodeUids`
+          // in the case, `NodeActions -> setCurrentFileContent` and `setNeedToSelectNodeUids` dispatch actions are considered as an one event in the node-event-history.
           const needToSelectNodeUids = getNodeUidsFromPaths(
             _validNodeTree,
             needToSelectNodePaths,
@@ -277,7 +277,7 @@ export const useNodeTreeEvent = () => {
         } else if (needToSelectCode) {
           LogAllow && console.log("it's a rnbw-change from code-view");
           // it's a typing change in code-view and we need to select currently `cursored node` in code-view.
-          // in the case, `callNodeApi -> setCurrentFileContent` and `setNeedToSelectNodeUids` dispatch actions are considered as an one event in the node-event-history.
+          // in the case, `NodeActions -> setCurrentFileContent` and `setNeedToSelectNodeUids` dispatch actions are considered as an one event in the node-event-history.
           const needToSelectNodeUid = getNodeUidByCodeSelection(
             needToSelectCode,
             nodeTree,

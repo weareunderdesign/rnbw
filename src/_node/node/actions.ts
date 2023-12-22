@@ -556,7 +556,7 @@ const edit = ({
   return needToSelectNodePaths;
 };
 
-export const doNodeActions = async (
+export const NodeActions = async (
   params: TNodeApiPayload,
   fb?: (...params: any[]) => void,
   cb?: (...params: any[]) => void,

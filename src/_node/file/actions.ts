@@ -111,7 +111,7 @@ const rename = async ({
   }
 };
 
-export const doFileActions = {
+export const FileActions = {
   create,
   remove,
   rename,

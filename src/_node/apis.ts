@@ -1,5 +1,4 @@
-import { doFileActions } from "./file";
-import { doNodeActions } from "./node";
+import { FileActions } from "./file";
+import { NodeActions } from "./node";
 
-export const callNodeApi = doNodeActions;
-export const FileActions = doFileActions;
+export { FileActions, NodeActions };

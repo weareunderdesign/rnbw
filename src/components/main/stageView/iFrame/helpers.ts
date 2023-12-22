@@ -1,7 +1,7 @@
 import { editor } from "monaco-editor";
 
 import {
-  callNodeApi,
+  NodeActions,
   StageNodeIdAttr,
   TNodeTreeData,
   TNodeUid,
@@ -119,7 +119,7 @@ export const editHtmlContent = ({
     const content = contentEditableElement.textContent;
 
     setIsContentProgrammaticallyChanged(true);
-    callNodeApi(
+    NodeActions(
       {
         dispatch,
         action: "text-edit",
