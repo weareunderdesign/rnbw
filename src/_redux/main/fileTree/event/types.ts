@@ -6,7 +6,7 @@ export type TFileEventReducerState = {
 
 export type TFileAction = { action: TFileActionType } & (
   | {
-      action: Extract<TFileActionType, "create" | "remove">;
+      action: Extract<TFileActionType, "create" | "remove" | "move">;
       payload: {
         uids: TNodeUid[];
       };

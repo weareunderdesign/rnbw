@@ -3,11 +3,11 @@ import { FileSystemFileHandle } from "file-system-access";
 import { verifyFileHandlerPermission } from "@_services/main";
 
 import {
-  getFileNameAndExtensionFromFullname,
   TFileHandlerCollection,
   TFileNodeData,
   TFileNodeTreeData,
   TNodeUid,
+  getTargetHandler,
 } from "../";
 import {
   _createIDBDirectory,
@@ -232,7 +232,7 @@ const moveLocalSingleDirectoryOrFile = async ({
   const parentHandler = fileHandlers[
     parentNode.uid
   ] as FileSystemDirectoryHandle;
-  const targetHandler = fileHandlers[targetUid] as FileSystemDirectoryHandle;
+  const targetHandler = getTargetHandler({ targetUid, fileTree, fileHandlers });
   if (
     !(await verifyFileHandlerPermission(handler)) ||
     !(await verifyFileHandlerPermission(parentHandler)) ||
@@ -364,8 +364,8 @@ const generateNewNameForLocalDirectoryOrFile = async ({
   nodeData: TFileNodeData;
   targetHandler: FileSystemDirectoryHandle;
 }): Promise<string> => {
-  let newName = nodeData.name;
-  const { baseName, ext } = getFileNameAndExtensionFromFullname(nodeData.name);
+  const { name, ext, kind } = nodeData;
+  let newName = kind === "directory" ? name : `${name}.${ext}`;
   let exists = true;
   let index = -1;
   while (exists) {
@@ -373,7 +373,9 @@ const generateNewNameForLocalDirectoryOrFile = async ({
       if (nodeData.kind === "directory") {
         await targetHandler.getDirectoryHandle(newName, { create: false });
       } else {
-        await targetHandler.getFileHandle(newName, { create: false });
+        await targetHandler.getFileHandle(newName, {
+          create: false,
+        });
       }
     } catch (err) {
       exists = false;
@@ -384,11 +386,11 @@ const generateNewNameForLocalDirectoryOrFile = async ({
       newName =
         nodeData.kind === "directory"
           ? index === 0
-            ? `${baseName} copy`
-            : `${baseName} copy (${index})`
+            ? `${name} copy`
+            : `${name} copy (${index})`
           : index === 0
-          ? `${baseName} copy.${ext}`
-          : `${baseName} copy (${index}).${ext}`;
+          ? `${name} copy.${ext}`
+          : `${name} copy (${index}).${ext}`;
     }
   }
   return newName;
@@ -400,8 +402,8 @@ const generateNewNameForIDBDirectoryOrFile = async ({
   nodeData: TFileNodeData;
   targetNodeData: TFileNodeData;
 }): Promise<string> => {
-  let newName = nodeData.name;
-  const { baseName, ext } = getFileNameAndExtensionFromFullname(nodeData.name);
+  const { name, ext, kind } = nodeData;
+  let newName = kind === "directory" ? name : `${name}.${ext}`;
   let exists = true;
   let index = -1;
   while (exists) {
@@ -418,11 +420,11 @@ const generateNewNameForIDBDirectoryOrFile = async ({
       newName =
         nodeData.kind === "directory"
           ? index === 0
-            ? `${baseName} copy`
-            : `${baseName} copy (${index})`
+            ? `${name} copy`
+            : `${name} copy (${index})`
           : index === 0
-          ? `${baseName} copy.${ext}`
-          : `${baseName} copy (${index}).${ext}`;
+          ? `${name} copy.${ext}`
+          : `${name} copy (${index}).${ext}`;
     }
   }
   return newName;
