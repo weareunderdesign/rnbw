@@ -1,10 +1,11 @@
-import { useCallback, useContext, useEffect } from "react";
+import { useCallback, useContext, useEffect, useRef } from "react";
 
 import { useAppState } from "@_redux/useAppState";
 import { useDispatch } from "react-redux";
 import {
   FileTree_Event_RedoActionType,
   FileTree_Event_UndoActionType,
+  TFileAction,
   setDoingFileAction,
   setFileAction,
 } from "@_redux/main/fileTree";
@@ -17,8 +18,15 @@ import { FileChangeAlertMessage } from "@_constants/main";
 
 export const useFileTreeEvent = () => {
   const dispatch = useDispatch();
-  const { project, fileTree, fileAction, lastFileAction, didUndo, didRedo } =
-    useAppState();
+  const {
+    project,
+    fileTree,
+    fileAction,
+    lastFileAction,
+    fileEventPastLength,
+    didUndo,
+    didRedo,
+  } = useAppState();
   const {
     fileHandlers,
     addInvalidFileNodes,
@@ -26,7 +34,15 @@ export const useFileTreeEvent = () => {
     setReloadCurrentProjectTrigger,
   } = useContext(MainContext);
 
+  const clearFutureHistoryTriggerRef = useRef(false);
+  const lastFileActionRef = useRef<TFileAction>({ action: null });
   useEffect(() => {
+    if (clearFutureHistoryTriggerRef.current) {
+      // remove invalid history events after `remove` action
+      clearFutureHistoryTriggerRef.current = false;
+      dispatch(setFileAction({ ...lastFileActionRef.current }));
+    }
+
     if (didRedo) {
       const { action, payload } = fileAction;
       if (action === "create") {
@@ -43,6 +59,14 @@ export const useFileTreeEvent = () => {
       const { action, payload } = lastFileAction;
       if (action === "create") {
         _remove({ ...payload });
+        // clear future history events
+        if (fileEventPastLength) {
+          lastFileActionRef.current = { ...fileAction };
+          clearFutureHistoryTriggerRef.current = true;
+          dispatch({ type: FileTree_Event_UndoActionType });
+        } else {
+          dispatch(setFileAction({ ...fileAction }));
+        }
       } else if (action === "remove") {
         // not undoable
       } else if (action === "rename") {
@@ -85,9 +109,6 @@ export const useFileTreeEvent = () => {
 
       // reload the current project
       setReloadCurrentProjectTrigger((prev) => !prev);
-
-      // remove invalid events history for `remove` action
-      dispatch(setFileAction({ action: null }));
     },
     [
       didRedo,
@@ -97,7 +118,6 @@ export const useFileTreeEvent = () => {
       project,
       fileTree,
       fileHandlers,
-      fileAction,
     ],
   );
   const _rename = useCallback(
