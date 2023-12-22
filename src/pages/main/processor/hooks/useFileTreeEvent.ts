@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 
 import { LogAllow } from "@_constants/global";
 import { FileChangeAlertMessage } from "@_constants/main";
-import { callFileApi } from "@_node/apis";
+import { FileActions } from "@_node/apis";
 import { _path, confirmAlert, getFullnameFromUid } from "@_node/index";
 import { TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
@@ -87,24 +87,21 @@ export const useFileTreeEvent = () => {
 
       dispatch(setDoingFileAction(true));
       addInvalidFileNodes(...uids);
-      await callFileApi(
-        {
-          projectContext: project.context,
-          action: "remove",
-          fileTree,
-          fileHandlers,
-          uids,
-        },
-        () => {
+      await FileActions.remove({
+        projectContext: project.context,
+        fileTree,
+        fileHandlers,
+        uids,
+        fb: () => {
           LogAllow && console.error("error while removing file system");
         },
-        (allDone: boolean) => {
+        cb: (allDone: boolean) => {
           LogAllow &&
             console.log(
               allDone ? "all is successfully removed" : "some is not removed",
             );
         },
-      );
+      });
       removeInvalidFileNodes(...uids);
       dispatch(setDoingFileAction(false));
 
@@ -135,24 +132,21 @@ export const useFileTreeEvent = () => {
       const newName = getFullnameFromUid(newUid);
       dispatch(setDoingFileAction(true));
       addInvalidFileNodes(node.uid);
-      await callFileApi(
-        {
-          projectContext: project.context,
-          action: "rename",
-          fileTree,
-          fileHandlers,
-          uids: [node.uid],
-          parentUid: node.parentUid as TNodeUid,
-          name: newName,
-        },
-        () => {
+      await FileActions.rename({
+        projectContext: project.context,
+        fileTree,
+        fileHandlers,
+        uids: [node.uid],
+        parentUid: node.parentUid as TNodeUid,
+        newName,
+        fb: () => {
           LogAllow && console.error("error while renaming file system");
         },
-        (done: boolean) => {
+        cb: (done: boolean) => {
           LogAllow &&
             console.log(done ? "successfully renamed" : "not renamed");
         },
-      );
+      });
       removeInvalidFileNodes(node.uid);
       dispatch(setDoingFileAction(false));
 

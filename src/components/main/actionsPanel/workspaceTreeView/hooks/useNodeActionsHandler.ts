@@ -1,19 +1,16 @@
-import {
-  useCallback,
-  useContext,
-} from 'react';
+import { useCallback, useContext } from "react";
 
-import { TreeItem } from 'react-complex-tree';
-import { useDispatch } from 'react-redux';
+import { TreeItem } from "react-complex-tree";
+import { useDispatch } from "react-redux";
 
-import { LogAllow } from '@_constants/global';
+import { LogAllow } from "@_constants/global";
 import {
   FileChangeAlertMessage,
   RednerableFileTypes,
   RootNodeUid,
   TmpFileNodeUidWhenAddNew,
-} from '@_constants/main';
-import { callFileApi } from '@_node/apis';
+} from "@_constants/main";
+import { FileActions } from "@_node/apis";
 import {
   _createIDBDirectory,
   _path,
@@ -21,15 +18,11 @@ import {
   confirmAlert,
   TFileNodeData,
   TFileNodeTreeData,
-} from '@_node/file';
-import { getValidNodeUids } from '@_node/helpers';
-import {
-  TNode,
-  TNodeTreeData,
-  TNodeUid,
-} from '@_node/types';
-import { clearFileSession } from '@_pages/main/helper';
-import { MainContext } from '@_redux/main';
+} from "@_node/file";
+import { getValidNodeUids } from "@_node/helpers";
+import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
+import { clearFileSession } from "@_pages/main/helper";
+import { MainContext } from "@_redux/main";
 import {
   expandFileTreeNodes,
   setCurrentFileUid,
@@ -38,10 +31,10 @@ import {
   setFileTree,
   setPrevRenderableFileUid,
   TFileAction,
-} from '@_redux/main/fileTree';
-import { setCurrentFileContent } from '@_redux/main/nodeTree/event';
-import { setShowCodeView } from '@_redux/main/processor';
-import { useAppState } from '@_redux/useAppState';
+} from "@_redux/main/fileTree";
+import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
+import { setShowCodeView } from "@_redux/main/processor";
+import { useAppState } from "@_redux/useAppState";
 
 interface IUseNodeActionsHandler {
   openFileUid: React.MutableRefObject<string>;
@@ -123,18 +116,15 @@ export const useNodeActionsHandler = ({
 
     dispatch(setDoingFileAction(true));
     addInvalidFileNodes(...uids);
-    await callFileApi(
-      {
-        projectContext: project.context,
-        action: "remove",
-        fileTree,
-        fileHandlers,
-        uids,
-      },
-      () => {
+    await FileActions.remove({
+      projectContext: project.context,
+      fileTree,
+      fileHandlers,
+      uids,
+      fb: () => {
         LogAllow && console.error("error while removing file system");
       },
-      (allDone: boolean) => {
+      cb: (allDone: boolean) => {
         LogAllow &&
           console.log(
             allDone ? "all is successfully removed" : "some is not removed",
@@ -146,7 +136,7 @@ export const useNodeActionsHandler = ({
         };
         dispatch(setFileAction(_fileAction));
       },
-    );
+    });
     removeInvalidFileNodes(...uids);
     dispatch(setDoingFileAction(false));
 
@@ -167,7 +157,7 @@ export const useNodeActionsHandler = ({
     const uids = selectedItems.filter((uid) => !invalidFileNodes[uid]);
     if (uids.length === 0) return;
 
-    /* await callFileApi(
+    /* await FileActions(
       {
         projectContext: project.context,
         dispatch,
@@ -304,20 +294,17 @@ export const useNodeActionsHandler = ({
 
         dispatch(setDoingFileAction(true));
         addInvalidFileNodes(node.uid);
-        await callFileApi(
-          {
-            projectContext: project.context,
-            action: "rename",
-            fileTree,
-            fileHandlers,
-            uids: [node.uid],
-            parentUid: node.parentUid as TNodeUid,
-            name,
-          },
-          () => {
+        await FileActions.rename({
+          projectContext: project.context,
+          fileTree,
+          fileHandlers,
+          uids: [node.uid],
+          parentUid: node.parentUid as TNodeUid,
+          newName: name,
+          fb: () => {
             LogAllow && console.error("error while renaming file system");
           },
-          (done: boolean) => {
+          cb: (done: boolean) => {
             LogAllow &&
               console.log(done ? "successfully renamed" : "not renamed");
             // add to event history
@@ -327,7 +314,7 @@ export const useNodeActionsHandler = ({
             };
             dispatch(setFileAction(_fileAction));
           },
-        );
+        });
         removeInvalidFileNodes(node.uid);
         dispatch(setDoingFileAction(false));
       } else {
@@ -339,20 +326,17 @@ export const useNodeActionsHandler = ({
 
         dispatch(setDoingFileAction(true));
         addInvalidFileNodes(node.uid);
-        await callFileApi(
-          {
-            projectContext: project.context,
-            action: "create",
-            fileTree,
-            fileHandlers,
-            parentUid: node.parentUid as TNodeUid,
-            name,
-            kind: node.isEntity ? "file" : "directory",
-          },
-          () => {
+        await FileActions.create({
+          projectContext: project.context,
+          fileTree,
+          fileHandlers,
+          parentUid: node.parentUid as TNodeUid,
+          name,
+          kind: node.isEntity ? "file" : "directory",
+          fb: () => {
             LogAllow && console.error("error while creating file system");
           },
-          (done: boolean) => {
+          cb: (done: boolean) => {
             LogAllow &&
               console.log(done ? "successfully created" : "not created");
             // add to event history
@@ -362,7 +346,7 @@ export const useNodeActionsHandler = ({
             };
             dispatch(setFileAction(_fileAction));
           },
-        );
+        });
         removeInvalidFileNodes(node.uid);
         dispatch(setDoingFileAction(false));
       }
@@ -451,7 +435,7 @@ export const useNodeActionsHandler = ({
       if (hasChangedFile && !confirmAlert(FileChangeAlertMessage)) return;
       addRunningActions(["fileTreeView-move"]);
       addInvalidFileNodes(...validatedUids);
-      await callFileApi(
+      /* await FileActions(
         {
           projectContext: project.context,
           action: "move",
@@ -471,7 +455,7 @@ export const useNodeActionsHandler = ({
               allDone ? "all is successfully past" : "some is not past",
             );
         },
-      );
+      ); */
 
       /* if (_uids.some((result) => !result)) {
       // addMessage(movingError);
