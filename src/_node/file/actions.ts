@@ -20,8 +20,8 @@ const create = async ({
   parentUid: TNodeUid;
   name: string;
   kind: "file" | "directory";
-  fb: (...params: any[]) => void;
-  cb: (...params: any[]) => void;
+  fb?: (...params: any[]) => void;
+  cb?: (...params: any[]) => void;
 }) => {
   try {
     const done = await FileSystemApis[
@@ -51,8 +51,8 @@ const remove = async ({
   fileTree: TFileNodeTreeData;
   fileHandlers: TFileHandlerCollection;
   uids: TNodeUid[];
-  fb: (...params: any[]) => void;
-  cb: (...params: any[]) => void;
+  fb?: (...params: any[]) => void;
+  cb?: (...params: any[]) => void;
 }) => {
   try {
     let allDone = true;
@@ -90,8 +90,8 @@ const rename = async ({
   uids: TNodeUid[];
   parentUid: TNodeUid;
   newName: string;
-  fb: (...params: any[]) => void;
-  cb: (...params: any[]) => void;
+  fb?: (...params: any[]) => void;
+  cb?: (...params: any[]) => void;
 }) => {
   try {
     const done = await FileSystemApis[projectContext].moveSingleDirectoryOrFile(
