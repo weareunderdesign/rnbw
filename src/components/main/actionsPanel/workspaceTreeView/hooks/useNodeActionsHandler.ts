@@ -67,14 +67,8 @@ export const useNodeActionsHandler = ({
     addTemporaryFileNodes,
     removeTemporaryFileNodes,
     reloadCurrentProject,
+    setReloadCurrentProjectTrigger,
   } = useContext(MainContext);
-
-  // current project - reload trigger
-  const [reloadCurrentProjectTrigger, setReloadCurrentProjectTrigger] =
-    useState(false);
-  useEffect(() => {
-    reloadCurrentProject();
-  }, [reloadCurrentProjectTrigger]);
 
   // Add & Remove
   const onAdd = useCallback(
@@ -293,11 +287,11 @@ export const useNodeActionsHandler = ({
         if (!file) return;
         const fileData = file.data;
         if (fileData.changed && !confirmAlert(FileChangeAlertMessage)) return;
+
         const parentNode = fileTree[node.parentUid as TNodeUid];
         if (!parentNode) return;
-        const parentNodeData = parentNode.data;
         const name = node.isEntity ? `${newName}.${nodeData.ext}` : newName;
-        const path = _path.join(parentNodeData.path, name);
+        const newUid = _path.join(parentNode.uid, name);
 
         dispatch(setDoingFileAction(true));
         addInvalidFileNodes(node.uid);
@@ -320,7 +314,7 @@ export const useNodeActionsHandler = ({
             // add to event history
             const _fileAction: TFileAction = {
               action: "rename",
-              payload: { orgPath: nodeData.path, newPath: path },
+              payload: { orgUid: node.uid, newUid },
             };
             dispatch(setFileAction(_fileAction));
           },

@@ -77,6 +77,7 @@ export type TMainContext = {
     projectHandle?: FileSystemDirectoryHandle | null,
   ) => void;
   reloadCurrentProject: (action?: TFileAction) => void;
+  setReloadCurrentProjectTrigger: (v: boolean) => void;
 
   onUndo: () => void;
   onRedo: () => void;

@@ -114,7 +114,12 @@ export default function MainPage() {
     setRecentProjectHandlers,
     htmlReferenceData,
   });
-  const { importProject, closeNavigator, reloadCurrentProject } = useHandlers({
+  const {
+    importProject,
+    closeNavigator,
+    reloadCurrentProject,
+    setReloadCurrentProjectTrigger,
+  } = useHandlers({
     currentProjectFileHandle,
     setCurrentProjectFileHandle,
     setFileHandlers,
@@ -193,6 +198,7 @@ export default function MainPage() {
 
           importProject,
           reloadCurrentProject,
+          setReloadCurrentProjectTrigger,
 
           onUndo,
           onRedo,

@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { setMany } from "idb-keyval";
 import { useDispatch } from "react-redux";
@@ -185,6 +185,13 @@ export const useHandlers = ({
     },
     [osType, saveRecentProject],
   );
+
+  // current project - reload trigger
+  const [reloadCurrentProjectTrigger, setReloadCurrentProjectTrigger] =
+    useState(false);
+  useEffect(() => {
+    reloadCurrentProject();
+  }, [reloadCurrentProjectTrigger]);
   const reloadCurrentProject = useCallback(async () => {
     if (project.context === "local") {
       const {
@@ -245,13 +252,15 @@ export const useHandlers = ({
       dispatch(updateFileTreeViewState({ deletedUids: deletedUids }));
     }
   }, [project, osType, fileTree, currentFileUid]);
+
   const closeNavigator = useCallback(() => {
     navigatorDropdownType !== null && dispatch(setNavigatorDropdownType(null));
   }, [navigatorDropdownType]);
 
   return {
     importProject,
-    reloadCurrentProject,
     closeNavigator,
+    reloadCurrentProject,
+    setReloadCurrentProjectTrigger,
   };
 };
