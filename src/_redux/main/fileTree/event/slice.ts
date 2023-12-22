@@ -33,13 +33,9 @@ export const FileEventReducer = undoable(fileEventSlice.reducer, {
   clearHistoryType: FileTree_Event_ClearActionType,
 
   groupBy: (action, currentState, previousHistory) => {
-    console.log(previousHistory);
     if (action.type === "fileEvent/setFileAction") {
       const fileAction = action.payload as TFileAction;
-      if (!fileAction.action) {
-        console.log(previousHistory.index);
-        return "null";
-      }
+      if (!fileAction.action) return "null";
     }
     return null;
   },
