@@ -4,32 +4,42 @@ import React, {
   useEffect,
   useMemo,
   useRef,
-} from "react";
+} from 'react';
 
-import cx from "classnames";
-import { debounce } from "lodash";
-import { DraggingPositionItem } from "react-complex-tree";
-import { useDispatch } from "react-redux";
+import cx from 'classnames';
+import { debounce } from 'lodash';
+import { DraggingPositionItem } from 'react-complex-tree';
+import { useDispatch } from 'react-redux';
 
-import { SVGIconI, SVGIconII, TreeView } from "@_components/common";
-import { getNormalizedPath, TFileNodeData } from "@_node/file";
-import { _path } from "@_node/file/nohostApis";
-import { TNode, TNodeUid } from "@_node/types";
-import { MainContext } from "@_redux/main";
-import { setHoveredFileUid } from "@_redux/main/fileTree";
-import { FileTree_Event_ClearActionType } from "@_redux/main/fileTree/event";
-import { setActivePanel } from "@_redux/main/processor";
-import { useAppState } from "@_redux/useAppState";
-import { generateQuerySelector } from "@_services/main";
-import { TFilesReference } from "@_types/main";
+import {
+  SVGIconI,
+  SVGIconII,
+  TreeView,
+} from '@_components/common';
+import {
+  getNormalizedPath,
+  TFileNodeData,
+} from '@_node/file';
+import { _path } from '@_node/file/nohostApis';
+import {
+  TNode,
+  TNodeUid,
+} from '@_node/types';
+import { MainContext } from '@_redux/main';
+import { setHoveredFileUid } from '@_redux/main/fileTree';
+import { FileTree_Event_ClearActionType } from '@_redux/main/fileTree/event';
+import { setActivePanel } from '@_redux/main/processor';
+import { useAppState } from '@_redux/useAppState';
+import { generateQuerySelector } from '@_services/main';
+import { TFilesReference } from '@_types/main';
 
 import {
   useCmdk,
+  useDefaultFileCreate,
   useNodeActionsHandler,
   useNodeViewState,
   useSync,
-  useDefaultFileCreate,
-} from "./hooks";
+} from './hooks';
 
 const AutoExpandDelayOnDnD = 1 * 1000;
 export default function WorkspaceTreeView() {
@@ -71,9 +81,6 @@ export default function WorkspaceTreeView() {
     invalidFileNodes,
     addInvalidFileNodes,
     removeInvalidFileNodes,
-    temporaryFileNodes,
-    addTemporaryFileNodes,
-    removeTemporaryFileNodes,
   } = useContext(MainContext);
 
   const { focusedItemRef, fileTreeViewData } = useSync();

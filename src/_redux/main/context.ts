@@ -38,9 +38,6 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   invalidFileNodes: {},
   addInvalidFileNodes: () => {},
   removeInvalidFileNodes: () => {},
-  temporaryFileNodes: {},
-  addTemporaryFileNodes: () => {},
-  removeTemporaryFileNodes: () => {},
 
   importProject: () => {},
   reloadCurrentProject: () => {},

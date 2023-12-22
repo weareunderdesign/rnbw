@@ -1,16 +1,19 @@
-import { useCallback, useContext } from "react";
+import {
+  useCallback,
+  useContext,
+} from 'react';
 
-import { TreeItem } from "react-complex-tree";
-import { useDispatch } from "react-redux";
+import { TreeItem } from 'react-complex-tree';
+import { useDispatch } from 'react-redux';
 
-import { LogAllow } from "@_constants/global";
+import { LogAllow } from '@_constants/global';
 import {
   FileChangeAlertMessage,
   RednerableFileTypes,
   RootNodeUid,
   TmpFileNodeUidWhenAddNew,
-} from "@_constants/main";
-import { callFileApi } from "@_node/apis";
+} from '@_constants/main';
+import { callFileApi } from '@_node/apis';
 import {
   _createIDBDirectory,
   _path,
@@ -18,11 +21,15 @@ import {
   confirmAlert,
   TFileNodeData,
   TFileNodeTreeData,
-} from "@_node/file";
-import { getValidNodeUids } from "@_node/helpers";
-import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
-import { clearFileSession } from "@_pages/main/helper";
-import { MainContext } from "@_redux/main";
+} from '@_node/file';
+import { getValidNodeUids } from '@_node/helpers';
+import {
+  TNode,
+  TNodeTreeData,
+  TNodeUid,
+} from '@_node/types';
+import { clearFileSession } from '@_pages/main/helper';
+import { MainContext } from '@_redux/main';
 import {
   expandFileTreeNodes,
   setCurrentFileUid,
@@ -31,10 +38,10 @@ import {
   setFileTree,
   setPrevRenderableFileUid,
   TFileAction,
-} from "@_redux/main/fileTree";
-import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
-import { setShowCodeView } from "@_redux/main/processor";
-import { useAppState } from "@_redux/useAppState";
+} from '@_redux/main/fileTree';
+import { setCurrentFileContent } from '@_redux/main/nodeTree/event';
+import { setShowCodeView } from '@_redux/main/processor';
+import { useAppState } from '@_redux/useAppState';
 
 interface IUseNodeActionsHandler {
   openFileUid: React.MutableRefObject<string>;
@@ -62,9 +69,6 @@ export const useNodeActionsHandler = ({
     invalidFileNodes,
     addInvalidFileNodes,
     removeInvalidFileNodes,
-    temporaryFileNodes,
-    addTemporaryFileNodes,
-    removeTemporaryFileNodes,
     reloadCurrentProject,
     triggerCurrentProjectReload,
   } = useContext(MainContext);
