@@ -1,9 +1,5 @@
 import JSZip from "jszip";
 
-import { TOsType } from "@_redux/global";
-import { TFileActionType, TProjectContext } from "@_redux/main/fileTree";
-import { TClipboardData } from "@_redux/main/processor";
-
 import { TBasicNodeData, TNode, TNodeTreeData, TNodeUid } from "../";
 
 export type TFileNode = TNode & {
@@ -71,68 +67,6 @@ export type TLocalProjectLoaderBaseResponse = {
   deletedUids: TNodeUid[];
   deletedUidsObj: { [uid: TNodeUid]: true };
 };
-
-export type TFileApiPayloadBase = {
-  projectContext: TProjectContext;
-  action: TFileActionType;
-  fileTree: TFileNodeTreeData;
-  fileHandlers: TFileHandlerCollection;
-  osType?: TOsType;
-};
-export type TFileApiPayload = TFileApiPayloadBase &
-  (
-    | {
-        action: Extract<TFileActionType, "create" | "rename">;
-        parentUid: TNodeUid;
-        name: string;
-      }
-    | {
-        action: Exclude<TFileActionType, "create" | "rename">;
-        parentUid?: never;
-        name?: never;
-      }
-  ) &
-  (
-    | {
-        action: Extract<TFileActionType, "create">;
-        kind: "file" | "directory";
-      }
-    | {
-        action: Exclude<TFileActionType, "create">;
-        kind?: never;
-      }
-  ) &
-  (
-    | {
-        action: Extract<
-          TFileActionType,
-          "remove" | "cut" | "copy" | "move" | "rename"
-        >;
-        uids: TNodeUid[];
-      }
-    | {
-        action: Exclude<
-          TFileActionType,
-          "remove" | "cut" | "copy" | "move" | "rename"
-        >;
-        uids?: never;
-      }
-  ) &
-  (
-    | {
-        action: Extract<TFileActionType, "move">;
-        clipboardData: TClipboardData | null;
-      }
-    | { action: Exclude<TFileActionType, "move">; clipboardData?: never }
-  ) &
-  (
-    | {
-        action: Extract<TFileActionType, "move">;
-        targetNode: TFileNode;
-      }
-    | { action: Exclude<TFileActionType, "move">; targetNode?: never }
-  );
-
 export type TZipFileInfo = {
   path: string;
   zip: JSZip | null | undefined;
