@@ -47,7 +47,6 @@ export const useNodeActionsHandler = ({
     project,
     currentFileUid,
     fileTree,
-    osType,
     showCodeView,
     fFocusedItem: focusedItem,
     fExpandedItemsObj: expandedItemsObj,
@@ -136,13 +135,19 @@ export const useNodeActionsHandler = ({
           console.log(
             allDone ? "all is successfully removed" : "some is not removed",
           );
+        // add to event history
+        const _fileAction: TFileAction = {
+          action: "remove",
+          payload: { uids },
+        };
+        dispatch(setFileAction(_fileAction));
       },
     );
     removeInvalidFileNodes(...uids);
     dispatch(setDoingFileAction(false));
 
     // reload the current project
-    setReloadCurrentProjectTrigger(true);
+    setReloadCurrentProjectTrigger((prev) => !prev);
   }, [
     selectedItems,
     invalidFileNodes,
@@ -325,9 +330,8 @@ export const useNodeActionsHandler = ({
         // create a new file/directory
         const parentNode = fileTree[node.parentUid as TNodeUid];
         if (!parentNode) return;
-        const parentNodeData = parentNode.data;
         const name = node.isEntity ? `${newName}.${nodeData.ext}` : newName;
-        const path = _path.join(parentNodeData.path, name);
+        const newUid = _path.join(parentNode.uid, name);
 
         dispatch(setDoingFileAction(true));
         addInvalidFileNodes(node.uid);
@@ -350,7 +354,7 @@ export const useNodeActionsHandler = ({
             // add to event history
             const _fileAction: TFileAction = {
               action: "create",
-              payload: { path },
+              payload: { uids: [newUid] },
             };
             dispatch(setFileAction(_fileAction));
           },
@@ -360,14 +364,14 @@ export const useNodeActionsHandler = ({
       }
 
       // reload the current project
-      setReloadCurrentProjectTrigger(true);
+      setReloadCurrentProjectTrigger((prev) => !prev);
     },
     [
       addInvalidFileNodes,
       removeInvalidFileNodes,
+      project,
       fileTree,
       fileHandlers,
-      osType,
     ],
   );
   const cb_readNode = useCallback(

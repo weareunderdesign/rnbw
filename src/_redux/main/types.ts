@@ -77,7 +77,7 @@ export type TMainContext = {
     projectHandle?: FileSystemDirectoryHandle | null,
   ) => void;
   reloadCurrentProject: (action?: TFileAction) => void;
-  setReloadCurrentProjectTrigger: (v: boolean) => void;
+  setReloadCurrentProjectTrigger: (v: React.SetStateAction<boolean>) => void;
 
   onUndo: () => void;
   onRedo: () => void;
