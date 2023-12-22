@@ -3,18 +3,20 @@ import { useContext, useEffect, useRef } from "react";
 import morphdom from "morphdom";
 import { useDispatch } from "react-redux";
 
+import { getNodeUidByCodeSelection } from "@_components/main/codeView";
 import { markSelectedElements } from "@_components/main/stageView/iFrame/helpers";
 import { LogAllow } from "@_constants/global";
 import {
+  _writeIDBFile,
   parseFile,
   PreserveRnbwNode,
   StageNodeIdAttr,
-  _writeIDBFile,
 } from "@_node/file";
 import { getNodeUidsFromPaths } from "@_node/helpers";
 import { TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { setCurrentCommand } from "@_redux/main/cmdk";
+import { setEditingNodeUidInCodeView } from "@_redux/main/codeView";
 import {
   setDoingFileAction,
   setFileTreeNodes,
@@ -43,8 +45,6 @@ import {
   getValidNodeTree,
   markChangedFolders,
 } from "../helpers";
-import { getNodeUidByCodeSelection } from "@_components/main/codeView";
-import { setEditingNodeUidInCodeView } from "@_redux/main/codeView";
 
 export const useNodeTreeEvent = () => {
   const dispatch = useDispatch();

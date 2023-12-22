@@ -112,3 +112,7 @@ export const getIndexHtmlContent = () => {
   const indexHtmlContent = doctype + html;
   return indexHtmlContent;
 };
+export const getFullnameFromUid = (uid: TNodeUid): string => {
+  const uidArr = uid.split(_path.sep);
+  return uidArr.pop() || "";
+};

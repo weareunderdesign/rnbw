@@ -2,26 +2,13 @@ import { TOsType, TTheme } from "@_redux/global";
 
 export const isChromeOrEdge = (): boolean => {
   const userAgent = navigator.userAgent;
-
   if (userAgent.indexOf("Chrome") > -1) {
     return true;
   } else if (userAgent.indexOf("Edg") > -1) {
     return true;
   }
-
   return false;
 };
-
-export const getLineBreaker = (osType: TOsType): string => {
-  return osType === "Windows"
-    ? "\n"
-    : osType === "Mac"
-    ? "\n"
-    : osType === "Linux"
-    ? "\n"
-    : "";
-};
-
 export const getCommandKey = (
   e: KeyboardEvent | MouseEvent | React.MouseEvent,
   osType: TOsType,
@@ -34,7 +21,6 @@ export const getCommandKey = (
     ? e.ctrlKey
     : false;
 };
-
 export const getSystemTheme = (): TTheme => {
   if (
     window.matchMedia &&

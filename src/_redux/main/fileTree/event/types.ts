@@ -1,19 +1,21 @@
+import { TNodeUid } from "@_node/types";
+
 export type TFileEventReducerState = {
   fileAction: TFileAction;
 };
 
 export type TFileAction = { action: TFileActionType } & (
   | {
-      action: Extract<TFileActionType, "create">;
+      action: Extract<TFileActionType, "create" | "remove">;
       payload: {
-        path: string;
+        uids: TNodeUid[];
       };
     }
   | {
       action: Extract<TFileActionType, "rename">;
       payload: {
-        orgPath: string;
-        newPath: string;
+        orgUid: string;
+        newUid: string;
       };
     }
   | {

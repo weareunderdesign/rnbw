@@ -1,92 +1,172 @@
-import { useEffect } from "react";
+import { useCallback, useContext, useEffect, useRef } from "react";
 
+import { useDispatch } from "react-redux";
+
+import { LogAllow } from "@_constants/global";
+import { FileChangeAlertMessage } from "@_constants/main";
+import { callFileApi } from "@_node/apis";
+import { _path, confirmAlert, getFullnameFromUid } from "@_node/index";
+import { TNodeUid } from "@_node/types";
+import { MainContext } from "@_redux/main";
+import {
+  FileTree_Event_RedoActionType,
+  FileTree_Event_UndoActionType,
+  setDoingFileAction,
+  setFileAction,
+  TFileAction,
+} from "@_redux/main/fileTree";
 import { useAppState } from "@_redux/useAppState";
 
 export const useFileTreeEvent = () => {
-  const { fileAction, fileEventFutureLength } = useAppState();
+  const dispatch = useDispatch();
+  const {
+    project,
+    fileTree,
+    fileAction,
+    lastFileAction,
+    fileEventPastLength,
+    didUndo,
+    didRedo,
+  } = useAppState();
+  const {
+    fileHandlers,
+    addInvalidFileNodes,
+    removeInvalidFileNodes,
+    triggerCurrentProjectReload,
+  } = useContext(MainContext);
 
-  // file event hms
+  const clearFutureHistoryTriggerRef = useRef(false);
+  const lastFileActionRef = useRef<TFileAction>({ action: null });
   useEffect(() => {
-    // reset fileAction in the new history
-    /* fileEventFutureLength === 0 &&
-      fileAction.type !== null &&
-      dispatch(setFileAction({ type: null })); */
-  }, [fileEventFutureLength]);
+    if (clearFutureHistoryTriggerRef.current) {
+      // remove invalid history events after `remove` action
+      clearFutureHistoryTriggerRef.current = false;
+      dispatch(setFileAction({ ...lastFileActionRef.current }));
+    }
 
-  useEffect(() => {
-    console.log({ fileAction });
+    if (didRedo) {
+      const { action, payload } = fileAction;
+      if (action === "create") {
+        // _create({ ...payload });
+      } else if (action === "remove") {
+        // _remove({ ...payload });
+      } else if (action === "rename") {
+        _rename({ ...payload });
+      }
+    }
   }, [fileAction]);
-
-  // isHms === true ? undo : redo
-  /* if (didUndo) {
-      const { type, param1, param2 } = fileAction;
-      if (type === "create") {
-        _delete([param1]);
-      } else if (type === "rename") {
-        const { parentUid } = param1;
-        const { orgName, newName } = param2;
-        const currentUid = `${parentUid}/${newName}`;
-        (async () => {
-          addTemporaryNodes(currentUid);
-          await _rename(currentUid, orgName);
-          removeTemporaryNodes(currentUid);
-        })();
-      } else if (type === "cut") {
-        const _uids: { uid: TNodeUid; parentUid: TNodeUid; name: string }[] =
-          param1;
-        const _targetUids: TNodeUid[] = param2;
-
-        const uids: TNodeUid[] = [];
-        const targetUids: TNodeUid[] = [];
-
-        _targetUids.map((targetUid, index) => {
-          const { uid, parentUid, name } = _uids[index];
-          uids.push(`${targetUid}/${name}`);
-          targetUids.push(parentUid);
-        });
-        _cut(uids, targetUids);
-      } else if (type === "copy") {
-        const _uids: { uid: TNodeUid; name: string }[] = param1;
-        const _targetUids: TNodeUid[] = param2;
-
-        const uids: TNodeUid[] = [];
-        _targetUids.map((targetUid, index) => {
-          const { name } = _uids[index];
-          uids.push(`${targetUid}/${name}`);
-        });
-        _delete(uids);
-      } else if (type === "remove") {
+  useEffect(() => {
+    if (didUndo) {
+      const { action, payload } = lastFileAction;
+      if (action === "create") {
+        _remove({ ...payload });
+        // clear future history events
+        if (fileEventPastLength) {
+          lastFileActionRef.current = { ...fileAction };
+          clearFutureHistoryTriggerRef.current = true;
+          dispatch({ type: FileTree_Event_UndoActionType });
+        } else {
+          dispatch(setFileAction({ ...fileAction }));
+        }
+      } else if (action === "remove") {
+        // not undoable
+      } else if (action === "rename") {
+        _rename({ orgUid: payload.newUid, newUid: payload.orgUid });
       }
-    } else {
-      const { type, param1, param2 } = lastFileAction;
-      if (type === "create") {
-        _create(param2);
-      } else if (type === "rename") {
-        const { uid } = param1;
-        const { newName } = param2;
-        (async () => {
-          addTemporaryNodes(uid);
-          await _rename(uid, newName);
-          removeTemporaryNodes(uid);
-        })();
-      } else if (type === "cut") {
-        const _uids: { uid: TNodeUid; name: string }[] = param1;
-        const targetUids: TNodeUid[] = param2;
+    }
+  }, [lastFileAction]);
 
-        const uids: TNodeUid[] = _uids.map((_uid) => _uid.uid);
-        _cut(uids, targetUids);
-      } else if (type === "copy") {
-        const _uids: { uid: TNodeUid; name: string }[] = param1;
-        const targetUids: TNodeUid[] = param2;
-
-        const uids: TNodeUid[] = [];
-        const names: string[] = [];
-        _uids.map((_uid) => {
-          uids.push(_uid.uid);
-          names.push(_uid.name);
-        });
-        _copy(uids, names, targetUids);
-      } else if (type === "remove") {
+  const _remove = useCallback(
+    async ({ uids }: { uids: TNodeUid[] }) => {
+      const message = `Are you sure you want to delete them? This action cannot be undone!`;
+      if (!window.confirm(message)) {
+        didRedo && dispatch({ type: FileTree_Event_UndoActionType });
+        didUndo && dispatch({ type: FileTree_Event_RedoActionType });
+        return;
       }
-    } */
+
+      dispatch(setDoingFileAction(true));
+      addInvalidFileNodes(...uids);
+      await callFileApi(
+        {
+          projectContext: project.context,
+          action: "remove",
+          fileTree,
+          fileHandlers,
+          uids,
+        },
+        () => {
+          LogAllow && console.error("error while removing file system");
+        },
+        (allDone: boolean) => {
+          LogAllow &&
+            console.log(
+              allDone ? "all is successfully removed" : "some is not removed",
+            );
+        },
+      );
+      removeInvalidFileNodes(...uids);
+      dispatch(setDoingFileAction(false));
+
+      // reload the current project
+      triggerCurrentProjectReload();
+    },
+    [
+      didRedo,
+      didUndo,
+      addInvalidFileNodes,
+      removeInvalidFileNodes,
+      project,
+      fileTree,
+      fileHandlers,
+    ],
+  );
+  const _rename = useCallback(
+    async ({ orgUid, newUid }: { orgUid: TNodeUid; newUid: TNodeUid }) => {
+      const node = fileTree[orgUid];
+      if (!node) return;
+      const nodeData = node.data;
+      if (nodeData.changed && !confirmAlert(FileChangeAlertMessage)) {
+        didRedo && dispatch({ type: FileTree_Event_UndoActionType });
+        didUndo && dispatch({ type: FileTree_Event_RedoActionType });
+        return;
+      }
+
+      const newName = getFullnameFromUid(newUid);
+      dispatch(setDoingFileAction(true));
+      addInvalidFileNodes(node.uid);
+      await callFileApi(
+        {
+          projectContext: project.context,
+          action: "rename",
+          fileTree,
+          fileHandlers,
+          uids: [node.uid],
+          parentUid: node.parentUid as TNodeUid,
+          name: newName,
+        },
+        () => {
+          LogAllow && console.error("error while renaming file system");
+        },
+        (done: boolean) => {
+          LogAllow &&
+            console.log(done ? "successfully renamed" : "not renamed");
+        },
+      );
+      removeInvalidFileNodes(node.uid);
+      dispatch(setDoingFileAction(false));
+
+      // reload the current project
+      triggerCurrentProjectReload();
+    },
+    [
+      didRedo,
+      didUndo,
+      addInvalidFileNodes,
+      removeInvalidFileNodes,
+      project,
+      fileTree,
+      fileHandlers,
+    ],
+  );
 };

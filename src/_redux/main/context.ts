@@ -1,6 +1,9 @@
-import { Context, createContext } from "react";
+import {
+  Context,
+  createContext,
+} from 'react';
 
-import { TMainContext } from "./types";
+import { TMainContext } from './types';
 
 export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   addRunningActions: () => {},
@@ -32,8 +35,13 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   },
   setIsCodeTyping: () => {},
 
+  invalidFileNodes: {},
+  addInvalidFileNodes: () => {},
+  removeInvalidFileNodes: () => {},
+
   importProject: () => {},
   reloadCurrentProject: () => {},
+  triggerCurrentProjectReload: () => {},
 
   onUndo: () => {},
   onRedo: () => {},

@@ -1,30 +1,40 @@
-import React, { useEffect } from "react";
+import React, { useEffect } from 'react';
 
-import cx from "classnames";
-import { Command } from "cmdk";
-import { useDispatch } from "react-redux";
+import cx from 'classnames';
+import { Command } from 'cmdk';
+import { useDispatch } from 'react-redux';
 
-import { SVGIcon } from "@_components/common";
-import { ActionsPanel, CodeView, StageView } from "@_components/main";
-import { LogAllow } from "@_constants/global";
-import { AddActionPrefix, RenameActionPrefix } from "@_constants/main";
+import { SVGIcon } from '@_components/common';
+import {
+  ActionsPanel,
+  CodeView,
+  StageView,
+} from '@_components/main';
+import { LogAllow } from '@_constants/global';
+import {
+  AddActionPrefix,
+  RenameActionPrefix,
+} from '@_constants/main';
 import {
   confirmFileChanges,
   isUnsavedProject,
   TFileNodeData,
-} from "@_node/file";
-import { MainContext } from "@_redux/main";
+} from '@_node/file';
+import { MainContext } from '@_redux/main';
 import {
   setCmdkOpen,
   setCmdkPages,
   setCmdkSearchContent,
   setCurrentCommand,
-} from "@_redux/main/cmdk";
-import { setFileAction } from "@_redux/main/fileTree";
-import { useAppState } from "@_redux/useAppState";
-import { TCmdkContext, TCmdkKeyMap, TCmdkReference } from "@_types/main";
+} from '@_redux/main/cmdk';
+import { useAppState } from '@_redux/useAppState';
+import {
+  TCmdkContext,
+  TCmdkKeyMap,
+  TCmdkReference,
+} from '@_types/main';
 
-import { getCommandKey } from "../../services/global";
+import { getCommandKey } from '../../services/global';
 import {
   useCmdk,
   useCmdkModal,
@@ -32,13 +42,14 @@ import {
   useFileHandlers,
   useHandlers,
   useInit,
+  useInvalidFileNodes,
   usePanels,
   useRecentProjects,
   useReferenceData,
   useReferneces,
   useRunningActions,
-} from "./hooks";
-import Processor from "./processor";
+} from './hooks';
+import Processor from './processor';
 
 export default function MainPage() {
   // redux
@@ -46,26 +57,18 @@ export default function MainPage() {
   const {
     osType,
     theme,
-
     currentFileUid,
     fileTree,
-
-    fileAction,
-    fileEventFutureLength,
-
     activePanel,
-
     showActionsPanel,
-
     autoSave,
     cmdkOpen,
     cmdkPages,
     currentCmdkPage,
-
     cmdkSearchContent,
   } = useAppState();
 
-  // custom hooks
+  // get,set
   const { addRunningActions, removeRunningActions } = useRunningActions();
   const {
     projectHandlers,
@@ -85,6 +88,20 @@ export default function MainPage() {
   } = useRecentProjects();
   const { filesReferenceData, htmlReferenceData } = useReferenceData();
   const {
+    monacoEditorRef,
+    setMonacoEditorRef,
+    iframeRefRef,
+    setIframeRefRef,
+    isContentProgrammaticallyChanged,
+    setIsContentProgrammaticallyChanged,
+    isCodeTyping,
+    setIsCodeTyping,
+  } = useReferneces();
+  const { invalidFileNodes, addInvalidFileNodes, removeInvalidFileNodes } =
+    useInvalidFileNodes();
+
+  // hooks
+  const {
     cmdkReferenceData,
     cmdkReferenceJumpstart,
     cmdkReferenceActions,
@@ -94,21 +111,23 @@ export default function MainPage() {
   } = useCmdkReferenceData({
     addRunningActions,
     removeRunningActions,
-
     recentProjectContexts,
     recentProjectNames,
     recentProjectHandlers,
     setRecentProjectContexts,
     setRecentProjectNames,
     setRecentProjectHandlers,
-
     htmlReferenceData,
   });
-  const { importProject, closeNavigator, reloadCurrentProject } = useHandlers({
+  const {
+    importProject,
+    closeNavigator,
+    reloadCurrentProject,
+    triggerCurrentProjectReload,
+  } = useHandlers({
     currentProjectFileHandle,
     setCurrentProjectFileHandle,
     setFileHandlers,
-
     recentProjectContexts,
     recentProjectNames,
     recentProjectHandlers,
@@ -121,16 +140,6 @@ export default function MainPage() {
     importProject,
   });
   useInit({ importProject, onNew });
-  const {
-    monacoEditorRef,
-    setMonacoEditorRef,
-    iframeRefRef,
-    setIframeRefRef,
-    isContentProgrammaticallyChanged,
-    setIsContentProgrammaticallyChanged,
-    isCodeTyping,
-    setIsCodeTyping,
-  } = useReferneces();
   const { validMenuItemCount, hoveredMenuItemDescription } = useCmdkModal();
   const {
     actionsPanelOffsetTop,
@@ -185,8 +194,14 @@ export default function MainPage() {
           isCodeTyping,
           setIsCodeTyping,
 
+          invalidFileNodes,
+          addInvalidFileNodes,
+          removeInvalidFileNodes,
+
           importProject,
           reloadCurrentProject,
+          triggerCurrentProjectReload,
+
           onUndo,
           onRedo,
         }}

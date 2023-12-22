@@ -1,16 +1,19 @@
-import { MutableRefObject } from "react";
+import { MutableRefObject } from 'react';
 
-import { editor } from "monaco-editor";
+import { editor } from 'monaco-editor';
 
-import { TFileHandlerCollection, TFileNodeTreeData } from "@_node/file";
-import { TNodeUid } from "@_node/types";
+import { TFileHandlerCollection } from '@_node/file';
+import { TNodeUid } from '@_node/types';
 import {
   TCmdkReferenceData,
   TFilesReferenceData,
   THtmlReferenceData,
-} from "@_types/main";
+} from '@_types/main';
 
-import { TFileAction, TProjectContext } from "./fileTree";
+import {
+  TFileAction,
+  TProjectContext,
+} from './fileTree';
 
 export type TEventHistoryInfo = {
   future: number;
@@ -61,11 +64,18 @@ export type TMainContext = {
   isCodeTyping: React.RefObject<boolean>;
   setIsCodeTyping: (value: boolean) => void;
 
+  invalidFileNodes: {
+    [uid: TNodeUid]: true;
+  };
+  addInvalidFileNodes: (...uids: TNodeUid[]) => void;
+  removeInvalidFileNodes: (...uids: TNodeUid[]) => void;
+
   importProject: (
     fsType: TProjectContext,
     projectHandle?: FileSystemDirectoryHandle | null,
   ) => void;
   reloadCurrentProject: (action?: TFileAction) => void;
+  triggerCurrentProjectReload: () => void;
 
   onUndo: () => void;
   onRedo: () => void;

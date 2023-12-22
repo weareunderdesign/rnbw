@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useDispatch } from "react-redux";
 
@@ -9,8 +9,6 @@ import {
   setCurrentCmdkPage,
 } from "@_redux/main/cmdk";
 import { useAppState } from "@_redux/useAppState";
-import { debounce } from "lodash";
-import { ShortDelay } from "@_constants/main";
 
 export const useCmdkModal = () => {
   const dispatch = useDispatch();

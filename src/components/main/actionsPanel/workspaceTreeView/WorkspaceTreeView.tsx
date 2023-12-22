@@ -4,34 +4,42 @@ import React, {
   useEffect,
   useMemo,
   useRef,
-} from "react";
+} from 'react';
 
-import cx from "classnames";
-import { debounce } from "lodash";
-import { DraggingPositionItem } from "react-complex-tree";
-import { useDispatch } from "react-redux";
+import cx from 'classnames';
+import { debounce } from 'lodash';
+import { DraggingPositionItem } from 'react-complex-tree';
+import { useDispatch } from 'react-redux';
 
-import { SVGIconI, SVGIconII, TreeView } from "@_components/common";
-import { getNormalizedPath, TFileNodeData } from "@_node/file";
-import { _path } from "@_node/file/nohostApis";
-import { TNode, TNodeUid } from "@_node/types";
-import { MainContext } from "@_redux/main";
-import { setHoveredFileUid } from "@_redux/main/fileTree";
-import { FileTree_Event_ClearActionType } from "@_redux/main/fileTree/event";
-import { setActivePanel } from "@_redux/main/processor";
-import { useAppState } from "@_redux/useAppState";
-import { generateQuerySelector } from "@_services/main";
-import { TFilesReference } from "@_types/main";
+import {
+  SVGIconI,
+  SVGIconII,
+  TreeView,
+} from '@_components/common';
+import {
+  getNormalizedPath,
+  TFileNodeData,
+} from '@_node/file';
+import { _path } from '@_node/file/nohostApis';
+import {
+  TNode,
+  TNodeUid,
+} from '@_node/types';
+import { MainContext } from '@_redux/main';
+import { setHoveredFileUid } from '@_redux/main/fileTree';
+import { FileTree_Event_ClearActionType } from '@_redux/main/fileTree/event';
+import { setActivePanel } from '@_redux/main/processor';
+import { useAppState } from '@_redux/useAppState';
+import { generateQuerySelector } from '@_services/main';
+import { TFilesReference } from '@_types/main';
 
 import {
   useCmdk,
-  useInvalidNodes,
+  useDefaultFileCreate,
   useNodeActionsHandler,
   useNodeViewState,
   useSync,
-  useTemporaryNodes,
-} from "./hooks";
-import { useDefaultFileCreate } from "./hooks/useDefaultFile";
+} from './hooks';
 
 const AutoExpandDelayOnDnD = 1 * 1000;
 export default function WorkspaceTreeView() {
@@ -66,19 +74,18 @@ export default function WorkspaceTreeView() {
     didRedo,
     currentCommand,
   } = useAppState();
-  const { addRunningActions, removeRunningActions, filesReferenceData } =
-    useContext(MainContext);
+  const {
+    addRunningActions,
+    removeRunningActions,
+    filesReferenceData,
+    invalidFileNodes,
+    addInvalidFileNodes,
+    removeInvalidFileNodes,
+  } = useContext(MainContext);
 
-  // invalid - can't do any actions on the nodes
-  const { invalidNodes, addInvalidNodes, removeInvalidNodes } =
-    useInvalidNodes();
-  // temporary - don't display the nodes
-  const { temporaryNodes, addTemporaryNodes, removeTemporaryNodes } =
-    useTemporaryNodes();
   const { focusedItemRef, fileTreeViewData } = useSync();
-
   const { cb_focusNode, cb_selectNode, cb_expandNode, cb_collapseNode } =
-    useNodeViewState({ invalidNodes });
+    useNodeViewState({ invalidFileNodes });
   const openFileUid = useRef<TNodeUid>("");
   const {
     cb_startRenamingNode,
@@ -87,21 +94,9 @@ export default function WorkspaceTreeView() {
     cb_moveNode,
     cb_readNode,
   } = useNodeActionsHandler({
-    invalidNodes,
-    addInvalidNodes,
-    removeInvalidNodes,
-    temporaryNodes,
-    addTemporaryNodes,
-    removeTemporaryNodes,
     openFileUid,
   });
   useCmdk({
-    invalidNodes,
-    addInvalidNodes,
-    removeInvalidNodes,
-    temporaryNodes,
-    addTemporaryNodes,
-    removeTemporaryNodes,
     openFileUid,
   });
   useDefaultFileCreate();
@@ -233,21 +228,6 @@ export default function WorkspaceTreeView() {
                     return;
                   }
 
-                  addRunningActions(["fileTreeView-select"]);
-                  !props.context.isFocused &&
-                    addRunningActions(["fileTreeView-focus"]);
-                  !e.shiftKey &&
-                    !e.ctrlKey &&
-                    addRunningActions(
-                      props.item.isFolder
-                        ? [
-                            props.context.isExpanded
-                              ? "fileTreeView-collapse"
-                              : "fileTreeView-expand",
-                          ]
-                        : ["fileTreeView-read"],
-                    );
-
                   if (!props.context.isFocused) {
                     props.context.focusItem();
                     focusedItemRef.current = props.item.index as TNodeUid;
@@ -325,7 +305,7 @@ export default function WorkspaceTreeView() {
                         props.context.isDraggingOver && "outline",
                         props.context.isDraggingOverParent && "",
 
-                        invalidNodes[props.item.data.uid] && "opacity-m",
+                        invalidFileNodes[props.item.data.uid] && "opacity-m",
                       )}
                       style={{
                         flexWrap: "nowrap",
@@ -523,10 +503,10 @@ export default function WorkspaceTreeView() {
             onDrop: (items, target) => {
               const targetUid = (target as DraggingPositionItem)
                 .targetItem as TNodeUid;
-              if (invalidNodes[targetUid]) return;
+              if (invalidFileNodes[targetUid]) return;
               const uids = items
                 .map((item) => item.index as TNodeUid)
-                .filter((uid) => !invalidNodes[uid]);
+                .filter((uid) => !invalidFileNodes[uid]);
               if (uids.length === 0) return;
 
               cb_moveNode(uids, targetUid);

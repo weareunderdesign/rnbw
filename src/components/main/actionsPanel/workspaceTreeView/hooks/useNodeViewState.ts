@@ -13,11 +13,11 @@ import {
 import { useAppState } from "@_redux/useAppState";
 
 interface IUseNodeViewState {
-  invalidNodes: {
+  invalidFileNodes: {
     [uid: string]: true;
   };
 }
-export const useNodeViewState = ({ invalidNodes }: IUseNodeViewState) => {
+export const useNodeViewState = ({ invalidFileNodes }: IUseNodeViewState) => {
   const dispatch = useDispatch();
   const {
     fileTree,
@@ -29,16 +29,17 @@ export const useNodeViewState = ({ invalidNodes }: IUseNodeViewState) => {
 
   const cb_focusNode = useCallback(
     (uid: TNodeUid) => {
-      if (invalidNodes[uid] || focusedItem === uid || !fileTree[uid]) return;
+      if (invalidFileNodes[uid] || focusedItem === uid || !fileTree[uid])
+        return;
 
       dispatch(focusFileTreeNode(uid));
     },
-    [invalidNodes, focusedItem, fileTree],
+    [invalidFileNodes, focusedItem, fileTree],
   );
   const cb_selectNode = useCallback(
     (uids: TNodeUid[]) => {
       let _uids = [...uids];
-      _uids = _uids.filter((_uid) => !invalidNodes[_uid] && fileTree[_uid]);
+      _uids = _uids.filter((_uid) => !invalidFileNodes[_uid] && fileTree[_uid]);
       if (_uids.length === 0) return;
 
       _uids = getValidNodeUids(fileTree, _uids);
@@ -55,12 +56,12 @@ export const useNodeViewState = ({ invalidNodes }: IUseNodeViewState) => {
 
       dispatch(selectFileTreeNodes(_uids));
     },
-    [invalidNodes, fileTree, selectedItems, selectedItemsObj],
+    [invalidFileNodes, fileTree, selectedItems, selectedItemsObj],
   );
   const cb_expandNode = useCallback(
     (uid: TNodeUid) => {
       if (
-        invalidNodes[uid] ||
+        invalidFileNodes[uid] ||
         !fileTree[uid] ||
         fileTree[uid].isEntity ||
         expandedItemsObj[uid]
@@ -69,12 +70,12 @@ export const useNodeViewState = ({ invalidNodes }: IUseNodeViewState) => {
 
       dispatch(expandFileTreeNodes([uid]));
     },
-    [invalidNodes, fileTree, expandedItemsObj],
+    [invalidFileNodes, fileTree, expandedItemsObj],
   );
   const cb_collapseNode = useCallback(
     (uid: TNodeUid) => {
       if (
-        invalidNodes[uid] ||
+        invalidFileNodes[uid] ||
         !fileTree[uid] ||
         fileTree[uid].isEntity ||
         !expandedItemsObj[uid]
@@ -83,7 +84,7 @@ export const useNodeViewState = ({ invalidNodes }: IUseNodeViewState) => {
 
       dispatch(collapseFileTreeNodes([uid]));
     },
-    [invalidNodes, fileTree, expandedItemsObj],
+    [invalidFileNodes, fileTree, expandedItemsObj],
   );
 
   return {

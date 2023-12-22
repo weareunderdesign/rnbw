@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { setMany } from "idb-keyval";
 import { useDispatch } from "react-redux";
@@ -35,7 +35,6 @@ interface IUseHandlers {
     React.SetStateAction<FileSystemDirectoryHandle | null>
   >;
   setFileHandlers: React.Dispatch<React.SetStateAction<TFileHandlerCollection>>;
-
   recentProjectContexts: TProjectContext[];
   recentProjectNames: string[];
   recentProjectHandlers: (FileSystemDirectoryHandle | null)[];
@@ -51,7 +50,6 @@ export const useHandlers = ({
   currentProjectFileHandle,
   setCurrentProjectFileHandle,
   setFileHandlers,
-
   recentProjectContexts,
   recentProjectNames,
   recentProjectHandlers,
@@ -187,6 +185,16 @@ export const useHandlers = ({
     },
     [osType, saveRecentProject],
   );
+
+  // current project - reload trigger
+  const [reloadCurrentProjectTrigger, setReloadCurrentProjectTrigger] =
+    useState(false);
+  const triggerCurrentProjectReload = useCallback(() => {
+    setReloadCurrentProjectTrigger((prev) => !prev);
+  }, []);
+  useEffect(() => {
+    reloadCurrentProject();
+  }, [reloadCurrentProjectTrigger]);
   const reloadCurrentProject = useCallback(async () => {
     if (project.context === "local") {
       const {
@@ -247,13 +255,15 @@ export const useHandlers = ({
       dispatch(updateFileTreeViewState({ deletedUids: deletedUids }));
     }
   }, [project, osType, fileTree, currentFileUid]);
+
   const closeNavigator = useCallback(() => {
     navigatorDropdownType !== null && dispatch(setNavigatorDropdownType(null));
   }, [navigatorDropdownType]);
 
   return {
     importProject,
-    reloadCurrentProject,
     closeNavigator,
+    reloadCurrentProject,
+    triggerCurrentProjectReload,
   };
 };

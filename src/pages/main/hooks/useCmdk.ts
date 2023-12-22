@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect } from "react";
 
 import { CustomDirectoryPickerOptions } from "file-system-access/lib/showDirectoryPicker";
 import { delMany } from "idb-keyval";
@@ -16,8 +16,9 @@ import { setCmdkPages, setCurrentCommand } from "@_redux/main/cmdk";
 import {
   FileTree_Event_RedoActionType,
   FileTree_Event_UndoActionType,
-  TProjectContext,
   setDoingFileAction,
+  setLastFileAction,
+  TProjectContext,
 } from "@_redux/main/fileTree";
 import {
   NodeTree_Event_RedoActionType,
@@ -51,6 +52,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     project,
     fileTree,
     doingFileAction,
+    fileAction,
     fileEventPastLength,
     fileEventFutureLength,
     nodeEventPastLength,
@@ -128,10 +130,11 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     if (doingAction || doingFileAction || iframeLoading) return;
 
     if (activePanel === "file") {
-      if (fileEventPastLength === 1) {
+      if (fileEventPastLength === 0) {
         LogAllow && console.log("Undo - FileTree - it is the origin state");
         return;
       }
+      dispatch(setLastFileAction({ ...fileAction }));
       dispatch({ type: FileTree_Event_UndoActionType });
     } else {
       if (nodeEventPastLength === 1) {
