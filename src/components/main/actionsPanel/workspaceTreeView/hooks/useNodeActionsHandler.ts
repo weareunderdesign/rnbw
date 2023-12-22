@@ -37,25 +37,9 @@ import { setShowCodeView } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 
 interface IUseNodeActionsHandler {
-  invalidNodes: {
-    [uid: string]: true;
-  };
-  addInvalidNodes: (...uids: string[]) => void;
-  removeInvalidNodes: (...uids: string[]) => void;
-  temporaryNodes: {
-    [uid: string]: true;
-  };
-  addTemporaryNodes: (...uids: string[]) => void;
-  removeTemporaryNodes: (...uids: string[]) => void;
   openFileUid: React.MutableRefObject<string>;
 }
 export const useNodeActionsHandler = ({
-  invalidNodes,
-  addInvalidNodes,
-  removeInvalidNodes,
-  temporaryNodes,
-  addTemporaryNodes,
-  removeTemporaryNodes,
   openFileUid,
 }: IUseNodeActionsHandler) => {
   const dispatch = useDispatch();
@@ -76,6 +60,12 @@ export const useNodeActionsHandler = ({
     removeRunningActions,
     fileHandlers,
     htmlReferenceData,
+    invalidFileNodes,
+    addInvalidFileNodes,
+    removeInvalidFileNodes,
+    temporaryFileNodes,
+    addTemporaryFileNodes,
+    removeTemporaryFileNodes,
     reloadCurrentProject,
   } = useContext(MainContext);
 
@@ -126,7 +116,7 @@ export const useNodeActionsHandler = ({
     [fileTree, focusedItem, expandedItemsObj],
   );
   const onRemove = useCallback(async () => {
-    const uids = selectedItems.filter((uid) => !invalidNodes[uid]);
+    const uids = selectedItems.filter((uid) => !invalidFileNodes[uid]);
     if (uids.length === 0) return;
 
     const message = `Are you sure you want to delete them? This action cannot be undone!`;
@@ -135,7 +125,7 @@ export const useNodeActionsHandler = ({
     }
 
     dispatch(setDoingFileAction(true));
-    addInvalidNodes(...uids);
+    addInvalidFileNodes(...uids);
     await callFileApi(
       {
         projectContext: project.context,
@@ -154,16 +144,16 @@ export const useNodeActionsHandler = ({
           );
       },
     );
-    removeInvalidNodes(...uids);
+    removeInvalidFileNodes(...uids);
     dispatch(setDoingFileAction(false));
 
     // reload the current project
     setReloadCurrentProjectTrigger(true);
   }, [
     selectedItems,
-    invalidNodes,
-    addInvalidNodes,
-    removeInvalidNodes,
+    invalidFileNodes,
+    addInvalidFileNodes,
+    removeInvalidFileNodes,
     project,
     fileTree,
     fileHandlers,
@@ -171,7 +161,7 @@ export const useNodeActionsHandler = ({
 
   // Cut & Copy & Paste & Duplicate
   const onCut = useCallback(async () => {
-    const uids = selectedItems.filter((uid) => !invalidNodes[uid]);
+    const uids = selectedItems.filter((uid) => !invalidFileNodes[uid]);
     if (uids.length === 0) return;
 
     /* await callFileApi(
@@ -192,7 +182,7 @@ export const useNodeActionsHandler = ({
   const onCopy = useCallback(() => {}, []);
   const onPaste = useCallback(() => {}, []);
   const onDuplicate = useCallback(async () => {
-    const uids = selectedItems.filter((uid) => !invalidNodes[uid]);
+    const uids = selectedItems.filter((uid) => !invalidFileNodes[uid]);
     if (uids.length === 0) return;
 
     let hasChangedFile = false;
@@ -217,7 +207,7 @@ export const useNodeActionsHandler = ({
 
     const _uids: { uid: TNodeUid; name: string }[] = [];
     const _targetUids: TNodeUid[] = [];
-    const _invalidNodes = { ...invalidNodes };
+    const _invalidFileNodes = { ...invalidFileNodes };
 
     let allDone = true;
     await Promise.all(
@@ -228,8 +218,8 @@ export const useNodeActionsHandler = ({
           fileTree,
           fileHandlers,
           () => {},
-          addInvalidNodes,
-          invalidNodes,
+          addInvalidFileNodes,
+          invalidFileNodes,
         );
         if (result) {
           _uids.push(result);
@@ -256,8 +246,8 @@ export const useNodeActionsHandler = ({
     addRunningActions,
     removeRunningActions,
     project.context,
-    invalidNodes,
-    addInvalidNodes,
+    invalidFileNodes,
+    addInvalidFileNodes,
     selectedItems,
     fileTree,
     fileHandlers,
@@ -267,13 +257,13 @@ export const useNodeActionsHandler = ({
   const cb_startRenamingNode = useCallback(
     (uid: TNodeUid) => {
       // validate
-      if (invalidNodes[uid]) {
-        removeInvalidNodes(uid);
+      if (invalidFileNodes[uid]) {
+        removeInvalidFileNodes(uid);
         return;
       }
-      addInvalidNodes(uid);
+      addInvalidFileNodes(uid);
     },
-    [invalidNodes, addInvalidNodes, removeInvalidNodes],
+    [invalidFileNodes, addInvalidFileNodes, removeInvalidFileNodes],
   );
   const cb_abortRenamingNode = useCallback(
     (item: TreeItem) => {
@@ -288,9 +278,9 @@ export const useNodeActionsHandler = ({
         delete _fileTree[item.data.uid];
         dispatch(setFileTree(_fileTree));
       }
-      removeInvalidNodes(node.uid);
+      removeInvalidFileNodes(node.uid);
     },
-    [fileTree, removeInvalidNodes],
+    [fileTree, removeInvalidFileNodes],
   );
   const cb_renameNode = useCallback(
     async (item: TreeItem, newName: string) => {
@@ -310,7 +300,7 @@ export const useNodeActionsHandler = ({
         const path = _path.join(parentNodeData.path, name);
 
         dispatch(setDoingFileAction(true));
-        addInvalidNodes(node.uid);
+        addInvalidFileNodes(node.uid);
         await callFileApi(
           {
             projectContext: project.context,
@@ -335,7 +325,7 @@ export const useNodeActionsHandler = ({
             dispatch(setFileAction(_fileAction));
           },
         );
-        removeInvalidNodes(node.uid);
+        removeInvalidFileNodes(node.uid);
         dispatch(setDoingFileAction(false));
       } else {
         // create a new file/directory
@@ -346,7 +336,7 @@ export const useNodeActionsHandler = ({
         const path = _path.join(parentNodeData.path, name);
 
         dispatch(setDoingFileAction(true));
-        addInvalidNodes(node.uid);
+        addInvalidFileNodes(node.uid);
         await callFileApi(
           {
             projectContext: project.context,
@@ -371,21 +361,27 @@ export const useNodeActionsHandler = ({
             dispatch(setFileAction(_fileAction));
           },
         );
-        removeInvalidNodes(node.uid);
+        removeInvalidFileNodes(node.uid);
         dispatch(setDoingFileAction(false));
       }
 
       // reload the current project
       setReloadCurrentProjectTrigger(true);
     },
-    [addInvalidNodes, removeInvalidNodes, fileTree, fileHandlers, osType],
+    [
+      addInvalidFileNodes,
+      removeInvalidFileNodes,
+      fileTree,
+      fileHandlers,
+      osType,
+    ],
   );
   const cb_readNode = useCallback(
     (uid: TNodeUid) => {
       addRunningActions(["fileTreeView-read"]);
 
       // validate
-      if (invalidNodes[uid]) {
+      if (invalidFileNodes[uid]) {
         removeRunningActions(["fileTreeView-read"]);
         return;
       }
@@ -427,7 +423,7 @@ export const useNodeActionsHandler = ({
     [
       addRunningActions,
       removeRunningActions,
-      invalidNodes,
+      invalidFileNodes,
       fileTree,
       currentFileUid,
       showCodeView,
@@ -452,7 +448,7 @@ export const useNodeActionsHandler = ({
       });
       if (hasChangedFile && !confirmAlert(FileChangeAlertMessage)) return;
       addRunningActions(["fileTreeView-move"]);
-      addInvalidNodes(...validatedUids);
+      addInvalidFileNodes(...validatedUids);
       await callFileApi(
         {
           projectContext: project.context,
@@ -492,8 +488,8 @@ export const useNodeActionsHandler = ({
       addRunningActions,
       removeRunningActions,
       project.context,
-      invalidNodes,
-      addInvalidNodes,
+      invalidFileNodes,
+      addInvalidFileNodes,
       fileTree,
       fileHandlers,
     ],

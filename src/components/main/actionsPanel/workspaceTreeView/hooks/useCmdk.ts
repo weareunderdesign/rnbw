@@ -7,36 +7,12 @@ import { useAppState } from "@_redux/useAppState";
 import { useNodeActionsHandler } from "./useNodeActionsHandler";
 
 interface IUseCmdk {
-  invalidNodes: {
-    [uid: string]: true;
-  };
-  addInvalidNodes: (...uids: string[]) => void;
-  removeInvalidNodes: (...uids: string[]) => void;
-  temporaryNodes: {
-    [uid: string]: true;
-  };
-  addTemporaryNodes: (...uids: string[]) => void;
-  removeTemporaryNodes: (...uids: string[]) => void;
   openFileUid: React.MutableRefObject<string>;
 }
-export const useCmdk = ({
-  invalidNodes,
-  addInvalidNodes,
-  removeInvalidNodes,
-  temporaryNodes,
-  addTemporaryNodes,
-  removeTemporaryNodes,
-  openFileUid,
-}: IUseCmdk) => {
+export const useCmdk = ({ openFileUid }: IUseCmdk) => {
   const { activePanel, currentCommand } = useAppState();
 
   const { onAdd, onRemove } = useNodeActionsHandler({
-    invalidNodes,
-    addInvalidNodes,
-    removeInvalidNodes,
-    temporaryNodes,
-    addTemporaryNodes,
-    removeTemporaryNodes,
     openFileUid,
   });
 

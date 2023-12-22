@@ -32,6 +32,13 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   },
   setIsCodeTyping: () => {},
 
+  invalidFileNodes: {},
+  addInvalidFileNodes: () => {},
+  removeInvalidFileNodes: () => {},
+  temporaryFileNodes: {},
+  addTemporaryFileNodes: () => {},
+  removeTemporaryFileNodes: () => {},
+
   importProject: () => {},
   reloadCurrentProject: () => {},
 

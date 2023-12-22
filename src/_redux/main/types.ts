@@ -61,6 +61,17 @@ export type TMainContext = {
   isCodeTyping: React.RefObject<boolean>;
   setIsCodeTyping: (value: boolean) => void;
 
+  invalidFileNodes: {
+    [uid: TNodeUid]: true;
+  };
+  addInvalidFileNodes: (...uids: TNodeUid[]) => void;
+  removeInvalidFileNodes: (...uids: TNodeUid[]) => void;
+  temporaryFileNodes: {
+    [uid: TNodeUid]: true;
+  };
+  addTemporaryFileNodes: (...uids: TNodeUid[]) => void;
+  removeTemporaryFileNodes: (...uids: TNodeUid[]) => void;
+
   importProject: (
     fsType: TProjectContext,
     projectHandle?: FileSystemDirectoryHandle | null,

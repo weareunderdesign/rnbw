@@ -31,11 +31,13 @@ import {
   useFileHandlers,
   useHandlers,
   useInit,
+  useInvalidFileNodes,
   usePanels,
   useRecentProjects,
   useReferenceData,
   useReferneces,
   useRunningActions,
+  useTemporaryFileNodes,
 } from "./hooks";
 import Processor from "./processor";
 
@@ -85,6 +87,13 @@ export default function MainPage() {
     isCodeTyping,
     setIsCodeTyping,
   } = useReferneces();
+  const { invalidFileNodes, addInvalidFileNodes, removeInvalidFileNodes } =
+    useInvalidFileNodes(); // invalid - can't do any actions on the nodes
+  const {
+    temporaryFileNodes,
+    addTemporaryFileNodes,
+    removeTemporaryFileNodes,
+  } = useTemporaryFileNodes(); // temporary - don't display the nodes
 
   // hooks
   const {
@@ -175,8 +184,16 @@ export default function MainPage() {
           isCodeTyping,
           setIsCodeTyping,
 
+          invalidFileNodes,
+          addInvalidFileNodes,
+          removeInvalidFileNodes,
+          temporaryFileNodes,
+          addTemporaryFileNodes,
+          removeTemporaryFileNodes,
+
           importProject,
           reloadCurrentProject,
+
           onUndo,
           onRedo,
         }}
