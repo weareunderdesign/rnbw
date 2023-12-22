@@ -31,13 +31,3 @@ export const getSystemTheme = (): TTheme => {
     return "Light";
   }
 };
-// ---------------------------------
-export const getLineBreaker = (osType: TOsType): string => {
-  return osType === "Windows"
-    ? "\n"
-    : osType === "Mac"
-    ? "\n"
-    : osType === "Linux"
-    ? "\n"
-    : "";
-};

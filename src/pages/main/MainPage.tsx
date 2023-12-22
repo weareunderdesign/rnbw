@@ -88,12 +88,12 @@ export default function MainPage() {
     setIsCodeTyping,
   } = useReferneces();
   const { invalidFileNodes, addInvalidFileNodes, removeInvalidFileNodes } =
-    useInvalidFileNodes(); // invalid - can't do any actions on the nodes
+    useInvalidFileNodes();
   const {
     temporaryFileNodes,
     addTemporaryFileNodes,
     removeTemporaryFileNodes,
-  } = useTemporaryFileNodes(); // temporary - don't display the nodes
+  } = useTemporaryFileNodes();
 
   // hooks
   const {
@@ -118,7 +118,7 @@ export default function MainPage() {
     importProject,
     closeNavigator,
     reloadCurrentProject,
-    setReloadCurrentProjectTrigger,
+    triggerCurrentProjectReload,
   } = useHandlers({
     currentProjectFileHandle,
     setCurrentProjectFileHandle,
@@ -198,7 +198,7 @@ export default function MainPage() {
 
           importProject,
           reloadCurrentProject,
-          setReloadCurrentProjectTrigger,
+          triggerCurrentProjectReload,
 
           onUndo,
           onRedo,

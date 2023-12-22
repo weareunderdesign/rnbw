@@ -189,6 +189,9 @@ export const useHandlers = ({
   // current project - reload trigger
   const [reloadCurrentProjectTrigger, setReloadCurrentProjectTrigger] =
     useState(false);
+  const triggerCurrentProjectReload = useCallback(() => {
+    setReloadCurrentProjectTrigger((prev) => !prev);
+  }, []);
   useEffect(() => {
     reloadCurrentProject();
   }, [reloadCurrentProjectTrigger]);
@@ -261,6 +264,6 @@ export const useHandlers = ({
     importProject,
     closeNavigator,
     reloadCurrentProject,
-    setReloadCurrentProjectTrigger,
+    triggerCurrentProjectReload,
   };
 };

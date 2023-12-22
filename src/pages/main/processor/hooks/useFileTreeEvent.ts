@@ -1,20 +1,21 @@
 import { useCallback, useContext, useEffect, useRef } from "react";
 
-import { useAppState } from "@_redux/useAppState";
 import { useDispatch } from "react-redux";
+
+import { LogAllow } from "@_constants/global";
+import { FileChangeAlertMessage } from "@_constants/main";
+import { callFileApi } from "@_node/apis";
+import { _path, confirmAlert, getFullnameFromUid } from "@_node/index";
+import { TNodeUid } from "@_node/types";
+import { MainContext } from "@_redux/main";
 import {
   FileTree_Event_RedoActionType,
   FileTree_Event_UndoActionType,
-  TFileAction,
   setDoingFileAction,
   setFileAction,
+  TFileAction,
 } from "@_redux/main/fileTree";
-import { callFileApi } from "@_node/apis";
-import { LogAllow } from "@_constants/global";
-import { TNodeUid } from "@_node/types";
-import { MainContext } from "@_redux/main";
-import { _path, confirmAlert, getFullnameFromUid } from "@_node/index";
-import { FileChangeAlertMessage } from "@_constants/main";
+import { useAppState } from "@_redux/useAppState";
 
 export const useFileTreeEvent = () => {
   const dispatch = useDispatch();
@@ -31,7 +32,7 @@ export const useFileTreeEvent = () => {
     fileHandlers,
     addInvalidFileNodes,
     removeInvalidFileNodes,
-    setReloadCurrentProjectTrigger,
+    triggerCurrentProjectReload,
   } = useContext(MainContext);
 
   const clearFutureHistoryTriggerRef = useRef(false);
@@ -108,7 +109,7 @@ export const useFileTreeEvent = () => {
       dispatch(setDoingFileAction(false));
 
       // reload the current project
-      setReloadCurrentProjectTrigger((prev) => !prev);
+      triggerCurrentProjectReload();
     },
     [
       didRedo,
@@ -156,7 +157,7 @@ export const useFileTreeEvent = () => {
       dispatch(setDoingFileAction(false));
 
       // reload the current project
-      setReloadCurrentProjectTrigger((prev) => !prev);
+      triggerCurrentProjectReload();
     },
     [
       didRedo,

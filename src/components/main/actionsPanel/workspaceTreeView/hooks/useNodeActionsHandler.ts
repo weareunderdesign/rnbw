@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext } from "react";
 
 import { TreeItem } from "react-complex-tree";
 import { useDispatch } from "react-redux";
@@ -66,7 +66,7 @@ export const useNodeActionsHandler = ({
     addTemporaryFileNodes,
     removeTemporaryFileNodes,
     reloadCurrentProject,
-    setReloadCurrentProjectTrigger,
+    triggerCurrentProjectReload,
   } = useContext(MainContext);
 
   // Add & Remove
@@ -147,7 +147,7 @@ export const useNodeActionsHandler = ({
     dispatch(setDoingFileAction(false));
 
     // reload the current project
-    setReloadCurrentProjectTrigger((prev) => !prev);
+    triggerCurrentProjectReload();
   }, [
     selectedItems,
     invalidFileNodes,
@@ -364,7 +364,7 @@ export const useNodeActionsHandler = ({
       }
 
       // reload the current project
-      setReloadCurrentProjectTrigger((prev) => !prev);
+      triggerCurrentProjectReload();
     },
     [
       addInvalidFileNodes,
