@@ -27,6 +27,7 @@ export const useFileTreeEvent = () => {
     fileEventPastLength,
     didUndo,
     didRedo,
+    clipboardData,
   } = useAppState();
   const {
     fileHandlers,
@@ -52,6 +53,8 @@ export const useFileTreeEvent = () => {
         // _remove({ ...payload });
       } else if (action === "rename") {
         _rename({ ...payload });
+      } else if (action === "move") {
+        _move({ ...payload });
       }
     }
   }, [fileAction]);
@@ -72,6 +75,12 @@ export const useFileTreeEvent = () => {
         // not undoable
       } else if (action === "rename") {
         _rename({ orgUid: payload.newUid, newUid: payload.orgUid });
+      } else if (action === "move") {
+        const uids = payload.uids.map(({ orgUid, newUid }) => ({
+          orgUid: newUid,
+          newUid: orgUid,
+        }));
+        _move({ uids });
       }
     }
   }, [lastFileAction]);
@@ -161,6 +170,51 @@ export const useFileTreeEvent = () => {
       project,
       fileTree,
       fileHandlers,
+    ],
+  );
+  const _move = useCallback(
+    async ({ uids }: { uids: { orgUid: TNodeUid; newUid: TNodeUid }[] }) => {
+      const orgUids = uids.map(({ orgUid }) => orgUid);
+      const newName = uids.map(({ newUid }) => getFullnameFromUid(newUid));
+      const targetUid = "";
+
+      dispatch(setDoingFileAction(true));
+      // addInvalidFileNodes(node.uid);
+      await FileActions.move({
+        projectContext: project.context,
+        fileTree,
+        fileHandlers,
+        uids: orgUids,
+        newName,
+        isCopy: false,
+        // targetUid: uids.map(({ newUid }) => fileTree[newUid]),
+
+        fb: () => {
+          LogAllow && console.error("error while pasting file system");
+        },
+        cb: (allDone: boolean) => {
+          LogAllow &&
+            console.log(
+              allDone ? "all is successfully pasted" : "some is not pasted",
+            );
+        },
+      });
+
+      // removeInvalidFileNodes(...uids);
+      dispatch(setDoingFileAction(false));
+
+      // reload the current project
+      triggerCurrentProjectReload();
+    },
+    [
+      didRedo,
+      didUndo,
+      addInvalidFileNodes,
+      removeInvalidFileNodes,
+      project,
+      fileTree,
+      fileHandlers,
+      clipboardData,
     ],
   );
 };
