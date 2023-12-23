@@ -1,12 +1,7 @@
 import { LogAllow } from "@_constants/global";
 import { TProjectContext } from "@_redux/main/fileTree";
 
-import {
-  TFileHandlerCollection,
-  TFileNodeTreeData,
-  TNodeUid,
-  getTargetHandler,
-} from "../";
+import { TFileHandlerCollection, TFileNodeTreeData, TNodeUid } from "../";
 import { FileSystemApis } from "./FileSystemApis";
 import { setClipboardData } from "@_redux/main/processor";
 import { Dispatch } from "react";
@@ -153,6 +148,7 @@ const move = async ({
   uids,
   targetUid,
   isCopy,
+  newName,
   fb,
   cb,
 }: {
@@ -160,8 +156,9 @@ const move = async ({
   fileTree: TFileNodeTreeData;
   fileHandlers: TFileHandlerCollection;
   uids: TNodeUid[];
-  targetUid: string;
+  targetUid?: string;
   isCopy: boolean;
+  newName: string[];
   fb?: (...params: any[]) => void;
   cb?: (...params: any[]) => void;
 }) => {
@@ -169,16 +166,8 @@ const move = async ({
     let allDone = true;
 
     await Promise.all(
-      uids.map(async (uid) => {
-        const newName = await FileSystemApis[projectContext].generateNewName({
-          nodeData: fileTree[uid].data,
-          targetHandler: getTargetHandler({
-            targetUid,
-            fileTree,
-            fileHandlers,
-          }),
-          targetNodeData: fileTree[targetUid].data,
-        });
+      uids.map(async (uid, index) => {
+        const _targetUid = targetUid ? targetUid : fileTree[uid].parentUid!;
 
         const done = await FileSystemApis[
           projectContext
@@ -186,8 +175,8 @@ const move = async ({
           fileTree,
           fileHandlers,
           uid,
-          targetUid,
-          newName,
+          targetUid: _targetUid,
+          newName: newName[index],
           isCopy,
         });
         if (!done) allDone = false;

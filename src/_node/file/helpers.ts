@@ -78,14 +78,6 @@ export const confirmFileChanges = (fileTree: TFileNodeTreeData): boolean => {
     ? confirmAlert(FileChangeAlertMessage)
     : true;
 };
-export const getFileNameAndExtensionFromFullname = (
-  name: string,
-): { baseName: string; ext: string } => {
-  const nameArr = name.split(".");
-  const ext = nameArr.length > 1 ? (nameArr.pop() as string) : "";
-  const baseName = nameArr.join(".");
-  return { baseName, ext };
-};
 export const getNormalizedPath = (
   path: string,
 ): { isAbsolutePath: boolean; normalizedPath: string } => {

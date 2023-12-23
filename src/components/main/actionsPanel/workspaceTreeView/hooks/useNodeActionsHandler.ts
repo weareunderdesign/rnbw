@@ -16,6 +16,9 @@ import {
   _path,
   _writeIDBFile,
   confirmAlert,
+  FileSystemApis,
+  getTargetHandler,
+  isUnsavedProject,
   TFileNodeData,
   TFileNodeTreeData,
 } from "@_node/file";
@@ -169,21 +172,32 @@ export const useNodeActionsHandler = ({
     if (!clipboardData) return;
     const uids = clipboardData.uids.filter((uid) => !invalidFileNodes[uid]);
     if (uids?.length === 0) return;
-
-    if (fileTree[focusedItem] === undefined) {
+    const targetNode = fileTree[focusedItem];
+    if (targetNode === undefined) {
       return;
     }
 
     // confirm files changes
-    const hasChangedFile = uids.some((uid) => {
-      const _file = fileTree[uid];
-      const _fileData = _file.data as TFileNodeData;
-      return _file && _fileData.changed;
-    });
-    if (hasChangedFile && !confirmAlert(FileChangeAlertMessage)) return;
+    if (isUnsavedProject(fileTree) && !confirmAlert(FileChangeAlertMessage))
+      return;
 
     dispatch(setDoingFileAction(true));
     addInvalidFileNodes(...uids);
+
+    const newName: string[] = await Promise.all(
+      uids.map((uid) =>
+        FileSystemApis[project.context].generateNewName({
+          nodeData: fileTree[uid].data,
+          targetHandler: getTargetHandler({
+            targetUid: focusedItem,
+            fileTree,
+            fileHandlers,
+          }),
+          targetNodeData: targetNode.data,
+        }),
+      ),
+    );
+
     await FileActions.move({
       projectContext: project.context,
       fileTree,
@@ -191,6 +205,7 @@ export const useNodeActionsHandler = ({
       uids,
       targetUid: focusedItem,
       isCopy: clipboardData.type === "copy",
+      newName,
       fb: () => {
         LogAllow && console.error("error while pasting file system");
       },
@@ -202,7 +217,16 @@ export const useNodeActionsHandler = ({
         // add to event history
         const _fileAction: TFileAction = {
           action: "move",
-          payload: { uids },
+          payload: {
+            uids: uids.map((uid, index) => ({
+              orgUid: uid,
+              newUid: `${targetNode.parentUid}/${
+                targetNode.data.kind === "directory"
+                  ? targetNode.displayName + "/"
+                  : ""
+              }${newName[index]}`,
+            })),
+          },
         };
         dispatch(setFileAction(_fileAction));
       },
