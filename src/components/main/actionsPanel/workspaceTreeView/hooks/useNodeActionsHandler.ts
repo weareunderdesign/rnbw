@@ -165,7 +165,7 @@ export const useNodeActionsHandler = ({
     FileActions.copy({ uids, dispatch });
   }, [selectedItems]);
   const onPaste = useCallback(async () => {
-    if (!clipboardData) return;
+    if (!clipboardData || clipboardData.panel !== "file") return;
     const uids = clipboardData.uids.filter((uid) => !invalidFileNodes[uid]);
     if (uids.length === 0) return;
     const targetNode = fileTree[focusedItem];
@@ -218,10 +218,10 @@ export const useNodeActionsHandler = ({
           );
 
         // clear clipboard when cut/paste
-        clipboardData.type === "cut" &&
+        !isCopy &&
           dispatch(
             setClipboardData({
-              panel: "file",
+              panel: "none",
               type: null,
               uids: [],
             }),
