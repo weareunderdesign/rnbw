@@ -109,7 +109,11 @@ export const getFullnameFromUid = (uid: TNodeUid): string => {
   const uidArr = uid.split(_path.sep);
   return uidArr.pop() || "";
 };
-
+export const getParentUidFromUid = (uid: TNodeUid): TNodeUid => {
+  const uidArr = uid.split(_path.sep);
+  uidArr.pop();
+  return uidArr.join(_path.sep);
+};
 export const getTargetHandler = ({
   fileHandlers,
   targetUid,

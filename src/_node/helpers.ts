@@ -100,7 +100,7 @@ export const getValidNodeUids = (
     // remove parent uids
     let parentNode = tree[uid];
     while (parentNode.uid !== RootNodeUid) {
-      parentNode = tree[parentNode.parentUid as TNodeUid];
+      parentNode = tree[parentNode.parentUid!];
       delete validatedUids[parentNode.uid];
     }
 
@@ -108,7 +108,7 @@ export const getValidNodeUids = (
     Object.keys(validatedUids).map((validatedUid) => {
       let validatedNode = tree[validatedUid];
       while (validatedNode.uid !== RootNodeUid) {
-        validatedNode = tree[validatedNode.parentUid as TNodeUid];
+        validatedNode = tree[validatedNode.parentUid!];
         if (validatedNode.uid === uid) {
           delete validatedUids[validatedUid];
           break;
@@ -125,7 +125,7 @@ export const getValidNodeUids = (
     let targetNode = tree[targetUid];
     while (targetNode.uid !== RootNodeUid) {
       delete validatedUids[targetNode.uid];
-      targetNode = tree[targetNode.parentUid as TNodeUid];
+      targetNode = tree[targetNode.parentUid!];
     }
 
     if (treeType === "html") {
@@ -183,7 +183,7 @@ export const getPrevSiblingNodeUid = (
 ): TNodeUid => {
   let beforeUid = "" as TNodeUid;
 
-  const parentNode = tree[node.parentUid as TNodeUid];
+  const parentNode = tree[node.parentUid!];
   for (const uid of parentNode.children) {
     if (uid === node.uid) break;
     beforeUid = uid;
@@ -197,7 +197,7 @@ export const getValidPrevNodeUid = (
 ): TNodeUid => {
   let prevNodeUid = "" as TNodeUid;
 
-  const parentNode = tree[node.parentUid as TNodeUid];
+  const parentNode = tree[node.parentUid!];
   for (const uid of parentNode.children) {
     if (uid === node.uid) break;
 
@@ -215,7 +215,7 @@ export const getNodeDepth = (tree: TNodeTreeData, uid: TNodeUid): number => {
     node = tree[uid];
 
   while (node.uid !== RootNodeUid) {
-    node = tree[node.parentUid as TNodeUid];
+    node = tree[node.parentUid!];
     ++nodeDepth;
   }
 
@@ -229,7 +229,7 @@ export const getNodeDepthExternal = (
     node = tree[uid];
 
   while (node.uid !== RootNodeUid) {
-    node = tree[node.parentUid as TNodeUid];
+    node = tree[node.parentUid!];
     ++nodeDepth;
   }
 

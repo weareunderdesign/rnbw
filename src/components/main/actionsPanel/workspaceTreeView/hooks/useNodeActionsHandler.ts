@@ -36,7 +36,7 @@ import {
   TFileAction,
 } from "@_redux/main/fileTree";
 import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
-import { setShowCodeView } from "@_redux/main/processor";
+import { setClipboardData, setShowCodeView } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 
 interface IUseNodeActionsHandler {
@@ -78,7 +78,7 @@ export const useNodeActionsHandler = ({
       let node = _fileTree[focusedItem];
       if (!node) return;
       if (node.isEntity) {
-        node = _fileTree[node.parentUid as TNodeUid];
+        node = _fileTree[node.parentUid!];
       }
 
       // expand the path to `focusedItem`
@@ -161,21 +161,17 @@ export const useNodeActionsHandler = ({
     if (uids.length === 0) return;
     FileActions.cut({ uids, dispatch });
   }, [selectedItems]);
-
   const onCopy = useCallback(() => {
     const uids = selectedItems.filter((uid) => !invalidFileNodes[uid]);
     if (uids.length === 0) return;
     FileActions.copy({ uids, dispatch });
   }, [selectedItems]);
-
   const onPaste = useCallback(async () => {
     if (!clipboardData) return;
     const uids = clipboardData.uids.filter((uid) => !invalidFileNodes[uid]);
-    if (uids?.length === 0) return;
+    if (uids.length === 0) return;
     const targetNode = fileTree[focusedItem];
-    if (targetNode === undefined) {
-      return;
-    }
+    if (!targetNode) return;
 
     // confirm files changes
     if (isUnsavedProject(fileTree) && !confirmAlert(FileChangeAlertMessage))
@@ -183,29 +179,34 @@ export const useNodeActionsHandler = ({
 
     dispatch(setDoingFileAction(true));
     addInvalidFileNodes(...uids);
-
-    const newName: string[] = await Promise.all(
-      uids.map((uid) =>
-        FileSystemApis[project.context].generateNewName({
-          nodeData: fileTree[uid].data,
-          targetHandler: getTargetHandler({
-            targetUid: focusedItem,
-            fileTree,
-            fileHandlers,
+    const targetUids = uids.map(() =>
+      targetNode.isEntity ? targetNode.parentUid! : targetNode.uid,
+    );
+    const newNames: string[] = await Promise.all(
+      uids.map(
+        async (uid) =>
+          await FileSystemApis[project.context].generateNewName({
+            nodeData: fileTree[uid].data,
+            // for `local` project
+            targetHandler: getTargetHandler({
+              targetUid: focusedItem,
+              fileTree,
+              fileHandlers,
+            }),
+            // for `idb` project
+            targetNodeData: targetNode.data,
           }),
-          targetNodeData: targetNode.data,
-        }),
       ),
     );
-
+    const isCopy = clipboardData.type === "copy";
     await FileActions.move({
       projectContext: project.context,
       fileTree,
       fileHandlers,
       uids,
-      targetUid: focusedItem,
-      isCopy: clipboardData.type === "copy",
-      newName,
+      targetUids,
+      newNames,
+      isCopy,
       fb: () => {
         LogAllow && console.error("error while pasting file system");
       },
@@ -214,18 +215,26 @@ export const useNodeActionsHandler = ({
           console.log(
             allDone ? "all is successfully pasted" : "some is not pasted",
           );
+
+        // clear clipboard when cut/paste
+        clipboardData.type === "cut" &&
+          dispatch(
+            setClipboardData({
+              panel: "file",
+              type: null,
+              uids: [],
+            }),
+          );
+
         // add to event history
         const _fileAction: TFileAction = {
           action: "move",
           payload: {
             uids: uids.map((uid, index) => ({
               orgUid: uid,
-              newUid: `${targetNode.parentUid}/${
-                targetNode.data.kind === "directory"
-                  ? targetNode.displayName + "/"
-                  : ""
-              }${newName[index]}`,
+              newUid: _path.join(targetUids[index], newNames[index]),
             })),
+            isCopy,
           },
         };
         dispatch(setFileAction(_fileAction));
@@ -236,8 +245,7 @@ export const useNodeActionsHandler = ({
 
     // reload the current project
     triggerCurrentProjectReload();
-  }, [clipboardData, project, fileTree, fileHandlers, focusedItem]);
-
+  }, [clipboardData, fileTree, focusedItem, project, fileHandlers]);
   const onDuplicate = useCallback(async () => {
     const uids = selectedItems.filter((uid) => !invalidFileNodes[uid]);
     if (uids.length === 0) return;
@@ -280,7 +288,7 @@ export const useNodeActionsHandler = ({
         );
         if (result) {
           _uids.push(result);
-          _targetUids.push(fileTree[uid].parentUid as TNodeUid);
+          _targetUids.push(fileTree[uid].parentUid!);
         } else {
           allDone = false;
         } */
@@ -329,8 +337,8 @@ export const useNodeActionsHandler = ({
       if (!nodeData.valid) {
         // remove newly added node
         const _fileTree = structuredClone(fileTree);
-        _fileTree[node.parentUid as TNodeUid].children = _fileTree[
-          node.parentUid as TNodeUid
+        _fileTree[node.parentUid!].children = _fileTree[
+          node.parentUid!
         ].children.filter((c_uid) => c_uid !== node.uid);
         delete _fileTree[item.data.uid];
         dispatch(setFileTree(_fileTree));
@@ -351,7 +359,7 @@ export const useNodeActionsHandler = ({
         const fileData = file.data;
         if (fileData.changed && !confirmAlert(FileChangeAlertMessage)) return;
 
-        const parentNode = fileTree[node.parentUid as TNodeUid];
+        const parentNode = fileTree[node.parentUid!];
         if (!parentNode) return;
         const name = node.isEntity ? `${newName}.${nodeData.ext}` : newName;
         const newUid = _path.join(parentNode.uid, name);
@@ -363,7 +371,7 @@ export const useNodeActionsHandler = ({
           fileTree,
           fileHandlers,
           uids: [node.uid],
-          parentUid: node.parentUid as TNodeUid,
+          parentUid: node.parentUid!,
           newName: name,
           fb: () => {
             LogAllow && console.error("error while renaming file system");
@@ -383,7 +391,7 @@ export const useNodeActionsHandler = ({
         dispatch(setDoingFileAction(false));
       } else {
         // create a new file/directory
-        const parentNode = fileTree[node.parentUid as TNodeUid];
+        const parentNode = fileTree[node.parentUid!];
         if (!parentNode) return;
         const name = node.isEntity ? `${newName}.${nodeData.ext}` : newName;
         const newUid = _path.join(parentNode.uid, name);
@@ -394,7 +402,7 @@ export const useNodeActionsHandler = ({
           projectContext: project.context,
           fileTree,
           fileHandlers,
-          parentUid: node.parentUid as TNodeUid,
+          parentUid: node.parentUid!,
           name,
           kind: node.isEntity ? "file" : "directory",
           fb: () => {

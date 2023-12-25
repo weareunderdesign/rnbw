@@ -25,6 +25,7 @@ export type TFileAction = { action: TFileActionType } & (
           orgUid: string;
           newUid: string;
         }[];
+        isCopy: boolean;
       };
     }
   | {

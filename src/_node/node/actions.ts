@@ -73,7 +73,7 @@ const add = ({
     const needToSelectNodePaths: string[] = [];
     const validNodeTree = getValidNodeTree(nodeTree);
     const targetNode = validNodeTree[focusedItem];
-    const targetParentNode = validNodeTree[targetNode.parentUid as TNodeUid];
+    const targetParentNode = validNodeTree[targetNode.parentUid!];
     const targetNodeChildIndex = getNodeChildIndex(
       targetParentNode,
       targetNode,
@@ -133,8 +133,8 @@ const cut = ({
     const removedChildCount: { [uid: TNodeUid]: number } = {};
     sortedUids.map((uid) => {
       const node = validNodeTree[uid];
-      const parentNode = validNodeTree[node.parentUid as TNodeUid];
-      const grandParentNode = validNodeTree[parentNode.parentUid as TNodeUid];
+      const parentNode = validNodeTree[node.parentUid!];
+      const grandParentNode = validNodeTree[parentNode.parentUid!];
       const parentNodeChildeIndex = getNodeChildIndex(
         grandParentNode,
         parentNode,
@@ -208,7 +208,7 @@ const paste = async ({
         const needToSelectNodePaths: string[] = [];
         const validNodeTree = getValidNodeTree(nodeTree);
         const focusedNode = validNodeTree[focusedItem];
-        const parentNode = validNodeTree[focusedNode.parentUid as TNodeUid];
+        const parentNode = validNodeTree[focusedNode.parentUid!];
         const focusedNodeChildIndex = getNodeChildIndex(
           parentNode,
           focusedNode,
@@ -278,14 +278,14 @@ const duplicate = ({
     const addedChildCount: { [uid: TNodeUid]: number } = {};
     sortedUids.map((uid) => {
       const node = validNodeTree[uid];
-      const parentNode = validNodeTree[node.parentUid as TNodeUid];
+      const parentNode = validNodeTree[node.parentUid!];
       const nodeChildeIndex = getNodeChildIndex(parentNode, node);
 
-      addedChildCount[node.parentUid as TNodeUid] =
-        (addedChildCount[node.parentUid as TNodeUid] || 0) + 1;
+      addedChildCount[node.parentUid!] =
+        (addedChildCount[node.parentUid!] || 0) + 1;
       const newNodePath = `${parentNode.data.path}${NodePathSplitter}${
         node.data.tagName
-      }-${nodeChildeIndex + addedChildCount[node.parentUid as TNodeUid]}`;
+      }-${nodeChildeIndex + addedChildCount[node.parentUid!]}`;
       needToSelectNodePaths.push(newNodePath);
     });
     return needToSelectNodePaths;
@@ -425,7 +425,7 @@ const rename = ({
     const needToSelectNodePaths: string[] = [];
     const validNodeTree = getValidNodeTree(nodeTree);
     const focusedNode = validNodeTree[focusedItem];
-    const parentNode = validNodeTree[focusedNode.parentUid as TNodeUid];
+    const parentNode = validNodeTree[focusedNode.parentUid!];
     const focusedNodeChildIndex = getNodeChildIndex(parentNode, focusedNode);
     const newNodePath = `${parentNode.data.path}${NodePathSplitter}${tagName}-${focusedNodeChildIndex}`;
     needToSelectNodePaths.push(newNodePath);
@@ -461,7 +461,7 @@ const group = ({
     const validNodeTree = getValidNodeTree(nodeTree);
     const sortedUids = sortUidsByMinStartIndex(uids, validNodeTree);
     const targetNode = validNodeTree[sortedUids[0]];
-    const targetParentNode = validNodeTree[targetNode.parentUid as TNodeUid];
+    const targetParentNode = validNodeTree[targetNode.parentUid!];
     const targetNodeChildIndex = getNodeChildIndex(
       targetParentNode,
       targetNode,
@@ -509,7 +509,7 @@ const ungroup = ({
     const addedChildCount: { [uid: TNodeUid]: number } = {};
     sortedUids.map((uid) => {
       const containerNode = validNodeTree[uid];
-      const parentNode = validNodeTree[containerNode.parentUid as TNodeUid];
+      const parentNode = validNodeTree[containerNode.parentUid!];
       const containerNodeChildIndex = getNodeChildIndex(
         parentNode,
         containerNode,
@@ -547,7 +547,7 @@ const edit = ({
     const needToSelectNodePaths: string[] = [];
     const validNodeTree = getValidNodeTree(nodeTree);
     const focusedNode = validNodeTree[focusedItem];
-    const parentNode = validNodeTree[focusedNode.parentUid as TNodeUid];
+    const parentNode = validNodeTree[focusedNode.parentUid!];
     const focusedNodeChildIndex = getNodeChildIndex(parentNode, focusedNode);
     const newNodePath = `${parentNode.data.path}${NodePathSplitter}${focusedNode.data.tagName}-${focusedNodeChildIndex}`;
     needToSelectNodePaths.push(newNodePath);
