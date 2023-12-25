@@ -119,20 +119,15 @@ export const editHtmlContent = ({
     const content = contentEditableElement.textContent;
 
     setIsContentProgrammaticallyChanged(true);
-    NodeActions(
-      {
-        dispatch,
-        action: "text-edit",
-        nodeTree,
-        targetUid: contentEditableUid,
-        content: content ? content : "",
-        codeViewInstanceModel,
-      },
-      () => {
-        setIsContentProgrammaticallyChanged(false);
-      },
+    NodeActions.edit({
+      dispatch,
+      nodeTree,
+      targetUid: contentEditableUid,
+      content: content ? content : "",
+      codeViewInstanceModel,
+      fb: () => setIsContentProgrammaticallyChanged(false),
       cb,
-    );
+    });
   }
 };
 
