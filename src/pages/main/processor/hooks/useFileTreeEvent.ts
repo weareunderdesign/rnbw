@@ -71,6 +71,7 @@ export const useFileTreeEvent = () => {
       const { action, payload } = lastFileAction;
       if (action === "create") {
         _remove({ ...payload });
+
         // clear future history events
         if (fileEventPastLength) {
           lastFileActionRef.current = { ...fileAction };
@@ -87,6 +88,7 @@ export const useFileTreeEvent = () => {
         if (payload.isCopy) {
           const uids = payload.uids.map(({ newUid }) => newUid);
           _remove({ uids });
+
           // clear future history events
           if (fileEventPastLength) {
             lastFileActionRef.current = { ...fileAction };
@@ -232,8 +234,6 @@ export const useFileTreeEvent = () => {
       triggerCurrentProjectReload();
     },
     [
-      didRedo,
-      didUndo,
       addInvalidFileNodes,
       removeInvalidFileNodes,
       project,

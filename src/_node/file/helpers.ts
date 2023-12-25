@@ -57,15 +57,29 @@ export const getInitialFileUidToOpen = (handlerObj: TFileHandlerInfoObj) => {
 
   return initialFileUidToOpen;
 };
-export const isUnsavedProject = (fileTree: TFileNodeTreeData) => {
-  for (const uid in fileTree) {
-    const file = fileTree[uid];
-    const fileData = file.data as TFileNodeData;
-    if (fileData && fileData.changed) {
-      return true;
+export const isUnsavedProject = (
+  fileTree: TFileNodeTreeData,
+  uids?: TNodeUid[],
+) => {
+  if (uids) {
+    for (const uid of uids) {
+      const file = fileTree[uid];
+      const fileData = file.data as TFileNodeData;
+      if (fileData && fileData.changed) {
+        return true;
+      }
     }
+    return false;
+  } else {
+    for (const uid in fileTree) {
+      const file = fileTree[uid];
+      const fileData = file.data as TFileNodeData;
+      if (fileData && fileData.changed) {
+        return true;
+      }
+    }
+    return false;
   }
-  return false;
 };
 export const confirmAlert = (msg: string): boolean => {
   if (!window.confirm(msg)) {
