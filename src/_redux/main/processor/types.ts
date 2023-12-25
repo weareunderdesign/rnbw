@@ -1,4 +1,4 @@
-import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
+import { TNodeUid } from "@_node/index";
 
 export type TProcessorReducerState = {
   doingAction: boolean;
@@ -31,12 +31,8 @@ export type TPanelContext =
   | "processor"
   | "hms"
   | "none";
+
 export type TClipboardData = {
-  panel: TPanelContext;
   type: "cut" | "copy" | null;
   uids: TNodeUid[];
-  fileType: "html" | "unknown";
-  data: TNode[];
-  fileUid: TNodeUid;
-  prevNodeTree: TNodeTreeData;
 };

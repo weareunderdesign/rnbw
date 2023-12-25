@@ -12,6 +12,7 @@ import {
   _readIDBFile,
   _removeIDBDirectoryOrFile,
   _writeIDBFile,
+  TFileHandlerCollection,
   TFileHandlerInfoObj,
   TFileNodeData,
   TFileNodeTreeData,
@@ -77,14 +78,6 @@ export const confirmFileChanges = (fileTree: TFileNodeTreeData): boolean => {
     ? confirmAlert(FileChangeAlertMessage)
     : true;
 };
-export const getFileNameAndExtensionFromFullname = (
-  name: string,
-): { baseName: string; ext: string } => {
-  const nameArr = name.split(".");
-  const ext = nameArr.length > 1 ? (nameArr.pop() as string) : "";
-  const baseName = nameArr.join(".");
-  return { baseName, ext };
-};
 export const getNormalizedPath = (
   path: string,
 ): { isAbsolutePath: boolean; normalizedPath: string } => {
@@ -115,4 +108,25 @@ export const getIndexHtmlContent = () => {
 export const getFullnameFromUid = (uid: TNodeUid): string => {
   const uidArr = uid.split(_path.sep);
   return uidArr.pop() || "";
+};
+
+export const getTargetHandler = ({
+  fileHandlers,
+  targetUid,
+  fileTree,
+}: {
+  targetUid: TNodeUid;
+  fileTree: TFileNodeTreeData;
+  fileHandlers: TFileHandlerCollection;
+}) => {
+  const targetNode = fileTree[targetUid];
+  let targetHandler = null;
+  if (targetNode.data.kind === "file" && targetNode.parentUid) {
+    targetHandler = fileHandlers[
+      targetNode.parentUid
+    ] as FileSystemDirectoryHandle;
+  } else {
+    targetHandler = fileHandlers[targetUid] as FileSystemDirectoryHandle;
+  }
+  return targetHandler;
 };

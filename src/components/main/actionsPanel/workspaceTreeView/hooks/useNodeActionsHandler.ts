@@ -16,6 +16,9 @@ import {
   _path,
   _writeIDBFile,
   confirmAlert,
+  FileSystemApis,
+  getTargetHandler,
+  isUnsavedProject,
   TFileNodeData,
   TFileNodeTreeData,
 } from "@_node/file";
@@ -156,24 +159,85 @@ export const useNodeActionsHandler = ({
   const onCut = useCallback(async () => {
     const uids = selectedItems.filter((uid) => !invalidFileNodes[uid]);
     if (uids.length === 0) return;
+    FileActions.cut({ uids, dispatch });
+  }, [selectedItems]);
 
-    /* await FileActions(
-      {
-        projectContext: project.context,
-        dispatch,
-        action: "cut",
-        fileTree,
-        currentFileUid,
-        uids,
-        nodeTree,
+  const onCopy = useCallback(() => {
+    const uids = selectedItems.filter((uid) => !invalidFileNodes[uid]);
+    if (uids.length === 0) return;
+    FileActions.copy({ uids, dispatch });
+  }, [selectedItems]);
+
+  const onPaste = useCallback(async () => {
+    if (!clipboardData) return;
+    const uids = clipboardData.uids.filter((uid) => !invalidFileNodes[uid]);
+    if (uids?.length === 0) return;
+    const targetNode = fileTree[focusedItem];
+    if (targetNode === undefined) {
+      return;
+    }
+
+    // confirm files changes
+    if (isUnsavedProject(fileTree) && !confirmAlert(FileChangeAlertMessage))
+      return;
+
+    dispatch(setDoingFileAction(true));
+    addInvalidFileNodes(...uids);
+
+    const newName: string[] = await Promise.all(
+      uids.map((uid) =>
+        FileSystemApis[project.context].generateNewName({
+          nodeData: fileTree[uid].data,
+          targetHandler: getTargetHandler({
+            targetUid: focusedItem,
+            fileTree,
+            fileHandlers,
+          }),
+          targetNodeData: targetNode.data,
+        }),
+      ),
+    );
+
+    await FileActions.move({
+      projectContext: project.context,
+      fileTree,
+      fileHandlers,
+      uids,
+      targetUid: focusedItem,
+      isCopy: clipboardData.type === "copy",
+      newName,
+      fb: () => {
+        LogAllow && console.error("error while pasting file system");
       },
-      () => {
-        LogAllow && console.error("error while cutting file system");
+      cb: (allDone: boolean) => {
+        LogAllow &&
+          console.log(
+            allDone ? "all is successfully pasted" : "some is not pasted",
+          );
+        // add to event history
+        const _fileAction: TFileAction = {
+          action: "move",
+          payload: {
+            uids: uids.map((uid, index) => ({
+              orgUid: uid,
+              newUid: `${targetNode.parentUid}/${
+                targetNode.data.kind === "directory"
+                  ? targetNode.displayName + "/"
+                  : ""
+              }${newName[index]}`,
+            })),
+          },
+        };
+        dispatch(setFileAction(_fileAction));
       },
-    ); */
-  }, [selectedItems, fileTree[currentFileUid], nodeTree]);
-  const onCopy = useCallback(() => {}, []);
-  const onPaste = useCallback(() => {}, []);
+    });
+    removeInvalidFileNodes(...uids);
+    dispatch(setDoingFileAction(false));
+
+    // reload the current project
+    triggerCurrentProjectReload();
+  }, [clipboardData, project, fileTree, fileHandlers, focusedItem]);
+
   const onDuplicate = useCallback(async () => {
     const uids = selectedItems.filter((uid) => !invalidFileNodes[uid]);
     if (uids.length === 0) return;

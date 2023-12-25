@@ -3,6 +3,9 @@ import { TProjectContext } from "@_redux/main/fileTree";
 
 import { TFileHandlerCollection, TFileNodeTreeData, TNodeUid } from "../";
 import { FileSystemApis } from "./FileSystemApis";
+import { setClipboardData } from "@_redux/main/processor";
+import { Dispatch } from "react";
+import { AnyAction } from "@reduxjs/toolkit";
 
 const create = async ({
   projectContext,
@@ -110,9 +113,86 @@ const rename = async ({
     fb && fb();
   }
 };
+const cut = ({
+  uids,
+  dispatch,
+}: {
+  uids: TNodeUid[];
+  dispatch: Dispatch<AnyAction>;
+}) => {
+  dispatch(
+    setClipboardData({
+      type: "cut",
+      uids,
+    }),
+  );
+};
+const copy = ({
+  uids,
+  dispatch,
+}: {
+  uids: TNodeUid[];
+  dispatch: Dispatch<AnyAction>;
+}) => {
+  dispatch(
+    setClipboardData({
+      type: "copy",
+      uids,
+    }),
+  );
+};
+const move = async ({
+  projectContext,
+  fileTree,
+  fileHandlers,
+  uids,
+  targetUid,
+  isCopy,
+  newName,
+  fb,
+  cb,
+}: {
+  projectContext: TProjectContext;
+  fileTree: TFileNodeTreeData;
+  fileHandlers: TFileHandlerCollection;
+  uids: TNodeUid[];
+  targetUid?: string;
+  isCopy: boolean;
+  newName: string[];
+  fb?: (...params: any[]) => void;
+  cb?: (...params: any[]) => void;
+}) => {
+  try {
+    let allDone = true;
 
+    await Promise.all(
+      uids.map(async (uid, index) => {
+        const _targetUid = targetUid ? targetUid : fileTree[uid].parentUid!;
+
+        const done = await FileSystemApis[
+          projectContext
+        ].moveSingleDirectoryOrFile({
+          fileTree,
+          fileHandlers,
+          uid,
+          targetUid: _targetUid,
+          newName: newName[index],
+          isCopy,
+        });
+        if (!done) allDone = false;
+      }),
+    );
+    cb && cb(allDone);
+  } catch (err) {
+    LogAllow && console.error(err);
+    fb && fb();
+  }
+};
 export const FileActions = {
   create,
   remove,
   rename,
+  cut,
+  copy,
+  move,
 };
