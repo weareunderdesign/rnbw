@@ -54,7 +54,7 @@ export const useNodeActionHandlers = () => {
     },
     [nodeTree, focusedItem],
   );
-  const onCut = useCallback(() => {
+  const onCut = useCallback(async () => {
     if (selectedItems.length === 0) return;
 
     const codeViewInstance = monacoEditorRef.current;
@@ -68,7 +68,7 @@ export const useNodeActionHandlers = () => {
     }
 
     setIsContentProgrammaticallyChanged(true);
-    NodeActions.cut({
+    await NodeActions.cut({
       dispatch,
       nodeTree,
       selectedUids: selectedItems,
@@ -76,7 +76,7 @@ export const useNodeActionHandlers = () => {
       fb: () => setIsContentProgrammaticallyChanged(false),
     });
   }, [selectedItems, nodeTree]);
-  const onCopy = useCallback(() => {
+  const onCopy = useCallback(async () => {
     if (selectedItems.length === 0) return;
 
     const codeViewInstance = monacoEditorRef.current;
@@ -90,7 +90,7 @@ export const useNodeActionHandlers = () => {
     }
 
     setIsContentProgrammaticallyChanged(true);
-    NodeActions.copy({
+    await NodeActions.copy({
       dispatch,
       nodeTree,
       selectedUids: selectedItems,
@@ -99,7 +99,7 @@ export const useNodeActionHandlers = () => {
     });
   }, [selectedItems, nodeTree]);
 
-  const onPaste = useCallback(() => {
+  const onPaste = useCallback(async () => {
     const focusedNode = validNodeTree[focusedItem];
     if (!focusedNode || !focusedNode.data.sourceCodeLocation) {
       LogAllow &&
@@ -118,7 +118,7 @@ export const useNodeActionHandlers = () => {
     }
 
     setIsContentProgrammaticallyChanged(true);
-    NodeActions.paste({
+    await NodeActions.paste({
       dispatch,
       nodeTree: validNodeTree,
       targetUid: focusedItem,

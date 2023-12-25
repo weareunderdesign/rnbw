@@ -43,7 +43,7 @@ const add = ({
   codeViewInstanceModel: editor.ITextModel;
   fb?: () => void;
   cb?: () => void;
-}): void => {
+}) => {
   try {
     const tagName = actionName.slice(
       AddNodeActionPrefix.length + 2,
@@ -91,7 +91,6 @@ const add = ({
       needToSelectNodePaths.push(newNodePath);
       return needToSelectNodePaths;
     })();
-
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
     const code = html_beautify(codeViewInstanceModel.getValue());
@@ -117,7 +116,7 @@ const remove = ({
   codeViewInstanceModel: editor.ITextModel;
   fb?: () => void;
   cb?: () => void;
-}): void => {
+}) => {
   try {
     const sortedUids = sortUidsByMaxEndIndex(selectedUids, nodeTree);
     sortedUids.forEach((uid) => {
@@ -133,18 +132,18 @@ const remove = ({
       }
     });
 
+    dispatch(setNeedToSelectNodePaths([]));
+
+    const code = html_beautify(codeViewInstanceModel.getValue());
+    codeViewInstanceModel.setValue(code);
+
     cb && cb();
   } catch (err) {
     fb && fb();
     LogAllow && console.log(err);
   }
-  dispatch(setNeedToSelectNodePaths([]));
-
-  const code = html_beautify(codeViewInstanceModel.getValue());
-  codeViewInstanceModel.setValue(code);
 };
-
-const cut = ({
+const cut = async ({
   dispatch,
   nodeTree,
   selectedUids,
@@ -158,9 +157,9 @@ const cut = ({
   codeViewInstanceModel: editor.ITextModel;
   fb?: () => void;
   cb?: () => void;
-}): void => {
+}) => {
   try {
-    copy({ dispatch, nodeTree, selectedUids, codeViewInstanceModel });
+    await copy({ dispatch, nodeTree, selectedUids, codeViewInstanceModel });
     remove({
       dispatch,
       nodeTree,
@@ -194,12 +193,12 @@ const cut = ({
       });
       return needToSelectNodePaths;
     })();
-
-    cb && cb();
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
     const code = html_beautify(codeViewInstanceModel.getValue());
     codeViewInstanceModel.setValue(code);
+
+    cb && cb();
   } catch (err) {
     LogAllow && console.log(err);
     fb && fb();
@@ -219,36 +218,35 @@ const copy = async ({
   codeViewInstanceModel: editor.ITextModel;
   fb?: () => void;
   cb?: () => void;
-}): Promise<void> => {
-  return new Promise<void>(async (resolve, reject) => {
-    try {
-      const copiedCode = copyCode({
-        nodeTree,
-        uids: selectedUids,
-        codeViewInstanceModel,
+}) => {
+  try {
+    const copiedCode = copyCode({
+      nodeTree,
+      uids: selectedUids,
+      codeViewInstanceModel,
+    });
+    await window.navigator.clipboard.writeText(copiedCode);
+
+    // predict needToSelectNodePaths
+    const needToSelectNodePaths = (() => {
+      const needToSelectNodePaths: string[] = [];
+      const validNodeTree = getValidNodeTree(nodeTree);
+      selectedUids.map((uid) => {
+        const node = validNodeTree[uid];
+        needToSelectNodePaths.push(node.data.path);
       });
-      await window.navigator.clipboard.writeText(copiedCode);
+      return needToSelectNodePaths;
+    })();
+    dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
-      // predict needToSelectNodePaths
-      const needToSelectNodePaths = (() => {
-        const needToSelectNodePaths: string[] = [];
-        const validNodeTree = getValidNodeTree(nodeTree);
-        selectedUids.map((uid) => {
-          const node = validNodeTree[uid];
-          needToSelectNodePaths.push(node.data.path);
-        });
-        return needToSelectNodePaths;
-      })();
-      dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
+    const code = html_beautify(codeViewInstanceModel.getValue());
+    codeViewInstanceModel.setValue(code);
 
-      const code = html_beautify(codeViewInstanceModel.getValue());
-      codeViewInstanceModel.setValue(code);
-      cb && cb();
-    } catch (err) {
-      LogAllow && console.error("Error writing to clipboard:", err);
-      fb && fb();
-    }
-  });
+    cb && cb();
+  } catch (err) {
+    LogAllow && console.error("Error writing to clipboard:", err);
+    fb && fb();
+  }
 };
 const paste = async ({
   dispatch,
@@ -264,64 +262,57 @@ const paste = async ({
   codeViewInstanceModel: editor.ITextModel;
   fb?: () => void;
   cb?: () => void;
-}): Promise<void> => {
-  return new Promise<void>(async (resolve, reject) => {
-    try {
-      let code = await window.navigator.clipboard.readText();
-      pasteCode({
-        nodeTree,
-        focusedItem: targetUid,
-        codeViewInstanceModel,
-        code,
-      });
+}) => {
+  try {
+    let code = await window.navigator.clipboard.readText();
+    pasteCode({
+      nodeTree,
+      focusedItem: targetUid,
+      codeViewInstanceModel,
+      code,
+    });
 
-      // predict needToSelectNodePaths
-      const needToSelectNodePaths = (() => {
-        const needToSelectNodePaths: string[] = [];
-        const validNodeTree = getValidNodeTree(nodeTree);
-        const focusedNode = validNodeTree[targetUid];
-        const parentNode = validNodeTree[focusedNode.parentUid as TNodeUid];
-        const focusedNodeChildIndex = getNodeChildIndex(
-          parentNode,
-          focusedNode,
-        );
+    // predict needToSelectNodePaths
+    const needToSelectNodePaths = (() => {
+      const needToSelectNodePaths: string[] = [];
+      const validNodeTree = getValidNodeTree(nodeTree);
+      const focusedNode = validNodeTree[targetUid];
+      const parentNode = validNodeTree[focusedNode.parentUid as TNodeUid];
+      const focusedNodeChildIndex = getNodeChildIndex(parentNode, focusedNode);
 
-        let addedChildCount = 0;
-        const divElement = window.document.createElement("div");
-        divElement.innerHTML = code;
-        if (divElement.hasChildNodes()) {
-          for (const childNode of divElement.childNodes) {
-            const nodeName = childNode.nodeName;
-            if (nodeName !== "#text") {
-              const tagName = String(nodeName).toLowerCase();
-              ++addedChildCount;
-              const newNodePath = `${
-                parentNode.data.path
-              }${NodePathSplitter}${tagName}-${
-                focusedNodeChildIndex + addedChildCount
-              }`;
-              needToSelectNodePaths.push(newNodePath);
-            }
+      let addedChildCount = 0;
+      const divElement = window.document.createElement("div");
+      divElement.innerHTML = code;
+      if (divElement.hasChildNodes()) {
+        for (const childNode of divElement.childNodes) {
+          const nodeName = childNode.nodeName;
+          if (nodeName !== "#text") {
+            const tagName = String(nodeName).toLowerCase();
+            ++addedChildCount;
+            const newNodePath = `${
+              parentNode.data.path
+            }${NodePathSplitter}${tagName}-${
+              focusedNodeChildIndex + addedChildCount
+            }`;
+            needToSelectNodePaths.push(newNodePath);
           }
         }
-        divElement.remove();
+      }
+      divElement.remove();
 
-        return needToSelectNodePaths;
-      })();
+      return needToSelectNodePaths;
+    })();
+    dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
-      cb && cb();
-      dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
+    code = html_beautify(codeViewInstanceModel.getValue());
+    codeViewInstanceModel.setValue(code);
 
-      code = html_beautify(codeViewInstanceModel.getValue());
-      codeViewInstanceModel.setValue(code);
-    } catch (err) {
-      LogAllow && console.error("Error reading from clipboard:", err);
-      fb && fb();
-      reject(err);
-    }
-  });
+    cb && cb();
+  } catch (err) {
+    LogAllow && console.error("Error reading from clipboard:", err);
+    fb && fb();
+  }
 };
-
 const duplicate = ({
   dispatch,
   nodeTree,
@@ -336,7 +327,7 @@ const duplicate = ({
   codeViewInstanceModel: editor.ITextModel;
   fb?: () => void;
   cb?: () => void;
-}): void => {
+}) => {
   try {
     const sortedUids = sortUidsByMaxEndIndex(selectedUids, nodeTree);
     sortedUids.forEach((uid) => {
@@ -375,12 +366,12 @@ const duplicate = ({
       });
       return needToSelectNodePaths;
     })();
-
-    cb && cb();
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
     const code = html_beautify(codeViewInstanceModel.getValue());
     codeViewInstanceModel.setValue(code);
+
+    cb && cb();
   } catch (err) {
     LogAllow && console.log(err);
     fb && fb();
@@ -406,7 +397,7 @@ const move = ({
   codeViewInstanceModel: editor.ITextModel;
   fb?: () => void;
   cb?: () => void;
-}): void => {
+}) => {
   try {
     const targetNode = nodeTree[targetUid];
     const childCount = targetNode.children.length;
@@ -475,19 +466,17 @@ const move = ({
       });
       return needToSelectNodePaths;
     })();
-
-    cb && cb();
-
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
     code = html_beautify(codeViewInstanceModel.getValue());
     codeViewInstanceModel.setValue(code);
+
+    cb && cb();
   } catch (err) {
     LogAllow && console.log(err);
     fb && fb();
   }
 };
-
 const rename = ({
   dispatch,
   actionName,
@@ -506,7 +495,7 @@ const rename = ({
   codeViewInstanceModel: editor.ITextModel;
   fb?: () => void;
   cb?: () => void;
-}): void => {
+}) => {
   try {
     const tagName = actionName.slice(
       RenameNodeActionPrefix.length + 2,
@@ -566,19 +555,17 @@ const rename = ({
       needToSelectNodePaths.push(newNodePath);
       return needToSelectNodePaths;
     })();
-
-    cb && cb();
-
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
     code = html_beautify(codeViewInstanceModel.getValue());
     codeViewInstanceModel.setValue(code);
+
+    cb && cb();
   } catch (err) {
     LogAllow && console.log(err);
     fb && fb();
   }
 };
-
 const group = ({
   dispatch,
   nodeTree,
@@ -593,7 +580,7 @@ const group = ({
   codeViewInstanceModel: editor.ITextModel;
   fb?: () => void;
   cb?: () => void;
-}): void => {
+}) => {
   try {
     const sortedUids = sortUidsByMinStartIndex(selectedUids, nodeTree);
     let code = copyCode({
@@ -632,11 +619,11 @@ const group = ({
       needToSelectNodePaths.push(newNodePath);
       return needToSelectNodePaths;
     })();
-
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
     code = html_beautify(codeViewInstanceModel.getValue());
     codeViewInstanceModel.setValue(code);
+
     cb && cb();
   } catch (err) {
     LogAllow && console.log(err);
@@ -657,7 +644,7 @@ const ungroup = ({
   codeViewInstanceModel: editor.ITextModel;
   fb?: () => void;
   cb?: () => void;
-}): void => {
+}) => {
   try {
     const sortedUids = sortUidsByMaxEndIndex(selectedUids, nodeTree);
     sortedUids.map((uid) => {
@@ -710,18 +697,17 @@ const ungroup = ({
       });
       return needToSelectNodePaths;
     })();
-    cb && cb();
-
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
     const code = html_beautify(codeViewInstanceModel.getValue());
     codeViewInstanceModel.setValue(code);
+
+    cb && cb();
   } catch (err) {
     LogAllow && console.log(err);
     fb && fb();
   }
 };
-
 const edit = ({
   dispatch,
   nodeTree,
@@ -738,7 +724,7 @@ const edit = ({
   codeViewInstanceModel: editor.ITextModel;
   fb?: () => void;
   cb?: () => void;
-}): void => {
+}) => {
   try {
     replaceContent({
       nodeTree,
@@ -758,17 +744,17 @@ const edit = ({
       needToSelectNodePaths.push(newNodePath);
       return needToSelectNodePaths;
     })();
-    cb && cb();
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
     const code = html_beautify(codeViewInstanceModel.getValue());
     codeViewInstanceModel.setValue(code);
+
+    cb && cb();
   } catch (err) {
     LogAllow && console.log(err);
     fb && fb();
   }
 };
-
 export const NodeActions = {
   add,
   remove,
