@@ -16,6 +16,9 @@ import {
   _path,
   _writeIDBFile,
   confirmAlert,
+  FileSystemApis,
+  getTargetHandler,
+  isUnsavedProject,
   TFileNodeData,
   TFileNodeTreeData,
 } from "@_node/file";
@@ -33,7 +36,7 @@ import {
   TFileAction,
 } from "@_redux/main/fileTree";
 import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
-import { setShowCodeView } from "@_redux/main/processor";
+import { setClipboardData, setShowCodeView } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 
 interface IUseNodeActionsHandler {
@@ -51,7 +54,6 @@ export const useNodeActionsHandler = ({
     fFocusedItem: focusedItem,
     fExpandedItemsObj: expandedItemsObj,
     fSelectedItems: selectedItems,
-    nodeTree,
     clipboardData,
   } = useAppState();
   const {
@@ -62,7 +64,6 @@ export const useNodeActionsHandler = ({
     invalidFileNodes,
     addInvalidFileNodes,
     removeInvalidFileNodes,
-    reloadCurrentProject,
     triggerCurrentProjectReload,
   } = useContext(MainContext);
 
@@ -75,7 +76,7 @@ export const useNodeActionsHandler = ({
       let node = _fileTree[focusedItem];
       if (!node) return;
       if (node.isEntity) {
-        node = _fileTree[node.parentUid as TNodeUid];
+        node = _fileTree[node.parentUid!];
       }
 
       // expand the path to `focusedItem`
@@ -156,92 +157,178 @@ export const useNodeActionsHandler = ({
   const onCut = useCallback(async () => {
     const uids = selectedItems.filter((uid) => !invalidFileNodes[uid]);
     if (uids.length === 0) return;
+    FileActions.cut({ uids, dispatch });
+  }, [selectedItems]);
+  const onCopy = useCallback(() => {
+    const uids = selectedItems.filter((uid) => !invalidFileNodes[uid]);
+    if (uids.length === 0) return;
+    FileActions.copy({ uids, dispatch });
+  }, [selectedItems]);
+  const onPaste = useCallback(async () => {
+    if (!clipboardData || clipboardData.panel !== "file") return;
+    const uids = clipboardData.uids.filter((uid) => !invalidFileNodes[uid]);
+    if (uids.length === 0) return;
+    const targetNode = fileTree[focusedItem];
+    if (!targetNode) return;
 
-    /* await FileActions(
-      {
-        projectContext: project.context,
-        dispatch,
-        action: "cut",
-        fileTree,
-        currentFileUid,
-        uids,
-        nodeTree,
+    // confirm files changes
+    if (
+      isUnsavedProject(fileTree, uids) &&
+      !confirmAlert(FileChangeAlertMessage)
+    )
+      return;
+
+    dispatch(setDoingFileAction(true));
+    addInvalidFileNodes(...uids);
+    const targetUids = uids.map(() =>
+      targetNode.isEntity ? targetNode.parentUid! : targetNode.uid,
+    );
+    const newNames: string[] = await Promise.all(
+      uids.map(
+        async (uid) =>
+          await FileSystemApis[project.context].generateNewName({
+            nodeData: fileTree[uid].data,
+            // for `local` project
+            targetHandler: getTargetHandler({
+              targetUid: focusedItem,
+              fileTree,
+              fileHandlers,
+            }),
+            // for `idb` project
+            targetNodeData: targetNode.data,
+          }),
+      ),
+    );
+    const isCopy = clipboardData.type === "copy";
+    await FileActions.move({
+      projectContext: project.context,
+      fileTree,
+      fileHandlers,
+      uids,
+      targetUids,
+      newNames,
+      isCopy,
+      fb: () => {
+        LogAllow && console.error("error while pasting file system");
       },
-      () => {
-        LogAllow && console.error("error while cutting file system");
+      cb: (allDone: boolean) => {
+        LogAllow &&
+          console.log(
+            allDone ? "all is successfully pasted" : "some is not pasted",
+          );
+
+        // clear clipboard when cut/paste
+        !isCopy &&
+          dispatch(
+            setClipboardData({
+              panel: "none",
+              type: null,
+              uids: [],
+            }),
+          );
+
+        // add to event history
+        const _fileAction: TFileAction = {
+          action: "move",
+          payload: {
+            uids: uids.map((uid, index) => ({
+              orgUid: uid,
+              newUid: _path.join(targetUids[index], newNames[index]),
+            })),
+            isCopy,
+          },
+        };
+        dispatch(setFileAction(_fileAction));
       },
-    ); */
-  }, [selectedItems, fileTree[currentFileUid], nodeTree]);
-  const onCopy = useCallback(() => {}, []);
-  const onPaste = useCallback(() => {}, []);
+    });
+    removeInvalidFileNodes(...uids);
+    dispatch(setDoingFileAction(false));
+
+    // reload the current project
+    triggerCurrentProjectReload();
+  }, [
+    clipboardData,
+    fileTree,
+    focusedItem,
+    addInvalidFileNodes,
+    removeInvalidFileNodes,
+    project,
+    fileHandlers,
+  ]);
   const onDuplicate = useCallback(async () => {
     const uids = selectedItems.filter((uid) => !invalidFileNodes[uid]);
     if (uids.length === 0) return;
 
-    let hasChangedFile = false;
-    uids.forEach((uid) => {
-      const _file = fileTree[uid];
-      const _fileData = _file.data as TFileNodeData;
-      if (_file && _fileData.changed) {
-        hasChangedFile = true;
-      }
-    });
-
+    // confirm files changes
     if (
-      hasChangedFile &&
-      !window.confirm(
-        "Your changes will be lost if you don't save them. Are you sure you want to continue without saving?",
-      )
-    ) {
+      isUnsavedProject(fileTree, uids) &&
+      !confirmAlert(FileChangeAlertMessage)
+    )
       return;
-    }
 
-    addRunningActions(["fileTreeView-duplicate"]);
-
-    const _uids: { uid: TNodeUid; name: string }[] = [];
-    const _targetUids: TNodeUid[] = [];
-    const _invalidFileNodes = { ...invalidFileNodes };
-
-    let allDone = true;
-    await Promise.all(
+    dispatch(setDoingFileAction(true));
+    addInvalidFileNodes(...uids);
+    const targetUids = uids.map((uid) => fileTree[uid].parentUid!);
+    const newNames: string[] = await Promise.all(
       uids.map(async (uid) => {
-        /* const result = await duplicateNode(
-          uid,
-          true,
-          fileTree,
-          fileHandlers,
-          () => {},
-          addInvalidFileNodes,
-          invalidFileNodes,
-        );
-        if (result) {
-          _uids.push(result);
-          _targetUids.push(fileTree[uid].parentUid as TNodeUid);
-        } else {
-          allDone = false;
-        } */
+        const node = fileTree[uid];
+        const parentNode = fileTree[node.parentUid!];
+        return await FileSystemApis[project.context].generateNewName({
+          nodeData: node.data,
+          // for `local` project
+          targetHandler: fileHandlers[
+            parentNode.uid
+          ] as FileSystemDirectoryHandle,
+          // for `idb` project
+          targetNodeData: parentNode.data,
+        });
       }),
     );
+    const isCopy = true;
+    await FileActions.move({
+      projectContext: project.context,
+      fileTree,
+      fileHandlers,
+      uids,
+      targetUids,
+      newNames,
+      isCopy,
+      fb: () => {
+        LogAllow && console.error("error while duplicating file system");
+      },
+      cb: (allDone: boolean) => {
+        LogAllow &&
+          console.log(
+            allDone
+              ? "all is successfully duplicated"
+              : "some is not duplicated",
+          );
 
-    if (!allDone) {
-      // addMessage(duplicatingWarning);
-    }
+        // add to event history
+        const _fileAction: TFileAction = {
+          action: "move",
+          payload: {
+            uids: uids.map((uid, index) => ({
+              orgUid: uid,
+              newUid: _path.join(targetUids[index], newNames[index]),
+            })),
+            isCopy,
+          },
+        };
+        dispatch(setFileAction(_fileAction));
+      },
+    });
+    removeInvalidFileNodes(...uids);
+    dispatch(setDoingFileAction(false));
 
-    /* const action: TFileAction = {
-      type: "copy",
-      param1: _uids,
-      param2: _targetUids,
-    };
-    dispatch(setFileAction(action)); */
-
-    removeRunningActions(["fileTreeView-duplicate"]);
+    // reload the current project
+    triggerCurrentProjectReload();
   }, [
-    addRunningActions,
-    removeRunningActions,
-    project.context,
+    selectedItems,
     invalidFileNodes,
     addInvalidFileNodes,
-    selectedItems,
+    removeInvalidFileNodes,
+    project,
     fileTree,
     fileHandlers,
   ]);
@@ -265,8 +352,8 @@ export const useNodeActionsHandler = ({
       if (!nodeData.valid) {
         // remove newly added node
         const _fileTree = structuredClone(fileTree);
-        _fileTree[node.parentUid as TNodeUid].children = _fileTree[
-          node.parentUid as TNodeUid
+        _fileTree[node.parentUid!].children = _fileTree[
+          node.parentUid!
         ].children.filter((c_uid) => c_uid !== node.uid);
         delete _fileTree[item.data.uid];
         dispatch(setFileTree(_fileTree));
@@ -287,7 +374,7 @@ export const useNodeActionsHandler = ({
         const fileData = file.data;
         if (fileData.changed && !confirmAlert(FileChangeAlertMessage)) return;
 
-        const parentNode = fileTree[node.parentUid as TNodeUid];
+        const parentNode = fileTree[node.parentUid!];
         if (!parentNode) return;
         const name = node.isEntity ? `${newName}.${nodeData.ext}` : newName;
         const newUid = _path.join(parentNode.uid, name);
@@ -299,7 +386,7 @@ export const useNodeActionsHandler = ({
           fileTree,
           fileHandlers,
           uids: [node.uid],
-          parentUid: node.parentUid as TNodeUid,
+          parentUid: node.parentUid!,
           newName: name,
           fb: () => {
             LogAllow && console.error("error while renaming file system");
@@ -319,7 +406,7 @@ export const useNodeActionsHandler = ({
         dispatch(setDoingFileAction(false));
       } else {
         // create a new file/directory
-        const parentNode = fileTree[node.parentUid as TNodeUid];
+        const parentNode = fileTree[node.parentUid!];
         if (!parentNode) return;
         const name = node.isEntity ? `${newName}.${nodeData.ext}` : newName;
         const newUid = _path.join(parentNode.uid, name);
@@ -330,7 +417,7 @@ export const useNodeActionsHandler = ({
           projectContext: project.context,
           fileTree,
           fileHandlers,
-          parentUid: node.parentUid as TNodeUid,
+          parentUid: node.parentUid!,
           name,
           kind: node.isEntity ? "file" : "directory",
           fb: () => {
@@ -416,66 +503,78 @@ export const useNodeActionsHandler = ({
     ],
   );
   const cb_moveNode = useCallback(
-    async (uids: string[], targetUid: TNodeUid, copy: boolean = false) => {
-      // validate
+    async (uids: string[], targetUid: TNodeUid) => {
       const targetNode = fileTree[targetUid];
-      if (targetNode === undefined) {
-        return;
-      }
+      if (!targetNode) return;
       const validatedUids = getValidNodeUids(fileTree, uids, targetUid);
-      if (validatedUids.length === 0) {
-        return;
-      }
+      if (validatedUids.length === 0) return;
+
       // confirm files changes
-      const hasChangedFile = validatedUids.some((uid) => {
-        const _file = fileTree[uid];
-        const _fileData = _file.data as TFileNodeData;
-        return _file && _fileData.changed;
-      });
-      if (hasChangedFile && !confirmAlert(FileChangeAlertMessage)) return;
-      addRunningActions(["fileTreeView-move"]);
+      if (
+        isUnsavedProject(fileTree, validatedUids) &&
+        !confirmAlert(FileChangeAlertMessage)
+      )
+        return;
+
+      dispatch(setDoingFileAction(true));
       addInvalidFileNodes(...validatedUids);
-      /* await FileActions(
-        {
-          projectContext: project.context,
-          action: "move",
-          fileHandlers,
-          uids,
-          fileTree,
-          targetNode,
-          clipboardData,
+      const targetUids = validatedUids.map(() => targetUid);
+      const newNames: string[] = await Promise.all(
+        uids.map(
+          async (uid) =>
+            await FileSystemApis[project.context].generateNewName({
+              nodeData: fileTree[uid].data,
+              // for `local` project
+              targetHandler: fileHandlers[
+                targetUid
+              ] as FileSystemDirectoryHandle,
+              // for `idb` project
+              targetNodeData: targetNode.data,
+            }),
+        ),
+      );
+      const isCopy = false;
+      await FileActions.move({
+        projectContext: project.context,
+        fileTree,
+        fileHandlers,
+        uids,
+        targetUids,
+        newNames,
+        isCopy,
+        fb: () => {
+          LogAllow && console.error("error while moving file system");
         },
-        () => {
-          LogAllow && console.error("error while pasting file system");
-        },
-        (allDone: boolean) => {
-          reloadCurrentProject();
+        cb: (allDone: boolean) => {
           LogAllow &&
             console.log(
-              allDone ? "all is successfully past" : "some is not past",
+              allDone ? "all is successfully moved" : "some is not moved",
             );
+
+          // add to event history
+          const _fileAction: TFileAction = {
+            action: "move",
+            payload: {
+              uids: uids.map((uid, index) => ({
+                orgUid: uid,
+                newUid: _path.join(targetUids[index], newNames[index]),
+              })),
+              isCopy,
+            },
+          };
+          dispatch(setFileAction(_fileAction));
         },
-      ); */
+      });
+      removeInvalidFileNodes(...uids);
+      dispatch(setDoingFileAction(false));
 
-      /* if (_uids.some((result) => !result)) {
-      // addMessage(movingError);
-    } */
-
-      /* const action: TFileAction = {
-      type: copy ? "copy" : "cut",
-      // param1: _uids,
-      // param2: _uids.map(() => targetUid),
-    };
-    dispatch(setFileAction(action)); */
-
-      removeRunningActions(["fileTreeView-move"]);
+      // reload the current project
+      triggerCurrentProjectReload();
     },
     [
-      addRunningActions,
-      removeRunningActions,
-      project.context,
-      invalidFileNodes,
       addInvalidFileNodes,
+      removeInvalidFileNodes,
+      project,
       fileTree,
       fileHandlers,
     ],

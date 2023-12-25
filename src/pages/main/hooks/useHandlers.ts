@@ -254,7 +254,7 @@ export const useHandlers = ({
       // update file tree view state
       dispatch(updateFileTreeViewState({ deletedUids: deletedUids }));
     }
-  }, [project, osType, fileTree, currentFileUid]);
+  }, [project, currentProjectFileHandle, osType, fileTree, currentFileUid]);
 
   const closeNavigator = useCallback(() => {
     navigatorDropdownType !== null && dispatch(setNavigatorDropdownType(null));

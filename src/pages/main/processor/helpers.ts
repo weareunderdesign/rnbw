@@ -42,7 +42,7 @@ export const getPreviewPath = (
   file: TFileNode,
 ) => {
   const { data: fileData } = file;
-  const p_fileData = fileTree[file.parentUid as TNodeUid].data;
+  const p_fileData = fileTree[file.parentUid!].data;
   const previewPath = `${p_fileData.path}/${StagePreviewPathPrefix}${fileData.name}.${fileData.ext}`;
   return previewPath;
 };
@@ -79,7 +79,7 @@ export const getNeedToExpandNodeUids = (
 
     while (node.uid !== RootNodeUid) {
       _expandedItems.push(node.uid);
-      node = validNodeTree[node.parentUid as TNodeUid];
+      node = validNodeTree[node.parentUid!];
     }
   });
   return _expandedItems;
@@ -120,7 +120,7 @@ export const getValidNodeTree = (nodeTree: TNodeTreeData): TNodeTreeData => {
   const validUids = getSubNodeUidsByBfs(RootNodeUid, _validNodeTree, false);
   validUids.map((uid) => {
     const node = _validNodeTree[uid];
-    const parentNode = _validNodeTree[node.parentUid as TNodeUid];
+    const parentNode = _validNodeTree[node.parentUid!];
     const parentNodePath =
       node.parentUid === RootNodeUid ? RootNodeUid : parentNode.data.path;
     node.data.path = `${parentNodePath}${NodePathSplitter}${

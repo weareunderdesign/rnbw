@@ -19,6 +19,16 @@ export type TFileAction = { action: TFileActionType } & (
       };
     }
   | {
+      action: Extract<TFileActionType, "move">;
+      payload: {
+        uids: {
+          orgUid: string;
+          newUid: string;
+        }[];
+        isCopy: boolean;
+      };
+    }
+  | {
       action: null;
       payload?: never;
     }

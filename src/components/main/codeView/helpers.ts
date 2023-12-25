@@ -57,7 +57,7 @@ export const getNodeUidByCodeSelection = (
       if (containFront && containBack) {
         focusedItem = nodeData.valid
           ? uid
-          : validNodeTree[node.parentUid as TNodeUid].children.length
+          : validNodeTree[node.parentUid!].children.length
           ? null
           : node.parentUid;
         break;

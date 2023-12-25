@@ -213,7 +213,7 @@ export const elementsCmdk = ({
   if (!flag) {
     const htmlNode = nodeTree[nFocusedItem];
     if (htmlNode && htmlNode.parentUid && htmlNode.parentUid !== RootNodeUid) {
-      const parentNode = nodeTree[htmlNode.parentUid as TNodeUid];
+      const parentNode = nodeTree[htmlNode.parentUid!];
       const refData = htmlReferenceData.elements[parentNode.displayName];
       if (refData) {
         if (refData.Contain === "All") {

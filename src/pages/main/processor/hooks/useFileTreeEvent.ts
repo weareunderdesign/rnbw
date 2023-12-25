@@ -5,7 +5,12 @@ import { useDispatch } from "react-redux";
 import { LogAllow } from "@_constants/global";
 import { FileChangeAlertMessage } from "@_constants/main";
 import { FileActions } from "@_node/apis";
-import { _path, confirmAlert, getFullnameFromUid } from "@_node/index";
+import {
+  _path,
+  confirmAlert,
+  getFullnameFromUid,
+  getParentUidFromUid,
+} from "@_node/index";
 import { TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import {
@@ -49,9 +54,15 @@ export const useFileTreeEvent = () => {
       if (action === "create") {
         // _create({ ...payload });
       } else if (action === "remove") {
-        // _remove({ ...payload });
+        _remove({ ...payload });
       } else if (action === "rename") {
         _rename({ ...payload });
+      } else if (action === "move") {
+        if (payload.isCopy) {
+          // not redoable
+        } else {
+          _move({ ...payload });
+        }
       }
     }
   }, [fileAction]);
@@ -60,6 +71,7 @@ export const useFileTreeEvent = () => {
       const { action, payload } = lastFileAction;
       if (action === "create") {
         _remove({ ...payload });
+
         // clear future history events
         if (fileEventPastLength) {
           lastFileActionRef.current = { ...fileAction };
@@ -72,6 +84,26 @@ export const useFileTreeEvent = () => {
         // not undoable
       } else if (action === "rename") {
         _rename({ orgUid: payload.newUid, newUid: payload.orgUid });
+      } else if (action === "move") {
+        if (payload.isCopy) {
+          const uids = payload.uids.map(({ newUid }) => newUid);
+          _remove({ uids });
+
+          // clear future history events
+          if (fileEventPastLength) {
+            lastFileActionRef.current = { ...fileAction };
+            clearFutureHistoryTriggerRef.current = true;
+            dispatch({ type: FileTree_Event_UndoActionType });
+          } else {
+            dispatch(setFileAction({ ...fileAction }));
+          }
+        } else {
+          const uids = payload.uids.map(({ orgUid, newUid }) => ({
+            orgUid: newUid,
+            newUid: orgUid,
+          }));
+          _move({ uids, isCopy: payload.isCopy });
+        }
       }
     }
   }, [lastFileAction]);
@@ -137,7 +169,7 @@ export const useFileTreeEvent = () => {
         fileTree,
         fileHandlers,
         uids: [node.uid],
-        parentUid: node.parentUid as TNodeUid,
+        parentUid: node.parentUid!,
         newName,
         fb: () => {
           LogAllow && console.error("error while renaming file system");
@@ -156,6 +188,52 @@ export const useFileTreeEvent = () => {
     [
       didRedo,
       didUndo,
+      addInvalidFileNodes,
+      removeInvalidFileNodes,
+      project,
+      fileTree,
+      fileHandlers,
+    ],
+  );
+  const _move = useCallback(
+    async ({
+      uids,
+      isCopy,
+    }: {
+      uids: { orgUid: TNodeUid; newUid: TNodeUid }[];
+      isCopy: boolean;
+    }) => {
+      const orgUids = uids.map(({ orgUid }) => orgUid);
+      const newNames = uids.map(({ newUid }) => getFullnameFromUid(newUid));
+      const targetUids = uids.map(({ newUid }) => getParentUidFromUid(newUid));
+
+      dispatch(setDoingFileAction(true));
+      addInvalidFileNodes(...orgUids);
+      await FileActions.move({
+        projectContext: project.context,
+        fileTree,
+        fileHandlers,
+        uids: orgUids,
+        targetUids,
+        newNames,
+        isCopy,
+        fb: () => {
+          LogAllow && console.error("error while moving file system");
+        },
+        cb: (allDone: boolean) => {
+          LogAllow &&
+            console.log(
+              allDone ? "all is successfully moved" : "some is not moved",
+            );
+        },
+      });
+      removeInvalidFileNodes(...orgUids);
+      dispatch(setDoingFileAction(false));
+
+      // reload the current project
+      triggerCurrentProjectReload();
+    },
+    [
       addInvalidFileNodes,
       removeInvalidFileNodes,
       project,

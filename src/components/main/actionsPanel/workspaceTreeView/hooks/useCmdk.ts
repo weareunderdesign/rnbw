@@ -12,9 +12,10 @@ interface IUseCmdk {
 export const useCmdk = ({ openFileUid }: IUseCmdk) => {
   const { activePanel, currentCommand } = useAppState();
 
-  const { onAdd, onRemove } = useNodeActionsHandler({
-    openFileUid,
-  });
+  const { onAdd, onRemove, onCut, onCopy, onPaste, onDuplicate } =
+    useNodeActionsHandler({
+      openFileUid,
+    });
 
   const onAddNode = useCallback(
     (actionName: string) => {
@@ -38,7 +39,7 @@ export const useCmdk = ({ openFileUid }: IUseCmdk) => {
       case "Delete":
         onRemove();
         break;
-      /* case "Cut":
+      case "Cut":
         onCut();
         break;
       case "Copy":
@@ -49,7 +50,7 @@ export const useCmdk = ({ openFileUid }: IUseCmdk) => {
         break;
       case "Duplicate":
         onDuplicate();
-        break; */
+        break;
       default:
         break;
     }
