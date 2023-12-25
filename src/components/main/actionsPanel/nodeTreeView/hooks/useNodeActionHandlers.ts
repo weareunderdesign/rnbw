@@ -42,18 +42,15 @@ export const useNodeActionHandlers = () => {
       }
 
       setIsContentProgrammaticallyChanged(true);
-      NodeActions(
-        {
-          dispatch,
-          action: "add",
-          actionName,
-          referenceData: htmlReferenceData,
-          nodeTree,
-          targetUid: focusedItem,
-          codeViewInstanceModel,
-        },
-        () => setIsContentProgrammaticallyChanged(false),
-      );
+      NodeActions.add({
+        dispatch,
+        actionName,
+        referenceData: htmlReferenceData,
+        nodeTree,
+        codeViewInstanceModel,
+        focusedItem,
+        fb: () => setIsContentProgrammaticallyChanged(false),
+      });
     },
     [nodeTree, focusedItem],
   );
@@ -71,16 +68,13 @@ export const useNodeActionHandlers = () => {
     }
 
     setIsContentProgrammaticallyChanged(true);
-    NodeActions(
-      {
-        dispatch,
-        action: "cut",
-        nodeTree,
-        selectedUids: selectedItems,
-        codeViewInstanceModel,
-      },
-      () => setIsContentProgrammaticallyChanged(false),
-    );
+    NodeActions.cut({
+      dispatch,
+      nodeTree,
+      selectedUids: selectedItems,
+      codeViewInstanceModel,
+      fb: () => setIsContentProgrammaticallyChanged(false),
+    });
   }, [selectedItems, nodeTree]);
   const onCopy = useCallback(() => {
     if (selectedItems.length === 0) return;
@@ -96,17 +90,15 @@ export const useNodeActionHandlers = () => {
     }
 
     setIsContentProgrammaticallyChanged(true);
-    NodeActions(
-      {
-        dispatch,
-        action: "copy",
-        nodeTree,
-        selectedUids: selectedItems,
-        codeViewInstanceModel,
-      },
-      () => setIsContentProgrammaticallyChanged(false),
-    );
+    NodeActions.copy({
+      dispatch,
+      nodeTree,
+      selectedUids: selectedItems,
+      codeViewInstanceModel,
+      cb: () => setIsContentProgrammaticallyChanged(false),
+    });
   }, [selectedItems, nodeTree]);
+
   const onPaste = useCallback(() => {
     const focusedNode = validNodeTree[focusedItem];
     if (!focusedNode || !focusedNode.data.sourceCodeLocation) {
@@ -126,17 +118,15 @@ export const useNodeActionHandlers = () => {
     }
 
     setIsContentProgrammaticallyChanged(true);
-    NodeActions(
-      {
-        dispatch,
-        action: "paste",
-        nodeTree: validNodeTree,
-        targetUid: focusedItem,
-        codeViewInstanceModel,
-      },
-      () => setIsContentProgrammaticallyChanged(false),
-    );
+    NodeActions.paste({
+      dispatch,
+      nodeTree: validNodeTree,
+      targetUid: focusedItem,
+      codeViewInstanceModel,
+      fb: () => setIsContentProgrammaticallyChanged(false),
+    });
   }, [validNodeTree, focusedItem]);
+
   const onDelete = useCallback(() => {
     if (selectedItems.length === 0) return;
 
@@ -151,16 +141,13 @@ export const useNodeActionHandlers = () => {
     }
 
     setIsContentProgrammaticallyChanged(true);
-    NodeActions(
-      {
-        dispatch,
-        action: "remove",
-        nodeTree,
-        selectedUids: selectedItems,
-        codeViewInstanceModel,
-      },
-      () => setIsContentProgrammaticallyChanged(false),
-    );
+    NodeActions.remove({
+      dispatch,
+      nodeTree,
+      selectedUids: selectedItems,
+      codeViewInstanceModel,
+      fb: () => setIsContentProgrammaticallyChanged(false),
+    });
   }, [selectedItems, nodeTree]);
   const onDuplicate = useCallback(() => {
     if (selectedItems.length === 0) return;
@@ -176,16 +163,13 @@ export const useNodeActionHandlers = () => {
     }
 
     setIsContentProgrammaticallyChanged(true);
-    NodeActions(
-      {
-        dispatch,
-        action: "duplicate",
-        nodeTree,
-        selectedUids: selectedItems,
-        codeViewInstanceModel,
-      },
-      () => setIsContentProgrammaticallyChanged(false),
-    );
+    NodeActions.duplicate({
+      dispatch,
+      nodeTree,
+      selectedUids: selectedItems,
+      codeViewInstanceModel,
+      fb: () => setIsContentProgrammaticallyChanged(false),
+    });
   }, [selectedItems, nodeTree]);
   const onMove = useCallback(
     ({
@@ -210,19 +194,16 @@ export const useNodeActionHandlers = () => {
       }
 
       setIsContentProgrammaticallyChanged(true);
-      NodeActions(
-        {
-          dispatch,
-          action: "move",
-          nodeTree,
-          selectedUids,
-          targetUid,
-          isBetween,
-          position,
-          codeViewInstanceModel,
-        },
-        () => setIsContentProgrammaticallyChanged(false),
-      );
+      NodeActions.move({
+        dispatch,
+        nodeTree,
+        selectedUids,
+        targetUid,
+        isBetween,
+        position,
+        codeViewInstanceModel,
+        fb: () => setIsContentProgrammaticallyChanged(false),
+      });
     },
     [nodeTree],
   );
@@ -242,18 +223,15 @@ export const useNodeActionHandlers = () => {
       }
 
       setIsContentProgrammaticallyChanged(true);
-      NodeActions(
-        {
-          dispatch,
-          action: "rename",
-          actionName,
-          referenceData: htmlReferenceData,
-          nodeTree,
-          targetUid: focusedItem,
-          codeViewInstanceModel,
-        },
-        () => setIsContentProgrammaticallyChanged(false),
-      );
+      NodeActions.rename({
+        dispatch,
+        actionName,
+        referenceData: htmlReferenceData,
+        nodeTree,
+        targetUid: focusedItem,
+        codeViewInstanceModel,
+        fb: () => setIsContentProgrammaticallyChanged(false),
+      });
     },
     [nodeTree, focusedItem],
   );
@@ -271,16 +249,13 @@ export const useNodeActionHandlers = () => {
     }
 
     setIsContentProgrammaticallyChanged(true);
-    NodeActions(
-      {
-        dispatch,
-        action: "group",
-        nodeTree: validNodeTree,
-        selectedUids: selectedItems,
-        codeViewInstanceModel,
-      },
-      () => setIsContentProgrammaticallyChanged(false),
-    );
+    NodeActions.group({
+      dispatch,
+      nodeTree: validNodeTree,
+      selectedUids: selectedItems,
+      codeViewInstanceModel,
+      fb: () => setIsContentProgrammaticallyChanged(false),
+    });
   }, [selectedItems, validNodeTree]);
   const onUngroup = useCallback(() => {
     if (selectedItems.length === 0) return;
@@ -296,16 +271,13 @@ export const useNodeActionHandlers = () => {
     }
 
     setIsContentProgrammaticallyChanged(true);
-    NodeActions(
-      {
-        dispatch,
-        action: "ungroup",
-        nodeTree: validNodeTree,
-        selectedUids: selectedItems,
-        codeViewInstanceModel,
-      },
-      () => setIsContentProgrammaticallyChanged(false),
-    );
+    NodeActions.ungroup({
+      dispatch,
+      nodeTree: validNodeTree,
+      selectedUids: selectedItems,
+      codeViewInstanceModel,
+      fb: () => setIsContentProgrammaticallyChanged(false),
+    });
   }, [selectedItems, validNodeTree]);
 
   return {
