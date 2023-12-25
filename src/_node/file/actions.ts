@@ -122,6 +122,7 @@ const cut = ({
 }) => {
   dispatch(
     setClipboardData({
+      panel: "file",
       type: "cut",
       uids,
     }),
@@ -136,6 +137,7 @@ const copy = ({
 }) => {
   dispatch(
     setClipboardData({
+      panel: "file",
       type: "copy",
       uids,
     }),
@@ -146,9 +148,9 @@ const move = async ({
   fileTree,
   fileHandlers,
   uids,
-  targetUid,
+  targetUids,
+  newNames,
   isCopy,
-  newName,
   fb,
   cb,
 }: {
@@ -156,27 +158,24 @@ const move = async ({
   fileTree: TFileNodeTreeData;
   fileHandlers: TFileHandlerCollection;
   uids: TNodeUid[];
-  targetUid?: string;
+  targetUids: TNodeUid[];
+  newNames: string[];
   isCopy: boolean;
-  newName: string[];
   fb?: (...params: any[]) => void;
   cb?: (...params: any[]) => void;
 }) => {
   try {
     let allDone = true;
-
     await Promise.all(
       uids.map(async (uid, index) => {
-        const _targetUid = targetUid ? targetUid : fileTree[uid].parentUid!;
-
         const done = await FileSystemApis[
           projectContext
         ].moveSingleDirectoryOrFile({
           fileTree,
           fileHandlers,
           uid,
-          targetUid: _targetUid,
-          newName: newName[index],
+          targetUid: targetUids[index],
+          newName: newNames[index],
           isCopy,
         });
         if (!done) allDone = false;

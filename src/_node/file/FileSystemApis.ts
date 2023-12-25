@@ -89,7 +89,7 @@ const removeSingleLocalDirectoryOrFile = async ({
   const node = fileTree[uid];
   if (!node) return false;
 
-  const parentNode = fileTree[node.parentUid as TNodeUid];
+  const parentNode = fileTree[node.parentUid!];
   if (!parentNode) return false;
 
   const parentHandler = fileHandlers[
@@ -119,7 +119,7 @@ const removeSingleIDBDirectoryOrFile = async ({
   const node = fileTree[uid];
   if (!node) return false;
 
-  const parentNode = fileTree[node.parentUid as TNodeUid];
+  const parentNode = fileTree[node.parentUid!];
   if (!parentNode) return false;
 
   const nodeData = node.data;
@@ -222,7 +222,7 @@ const moveLocalSingleDirectoryOrFile = async ({
   const node = fileTree[uid];
   if (!node) return false;
 
-  const parentNode = fileTree[node.parentUid as TNodeUid];
+  const parentNode = fileTree[node.parentUid!];
   if (!parentNode) return false;
 
   const targetNode = fileTree[targetUid];

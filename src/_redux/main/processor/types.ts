@@ -33,6 +33,7 @@ export type TPanelContext =
   | "none";
 
 export type TClipboardData = {
+  panel: TPanelContext;
   type: "cut" | "copy" | null;
   uids: TNodeUid[];
 };
