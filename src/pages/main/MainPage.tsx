@@ -7,7 +7,11 @@ import { useDispatch } from "react-redux";
 import { SVGIcon } from "@_components/common";
 import { ActionsPanel, CodeView, StageView } from "@_components/main";
 import { LogAllow } from "@_constants/global";
-import { AddActionPrefix, RenameActionPrefix } from "@_constants/main";
+import {
+  AddActionPrefix,
+  RenameActionPrefix,
+  RenderableFileTypes,
+} from "@_constants/main";
 import {
   confirmFileChanges,
   isUnsavedProject,
@@ -202,7 +206,9 @@ export default function MainPage() {
           style={{ display: "relative" }}
           onClick={closeNavigator}
         >
-          <StageView />
+          {RenderableFileTypes?.[fileTree[currentFileUid]?.data?.ext] && (
+            <StageView />
+          )}
           <ActionsPanel
             top={actionsPanelOffsetTop}
             left={actionsPanelOffsetLeft}

@@ -6,7 +6,7 @@ import { useDispatch } from "react-redux";
 import { LogAllow } from "@_constants/global";
 import {
   FileChangeAlertMessage,
-  RednerableFileTypes,
+  RenderableFileTypes,
   RootNodeUid,
   TmpFileNodeUidWhenAddNew,
 } from "@_constants/main";
@@ -467,7 +467,7 @@ export const useNodeActionsHandler = ({
       clearFileSession(dispatch);
 
       const nodeData = node.data as TFileNodeData;
-      if (RednerableFileTypes[nodeData.ext]) {
+      if (RenderableFileTypes[nodeData.ext]) {
         dispatch(setPrevRenderableFileUid(uid));
 
         // set initial content of the html if file content is empty
@@ -487,6 +487,7 @@ export const useNodeActionsHandler = ({
       }
 
       dispatch(setCurrentFileUid(uid));
+
       dispatch(setCurrentFileContent(nodeData.content));
 
       removeRunningActions(["fileTreeView-read"]);
