@@ -42,6 +42,7 @@ export const useFileTreeEvent = () => {
 
   const clearFutureHistoryTriggerRef = useRef(false);
   const lastFileActionRef = useRef<TFileAction>({ action: null });
+
   useEffect(() => {
     if (clearFutureHistoryTriggerRef.current) {
       // remove invalid history events after `remove` action
@@ -66,6 +67,7 @@ export const useFileTreeEvent = () => {
       }
     }
   }, [fileAction]);
+
   useEffect(() => {
     if (didUndo) {
       const { action, payload } = lastFileAction;
@@ -195,6 +197,7 @@ export const useFileTreeEvent = () => {
       fileHandlers,
     ],
   );
+
   const _move = useCallback(
     async ({
       uids,

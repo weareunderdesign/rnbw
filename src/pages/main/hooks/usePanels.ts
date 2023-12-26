@@ -11,6 +11,7 @@ export const usePanels = () => {
   const [codeViewOffsetLeft, setCodeViewOffsetLeft] = useState(12);
   const [codeViewHeight, setCodeViewHeight] = useState("40");
   const [codeViewDragging, setCodeViewDragging] = useState(false);
+
   const dragCodeView = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setCodeViewOffsetTop(
@@ -23,6 +24,7 @@ export const usePanels = () => {
       setCodeViewDragging(true);
     }
   }, []);
+
   const dragEndCodeView = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const offsetTop = (
@@ -34,6 +36,7 @@ export const usePanels = () => {
     setCodeViewDragging(false);
     localStorage.setItem("offsetTop", offsetTop);
   }, []);
+
   const dropCodeView = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
   }, []);

@@ -35,42 +35,20 @@ const AutoExpandDelayOnDnD = 1 * 1000;
 export default function WorkspaceTreeView() {
   const dispatch = useDispatch();
   const {
-    osType,
-    theme,
-
-    workspace,
-    project,
     initialFileUidToOpen,
     currentFileUid,
     fileTree,
-
     fFocusedItem: focusedItem,
     fExpandedItems: expandedItems,
-    fExpandedItemsObj: expandedItemsObj,
     fSelectedItems: selectedItems,
-    fSelectedItemsObj: selectedItemsObj,
-    hoveredFileUid,
-
-    lastFileAction,
-
-    fileAction,
     linkToOpen,
-
     navigatorDropdownType,
-
-    activePanel,
-
-    didUndo,
-    didRedo,
-    currentCommand,
   } = useAppState();
   const {
     addRunningActions,
     removeRunningActions,
     filesReferenceData,
     invalidFileNodes,
-    addInvalidFileNodes,
-    removeInvalidFileNodes,
   } = useContext(MainContext);
 
   const { focusedItemRef, fileTreeViewData } = useSync();

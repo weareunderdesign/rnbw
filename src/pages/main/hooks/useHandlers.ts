@@ -103,6 +103,7 @@ export const useHandlers = ({
     },
     [recentProjectContexts, recentProjectNames, recentProjectHandlers],
   );
+
   const importProject = useCallback(
     async (
       fsType: TProjectContext,
@@ -189,12 +190,15 @@ export const useHandlers = ({
   // current project - reload trigger
   const [reloadCurrentProjectTrigger, setReloadCurrentProjectTrigger] =
     useState(false);
+
   const triggerCurrentProjectReload = useCallback(() => {
     setReloadCurrentProjectTrigger((prev) => !prev);
   }, []);
+
   useEffect(() => {
     reloadCurrentProject();
   }, [reloadCurrentProjectTrigger]);
+
   const reloadCurrentProject = useCallback(async () => {
     if (project.context === "local") {
       const {
