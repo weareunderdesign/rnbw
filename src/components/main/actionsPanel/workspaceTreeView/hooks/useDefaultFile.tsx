@@ -1,38 +1,38 @@
 import { RootNodeUid } from "@_constants/main";
 import { FileActions } from "@_node/apis";
 import { MainContext } from "@_redux/main";
-import { setShowActionsPanel } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
-import { useContext, useEffect } from "react";
-import { useDispatch } from "react-redux";
-// import { createDefaultFile } from "../helpers/createDefaultFile";
+import { useCallback, useContext, useEffect } from "react";
 
 export const useDefaultFileCreate = () => {
-  const dispatch = useDispatch();
-  const { project, fileTree } = useAppState();
+  const { project, fileTree, initialFileUidToOpen } = useAppState();
   const { fileHandlers, triggerCurrentProjectReload } = useContext(MainContext);
+
+  const createDefaultFile = useCallback(async () => {
+    await FileActions.create({
+      projectContext: project.context,
+      fileTree,
+      fileHandlers,
+      parentUid: RootNodeUid,
+      name: "index.html",
+      kind: "file",
+    });
+  }, [project.context, fileTree, fileHandlers, RootNodeUid]);
 
   useEffect(() => {
     if (
-      fileTree[RootNodeUid]?.children?.length === 0 &&
-      fileHandlers[RootNodeUid]
+      initialFileUidToOpen === "" &&
+      fileHandlers[RootNodeUid] &&
+      !Object.values(fileTree).some(
+        (node) => node.data.ext === "html" && node.parentUid === RootNodeUid,
+      )
     ) {
-      console.log("HI !!!!!!!!!!");
-
-      // createDefaultFile(fileHandlers);
-      (async () =>
-        await FileActions.create({
-          projectContext: project.context,
-          fileTree,
-          fileHandlers,
-          parentUid: RootNodeUid,
-          name: "index.html",
-          kind: "file",
-        }))();
-      // reload the current project
+      createDefaultFile();
       triggerCurrentProjectReload();
-      // reloadCurrentProject();
-      // dispatch(setShowActionsPanel(true));
     }
-  }, [fileTree[RootNodeUid]?.children, fileHandlers[RootNodeUid]]);
+  }, [
+    fileTree[RootNodeUid]?.children,
+    fileHandlers[RootNodeUid],
+    initialFileUidToOpen,
+  ]);
 };
