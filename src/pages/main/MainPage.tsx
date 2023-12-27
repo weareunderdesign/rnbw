@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 
 import cx from "classnames";
 import { Command } from "cmdk";
@@ -7,7 +7,11 @@ import { useDispatch } from "react-redux";
 import { SVGIcon } from "@_components/common";
 import { ActionsPanel, CodeView, StageView } from "@_components/main";
 import { LogAllow } from "@_constants/global";
-import { AddActionPrefix, RenameActionPrefix } from "@_constants/main";
+import {
+  AddActionPrefix,
+  CodeViewSyncDelay,
+  RenameActionPrefix,
+} from "@_constants/main";
 import {
   confirmFileChanges,
   isUnsavedProject,
@@ -39,6 +43,7 @@ import {
   useRunningActions,
 } from "./hooks";
 import Processor from "./processor";
+import { debounce } from "lodash";
 
 export default function MainPage() {
   // redux
@@ -155,6 +160,18 @@ export default function MainPage() {
   useEffect(() => {
     Object.keys(cmdkReferenceJumpstart).length !== 0 && onJumpstart();
   }, [cmdkReferenceJumpstart]);
+
+  // reload project after local file changes
+  const debouncedCurrentProjectReload = useCallback(
+    debounce(triggerCurrentProjectReload, CodeViewSyncDelay),
+    [triggerCurrentProjectReload],
+  );
+
+  useEffect(() => {
+    document.addEventListener("visibilitychange", () => {
+      document.visibilityState === "visible" && debouncedCurrentProjectReload();
+    });
+  }, []);
 
   return (
     <>
