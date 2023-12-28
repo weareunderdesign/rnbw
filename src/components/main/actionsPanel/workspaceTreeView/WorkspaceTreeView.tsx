@@ -472,8 +472,6 @@ export default function WorkspaceTreeView() {
               const targetUid = (target as DraggingPositionItem)
                 .targetItem as TNodeUid;
               if (invalidFileNodes[targetUid]) return;
-              console.log(targetUid, "### targetUid");
-
               const uids = items
                 .map((item) => item.index as TNodeUid)
                 .filter(
