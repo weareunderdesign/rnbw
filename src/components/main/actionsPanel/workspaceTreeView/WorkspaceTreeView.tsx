@@ -472,9 +472,15 @@ export default function WorkspaceTreeView() {
               const targetUid = (target as DraggingPositionItem)
                 .targetItem as TNodeUid;
               if (invalidFileNodes[targetUid]) return;
+              console.log(targetUid, "### targetUid");
+
               const uids = items
                 .map((item) => item.index as TNodeUid)
-                .filter((uid) => !invalidFileNodes[uid]);
+                .filter(
+                  (uid) =>
+                    !invalidFileNodes[uid] &&
+                    fileTree[uid].parentUid !== targetUid,
+                );
               if (uids.length === 0) return;
 
               cb_moveNode(uids, targetUid);
