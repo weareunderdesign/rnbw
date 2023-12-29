@@ -10,7 +10,7 @@ import * as monaco from "monaco-editor";
 import { useDispatch } from "react-redux";
 
 import { RootNodeUid } from "@_constants/main";
-import { TFileNodeData, TNodeUid } from "@_node/index";
+import { TFileNodeData, TNodeUid, addAttr } from "@_node/index";
 import { MainContext } from "@_redux/main";
 import { setSelectedNodeUids } from "@_redux/main/nodeTree";
 import { setActivePanel } from "@_redux/main/processor";
@@ -71,6 +71,36 @@ export default function CodeView(props: CodeViewProps) {
     const extension = fileData.ext;
     extension && updateLanguage(extension);
   }, [fileTree, currentFileUid]);
+
+  // theme sync
+
+  const addThemeToHtmlContent = useCallback(
+    (attrName: string, attrValue: string | null) => {
+      const node = Object.values(nodeTree).filter(
+        (node) => node.displayName === "html",
+      )[0];
+      if (!attrValue) return;
+      const codeViewInstance = monacoEditorRef.current;
+      const codeViewInstanceModel = codeViewInstance?.getModel();
+      if (!codeViewInstance || !codeViewInstanceModel) return;
+
+      if (node) {
+        addAttr({
+          attrName,
+          attrValue,
+          focusedItem: node.uid,
+          nodeTree,
+          codeViewInstanceModel: codeViewInstanceModel,
+        });
+      }
+    },
+    [nodeTree, monacoEditorRef],
+  );
+
+  useEffect(() => {
+    const storedTheme = localStorage.getItem("theme");
+    addThemeToHtmlContent("data-theme", storedTheme);
+  }, [theme]);
 
   // focusedItem -> code select
   const focusedItemRef = useRef<TNodeUid>("");
