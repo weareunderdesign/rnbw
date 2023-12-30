@@ -164,14 +164,20 @@ export default function MainPage() {
   // reload project after local file changes
   const debouncedCurrentProjectReload = useCallback(
     debounce(triggerCurrentProjectReload, CodeViewSyncDelay),
-    [triggerCurrentProjectReload],
+    [triggerCurrentProjectReload, fileTree, currentFileUid],
   );
 
   useEffect(() => {
-    document.addEventListener("visibilitychange", () => {
-      document.visibilityState === "visible" && debouncedCurrentProjectReload();
-    });
-  }, []);
+    const handleVisibilityChange = () => {
+      document.visibilityState === "visible" &&
+        !fileTree[currentFileUid]?.data?.changed &&
+        debouncedCurrentProjectReload();
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [fileTree[currentFileUid]]);
 
   return (
     <>
