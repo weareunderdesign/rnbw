@@ -303,7 +303,7 @@ export const useNodeTreeEvent = () => {
     }
 
     removeRunningActions(["processor-update"]);
-  }, [currentFileUid]);
+  }, [currentFileContent, currentFileUid]);
 
   // expand nodes that need to be expanded when it's just select-event
   useEffect(() => {

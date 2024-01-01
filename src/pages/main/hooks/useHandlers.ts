@@ -229,6 +229,8 @@ export const useHandlers = ({
           dispatch(setCurrentFileUid(""));
           dispatch(setCurrentFileContent(""));
         }
+      } else {
+        dispatch(setCurrentFileContent(_fileTree[currentFileUid].data.content));
       }
       // update file tree view state
       dispatch(updateFileTreeViewState({ deletedUids: deletedUids }));
