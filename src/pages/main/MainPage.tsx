@@ -9,6 +9,7 @@ import { ActionsPanel, CodeView, StageView } from "@_components/main";
 import { LogAllow } from "@_constants/global";
 import {
   AddActionPrefix,
+  RenderableFileTypes,
   CodeViewSyncDelay,
   RenameActionPrefix,
 } from "@_constants/main";
@@ -225,7 +226,9 @@ export default function MainPage() {
           style={{ display: "relative" }}
           onClick={closeNavigator}
         >
-          <StageView />
+          {RenderableFileTypes?.[fileTree[currentFileUid]?.data?.ext] && (
+            <StageView />
+          )}
           <ActionsPanel
             top={actionsPanelOffsetTop}
             left={actionsPanelOffsetLeft}

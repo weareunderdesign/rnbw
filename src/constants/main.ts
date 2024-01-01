@@ -9,8 +9,15 @@ export const ParsableFileTypes: {
   [fileType: string]: true;
 } = {
   html: true,
+  css: true,
+  js: true,
+  txt: true,
+  json: true,
+  md: true,
+  xml: true,
+  svg: true,
 };
-export const RednerableFileTypes: {
+export const RenderableFileTypes: {
   [fileType: string]: true;
 } = {
   html: true,
