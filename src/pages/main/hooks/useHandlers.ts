@@ -192,6 +192,7 @@ export const useHandlers = ({
     useState(false);
 
   const triggerCurrentProjectReload = useCallback(() => {
+    console.log("triggerCurrentProjectReload");
     setReloadCurrentProjectTrigger((prev) => !prev);
   }, []);
 

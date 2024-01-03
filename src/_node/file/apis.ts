@@ -277,7 +277,6 @@ export const loadLocalProject = async (
             if (c_kind === "file") {
               const fileEntry = await (entry as FileSystemFileHandle).getFile();
               c_content = Buffer.from(await fileEntry.arrayBuffer());
-              debugger;
             }
 
             const c_handlerInfo: TFileHandlerInfo = {

@@ -136,6 +136,7 @@ export default function MainPage() {
   });
   useInit({ importProject, onNew });
   const { validMenuItemCount, hoveredMenuItemDescription } = useCmdkModal();
+
   const {
     actionsPanelOffsetTop,
     actionsPanelOffsetLeft,
@@ -150,6 +151,12 @@ export default function MainPage() {
     dropCodeView,
   } = usePanels();
 
+  const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
+  const prevFocusedElement = React.useRef<HTMLElement | null>(
+    window.document.activeElement as HTMLElement | null,
+  );
+
+  const INTERVAL_TIMER = 2000;
   // web-tab close event handler
   useEffect(() => {
     window.onbeforeunload = isUnsavedProject(fileTree) ? () => "changed" : null;
@@ -168,17 +175,76 @@ export default function MainPage() {
     [triggerCurrentProjectReload, fileTree, currentFileUid],
   );
 
-  useEffect(() => {
-    const handleVisibilityChange = () => {
+  const handleVisibilityChange = useCallback(() => {
+    if (
       document.visibilityState === "visible" &&
-        !fileTree[currentFileUid]?.data?.changed &&
+      !fileTree[currentFileUid]?.data?.changed
+    ) {
+      debouncedCurrentProjectReload();
+    }
+  }, [fileTree, currentFileUid, debouncedCurrentProjectReload]);
+
+  const handleBlurChange = useCallback(() => {
+    if (
+      !window.document.activeElement?.isEqualNode(prevFocusedElement.current)
+    ) {
+      return;
+    }
+    intervalRef.current = setInterval(() => {
+      if (
+        document.visibilityState === "visible" &&
+        !fileTree[currentFileUid]?.data?.changed
+      ) {
         debouncedCurrentProjectReload();
-    };
+      }
+    }, INTERVAL_TIMER);
+  }, [fileTree, currentFileUid, debouncedCurrentProjectReload]);
+
+  const handleFocusChange = useCallback(() => {
+    if (intervalRef.current) {
+      prevFocusedElement.current = window.document.activeElement as HTMLElement;
+      clearInterval(intervalRef.current);
+    }
+  }, []);
+
+  const addEventListeners = useCallback(() => {
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("blur", handleBlurChange);
+    window.addEventListener("focus", handleFocusChange);
+    const contentWindow = iframeRefRef.current?.contentWindow;
+    if (contentWindow) {
+      contentWindow.addEventListener("focus", handleFocusChange);
+      contentWindow.addEventListener("blur", handleBlurChange);
+    }
+  }, [
+    handleVisibilityChange,
+    handleFocusChange,
+    handleBlurChange,
+    iframeRefRef,
+  ]);
+
+  const removeEventListeners = useCallback(() => {
+    document.removeEventListener("visibilitychange", handleVisibilityChange);
+    window.removeEventListener("blur", handleBlurChange);
+    window.removeEventListener("focus", handleFocusChange);
+    const contentWindow = iframeRefRef.current?.contentWindow;
+    if (contentWindow) {
+      contentWindow.removeEventListener("focus", handleFocusChange);
+      contentWindow.removeEventListener("blur", handleBlurChange);
+    }
+  }, [
+    handleVisibilityChange,
+    handleFocusChange,
+    handleBlurChange,
+    iframeRefRef,
+  ]);
+
+  useEffect(() => {
+    addEventListeners();
     return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      removeEventListeners();
     };
-  }, [fileTree[currentFileUid]]);
+  }, [addEventListeners, removeEventListeners]);
 
   return (
     <>
