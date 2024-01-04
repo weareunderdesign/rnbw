@@ -5,12 +5,13 @@ import { useDispatch } from "react-redux";
 import { LogAllow } from "@_constants/global";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
-import { setCurrentCommand } from "@_redux/main/cmdk";
+import { setCmdkOpen, setCurrentCommand } from "@_redux/main/cmdk";
 import { useAppState } from "@_redux/useAppState";
 import { getCommandKey } from "@_services/global";
 import { TCmdkKeyMap } from "@_types/main";
 
 import { editHtmlContent } from "../helpers";
+import { setShowActionsPanel, setShowCodeView } from "@_redux/main/processor";
 
 interface IUseCmdkProps {
   iframeRefRef: React.MutableRefObject<HTMLIFrameElement | null>;
@@ -79,6 +80,7 @@ export const useCmdk = ({
         }
       }
       if (isEditingRef.current) {
+        debugger;
         // for content-editing
         if (
           (e.code === "Escape" || action === "Save") &&
@@ -117,6 +119,10 @@ export const useCmdk = ({
           }
         }
       } else {
+        if (e.code === "Escape") {
+          dispatch(setShowActionsPanel(false));
+          dispatch(setShowCodeView(false));
+        }
         if (action) {
           LogAllow && console.log("action to be run by cmdk: ", action);
           dispatch(setCurrentCommand({ action }));
