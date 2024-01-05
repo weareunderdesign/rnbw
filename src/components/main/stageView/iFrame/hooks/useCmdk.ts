@@ -5,7 +5,7 @@ import { useDispatch } from "react-redux";
 import { LogAllow } from "@_constants/global";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
-import { setCmdkOpen, setCurrentCommand } from "@_redux/main/cmdk";
+import { setCurrentCommand } from "@_redux/main/cmdk";
 import { useAppState } from "@_redux/useAppState";
 import { getCommandKey } from "@_services/global";
 import { TCmdkKeyMap } from "@_types/main";
@@ -80,7 +80,6 @@ export const useCmdk = ({
         }
       }
       if (isEditingRef.current) {
-        debugger;
         // for content-editing
         if (
           (e.code === "Escape" || action === "Save") &&

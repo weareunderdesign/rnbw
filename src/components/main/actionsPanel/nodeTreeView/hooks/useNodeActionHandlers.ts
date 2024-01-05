@@ -99,33 +99,41 @@ export const useNodeActionHandlers = () => {
     });
   }, [selectedItems, nodeTree]);
 
-  const onPaste = useCallback(async () => {
-    const focusedNode = validNodeTree[focusedItem];
-    if (!focusedNode || !focusedNode.data.sourceCodeLocation) {
-      LogAllow &&
-        console.error("Focused node or source code location is undefined");
-      return;
-    }
+  const onPaste = useCallback(
+    async (
+      { spanPaste }: { spanPaste?: boolean } = {
+        spanPaste: false,
+      },
+    ) => {
+      const focusedNode = validNodeTree[focusedItem];
+      if (!focusedNode || !focusedNode.data.sourceCodeLocation) {
+        LogAllow &&
+          console.error("Focused node or source code location is undefined");
+        return;
+      }
 
-    const codeViewInstance = monacoEditorRef.current;
-    const codeViewInstanceModel = codeViewInstance?.getModel();
-    if (!codeViewInstance || !codeViewInstanceModel) {
-      LogAllow &&
-        console.error(
-          `Monaco Editor ${!codeViewInstance ? "" : "Model"} is undefined`,
-        );
-      return;
-    }
+      const codeViewInstance = monacoEditorRef.current;
+      const codeViewInstanceModel = codeViewInstance?.getModel();
+      if (!codeViewInstance || !codeViewInstanceModel) {
+        LogAllow &&
+          console.error(
+            `Monaco Editor ${!codeViewInstance ? "" : "Model"} is undefined`,
+          );
+        return;
+      }
 
-    setIsContentProgrammaticallyChanged(true);
-    await NodeActions.paste({
-      dispatch,
-      nodeTree: validNodeTree,
-      targetUid: focusedItem,
-      codeViewInstanceModel,
-      fb: () => setIsContentProgrammaticallyChanged(false),
-    });
-  }, [validNodeTree, focusedItem]);
+      setIsContentProgrammaticallyChanged(true);
+      await NodeActions.paste({
+        dispatch,
+        nodeTree: validNodeTree,
+        targetUid: focusedItem,
+        codeViewInstanceModel,
+        spanPaste,
+        fb: () => setIsContentProgrammaticallyChanged(false),
+      });
+    },
+    [validNodeTree, focusedItem],
+  );
 
   const onDelete = useCallback(() => {
     if (selectedItems.length === 0) return;

@@ -1,7 +1,6 @@
-import { useContext, useEffect } from "react";
+import { useEffect } from "react";
 
 import { isAddNodeAction, isRenameNodeAction } from "@_node/helpers";
-import { MainContext } from "@_redux/main";
 import { useAppState } from "@_redux/useAppState";
 
 import { useNodeActionHandlers } from "./useNodeActionHandlers";
@@ -45,6 +44,11 @@ export const useCmdk = () => {
         break;
       case "Paste":
         onPaste();
+        break;
+      case "Span Paste":
+        onPaste({
+          spanPaste: true,
+        });
         break;
       case "Delete":
         onDelete();
