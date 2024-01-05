@@ -267,7 +267,6 @@ export const useNodeTreeEvent = () => {
           _selectedNodeUids.push(...needToSelectNodeUids);
           dispatch(setNeedToSelectNodeUids(needToSelectNodeUids));
           dispatch(setNeedToSelectNodePaths(null));
-          debugger;
         } else if (needToSelectCode) {
           LogAllow && console.log("it's a rnbw-change from code-view");
           // it's a typing change in code-view and we need to select currently `cursored node` in code-view.
