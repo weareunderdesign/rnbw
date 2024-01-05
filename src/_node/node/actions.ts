@@ -253,6 +253,7 @@ const paste = async ({
   nodeTree,
   targetUid,
   codeViewInstanceModel,
+  spanPaste,
   fb,
   cb,
 }: {
@@ -260,11 +261,13 @@ const paste = async ({
   nodeTree: TNodeTreeData;
   targetUid: TNodeUid;
   codeViewInstanceModel: editor.ITextModel;
+  spanPaste?: boolean;
   fb?: () => void;
   cb?: () => void;
 }) => {
   try {
     let code = await window.navigator.clipboard.readText();
+    if (spanPaste) code = `<span>${code}</span>`;
     pasteCode({
       nodeTree,
       focusedItem: targetUid,
