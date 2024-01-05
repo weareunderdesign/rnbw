@@ -113,10 +113,11 @@ export const editHtmlContent = ({
   const contentEditableElement =
     iframeRef.contentWindow?.document.querySelector(
       `[${StageNodeIdAttr}="${contentEditableUid}"]`,
-    );
+    ) as HTMLElement;
+
   if (contentEditableElement) {
     contentEditableElement.setAttribute("contenteditable", "false");
-    const content = contentEditableElement.textContent;
+    const content = contentEditableElement.innerText.replace(/\n/g, "<br/>");
 
     setIsContentProgrammaticallyChanged(true);
     NodeActions.edit({
