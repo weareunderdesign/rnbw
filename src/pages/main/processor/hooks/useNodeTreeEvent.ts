@@ -150,7 +150,6 @@ export const useNodeTreeEvent = () => {
           const updatedHtml = contentInApp;
           if (!iframeHtml || !updatedHtml) return;
 
-          let nodeUidToFocus = "";
           morphdom(iframeHtml, updatedHtml, {
             onBeforeElUpdated: function (fromEl, toEl) {
               //check if the node is script or style
@@ -159,16 +158,10 @@ export const useNodeTreeEvent = () => {
                 fromEl.nodeName === "LINK" ||
                 fromEl.nodeName === "STYLE"
               ) {
-                if (fromEl.outerHTML === toEl.outerHTML) {
-                  return false;
-                } else {
-                  let fromOuter = fromEl.outerHTML;
-                  let toOuter = toEl.outerHTML;
-                  return false;
-                }
+                return false;
               }
               const fromElRnbwId = fromEl.getAttribute(StageNodeIdAttr);
-              nodeUidToFocus = syncConfigs?.matchIds?.[0] || "";
+
               if (toEl.nodeName.includes("-")) return false;
               if (
                 syncConfigs?.matchIds &&
@@ -274,6 +267,7 @@ export const useNodeTreeEvent = () => {
           _selectedNodeUids.push(...needToSelectNodeUids);
           dispatch(setNeedToSelectNodeUids(needToSelectNodeUids));
           dispatch(setNeedToSelectNodePaths(null));
+          debugger;
         } else if (needToSelectCode) {
           LogAllow && console.log("it's a rnbw-change from code-view");
           // it's a typing change in code-view and we need to select currently `cursored node` in code-view.
