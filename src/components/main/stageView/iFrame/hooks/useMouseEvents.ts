@@ -57,7 +57,7 @@ export const useMouseEvents = ({
   const onClick = useCallback((e: MouseEvent) => {
     dispatch(setActivePanel("stage"));
 
-    const { uid, element } = getValidElementWithUid(e.target as HTMLElement);
+    const { uid } = getValidElementWithUid(e.target as HTMLElement);
     if (uid) {
       // update selectedNodeUids
       (() => {
@@ -129,9 +129,6 @@ export const useMouseEvents = ({
 
     if (!uid) {
       // when dbl-click on a web component
-      /* const { uid: validUid, element: validElement } = getValidElementWithUid(
-        e.target as HTMLElement,
-      ); */
       isEditingRef.current = false;
     } else {
       const node = nodeTreeRef.current[uid];
