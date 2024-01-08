@@ -15,6 +15,7 @@ import {
   CodeViewSyncDelay,
   CodeViewSyncDelay_Long,
   DefaultTabSize,
+  AutoSaveDelay,
 } from "@_constants/main";
 import { MainContext } from "@_redux/main";
 import { setCodeViewTabSize } from "@_redux/main/codeView";
@@ -26,10 +27,11 @@ import { useAppState } from "@_redux/useAppState";
 
 import { getCodeViewTheme, getLanguageFromExtension } from "../helpers";
 import { TCodeSelection } from "../types";
+import { setCurrentCommand } from "@_redux/main/cmdk";
 
 const useEditor = () => {
   const dispatch = useDispatch();
-  const { theme: _theme } = useAppState();
+  const { theme: _theme, autoSave } = useAppState();
   const {
     monacoEditorRef,
     setMonacoEditorRef,
@@ -129,23 +131,34 @@ const useEditor = () => {
     [setCodeSelection],
   );
 
+  const debouncedAutoSave = useCallback(
+    debounce(
+      () => dispatch(setCurrentCommand({ action: "Save" })),
+      AutoSaveDelay,
+    ),
+    [],
+  );
   // handleOnChange
-  const onChange = useCallback((value: string) => {
-    dispatch(setCurrentFileContent(value));
-    dispatch(
-      setNeedToSelectCode(
-        codeSelectionRef.current
-          ? {
-              startLineNumber: codeSelectionRef.current.startLineNumber,
-              startColumn: codeSelectionRef.current.startColumn,
-              endLineNumber: codeSelectionRef.current.endLineNumber,
-              endColumn: codeSelectionRef.current.endColumn,
-            }
-          : null,
-      ),
-    );
-    setIsCodeTyping(false);
-  }, []);
+  const onChange = useCallback(
+    (value: string) => {
+      dispatch(setCurrentFileContent(value));
+      dispatch(
+        setNeedToSelectCode(
+          codeSelectionRef.current
+            ? {
+                startLineNumber: codeSelectionRef.current.startLineNumber,
+                startColumn: codeSelectionRef.current.startColumn,
+                endLineNumber: codeSelectionRef.current.endLineNumber,
+                endColumn: codeSelectionRef.current.endColumn,
+              }
+            : null,
+        ),
+      );
+      setIsCodeTyping(false);
+      autoSave && debouncedAutoSave();
+    },
+    [debouncedAutoSave, autoSave],
+  );
   const debouncedOnChange = useCallback(
     debounce((value) => {
       onChange(value);

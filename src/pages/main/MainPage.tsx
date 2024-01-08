@@ -45,7 +45,6 @@ import {
 } from "./hooks";
 import Processor from "./processor";
 import { debounce } from "lodash";
-import { useSaveCommand } from "./processor/hooks";
 
 export default function MainPage() {
   // redux
@@ -151,7 +150,6 @@ export default function MainPage() {
     dragEndCodeView,
     dropCodeView,
   } = usePanels();
-  const { onSaveCurrentFile, onSaveProject } = useSaveCommand();
   const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
   const prevFocusedElement = React.useRef<HTMLElement | null>(
     window.document.activeElement as HTMLElement | null,
@@ -179,16 +177,10 @@ export default function MainPage() {
   const handleVisibilityChange = useCallback(() => {
     if (document.visibilityState === "visible") {
       fileTree[currentFileUid]?.data?.changed
-        ? autoSave && onSaveCurrentFile()
+        ? autoSave && dispatch(setCurrentCommand({ action: "Save" }))
         : debouncedCurrentProjectReload();
     }
-  }, [
-    fileTree,
-    currentFileUid,
-    debouncedCurrentProjectReload,
-    autoSave,
-    onSaveCurrentFile,
-  ]);
+  }, [fileTree, currentFileUid, debouncedCurrentProjectReload, autoSave, ,]);
 
   const handleBlurChange = useCallback(() => {
     if (
