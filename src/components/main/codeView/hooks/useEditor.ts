@@ -15,7 +15,6 @@ import {
   CodeViewSyncDelay,
   CodeViewSyncDelay_Long,
   DefaultTabSize,
-  AutoSaveDelay,
 } from "@_constants/main";
 import { MainContext } from "@_redux/main";
 import { setCodeViewTabSize } from "@_redux/main/codeView";
@@ -27,7 +26,7 @@ import { useAppState } from "@_redux/useAppState";
 
 import { getCodeViewTheme, getLanguageFromExtension } from "../helpers";
 import { TCodeSelection } from "../types";
-import { setCurrentCommand } from "@_redux/main/cmdk";
+import { useSaveCommand } from "@_pages/main/processor/hooks";
 
 const useEditor = () => {
   const dispatch = useDispatch();
@@ -130,14 +129,7 @@ const useEditor = () => {
     },
     [setCodeSelection],
   );
-
-  const debouncedAutoSave = useCallback(
-    debounce(
-      () => dispatch(setCurrentCommand({ action: "Save" })),
-      AutoSaveDelay,
-    ),
-    [],
-  );
+  const { debouncedAutoSave } = useSaveCommand();
   // handleOnChange
   const onChange = useCallback(
     (value: string) => {
