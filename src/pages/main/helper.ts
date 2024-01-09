@@ -1,9 +1,10 @@
 import { Dispatch } from "react";
 
 import { RootNodeUid } from "@_constants/main";
-import { TNodeUid } from "@_node/types";
+import { TNodeTreeData, TNodeUid } from "@_node/types";
 import {
   clearFileTreeViewState,
+  expandFileTreeNodes,
   setCurrentFileUid,
   setFileTree,
   setInitialFileUidToOpen,
@@ -27,8 +28,12 @@ import {
   TCmdkReference,
   TCmdkReferenceData,
   TFilesReference,
+  THtmlReferenceData,
 } from "@_types/main";
 import { AnyAction } from "@reduxjs/toolkit";
+import { THtmlNodeData } from "@_node/node";
+import { TFileNodeData, TFileNodeTreeData } from "@_node/index";
+import { setNavigatorDropdownType } from "@_redux/main/processor";
 
 export const addDefaultCmdkActions = (
   cmdkReferenceData: TCmdkReferenceData,
@@ -305,6 +310,97 @@ export const elementsCmdk = ({
     delete data["Elements"];
   }
 };
+
+export const isWebComponentDblClicked = ({
+  nodeData,
+  htmlReferenceData,
+}: {
+  nodeData: THtmlNodeData;
+  htmlReferenceData: THtmlReferenceData;
+}) => {
+  // check the element is wc
+  let found = false;
+  if (nodeData && htmlReferenceData.elements[nodeData.nodeName] === undefined)
+    found = true;
+  return found;
+};
+
+export const onWebComponentDblClick = ({
+  wcName,
+  fileTree,
+  validNodeTree,
+  dispatch,
+  expandedItemsObj,
+}: {
+  wcName: string;
+  fileTree: TFileNodeTreeData;
+  validNodeTree: TNodeTreeData;
+  dispatch: Dispatch<AnyAction>;
+  expandedItemsObj: {
+    [uid: TNodeUid]: true;
+  };
+}) => {
+  let exist = false;
+  for (let x in fileTree) {
+    const defineRegex = /customElements\.define\(\s*['"]([\w-]+)['"]/;
+    if (
+      (fileTree[x].data as TFileNodeData).content &&
+      (fileTree[x].data as TFileNodeData).ext === "js"
+    ) {
+      const match = (fileTree[x].data as TFileNodeData).content.match(
+        defineRegex,
+      );
+      if (match) {
+        // check web component
+        if (wcName === match[1].toLowerCase()) {
+          const fileName = (fileTree[x].data as TFileNodeData).name;
+          let src = "";
+          for (let i in validNodeTree) {
+            if (
+              (validNodeTree[i].data as THtmlNodeData).nodeName === "script"
+            ) {
+              src = (validNodeTree[i].data as THtmlNodeData).attribs.src;
+              if (src.search(fileName + ".js") !== -1) break;
+            }
+          }
+          if (src !== "") {
+            if (
+              src.startsWith("http") ||
+              src.startsWith("https") ||
+              src.startsWith("//")
+            ) {
+              alert("rnbw couldn't find it's source file");
+              break;
+            } else {
+              dispatch(setInitialFileUidToOpen(fileTree[x].uid));
+              dispatch(setNavigatorDropdownType("project"));
+              // expand path to the uid
+              const _expandedItems: string[] = [];
+              let _file = fileTree[x];
+              while (_file && _file.uid !== RootNodeUid) {
+                _file = fileTree[_file.parentUid as string];
+                if (
+                  _file &&
+                  !_file.isEntity &&
+                  (!expandedItemsObj[_file.uid] ||
+                    expandedItemsObj[_file.uid] === undefined)
+                )
+                  _expandedItems.push(_file.uid);
+              }
+              dispatch(expandFileTreeNodes(_expandedItems));
+              exist = true;
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+  if (!exist) {
+    alert("rnbw couldn't find it's source file");
+  }
+};
+
 export const scrollToElement = (element: Element, behavior: ScrollBehavior) => {
   element.scrollIntoView({
     block: "nearest",

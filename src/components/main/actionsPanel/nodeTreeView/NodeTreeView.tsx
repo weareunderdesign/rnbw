@@ -16,12 +16,13 @@ import { RootNodeUid, ShortDelay } from "@_constants/main";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { TFileNodeData, THtmlNodeData } from "@_node/index";
 import { TNode, TNodeUid } from "@_node/types";
-import { scrollToElement } from "@_pages/main/helper";
-import { MainContext } from "@_redux/main";
 import {
-  expandFileTreeNodes,
-  setInitialFileUidToOpen,
-} from "@_redux/main/fileTree";
+  isWebComponentDblClicked,
+  onWebComponentDblClick,
+  scrollToElement,
+} from "@_pages/main/helper";
+import { MainContext } from "@_redux/main";
+
 import { setHoveredNodeUid } from "@_redux/main/nodeTree";
 import {
   setActivePanel,
@@ -146,74 +147,21 @@ const NodeTreeView = () => {
   // open web component
   const openWebComponent = useCallback(
     (item: TNodeUid) => {
-      // check the element is wc
       const nodeData = validNodeTree[item].data as THtmlNodeData;
-      let exist = false;
+      // check the element is wc
       if (
-        nodeData &&
-        htmlReferenceData.elements[nodeData.name] === undefined &&
-        nodeData.type === "tag"
+        isWebComponentDblClicked({
+          nodeData,
+          htmlReferenceData,
+        })
       ) {
-        const wcName = nodeData.name;
-        for (let x in fileTree) {
-          const defineRegex = /customElements\.define\(\s*['"]([\w-]+)['"]/;
-          if (
-            (fileTree[x].data as TFileNodeData).content &&
-            (fileTree[x].data as TFileNodeData).ext === ".js"
-          ) {
-            const match = (fileTree[x].data as TFileNodeData).content.match(
-              defineRegex,
-            );
-            if (match) {
-              // check web component
-              if (wcName === match[1].toLowerCase()) {
-                const fileName = (fileTree[x].data as TFileNodeData).name;
-                let src = "";
-                for (let i in validNodeTree) {
-                  if (
-                    (validNodeTree[i].data as THtmlNodeData).type ===
-                      "script" &&
-                    (validNodeTree[i].data as THtmlNodeData).html.search(
-                      fileName + ".js",
-                    ) !== -1
-                  ) {
-                    src = (validNodeTree[i].data as THtmlNodeData).attribs.src;
-                    break;
-                  }
-                }
-                if (src !== "") {
-                  if (src.startsWith("http") || src.startsWith("//")) {
-                    alert("rnbw couldn't find it's source file");
-                    break;
-                  } else {
-                    dispatch(setInitialFileUidToOpen(fileTree[x].uid));
-                    dispatch(setNavigatorDropdownType("project"));
-                    // expand path to the uid
-                    const _expandedItems: string[] = [];
-                    let _file = fileTree[x];
-                    while (_file && _file.uid !== RootNodeUid) {
-                      _file = fileTree[_file.parentUid as string];
-                      if (
-                        _file &&
-                        !_file.isEntity &&
-                        (!expandedItemsObj[_file.uid] ||
-                          expandedItemsObj[_file.uid] === undefined)
-                      )
-                        _expandedItems.push(_file.uid);
-                    }
-                    dispatch(expandFileTreeNodes(_expandedItems));
-                    exist = true;
-                    break;
-                  }
-                }
-              }
-            }
-          }
-        }
-
-        if (!exist) {
-          alert("rnbw couldn't find it's source file");
-        }
+        onWebComponentDblClick({
+          wcName: nodeData.nodeName,
+          validNodeTree,
+          dispatch,
+          expandedItemsObj,
+          fileTree,
+        });
       }
     },
     [htmlReferenceData, validNodeTree, fileTree],
