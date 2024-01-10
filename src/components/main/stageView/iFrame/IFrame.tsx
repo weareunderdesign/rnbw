@@ -29,7 +29,7 @@ export const IFrame = () => {
   const linkTagUidRef = useRef<TNodeUid>("");
 
   // hooks
-  const { nodeTreeRef, hoveredItemRef, focusedItemRef, selectedItemsRef } =
+  const { nodeTreeRef, focusedItemRef, selectedItemsRef } =
     useSyncNode(iframeRefState);
   const { onKeyDown } = useCmdk({
     iframeRefRef,
