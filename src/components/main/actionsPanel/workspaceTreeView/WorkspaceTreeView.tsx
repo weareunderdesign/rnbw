@@ -30,6 +30,7 @@ import {
   useNodeViewState,
   useSync,
 } from "./hooks";
+import { useSaveCommand } from "@_pages/main/processor/hooks";
 
 const AutoExpandDelayOnDnD = 1 * 1000;
 export default function WorkspaceTreeView() {
@@ -43,6 +44,7 @@ export default function WorkspaceTreeView() {
     fSelectedItems: selectedItems,
     linkToOpen,
     navigatorDropdownType,
+    autoSave,
   } = useAppState();
   const {
     addRunningActions,
@@ -64,6 +66,8 @@ export default function WorkspaceTreeView() {
   } = useNodeActionsHandler({
     openFileUid,
   });
+  const { onSaveCurrentFile } = useSaveCommand();
+
   useCmdk({
     openFileUid,
   });
@@ -189,6 +193,10 @@ export default function WorkspaceTreeView() {
               const onClick = useCallback(
                 (e: React.MouseEvent) => {
                   e.stopPropagation();
+
+                  if (fileTree[currentFileUid]?.data?.changed && autoSave) {
+                    onSaveCurrentFile();
+                  }
                   openFileUid.current = props.item.data.uid;
                   // skip click-event from an inline rename input
                   const targetId = e.target && (e.target as HTMLElement).id;
@@ -215,7 +223,7 @@ export default function WorkspaceTreeView() {
 
                   dispatch(setActivePanel("file"));
                 },
-                [props.item, props.context],
+                [props.item, props.context, fileTree, autoSave, currentFileUid],
               );
 
               const onDragStart = (e: React.DragEvent) => {

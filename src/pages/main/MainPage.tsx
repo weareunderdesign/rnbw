@@ -150,7 +150,6 @@ export default function MainPage() {
     dragEndCodeView,
     dropCodeView,
   } = usePanels();
-
   const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
   const prevFocusedElement = React.useRef<HTMLElement | null>(
     window.document.activeElement as HTMLElement | null,
@@ -176,13 +175,12 @@ export default function MainPage() {
   );
 
   const handleVisibilityChange = useCallback(() => {
-    if (
-      document.visibilityState === "visible" &&
-      !fileTree[currentFileUid]?.data?.changed
-    ) {
-      debouncedCurrentProjectReload();
+    if (document.visibilityState === "visible") {
+      fileTree[currentFileUid]?.data?.changed
+        ? autoSave && dispatch(setCurrentCommand({ action: "Save" }))
+        : debouncedCurrentProjectReload();
     }
-  }, [fileTree, currentFileUid, debouncedCurrentProjectReload]);
+  }, [fileTree, currentFileUid, debouncedCurrentProjectReload, autoSave, ,]);
 
   const handleBlurChange = useCallback(() => {
     if (

@@ -4,13 +4,16 @@ import { useDispatch } from "react-redux";
 
 import { setDidRedo, setDidUndo } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
+import { useSaveCommand } from "./useSaveCommand";
 
 export const useHms = () => {
   const dispatch = useDispatch();
-  const { didUndo, didRedo } = useAppState();
+  const { didUndo, didRedo, autoSave } = useAppState();
+  const { debouncedAutoSave } = useSaveCommand();
 
   useEffect(() => {
     didUndo && dispatch(setDidUndo(false));
     didRedo && dispatch(setDidRedo(false));
-  }, [didUndo, didRedo]);
+    autoSave && debouncedAutoSave();
+  }, [didUndo, didRedo, autoSave]);
 };

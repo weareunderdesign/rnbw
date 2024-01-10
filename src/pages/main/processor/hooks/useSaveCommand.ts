@@ -2,7 +2,7 @@ import { useCallback, useContext, useEffect } from "react";
 
 import { useDispatch } from "react-redux";
 
-import { RootNodeUid } from "@_constants/main";
+import { AutoSaveDelay, RootNodeUid } from "@_constants/main";
 import { TFileNodeTreeData } from "@_node/file";
 import { MainContext } from "@_redux/main";
 import { setFileTree } from "@_redux/main/fileTree";
@@ -10,6 +10,8 @@ import { setNeedToReloadIframe } from "@_redux/main/stageView";
 import { useAppState } from "@_redux/useAppState";
 
 import { saveFileContent } from "../helpers";
+import { setCurrentCommand } from "@_redux/main/cmdk";
+import { debounce } from "lodash";
 
 export const useSaveCommand = () => {
   const dispatch = useDispatch();
@@ -57,5 +59,13 @@ export const useSaveCommand = () => {
 
   const onSaveProject = useCallback(async () => {}, []);
 
-  return { onSaveCurrentFile, onSaveProject };
+  const debouncedAutoSave = useCallback(
+    debounce(
+      () => dispatch(setCurrentCommand({ action: "Save" })),
+      AutoSaveDelay,
+    ),
+    [],
+  );
+
+  return { onSaveCurrentFile, onSaveProject, debouncedAutoSave };
 };
