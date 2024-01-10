@@ -26,10 +26,11 @@ import { useAppState } from "@_redux/useAppState";
 
 import { getCodeViewTheme, getLanguageFromExtension } from "../helpers";
 import { TCodeSelection } from "../types";
+import { useSaveCommand } from "@_pages/main/processor/hooks";
 
 const useEditor = () => {
   const dispatch = useDispatch();
-  const { theme: _theme } = useAppState();
+  const { theme: _theme, autoSave } = useAppState();
   const {
     monacoEditorRef,
     setMonacoEditorRef,
@@ -128,24 +129,28 @@ const useEditor = () => {
     },
     [setCodeSelection],
   );
-
+  const { debouncedAutoSave } = useSaveCommand();
   // handleOnChange
-  const onChange = useCallback((value: string) => {
-    dispatch(setCurrentFileContent(value));
-    dispatch(
-      setNeedToSelectCode(
-        codeSelectionRef.current
-          ? {
-              startLineNumber: codeSelectionRef.current.startLineNumber,
-              startColumn: codeSelectionRef.current.startColumn,
-              endLineNumber: codeSelectionRef.current.endLineNumber,
-              endColumn: codeSelectionRef.current.endColumn,
-            }
-          : null,
-      ),
-    );
-    setIsCodeTyping(false);
-  }, []);
+  const onChange = useCallback(
+    (value: string) => {
+      dispatch(setCurrentFileContent(value));
+      dispatch(
+        setNeedToSelectCode(
+          codeSelectionRef.current
+            ? {
+                startLineNumber: codeSelectionRef.current.startLineNumber,
+                startColumn: codeSelectionRef.current.startColumn,
+                endLineNumber: codeSelectionRef.current.endLineNumber,
+                endColumn: codeSelectionRef.current.endColumn,
+              }
+            : null,
+        ),
+      );
+      setIsCodeTyping(false);
+      autoSave && debouncedAutoSave();
+    },
+    [debouncedAutoSave, autoSave],
+  );
   const debouncedOnChange = useCallback(
     debounce((value) => {
       onChange(value);
