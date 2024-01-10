@@ -1,4 +1,4 @@
-import { useCallback, useContext } from "react";
+import { useCallback, useContext, useRef } from "react";
 
 import { debounce } from "lodash";
 import { useDispatch } from "react-redux";
@@ -19,6 +19,11 @@ import {
   getValidElementWithUid,
   selectAllText,
 } from "../helpers";
+import {
+  isWebComponentDblClicked,
+  onWebComponentDblClick,
+} from "@_pages/main/helper";
+import { useAppState } from "@_redux/useAppState";
 
 interface IUseMouseEventsProps {
   iframeRefRef: React.MutableRefObject<HTMLIFrameElement | null>;
@@ -33,15 +38,23 @@ interface IUseMouseEventsProps {
 export const useMouseEvents = ({
   iframeRefRef,
   nodeTreeRef,
-  focusedItemRef,
   selectedItemsRef,
   contentEditableUidRef,
   isEditingRef,
-  linkTagUidRef,
 }: IUseMouseEventsProps) => {
   const dispatch = useDispatch();
-  const { monacoEditorRef, setIsContentProgrammaticallyChanged } =
-    useContext(MainContext);
+  const {
+    monacoEditorRef,
+    setIsContentProgrammaticallyChanged,
+    htmlReferenceData,
+  } = useContext(MainContext);
+  const {
+    fileTree,
+    validNodeTree,
+    fExpandedItemsObj: expandedItemsObj,
+  } = useAppState();
+
+  const mostRecentClickedNodeUidRef = useRef<TNodeUid>(""); //This is used because dbl clikc event was not able to receive the uid of the node that was clicked
 
   // hoveredNodeUid
   const onMouseEnter = useCallback((e: MouseEvent) => {}, []);
@@ -59,6 +72,7 @@ export const useMouseEvents = ({
 
     const { uid } = getValidElementWithUid(e.target as HTMLElement);
     if (uid) {
+      mostRecentClickedNodeUidRef.current = uid;
       // update selectedNodeUids
       (() => {
         const uids = e.shiftKey
@@ -123,29 +137,63 @@ export const useMouseEvents = ({
     debounce(selectAllText, ShortDelay),
     [],
   );
-  const onDblClick = useCallback((e: MouseEvent) => {
-    const ele = e.target as HTMLElement;
-    const uid: TNodeUid | null = ele.getAttribute(StageNodeIdAttr);
+  const onDblClick = useCallback(
+    (e: MouseEvent) => {
+      const ele = e.target as HTMLElement;
+      const uid: TNodeUid | null = ele.getAttribute(StageNodeIdAttr);
 
-    if (!uid) {
-      // when dbl-click on a web component
-      isEditingRef.current = false;
-    } else {
-      const node = nodeTreeRef.current[uid];
-      const nodeData = node.data as THtmlNodeData;
-      if (["html", "head", "body", "img", "div"].includes(nodeData.name))
-        return;
+      if (!uid) {
+        // when dbl-click on a web component
+        isEditingRef.current = false;
+        if (mostRecentClickedNodeUidRef.current) {
+          // when dbl-click on a web component
+          const node = nodeTreeRef.current[mostRecentClickedNodeUidRef.current];
+          const nodeData = node.data as THtmlNodeData;
+          if (
+            isWebComponentDblClicked({
+              htmlReferenceData,
+              nodeData,
+            })
+          ) {
+            onWebComponentDblClick({
+              dispatch,
+              expandedItemsObj,
+              fileTree,
+              validNodeTree,
+              wcName: nodeData.nodeName,
+            });
+            return;
+          }
+        }
+      } else {
+        const node = nodeTreeRef.current[uid];
+        const nodeData = node.data as THtmlNodeData;
+        console.log("nodeData", mostRecentClickedNodeUidRef.current);
 
-      const { startTag, endTag } = nodeData.sourceCodeLocation;
-      if (startTag && endTag) {
-        isEditingRef.current = true;
-        contentEditableUidRef.current = uid;
-        ele.setAttribute("contenteditable", "true");
-        ele.focus();
-        debouncedSelectAllText(iframeRefRef.current, ele);
+        if (["html", "head", "body", "img", "div"].includes(nodeData.name))
+          return;
+
+        const { startTag, endTag } = nodeData.sourceCodeLocation;
+        if (startTag && endTag) {
+          isEditingRef.current = true;
+          contentEditableUidRef.current = uid;
+          ele.setAttribute("contenteditable", "true");
+          ele.focus();
+          debouncedSelectAllText(iframeRefRef.current, ele);
+        }
       }
-    }
-  }, []);
+    },
+    [
+      contentEditableUidRef,
+      debouncedSelectAllText,
+      expandedItemsObj,
+      fileTree,
+      htmlReferenceData,
+      nodeTreeRef,
+      validNodeTree,
+      mostRecentClickedNodeUidRef.current,
+    ],
+  );
 
   return {
     onMouseLeave,
