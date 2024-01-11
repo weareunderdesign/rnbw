@@ -68,6 +68,7 @@ export const useAppState = () => {
         autoSave,
         didUndo,
         didRedo,
+        loading,
       },
       cmdk: {
         cmdkOpen,
@@ -158,6 +159,7 @@ export const useAppState = () => {
 
     didUndo,
     didRedo,
+    loading,
 
     cmdkOpen,
     cmdkPages,

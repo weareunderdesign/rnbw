@@ -23,6 +23,7 @@ const processorReducerInitialState: TProcessorReducerState = {
 
   didUndo: false,
   didRedo: false,
+  loading: 0,
 };
 const processorSlice = createSlice({
   name: "processor",
@@ -75,6 +76,12 @@ const processorSlice = createSlice({
       const didRedo = action.payload;
       state.didRedo = didRedo;
     },
+    setLoadingTrue(state) {
+      state.loading += 1;
+    },
+    setLoadingFalse(state) {
+      state.loading = Math.max(0, state.loading - 1);
+    },
   },
 });
 export const {
@@ -93,5 +100,7 @@ export const {
 
   setDidUndo,
   setDidRedo,
+  setLoadingTrue,
+  setLoadingFalse,
 } = processorSlice.actions;
 export const ProcessorReduer = processorSlice.reducer;

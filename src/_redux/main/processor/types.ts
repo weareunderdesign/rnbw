@@ -16,6 +16,7 @@ export type TProcessorReducerState = {
 
   didUndo: boolean;
   didRedo: boolean;
+  loading: number;
 };
 
 export type TNavigatorDropdownType = "workspace" | "project" | null;
