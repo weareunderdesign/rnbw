@@ -290,7 +290,7 @@ export default function MainPage() {
           style={{ display: "relative" }}
           onClick={closeNavigator}
         >
-          <Loader show={true} />
+          <Loader />
           {RenderableFileTypes?.[fileTree[currentFileUid]?.data?.ext] && (
             <StageView />
           )}

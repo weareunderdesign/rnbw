@@ -22,6 +22,8 @@ import {
 } from "@_redux/main/fileTree";
 import { setCurrentFileContent } from "@_redux/main/nodeTree";
 import {
+  setLoadingFalse,
+  setLoadingTrue,
   setNavigatorDropdownType,
   setShowActionsPanel,
 } from "@_redux/main/processor";
@@ -111,6 +113,7 @@ export const useHandlers = ({
     ) => {
       if (fsType === "local") {
         dispatch(setDoingFileAction(true));
+        dispatch(setLoadingTrue());
         try {
           const {
             handlerArr,
@@ -156,8 +159,10 @@ export const useHandlers = ({
           LogAllow && console.log("ERROR while importing local project", err);
         }
         dispatch(setDoingFileAction(false));
+        dispatch(setLoadingFalse());
       } else if (fsType === "idb") {
         dispatch(setDoingFileAction(true));
+        dispatch(setLoadingTrue());
         try {
           const { _fileTree, _initialFileUidToOpen } =
             await loadIDBProject(DefaultProjectPath);
@@ -182,6 +187,7 @@ export const useHandlers = ({
           LogAllow && console.log("ERROR while importing IDB project", err);
         }
         dispatch(setDoingFileAction(false));
+        dispatch(setLoadingFalse());
       }
     },
     [osType, saveRecentProject],
