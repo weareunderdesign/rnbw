@@ -12,6 +12,17 @@ html {
   outline: 1px solid var(--color-rnbwdev-rainbow-element-background);
   outline-offset: -1px;
 }
+h1[rnbwdev-rnbw-element-hover]:hover,
+h2[rnbwdev-rnbw-element-hover]:hover,
+h3[rnbwdev-rnbw-element-hover]:hover,
+h4[rnbwdev-rnbw-element-hover]:hover,
+h5[rnbwdev-rnbw-element-hover]:hover,
+h6[rnbwdev-rnbw-element-hover]:hover,
+p[rnbwdev-rnbw-element-hover]:hover {
+  outline: none;
+  text-decoration: underline;
+  text-decoration-color: var(--color-rnbwdev-rainbow-element-background);
+}
 [rnbwdev-rnbw-element-select] {
   outline: 1px solid var(--color-rnbwdev-rainbow-element-foreground);
   outline-offset: -1px;
