@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import LoadingBar from "react-top-loading-bar";
 import { useAppState } from "@_redux/useAppState";
-const animationDuration = 200;
+const animationDuration = 300;
 
 export const Loader = () => {
   const { theme, loading } = useAppState();

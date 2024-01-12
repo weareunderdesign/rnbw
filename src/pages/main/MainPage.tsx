@@ -180,7 +180,7 @@ export default function MainPage() {
         ? autoSave && dispatch(setCurrentCommand({ action: "Save" }))
         : debouncedCurrentProjectReload();
     }
-  }, [fileTree, currentFileUid, debouncedCurrentProjectReload, autoSave, ,]);
+  }, [fileTree, currentFileUid, debouncedCurrentProjectReload, autoSave]);
 
   const handleBlurChange = useCallback(() => {
     if (
