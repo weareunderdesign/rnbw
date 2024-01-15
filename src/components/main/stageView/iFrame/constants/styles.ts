@@ -19,9 +19,12 @@ h4[rnbwdev-rnbw-element-hover]:hover,
 h5[rnbwdev-rnbw-element-hover]:hover,
 h6[rnbwdev-rnbw-element-hover]:hover,
 p[rnbwdev-rnbw-element-hover]:hover {
-  outline: none;
   text-decoration: underline;
   text-decoration-color: var(--color-rnbwdev-rainbow-element-background);
+  text-decoration-thickness: 1px;
+}
+[rnbwdev-rnbw-element-hover]:hover:not([rnbwdev-rnbw-element-select]) {
+  outline: none;
 }
 [rnbwdev-rnbw-element-select] {
   outline: 1px solid var(--color-rnbwdev-rainbow-element-foreground);
