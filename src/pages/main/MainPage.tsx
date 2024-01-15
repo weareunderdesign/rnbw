@@ -4,7 +4,7 @@ import cx from "classnames";
 import { Command } from "cmdk";
 import { useDispatch } from "react-redux";
 
-import { SVGIcon } from "@_components/common";
+import { Loader, SVGIcon } from "@_components/common";
 import { ActionsPanel, CodeView, StageView } from "@_components/main";
 import { LogAllow } from "@_constants/global";
 import {
@@ -180,7 +180,7 @@ export default function MainPage() {
         ? autoSave && dispatch(setCurrentCommand({ action: "Save" }))
         : debouncedCurrentProjectReload();
     }
-  }, [fileTree, currentFileUid, debouncedCurrentProjectReload, autoSave, ,]);
+  }, [fileTree, currentFileUid, debouncedCurrentProjectReload, autoSave]);
 
   const handleBlurChange = useCallback(() => {
     if (
@@ -290,6 +290,7 @@ export default function MainPage() {
           style={{ display: "relative" }}
           onClick={closeNavigator}
         >
+          <Loader />
           {RenderableFileTypes?.[fileTree[currentFileUid]?.data?.ext] && (
             <StageView />
           )}

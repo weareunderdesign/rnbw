@@ -12,6 +12,7 @@ import { useAppState } from "@_redux/useAppState";
 import { saveFileContent } from "../helpers";
 import { setCurrentCommand } from "@_redux/main/cmdk";
 import { debounce } from "lodash";
+import { setLoadingFalse, setLoadingTrue } from "@_redux/main/processor";
 
 export const useSaveCommand = () => {
   const dispatch = useDispatch();
@@ -35,7 +36,7 @@ export const useSaveCommand = () => {
 
   const onSaveCurrentFile = useCallback(async () => {
     if (!fileTree[RootNodeUid]) return;
-
+    dispatch(setLoadingTrue());
     const _ffTree = structuredClone(fileTree);
     let file = _ffTree[currentFileUid];
     const fileData = file.data;
@@ -55,6 +56,7 @@ export const useSaveCommand = () => {
 
     dispatch(setFileTree(_ffTree as TFileNodeTreeData));
     fileData.ext !== "html" && dispatch(setNeedToReloadIframe(true));
+    dispatch(setLoadingFalse());
   }, [project, fileTree, fileHandlers, currentFileUid]);
 
   const onSaveProject = useCallback(async () => {}, []);

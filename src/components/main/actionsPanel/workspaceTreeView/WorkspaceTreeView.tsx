@@ -18,7 +18,11 @@ import { TNode, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { setHoveredFileUid } from "@_redux/main/fileTree";
 import { FileTree_Event_ClearActionType } from "@_redux/main/fileTree/event";
-import { setActivePanel } from "@_redux/main/processor";
+import {
+  setActivePanel,
+  setLoadingFalse,
+  setLoadingTrue,
+} from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 import { generateQuerySelector } from "@_services/main";
 import { TFilesReference } from "@_types/main";
@@ -191,37 +195,55 @@ export default function WorkspaceTreeView() {
               }, []);
 
               const onClick = useCallback(
-                (e: React.MouseEvent) => {
+                async (e: React.MouseEvent) => {
                   e.stopPropagation();
+                  const isFile =
+                    fileTree[props.item.data.uid].data.kind === "file";
 
-                  if (fileTree[currentFileUid]?.data?.changed && autoSave) {
-                    onSaveCurrentFile();
-                  }
-                  openFileUid.current = props.item.data.uid;
-                  // skip click-event from an inline rename input
-                  const targetId = e.target && (e.target as HTMLElement).id;
-                  if (targetId === "FileTreeView-RenameInput") {
-                    return;
-                  }
+                  isFile &&
+                    props.item.data.uid !== currentFileUid &&
+                    dispatch(setLoadingTrue());
 
-                  if (!props.context.isFocused) {
-                    props.context.focusItem();
-                    focusedItemRef.current = props.item.index as TNodeUid;
-                  }
-                  e.shiftKey
-                    ? props.context.selectUpTo()
-                    : e.ctrlKey
-                    ? props.context.isSelected
-                      ? props.context.unselectItem()
-                      : props.context.addToSelectedItems()
-                    : [
-                        props.context.selectItem(),
-                        props.item.isFolder
-                          ? props.context.toggleExpandedState()
-                          : props.context.primaryAction(),
-                      ];
+                  try {
+                    const promises = [];
 
-                  dispatch(setActivePanel("file"));
+                    if (fileTree[currentFileUid]?.data?.changed && autoSave) {
+                      promises.push(onSaveCurrentFile());
+                    }
+                    openFileUid.current = props.item.data.uid;
+                    // Skip click-event from an inline rename input
+                    const targetId = e.target && (e.target as HTMLElement).id;
+                    if (targetId === "FileTreeView-RenameInput") {
+                      return;
+                    }
+
+                    if (!props.context.isFocused) {
+                      props.context.focusItem();
+                      focusedItemRef.current = props.item.index as TNodeUid;
+                    }
+                    if (e.shiftKey) {
+                      promises.push(props.context.selectUpTo());
+                    } else if (e.ctrlKey) {
+                      promises.push(
+                        props.context.isSelected
+                          ? props.context.unselectItem()
+                          : props.context.addToSelectedItems(),
+                      );
+                    } else {
+                      promises.push(props.context.selectItem());
+                      if (props.item.isFolder) {
+                        promises.push(props.context.toggleExpandedState());
+                      } else {
+                        promises.push(props.context.primaryAction());
+                      }
+                    }
+
+                    promises.push(dispatch(setActivePanel("file")));
+                    // Wait for all promises to resolve
+                    await Promise.all(promises);
+                  } finally {
+                    isFile && dispatch(setLoadingFalse());
+                  }
                 },
                 [props.item, props.context, fileTree, autoSave, currentFileUid],
               );
