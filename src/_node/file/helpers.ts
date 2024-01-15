@@ -148,3 +148,10 @@ export const getTargetHandler = ({
   }
   return targetHandler;
 };
+export const createURLPath = (
+  baseString: string,
+  partToReplace: string,
+  replacementValue: string,
+) => {
+  return baseString?.replace(partToReplace, replacementValue);
+};

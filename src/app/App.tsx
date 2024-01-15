@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { HashRouter as Router, Route, Routes } from "react-router-dom";
 import { Workbox } from "workbox-window";
 
 import { LogAllow } from "@_constants/global";
@@ -27,7 +27,7 @@ export default function App(props: AppProps) {
         {nohostReady ? (
           <Router>
             <Routes>
-              <Route path="/" element={<MainPage />} />
+              <Route path="*" element={<MainPage />} />
             </Routes>
           </Router>
         ) : null}
