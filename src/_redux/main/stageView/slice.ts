@@ -7,7 +7,7 @@ const stageViewReducerInitialState: TStageViewReducerState = {
   iframeLoading: false,
   needToReloadIframe: false,
   linkToOpen: null,
-
+  webComponentOpen: false,
   syncConfigs: {},
 };
 const stageViewSlice = createSlice({
@@ -34,6 +34,10 @@ const stageViewSlice = createSlice({
       const syncConfigs = action.payload;
       state.syncConfigs = syncConfigs;
     },
+    setWebComponentOpen(state, action: PayloadAction<boolean>) {
+      const webComponentOpen = action.payload;
+      state.webComponentOpen = webComponentOpen;
+    },
   },
 });
 export const {
@@ -42,5 +46,6 @@ export const {
   setNeedToReloadIframe,
   setLinkToOpen,
   setSyncConfigs,
+  setWebComponentOpen,
 } = stageViewSlice.actions;
 export const StageViewReducer = stageViewSlice.reducer;

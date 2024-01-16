@@ -3,7 +3,7 @@ export type TStageViewReducerState = {
   iframeLoading: boolean;
   needToReloadIframe: boolean;
   linkToOpen: string | null;
-
+  webComponentOpen: boolean;
   syncConfigs: StageViewSyncConfigs;
 };
 

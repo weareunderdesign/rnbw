@@ -22,7 +22,7 @@ import {
   NodeTree_Event_ClearActionType,
   NodeTree_Event_JumpToPastActionType,
 } from "@_redux/main/nodeTree/event";
-import { setIframeSrc } from "@_redux/main/stageView";
+import { setIframeSrc, setWebComponentOpen } from "@_redux/main/stageView";
 import {
   TCmdkKeyMap,
   TCmdkReference,
@@ -33,7 +33,10 @@ import {
 import { AnyAction } from "@reduxjs/toolkit";
 import { THtmlNodeData } from "@_node/node";
 import { TFileNodeData, TFileNodeTreeData } from "@_node/index";
-import { setNavigatorDropdownType } from "@_redux/main/processor";
+import {
+  setActivePanel,
+  setNavigatorDropdownType,
+} from "@_redux/main/processor";
 
 export const addDefaultCmdkActions = (
   cmdkReferenceData: TCmdkReferenceData,
@@ -372,8 +375,10 @@ export const onWebComponentDblClick = ({
               alert("rnbw couldn't find it's source file");
               break;
             } else {
+              dispatch(setWebComponentOpen(true));
               dispatch(setInitialFileUidToOpen(fileTree[x].uid));
               dispatch(setNavigatorDropdownType("project"));
+              dispatch(setActivePanel("code"));
               // expand path to the uid
               const _expandedItems: string[] = [];
               let _file = fileTree[x];
@@ -388,6 +393,7 @@ export const onWebComponentDblClick = ({
                   _expandedItems.push(_file.uid);
               }
               dispatch(expandFileTreeNodes(_expandedItems));
+
               exist = true;
               break;
             }

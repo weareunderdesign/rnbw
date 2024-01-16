@@ -13,9 +13,7 @@ export const useCmdk = ({ openFileUid }: IUseCmdk) => {
   const { activePanel, currentCommand } = useAppState();
 
   const { onAdd, onRemove, onCut, onCopy, onPaste, onDuplicate } =
-    useNodeActionsHandler({
-      openFileUid,
-    });
+    useNodeActionsHandler();
 
   const onAddNode = useCallback(
     (actionName: string) => {

@@ -39,12 +39,7 @@ import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
 import { setClipboardData, setShowCodeView } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 
-interface IUseNodeActionsHandler {
-  openFileUid: React.MutableRefObject<string>;
-}
-export const useNodeActionsHandler = ({
-  openFileUid,
-}: IUseNodeActionsHandler) => {
+export const useNodeActionsHandler = () => {
   const dispatch = useDispatch();
   const {
     project,
@@ -55,6 +50,7 @@ export const useNodeActionsHandler = ({
     fExpandedItemsObj: expandedItemsObj,
     fSelectedItems: selectedItems,
     clipboardData,
+    webComponentOpen,
   } = useAppState();
   const {
     addRunningActions,
@@ -464,12 +460,9 @@ export const useNodeActionsHandler = ({
         return;
       }
 
-      clearFileSession(dispatch);
-
       const nodeData = node.data as TFileNodeData;
       if (RenderableFileTypes[nodeData.ext]) {
         dispatch(setPrevRenderableFileUid(uid));
-
         // set initial content of the html if file content is empty
         if (
           nodeData.ext === "html" &&
@@ -485,9 +478,10 @@ export const useNodeActionsHandler = ({
           nodeData.content = doctype + html;
         }
       }
-
+      if (!webComponentOpen) {
+        clearFileSession(dispatch);
+      }
       dispatch(setCurrentFileUid(uid));
-
       dispatch(setCurrentFileContent(nodeData.content));
 
       removeRunningActions(["fileTreeView-read"]);
@@ -501,6 +495,7 @@ export const useNodeActionsHandler = ({
       fileTree,
       currentFileUid,
       showCodeView,
+      webComponentOpen,
     ],
   );
   const cb_moveNode = useCallback(

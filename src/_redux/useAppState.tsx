@@ -55,6 +55,7 @@ export const useAppState = () => {
         needToReloadIframe,
         linkToOpen,
         syncConfigs,
+        webComponentOpen,
       },
       codeView: { editingNodeUid: editingNodeUidInCodeView, codeViewTabSize },
       processor: {
@@ -140,6 +141,7 @@ export const useAppState = () => {
     needToReloadIframe,
     linkToOpen,
     syncConfigs,
+    webComponentOpen,
 
     editingNodeUidInCodeView,
     codeViewTabSize,
