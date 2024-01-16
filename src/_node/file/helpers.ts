@@ -153,5 +153,5 @@ export const createURLPath = (
   partToReplace: string,
   replacementValue: string,
 ) => {
-  return baseString?.replace(partToReplace, replacementValue);
+  return `/${baseString?.replace(partToReplace, replacementValue)}`;
 };

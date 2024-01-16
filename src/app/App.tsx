@@ -27,7 +27,8 @@ export default function App(props: AppProps) {
         {nohostReady ? (
           <Router>
             <Routes>
-              <Route path="*" element={<MainPage />} />
+              <Route path="/" element={<MainPage />} />
+              <Route path="/:project/*" element={<MainPage />} />
             </Routes>
           </Router>
         ) : null}

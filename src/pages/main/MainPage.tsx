@@ -12,6 +12,7 @@ import {
   RenderableFileTypes,
   CodeViewSyncDelay,
   RenameActionPrefix,
+  RootNodeUid,
 } from "@_constants/main";
 import {
   confirmFileChanges,
@@ -45,6 +46,7 @@ import {
 } from "./hooks";
 import Processor from "./processor";
 import { debounce } from "lodash";
+import { useNavigate, useParams } from "react-router-dom";
 
 export default function MainPage() {
   // redux
@@ -81,6 +83,7 @@ export default function MainPage() {
     setRecentProjectNames,
     setRecentProjectHandlers,
   } = useRecentProjects();
+
   const { filesReferenceData, htmlReferenceData } = useReferenceData();
   const {
     monacoEditorRef,
@@ -243,7 +246,66 @@ export default function MainPage() {
       removeEventListeners();
     };
   }, [addEventListeners, removeEventListeners]);
+  const { project, "*": rest } = useParams();
+  const navigate = useNavigate();
 
+  const openFromURL = async () => {
+    console.log(">>>>>>>>>>>>>>>>>>>> function to be run <<<<<<<<<<<<<<<<<<");
+
+    if (!project) return;
+    if (currentProjectFileHandle?.name !== project) {
+      // if (recentProjectNames.includes(project)) {
+      console.log({ recentProjectContexts, recentProjectHandlers });
+
+      const index = recentProjectNames.indexOf(project);
+
+      console.log({ project, rest, index }, "index");
+
+      const projectContext = recentProjectContexts[index];
+      const projectHandler = recentProjectHandlers[index];
+
+      console.log(
+        { projectContext, projectHandler },
+        "recentProjectHandlers[index]",
+      );
+
+      if (index >= 0 && projectHandler) {
+        // isUnsavedProject(fileTree)
+        //   ? confirmFileChanges(fileTree)
+        //   :
+        // window.confirm("Дозволити доступ до файлу?") &&
+        importProject(projectContext, projectHandler);
+      }
+    }
+
+    const pathName = `${RootNodeUid}/${rest}`;
+    if (currentFileUid !== pathName) {
+      console.log(pathName, "openFILE");
+
+      // openFile(pathName);
+    }
+  };
+  useEffect(() => {
+    // if (!project) return;
+    // if (currentProjectFileHandle?.name !== project) {
+    //   // if (recentProjectNames.includes(project)) {
+    //   const index = recentProjectNames.indexOf(project);
+
+    //   if (index >= 0) {
+    //     confirmFileChanges(fileTree) &&
+    //       importProject(
+    //         recentProjectContexts[index],
+    //         recentProjectHandlers[index],
+    //       );
+    //   }
+    // }
+
+    // const pathName = `${RootNodeUid}/${rest}`;
+    // if (currentFileUid !== pathName) {
+    //   openFile(pathName);
+    // }
+    recentProjectHandlers && openFromURL();
+  }, [project, rest, recentProjectHandlers]);
   return (
     <>
       <MainContext.Provider
@@ -262,7 +324,12 @@ export default function MainPage() {
           fileHandlers,
           setFileHandlers,
 
+          recentProjectNames,
+          recentProjectHandlers,
+          recentProjectContexts,
+
           monacoEditorRef,
+
           setMonacoEditorRef,
           iframeRefRef,
           setIframeRefRef,
@@ -545,10 +612,12 @@ export default function MainPage() {
                                   command.Group === "Recent"
                                 ) {
                                   const index = Number(command.Context);
+
                                   const projectContext =
                                     recentProjectContexts[index];
                                   const projectHandler =
                                     recentProjectHandlers[index];
+                                  navigate("/");
 
                                   confirmFileChanges(fileTree) &&
                                     importProject(

@@ -14,7 +14,12 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { RootNodeUid } from "@_constants/main";
 import { SVGIconI, SVGIconII, TreeView } from "@_components/common";
-import { getNormalizedPath, createURLPath, TFileNodeData } from "@_node/file";
+import {
+  getNormalizedPath,
+  createURLPath,
+  TFileNodeData,
+  confirmFileChanges,
+} from "@_node/file";
 import { _path } from "@_node/file/nohostApis";
 import { TNode, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
@@ -57,9 +62,14 @@ export default function WorkspaceTreeView() {
     removeRunningActions,
     filesReferenceData,
     invalidFileNodes,
+    currentProjectFileHandle,
+    recentProjectNames,
+    recentProjectHandlers,
+    recentProjectContexts,
+    importProject,
   } = useContext(MainContext);
   const navigate = useNavigate();
-  const path = useParams();
+  const { project, "*": rest } = useParams();
 
   const { focusedItemRef, fileTreeViewData } = useSync();
   const { cb_focusNode, cb_selectNode, cb_expandNode, cb_collapseNode } =
@@ -138,18 +148,56 @@ export default function WorkspaceTreeView() {
   const onPanelClick = useCallback(() => {
     dispatch(setActivePanel("file"));
   }, []);
+  const openFromURL = async () => {
+    console.log(">>>>>>>>>>>>>>>>>>>> function to be run <<<<<<<<<<<<<<<<<<");
 
-  useEffect(() => {
-    if (!path["*"]) return;
-    const pathName = createURLPath(
-      path["*"],
-      fileTree[RootNodeUid]?.displayName,
-      RootNodeUid,
-    );
+    if (!project) return;
+    if (currentProjectFileHandle?.name !== project) {
+      // if (recentProjectNames.includes(project)) {
+      console.log({ recentProjectContexts, recentProjectHandlers });
+
+      const index = recentProjectNames.indexOf(project);
+
+      console.log({ project, rest, index }, "index");
+
+      const projectContext = recentProjectContexts[index];
+      const projectHandler = recentProjectHandlers[index];
+
+      console.log(
+        { projectContext, projectHandler },
+        "recentProjectHandlers[index]",
+      );
+
+      if (index >= 0 && projectHandler) {
+        confirmFileChanges(fileTree) &&
+          importProject(projectContext, projectHandler);
+      }
+    }
+
+    const pathName = `${RootNodeUid}/${rest}`;
     if (currentFileUid !== pathName) {
       openFile(pathName);
     }
-  }, [path]);
+  };
+  useEffect(() => {
+    // if (!project) return;
+    // if (currentProjectFileHandle?.name !== project) {
+    //   // if (recentProjectNames.includes(project)) {
+    //   const index = recentProjectNames.indexOf(project);
+    //   if (index >= 0) {
+    //     confirmFileChanges(fileTree) &&
+    //       importProject(
+    //         recentProjectContexts[index],
+    //         recentProjectHandlers[index],
+    //       );
+    //   }
+    // }
+    // const pathName = `${RootNodeUid}/${rest}`;
+    // if (currentFileUid !== pathName) {
+    //   openFile(pathName);
+    // }
+    // openFromURL();
+  }, [project, rest]);
 
   return currentFileUid === "" || navigatorDropdownType === "project" ? (
     <>
@@ -215,18 +263,18 @@ export default function WorkspaceTreeView() {
                   e.stopPropagation();
                   const isFile =
                     fileTree[props.item.data.uid].data.kind === "file";
-                  isFile &&
-                    navigate(
-                      createURLPath(
-                        props.item.data.uid,
-                        RootNodeUid,
-                        fileTree[RootNodeUid]?.displayName,
-                      ),
-                    );
+                  const newURL = createURLPath(
+                    props.item.data.uid,
+                    RootNodeUid,
+                    fileTree[RootNodeUid]?.displayName,
+                  );
 
-                  isFile &&
+                  if (isFile) {
+                    navigate(newURL);
+
                     props.item.data.uid !== currentFileUid &&
-                    dispatch(setLoadingTrue());
+                      dispatch(setLoadingTrue());
+                  }
 
                   try {
                     const promises = [];

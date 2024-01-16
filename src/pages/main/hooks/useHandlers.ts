@@ -162,13 +162,13 @@ export const useHandlers = ({
             fsType,
             projectHandle as FileSystemDirectoryHandle,
           );
-          navigate(
-            createURLPath(
-              _initialFileUidToOpen,
-              RootNodeUid,
-              _fileTree[RootNodeUid]?.displayName,
-            ),
+
+          const pathURL = createURLPath(
+            _initialFileUidToOpen,
+            RootNodeUid,
+            _fileTree[RootNodeUid]?.displayName,
           );
+          navigate(pathURL);
         } catch (err) {
           LogAllow && console.log("ERROR while importing local project", err);
         }
