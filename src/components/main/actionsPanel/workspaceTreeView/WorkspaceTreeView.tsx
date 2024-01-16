@@ -67,9 +67,7 @@ export default function WorkspaceTreeView() {
     cb_renameNode,
     cb_moveNode,
     cb_readNode,
-  } = useNodeActionsHandler({
-    openFileUid,
-  });
+  } = useNodeActionsHandler();
   const { onSaveCurrentFile } = useSaveCommand();
 
   useCmdk({
