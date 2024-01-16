@@ -291,9 +291,7 @@ export default function MainPage() {
           onClick={closeNavigator}
         >
           <Loader />
-          {RenderableFileTypes?.[fileTree[currentFileUid]?.data?.ext] && (
-            <StageView />
-          )}
+          <StageView />
           <ActionsPanel
             top={actionsPanelOffsetTop}
             left={actionsPanelOffsetLeft}

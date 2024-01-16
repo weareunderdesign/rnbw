@@ -65,6 +65,7 @@ export const useNodeTreeEvent = () => {
     nExpandedItems,
 
     syncConfigs,
+    webComponentOpen,
   } = useAppState();
   const { addRunningActions, removeRunningActions, iframeRefRef } =
     useContext(MainContext);
@@ -93,7 +94,7 @@ export const useNodeTreeEvent = () => {
   useEffect(() => {
     isCurrentFileContentChanged.current = true;
     // validate
-    if (!fileTree[currentFileUid]) return;
+    if (!fileTree[currentFileUid] || webComponentOpen) return;
 
     addRunningActions(["processor-update"]);
 
@@ -104,8 +105,11 @@ export const useNodeTreeEvent = () => {
       fileData.ext,
       currentFileContent,
     );
+
     fileData.content = currentFileContent;
+
     fileData.contentInApp = contentInApp;
+
     fileData.changed = fileData.content !== fileData.orgContent;
     if (file.parentUid) {
       markChangedFolders(fileTree, file, dispatch, fileData.changed);
@@ -218,6 +222,7 @@ export const useNodeTreeEvent = () => {
       }
     }
 
+    debugger;
     // sync node-tree
     dispatch(setNodeTree(nodeTree));
     const _validNodeTree = getValidNodeTree(nodeTree);

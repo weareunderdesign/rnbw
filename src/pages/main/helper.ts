@@ -22,7 +22,7 @@ import {
   NodeTree_Event_ClearActionType,
   NodeTree_Event_JumpToPastActionType,
 } from "@_redux/main/nodeTree/event";
-import { setIframeSrc } from "@_redux/main/stageView";
+import { setIframeSrc, setWebComponentOpen } from "@_redux/main/stageView";
 import {
   TCmdkKeyMap,
   TCmdkReference,
@@ -372,6 +372,7 @@ export const onWebComponentDblClick = ({
               alert("rnbw couldn't find it's source file");
               break;
             } else {
+              dispatch(setWebComponentOpen(true));
               dispatch(setInitialFileUidToOpen(fileTree[x].uid));
               dispatch(setNavigatorDropdownType("project"));
               // expand path to the uid
@@ -388,6 +389,7 @@ export const onWebComponentDblClick = ({
                   _expandedItems.push(_file.uid);
               }
               dispatch(expandFileTreeNodes(_expandedItems));
+
               exist = true;
               break;
             }
