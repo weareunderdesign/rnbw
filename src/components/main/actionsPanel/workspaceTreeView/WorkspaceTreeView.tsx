@@ -35,6 +35,7 @@ import {
   useSync,
 } from "./hooks";
 import { useSaveCommand } from "@_pages/main/processor/hooks";
+import { setWebComponentOpen } from "@_redux/main/stageView";
 
 const AutoExpandDelayOnDnD = 1 * 1000;
 export default function WorkspaceTreeView() {
@@ -49,6 +50,8 @@ export default function WorkspaceTreeView() {
     linkToOpen,
     navigatorDropdownType,
     autoSave,
+    activePanel,
+    prevRenderableFileUid,
   } = useAppState();
   const {
     addRunningActions,
@@ -128,6 +131,16 @@ export default function WorkspaceTreeView() {
       openFile(fileUidToOpen);
     }
   }, [linkToOpen]);
+
+  useEffect(
+    function RevertWcOpen() {
+      if (activePanel !== "code") {
+        dispatch(setWebComponentOpen(false));
+        openFile(prevRenderableFileUid);
+      }
+    },
+    [activePanel],
+  );
 
   const onPanelClick = useCallback(() => {
     dispatch(setActivePanel("file"));

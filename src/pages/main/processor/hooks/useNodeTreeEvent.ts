@@ -222,7 +222,6 @@ export const useNodeTreeEvent = () => {
       }
     }
 
-    debugger;
     // sync node-tree
     dispatch(setNodeTree(nodeTree));
     const _validNodeTree = getValidNodeTree(nodeTree);
