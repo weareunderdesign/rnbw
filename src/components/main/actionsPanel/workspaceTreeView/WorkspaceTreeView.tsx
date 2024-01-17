@@ -42,7 +42,6 @@ import {
   useSync,
 } from "./hooks";
 import { useSaveCommand } from "@_pages/main/processor/hooks";
-import { LogAllow } from "@_constants/global";
 
 const AutoExpandDelayOnDnD = 1 * 1000;
 export default function WorkspaceTreeView() {
@@ -158,14 +157,6 @@ export default function WorkspaceTreeView() {
       currentProjectFileHandle &&
       currentProjectFileHandle?.name !== project
     ) {
-      console.log(
-        recentProjectHandlers,
-        "recentProjectHandlers",
-        currentProjectFileHandle?.name,
-        project,
-        "currentProjectFileHandle?.name !== project",
-      );
-
       if (!recentProjectHandlers) return;
 
       const index = recentProjectNames.indexOf(project);
@@ -173,23 +164,15 @@ export default function WorkspaceTreeView() {
       const projectHandler = recentProjectHandlers[index];
 
       if (index >= 0 && projectHandler) {
-        if (!confirmFileChanges(fileTree)) return;
-        if (project !== projectHandler.name) {
-          try {
-            importProject(projectContext, projectHandler);
-          } catch {
-            LogAllow && console.log("failed to open local project");
-          }
+        if (currentFileUid !== projectHandler.name) {
+          confirmFileChanges(fileTree) &&
+            importProject(projectContext, projectHandler, true);
         }
-
-        // dispatch(setInitialFileUidToOpen(pathName));
       }
-    }
 
-    if (currentFileUid && currentFileUid !== pathName) {
-      console.log({ currentFileUid, pathName }, "currentFileUid !== pathName");
-
-      openFile(pathName);
+      if (currentFileUid && currentFileUid !== pathName) {
+        openFile(pathName);
+      }
     }
   };
 

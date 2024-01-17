@@ -89,7 +89,6 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
 
     dispatch(setDoingFileAction(true));
     try {
-      navigate("/");
       await initIDBProject(DefaultProjectPath);
       await importProject("idb");
     } catch (err) {
@@ -101,8 +100,8 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     if (!confirmFileChanges(fileTree)) return;
 
     dispatch(setDoingFileAction(true));
+    navigate("/");
     try {
-      navigate("/", { replace: true });
       const projectHandle = await showDirectoryPicker({
         _preferPolyfill: false,
         mode: "readwrite",

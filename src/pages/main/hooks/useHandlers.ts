@@ -119,6 +119,7 @@ export const useHandlers = ({
     async (
       fsType: TProjectContext,
       projectHandle?: FileSystemDirectoryHandle | null,
+      fromURL?: boolean,
     ) => {
       if (fsType === "local") {
         dispatch(setDoingFileAction(true));
@@ -164,10 +165,9 @@ export const useHandlers = ({
             fsType,
             projectHandle as FileSystemDirectoryHandle,
           );
-          console.log(rest, "rest");
 
           const pathURL = createURLPath(
-            rest ? `${RootNodeUid}/${rest}` : _initialFileUidToOpen,
+            fromURL ? `${RootNodeUid}/${rest}` : _initialFileUidToOpen,
             RootNodeUid,
             _fileTree[RootNodeUid]?.displayName,
           );
@@ -207,7 +207,7 @@ export const useHandlers = ({
         dispatch(setLoadingFalse());
       }
     },
-    [osType, saveRecentProject],
+    [osType, saveRecentProject, rest],
   );
 
   // current project - reload trigger

@@ -74,6 +74,7 @@ export type TMainContext = {
   importProject: (
     fsType: TProjectContext,
     projectHandle?: FileSystemDirectoryHandle | null,
+    fromURL?: boolean,
   ) => void;
   reloadCurrentProject: (action?: TFileAction) => void;
   triggerCurrentProjectReload: () => void;
