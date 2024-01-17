@@ -282,6 +282,9 @@ const paste = async ({
   try {
     let code = await window.navigator.clipboard.readText();
     if (spanPaste) code = `<span>${code}</span>`;
+    else {
+      code = `<div>${code}</div>`;
+    }
     pasteCode({
       nodeTree,
       focusedItem: targetUid,
