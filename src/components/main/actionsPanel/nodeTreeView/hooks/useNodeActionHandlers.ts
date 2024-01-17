@@ -15,6 +15,7 @@ export const useNodeActionHandlers = () => {
     validNodeTree,
     nFocusedItem: focusedItem,
     nSelectedItems: selectedItems,
+    formatCode,
   } = useAppState();
   const {
     htmlReferenceData,
@@ -49,6 +50,7 @@ export const useNodeActionHandlers = () => {
         nodeTree,
         codeViewInstanceModel,
         focusedItem,
+        formatCode,
         fb: () => setIsContentProgrammaticallyChanged(false),
       });
     },
@@ -73,6 +75,7 @@ export const useNodeActionHandlers = () => {
       nodeTree,
       selectedUids: selectedItems,
       codeViewInstanceModel,
+      formatCode,
       fb: () => setIsContentProgrammaticallyChanged(false),
     });
   }, [selectedItems, nodeTree]);
@@ -129,6 +132,7 @@ export const useNodeActionHandlers = () => {
         targetUid: focusedItem,
         codeViewInstanceModel,
         spanPaste,
+        formatCode,
         fb: () => setIsContentProgrammaticallyChanged(false),
       });
     },
@@ -154,6 +158,7 @@ export const useNodeActionHandlers = () => {
       nodeTree,
       selectedUids: selectedItems,
       codeViewInstanceModel,
+      formatCode,
       fb: () => setIsContentProgrammaticallyChanged(false),
     });
   }, [selectedItems, nodeTree]);
@@ -176,6 +181,7 @@ export const useNodeActionHandlers = () => {
       nodeTree,
       selectedUids: selectedItems,
       codeViewInstanceModel,
+      formatCode,
       fb: () => setIsContentProgrammaticallyChanged(false),
     });
   }, [selectedItems, nodeTree]);
@@ -210,6 +216,7 @@ export const useNodeActionHandlers = () => {
         isBetween,
         position,
         codeViewInstanceModel,
+        formatCode,
         fb: () => setIsContentProgrammaticallyChanged(false),
       });
     },
@@ -238,6 +245,7 @@ export const useNodeActionHandlers = () => {
         nodeTree,
         targetUid: focusedItem,
         codeViewInstanceModel,
+        formatCode,
         fb: () => setIsContentProgrammaticallyChanged(false),
       });
     },
@@ -262,6 +270,7 @@ export const useNodeActionHandlers = () => {
       nodeTree: validNodeTree,
       selectedUids: selectedItems,
       codeViewInstanceModel,
+      formatCode,
       fb: () => setIsContentProgrammaticallyChanged(false),
     });
   }, [selectedItems, validNodeTree]);
@@ -284,6 +293,7 @@ export const useNodeActionHandlers = () => {
       nodeTree: validNodeTree,
       selectedUids: selectedItems,
       codeViewInstanceModel,
+      formatCode,
       fb: () => setIsContentProgrammaticallyChanged(false),
     });
   }, [selectedItems, validNodeTree]);

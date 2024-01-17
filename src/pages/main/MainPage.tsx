@@ -57,6 +57,7 @@ export default function MainPage() {
     activePanel,
     showActionsPanel,
     autoSave,
+    formatCode,
     cmdkOpen,
     cmdkPages,
     currentCmdkPage,
@@ -518,6 +519,7 @@ export default function MainPage() {
                                 // keep modal open when toogling theme or go "Add" menu from "Actions" menu
                                 command.Name !== "Theme" &&
                                   command.Name !== "Autosave" &&
+                                  command.Name !== "Format Code" &&
                                   command.Name !== "Add" &&
                                   command.Name !== "Turn into" &&
                                   dispatch(setCmdkOpen(false));
@@ -600,6 +602,24 @@ export default function MainPage() {
                                         </span>
                                         <span className="text-m">
                                           {autoSave ? "On" : "Off"}
+                                        </span>
+                                      </div>
+                                    </>
+                                  ) : command.Name === "Format Code" ? (
+                                    <>
+                                      {/* detect Format code */}
+                                      <div className="padding-xs">
+                                        <div className="radius-m icon-xs align-center background-tertiary"></div>
+                                      </div>
+                                      <div className="gap-s align-center">
+                                        <span className="text-m opacity-m">
+                                          Format Code
+                                        </span>
+                                        <span className="text-s opacity-m">
+                                          /
+                                        </span>
+                                        <span className="text-m">
+                                          {formatCode ? "On" : "Off"}
                                         </span>
                                       </div>
                                     </>
