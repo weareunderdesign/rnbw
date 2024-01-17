@@ -3,6 +3,7 @@ import { useCallback, useEffect } from "react";
 import { CustomDirectoryPickerOptions } from "file-system-access/lib/showDirectoryPicker";
 import { delMany } from "idb-keyval";
 import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 import { LogAllow } from "@_constants/global";
 import { DefaultProjectPath } from "@_constants/main";
@@ -46,6 +47,8 @@ interface IUseCmdk {
 }
 export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const {
     osType,
     theme,
@@ -86,6 +89,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
 
     dispatch(setDoingFileAction(true));
     try {
+      navigate("/");
       await initIDBProject(DefaultProjectPath);
       await importProject("idb");
     } catch (err) {
@@ -98,6 +102,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
 
     dispatch(setDoingFileAction(true));
     try {
+      navigate("/", { replace: true });
       const projectHandle = await showDirectoryPicker({
         _preferPolyfill: false,
         mode: "readwrite",
@@ -107,7 +112,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
       LogAllow && console.log("failed to open local project");
     }
     dispatch(setDoingFileAction(false));
-  }, [importProject, fileTree]);
+  }, [importProject, fileTree, navigate]);
   const onActions = useCallback(() => {
     if (cmdkOpen) return;
     dispatch(setCmdkPages(["Actions"]));

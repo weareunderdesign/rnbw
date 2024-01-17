@@ -42,6 +42,7 @@ import {
   useSync,
 } from "./hooks";
 import { useSaveCommand } from "@_pages/main/processor/hooks";
+import { LogAllow } from "@_constants/global";
 
 const AutoExpandDelayOnDnD = 1 * 1000;
 export default function WorkspaceTreeView() {
@@ -148,56 +149,53 @@ export default function WorkspaceTreeView() {
   const onPanelClick = useCallback(() => {
     dispatch(setActivePanel("file"));
   }, []);
-  const openFromURL = async () => {
-    console.log(">>>>>>>>>>>>>>>>>>>> function to be run <<<<<<<<<<<<<<<<<<");
 
+  const openFromURL = async () => {
     if (!project) return;
-    if (currentProjectFileHandle?.name !== project) {
-      // if (recentProjectNames.includes(project)) {
-      console.log({ recentProjectContexts, recentProjectHandlers });
+    const pathName = `${RootNodeUid}/${rest}`;
+
+    if (
+      currentProjectFileHandle &&
+      currentProjectFileHandle?.name !== project
+    ) {
+      console.log(
+        recentProjectHandlers,
+        "recentProjectHandlers",
+        currentProjectFileHandle?.name,
+        project,
+        "currentProjectFileHandle?.name !== project",
+      );
+
+      if (!recentProjectHandlers) return;
 
       const index = recentProjectNames.indexOf(project);
-
-      console.log({ project, rest, index }, "index");
-
       const projectContext = recentProjectContexts[index];
       const projectHandler = recentProjectHandlers[index];
 
-      console.log(
-        { projectContext, projectHandler },
-        "recentProjectHandlers[index]",
-      );
-
       if (index >= 0 && projectHandler) {
-        confirmFileChanges(fileTree) &&
-          importProject(projectContext, projectHandler);
+        if (!confirmFileChanges(fileTree)) return;
+        if (project !== projectHandler.name) {
+          try {
+            importProject(projectContext, projectHandler);
+          } catch {
+            LogAllow && console.log("failed to open local project");
+          }
+        }
+
+        // dispatch(setInitialFileUidToOpen(pathName));
       }
     }
 
-    const pathName = `${RootNodeUid}/${rest}`;
-    if (currentFileUid !== pathName) {
+    if (currentFileUid && currentFileUid !== pathName) {
+      console.log({ currentFileUid, pathName }, "currentFileUid !== pathName");
+
       openFile(pathName);
     }
   };
+
   useEffect(() => {
-    // if (!project) return;
-    // if (currentProjectFileHandle?.name !== project) {
-    //   // if (recentProjectNames.includes(project)) {
-    //   const index = recentProjectNames.indexOf(project);
-    //   if (index >= 0) {
-    //     confirmFileChanges(fileTree) &&
-    //       importProject(
-    //         recentProjectContexts[index],
-    //         recentProjectHandlers[index],
-    //       );
-    //   }
-    // }
-    // const pathName = `${RootNodeUid}/${rest}`;
-    // if (currentFileUid !== pathName) {
-    //   openFile(pathName);
-    // }
-    // openFromURL();
-  }, [project, rest]);
+    openFromURL();
+  }, [project, rest, recentProjectHandlers]);
 
   return currentFileUid === "" || navigatorDropdownType === "project" ? (
     <>

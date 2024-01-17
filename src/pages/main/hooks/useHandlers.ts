@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { setMany } from "idb-keyval";
 import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { LogAllow } from "@_constants/global";
 import {
@@ -69,6 +69,8 @@ export const useHandlers = ({
   const navigate = useNavigate();
   const { osType, navigatorDropdownType, project, fileTree, currentFileUid } =
     useAppState();
+
+  const { "*": rest } = useParams();
 
   const saveRecentProject = useCallback(
     async (
@@ -162,9 +164,10 @@ export const useHandlers = ({
             fsType,
             projectHandle as FileSystemDirectoryHandle,
           );
+          console.log(rest, "rest");
 
           const pathURL = createURLPath(
-            _initialFileUidToOpen,
+            rest ? `${RootNodeUid}/${rest}` : _initialFileUidToOpen,
             RootNodeUid,
             _fileTree[RootNodeUid]?.displayName,
           );
