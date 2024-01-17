@@ -34,6 +34,8 @@ export const useCmdk = ({
     setIsContentProgrammaticallyChanged,
   } = useContext(MainContext);
 
+  const { formatCode } = useAppState();
+
   const onKeyDown = useCallback(
     (e: KeyboardEvent) => {
       // cmdk obj for the current command
@@ -110,6 +112,7 @@ export const useCmdk = ({
               contentEditableUid,
               codeViewInstanceModel,
               setIsContentProgrammaticallyChanged,
+              formatCode,
               cb:
                 action === "Save"
                   ? () => dispatch(setCurrentCommand({ action: "SaveForce" }))

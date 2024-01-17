@@ -52,6 +52,7 @@ export const useMouseEvents = ({
     fileTree,
     validNodeTree,
     fExpandedItemsObj: expandedItemsObj,
+    formatCode,
   } = useAppState();
 
   const mostRecentClickedNodeUidRef = useRef<TNodeUid>(""); //This is used because dbl clikc event was not able to receive the uid of the node that was clicked
@@ -128,6 +129,7 @@ export const useMouseEvents = ({
           contentEditableUid,
           codeViewInstanceModel,
           setIsContentProgrammaticallyChanged,
+          formatCode,
         });
       }
     }

@@ -100,6 +100,7 @@ export const editHtmlContent = ({
   contentEditableUid,
   codeViewInstanceModel,
   setIsContentProgrammaticallyChanged,
+  formatCode,
   cb,
 }: {
   dispatch: Dispatch<AnyAction>;
@@ -108,6 +109,7 @@ export const editHtmlContent = ({
   contentEditableUid: TNodeUid;
   codeViewInstanceModel: editor.ITextModel;
   setIsContentProgrammaticallyChanged: (value: boolean) => void;
+  formatCode: boolean;
   cb?: () => void;
 }) => {
   const contentEditableElement =
@@ -126,6 +128,7 @@ export const editHtmlContent = ({
       targetUid: contentEditableUid,
       content: content ? content : "",
       codeViewInstanceModel,
+      formatCode,
       fb: () => setIsContentProgrammaticallyChanged(false),
       cb,
     });

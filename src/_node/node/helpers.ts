@@ -25,6 +25,7 @@ export const copyCode = ({
   });
   return copiedCode;
 };
+
 export const pasteCode = ({
   nodeTree,
   focusedItem,
@@ -52,6 +53,7 @@ export const pasteCode = ({
   };
   codeViewInstanceModel.applyEdits([edit]);
 };
+
 export const replaceContent = ({
   nodeTree,
   focusedItem,
