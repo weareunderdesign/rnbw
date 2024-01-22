@@ -2,11 +2,17 @@ import { useCallback, useEffect, useState } from "react";
 
 import { setMany } from "idb-keyval";
 import { useDispatch } from "react-redux";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { LogAllow } from "@_constants/global";
-import { DefaultProjectPath, RecentProjectCount } from "@_constants/main";
+import {
+  DefaultProjectPath,
+  RecentProjectCount,
+  RootNodeUid,
+} from "@_constants/main";
 import {
   buildNohostIDB,
+  createURLPath,
   loadIDBProject,
   loadLocalProject,
   TFileHandlerCollection,
@@ -60,8 +66,11 @@ export const useHandlers = ({
   setRecentProjectHandlers,
 }: IUseHandlers) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { osType, navigatorDropdownType, project, fileTree, currentFileUid } =
     useAppState();
+
+  const { "*": rest } = useParams();
 
   const saveRecentProject = useCallback(
     async (
@@ -110,6 +119,7 @@ export const useHandlers = ({
     async (
       fsType: TProjectContext,
       projectHandle?: FileSystemDirectoryHandle | null,
+      fromURL?: boolean,
     ) => {
       if (fsType === "local") {
         dispatch(setDoingFileAction(true));
@@ -155,6 +165,13 @@ export const useHandlers = ({
             fsType,
             projectHandle as FileSystemDirectoryHandle,
           );
+
+          const pathURL = createURLPath(
+            fromURL ? `${RootNodeUid}/${rest}` : _initialFileUidToOpen,
+            RootNodeUid,
+            _fileTree[RootNodeUid]?.displayName,
+          );
+          navigate(pathURL);
         } catch (err) {
           LogAllow && console.log("ERROR while importing local project", err);
         }
@@ -190,7 +207,7 @@ export const useHandlers = ({
         dispatch(setLoadingFalse());
       }
     },
-    [osType, saveRecentProject],
+    [osType, saveRecentProject, rest],
   );
 
   // current project - reload trigger

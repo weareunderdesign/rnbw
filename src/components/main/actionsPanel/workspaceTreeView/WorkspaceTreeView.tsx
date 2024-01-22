@@ -10,9 +10,16 @@ import cx from "classnames";
 import { debounce } from "lodash";
 import { DraggingPositionItem } from "react-complex-tree";
 import { useDispatch } from "react-redux";
+import { useNavigate, useParams } from "react-router-dom";
 
+import { RootNodeUid } from "@_constants/main";
 import { SVGIconI, SVGIconII, TreeView } from "@_components/common";
-import { getNormalizedPath, TFileNodeData } from "@_node/file";
+import {
+  getNormalizedPath,
+  createURLPath,
+  TFileNodeData,
+  confirmFileChanges,
+} from "@_node/file";
 import { _path } from "@_node/file/nohostApis";
 import { TNode, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
@@ -58,7 +65,14 @@ export default function WorkspaceTreeView() {
     removeRunningActions,
     filesReferenceData,
     invalidFileNodes,
+    currentProjectFileHandle,
+    recentProjectNames,
+    recentProjectHandlers,
+    recentProjectContexts,
+    importProject,
   } = useContext(MainContext);
+  const navigate = useNavigate();
+  const { project, "*": rest } = useParams();
 
   const { focusedItemRef, fileTreeViewData } = useSync();
   const { cb_focusNode, cb_selectNode, cb_expandNode, cb_collapseNode } =
@@ -146,6 +160,37 @@ export default function WorkspaceTreeView() {
     dispatch(setActivePanel("file"));
   }, []);
 
+  const openFromURL = async () => {
+    if (!project) return;
+    const pathName = `${RootNodeUid}/${rest}`;
+
+    if (
+      currentProjectFileHandle &&
+      currentProjectFileHandle?.name !== project
+    ) {
+      if (!recentProjectHandlers) return;
+
+      const index = recentProjectNames.indexOf(project);
+      const projectContext = recentProjectContexts[index];
+      const projectHandler = recentProjectHandlers[index];
+
+      if (index >= 0 && projectHandler) {
+        if (currentFileUid !== projectHandler.name) {
+          confirmFileChanges(fileTree) &&
+            importProject(projectContext, projectHandler, true);
+        }
+      }
+
+      if (currentFileUid && currentFileUid !== pathName) {
+        openFile(pathName);
+      }
+    }
+  };
+
+  useEffect(() => {
+    openFromURL();
+  }, [project, rest, recentProjectHandlers]);
+
   return currentFileUid === "" || navigatorDropdownType === "project" ? (
     <>
       <div
@@ -210,10 +255,18 @@ export default function WorkspaceTreeView() {
                   e.stopPropagation();
                   const isFile =
                     fileTree[props.item.data.uid].data.kind === "file";
+                  const newURL = createURLPath(
+                    props.item.data.uid,
+                    RootNodeUid,
+                    fileTree[RootNodeUid]?.displayName,
+                  );
 
-                  isFile &&
+                  if (isFile) {
+                    navigate(newURL);
+
                     props.item.data.uid !== currentFileUid &&
-                    dispatch(setLoadingTrue());
+                      dispatch(setLoadingTrue());
+                  }
 
                   try {
                     const promises = [];
