@@ -24,6 +24,7 @@ import {
 import { copyCode, pasteCode, replaceContent } from "./helpers";
 import { Dispatch } from "react";
 import { AnyAction } from "@reduxjs/toolkit";
+import { setNodeAddingOperationType } from "@_redux/main/stageView";
 
 const add = ({
   dispatch,
@@ -323,7 +324,7 @@ const paste = async ({
       return needToSelectNodePaths;
     })();
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
-
+    dispatch(setNodeAddingOperationType("paste"));
     code = formatCode
       ? html_beautify(codeViewInstanceModel.getValue())
       : codeViewInstanceModel.getValue();

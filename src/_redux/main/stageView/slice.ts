@@ -38,6 +38,10 @@ const stageViewSlice = createSlice({
       const webComponentOpen = action.payload;
       state.webComponentOpen = webComponentOpen;
     },
+    setNodeAddingOperationType(state, action: PayloadAction<"paste" | null>) {
+      const nodeAddingOperationType = action.payload;
+      state.syncConfigs.nodeAddingOperationType = nodeAddingOperationType;
+    },
   },
 });
 export const {
@@ -47,5 +51,6 @@ export const {
   setLinkToOpen,
   setSyncConfigs,
   setWebComponentOpen,
+  setNodeAddingOperationType,
 } = stageViewSlice.actions;
 export const StageViewReducer = stageViewSlice.reducer;

@@ -10,4 +10,5 @@ export type TStageViewReducerState = {
 export type StageViewSyncConfigs = {
   matchIds?: string[] | null;
   skipFromChildren?: boolean;
+  nodeAddingOperationType?: "paste" | null;
 };
