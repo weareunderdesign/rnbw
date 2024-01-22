@@ -4,7 +4,10 @@ import morphdom from "morphdom";
 import { useDispatch } from "react-redux";
 
 import { getNodeUidByCodeSelection } from "@_components/main/codeView";
-import { markSelectedElements } from "@_components/main/stageView/iFrame/helpers";
+import {
+  makeSelectedElementEditable,
+  markSelectedElements,
+} from "@_components/main/stageView/iFrame/helpers";
 import { LogAllow } from "@_constants/global";
 import {
   _writeIDBFile,
@@ -35,7 +38,11 @@ import {
   setSelectedNodeUids,
   setValidNodeTree,
 } from "@_redux/main/nodeTree";
-import { setIframeSrc, setNeedToReloadIframe } from "@_redux/main/stageView";
+import {
+  setIframeSrc,
+  setNeedToReloadIframe,
+  setNodeAddingOperationType,
+} from "@_redux/main/stageView";
 import { useAppState } from "@_redux/useAppState";
 
 import {
@@ -67,8 +74,12 @@ export const useNodeTreeEvent = () => {
     syncConfigs,
     webComponentOpen,
   } = useAppState();
-  const { addRunningActions, removeRunningActions, iframeRefRef } =
-    useContext(MainContext);
+  const {
+    addRunningActions,
+    removeRunningActions,
+    iframeRefRef,
+    setContentEditableUidRef,
+  } = useContext(MainContext);
 
   const isSelectedNodeUidsChanged = useRef(false);
   const isCurrentFileContentChanged = useRef(false);
@@ -270,6 +281,14 @@ export const useNodeTreeEvent = () => {
           );
           _selectedNodeUids.push(...needToSelectNodeUids);
           dispatch(setNeedToSelectNodeUids(needToSelectNodeUids));
+          if (syncConfigs.nodeAddingOperationType === "paste") {
+            makeSelectedElementEditable(
+              iframeRefRef.current,
+              needToSelectNodeUids[0],
+              setContentEditableUidRef,
+            );
+            dispatch(setNodeAddingOperationType(null));
+          }
           dispatch(setNeedToSelectNodePaths(null));
         } else if (needToSelectCode) {
           LogAllow && console.log("it's a rnbw-change from code-view");

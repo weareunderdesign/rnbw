@@ -38,9 +38,52 @@ export const markSelectedElements = (
     isValid === null
       ? (selectedElement = selectedElement?.firstElementChild)
       : null;
+
+    //we need to check if the element has a child element because when pasting a new node it is wrapped in a div
+    const childUid =
+      selectedElement?.firstElementChild?.getAttribute(StageNodeIdAttr);
+    if (childUid) selectedElement = selectedElement?.firstElementChild;
     selectedElement?.setAttribute("rnbwdev-rnbw-element-select", "");
   });
 };
+
+export const makeSelectedElementEditable = (
+  iframeRef: HTMLIFrameElement | null,
+  uid: TNodeUid,
+  setContentEditableUidRef: (uid: TNodeUid | null) => void,
+) => {
+  let selectedElement = iframeRef?.contentWindow?.document?.querySelector(
+    `[${StageNodeIdAttr}="${uid}"]`,
+  );
+  const childUid =
+    selectedElement?.firstElementChild?.getAttribute(StageNodeIdAttr);
+  if (childUid) selectedElement = selectedElement?.firstElementChild;
+  selectedElement?.setAttribute("contenteditable", "true");
+
+  //@ts-ignore
+  selectedElement?.addEventListener("keydown", (event: KeyboardEvent) => {
+    if (
+      event.key === "Backspace" &&
+      (event.target as HTMLElement).isContentEditable
+    ) {
+      event.stopPropagation();
+    }
+  });
+
+  setContentEditableUidRef(uid);
+  //@ts-ignore
+  selectedElement?.focus();
+  //place cursor at the end of the text
+  const range = iframeRef?.contentWindow?.document.createRange();
+  if (range) {
+    range.selectNodeContents(selectedElement as Node);
+    range.collapse(false);
+    const selection = iframeRef?.contentWindow?.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+  }
+};
+
 export const unmarkSelectedElements = (
   iframeRef: HTMLIFrameElement | null,
   uids: TNodeUid[],

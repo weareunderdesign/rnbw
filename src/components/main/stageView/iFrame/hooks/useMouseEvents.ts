@@ -30,7 +30,7 @@ interface IUseMouseEventsProps {
   nodeTreeRef: React.MutableRefObject<TNodeTreeData>;
   focusedItemRef: React.MutableRefObject<TNodeUid>;
   selectedItemsRef: React.MutableRefObject<TNodeUid[]>;
-  contentEditableUidRef: React.MutableRefObject<TNodeUid>;
+  contentEditableUidRef: React.MutableRefObject<TNodeUid | null>;
   isEditingRef: React.MutableRefObject<boolean>;
   linkTagUidRef: React.MutableRefObject<TNodeUid>;
 }
@@ -47,6 +47,7 @@ export const useMouseEvents = ({
     monacoEditorRef,
     setIsContentProgrammaticallyChanged,
     htmlReferenceData,
+    setContentEditableUidRef,
   } = useContext(MainContext);
   const {
     fileTree,
@@ -110,7 +111,7 @@ export const useMouseEvents = ({
       ) {
         isEditingRef.current = false;
         const contentEditableUid = contentEditableUidRef.current;
-        contentEditableUidRef.current = "";
+        setContentEditableUidRef(null);
 
         const codeViewInstance = monacoEditorRef.current;
         const codeViewInstanceModel = codeViewInstance?.getModel();
@@ -178,7 +179,7 @@ export const useMouseEvents = ({
         const { startTag, endTag } = nodeData.sourceCodeLocation;
         if (startTag && endTag) {
           isEditingRef.current = true;
-          contentEditableUidRef.current = uid;
+          setContentEditableUidRef(uid);
           ele.setAttribute("contenteditable", "true");
           ele.focus();
           debouncedSelectAllText(iframeRefRef.current, ele);

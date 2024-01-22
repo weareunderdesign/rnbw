@@ -19,12 +19,12 @@ import { useCmdk, useMouseEvents, useSyncNode } from "./hooks";
 export const IFrame = () => {
   const dispatch = useDispatch();
   const { needToReloadIframe, iframeSrc } = useAppState();
-  const { iframeRefRef, setIframeRefRef } = useContext(MainContext);
+  const { iframeRefRef, setIframeRefRef, contentEditableUidRef } =
+    useContext(MainContext);
 
   const [iframeRefState, setIframeRefState] =
     useState<HTMLIFrameElement | null>(null);
 
-  const contentEditableUidRef = useRef<TNodeUid>("");
   const isEditingRef = useRef(false);
   const linkTagUidRef = useRef<TNodeUid>("");
 
@@ -34,7 +34,6 @@ export const IFrame = () => {
   const { onKeyDown } = useCmdk({
     iframeRefRef,
     nodeTreeRef,
-    contentEditableUidRef,
     isEditingRef,
   });
   const { onMouseEnter, onMouseMove, onMouseLeave, onClick, onDblClick } =

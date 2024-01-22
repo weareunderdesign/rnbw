@@ -16,14 +16,12 @@ import { setShowActionsPanel, setShowCodeView } from "@_redux/main/processor";
 interface IUseCmdkProps {
   iframeRefRef: React.MutableRefObject<HTMLIFrameElement | null>;
   nodeTreeRef: React.MutableRefObject<TNodeTreeData>;
-  contentEditableUidRef: React.MutableRefObject<TNodeUid>;
   isEditingRef: React.MutableRefObject<boolean>;
 }
 
 export const useCmdk = ({
   iframeRefRef,
   nodeTreeRef,
-  contentEditableUidRef,
   isEditingRef,
 }: IUseCmdkProps) => {
   const dispatch = useDispatch();
@@ -32,6 +30,8 @@ export const useCmdk = ({
     cmdkReferenceData,
     monacoEditorRef,
     setIsContentProgrammaticallyChanged,
+    contentEditableUidRef,
+    setContentEditableUidRef,
   } = useContext(MainContext);
 
   const { formatCode } = useAppState();
@@ -89,7 +89,7 @@ export const useCmdk = ({
         ) {
           isEditingRef.current = false;
           const contentEditableUid = contentEditableUidRef.current;
-          contentEditableUidRef.current = "";
+          setContentEditableUidRef(null);
 
           const codeViewInstance = monacoEditorRef.current;
           const codeViewInstanceModel = codeViewInstance?.getModel();
@@ -104,20 +104,20 @@ export const useCmdk = ({
             action === "Save" &&
               LogAllow &&
               console.log("action to be run by cmdk: ", action);
-
-            editHtmlContent({
-              dispatch,
-              iframeRef: iframeRefRef.current,
-              nodeTree: nodeTreeRef.current,
-              contentEditableUid,
-              codeViewInstanceModel,
-              setIsContentProgrammaticallyChanged,
-              formatCode,
-              cb:
-                action === "Save"
-                  ? () => dispatch(setCurrentCommand({ action: "SaveForce" }))
-                  : undefined,
-            });
+            if (contentEditableUid)
+              editHtmlContent({
+                dispatch,
+                iframeRef: iframeRefRef.current,
+                nodeTree: nodeTreeRef.current,
+                contentEditableUid,
+                codeViewInstanceModel,
+                setIsContentProgrammaticallyChanged,
+                formatCode,
+                cb:
+                  action === "Save"
+                    ? () => dispatch(setCurrentCommand({ action: "SaveForce" }))
+                    : undefined,
+              });
           }
         }
       } else {

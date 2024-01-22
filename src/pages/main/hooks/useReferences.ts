@@ -1,6 +1,7 @@
 import { useCallback, useRef } from "react";
 
 import { editor } from "monaco-editor";
+import { TNodeUid } from "@_node/types";
 
 export const useReferneces = () => {
   const monacoEditorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
@@ -14,6 +15,12 @@ export const useReferneces = () => {
   const setIframeRefRef = useCallback((iframeRef: HTMLIFrameElement | null) => {
     iframeRefRef.current = iframeRef;
   }, []);
+
+  const contentEditableUidRef = useRef<TNodeUid | null>(null);
+  const setContentEditableUidRef = useCallback((uid: TNodeUid | null) => {
+    contentEditableUidRef.current = uid;
+  }, []);
+
   const isContentProgrammaticallyChanged = useRef(false);
   const setIsContentProgrammaticallyChanged = useCallback((value: boolean) => {
     isContentProgrammaticallyChanged.current = value;
@@ -28,6 +35,8 @@ export const useReferneces = () => {
     setMonacoEditorRef,
     iframeRefRef,
     setIframeRefRef,
+    contentEditableUidRef,
+    setContentEditableUidRef,
     isContentProgrammaticallyChanged,
     setIsContentProgrammaticallyChanged,
     isCodeTyping,
