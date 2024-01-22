@@ -50,6 +50,10 @@ export type TMainContext = {
   fileHandlers: TFileHandlerCollection;
   setFileHandlers: (fileHandlerObj: TFileHandlerCollection) => void;
 
+  recentProjectNames: string[];
+  recentProjectHandlers: (FileSystemDirectoryHandle | null)[];
+  recentProjectContexts: TProjectContext[];
+
   monacoEditorRef: IEditorRef;
   setMonacoEditorRef: (
     editorInstance: editor.IStandaloneCodeEditor | null,
@@ -74,6 +78,7 @@ export type TMainContext = {
   importProject: (
     fsType: TProjectContext,
     projectHandle?: FileSystemDirectoryHandle | null,
+    fromURL?: boolean,
   ) => void;
   reloadCurrentProject: (action?: TFileAction) => void;
   triggerCurrentProjectReload: () => void;

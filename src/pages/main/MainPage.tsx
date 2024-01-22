@@ -45,6 +45,7 @@ import {
 } from "./hooks";
 import Processor from "./processor";
 import { debounce } from "lodash";
+import { useNavigate } from "react-router-dom";
 
 export default function MainPage() {
   // redux
@@ -82,6 +83,7 @@ export default function MainPage() {
     setRecentProjectNames,
     setRecentProjectHandlers,
   } = useRecentProjects();
+
   const { filesReferenceData, htmlReferenceData } = useReferenceData();
   const {
     monacoEditorRef,
@@ -246,6 +248,7 @@ export default function MainPage() {
       removeEventListeners();
     };
   }, [addEventListeners, removeEventListeners]);
+  const navigate = useNavigate();
 
   return (
     <>
@@ -265,7 +268,12 @@ export default function MainPage() {
           fileHandlers,
           setFileHandlers,
 
+          recentProjectNames,
+          recentProjectHandlers,
+          recentProjectContexts,
+
           monacoEditorRef,
+
           setMonacoEditorRef,
           iframeRefRef,
           setIframeRefRef,
@@ -517,7 +525,7 @@ export default function MainPage() {
                                 "rnbw-cmdk-menu-item-description":
                                   command.Description,
                               }}
-                              onSelect={() => {
+                              onSelect={async () => {
                                 LogAllow && console.log("onSelect", command);
 
                                 // keep modal open when toogling theme or go "Add" menu from "Actions" menu
@@ -549,10 +557,12 @@ export default function MainPage() {
                                   command.Group === "Recent"
                                 ) {
                                   const index = Number(command.Context);
+
                                   const projectContext =
                                     recentProjectContexts[index];
                                   const projectHandler =
                                     recentProjectHandlers[index];
+                                  navigate("/");
 
                                   confirmFileChanges(fileTree) &&
                                     importProject(

@@ -19,6 +19,10 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   fileHandlers: {},
   setFileHandlers: () => {},
 
+  recentProjectNames: [],
+  recentProjectHandlers: [],
+  recentProjectContexts: [],
+
   monacoEditorRef: { current: null },
   setMonacoEditorRef: () => {},
   iframeRefRef: { current: null },
