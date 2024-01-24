@@ -106,11 +106,38 @@ export default function CodeView(props: CodeViewProps) {
     );
   }, [validNodeTree, nFocusedItem, activePanel]);
   useEffect(() => {
-    if (focusedItemRef.current === nFocusedItem) return;
-    focusedItemRef.current = nFocusedItem;
-
     const monacoEditor = monacoEditorRef.current;
     if (!monacoEditor) return;
+
+    if (focusedItemRef.current === nFocusedItem) {
+      if (!codeSelection) return;
+
+      const node = validNodeTree[nFocusedItem];
+      const sourceCodeLocation = node.data.sourceCodeLocation;
+
+      if (!sourceCodeLocation) return;
+      const {
+        startLine: startLineNumber,
+        startCol: startColumn,
+        endCol: endColumn,
+        endLine: endLineNumber,
+      } = sourceCodeLocation;
+
+      monacoEditor.setSelection({
+        startLineNumber,
+        startColumn,
+        endLineNumber,
+        endColumn,
+      });
+      monacoEditor.setSelection({
+        startLineNumber: codeSelection?.startLineNumber,
+        startColumn: codeSelection?.startColumn,
+        endLineNumber: codeSelection?.endLineNumber,
+        endColumn: codeSelection?.endColumn,
+      });
+      return;
+    }
+    focusedItemRef.current = nFocusedItem;
 
     // skip typing in code-view
     if (editingNodeUidInCodeView === nFocusedItem) {
