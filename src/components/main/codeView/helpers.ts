@@ -6,8 +6,12 @@ import { getSubNodeUidsByBfs } from "@_node/helpers";
 import { RootNodeUid } from "@_constants/main";
 
 export const getLanguageFromExtension = (extension: string) => {
-  if (!!extension) return extension;
-  return "plaintext";
+  const extensionMap: { [key: string]: string } = {
+    html: "html",
+    js: "javascript",
+    md: "markdown",
+  };
+  return extensionMap[extension] || "plaintext";
 };
 
 export const getCodeViewTheme = (theme: TTheme) => {

@@ -52,7 +52,6 @@ export default function CodeView(props: CodeViewProps) {
     updateLanguage,
 
     editorConfigs,
-    setWordWrap,
 
     codeSelection,
   } = useEditor();
