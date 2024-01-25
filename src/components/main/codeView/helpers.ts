@@ -10,6 +10,7 @@ export const getLanguageFromExtension = (extension: string) => {
     html: "html",
     js: "javascript",
     md: "markdown",
+    css: "css",
   };
   return extensionMap[extension] || "plaintext";
 };
