@@ -660,7 +660,9 @@ export default function MainPage() {
                                     )?.map((keyMap, index) => (
                                       <div className="gap-s" key={index}>
                                         {keyMap.cmd && (
-                                          <span className="text-m">⌘</span>
+                                          <span className="text-m">
+                                            {osType === "Mac" ? "⌘" : "Ctrl"}
+                                          </span>
                                         )}
                                         {keyMap.shift && (
                                           <span className="text-m">⇧</span>
