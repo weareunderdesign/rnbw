@@ -45,6 +45,7 @@ import {
   getValidNodeTree,
   markChangedFolders,
 } from "../helpers";
+import { setLoadingFalse, setLoadingTrue } from "@_redux/main/processor";
 
 export const useNodeTreeEvent = () => {
   const dispatch = useDispatch();
@@ -126,6 +127,7 @@ export const useNodeTreeEvent = () => {
     (async () => {
       // update idb
       dispatch(setDoingFileAction(true));
+      dispatch(setLoadingTrue());
       try {
         const previewPath = getPreviewPath(fileTree, file);
         await _writeIDBFile(previewPath, fileData.contentInApp as string);
@@ -134,6 +136,7 @@ export const useNodeTreeEvent = () => {
         }
       } catch (err) {}
       dispatch(setDoingFileAction(false));
+      dispatch(setLoadingFalse());
     })();
 
     // ---
@@ -238,6 +241,7 @@ export const useNodeTreeEvent = () => {
         ),
       );
     } else if (prevFileUid !== currentFileUid) {
+      dispatch(setLoadingTrue());
       LogAllow && console.log("it's a new file");
       dispatch(setSelectedNodeUids([uid]));
       dispatch(
@@ -298,7 +302,7 @@ export const useNodeTreeEvent = () => {
     if (prevFileUid !== currentFileUid) {
       dispatch(setPrevFileUid(currentFileUid));
     }
-
+    dispatch(setLoadingFalse());
     removeRunningActions(["processor-update"]);
   }, [currentFileContent, currentFileUid]);
 

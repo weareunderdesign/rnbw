@@ -52,8 +52,6 @@ export const IFrame = () => {
   // init iframe
   useEffect(() => {
     setIframeRefRef(iframeRefState);
-    console.log(iframeRefState, "iframeRefState");
-
     if (iframeRefState) {
       project.context === "local" && dispatch(setLoadingTrue());
       dispatch(setIframeLoading(true));
@@ -114,8 +112,6 @@ export const IFrame = () => {
         dispatch(setIframeLoading(false));
         project.context === "local" && dispatch(setLoadingFalse());
       };
-    } else {
-      // dispatch(setLoadingFalse());
     }
   }, [iframeRefState]);
 

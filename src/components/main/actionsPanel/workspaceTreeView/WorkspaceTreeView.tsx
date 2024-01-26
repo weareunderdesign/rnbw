@@ -255,10 +255,6 @@ export default function WorkspaceTreeView() {
                   e.stopPropagation();
                   const isFile =
                     fileTree[props.item.data.uid].data.kind === "file";
-                  console.log(
-                    fileTree[props.item.data.uid].data,
-                    "%%%%%%%%%%%",
-                  );
 
                   const newURL = createURLPath(
                     props.item.data.uid,
