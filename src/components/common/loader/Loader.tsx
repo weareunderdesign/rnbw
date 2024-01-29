@@ -39,12 +39,14 @@ export const Loader = () => {
   return (
     <LoadingBar
       ref={loaderRef}
-      color={theme === "Light" ? "#111" : "#fff"}
+      // color={theme === "Light" ? "#fff" : "#111"}
+      color="#111"
       height={4}
-      shadow={true}
+      shadow={false}
       transitionTime={150}
       waitingTime={300}
       containerStyle={{ mixBlendMode: "difference" }}
+      // style={{ mixBlendMode: "difference" }}
     />
   );
 };
