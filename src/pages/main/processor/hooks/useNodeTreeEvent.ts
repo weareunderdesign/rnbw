@@ -35,7 +35,11 @@ import {
   setSelectedNodeUids,
   setValidNodeTree,
 } from "@_redux/main/nodeTree";
-import { setIframeSrc, setNeedToReloadIframe } from "@_redux/main/stageView";
+import {
+  setContentEditable,
+  setIframeSrc,
+  setNeedToReloadIframe,
+} from "@_redux/main/stageView";
 import { useAppState } from "@_redux/useAppState";
 
 import {
@@ -67,6 +71,7 @@ export const useNodeTreeEvent = () => {
 
     syncConfigs,
     webComponentOpen,
+    contentEditable,
   } = useAppState();
   const { addRunningActions, removeRunningActions, iframeRefRef } =
     useContext(MainContext);
@@ -149,7 +154,7 @@ export const useNodeTreeEvent = () => {
       dispatch(setNeedToReloadIframe(true));
     } else {
       // dom-diff using morph
-      if (fileData.ext === "html") {
+      if (fileData.ext === "html" && !contentEditable) {
         const iframe: any = document.getElementById("iframeId");
         if (iframe) {
           const iframeDoc = iframe.contentDocument;
@@ -222,6 +227,8 @@ export const useNodeTreeEvent = () => {
             },
           });
         }
+      } else if (contentEditable) {
+        dispatch(setContentEditable(false));
       }
     }
 

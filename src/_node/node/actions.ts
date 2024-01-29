@@ -787,17 +787,17 @@ const edit = ({
     });
 
     // predict needToSelectNodePaths
-    const needToSelectNodePaths = (() => {
-      const needToSelectNodePaths: string[] = [];
-      const validNodeTree = getValidNodeTree(nodeTree);
-      const focusedNode = validNodeTree[targetUid];
-      const parentNode = validNodeTree[focusedNode.parentUid as TNodeUid];
-      const focusedNodeChildIndex = getNodeChildIndex(parentNode, focusedNode);
-      const newNodePath = `${parentNode.data.path}${NodePathSplitter}${focusedNode.data.tagName}-${focusedNodeChildIndex}`;
-      needToSelectNodePaths.push(newNodePath);
-      return needToSelectNodePaths;
-    })();
-    dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
+    // const needToSelectNodePaths = (() => {
+    //   const needToSelectNodePaths: string[] = [];
+    //   const validNodeTree = getValidNodeTree(nodeTree);
+    //   const focusedNode = validNodeTree[targetUid];
+    //   const parentNode = validNodeTree[focusedNode.parentUid as TNodeUid];
+    //   const focusedNodeChildIndex = getNodeChildIndex(parentNode, focusedNode);
+    //   const newNodePath = `${parentNode.data.path}${NodePathSplitter}${focusedNode.data.tagName}-${focusedNodeChildIndex}`;
+    //   needToSelectNodePaths.push(newNodePath);
+    //   return needToSelectNodePaths;
+    // })();
+    // dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
     const code = formatCode
       ? html_beautify(codeViewInstanceModel.getValue())
