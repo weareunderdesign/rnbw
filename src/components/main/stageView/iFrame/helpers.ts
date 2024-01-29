@@ -125,7 +125,6 @@ export const editHtmlContent = ({
     setIsContentProgrammaticallyChanged(true);
     dispatch(setContentEditable(true));
     NodeActions.edit({
-      dispatch,
       nodeTree,
       targetUid: contentEditableUid,
       content: content ? content : "",
