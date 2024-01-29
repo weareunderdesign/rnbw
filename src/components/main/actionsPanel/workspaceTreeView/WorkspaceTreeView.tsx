@@ -255,6 +255,7 @@ export default function WorkspaceTreeView() {
                   e.stopPropagation();
                   const isFile =
                     fileTree[props.item.data.uid].data.kind === "file";
+
                   const newURL = createURLPath(
                     props.item.data.uid,
                     RootNodeUid,
@@ -263,6 +264,7 @@ export default function WorkspaceTreeView() {
 
                   if (isFile) {
                     navigate(newURL);
+                    dispatch(setLoadingFalse());
 
                     props.item.data.uid !== currentFileUid &&
                       dispatch(setLoadingTrue());

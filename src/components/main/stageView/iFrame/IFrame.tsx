@@ -15,10 +15,11 @@ import { useAppState } from "@_redux/useAppState";
 import { jss, styles } from "./constants";
 import { markSelectedElements } from "./helpers";
 import { useCmdk, useMouseEvents, useSyncNode } from "./hooks";
+import { setLoadingFalse, setLoadingTrue } from "@_redux/main/processor";
 
 export const IFrame = () => {
   const dispatch = useDispatch();
-  const { needToReloadIframe, iframeSrc } = useAppState();
+  const { needToReloadIframe, iframeSrc, project } = useAppState();
   const { iframeRefRef, setIframeRefRef } = useContext(MainContext);
 
   const [iframeRefState, setIframeRefState] =
@@ -52,6 +53,7 @@ export const IFrame = () => {
   useEffect(() => {
     setIframeRefRef(iframeRefState);
     if (iframeRefState) {
+      project.context === "local" && dispatch(setLoadingTrue());
       dispatch(setIframeLoading(true));
 
       iframeRefState.onload = () => {
@@ -108,6 +110,7 @@ export const IFrame = () => {
         markSelectedElements(iframeRefState, selectedItemsRef.current);
 
         dispatch(setIframeLoading(false));
+        project.context === "local" && dispatch(setLoadingFalse());
       };
     }
   }, [iframeRefState]);

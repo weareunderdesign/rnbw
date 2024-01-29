@@ -123,7 +123,6 @@ export const useHandlers = ({
     ) => {
       if (fsType === "local") {
         dispatch(setDoingFileAction(true));
-        dispatch(setLoadingTrue());
         try {
           const {
             handlerArr,
@@ -135,7 +134,7 @@ export const useHandlers = ({
             projectHandle as FileSystemDirectoryHandle,
             osType,
           );
-
+          dispatch(setLoadingTrue());
           clearProjectSession(dispatch);
 
           // build nohost idb
@@ -179,7 +178,6 @@ export const useHandlers = ({
         dispatch(setLoadingFalse());
       } else if (fsType === "idb") {
         dispatch(setDoingFileAction(true));
-        dispatch(setLoadingTrue());
         try {
           const { _fileTree, _initialFileUidToOpen } =
             await loadIDBProject(DefaultProjectPath);
@@ -204,7 +202,6 @@ export const useHandlers = ({
           LogAllow && console.log("ERROR while importing IDB project", err);
         }
         dispatch(setDoingFileAction(false));
-        dispatch(setLoadingFalse());
       }
     },
     [osType, saveRecentProject, rest],
