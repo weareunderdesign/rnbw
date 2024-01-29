@@ -8,7 +8,6 @@ import { setDoingFileAction, TProjectContext } from "@_redux/main/fileTree";
 import { isChromeOrEdge } from "@_services/global";
 
 import { setSystemTheme } from "../helper";
-import { useLocation } from "react-router-dom";
 
 interface IUseInit {
   importProject: (
