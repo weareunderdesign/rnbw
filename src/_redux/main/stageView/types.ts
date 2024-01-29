@@ -5,6 +5,7 @@ export type TStageViewReducerState = {
   linkToOpen: string | null;
   webComponentOpen: boolean;
   syncConfigs: StageViewSyncConfigs;
+  contentEditable: boolean;
 };
 
 export type StageViewSyncConfigs = {
