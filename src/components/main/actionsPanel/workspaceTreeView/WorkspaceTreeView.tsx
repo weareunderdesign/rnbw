@@ -163,25 +163,20 @@ export default function WorkspaceTreeView() {
   const openFromURL = async () => {
     if (!project) return;
     const pathName = `${RootNodeUid}/${rest}`;
+    const isCurrentProject = currentProjectFileHandle?.name === project;
+    const isDifferentFile = currentFileUid !== pathName;
 
-    if (
-      currentProjectFileHandle &&
-      currentProjectFileHandle?.name !== project
-    ) {
-      if (!recentProjectHandlers) return;
-
+    if (isCurrentProject && isDifferentFile) {
+      openFile(pathName);
+    } else if (!isCurrentProject && recentProjectHandlers) {
       const index = recentProjectNames.indexOf(project);
-      const projectContext = recentProjectContexts[index];
-      const projectHandler = recentProjectHandlers[index];
-
-      if (index >= 0 && projectHandler) {
-        if (currentFileUid !== projectHandler.name) {
+      if (index >= 0) {
+        const projectContext = recentProjectContexts[index];
+        const projectHandler = recentProjectHandlers[index];
+        if (projectHandler && currentFileUid !== projectHandler.name) {
           confirmFileChanges(fileTree) &&
             importProject(projectContext, projectHandler, true);
         }
-      }
-
-      if (currentFileUid && currentFileUid !== pathName) {
         openFile(pathName);
       }
     }

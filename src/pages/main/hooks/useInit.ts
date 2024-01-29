@@ -88,4 +88,8 @@ export const useInit = ({ importProject, onNew }: IUseInit) => {
       onNew();
     }
   }, []);
+
+  useEffect(() => {
+    window.history.replaceState(null, "", "/");
+  }, []);
 };

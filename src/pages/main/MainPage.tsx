@@ -9,7 +9,6 @@ import { ActionsPanel, CodeView, StageView } from "@_components/main";
 import { LogAllow } from "@_constants/global";
 import {
   AddActionPrefix,
-  RenderableFileTypes,
   CodeViewSyncDelay,
   RenameActionPrefix,
 } from "@_constants/main";
@@ -50,6 +49,7 @@ import { useNavigate } from "react-router-dom";
 export default function MainPage() {
   // redux
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const {
     osType,
     theme,
@@ -246,7 +246,6 @@ export default function MainPage() {
       removeEventListeners();
     };
   }, [addEventListeners, removeEventListeners]);
-  const navigate = useNavigate();
 
   return (
     <>
