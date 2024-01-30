@@ -88,9 +88,11 @@ const useEditor = () => {
     null,
   );
   const codeSelectionRef = useRef<TCodeSelection | null>(null);
+
   useEffect(() => {
     codeSelectionRef.current = codeSelection;
   }, [codeSelection]);
+
   const setCodeSelection = useCallback(() => {
     const monacoEditor = monacoEditorRef.current;
     const _selection = monacoEditor?.getSelection();
@@ -129,7 +131,9 @@ const useEditor = () => {
     },
     [setCodeSelection],
   );
+
   const { debouncedAutoSave } = useSaveCommand();
+
   // handleOnChange
   const onChange = useCallback(
     (value: string) => {
@@ -151,6 +155,7 @@ const useEditor = () => {
     },
     [debouncedAutoSave, autoSave],
   );
+
   const debouncedOnChange = useCallback(
     debounce((value) => {
       onChange(value);
@@ -158,10 +163,12 @@ const useEditor = () => {
     }, CodeViewSyncDelay),
     [onChange],
   );
+
   const longDebouncedOnChange = useCallback(
     debounce(onChange, CodeViewSyncDelay_Long),
     [onChange],
   );
+
   const handleOnChange = useCallback(
     (value: string | undefined) => {
       if (value === undefined) return;
@@ -182,6 +189,7 @@ const useEditor = () => {
     action: "none" | "undo" | "redo";
     toggle: boolean;
   }>({ action: "none", toggle: false });
+
   useEffect(() => {
     if (undoRedoToggle.action === "undo") {
       onUndo();
