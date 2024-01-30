@@ -67,8 +67,14 @@ export const useHandlers = ({
 }: IUseHandlers) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { osType, navigatorDropdownType, project, fileTree, currentFileUid } =
-    useAppState();
+  const {
+    osType,
+    navigatorDropdownType,
+    project,
+    fileTree,
+    currentFileUid,
+    webComponentOpen,
+  } = useAppState();
 
   const { "*": rest } = useParams();
 
@@ -284,6 +290,7 @@ export const useHandlers = ({
   }, [project, currentProjectFileHandle, osType, fileTree, currentFileUid]);
 
   const closeNavigator = useCallback(() => {
+    if (webComponentOpen) return;
     navigatorDropdownType !== null && dispatch(setNavigatorDropdownType(null));
   }, [navigatorDropdownType]);
 
