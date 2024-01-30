@@ -104,6 +104,7 @@ export default function CodeView(props: CodeViewProps) {
       1,
     );
   }, [validNodeTree, nFocusedItem, activePanel]);
+
   useEffect(() => {
     const monacoEditor = monacoEditorRef.current;
     if (!monacoEditor) return;
@@ -163,6 +164,9 @@ export default function CodeView(props: CodeViewProps) {
 
     const file = fileTree[currentFileUid];
     if (!file) return;
+
+    const ext = file.data.ext;
+    if (ext !== "html") return;
 
     if (!validNodeTree[RootNodeUid]) return;
 
