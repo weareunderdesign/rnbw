@@ -36,28 +36,14 @@ export const Loader = () => {
     return () => clearInterval(intervalId);
   }, [loading]);
 
-  useEffect(() => {
-    const newFocusedElement =
-      document.getElementsByTagName("iframe")[0]?.contentDocument;
-
-    if (newFocusedElement) {
-      const bodyColor = getComputedStyle(
-        newFocusedElement?.body,
-      ).getPropertyValue("background-color");
-      console.log(bodyColor, "bodyColor");
-    }
-  }, [document.getElementsByTagName("iframe")[0]]);
-
   return (
     <LoadingBar
       ref={loaderRef}
-      color={theme === "Light" ? "#111" : "#fff"}
-      background="transparent"
+      color={theme === "Light" ? "#000" : "#fff"}
       height={4}
       shadow={false}
       transitionTime={150}
       waitingTime={300}
-      containerClassName="container"
       containerStyle={{
         mixBlendMode: theme === "Light" ? "normal" : "difference",
       }}
