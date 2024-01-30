@@ -70,10 +70,9 @@ export default function CodeView(props: CodeViewProps) {
     const extension = fileData.ext;
     extension && updateLanguage(extension);
 
+    //scroll to top
     const monacoEditor = monacoEditorRef.current;
     if (!monacoEditor) return;
-
-    //scroll to top
     monacoEditor.setScrollTop(0);
   }, [fileTree, currentFileUid]);
 
