@@ -135,6 +135,7 @@ const NodeTreeView = () => {
 
   // node view state handlers
   const { cb_expandNode } = useNodeViewState();
+  const [nextToExpand, setNextToExpand] = useState<TNodeUid | null>(null);
 
   const onPanelClick = useCallback(() => {
     dispatch(setActivePanel("node"));
@@ -165,9 +166,7 @@ const NodeTreeView = () => {
   );
 
   const isDragging = useRef<boolean>(false);
-
-  const callbacks = useNodeTreeCallback(focusedItemRef.current, isDragging);
-  const [nextToExpand, setNextToExpand] = useState<TNodeUid | null>(null);
+  const callbacks = useNodeTreeCallback(isDragging);
 
   const debouncedExpand = useCallback(
     debounce((uid) => {
