@@ -21,7 +21,12 @@ import {
   TNodeTreeData,
   TNodeUid,
 } from "../";
-import { copyCode, pasteCode, replaceContent } from "./helpers";
+import {
+  copyCode,
+  pasteCode,
+  pasteCodeInsideEmpty,
+  replaceContent,
+} from "./helpers";
 import { Dispatch } from "react";
 import { AnyAction } from "@reduxjs/toolkit";
 
@@ -432,7 +437,7 @@ const move = ({
     const childCount = targetNode.children.length;
     const focusedItem = isBetween
       ? targetNode.children[Math.min(childCount - 1, position)]
-      : targetNode.children[childCount - 1];
+      : targetNode.children[0];
     const sortedUids = sortUidsByMaxEndIndex(
       [...selectedUids, focusedItem],
       nodeTree,
@@ -448,13 +453,20 @@ const move = ({
     sortedUids.map((uid) => {
       if (uid === focusedItem && isFirst) {
         isFirst = false;
-        pasteCode({
-          nodeTree,
-          focusedItem,
-          addToBefore: isBetween && position === 0,
-          codeViewInstanceModel,
-          code,
-        });
+        focusedItem
+          ? pasteCode({
+              nodeTree,
+              focusedItem,
+              addToBefore: (isBetween && position === 0) || position === 0,
+              codeViewInstanceModel,
+              code,
+            })
+          : pasteCodeInsideEmpty({
+              nodeTree,
+              focusedItem: targetNode.uid,
+              codeViewInstanceModel,
+              code,
+            });
       } else {
         remove({
           dispatch,

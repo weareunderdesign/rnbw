@@ -214,7 +214,7 @@ const NodeTreeView = () => {
                       : nodeData.nodeName
                   ];
                 return refData;
-              }, [props.item.data]);
+              }, [props.item.data, cb_expandNode]);
 
             const onClick = useCallback(
               (e: React.MouseEvent) => {

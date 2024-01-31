@@ -54,6 +54,32 @@ export const pasteCode = ({
   codeViewInstanceModel.applyEdits([edit]);
 };
 
+export const pasteCodeInsideEmpty = ({
+  nodeTree,
+  focusedItem,
+  codeViewInstanceModel,
+  code,
+}: {
+  nodeTree: TNodeTreeData;
+  focusedItem: TNodeUid;
+  addToBefore?: boolean;
+  codeViewInstanceModel: editor.ITextModel;
+  code: string;
+}) => {
+  const focusedNode = nodeTree[focusedItem];
+  const { startTag } = focusedNode.data.sourceCodeLocation;
+  const edit = {
+    range: new Range(
+      startTag.endLine,
+      startTag.endCol,
+      startTag.endLine,
+      startTag.endCol,
+    ),
+    text: code,
+  };
+  codeViewInstanceModel.applyEdits([edit]);
+};
+
 export const replaceContent = ({
   nodeTree,
   focusedItem,
