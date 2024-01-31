@@ -176,7 +176,7 @@ export const useMouseEvents = ({
           return;
 
         const { startTag, endTag } = nodeData.sourceCodeLocation;
-        if (startTag && endTag) {
+        if (startTag && endTag && contentEditableUidRef.current !== uid) {
           isEditingRef.current = true;
           contentEditableUidRef.current = uid;
           ele.setAttribute("contenteditable", "true");
