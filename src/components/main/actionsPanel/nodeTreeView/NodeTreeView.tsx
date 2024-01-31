@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from "react";
 
 import cx from "classnames";
@@ -12,7 +13,7 @@ import { useDispatch } from "react-redux";
 
 import { TreeView } from "@_components/common";
 import { TreeViewData } from "@_components/common/treeView/types";
-import { RootNodeUid } from "@_constants/main";
+import { DargItemImage, RootNodeUid } from "@_constants/main";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { THtmlNodeData } from "@_node/index";
 import { TNode, TNodeUid } from "@_node/types";
@@ -166,6 +167,16 @@ const NodeTreeView = () => {
   const isDragging = useRef<boolean>(false);
 
   const callbacks = useNodeTreeCallback(focusedItemRef.current, isDragging);
+  const [nextToExpand, setNextToExpand] = useState<TNodeUid | null>(null);
+
+  const debouncedExpand = useCallback(
+    debounce((uid) => {
+      if (uid === nextToExpand) {
+        cb_expandNode(uid);
+      }
+    }, AutoExpandDelayOnDnD),
+    [cb_expandNode, nextToExpand],
+  );
 
   return currentFileUid !== "" ? (
     <div
@@ -266,20 +277,17 @@ const NodeTreeView = () => {
 
             const onDragStart = (e: React.DragEvent) => {
               e.dataTransfer.effectAllowed = "move";
+              e.dataTransfer.setDragImage(DargItemImage, 0, 0);
               props.context.startDragging();
 
               isDragging.current = true;
             };
 
-            const debouncedExpand = useCallback(
-              debounce(cb_expandNode, AutoExpandDelayOnDnD),
-              [cb_expandNode],
-            );
             const onDragEnter = (e: React.DragEvent) => {
               if (!props.context.isExpanded) {
+                setNextToExpand(props.item.index as TNodeUid);
                 debouncedExpand(props.item.index as TNodeUid);
               }
-              // e.dataTransfer.effectAllowed = 'move'
             };
 
             return (
