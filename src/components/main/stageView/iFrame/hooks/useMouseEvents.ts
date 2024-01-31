@@ -1,8 +1,10 @@
 import { useCallback, useContext, useRef } from "react";
 
+import { debounce } from "lodash";
 import { useDispatch } from "react-redux";
 
 import { LogAllow } from "@_constants/global";
+import { ShortDelay } from "@_constants/main";
 import { StageNodeIdAttr } from "@_node/file";
 import { getValidNodeUids } from "@_node/helpers";
 import { THtmlNodeData } from "@_node/node";
@@ -12,7 +14,11 @@ import { setHoveredNodeUid } from "@_redux/main/nodeTree";
 import { setSelectedNodeUids } from "@_redux/main/nodeTree/event";
 import { setActivePanel } from "@_redux/main/processor";
 
-import { editHtmlContent, getValidElementWithUid } from "../helpers";
+import {
+  editHtmlContent,
+  getValidElementWithUid,
+  selectAllText,
+} from "../helpers";
 import {
   isWebComponentDblClicked,
   onWebComponentDblClick,
@@ -129,6 +135,10 @@ export const useMouseEvents = ({
     }
   }, []);
 
+  const debouncedSelectAllText = useCallback(
+    debounce(selectAllText, ShortDelay),
+    [],
+  );
   const onDblClick = useCallback(
     (e: MouseEvent) => {
       const ele = e.target as HTMLElement;
@@ -166,16 +176,18 @@ export const useMouseEvents = ({
           return;
 
         const { startTag, endTag } = nodeData.sourceCodeLocation;
-        if (startTag && endTag) {
+        if (startTag && endTag && contentEditableUidRef.current !== uid) {
           isEditingRef.current = true;
           contentEditableUidRef.current = uid;
           ele.setAttribute("contenteditable", "true");
           ele.focus();
+          debouncedSelectAllText(iframeRefRef.current, ele);
         }
       }
     },
     [
       contentEditableUidRef,
+      debouncedSelectAllText,
       expandedItemsObj,
       fileTree,
       htmlReferenceData,
