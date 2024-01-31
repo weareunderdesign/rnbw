@@ -1,7 +1,7 @@
-import React, { FC } from "react";
+import React, { FC, useEffect } from "react";
+import { DraggingPosition, DraggingPositionItem } from "react-complex-tree";
 
-import { DraggingPosition } from "react-complex-tree";
-
+import { addClass, removeClass } from "@_services/main";
 interface DragBetweenLine {
   draggingPosition: DraggingPosition;
   lineProps: React.HTMLProps<any>;
@@ -9,6 +9,25 @@ interface DragBetweenLine {
 
 export const DragBetweenLine: FC<DragBetweenLine> = React.memo(
   ({ draggingPosition, lineProps }) => {
+    const parentUid = (draggingPosition as DraggingPositionItem).parentItem;
+
+    useEffect(() => {
+      const newParentElement = document.querySelector(
+        `#NodeTreeView-${parentUid}`,
+      );
+      newParentElement?.setAttribute(
+        "class",
+        addClass(newParentElement.getAttribute("class") || "", "outline"),
+      );
+
+      return () => {
+        newParentElement?.setAttribute(
+          "class",
+          removeClass(newParentElement.getAttribute("class") || "", "outline"),
+        );
+      };
+    }, [parentUid]);
+
     return (
       <div
         {...lineProps}
