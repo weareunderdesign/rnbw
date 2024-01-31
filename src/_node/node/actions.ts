@@ -433,12 +433,11 @@ const move = ({
   cb?: () => void;
 }) => {
   try {
-    const targetNode = nodeTree[targetUid];
+    const targetNode = getValidNodeTree(nodeTree)[targetUid];
     const childCount = targetNode.children.length;
-    console.log({ position, childCount, isBetween }, "####");
 
     const focusedItem = isBetween
-      ? targetNode.children[Math.min(childCount - 1, position)]
+      ? targetNode.children[Math.min(childCount - 1, position - 1)]
       : targetNode.children[0];
     const sortedUids = sortUidsByMaxEndIndex(
       [...selectedUids, focusedItem],
