@@ -435,6 +435,8 @@ const move = ({
   try {
     const targetNode = nodeTree[targetUid];
     const childCount = targetNode.children.length;
+    console.log({ position, childCount, isBetween }, "####");
+
     const focusedItem = isBetween
       ? targetNode.children[Math.min(childCount - 1, position)]
       : targetNode.children[0];
@@ -493,16 +495,14 @@ const move = ({
             ? nodeChildeIndex < position
               ? directChildCount++
               : null
-            : directChildCount++;
+            : 0;
         }
       });
 
       selectedUids.map((uid, index) => {
         const node = validNodeTree[uid];
         const newNodeChildIndex =
-          (isBetween ? position : targetNode.children.length) -
-          directChildCount +
-          index;
+          (isBetween ? position : 0) - directChildCount + index;
         const newNodePath = `${targetNode.data.path}${NodePathSplitter}${node.data.tagName}-${newNodeChildIndex}`;
         needToSelectNodePaths.push(newNodePath);
       });

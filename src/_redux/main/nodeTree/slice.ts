@@ -36,6 +36,8 @@ const nodeTreeSlice = createSlice({
 
     setNeedToSelectNodePaths(state, action: PayloadAction<string[] | null>) {
       const needToSelectNodePaths = action.payload;
+      console.log(needToSelectNodePaths, "selecting");
+
       state.needToSelectNodePaths = needToSelectNodePaths;
     },
     setNeedToSelectCode(state, action: PayloadAction<TCodeSelection | null>) {
