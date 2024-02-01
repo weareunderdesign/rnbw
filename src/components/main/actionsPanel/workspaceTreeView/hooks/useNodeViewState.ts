@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useContext } from "react";
 
 import { useDispatch } from "react-redux";
 
@@ -11,6 +11,7 @@ import {
   selectFileTreeNodes,
 } from "@_redux/main/fileTree";
 import { useAppState } from "@_redux/useAppState";
+import { MainContext } from "@_redux/main";
 
 interface IUseNodeViewState {
   invalidFileNodes: {
@@ -26,13 +27,17 @@ export const useNodeViewState = ({ invalidFileNodes }: IUseNodeViewState) => {
     fSelectedItems: selectedItems,
     fSelectedItemsObj: selectedItemsObj,
   } = useAppState();
+  const { removeRunningActions } = useContext(MainContext);
 
   const cb_focusNode = useCallback(
     (uid: TNodeUid) => {
-      if (invalidFileNodes[uid] || focusedItem === uid || !fileTree[uid])
+      if (invalidFileNodes[uid] || focusedItem === uid || !fileTree[uid]) {
+        removeRunningActions(["fileTreeView-focus"]);
         return;
+      }
 
       dispatch(focusFileTreeNode(uid));
+      removeRunningActions(["fileTreeView-focus"]);
     },
     [invalidFileNodes, focusedItem, fileTree],
   );
@@ -40,7 +45,10 @@ export const useNodeViewState = ({ invalidFileNodes }: IUseNodeViewState) => {
     (uids: TNodeUid[]) => {
       let _uids = [...uids];
       _uids = _uids.filter((_uid) => !invalidFileNodes[_uid] && fileTree[_uid]);
-      if (_uids.length === 0) return;
+      if (_uids.length === 0) {
+        removeRunningActions(["fileTreeView-select"]);
+        return;
+      }
 
       _uids = getValidNodeUids(fileTree, _uids);
       if (_uids.length === selectedItems.length) {
@@ -51,10 +59,14 @@ export const useNodeViewState = ({ invalidFileNodes }: IUseNodeViewState) => {
             break;
           }
         }
-        if (same) return;
+        if (same) {
+          removeRunningActions(["fileTreeView-select"]);
+          return;
+        }
       }
 
       dispatch(selectFileTreeNodes(_uids));
+      removeRunningActions(["fileTreeView-select"]);
     },
     [invalidFileNodes, fileTree, selectedItems, selectedItemsObj],
   );
