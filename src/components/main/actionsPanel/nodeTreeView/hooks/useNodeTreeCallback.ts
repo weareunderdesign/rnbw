@@ -11,7 +11,6 @@ import { useNodeActionHandlers } from "./useNodeActionHandlers";
 import { useNodeViewState } from "./useNodeViewState";
 
 export const useNodeTreeCallback = (
-  focusItemValue: TNodeUid | null,
   isDragging: React.MutableRefObject<boolean>,
 ) => {
   const { validNodeTree } = useAppState();
@@ -57,32 +56,6 @@ export const useNodeTreeCallback = (
     if (validUids.length === 0) return;
 
     if (target.parentItem === "ROOT") return;
-
-    // ************************************************************************
-    // below commentted process will be done in getValidNodeUids helper
-    // please have a check
-    // ************************************************************************
-    /* const isTargetHead =
-      (target?.parentItem && validNodeTree[target?.parentItem].displayName) ===
-        "head" ||
-      (target?.targetItem &&
-        validNodeTree[target?.targetItem].displayName === "head");
-    const headTags = [
-      "title",
-      "meta",
-      "link",
-      "script",
-      "style",
-      "base",
-      "noscript",
-    ];
-    if (isTargetHead) {
-      for (const item of items) {
-        if (!headTags.includes(item.data.displayName)) {
-          return;
-        }
-      }
-    } */
 
     onMove({
       selectedUids: validUids,
