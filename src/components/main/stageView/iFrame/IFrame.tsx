@@ -16,6 +16,7 @@ import { jss, styles } from "./constants";
 import { markSelectedElements } from "./helpers";
 import { useCmdk, useMouseEvents, useSyncNode } from "./hooks";
 import { setLoadingFalse, setLoadingTrue } from "@_redux/main/processor";
+import { useZoom } from "./hooks/useZoom";
 
 export const IFrame = () => {
   const dispatch = useDispatch();
@@ -114,6 +115,9 @@ export const IFrame = () => {
       };
     }
   }, [iframeRefState]);
+
+  // zoom iframe
+  useZoom(iframeRefState, isEditingRef);
 
   // reload iframe
   useEffect(() => {
