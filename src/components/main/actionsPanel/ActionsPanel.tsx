@@ -15,6 +15,7 @@ export default function ActionsPanel() {
           width: "100%",
           height: "100%",
           overflow: "hidden",
+          zIndex: 999,
         }}
       >
         <NavigatorPanel />

@@ -57,6 +57,7 @@ export const useAppState = () => {
         syncConfigs,
         webComponentOpen,
         contentEditable,
+        zoomLevel,
       },
       codeView: { editingNodeUid: editingNodeUidInCodeView, codeViewTabSize },
       processor: {
@@ -145,6 +146,7 @@ export const useAppState = () => {
     syncConfigs,
     webComponentOpen,
     contentEditable,
+    zoomLevel,
 
     editingNodeUidInCodeView,
     codeViewTabSize,

@@ -176,11 +176,13 @@ body.inheritCursors * {
 #CodeView {
   transition: 0.3s all;
 }
-.panelResize-horizontal:hover {
+.panelResize-horizontal:hover,
+.panelResize-horizontal:active {
   background-color: var(--color-secondary-background);
   cursor: col-resize !important;
 }
-.panelResize-vertical:hover {
+.panelResize-vertical:hover,
+.panelResize-vertical:active {
   background-color: var(--color-secondary-background);
   cursor: row-resize !important;
 }
