@@ -134,9 +134,8 @@ export const IFrame = () => {
             src={iframeSrc}
             style={{
               background: "white",
-              position: "absolute",
               width: "100%",
-              height: "100vh",
+              height: "100%",
             }}
           />
         )}

@@ -4,7 +4,6 @@ export * from "./useCmdkReferenceData";
 export * from "./useFileHandlers";
 export * from "./useHandlers";
 export * from "./useInit";
-export * from "./usePanels";
 export * from "./useRecentProjects";
 export * from "./useReferenceData";
 export * from "./useReferences";

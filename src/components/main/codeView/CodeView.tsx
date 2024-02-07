@@ -18,13 +18,12 @@ import { useAppState } from "@_redux/useAppState";
 import { Editor, loader } from "@monaco-editor/react";
 
 import { useCmdk, useEditor } from "./hooks";
-import { CodeViewProps } from "./types";
 import { getNodeUidByCodeSelection } from "./helpers";
 import { setEditingNodeUidInCodeView } from "@_redux/main/codeView";
 
 loader.config({ monaco });
 
-export default function CodeView(props: CodeViewProps) {
+export default function CodeView() {
   const dispatch = useDispatch();
   const {
     fileTree,
@@ -192,10 +191,6 @@ export default function CodeView(props: CodeViewProps) {
       <>
         <div
           id="CodeView"
-          // draggable
-          onDrag={props.dragCodeView}
-          onDragEnd={props.dragEndCodeView}
-          onDrop={props.dropCodeView}
           onDragCapture={(e) => {
             e.preventDefault();
           }}
@@ -203,20 +198,12 @@ export default function CodeView(props: CodeViewProps) {
             e.preventDefault();
           }}
           style={{
-            position: "absolute",
-            top: props.offsetTop,
-            left: props.offsetLeft,
-            width: props.width,
-            height: showCodeView ? props.height : "0px",
-            visibility: showCodeView ? "visible" : "hidden",
+            width: "100%",
+            height: "100%",
             zIndex: 999,
             overflow: "hidden",
-            minHeight: showCodeView ? "180px" : "0px",
           }}
-          className={
-            "border radius-s background-primary shadow" +
-            (props.codeViewDragging ? " dragging" : "")
-          }
+          className={"border radius-s background-primary shadow"}
           onClick={onPanelClick}
         >
           <Editor
@@ -235,7 +222,6 @@ export default function CodeView(props: CodeViewProps) {
       </>
     );
   }, [
-    props,
     onPanelClick,
     showCodeView,
 

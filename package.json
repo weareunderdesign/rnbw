@@ -35,6 +35,7 @@
     "react-dom": "^18.2.0",
     "react-papaparse": "^4.1.0",
     "react-redux": "^8.0.5",
+    "react-resizable-panels": "^2.0.3",
     "react-router-dom": "^6.9.0",
     "react-split": "^2.0.14",
     "react-top-loading-bar": "^2.3.1",
