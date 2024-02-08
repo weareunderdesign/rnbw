@@ -1,50 +1,36 @@
 import React, { useMemo } from "react";
 
-import { useAppState } from "@_redux/useAppState";
-
 import NavigatorPanel from "./navigatorPanel";
 import NodeTreeView from "./nodeTreeView";
 import SettingsPanel from "./settingsPanel";
-import { ActionsPanelProps } from "./types";
 import WorkspaceTreeView from "./workspaceTreeView";
 
-export default function ActionsPanel({ ...props }: ActionsPanelProps) {
-  const { showActionsPanel } = useAppState();
-
+export default function ActionsPanel() {
   return useMemo(() => {
     return (
-      <>
+      <div
+        id="ActionsPanel"
+        className="border radius-s background-primary shadow"
+        style={{
+          width: "100%",
+          height: "100%",
+          overflow: "hidden",
+          zIndex: 999,
+        }}
+      >
+        <NavigatorPanel />
         <div
-          id="ActionsPanel"
-          className="border radius-s background-primary shadow"
           style={{
-            position: "absolute",
-            top: props.top,
-            left: props.left,
-            width: props.width,
-            height: props.height,
-
-            overflow: "hidden",
-
-            ...(showActionsPanel
-              ? {}
-              : { width: "0", overflow: "hidden", border: "none" }),
+            display: "grid",
+            gridTemplateRows: "repeat(auto-fit, minmax(50px, 1fr))",
+            height: "100%",
           }}
         >
-          <NavigatorPanel />
-          <div
-            style={{
-              display: "grid",
-              gridTemplateRows: "repeat(auto-fit, minmax(50px, 1fr))",
-              height: "100%",
-            }}
-          >
-            <WorkspaceTreeView />
-            <NodeTreeView />
-          </div>
-          {false && <SettingsPanel />}
+          <WorkspaceTreeView />
+          <NodeTreeView />
         </div>
-      </>
+        {false && <SettingsPanel />}
+      </div>
     );
-  }, [props, showActionsPanel]);
+  }, []);
 }

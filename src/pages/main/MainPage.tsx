@@ -3,6 +3,8 @@ import React, { useCallback, useEffect } from "react";
 import cx from "classnames";
 import { Command } from "cmdk";
 import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { debounce } from "lodash";
 
 import { Loader, SVGIcon } from "@_components/common";
 import { ActionsPanel, CodeView, StageView } from "@_components/main";
@@ -36,15 +38,13 @@ import {
   useHandlers,
   useInit,
   useInvalidFileNodes,
-  usePanels,
   useRecentProjects,
   useReferenceData,
   useReferneces,
   useRunningActions,
 } from "./hooks";
 import Processor from "./processor";
-import { debounce } from "lodash";
-import { useNavigate } from "react-router-dom";
+import ResizablePanels from "./ResizablePanels";
 
 export default function MainPage() {
   // redux
@@ -56,7 +56,6 @@ export default function MainPage() {
     currentFileUid,
     fileTree,
     activePanel,
-    showActionsPanel,
     autoSave,
     formatCode,
     cmdkOpen,
@@ -140,19 +139,6 @@ export default function MainPage() {
   useInit({ importProject, onNew });
   const { validMenuItemCount, hoveredMenuItemDescription } = useCmdkModal();
 
-  const {
-    actionsPanelOffsetTop,
-    actionsPanelOffsetLeft,
-    actionsPanelWidth,
-    codeViewOffsetTop,
-    codeViewOffsetBottom,
-    codeViewOffsetLeft,
-    codeViewHeight,
-    codeViewDragging,
-    dragCodeView,
-    dragEndCodeView,
-    dropCodeView,
-  } = usePanels();
   const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
   const prevFocusedElement = React.useRef<HTMLElement | null>(
     window.document.activeElement as HTMLElement | null,
@@ -299,31 +285,10 @@ export default function MainPage() {
           onClick={closeNavigator}
         >
           <Loader />
-          <StageView />
-          <ActionsPanel
-            top={actionsPanelOffsetTop}
-            left={actionsPanelOffsetLeft}
-            width={`${actionsPanelWidth}px`}
-            height={`calc(100vh - ${actionsPanelOffsetTop * 2}px)`}
-          />
-          <CodeView
-            offsetTop={`${codeViewOffsetTop}`}
-            offsetBottom={codeViewOffsetBottom}
-            offsetLeft={
-              showActionsPanel
-                ? actionsPanelOffsetLeft * 2 + actionsPanelWidth
-                : codeViewOffsetLeft
-            }
-            width={`calc(100vw - ${
-              (showActionsPanel
-                ? actionsPanelWidth + actionsPanelOffsetLeft * 2
-                : codeViewOffsetLeft) + codeViewOffsetLeft
-            }px)`}
-            height={`${codeViewHeight}vh`}
-            dropCodeView={dropCodeView}
-            dragCodeView={dragCodeView}
-            dragEndCodeView={dragEndCodeView}
-            codeViewDragging={codeViewDragging}
+          <ResizablePanels
+            actionPanel={<ActionsPanel />}
+            codeView={<CodeView />}
+            stageView={<StageView />}
           />
         </div>
 
