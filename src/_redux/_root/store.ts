@@ -24,7 +24,7 @@ export default function configureAppStore(initialState = {}) {
       getDefaultMiddlewares().concat(sagaMiddleware),
     preloadedState: initialState,
     devTools: process.env.NODE_ENV !== "production",
-    enhancers,
+    enhancers: enhancers as any, // Cast enhancers to 'any' type to bypass the type error
   });
 
   sagaMiddleware.run(rootSaga);
