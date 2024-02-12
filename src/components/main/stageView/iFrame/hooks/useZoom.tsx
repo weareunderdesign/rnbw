@@ -4,19 +4,18 @@ import {
   useContext,
   useEffect,
   useRef,
+  useState,
 } from "react";
 import { MainContext } from "@_redux/main";
 import { useAppState } from "@_redux/useAppState";
-import { useDispatch } from "react-redux";
-import { setZoomLevel } from "@_redux/main/stageView";
 
 export const useZoom = (
   iframeRefState: HTMLIFrameElement | null,
   isEditingRef: MutableRefObject<boolean>,
 ) => {
   const { isCodeTyping } = useContext(MainContext);
-  const { activePanel, zoomLevel } = useAppState();
-  const dispatch = useDispatch();
+  const { activePanel } = useAppState();
+  const [zoomLevel, setZoomLevel] = useState(1);
 
   const activePanelRef = useRef(activePanel);
 
@@ -26,7 +25,7 @@ export const useZoom = (
 
   const setZoom = useCallback(
     (level: number) => {
-      dispatch(setZoomLevel(level));
+      setZoomLevel(level);
       if (!iframeRefState) return;
       iframeRefState.style.transform = `scale(${level})`;
       iframeRefState.style.transformOrigin = `top ${

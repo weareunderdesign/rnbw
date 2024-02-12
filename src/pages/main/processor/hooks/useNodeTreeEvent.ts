@@ -214,7 +214,7 @@ export const useNodeTreeEvent = () => {
               if (ifPreserveNode) {
                 return false;
               }
-              //script and style should not be discarded
+              // script and style should not be discarded
               if (
                 elementNode.nodeName === "SCRIPT" ||
                 elementNode.nodeName === "LINK" ||

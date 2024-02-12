@@ -1,13 +1,6 @@
-import React, {
-  useState,
-  useEffect,
-  useContext,
-  useMemo,
-  useCallback,
-} from "react";
+import React, { useMemo } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { useAppState } from "@_redux/useAppState";
-import { MainContext } from "@_redux/main";
 import { ResizablePanelsProps } from "./types";
 
 const actionsPanelPx = 240;
@@ -20,9 +13,7 @@ export default function ResizablePanels({
   stageView,
   codeView,
 }: ResizablePanelsProps) {
-  const { showActionsPanel, showCodeView, zoomLevel } = useAppState();
-  const { iframeRefRef } = useContext(MainContext);
-  const [hoverSide, setHoverSide] = useState(false);
+  const { showActionsPanel, showCodeView } = useAppState();
 
   const stageWidth = useMemo(
     () =>
@@ -36,46 +27,10 @@ export default function ResizablePanels({
     [showActionsPanel, showCodeView],
   );
 
-  const handleMouseMove = useCallback(
-    (event: MouseEvent) => {
-      const threshold = 100;
-      if (event.clientX <= threshold) {
-        setHoverSide(true);
-      } else {
-        if (hoverSide && event.clientX < actionsPanelPx - 1) return;
-        setHoverSide(false);
-      }
-    },
-    [hoverSide],
-  );
-
-  useEffect(() => {
-    if (!showActionsPanel) {
-      const iframeWindow = iframeRefRef.current?.contentWindow;
-      zoomLevel === 1 &&
-        iframeWindow?.addEventListener("mousemove", handleMouseMove);
-      window?.addEventListener("mousemove", handleMouseMove);
-
-      return () => {
-        iframeWindow?.removeEventListener("mousemove", handleMouseMove);
-        window.removeEventListener("mousemove", handleMouseMove);
-      };
-    }
-  }, [iframeRefRef.current, showActionsPanel, zoomLevel, hoverSide]);
-
   return (
     <>
-      {!showActionsPanel && hoverSide && (
-        <div
-          style={{
-            width: "240px",
-            height: "100%",
-            position: "absolute",
-            zIndex: 999,
-          }}
-        >
-          {actionPanel}
-        </div>
+      {!showActionsPanel && (
+        <div className="action-panel-wrapper">{actionPanel}</div>
       )}
       <PanelGroup style={{ height: "100vh" }} direction="horizontal">
         {showActionsPanel && (
