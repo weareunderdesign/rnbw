@@ -1,34 +1,53 @@
-import React, { ReactNode, useState, useEffect, useContext } from "react";
+import React, {
+  useState,
+  useEffect,
+  useContext,
+  useMemo,
+  useCallback,
+} from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { useAppState } from "@_redux/useAppState";
 import { MainContext } from "@_redux/main";
+import { ResizablePanelsProps } from "./types";
 
 const actionsPanelPx = 240;
 const containerWidth = document.documentElement.clientWidth;
 const actionsPanelWidth = (actionsPanelPx / containerWidth) * 100;
+const codeViewWidth = 50 - actionsPanelWidth;
 
 export default function ResizablePanels({
   actionPanel,
   stageView,
   codeView,
-}: {
-  actionPanel: ReactNode;
-  stageView: ReactNode;
-  codeView: ReactNode;
-}) {
+}: ResizablePanelsProps) {
   const { showActionsPanel, showCodeView, zoomLevel } = useAppState();
   const { iframeRefRef } = useContext(MainContext);
   const [hoverSide, setHoverSide] = useState(false);
 
-  const handleMouseMove = (event: MouseEvent) => {
-    const threshold = 100;
-    if (event.clientX <= threshold) {
-      setHoverSide(true);
-    } else {
-      if (hoverSide && event.clientX < actionsPanelPx - 1) return;
-      setHoverSide(false);
-    }
-  };
+  const stageWidth = useMemo(
+    () =>
+      !showCodeView
+        ? !showActionsPanel
+          ? 50 + codeViewWidth + actionsPanelWidth
+          : 50 + codeViewWidth
+        : !showActionsPanel
+        ? 50 + actionsPanelWidth
+        : 50,
+    [showActionsPanel, showCodeView],
+  );
+
+  const handleMouseMove = useCallback(
+    (event: MouseEvent) => {
+      const threshold = 100;
+      if (event.clientX <= threshold) {
+        setHoverSide(true);
+      } else {
+        if (hoverSide && event.clientX < actionsPanelPx - 1) return;
+        setHoverSide(false);
+      }
+    },
+    [hoverSide],
+  );
 
   useEffect(() => {
     if (!showActionsPanel) {
@@ -64,66 +83,32 @@ export default function ResizablePanels({
             <Panel
               id="ActionsPanel"
               defaultSize={actionsPanelWidth}
-              minSize={10}
+              minSize={5}
               order={1}
-              style={{ padding: "12px 0px 12px 12px" }}
             >
               {actionPanel}
             </Panel>
-            <PanelResizeHandle
-              className="panelResize-horizontal"
-              style={{
-                width: "3px",
-              }}
-            />
+            <PanelResizeHandle className="panelResize" />
           </>
         )}
 
-        <Panel
-          defaultSize={showActionsPanel ? 100 - actionsPanelWidth : 100}
-          minSize={10}
-          order={3}
-          id="VerticalContainer"
-        >
-          <PanelGroup direction="vertical">
+        <Panel id="StageView" defaultSize={stageWidth} minSize={10} order={2}>
+          {stageView}
+        </Panel>
+
+        {showCodeView && (
+          <>
+            <PanelResizeHandle className="panelResize" />
             <Panel
-              id="StageView"
-              defaultSize={showCodeView ? 60 : 100}
-              minSize={10}
+              id="CodeView"
+              defaultSize={codeViewWidth}
+              minSize={5}
               order={2}
             >
-              {stageView}
+              {codeView}
             </Panel>
-
-            {showCodeView && (
-              <>
-                <PanelResizeHandle
-                  className="panelResize-vertical"
-                  style={{
-                    height: "3px",
-                  }}
-                />
-                <Panel
-                  id="CodeView"
-                  defaultSize={40}
-                  minSize={10}
-                  order={2}
-                  style={{
-                    padding: `0px 12px 12px ${
-                      showActionsPanel ? "0px" : "12px"
-                    }`,
-                    width: hoverSide
-                      ? `calc(100% - ${actionsPanelPx}px)`
-                      : "100%",
-                    alignSelf: "end",
-                  }}
-                >
-                  {codeView}
-                </Panel>
-              </>
-            )}
-          </PanelGroup>
-        </Panel>
+          </>
+        )}
       </PanelGroup>
     </>
   );
