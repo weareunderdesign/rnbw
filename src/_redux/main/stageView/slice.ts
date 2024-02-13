@@ -10,7 +10,6 @@ const stageViewReducerInitialState: TStageViewReducerState = {
   webComponentOpen: false,
   syncConfigs: {},
   contentEditable: false,
-  zoomLevel: 1,
 };
 const stageViewSlice = createSlice({
   name: "stageView",
@@ -44,10 +43,6 @@ const stageViewSlice = createSlice({
       const contentEditable = action.payload;
       state.contentEditable = contentEditable;
     },
-    setZoomLevel(state, action: PayloadAction<number>) {
-      const zoomLevel = action.payload;
-      state.zoomLevel = zoomLevel;
-    },
   },
 });
 export const {
@@ -58,6 +53,5 @@ export const {
   setSyncConfigs,
   setWebComponentOpen,
   setContentEditable,
-  setZoomLevel,
 } = stageViewSlice.actions;
 export const StageViewReducer = stageViewSlice.reducer;

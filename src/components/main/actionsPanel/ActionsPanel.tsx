@@ -11,12 +11,6 @@ export default function ActionsPanel() {
       <div
         id="ActionsPanel"
         className="border radius-s background-primary shadow"
-        style={{
-          width: "100%",
-          height: "100%",
-          overflow: "hidden",
-          zIndex: 999,
-        }}
       >
         <NavigatorPanel />
         <div

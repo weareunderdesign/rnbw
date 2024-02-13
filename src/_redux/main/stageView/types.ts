@@ -6,7 +6,6 @@ export type TStageViewReducerState = {
   webComponentOpen: boolean;
   syncConfigs: StageViewSyncConfigs;
   contentEditable: boolean;
-  zoomLevel: number;
 };
 
 export type StageViewSyncConfigs = {

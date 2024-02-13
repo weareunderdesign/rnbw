@@ -173,16 +173,41 @@ body.inheritCursors * {
   height: 100% !important;
   width: calc(100% - 64px) !important;
 }
-#CodeView {
-  transition: 0.3s all;
+/* panels style */
+
+.panelResize {
+  width: 3px;
 }
-.panelResize-horizontal:hover,
-.panelResize-horizontal:active {
+.panelResize:hover,
+.panelResize:active {
   background-color: var(--color-secondary-background);
   cursor: col-resize !important;
 }
-.panelResize-vertical:hover,
-.panelResize-vertical:active {
-  background-color: var(--color-secondary-background);
-  cursor: row-resize !important;
+
+#CodeView {
+  transition: 0.3s all;
+}
+
+#ActionsPanel {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  z-index: 999;
+  transition: 0.3s all;
+}
+
+.action-panel-wrapper {
+  width: 120px;
+  height: 100%;
+  position: absolute;
+}
+
+.action-panel-wrapper > #ActionsPanel {
+  width: 240px;
+  transform: translateX(-300px);
+}
+
+.action-panel-wrapper:hover > #ActionsPanel {
+  transform: translateX(0px);
 }
