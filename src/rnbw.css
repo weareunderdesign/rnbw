@@ -211,3 +211,19 @@ body.inheritCursors * {
 .action-panel-wrapper:hover > #ActionsPanel {
   transform: translateX(0px);
 }
+
+.sideButton {
+  visibility: visible;
+  height: 16px;
+  width: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.sideButton:hover {
+  background-color: var(--color-secondary-background);
+  border-radius: 4px;
+}
+.sideButton_hidden {
+  visibility: hidden;
+}
