@@ -1,10 +1,11 @@
 import { createInjectorsEnhancer } from "redux-injectors";
 import createSagaMiddleware from "redux-saga";
-
-import { configureStore } from "@reduxjs/toolkit";
+import { StoreEnhancer, Tuple, configureStore } from "@reduxjs/toolkit";
 
 import createReducer from "./rootReducer";
 import rootSaga from "./rootSaga";
+
+type Enhancers = ReadonlyArray<StoreEnhancer>;
 
 export default function configureAppStore(initialState = {}) {
   const reduxSagaMonitorOptions = {};
@@ -24,7 +25,8 @@ export default function configureAppStore(initialState = {}) {
       getDefaultMiddlewares().concat(sagaMiddleware),
     preloadedState: initialState,
     devTools: process.env.NODE_ENV !== "production",
-    enhancers,
+    enhancers: (getDefaultEnhancers) =>
+      getDefaultEnhancers().concat(enhancers) as Tuple<Enhancers>,
   });
 
   sagaMiddleware.run(rootSaga);
