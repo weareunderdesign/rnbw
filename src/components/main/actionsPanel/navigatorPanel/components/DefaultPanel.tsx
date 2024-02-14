@@ -59,13 +59,13 @@ export const DefaultPanel = () => {
             {isHomeIcon(fileNode)
               ? "home"
               : filesReferenceData[fileExtension] && fileExtension !== "md"
-              ? filesReferenceData[fileExtension].Icon
-              : "page"}
+                ? filesReferenceData[fileExtension].Icon
+                : "page"}
           </SVGIconI>
           <span
             className="text-s"
             style={{
-              width: fileNode.parentUid !== RootNodeUid ? "60px" : "90px",
+              width: "60px",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
               overflow: "hidden",

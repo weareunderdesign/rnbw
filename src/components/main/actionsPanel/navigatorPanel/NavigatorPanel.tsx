@@ -12,6 +12,7 @@ import {
 } from "./constants";
 import { useFavicon, useNavigatorPanelHandlers } from "./hooks";
 import { NavigatorPanelProps } from "./types";
+import { PanelButton } from "./components/PanelButton";
 
 export default function NavigatorPanel(props: NavigatorPanelProps) {
   const {
@@ -52,8 +53,8 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
           ? unsavedProjectLightImg
           : unsavedProjectDarkImg
         : theme === "Light"
-        ? projectLightImg
-        : projectDarkImg;
+          ? projectLightImg
+          : projectDarkImg;
     }
   }, [unsavedProject, theme]);
 
@@ -73,21 +74,26 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
       <>
         <div
           id="NavigatorPanel"
-          className="padding-m border-bottom gap-s"
-          onClick={onPanelClick}
-          ref={navigatorPanelRef}
+          className="border-bottom padding-m"
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
         >
-          {!navigatorDropdownType ? (
-            <DefaultPanel />
-          ) : navigatorDropdownType === "workspace" ? (
-            <></>
-          ) : navigatorDropdownType === "project" ? (
-            <ProjectPanel unsavedProject={unsavedProject} />
-          ) : (
-            <></>
-          )}
+          <div className="gap-s" onClick={onPanelClick} ref={navigatorPanelRef}>
+            {!navigatorDropdownType ? (
+              <DefaultPanel />
+            ) : navigatorDropdownType === "workspace" ? (
+              <></>
+            ) : navigatorDropdownType === "project" ? (
+              <ProjectPanel unsavedProject={unsavedProject} />
+            ) : (
+              <></>
+            )}
+          </div>
+          <PanelButton />
         </div>
-
         {navigatorDropdownType && (
           <AdditionalPanel navigatorPanel={navigatorPanelRef.current} />
         )}
