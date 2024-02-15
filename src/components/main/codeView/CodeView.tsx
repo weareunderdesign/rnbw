@@ -68,12 +68,14 @@ export default function CodeView() {
     const fileData = file.data as TFileNodeData;
     const extension = fileData.ext;
     extension && updateLanguage(extension);
+  }, [fileTree, currentFileUid]);
 
-    //scroll to top
+  //scroll to top on file change
+  useEffect(() => {
     const monacoEditor = monacoEditorRef.current;
     if (!monacoEditor) return;
     monacoEditor.setScrollTop(0);
-  }, [fileTree, currentFileUid]);
+  }, [currentFileUid]);
 
   // focusedItem -> code select
   const focusedItemRef = useRef<TNodeUid>("");
