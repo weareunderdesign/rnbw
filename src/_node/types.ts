@@ -10,6 +10,7 @@ export type TNode = {
   children: TNodeUid[];
 
   data: TNodeData;
+  sequencedUid: TNodeUid;
 };
 
 export type TNodeUid = string;
