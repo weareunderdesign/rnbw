@@ -9,6 +9,7 @@ import { useAppState } from "@_redux/useAppState";
 import { NodeActions } from "@_node/apis";
 import { elementsCmdk } from "@_pages/main/helper";
 import { TCmdkGroupData } from "@_types/main";
+import { RootNodeUid } from "@_constants/main";
 
 export const useNodeActionHandlers = () => {
   const dispatch = useDispatch();
@@ -30,9 +31,14 @@ export const useNodeActionHandlers = () => {
     (actionName: string) => {
       if (selectedItems.length === 0) return;
       const selectedNodes = selectedItems.map((uid) => nodeTree[uid]);
+      const nodeToAdd = actionName.split("-").slice(1).join("-");
       if (
         selectedNodes.some(
-          (node: TNode) => !node || !node.data || !node.data.sourceCodeLocation,
+          (node: TNode) =>
+            !node ||
+            !node.data ||
+            !node.data.sourceCodeLocation ||
+            (node.parentUid == RootNodeUid && nodeToAdd !== "Node-<html>"),
         )
       ) {
         LogAllow &&
@@ -51,7 +57,6 @@ export const useNodeActionHandlers = () => {
       }
 
       let selectedUids = [...selectedItems];
-      const nodeToAdd = actionName.split("-").slice(1).join("-");
       const data: TCmdkGroupData = {
         Files: [],
         Elements: [],
@@ -74,8 +79,15 @@ export const useNodeActionHandlers = () => {
 
       const allowedArray = selectedNodes.map(
         (selectedNode: TNode, i: number) => {
-          let addingAllowed = checkAddingAllowed(selectedNode.uid);
-          if (!addingAllowed && selectedNode.parentUid) {
+          let addingAllowed =
+            (selectedNode.parentUid == RootNodeUid &&
+              nodeToAdd === "Node-<html>") ||
+            checkAddingAllowed(selectedNode.uid);
+          if (
+            !addingAllowed &&
+            selectedNode?.parentUid &&
+            selectedNode?.parentUid !== RootNodeUid
+          ) {
             selectedUids[i] = selectedNode.parentUid;
             addingAllowed = checkAddingAllowed(selectedNode.parentUid);
           }
