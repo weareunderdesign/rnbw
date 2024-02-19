@@ -3,7 +3,7 @@ import { useCallback, useContext } from "react";
 import { useDispatch } from "react-redux";
 
 import { LogAllow } from "@_constants/global";
-import { TNodeUid } from "@_node/types";
+import { TNode, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { useAppState } from "@_redux/useAppState";
 import { NodeActions } from "@_node/apis";
@@ -28,10 +28,15 @@ export const useNodeActionHandlers = () => {
 
   const onAddNode = useCallback(
     (actionName: string) => {
-      const focusedNode = nodeTree[focusedItem];
-      if (!focusedNode || !focusedNode.data.sourceCodeLocation) {
+      if (selectedItems.length === 0) return;
+      const selectedNodes = selectedItems.map((uid) => nodeTree[uid]);
+      if (
+        selectedNodes.some(
+          (node: TNode) => !node || !node.data || !node.data.sourceCodeLocation,
+        )
+      ) {
         LogAllow &&
-          console.error("Focused node or source code location is undefined");
+          console.error("Selected nodes or source code location is undefined");
         return;
       }
 
@@ -45,13 +50,13 @@ export const useNodeActionHandlers = () => {
         return;
       }
 
-      let focusedUid = focusedItem;
+      let selectedUids = [...selectedItems];
+      const nodeToAdd = actionName.split("-").slice(1).join("-");
       const data: TCmdkGroupData = {
         Files: [],
         Elements: [],
         Recent: [],
       };
-      const nodeToAdd = actionName.split("-").slice(1).join("-");
 
       const checkAddingAllowed = (uid: string) => {
         elementsCmdk({
@@ -67,13 +72,17 @@ export const useNodeActionHandlers = () => {
         );
       };
 
-      let addingAllowed = checkAddingAllowed(focusedUid);
-
-      if (!addingAllowed && focusedNode.parentUid) {
-        focusedUid = focusedNode.parentUid;
-        addingAllowed = checkAddingAllowed(focusedUid);
-      }
-      if (!addingAllowed) return;
+      const allowedArray = selectedNodes.map(
+        (selectedNode: TNode, i: number) => {
+          let addingAllowed = checkAddingAllowed(selectedNode.uid);
+          if (!addingAllowed && selectedNode.parentUid) {
+            selectedUids[i] = selectedNode.parentUid;
+            addingAllowed = checkAddingAllowed(selectedNode.parentUid);
+          }
+          return addingAllowed;
+        },
+      );
+      if (allowedArray.includes(false)) return;
 
       setIsContentProgrammaticallyChanged(true);
       NodeActions.add({
@@ -82,7 +91,7 @@ export const useNodeActionHandlers = () => {
         referenceData: htmlReferenceData,
         nodeTree,
         codeViewInstanceModel,
-        focusedItem: focusedUid,
+        selectedItems: selectedUids,
         formatCode,
         fb: () => setIsContentProgrammaticallyChanged(false),
       });
