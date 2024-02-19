@@ -11,7 +11,6 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
     elements: {},
   },
   cmdkReferenceData: {},
-  cmdkReferenceAdd: {},
 
   projectHandlers: {},
   setProjectHandlers: () => {},

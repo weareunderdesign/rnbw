@@ -230,31 +230,8 @@ export const useCmdkReferenceData = ({
       groupName: "Add",
     });
 
-    // Elements
-    // elementsCmdk({
-    //   nodeTree,
-    //   nFocusedItem,
-    //   htmlReferenceData,
-    //   data,
-    //   cmdkSearchContent,
-    //   groupName: "Add",
-    // });
-    // console.log(
-    //   {
-    //     nodeTree,
-    //     nFocusedItem,
-    //     htmlReferenceData,
-    //     data,
-    //     cmdkSearchContent,
-    //     groupName: "Add",
-    //   },
-    //   "data",
-    // );
-
     Object.keys(htmlReferenceData.elements).map((tag: string) => {
       const tagRef = htmlReferenceData.elements[tag];
-      // console.log(tagRef, "tagRef");
-
       if (tagRef !== undefined) {
         data["Elements"].push({
           Featured: tagRef && tagRef.Featured === "Yes" ? true : false,

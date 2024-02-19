@@ -243,7 +243,6 @@ export default function MainPage() {
           filesReferenceData,
           htmlReferenceData,
           cmdkReferenceData,
-          cmdkReferenceAdd,
 
           projectHandlers,
           setProjectHandlers,

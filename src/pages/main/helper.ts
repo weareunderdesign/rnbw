@@ -211,18 +211,6 @@ export const elementsCmdk = ({
   cmdkSearchContent,
   groupName,
 }: any) => {
-  // console.log(
-  //   {
-  //     nodeTree,
-  //     nFocusedItem,
-  //     htmlReferenceData,
-  //     data,
-  //     cmdkSearchContent,
-  //     groupName,
-  //   },
-  //   "in function ",
-  // );
-
   let flag = true;
   for (let x in nodeTree) {
     if (nodeTree[x].displayName === "html") {
@@ -311,20 +299,19 @@ export const elementsCmdk = ({
         Context: `Node-${tagRef.Tag}`,
       });
   }
-  if (
-    data["Elements"].length > 0 &&
-    data["Elements"].filter(
-      (element: any) => element.Featured || !!cmdkSearchContent,
-    ).length > 0
-  ) {
-    data["Elements"] = data["Elements"].filter(
-      (element: any) => element.Featured || !!cmdkSearchContent,
-    );
-  }
+  // if (
+  //   data["Elements"].length > 0 &&
+  //   data["Elements"].filter(
+  //     (element: any) => element.Featured || !!cmdkSearchContent,
+  //   ).length > 0
+  // ) {
+  //   data["Elements"] = data["Elements"].filter(
+  //     (element: any) => element.Featured || !!cmdkSearchContent,
+  //   );
+  // }
   if (data["Elements"].length === 0) {
     delete data["Elements"];
   }
-  console.log(data, "data in function");
 };
 
 export const isWebComponentDblClicked = ({

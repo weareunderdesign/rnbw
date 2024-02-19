@@ -8,6 +8,7 @@ import { MainContext } from "@_redux/main";
 import { useAppState } from "@_redux/useAppState";
 import { NodeActions } from "@_node/apis";
 import { elementsCmdk } from "@_pages/main/helper";
+import { TCmdkGroupData } from "@_types/main";
 
 export const useNodeActionHandlers = () => {
   const dispatch = useDispatch();
@@ -23,13 +24,10 @@ export const useNodeActionHandlers = () => {
     htmlReferenceData,
     monacoEditorRef,
     setIsContentProgrammaticallyChanged,
-    cmdkReferenceAdd,
   } = useContext(MainContext);
 
   const onAddNode = useCallback(
     (actionName: string) => {
-      console.log(actionName, "actionName");
-
       const focusedNode = nodeTree[focusedItem];
       if (!focusedNode || !focusedNode.data.sourceCodeLocation) {
         LogAllow &&
@@ -46,31 +44,36 @@ export const useNodeActionHandlers = () => {
           );
         return;
       }
-      // console.log(cmdkReferenceAdd, "cmdkReferenceAdd");
 
-      let data = cmdkReferenceAdd;
+      let focusedUid = focusedItem;
+      const data: TCmdkGroupData = {
+        Files: [],
+        Elements: [],
+        Recent: [],
+      };
+      const nodeToAdd = actionName.split("-").slice(1).join("-");
 
-      elementsCmdk({
-        nodeTree,
-        nFocusedItem: focusedItem,
-        htmlReferenceData,
-        data,
-        cmdkSearchContent,
-        groupName: "Add",
-      });
-      console.log(data, "##### data");
+      const checkAddingAllowed = (uid: string) => {
+        elementsCmdk({
+          nodeTree,
+          nFocusedItem: uid,
+          htmlReferenceData,
+          data,
+          cmdkSearchContent,
+          groupName: "Add",
+        });
+        return Object.values(data["Elements"]).some(
+          (obj) => obj["Context"] === nodeToAdd,
+        );
+      };
 
-      // console.log(
-      //   elementsCmdk({
-      //     nodeTree,
-      //     focusedItem,
-      //     htmlReferenceData,
-      //     data,
-      //     cmdkSearchContent,
-      //     groupName: "Add",
-      //   }),
-      //   "elementsCmdk",
-      // );
+      let addingAllowed = checkAddingAllowed(focusedUid);
+
+      if (!addingAllowed && focusedNode.parentUid) {
+        focusedUid = focusedNode.parentUid;
+        addingAllowed = checkAddingAllowed(focusedUid);
+      }
+      if (!addingAllowed) return;
 
       setIsContentProgrammaticallyChanged(true);
       NodeActions.add({
@@ -79,12 +82,12 @@ export const useNodeActionHandlers = () => {
         referenceData: htmlReferenceData,
         nodeTree,
         codeViewInstanceModel,
-        focusedItem,
+        focusedItem: focusedUid,
         formatCode,
         fb: () => setIsContentProgrammaticallyChanged(false),
       });
     },
-    [nodeTree, focusedItem, cmdkReferenceAdd, htmlReferenceData],
+    [nodeTree, focusedItem, htmlReferenceData, cmdkSearchContent],
   );
   const onCut = useCallback(async () => {
     if (selectedItems.length === 0) return;
