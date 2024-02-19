@@ -231,15 +231,50 @@ export const useCmdkReferenceData = ({
     });
 
     // Elements
-    elementsCmdk({
-      nodeTree,
-      nFocusedItem,
-      htmlReferenceData,
-      data,
-      cmdkSearchContent,
-      groupName: "Add",
-    });
+    // elementsCmdk({
+    //   nodeTree,
+    //   nFocusedItem,
+    //   htmlReferenceData,
+    //   data,
+    //   cmdkSearchContent,
+    //   groupName: "Add",
+    // });
+    // console.log(
+    //   {
+    //     nodeTree,
+    //     nFocusedItem,
+    //     htmlReferenceData,
+    //     data,
+    //     cmdkSearchContent,
+    //     groupName: "Add",
+    //   },
+    //   "data",
+    // );
 
+    Object.keys(htmlReferenceData.elements).map((tag: string) => {
+      const tagRef = htmlReferenceData.elements[tag];
+      // console.log(tagRef, "tagRef");
+
+      if (tagRef !== undefined) {
+        data["Elements"].push({
+          Featured: tagRef && tagRef.Featured === "Yes" ? true : false,
+          Name: tagRef.Name,
+          Icon: tagRef.Icon,
+          Description: tagRef.Description,
+          "Keyboard Shortcut": [
+            {
+              cmd: false,
+              shift: false,
+              alt: false,
+              key: "",
+              click: false,
+            },
+          ],
+          Group: "Add",
+          Context: `Node-${tagRef.Tag}`,
+        });
+      }
+    });
     // Recent
     delete data["Recent"];
 

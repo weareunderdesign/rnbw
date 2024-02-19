@@ -243,6 +243,7 @@ export default function MainPage() {
           filesReferenceData,
           htmlReferenceData,
           cmdkReferenceData,
+          cmdkReferenceAdd,
 
           projectHandlers,
           setProjectHandlers,
@@ -343,12 +344,12 @@ export default function MainPage() {
                 currentCmdkPage === "Jumpstart"
                   ? "Jumpstart..."
                   : currentCmdkPage === "Actions"
-                  ? "Do something..."
-                  : currentCmdkPage === "Add"
-                  ? "Add something..."
-                  : currentCmdkPage === "Turn into"
-                  ? "Turn into..."
-                  : ""
+                    ? "Do something..."
+                    : currentCmdkPage === "Add"
+                      ? "Add something..."
+                      : currentCmdkPage === "Turn into"
+                        ? "Turn into..."
+                        : ""
               }
             />
           </div>
@@ -391,12 +392,12 @@ export default function MainPage() {
                     currentCmdkPage === "Jumpstart"
                       ? cmdkReferenceJumpstart
                       : currentCmdkPage === "Actions"
-                      ? cmdkReferenceActions
-                      : currentCmdkPage === "Add"
-                      ? cmdkReferenceAdd
-                      : currentCmdkPage === "Turn into"
-                      ? cmdkReferenceRename
-                      : {},
+                        ? cmdkReferenceActions
+                        : currentCmdkPage === "Add"
+                          ? cmdkReferenceAdd
+                          : currentCmdkPage === "Turn into"
+                            ? cmdkReferenceRename
+                            : {},
                   ).map((groupName: string) => {
                     let groupNameShow = false;
                     (currentCmdkPage === "Jumpstart"
@@ -404,10 +405,10 @@ export default function MainPage() {
                         ? cmdkReferenceJumpstart[groupName]
                         : cmdkReferneceRecentProject
                       : currentCmdkPage === "Actions"
-                      ? cmdkReferenceActions[groupName]
-                      : currentCmdkPage === "Add"
-                      ? cmdkReferenceAdd[groupName]
-                      : []
+                        ? cmdkReferenceActions[groupName]
+                        : currentCmdkPage === "Add"
+                          ? cmdkReferenceAdd[groupName]
+                          : []
                     ).map((command: TCmdkReference) => {
                       const context = command.Context as TCmdkContext;
                       groupNameShow =
@@ -448,12 +449,12 @@ export default function MainPage() {
                             ? cmdkReferenceJumpstart[groupName]
                             : cmdkReferneceRecentProject
                           : currentCmdkPage === "Actions"
-                          ? cmdkReferenceActions[groupName]
-                          : currentCmdkPage === "Add"
-                          ? cmdkReferenceAdd[groupName]
-                          : currentCmdkPage === "Turn into"
-                          ? cmdkReferenceRename[groupName]
-                          : []
+                            ? cmdkReferenceActions[groupName]
+                            : currentCmdkPage === "Add"
+                              ? cmdkReferenceAdd[groupName]
+                              : currentCmdkPage === "Turn into"
+                                ? cmdkReferenceRename[groupName]
+                                : []
                         )?.map((command: TCmdkReference, index) => {
                           const context: TCmdkContext =
                             command.Context as TCmdkContext;

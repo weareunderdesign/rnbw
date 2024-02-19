@@ -211,6 +211,18 @@ export const elementsCmdk = ({
   cmdkSearchContent,
   groupName,
 }: any) => {
+  // console.log(
+  //   {
+  //     nodeTree,
+  //     nFocusedItem,
+  //     htmlReferenceData,
+  //     data,
+  //     cmdkSearchContent,
+  //     groupName,
+  //   },
+  //   "in function ",
+  // );
+
   let flag = true;
   for (let x in nodeTree) {
     if (nodeTree[x].displayName === "html") {
@@ -312,6 +324,7 @@ export const elementsCmdk = ({
   if (data["Elements"].length === 0) {
     delete data["Elements"];
   }
+  console.log(data, "data in function");
 };
 
 export const isWebComponentDblClicked = ({

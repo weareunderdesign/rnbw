@@ -7,6 +7,7 @@ import { TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { useAppState } from "@_redux/useAppState";
 import { NodeActions } from "@_node/apis";
+import { elementsCmdk } from "@_pages/main/helper";
 
 export const useNodeActionHandlers = () => {
   const dispatch = useDispatch();
@@ -16,15 +17,19 @@ export const useNodeActionHandlers = () => {
     nFocusedItem: focusedItem,
     nSelectedItems: selectedItems,
     formatCode,
+    cmdkSearchContent,
   } = useAppState();
   const {
     htmlReferenceData,
     monacoEditorRef,
     setIsContentProgrammaticallyChanged,
+    cmdkReferenceAdd,
   } = useContext(MainContext);
 
   const onAddNode = useCallback(
     (actionName: string) => {
+      console.log(actionName, "actionName");
+
       const focusedNode = nodeTree[focusedItem];
       if (!focusedNode || !focusedNode.data.sourceCodeLocation) {
         LogAllow &&
@@ -41,6 +46,31 @@ export const useNodeActionHandlers = () => {
           );
         return;
       }
+      // console.log(cmdkReferenceAdd, "cmdkReferenceAdd");
+
+      let data = cmdkReferenceAdd;
+
+      elementsCmdk({
+        nodeTree,
+        nFocusedItem: focusedItem,
+        htmlReferenceData,
+        data,
+        cmdkSearchContent,
+        groupName: "Add",
+      });
+      console.log(data, "##### data");
+
+      // console.log(
+      //   elementsCmdk({
+      //     nodeTree,
+      //     focusedItem,
+      //     htmlReferenceData,
+      //     data,
+      //     cmdkSearchContent,
+      //     groupName: "Add",
+      //   }),
+      //   "elementsCmdk",
+      // );
 
       setIsContentProgrammaticallyChanged(true);
       NodeActions.add({
@@ -54,7 +84,7 @@ export const useNodeActionHandlers = () => {
         fb: () => setIsContentProgrammaticallyChanged(false),
       });
     },
-    [nodeTree, focusedItem],
+    [nodeTree, focusedItem, cmdkReferenceAdd, htmlReferenceData],
   );
   const onCut = useCallback(async () => {
     if (selectedItems.length === 0) return;
