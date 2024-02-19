@@ -87,14 +87,15 @@ export const useNodeActionsHandler = () => {
         displayName: isDirectory
           ? "Untitled"
           : ext === "html"
-          ? "Untitled"
-          : "Untitled",
+            ? "Untitled"
+            : "Untitled",
         isEntity: !isDirectory,
         children: [],
         data: {
           valid: false,
           ext,
         },
+        sequencedUid: "",
       };
       node.children.unshift(tmpNode.uid);
       _fileTree[tmpNode.uid] = tmpNode;
