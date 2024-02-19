@@ -245,9 +245,10 @@ const copy = async ({
   cb?: () => void;
 }) => {
   try {
+    const sortedUids = sortUidsByMinStartIndex(selectedUids, nodeTree);
     const copiedCode = copyCode({
       nodeTree,
-      uids: selectedUids,
+      uids: sortedUids,
       codeViewInstanceModel,
     });
     await window.navigator.clipboard.writeText(copiedCode);
