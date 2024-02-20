@@ -275,6 +275,8 @@ export const elementsCmdk = ({
           });
         }
       }
+    } else if (htmlNode?.displayName === "html") {
+      data["Elements"] = ["head", "body"];
     }
   } else {
     data["Elements"] = [];

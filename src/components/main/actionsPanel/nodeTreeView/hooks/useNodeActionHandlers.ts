@@ -37,7 +37,7 @@ export const useNodeActionHandlers = () => {
             !node ||
             !node.data ||
             !node.data.sourceCodeLocation ||
-            (node.parentUid == RootNodeUid && nodeToAdd !== "Node-<html>"),
+            node.parentUid == RootNodeUid,
         )
       ) {
         LogAllow &&
@@ -133,7 +133,11 @@ export const useNodeActionHandlers = () => {
       },
     ) => {
       const focusedNode = validNodeTree[focusedItem];
-      if (!focusedNode || !focusedNode.data.sourceCodeLocation) {
+      if (
+        !focusedNode ||
+        !focusedNode.data.sourceCodeLocation ||
+        focusedNode?.parentUid === RootNodeUid
+      ) {
         LogAllow &&
           console.error("Focused node or source code location is undefined");
         return;
