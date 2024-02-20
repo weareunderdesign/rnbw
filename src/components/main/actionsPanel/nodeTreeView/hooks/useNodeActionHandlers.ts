@@ -197,6 +197,15 @@ export const useNodeActionHandlers = () => {
       return;
     }
 
+    if (
+      selectedItems.some((uid) =>
+        ["html", "head", "body"].includes(nodeTree[uid].displayName),
+      )
+    ) {
+      LogAllow && console.error("Deleting nodes not allowed");
+      return;
+    }
+
     setIsContentProgrammaticallyChanged(true);
     NodeActions.remove({
       dispatch,
