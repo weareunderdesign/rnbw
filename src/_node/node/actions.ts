@@ -12,7 +12,10 @@ import {
   RenameNodeActionPrefix,
 } from "@_constants/main";
 import { getValidNodeTree } from "@_pages/main/processor/helpers";
-import { setNeedToSelectNodePaths } from "@_redux/main/nodeTree";
+import {
+  setCopiedNodeDisplayName,
+  setNeedToSelectNodePaths,
+} from "@_redux/main/nodeTree";
 import { THtmlReferenceData } from "@_types/main";
 
 import {
@@ -184,6 +187,11 @@ const cut = async ({
 }) => {
   try {
     await copy({ dispatch, nodeTree, selectedUids, codeViewInstanceModel });
+    dispatch(
+      setCopiedNodeDisplayName(
+        selectedUids.map((uid) => `Node-<${nodeTree[uid].displayName}>`),
+      ),
+    );
     remove({
       dispatch,
       nodeTree,
@@ -252,6 +260,12 @@ const copy = async ({
       codeViewInstanceModel,
     });
     await window.navigator.clipboard.writeText(copiedCode);
+
+    dispatch(
+      setCopiedNodeDisplayName(
+        selectedUids.map((uid) => `Node-<${nodeTree[uid].displayName}>`),
+      ),
+    );
 
     // predict needToSelectNodePaths
     const needToSelectNodePaths = (() => {

@@ -208,7 +208,6 @@ export const elementsCmdk = ({
   nFocusedItem,
   htmlReferenceData,
   data,
-  cmdkSearchContent,
   groupName,
 }: any) => {
   let flag = true;
@@ -299,16 +298,7 @@ export const elementsCmdk = ({
         Context: `Node-${tagRef.Tag}`,
       });
   }
-  // if (
-  //   data["Elements"].length > 0 &&
-  //   data["Elements"].filter(
-  //     (element: any) => element.Featured || !!cmdkSearchContent,
-  //   ).length > 0
-  // ) {
-  //   data["Elements"] = data["Elements"].filter(
-  //     (element: any) => element.Featured || !!cmdkSearchContent,
-  //   );
-  // }
+
   if (data["Elements"].length === 0) {
     delete data["Elements"];
   }

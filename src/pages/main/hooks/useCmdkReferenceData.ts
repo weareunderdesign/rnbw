@@ -277,7 +277,6 @@ export const useCmdkReferenceData = ({
       nFocusedItem,
       htmlReferenceData,
       data,
-      cmdkSearchContent,
       groupName: "Turn into",
     });
 
@@ -285,7 +284,7 @@ export const useCmdkReferenceData = ({
     delete data["Recent"];
 
     return data;
-  }, [nodeTree, nFocusedItem, htmlReferenceData, cmdkSearchContent]);
+  }, [nodeTree, nFocusedItem, htmlReferenceData]);
 
   return {
     cmdkReferenceData,

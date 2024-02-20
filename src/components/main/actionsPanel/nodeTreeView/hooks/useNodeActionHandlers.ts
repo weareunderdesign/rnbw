@@ -7,9 +7,8 @@ import { TNode, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { useAppState } from "@_redux/useAppState";
 import { NodeActions } from "@_node/apis";
-import { elementsCmdk } from "@_pages/main/helper";
-import { TCmdkGroupData } from "@_types/main";
 import { RootNodeUid } from "@_constants/main";
+import { isPastingAllowed } from "../helpers";
 
 export const useNodeActionHandlers = () => {
   const dispatch = useDispatch();
@@ -19,7 +18,7 @@ export const useNodeActionHandlers = () => {
     nFocusedItem: focusedItem,
     nSelectedItems: selectedItems,
     formatCode,
-    cmdkSearchContent,
+    copiedNodeDisplayName,
   } = useAppState();
   const {
     htmlReferenceData,
@@ -56,45 +55,16 @@ export const useNodeActionHandlers = () => {
         return;
       }
 
-      let selectedUids = [...selectedItems];
-      const data: TCmdkGroupData = {
-        Files: [],
-        Elements: [],
-        Recent: [],
-      };
-
-      const checkAddingAllowed = (uid: string) => {
-        elementsCmdk({
-          nodeTree,
-          nFocusedItem: uid,
-          htmlReferenceData,
-          data,
-          cmdkSearchContent,
-          groupName: "Add",
-        });
-        return Object.values(data["Elements"]).some(
-          (obj) => obj["Context"] === nodeToAdd,
-        );
-      };
-
-      const allowedArray = selectedNodes.map(
-        (selectedNode: TNode, i: number) => {
-          let addingAllowed =
-            (selectedNode.parentUid == RootNodeUid &&
-              nodeToAdd === "Node-<html>") ||
-            checkAddingAllowed(selectedNode.uid);
-          if (
-            !addingAllowed &&
-            selectedNode?.parentUid &&
-            selectedNode?.parentUid !== RootNodeUid
-          ) {
-            selectedUids[i] = selectedNode.parentUid;
-            addingAllowed = checkAddingAllowed(selectedNode.parentUid);
-          }
-          return addingAllowed;
-        },
-      );
-      if (allowedArray.includes(false)) return;
+      const { isAllowed, selectedUids } = isPastingAllowed({
+        selectedItems,
+        nodeTree,
+        htmlReferenceData,
+        nodeToAdd: [nodeToAdd],
+      });
+      if (!isAllowed) {
+        LogAllow && console.error("Adding not allowed");
+        return;
+      }
 
       setIsContentProgrammaticallyChanged(true);
       NodeActions.add({
@@ -108,7 +78,7 @@ export const useNodeActionHandlers = () => {
         fb: () => setIsContentProgrammaticallyChanged(false),
       });
     },
-    [nodeTree, focusedItem, htmlReferenceData, cmdkSearchContent],
+    [nodeTree, focusedItem, htmlReferenceData],
   );
   const onCut = useCallback(async () => {
     if (selectedItems.length === 0) return;
@@ -179,18 +149,35 @@ export const useNodeActionHandlers = () => {
         return;
       }
 
+      const { isAllowed, selectedUids } = isPastingAllowed({
+        selectedItems: [focusedItem],
+        nodeTree,
+        htmlReferenceData,
+        nodeToAdd: copiedNodeDisplayName,
+      });
+      if (!isAllowed) {
+        LogAllow && console.error("Pasting not allowed");
+        return;
+      }
+
       setIsContentProgrammaticallyChanged(true);
       await NodeActions.paste({
         dispatch,
         nodeTree: validNodeTree,
-        targetUid: focusedItem,
+        targetUid: selectedUids[0],
         codeViewInstanceModel,
         spanPaste,
         formatCode,
         fb: () => setIsContentProgrammaticallyChanged(false),
       });
     },
-    [validNodeTree, focusedItem],
+    [
+      validNodeTree,
+      focusedItem,
+      copiedNodeDisplayName,
+      nodeTree,
+      htmlReferenceData,
+    ],
   );
 
   const onDelete = useCallback(() => {
