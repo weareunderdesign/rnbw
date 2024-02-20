@@ -175,14 +175,16 @@ export const isPastingAllowed = ({
   nodeTree,
   htmlReferenceData,
   nodeToAdd,
+  validNodeTree,
 }: {
   selectedItems: TNodeUid[];
   nodeTree: TNodeTreeData;
   htmlReferenceData: THtmlReferenceData;
   nodeToAdd: string[];
+  validNodeTree: TNodeTreeData;
 }) => {
   const selectedUids = [...selectedItems];
-  const selectedNodes = selectedItems.map((uid) => nodeTree[uid]);
+  const selectedNodes = selectedItems.map((uid) => validNodeTree[uid]);
 
   const checkAddingAllowed = (uid: string) => {
     const data: TCmdkGroupData = {
@@ -206,8 +208,8 @@ export const isPastingAllowed = ({
 
   const allowedArray = selectedNodes.map((selectedNode: TNode, i: number) => {
     let addingAllowed =
-      (selectedNode.parentUid == RootNodeUid &&
-        nodeToAdd.includes("Node-<html>")) ||
+      (selectedNode.displayName == "body" &&
+        selectedNode.children.length == 0) ||
       checkAddingAllowed(selectedNode.uid);
     if (
       !addingAllowed &&

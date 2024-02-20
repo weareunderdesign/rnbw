@@ -60,6 +60,7 @@ export const useNodeActionHandlers = () => {
         nodeTree,
         htmlReferenceData,
         nodeToAdd: [nodeToAdd],
+        validNodeTree,
       });
       if (!isAllowed) {
         LogAllow && console.error("Adding not allowed");
@@ -78,7 +79,7 @@ export const useNodeActionHandlers = () => {
         fb: () => setIsContentProgrammaticallyChanged(false),
       });
     },
-    [nodeTree, focusedItem, htmlReferenceData],
+    [nodeTree, focusedItem, htmlReferenceData, validNodeTree],
   );
   const onCut = useCallback(async () => {
     if (selectedItems.length === 0) return;
@@ -158,6 +159,7 @@ export const useNodeActionHandlers = () => {
         nodeTree,
         htmlReferenceData,
         nodeToAdd: copiedNodeDisplayName,
+        validNodeTree,
       });
       if (!isAllowed) {
         LogAllow && console.error("Pasting not allowed");
