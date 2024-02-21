@@ -138,10 +138,15 @@ const parseHtml = (content: string): THtmlParserResponse => {
 
       node.data.childNodes.map((child: THtmlDomNode, index: number) => {
         const uid = String(++_uid);
-        const _seqUid = content.substring(
-          child.sourceCodeLocation.startOffset,
-          child.sourceCodeLocation.endOffset,
-        );
+        let _seqUid = uid;
+        try {
+          _seqUid = content.substring(
+            child.sourceCodeLocation.startOffset,
+            child.sourceCodeLocation.endOffset,
+          );
+        } catch (e) {
+          console.log(e);
+        }
 
         if (child.nodeName === "title") {
           window.document.title =
