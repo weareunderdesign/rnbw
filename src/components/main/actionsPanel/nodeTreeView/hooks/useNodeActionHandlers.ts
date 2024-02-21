@@ -1,6 +1,7 @@
 import { useCallback, useContext } from "react";
 
 import { useDispatch } from "react-redux";
+import { toast } from "react-toastify";
 
 import { LogAllow } from "@_constants/global";
 import { TNode, TNodeUid } from "@_node/types";
@@ -40,8 +41,9 @@ export const useNodeActionHandlers = () => {
             node.parentUid == RootNodeUid,
         )
       ) {
-        LogAllow &&
-          console.error("Selected nodes or source code location is undefined");
+        toast("Selected nodes or source code location is undefined", {
+          type: "error",
+        });
         return;
       }
 
@@ -63,7 +65,9 @@ export const useNodeActionHandlers = () => {
         validNodeTree,
       });
       if (!isAllowed) {
-        LogAllow && console.error("Adding not allowed");
+        toast("Adding not allowed", {
+          type: "error",
+        });
         return;
       }
 
@@ -162,7 +166,9 @@ export const useNodeActionHandlers = () => {
         validNodeTree,
       });
       if (!isAllowed) {
-        LogAllow && console.error("Pasting not allowed");
+        toast("Pasting not allowed", {
+          type: "error",
+        });
         return;
       }
 
