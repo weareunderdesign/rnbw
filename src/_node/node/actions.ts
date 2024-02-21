@@ -256,9 +256,6 @@ const copy = async ({
     })();
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
-    const code = html_beautify(codeViewInstanceModel.getValue());
-    codeViewInstanceModel.setValue(code);
-
     cb && cb();
   } catch (err) {
     LogAllow && console.error("Error writing to clipboard:", err);
