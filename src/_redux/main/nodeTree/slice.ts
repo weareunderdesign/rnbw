@@ -20,6 +20,7 @@ const nodeTreeReducerInitialState: TNodeTreeReducerState = {
     selectedItemsObj: {},
   },
   hoveredNodeUid: "",
+  copiedNodeDisplayName: [],
 };
 const nodeTreeSlice = createSlice({
   name: "nodeTree",
@@ -145,6 +146,10 @@ const nodeTreeSlice = createSlice({
     clearNodeTreeViewState(state) {
       state.nodeTreeViewState = nodeTreeReducerInitialState.nodeTreeViewState;
     },
+    setCopiedNodeDisplayName(state, action: PayloadAction<string[]>) {
+      const copiedNodeDisplayName = action.payload;
+      state.copiedNodeDisplayName = copiedNodeDisplayName;
+    },
   },
 });
 export const {
@@ -162,5 +167,6 @@ export const {
   updateNodeTreeTreeViewState,
   setHoveredNodeUid,
   clearNodeTreeViewState,
+  setCopiedNodeDisplayName,
 } = nodeTreeSlice.actions;
 export const NodeTreeReducer = nodeTreeSlice.reducer;

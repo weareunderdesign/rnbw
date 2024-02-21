@@ -12,7 +12,10 @@ import {
   RenameNodeActionPrefix,
 } from "@_constants/main";
 import { getValidNodeTree } from "@_pages/main/processor/helpers";
-import { setNeedToSelectNodePaths } from "@_redux/main/nodeTree";
+import {
+  setCopiedNodeDisplayName,
+  setNeedToSelectNodePaths,
+} from "@_redux/main/nodeTree";
 import { THtmlReferenceData } from "@_types/main";
 
 import {
@@ -35,7 +38,7 @@ const add = ({
   actionName,
   referenceData,
   nodeTree,
-  focusedItem,
+  selectedItems,
   codeViewInstanceModel,
   formatCode,
   fb,
@@ -45,7 +48,7 @@ const add = ({
   actionName: string;
   referenceData: TNodeReferenceData;
   nodeTree: TNodeTreeData;
-  focusedItem: TNodeUid;
+  selectedItems: TNodeUid[];
   codeViewInstanceModel: editor.ITextModel;
   formatCode: boolean;
   fb?: () => void;
@@ -74,28 +77,36 @@ const add = ({
         ? openingTag
         : `${openingTag}${tagContent}${closingTag}`;
 
-    const focusedNode = nodeTree[focusedItem];
-    const { endLine, endCol } = focusedNode.data.sourceCodeLocation;
-    const edit = {
-      range: new Range(endLine, endCol, endLine, endCol),
-      text: codeViewText,
-    };
-    codeViewInstanceModel.applyEdits([edit]);
+    const sortedUids = sortUidsByMaxEndIndex(selectedItems, nodeTree);
+    sortedUids.forEach((uid) => {
+      const node = nodeTree[uid];
+      if (node) {
+        const { endCol, endLine } = node.data.sourceCodeLocation;
+
+        const edit = {
+          range: new Range(endLine, endCol, endLine, endCol),
+          text: codeViewText,
+        };
+        codeViewInstanceModel.applyEdits([edit]);
+      }
+    });
 
     // predict needToSelectNodePaths
     const needToSelectNodePaths = (() => {
       const needToSelectNodePaths: string[] = [];
       const validNodeTree = getValidNodeTree(nodeTree);
-      const targetNode = validNodeTree[focusedItem];
-      const targetParentNode = validNodeTree[targetNode.parentUid as TNodeUid];
-      const targetNodeChildIndex = getNodeChildIndex(
-        targetParentNode,
-        targetNode,
-      );
-      const newNodePath = `${
-        targetParentNode.data.path
-      }${NodePathSplitter}${tagName}-${targetNodeChildIndex + 1}`;
-      needToSelectNodePaths.push(newNodePath);
+      const sortedUids = sortUidsByMinStartIndex(selectedItems, validNodeTree);
+      const addedChildCount: { [uid: TNodeUid]: number } = {};
+      sortedUids.map((uid) => {
+        const node = validNodeTree[uid];
+        const parentNode = validNodeTree[node.parentUid as TNodeUid];
+        const nodeChildeIndex = getNodeChildIndex(parentNode, node);
+
+        addedChildCount[node.parentUid as TNodeUid] =
+          (addedChildCount[node.parentUid as TNodeUid] || 0) + 1;
+        const newNodePath = `${parentNode.data.path}${NodePathSplitter}${tagName}-${nodeChildeIndex + addedChildCount[node.parentUid as TNodeUid]}`;
+        needToSelectNodePaths.push(newNodePath);
+      });
       return needToSelectNodePaths;
     })();
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
@@ -176,6 +187,11 @@ const cut = async ({
 }) => {
   try {
     await copy({ dispatch, nodeTree, selectedUids, codeViewInstanceModel });
+    dispatch(
+      setCopiedNodeDisplayName(
+        selectedUids.map((uid) => `Node-<${nodeTree[uid].displayName}>`),
+      ),
+    );
     remove({
       dispatch,
       nodeTree,
@@ -237,12 +253,19 @@ const copy = async ({
   cb?: () => void;
 }) => {
   try {
+    const sortedUids = sortUidsByMinStartIndex(selectedUids, nodeTree);
     const copiedCode = copyCode({
       nodeTree,
-      uids: selectedUids,
+      uids: sortedUids,
       codeViewInstanceModel,
     });
     await window.navigator.clipboard.writeText(copiedCode);
+
+    dispatch(
+      setCopiedNodeDisplayName(
+        selectedUids.map((uid) => `Node-<${nodeTree[uid].displayName}>`),
+      ),
+    );
 
     // predict needToSelectNodePaths
     const needToSelectNodePaths = (() => {

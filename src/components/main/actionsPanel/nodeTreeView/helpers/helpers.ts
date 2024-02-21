@@ -3,7 +3,10 @@ import { DraggingPosition } from "react-complex-tree";
 
 import { LogAllow } from "@_constants/global";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
-import { TNodeTreeData, TNodeUid } from "@_node/types";
+import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
+import { RootNodeUid } from "@_constants/main";
+import { elementsCmdk } from "@_pages/main/helper";
+import { TCmdkGroupData, THtmlReferenceData } from "@_types/main";
 
 export const sortUidsByMaxEndIndex = (
   uids: TNodeUid[],
@@ -154,15 +157,70 @@ export const getDropOptions = (
       isBetween && !order
         ? startLine
         : !childrenNodes.length
-        ? lineNumber
-        : endLine,
+          ? lineNumber
+          : endLine,
     column:
       isBetween && !order
         ? startCol
         : !childrenNodes.length
-        ? column
-        : endCol + 1,
+          ? column
+          : endCol + 1,
   };
 
   return { position, isBetween, order, targetendOffset, targetUid };
+};
+
+export const isPastingAllowed = ({
+  selectedItems,
+  nodeTree,
+  htmlReferenceData,
+  nodeToAdd,
+  validNodeTree,
+}: {
+  selectedItems: TNodeUid[];
+  nodeTree: TNodeTreeData;
+  htmlReferenceData: THtmlReferenceData;
+  nodeToAdd: string[];
+  validNodeTree: TNodeTreeData;
+}) => {
+  const selectedUids = [...selectedItems];
+  const selectedNodes = selectedItems.map((uid) => validNodeTree[uid]);
+
+  const checkAddingAllowed = (uid: string) => {
+    const data: TCmdkGroupData = {
+      Files: [],
+      Elements: [],
+      Recent: [],
+    };
+
+    elementsCmdk({
+      nodeTree,
+      nFocusedItem: uid,
+      htmlReferenceData,
+      data,
+      groupName: "Add",
+    });
+
+    return nodeToAdd.every((node) =>
+      Object.values(data["Elements"]).some((obj) => obj["Context"] === node),
+    );
+  };
+
+  const allowedArray = selectedNodes.map((selectedNode: TNode, i: number) => {
+    let addingAllowed =
+      (selectedNode.displayName == "body" &&
+        selectedNode.children.length == 0) ||
+      checkAddingAllowed(selectedNode.uid);
+    if (
+      !addingAllowed &&
+      selectedNode?.parentUid &&
+      selectedNode?.parentUid !== RootNodeUid
+    ) {
+      selectedUids[i] = selectedNode.parentUid;
+      addingAllowed = checkAddingAllowed(selectedNode.parentUid);
+    }
+    return addingAllowed;
+  });
+
+  return { isAllowed: !allowedArray.includes(false), selectedUids };
 };

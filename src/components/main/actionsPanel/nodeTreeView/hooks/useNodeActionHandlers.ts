@@ -1,12 +1,15 @@
 import { useCallback, useContext } from "react";
 
 import { useDispatch } from "react-redux";
+import { toast } from "react-toastify";
 
 import { LogAllow } from "@_constants/global";
-import { TNodeUid } from "@_node/types";
+import { TNode, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { useAppState } from "@_redux/useAppState";
 import { NodeActions } from "@_node/apis";
+import { RootNodeUid } from "@_constants/main";
+import { isPastingAllowed } from "../helpers";
 
 export const useNodeActionHandlers = () => {
   const dispatch = useDispatch();
@@ -16,6 +19,7 @@ export const useNodeActionHandlers = () => {
     nFocusedItem: focusedItem,
     nSelectedItems: selectedItems,
     formatCode,
+    copiedNodeDisplayName,
   } = useAppState();
   const {
     htmlReferenceData,
@@ -25,10 +29,21 @@ export const useNodeActionHandlers = () => {
 
   const onAddNode = useCallback(
     (actionName: string) => {
-      const focusedNode = nodeTree[focusedItem];
-      if (!focusedNode || !focusedNode.data.sourceCodeLocation) {
-        LogAllow &&
-          console.error("Focused node or source code location is undefined");
+      if (selectedItems.length === 0) return;
+      const selectedNodes = selectedItems.map((uid) => nodeTree[uid]);
+      const nodeToAdd = actionName.split("-").slice(1).join("-");
+      if (
+        selectedNodes.some(
+          (node: TNode) =>
+            !node ||
+            !node.data ||
+            !node.data.sourceCodeLocation ||
+            node.parentUid == RootNodeUid,
+        )
+      ) {
+        toast("Selected nodes or source code location is undefined", {
+          type: "error",
+        });
         return;
       }
 
@@ -42,6 +57,20 @@ export const useNodeActionHandlers = () => {
         return;
       }
 
+      const { isAllowed, selectedUids } = isPastingAllowed({
+        selectedItems,
+        nodeTree,
+        htmlReferenceData,
+        nodeToAdd: [nodeToAdd],
+        validNodeTree,
+      });
+      if (!isAllowed) {
+        toast("Adding not allowed", {
+          type: "error",
+        });
+        return;
+      }
+
       setIsContentProgrammaticallyChanged(true);
       NodeActions.add({
         dispatch,
@@ -49,12 +78,12 @@ export const useNodeActionHandlers = () => {
         referenceData: htmlReferenceData,
         nodeTree,
         codeViewInstanceModel,
-        focusedItem,
+        selectedItems: selectedUids,
         formatCode,
         fb: () => setIsContentProgrammaticallyChanged(false),
       });
     },
-    [nodeTree, focusedItem],
+    [nodeTree, focusedItem, htmlReferenceData, validNodeTree],
   );
   const onCut = useCallback(async () => {
     if (selectedItems.length === 0) return;
@@ -109,7 +138,11 @@ export const useNodeActionHandlers = () => {
       },
     ) => {
       const focusedNode = validNodeTree[focusedItem];
-      if (!focusedNode || !focusedNode.data.sourceCodeLocation) {
+      if (
+        !focusedNode ||
+        !focusedNode.data.sourceCodeLocation ||
+        focusedNode?.parentUid === RootNodeUid
+      ) {
         LogAllow &&
           console.error("Focused node or source code location is undefined");
         return;
@@ -125,18 +158,38 @@ export const useNodeActionHandlers = () => {
         return;
       }
 
+      const { isAllowed, selectedUids } = isPastingAllowed({
+        selectedItems: [focusedItem],
+        nodeTree,
+        htmlReferenceData,
+        nodeToAdd: copiedNodeDisplayName,
+        validNodeTree,
+      });
+      if (!isAllowed) {
+        toast("Pasting not allowed", {
+          type: "error",
+        });
+        return;
+      }
+
       setIsContentProgrammaticallyChanged(true);
       await NodeActions.paste({
         dispatch,
         nodeTree: validNodeTree,
-        targetUid: focusedItem,
+        targetUid: selectedUids[0],
         codeViewInstanceModel,
         spanPaste,
         formatCode,
         fb: () => setIsContentProgrammaticallyChanged(false),
       });
     },
-    [validNodeTree, focusedItem],
+    [
+      validNodeTree,
+      focusedItem,
+      copiedNodeDisplayName,
+      nodeTree,
+      htmlReferenceData,
+    ],
   );
 
   const onDelete = useCallback(() => {
@@ -149,6 +202,15 @@ export const useNodeActionHandlers = () => {
         console.error(
           `Monaco Editor ${!codeViewInstance ? "" : "Model"} is undefined`,
         );
+      return;
+    }
+
+    if (
+      selectedItems.some((uid) =>
+        ["html", "head", "body"].includes(nodeTree[uid].displayName),
+      )
+    ) {
+      LogAllow && console.error("Deleting nodes not allowed");
       return;
     }
 

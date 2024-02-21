@@ -230,16 +230,28 @@ export const useCmdkReferenceData = ({
       groupName: "Add",
     });
 
-    // Elements
-    elementsCmdk({
-      nodeTree,
-      nFocusedItem,
-      htmlReferenceData,
-      data,
-      cmdkSearchContent,
-      groupName: "Add",
+    Object.keys(htmlReferenceData.elements).map((tag: string) => {
+      const tagRef = htmlReferenceData.elements[tag];
+      if (tagRef !== undefined) {
+        data["Elements"].push({
+          Featured: tagRef && tagRef.Featured === "Yes" ? true : false,
+          Name: tagRef.Name,
+          Icon: tagRef.Icon,
+          Description: tagRef.Description,
+          "Keyboard Shortcut": [
+            {
+              cmd: false,
+              shift: false,
+              alt: false,
+              key: "",
+              click: false,
+            },
+          ],
+          Group: "Add",
+          Context: `Node-${tagRef.Tag}`,
+        });
+      }
     });
-
     // Recent
     delete data["Recent"];
 
@@ -265,7 +277,6 @@ export const useCmdkReferenceData = ({
       nFocusedItem,
       htmlReferenceData,
       data,
-      cmdkSearchContent,
       groupName: "Turn into",
     });
 
@@ -273,7 +284,7 @@ export const useCmdkReferenceData = ({
     delete data["Recent"];
 
     return data;
-  }, [nodeTree, nFocusedItem, htmlReferenceData, cmdkSearchContent]);
+  }, [nodeTree, nFocusedItem, htmlReferenceData]);
 
   return {
     cmdkReferenceData,
