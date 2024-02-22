@@ -6,12 +6,7 @@ import { useDispatch } from "react-redux";
 import { getNodeUidByCodeSelection } from "@_components/main/codeView";
 import { markSelectedElements } from "@_components/main/stageView/iFrame/helpers";
 import { LogAllow } from "@_constants/global";
-import {
-  _writeIDBFile,
-  parseFile,
-  PreserveRnbwNode,
-  StageNodeIdAttr,
-} from "@_node/file";
+import { _writeIDBFile, parseFile } from "@_node/file";
 import { getNodeUidsFromPaths } from "@_node/helpers";
 import { TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
@@ -35,11 +30,7 @@ import {
   setSelectedNodeUids,
   setValidNodeTree,
 } from "@_redux/main/nodeTree";
-import {
-  setContentEditable,
-  setIframeSrc,
-  setNeedToReloadIframe,
-} from "@_redux/main/stageView";
+import { setIframeSrc, setNeedToReloadIframe } from "@_redux/main/stageView";
 import { useAppState } from "@_redux/useAppState";
 
 import {
@@ -71,7 +62,6 @@ export const useNodeTreeEvent = () => {
 
     syncConfigs,
     webComponentOpen,
-    contentEditable,
   } = useAppState();
   const { addRunningActions, removeRunningActions, iframeRefRef } =
     useContext(MainContext);
@@ -154,7 +144,7 @@ export const useNodeTreeEvent = () => {
       dispatch(setNeedToReloadIframe(true));
     } else {
       // dom-diff using morph
-      if (fileData.ext === "html" && !contentEditable) {
+      if (fileData.ext === "html") {
         const iframe: any = document.getElementById("iframeId");
         if (iframe) {
           const iframeDoc = iframe.contentDocument;
@@ -188,8 +178,6 @@ export const useNodeTreeEvent = () => {
             },
           });
         }
-      } else if (contentEditable) {
-        dispatch(setContentEditable(false));
       }
     }
 

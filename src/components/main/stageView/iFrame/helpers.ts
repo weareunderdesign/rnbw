@@ -7,7 +7,6 @@ import {
   TNodeUid,
 } from "@_node/index";
 import { AnyAction, Dispatch } from "@reduxjs/toolkit";
-import { setContentEditable } from "@_redux/main/stageView";
 
 export const getValidElementWithUid = (
   ele: HTMLElement,
@@ -120,10 +119,10 @@ export const editHtmlContent = ({
 
   if (contentEditableElement) {
     contentEditableElement.setAttribute("contenteditable", "false");
-    const content = contentEditableElement.innerText.replace(/\n/g, "<br/>");
+    const content = contentEditableElement.innerHTML;
+    // const content = contentEditableElement.innerText.replace(/\n/g, "<br/>");
 
     setIsContentProgrammaticallyChanged(true);
-    dispatch(setContentEditable(true));
     NodeActions.edit({
       nodeTree,
       targetUid: contentEditableUid,
