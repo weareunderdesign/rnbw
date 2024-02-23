@@ -24,7 +24,7 @@ export const useDefaultFileCreate = () => {
       initialFileUidToOpen === "" &&
       fileHandlers[RootNodeUid] &&
       !Object.values(fileTree).some(
-        (node) => node.data.ext === "html" && node.parentUid === RootNodeUid,
+        (node) => node?.data?.ext === "html" && node.parentUid === RootNodeUid,
       )
     ) {
       createDefaultFile();

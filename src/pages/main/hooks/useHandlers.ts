@@ -13,6 +13,7 @@ import {
 import {
   buildNohostIDB,
   createURLPath,
+  getIndexHtmlContent,
   loadIDBProject,
   loadLocalProject,
   TFileHandlerCollection,
@@ -161,11 +162,6 @@ export const useHandlers = ({
           dispatch(setInitialFileUidToOpen(_initialFileUidToOpen));
           setFileHandlers(_fileHandlers);
 
-          if (_initialFileUidToOpen === "") {
-            dispatch(setShowActionsPanel(false));
-            dispatch(setNavigatorDropdownType(null));
-          }
-
           await saveRecentProject(
             fsType,
             projectHandle as FileSystemDirectoryHandle,
@@ -244,20 +240,19 @@ export const useHandlers = ({
       dispatch(setFileTree(_fileTree));
       setFileHandlers(_fileHandlers);
       // need to open another file if the current open file is deleted
-      if (deletedUidsObj[currentFileUid]) {
+      if (deletedUidsObj[currentFileUid] || !currentFileUid) {
         if (!!_initialFileUidToOpen) {
           dispatch(setCurrentFileUid(_initialFileUidToOpen));
           dispatch(
             setCurrentFileContent(
-              _fileTree[_initialFileUidToOpen].data.content,
+              _fileTree[_initialFileUidToOpen].data.content ||
+                getIndexHtmlContent(),
             ),
           );
         } else {
           dispatch(setCurrentFileUid(""));
           dispatch(setCurrentFileContent(""));
         }
-      } else {
-        dispatch(setCurrentFileContent(_fileTree[currentFileUid].data.content));
       }
       // update file tree view state
       dispatch(updateFileTreeViewState({ deletedUids: deletedUids }));
