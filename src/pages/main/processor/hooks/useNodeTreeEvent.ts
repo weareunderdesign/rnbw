@@ -6,7 +6,12 @@ import { useDispatch } from "react-redux";
 import { getNodeUidByCodeSelection } from "@_components/main/codeView";
 import { markSelectedElements } from "@_components/main/stageView/iFrame/helpers";
 import { LogAllow } from "@_constants/global";
-import { _writeIDBFile, parseFile } from "@_node/file";
+import {
+  _writeIDBFile,
+  parseFile,
+  PreserveRnbwNode,
+  StageNodeIdAttr,
+} from "@_node/file";
 import { getNodeUidsFromPaths } from "@_node/helpers";
 import { TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
@@ -150,19 +155,30 @@ export const useNodeTreeEvent = () => {
           const iframeDoc = iframe.contentDocument;
           const iframeHtml = iframeDoc.getElementsByTagName("html")[0];
           const updatedHtml = contentInApp;
-
           if (!iframeHtml || !updatedHtml) return;
 
           morphdom(iframeHtml, updatedHtml, {
             onBeforeElUpdated: function (fromEl, toEl) {
-              //Preserve Node are the nodes style that don't need to be updated
-              //Such as the style of the iframe applied by the rnbw
+              //check if the node is script or style
+              if (
+                fromEl.nodeName === "SCRIPT" ||
+                fromEl.nodeName === "LINK" ||
+                fromEl.nodeName === "STYLE"
+              ) {
+                return false;
+              }
+              const fromElRnbwId = fromEl.getAttribute(StageNodeIdAttr);
 
-              const fromElSequencedUid =
-                fromEl.getAttribute("data-sequenced-uid");
-              const toElSequencedUid = toEl.getAttribute("data-sequenced-uid");
-
-              if (fromEl.tagName === "HTML" && toEl.tagName === "HTML") {
+              if (toEl.nodeName.includes("-")) return false;
+              if (
+                syncConfigs?.matchIds &&
+                !!fromElRnbwId &&
+                syncConfigs.matchIds.includes(fromElRnbwId)
+              ) {
+                return true;
+              } else if (fromEl.isEqualNode(toEl)) {
+                return false;
+              } else if (toEl.nodeName === "HTML") {
                 //copy the attributes
                 for (let i = 0; i < fromEl.attributes.length; i++) {
                   toEl.setAttribute(
@@ -170,10 +186,38 @@ export const useNodeTreeEvent = () => {
                     fromEl.attributes[i].value,
                   );
                 }
-              } else if (toEl.nodeName.includes("-")) return false;
-              else if (fromElSequencedUid === toElSequencedUid) {
+                if (fromEl.isEqualNode(toEl)) return false;
+              }
+              return true;
+            },
+            onElUpdated: function (el) {
+              if (el.nodeName === "HTML") {
+                //copy the attributes
+                for (let i = 0; i < el.attributes.length; i++) {
+                  iframeHtml.setAttribute(
+                    el.attributes[i].name,
+                    el.attributes[i].value,
+                  );
+                }
+              }
+            },
+            onBeforeNodeDiscarded: function (node: Node) {
+              const elementNode = node as Element;
+              const ifPreserveNode = elementNode.getAttribute
+                ? elementNode.getAttribute(PreserveRnbwNode)
+                : false;
+              if (ifPreserveNode) {
                 return false;
               }
+              // script and style should not be discarded
+              if (
+                elementNode.nodeName === "SCRIPT" ||
+                elementNode.nodeName === "LINK" ||
+                elementNode.nodeName === "STYLE"
+              ) {
+                return false;
+              }
+
               return true;
             },
           });
