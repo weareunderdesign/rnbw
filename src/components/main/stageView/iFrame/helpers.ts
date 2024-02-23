@@ -119,8 +119,7 @@ export const editHtmlContent = ({
 
   if (contentEditableElement) {
     contentEditableElement.setAttribute("contenteditable", "false");
-    const content = contentEditableElement.innerHTML;
-    // const content = contentEditableElement.innerText.replace(/\n/g, "<br/>");
+    const content = contentEditableElement.innerText.replace(/\n/g, "<br/>");
 
     setIsContentProgrammaticallyChanged(true);
     NodeActions.edit({
