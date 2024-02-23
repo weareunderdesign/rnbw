@@ -35,8 +35,6 @@
     "react-split": "^2.0.14",
     "react-toastify": "^10.0.4",
     "react-top-loading-bar": "^2.3.1",
-    "redux-injectors": "^2.1.0",
-    "redux-saga": "^1.2.1",
     "redux-undo": "^1.0.1",
     "workbox-window": "^6.5.4"
   },
