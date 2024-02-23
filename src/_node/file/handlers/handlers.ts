@@ -51,10 +51,8 @@ const parseHtml = (content: string): THtmlParserResponse => {
           endOffset: 0,
         },
       },
-      sequencedUid: RootNodeUid,
     };
     const seedNodes: THtmlNode[] = [nodeTree[RootNodeUid]];
-
     let _uid = 0;
 
     const getHtmlNodeAttribs = (
@@ -74,7 +72,6 @@ const parseHtml = (content: string): THtmlParserResponse => {
       parentUid: TNodeUid,
       node: THtmlDomNode,
       nodeTree: THtmlNodeTreeData,
-      sequencedUid?: TNodeUid,
     ) => {
       const {
         startLine = 0,
@@ -92,7 +89,6 @@ const parseHtml = (content: string): THtmlParserResponse => {
 
       nodeTree[uid] = {
         uid,
-        sequencedUid: sequencedUid || uid,
         parentUid: parentUid,
 
         displayName: node.nodeName,
@@ -126,34 +122,21 @@ const parseHtml = (content: string): THtmlParserResponse => {
 
       if (!node.attrs) node.attrs = [];
       node.attrs.push({ name: StageNodeIdAttr, value: uid });
-      node.attrs.push({
-        name: "data-sequenced-uid",
-        value: sequencedUid || uid,
-      });
     };
 
     while (seedNodes.length) {
       const node = seedNodes.shift() as THtmlNode;
       if (!node.data.childNodes) continue;
 
-      node.data.childNodes.map((child: THtmlDomNode, index: number) => {
+      node.data.childNodes.map((child: THtmlDomNode) => {
         const uid = String(++_uid);
-        let _seqUid = uid;
-        try {
-          _seqUid = content.substring(
-            child.sourceCodeLocation.startOffset,
-            child.sourceCodeLocation.endOffset,
-          );
-        } catch (e) {
-          console.log(e);
-        }
 
         if (child.nodeName === "title") {
           window.document.title =
             child?.childNodes?.[0]?.value ?? RainbowAppName;
         }
 
-        proceedWithNode(uid, node.uid, child, nodeTree, _seqUid);
+        proceedWithNode(uid, node.uid, child, nodeTree);
         seedNodes.push(nodeTree[uid]);
       });
     }
@@ -166,7 +149,7 @@ const parseHtml = (content: string): THtmlParserResponse => {
   });
 
   const contentInApp = parse5.serialize(htmlDom);
-  console.log({ nodeTree });
+
   return {
     contentInApp,
     nodeTree,

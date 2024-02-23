@@ -9,7 +9,6 @@ const stageViewReducerInitialState: TStageViewReducerState = {
   linkToOpen: null,
   webComponentOpen: false,
   syncConfigs: {},
-  contentEditable: false,
 };
 const stageViewSlice = createSlice({
   name: "stageView",
@@ -39,10 +38,6 @@ const stageViewSlice = createSlice({
       const webComponentOpen = action.payload;
       state.webComponentOpen = webComponentOpen;
     },
-    setContentEditable(state, action: PayloadAction<boolean>) {
-      const contentEditable = action.payload;
-      state.contentEditable = contentEditable;
-    },
   },
 });
 export const {
@@ -52,6 +47,5 @@ export const {
   setLinkToOpen,
   setSyncConfigs,
   setWebComponentOpen,
-  setContentEditable,
 } = stageViewSlice.actions;
 export const StageViewReducer = stageViewSlice.reducer;
