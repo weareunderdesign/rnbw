@@ -6,9 +6,7 @@ import { Workbox } from "workbox-window";
 import { LogAllow } from "@_constants/global";
 import MainPage from "@_pages/main";
 
-import { AppProps } from "./types";
-
-export default function App(props: AppProps) {
+export default function App() {
   // setup nohost-serviceworker
   const [nohostReady, setNohostReady] = useState(false);
   useEffect(() => {
