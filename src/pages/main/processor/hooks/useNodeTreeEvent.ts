@@ -163,6 +163,7 @@ export const useNodeTreeEvent = () => {
 
           if (!iframeHtml || !updatedHtml) return;
 
+          let addedNodeNames: any = [];
           morphdom(iframeHtml, updatedHtml, {
             onBeforeElUpdated: function (fromEl, toEl) {
               //Preserve Node are the nodes style that don't need to be updated
@@ -180,13 +181,39 @@ export const useNodeTreeEvent = () => {
                     fromEl.attributes[i].value,
                   );
                 }
-              } else if (toEl.nodeName.includes("-")) return false;
+              } else if (toEl.nodeName.includes("-")) {
+                toEl.innerHTML=fromEl.innerHTML;
+
+
+                return true;
+              }
               else if (fromElSequencedUid === toElSequencedUid) {
                 return false;
               }
               return true;
             },
+            onBeforeNodeAdded: function (node) {
+              if( iframe.contentWindow.customElements.get(node.nodeName.toLowerCase()) ){
+                addedNodeNames.push(node.nodeName);
+                return node;
+              }
+              if(!node.firstChild){
+                return node;
+              }
+              if ( iframe.contentWindow.customElements.get(node.firstChild.nodeName.toLowerCase())) {
+                addedNodeNames.push(node.firstChild.nodeName);
+              }
+              return node;
+            }
           });
+          if(addedNodeNames.length > 0){
+            const nodeName = addedNodeNames[0];
+            const nodeContent = iframeDoc.getElementsByTagName(nodeName)[0].innerHTML;
+            const nodesToBeUpdated = iframeDoc.querySelectorAll(nodeName);
+            nodesToBeUpdated.forEach((node: any) => {
+              node.innerHTML = nodeContent;
+            })
+          }
         }
       } else if (contentEditable) {
         dispatch(setContentEditable(false));
