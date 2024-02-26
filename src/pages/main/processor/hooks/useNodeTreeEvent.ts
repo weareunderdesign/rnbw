@@ -157,7 +157,6 @@ export const useNodeTreeEvent = () => {
           const updatedHtml = contentInApp;
           if (!iframeHtml || !updatedHtml) return;
 
-          let addedNodeNames: any = [];
           morphdom(iframeHtml, updatedHtml, {
             onBeforeElUpdated: function (fromEl, toEl) {
               //check if the node is script or style
@@ -221,28 +220,7 @@ export const useNodeTreeEvent = () => {
 
               return true;
             },
-            onBeforeNodeAdded: function (node) {
-              if( iframe.contentWindow.customElements.get(node.nodeName.toLowerCase()) ){
-                addedNodeNames.push(node.nodeName);
-                return node;
-              }
-              if(!node.firstChild){
-                return node;
-              }
-              if ( iframe.contentWindow.customElements.get(node.firstChild.nodeName.toLowerCase())) {
-                addedNodeNames.push(node.firstChild.nodeName);
-              }
-              return node;
-            }
           });
-          if(addedNodeNames.length > 0){
-            const nodeName = addedNodeNames[0];
-            const nodeContent = iframeDoc.getElementsByTagName(nodeName)[0].innerHTML;
-            const nodesToBeUpdated = iframeDoc.querySelectorAll(nodeName);
-            nodesToBeUpdated.forEach((node: any) => {
-              node.innerHTML = nodeContent;
-            })
-          }
         }
       }
     }

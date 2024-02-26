@@ -222,6 +222,5 @@ export const isPastingAllowed = ({
     return addingAllowed;
   });
 
-  // return { isAllowed: !allowedArray.includes(false), selectedUids };
-  return { isAllowed: true, selectedUids };
+  return { isAllowed: !allowedArray.includes(false), selectedUids };
 };
