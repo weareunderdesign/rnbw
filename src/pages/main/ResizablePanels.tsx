@@ -1,5 +1,10 @@
-import React, { useMemo } from "react";
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import React, { useEffect, useMemo } from "react";
+import {
+  Panel,
+  PanelGroup,
+  PanelResizeHandle,
+  getPanelElement,
+} from "react-resizable-panels";
 import { useAppState } from "@_redux/useAppState";
 import { ResizablePanelsProps } from "./types";
 
@@ -22,10 +27,18 @@ export default function ResizablePanels({
           ? 50 + codeViewWidth + actionsPanelWidth
           : 50 + codeViewWidth
         : !showActionsPanel
-        ? 50 + actionsPanelWidth
-        : 50,
+          ? 50 + actionsPanelWidth
+          : 50,
     [showActionsPanel, showCodeView],
   );
+
+  useEffect(() => {
+    const codeViewPanelElement = getPanelElement("CodeView");
+
+    if (!codeViewPanelElement) return;
+
+    codeViewPanelElement.style.flex = showCodeView ? "33.7 1 0px" : "0 0 0px";
+  }, [showCodeView, showActionsPanel]);
 
   return (
     <>
@@ -51,19 +64,10 @@ export default function ResizablePanels({
           {stageView}
         </Panel>
 
-        {showCodeView && (
-          <>
-            <PanelResizeHandle className="panelResize" />
-            <Panel
-              id="CodeView"
-              defaultSize={codeViewWidth}
-              minSize={5}
-              order={2}
-            >
-              {codeView}
-            </Panel>
-          </>
-        )}
+        {showCodeView && <PanelResizeHandle className="panelResize" />}
+        <Panel id="CodeView" defaultSize={codeViewWidth} minSize={0} order={2}>
+          {codeView}
+        </Panel>
       </PanelGroup>
     </>
   );
