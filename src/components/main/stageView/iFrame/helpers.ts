@@ -119,7 +119,9 @@ export const editHtmlContent = ({
 
   if (contentEditableElement) {
     contentEditableElement.setAttribute("contenteditable", "false");
-    const content = contentEditableElement.innerText.replace(/\n/g, "<br/>");
+    //the first \n is replaced by "" the first line break that is by default added by the contenteditable
+    const content = contentEditableElement.innerHTML.replace("\n", "").replace(/\n/g, "<br/>");
+    debugger
 
     setIsContentProgrammaticallyChanged(true);
     NodeActions.edit({
