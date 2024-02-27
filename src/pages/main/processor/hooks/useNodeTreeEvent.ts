@@ -64,7 +64,7 @@ export const useNodeTreeEvent = () => {
     needToSelectNodePaths,
     needToSelectCode,
     nExpandedItems,
-
+    nFocusedItem,
     syncConfigs,
     webComponentOpen,
   } = useAppState();
@@ -250,6 +250,7 @@ export const useNodeTreeEvent = () => {
         ),
       );
     } else {
+      markSelectedElements(iframeRefRef.current, [nFocusedItem]);
       const validExpandedItems = nExpandedItems.filter(
         (uid) => _validNodeTree[uid] && _validNodeTree[uid].isEntity === false,
       );
