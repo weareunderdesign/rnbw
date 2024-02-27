@@ -200,10 +200,11 @@ export default function CodeView() {
             e.preventDefault();
           }}
           style={{
-            width: "100%",
+            width: showCodeView ? "100%" : "0%",
             height: "100%",
             zIndex: 999,
             overflow: "hidden",
+            visibility: showCodeView ? "visible" : "hidden",
           }}
           className={"border radius-s background-primary shadow"}
           onClick={onPanelClick}
