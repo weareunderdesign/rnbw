@@ -204,7 +204,7 @@ body.inheritCursors * {
 }
 
 .action-panel-wrapper > #ActionsPanel {
-  width: 240px;
+  width: 10px;
   transform: translateX(-300px);
 }
 
