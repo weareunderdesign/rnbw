@@ -27,12 +27,8 @@ export const useCmdk = ({
   isEditingRef,
 }: IUseCmdkProps) => {
   const dispatch = useDispatch();
-  const { osType } = useAppState();
-  const {
-    cmdkReferenceData,
-    monacoEditorRef,
-    setIsContentProgrammaticallyChanged,
-  } = useContext(MainContext);
+  const { osType, cmdkReferenceData } = useAppState();
+  const { monacoEditorRef } = useContext(MainContext);
 
   const { formatCode } = useAppState();
 
@@ -60,10 +56,10 @@ export const useCmdk = ({
             keyObj.key.length === 0
               ? ""
               : keyObj.key === "\\"
-              ? "Backslash"
-              : (keyObj.key.length === 1 ? "Key" : "") +
-                keyObj.key[0].toUpperCase() +
-                keyObj.key.slice(1);
+                ? "Backslash"
+                : (keyObj.key.length === 1 ? "Key" : "") +
+                  keyObj.key[0].toUpperCase() +
+                  keyObj.key.slice(1);
 
           if (
             cmdk.cmd === keyObj.cmd &&
@@ -111,7 +107,6 @@ export const useCmdk = ({
               nodeTree: nodeTreeRef.current,
               contentEditableUid,
               codeViewInstanceModel,
-              setIsContentProgrammaticallyChanged,
               formatCode,
               cb:
                 action === "Save"

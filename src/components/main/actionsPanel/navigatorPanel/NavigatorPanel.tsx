@@ -23,10 +23,10 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
     project,
     fileTree,
     currentFileUid,
+    filesReferenceData,
   } = useAppState();
 
   const {
-    filesReferenceData,
     // open project
     importProject,
   } = useContext(MainContext);

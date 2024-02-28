@@ -38,8 +38,9 @@ export default function CodeView() {
     showCodeView,
 
     editingNodeUidInCodeView,
+    isCodeTyping,
   } = useAppState();
-  const { isCodeTyping, monacoEditorRef } = useContext(MainContext);
+  const { monacoEditorRef } = useContext(MainContext);
 
   const {
     handleEditorDidMount,
@@ -167,7 +168,7 @@ export default function CodeView() {
 
   // code select -> selectedUids
   useEffect(() => {
-    if (!codeSelection || isCodeTyping.current) return;
+    if (!codeSelection || isCodeTyping) return;
 
     const file = fileTree[currentFileUid];
     if (!file) return;
@@ -200,11 +201,10 @@ export default function CodeView() {
             e.preventDefault();
           }}
           style={{
-            width: showCodeView ? "100%" : "0%",
+            width: "100%",
             height: "100%",
             zIndex: 999,
             overflow: "hidden",
-            visibility: showCodeView ? "visible" : "hidden",
           }}
           className={"border radius-s background-primary shadow"}
           onClick={onPanelClick}

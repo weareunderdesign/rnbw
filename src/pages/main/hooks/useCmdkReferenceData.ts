@@ -27,38 +27,36 @@ import {
   fileCmdk,
   getKeyObjectsFromCommand,
 } from "../helper";
+import { useDispatch } from "react-redux";
+import { setCmdkReferenceData } from "@_redux/main/cmdk";
+import {
+  setRecentProjectContexts,
+  setRecentProjectHandlers,
+  setRecentProjectNames,
+} from "@_redux/main/project";
 
 interface IUseCmdkReferenceData {
   addRunningActions: (actionNames: string[]) => void;
   removeRunningActions: (actionNames: string[]) => void;
-  recentProjectContexts: TProjectContext[];
-  recentProjectNames: string[];
-  recentProjectHandlers: (FileSystemDirectoryHandle | null)[];
-  setRecentProjectContexts: React.Dispatch<
-    React.SetStateAction<TProjectContext[]>
-  >;
-  setRecentProjectNames: React.Dispatch<React.SetStateAction<string[]>>;
-  setRecentProjectHandlers: React.Dispatch<
-    React.SetStateAction<(FileSystemDirectoryHandle | null)[]>
-  >;
   htmlReferenceData: THtmlReferenceData;
 }
 export const useCmdkReferenceData = ({
   addRunningActions,
   removeRunningActions,
-  recentProjectContexts,
-  recentProjectNames,
-  recentProjectHandlers,
-  setRecentProjectContexts,
-  setRecentProjectNames,
-  setRecentProjectHandlers,
   htmlReferenceData,
 }: IUseCmdkReferenceData) => {
-  const { fileTree, fFocusedItem, nodeTree, nFocusedItem, cmdkSearchContent } =
-    useAppState();
+  const dispatch = useDispatch();
+  const {
+    fileTree,
+    fFocusedItem,
+    nodeTree,
+    nFocusedItem,
+    cmdkSearchContent,
+    recentProjectNames,
+    recentProjectHandlers,
+    recentProjectContexts,
+  } = useAppState();
 
-  const [cmdkReferenceData, setCmdkReferenceData] =
-    useState<TCmdkReferenceData>({});
   const [cmdkReferenceJumpstart, setCmdkReferenceJumpstart] =
     useState<TCmdkGroupData>({});
   const [cmdkReferenceActions, setCmdkReferenceActions] =
@@ -105,9 +103,15 @@ export const useCmdkReferenceData = ({
                   "recent-project-name": sessionInfo[1],
                   "recent-project-handler": sessionInfo[2],
                 };
-                setRecentProjectContexts(_session["recent-project-context"]);
-                setRecentProjectNames(_session["recent-project-name"]);
-                setRecentProjectHandlers(_session["recent-project-handler"]);
+                dispatch(
+                  setRecentProjectContexts(_session["recent-project-context"]),
+                );
+                dispatch(
+                  setRecentProjectNames(_session["recent-project-name"]),
+                );
+                dispatch(
+                  setRecentProjectHandlers(_session["recent-project-handler"]),
+                );
 
                 for (
                   let index = 0;
@@ -182,7 +186,7 @@ export const useCmdkReferenceData = ({
         console.log("cmdk actions reference data: ", _cmdkRefActionsData);
 
       // set cmdk map
-      setCmdkReferenceData(_cmdkReferenceData);
+      dispatch(setCmdkReferenceData(_cmdkReferenceData));
       LogAllow && console.log("cmdk map: ", _cmdkReferenceData);
 
       removeRunningActions(["reference-cmdk"]);
@@ -287,7 +291,6 @@ export const useCmdkReferenceData = ({
   }, [nodeTree, nFocusedItem, htmlReferenceData]);
 
   return {
-    cmdkReferenceData,
     cmdkReferenceJumpstart,
     cmdkReferenceActions,
     cmdkReferneceRecentProject,

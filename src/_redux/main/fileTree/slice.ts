@@ -26,6 +26,7 @@ const fileTreeReducerInitialState: TFileTreeReducerState = {
 
   doingFileAction: false,
   lastFileAction: { action: null },
+  invalidFileNodes: {},
 };
 
 const fileTreeSlice = createSlice({
@@ -142,6 +143,16 @@ const fileTreeSlice = createSlice({
       const lastFileAction = action.payload;
       state.lastFileAction = lastFileAction;
     },
+    addInvalidFileNodes(state, action: PayloadAction<TNodeUid[]>) {
+      const _invalidFileNodes = { ...state.invalidFileNodes };
+      action.payload.map((uid) => (_invalidFileNodes[uid] = true));
+      state.invalidFileNodes = _invalidFileNodes;
+    },
+    removeInvalidFileNodes(state, action: PayloadAction<TNodeUid[]>) {
+      const _invalidFileNodes = { ...state.invalidFileNodes };
+      action.payload.map((uid) => delete _invalidFileNodes[uid]);
+      state.invalidFileNodes = _invalidFileNodes;
+    },
   },
 });
 export const {
@@ -164,5 +175,8 @@ export const {
 
   setDoingFileAction,
   setLastFileAction,
+
+  addInvalidFileNodes,
+  removeInvalidFileNodes,
 } = fileTreeSlice.actions;
 export const FileTreeReducer = fileTreeSlice.reducer;

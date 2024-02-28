@@ -7,6 +7,7 @@ import {
   TNodeUid,
 } from "@_node/index";
 import { AnyAction, Dispatch } from "@reduxjs/toolkit";
+import { setIsContentProgrammaticallyChanged } from "@_redux/main/reference";
 
 export const getValidElementWithUid = (
   ele: HTMLElement,
@@ -99,7 +100,6 @@ export const editHtmlContent = ({
   nodeTree,
   contentEditableUid,
   codeViewInstanceModel,
-  setIsContentProgrammaticallyChanged,
   formatCode,
   cb,
 }: {
@@ -108,7 +108,6 @@ export const editHtmlContent = ({
   nodeTree: TNodeTreeData;
   contentEditableUid: TNodeUid;
   codeViewInstanceModel: editor.ITextModel;
-  setIsContentProgrammaticallyChanged: (value: boolean) => void;
   formatCode: boolean;
   cb?: () => void;
 }) => {
@@ -120,11 +119,10 @@ export const editHtmlContent = ({
   if (contentEditableElement) {
     contentEditableElement.setAttribute("contenteditable", "false");
     //the first \n is replaced by "" as the first line break that is by default added by the contenteditable
-    let content = contentEditableElement.innerHTML.replace(/\n/, "")
+    let content = contentEditableElement.innerHTML.replace(/\n/, "");
     content = content.replace(/\n/g, "<br/>");
 
-
-    setIsContentProgrammaticallyChanged(true);
+    dispatch(setIsContentProgrammaticallyChanged(true));
     NodeActions.edit({
       nodeTree,
       targetUid: contentEditableUid,
