@@ -9,7 +9,7 @@ export const ItemTitle: FC<ItemTitleProps> = React.memo(({ title }) => {
     <span
       className="text-s justify-stretch"
       style={{
-        width: "100%",
+        width: "calc(100% - 32px)",
         textOverflow: "ellipsis",
         overflow: "hidden",
         whiteSpace: "nowrap",

@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { TCmdkReducerState, TCommand } from "./types";
+import { TCmdkReducerState, TCmdkReferenceData, TCommand } from "./types";
 
 const cmdkReducerInitialState: TCmdkReducerState = {
   cmdkOpen: false,
@@ -9,6 +9,7 @@ const cmdkReducerInitialState: TCmdkReducerState = {
 
   cmdkSearchContent: "",
   currentCommand: null,
+  cmdkReferenceData: {},
 };
 const cmdkSlice = createSlice({
   name: "cmdk",
@@ -35,6 +36,10 @@ const cmdkSlice = createSlice({
       const currentCommand = action.payload;
       state.currentCommand = currentCommand;
     },
+    setCmdkReferenceData(state, action: PayloadAction<TCmdkReferenceData>) {
+      const cmdkReferenceData = action.payload;
+      state.cmdkReferenceData = cmdkReferenceData;
+    },
   },
 });
 export const {
@@ -44,5 +49,6 @@ export const {
 
   setCmdkSearchContent,
   setCurrentCommand,
+  setCmdkReferenceData,
 } = cmdkSlice.actions;
 export const CmdkReduer = cmdkSlice.reducer;

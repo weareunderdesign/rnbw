@@ -4,7 +4,6 @@ import { DraggingPosition, TreeItem, TreeItemIndex } from "react-complex-tree";
 
 import { getValidNodeUids } from "@_node/helpers";
 import { TNodeUid } from "@_node/types";
-import { MainContext } from "@_redux/main";
 import { useAppState } from "@_redux/useAppState";
 
 import { useNodeActionHandlers } from "./useNodeActionHandlers";
@@ -13,8 +12,7 @@ import { useNodeViewState } from "./useNodeViewState";
 export const useNodeTreeCallback = (
   isDragging: React.MutableRefObject<boolean>,
 ) => {
-  const { validNodeTree } = useAppState();
-  const { htmlReferenceData } = useContext(MainContext);
+  const { validNodeTree, htmlReferenceData } = useAppState();
 
   const { onMove } = useNodeActionHandlers();
   const { cb_focusNode, cb_selectNode, cb_expandNode, cb_collapseNode } =

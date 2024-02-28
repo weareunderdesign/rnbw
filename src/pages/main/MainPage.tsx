@@ -28,18 +28,13 @@ import {
 } from "@_redux/main/cmdk";
 import { useAppState } from "@_redux/useAppState";
 import { TCmdkContext, TCmdkKeyMap, TCmdkReference } from "@_types/main";
-
 import { getCommandKey } from "../../services/global";
 import {
   useCmdk,
   useCmdkModal,
   useCmdkReferenceData,
-  useFileHandlers,
   useHandlers,
   useInit,
-  useInvalidFileNodes,
-  useRecentProjects,
-  useReferenceData,
   useReferneces,
   useRunningActions,
 } from "./hooks";
@@ -62,44 +57,24 @@ export default function MainPage() {
     cmdkPages,
     currentCmdkPage,
     cmdkSearchContent,
+    htmlReferenceData,
+    cmdkReferenceData,
+    recentProjectHandlers,
+    recentProjectContexts,
   } = useAppState();
 
   // get,set
   const { addRunningActions, removeRunningActions } = useRunningActions();
-  const {
-    projectHandlers,
-    setProjectHandlers,
-    currentProjectFileHandle,
-    setCurrentProjectFileHandle,
-    fileHandlers,
-    setFileHandlers,
-  } = useFileHandlers();
-  const {
-    recentProjectContexts,
-    recentProjectNames,
-    recentProjectHandlers,
-    setRecentProjectContexts,
-    setRecentProjectNames,
-    setRecentProjectHandlers,
-  } = useRecentProjects();
 
-  const { filesReferenceData, htmlReferenceData } = useReferenceData();
   const {
     monacoEditorRef,
     setMonacoEditorRef,
     iframeRefRef,
     setIframeRefRef,
-    isContentProgrammaticallyChanged,
-    setIsContentProgrammaticallyChanged,
-    isCodeTyping,
-    setIsCodeTyping,
   } = useReferneces();
-  const { invalidFileNodes, addInvalidFileNodes, removeInvalidFileNodes } =
-    useInvalidFileNodes();
 
   // hooks
   const {
-    cmdkReferenceData,
     cmdkReferenceJumpstart,
     cmdkReferenceActions,
     cmdkReferneceRecentProject,
@@ -108,12 +83,6 @@ export default function MainPage() {
   } = useCmdkReferenceData({
     addRunningActions,
     removeRunningActions,
-    recentProjectContexts,
-    recentProjectNames,
-    recentProjectHandlers,
-    setRecentProjectContexts,
-    setRecentProjectNames,
-    setRecentProjectHandlers,
     htmlReferenceData,
   });
   const {
@@ -121,17 +90,7 @@ export default function MainPage() {
     closeNavigator,
     reloadCurrentProject,
     triggerCurrentProjectReload,
-  } = useHandlers({
-    currentProjectFileHandle,
-    setCurrentProjectFileHandle,
-    setFileHandlers,
-    recentProjectContexts,
-    recentProjectNames,
-    recentProjectHandlers,
-    setRecentProjectContexts,
-    setRecentProjectNames,
-    setRecentProjectHandlers,
-  });
+  } = useHandlers();
   const { onJumpstart, onNew, onClear, onUndo, onRedo } = useCmdk({
     cmdkReferenceData,
     importProject,
@@ -240,34 +199,11 @@ export default function MainPage() {
           addRunningActions,
           removeRunningActions,
 
-          filesReferenceData,
-          htmlReferenceData,
-          cmdkReferenceData,
-
-          projectHandlers,
-          setProjectHandlers,
-          currentProjectFileHandle,
-          setCurrentProjectFileHandle,
-          fileHandlers,
-          setFileHandlers,
-
-          recentProjectNames,
-          recentProjectHandlers,
-          recentProjectContexts,
-
           monacoEditorRef,
 
           setMonacoEditorRef,
           iframeRefRef,
           setIframeRefRef,
-          isContentProgrammaticallyChanged,
-          setIsContentProgrammaticallyChanged,
-          isCodeTyping,
-          setIsCodeTyping,
-
-          invalidFileNodes,
-          addInvalidFileNodes,
-          removeInvalidFileNodes,
 
           importProject,
           reloadCurrentProject,

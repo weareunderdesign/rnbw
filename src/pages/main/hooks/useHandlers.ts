@@ -37,35 +37,16 @@ import {
 import { useAppState } from "@_redux/useAppState";
 
 import { clearProjectSession } from "../helper";
-
-interface IUseHandlers {
-  currentProjectFileHandle: FileSystemDirectoryHandle | null;
-  setCurrentProjectFileHandle: React.Dispatch<
-    React.SetStateAction<FileSystemDirectoryHandle | null>
-  >;
-  setFileHandlers: React.Dispatch<React.SetStateAction<TFileHandlerCollection>>;
-  recentProjectContexts: TProjectContext[];
-  recentProjectNames: string[];
-  recentProjectHandlers: (FileSystemDirectoryHandle | null)[];
-  setRecentProjectContexts: React.Dispatch<
-    React.SetStateAction<TProjectContext[]>
-  >;
-  setRecentProjectNames: React.Dispatch<React.SetStateAction<string[]>>;
-  setRecentProjectHandlers: React.Dispatch<
-    React.SetStateAction<(FileSystemDirectoryHandle | null)[]>
-  >;
-}
-export const useHandlers = ({
-  currentProjectFileHandle,
+import {
   setCurrentProjectFileHandle,
   setFileHandlers,
-  recentProjectContexts,
-  recentProjectNames,
-  recentProjectHandlers,
   setRecentProjectContexts,
-  setRecentProjectNames,
   setRecentProjectHandlers,
-}: IUseHandlers) => {
+  setRecentProjectNames,
+} from "@_redux/main/project";
+
+export const useHandlers = () => {
+  const { currentProjectFileHandle } = useAppState();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const {
@@ -75,6 +56,9 @@ export const useHandlers = ({
     fileTree,
     currentFileUid,
     webComponentOpen,
+    recentProjectNames,
+    recentProjectHandlers,
+    recentProjectContexts,
   } = useAppState();
 
   const { "*": rest } = useParams();
@@ -110,9 +94,9 @@ export const useHandlers = ({
       _recentProjectHandlers.unshift(
         projectHandle as FileSystemDirectoryHandle,
       );
-      setRecentProjectContexts(_recentProjectContexts);
-      setRecentProjectNames(_recentProjectNames);
-      setRecentProjectHandlers(_recentProjectHandlers);
+      dispatch(setRecentProjectContexts(_recentProjectContexts));
+      dispatch(setRecentProjectNames(_recentProjectNames));
+      dispatch(setRecentProjectHandlers(_recentProjectHandlers));
       await setMany([
         ["recent-project-context", _recentProjectContexts],
         ["recent-project-name", _recentProjectNames],
@@ -154,13 +138,15 @@ export const useHandlers = ({
               favicon: null,
             }),
           );
-          setCurrentProjectFileHandle(
-            projectHandle as FileSystemDirectoryHandle,
+          dispatch(
+            setCurrentProjectFileHandle(
+              projectHandle as FileSystemDirectoryHandle,
+            ),
           );
 
           dispatch(setFileTree(_fileTree));
           dispatch(setInitialFileUidToOpen(_initialFileUidToOpen));
-          setFileHandlers(_fileHandlers);
+          dispatch(setFileHandlers(_fileHandlers));
 
           await saveRecentProject(
             fsType,
@@ -193,11 +179,11 @@ export const useHandlers = ({
               favicon: null,
             }),
           );
-          setCurrentProjectFileHandle(null);
+          dispatch(setCurrentProjectFileHandle(null));
 
           dispatch(setFileTree(_fileTree));
           dispatch(setInitialFileUidToOpen(_initialFileUidToOpen));
-          setFileHandlers({});
+          dispatch(setFileHandlers({}));
 
           // await saveRecentProject(fsType, null);
         } catch (err) {
@@ -238,7 +224,7 @@ export const useHandlers = ({
         fileTree,
       );
       dispatch(setFileTree(_fileTree));
-      setFileHandlers(_fileHandlers);
+      dispatch(setFileHandlers(_fileHandlers));
       // need to open another file if the current open file is deleted
       if (deletedUidsObj[currentFileUid] || !currentFileUid) {
         if (!!_initialFileUidToOpen) {

@@ -8,7 +8,6 @@ import { useAppState } from "@_redux/useAppState";
 
 import { isSelected } from "../helpers";
 import { useNavigatorPanelHandlers } from "../hooks";
-import { MainContext } from "@_redux/main";
 
 interface AdditionalPanelProps {
   navigatorPanel: HTMLDivElement | null;
@@ -17,8 +16,7 @@ interface AdditionalPanelProps {
 export const AdditionalPanel: FC<AdditionalPanelProps> = ({
   navigatorPanel,
 }) => {
-  const { workspace, project, navigatorDropdownType } = useAppState();
-  const { projectHandlers } = useContext(MainContext);
+  const { workspace, project, navigatorDropdownType, projectHandlers } = useAppState();
 
   const navigatorDropDownRef = useRef<HTMLDivElement | null>(null);
 

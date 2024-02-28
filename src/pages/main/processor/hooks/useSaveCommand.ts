@@ -16,9 +16,9 @@ import { setLoadingFalse, setLoadingTrue } from "@_redux/main/processor";
 
 export const useSaveCommand = () => {
   const dispatch = useDispatch();
-  const { project, fileTree, currentFileUid, currentCommand } = useAppState();
-  const { addRunningActions, removeRunningActions, fileHandlers } =
-    useContext(MainContext);
+  const { project, fileTree, currentFileUid, currentCommand, fileHandlers } =
+    useAppState();
+  const { addRunningActions, removeRunningActions } = useContext(MainContext);
 
   useEffect(() => {
     if (!currentCommand) return;

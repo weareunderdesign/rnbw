@@ -2,13 +2,7 @@ import { MutableRefObject } from "react";
 
 import { editor } from "monaco-editor";
 
-import { TFileHandlerCollection } from "@_node/file";
 import { TNodeUid } from "@_node/types";
-import {
-  TCmdkReferenceData,
-  TFilesReferenceData,
-  THtmlReferenceData,
-} from "@_types/main";
 
 import { TFileAction, TProjectContext } from "./fileTree";
 
@@ -37,39 +31,12 @@ export type TMainContext = {
   addRunningActions: (actionNames: string[]) => void;
   removeRunningActions: (actionNames: string[]) => void;
 
-  filesReferenceData: TFilesReferenceData;
-  htmlReferenceData: THtmlReferenceData;
-  cmdkReferenceData: TCmdkReferenceData;
-
-  projectHandlers: TFileHandlerCollection;
-  setProjectHandlers: (projectHandlerObj: TFileHandlerCollection) => void;
-  currentProjectFileHandle: FileSystemDirectoryHandle | null;
-  setCurrentProjectFileHandle: (
-    fileHandler: FileSystemDirectoryHandle | null,
-  ) => void;
-  fileHandlers: TFileHandlerCollection;
-  setFileHandlers: (fileHandlerObj: TFileHandlerCollection) => void;
-
-  recentProjectNames: string[];
-  recentProjectHandlers: (FileSystemDirectoryHandle | null)[];
-  recentProjectContexts: TProjectContext[];
-
   monacoEditorRef: IEditorRef;
   setMonacoEditorRef: (
     editorInstance: editor.IStandaloneCodeEditor | null,
   ) => void;
   iframeRefRef: MutableRefObject<HTMLIFrameElement | null>;
   setIframeRefRef: (iframeRef: HTMLIFrameElement | null) => void;
-  isContentProgrammaticallyChanged: React.RefObject<boolean>;
-  setIsContentProgrammaticallyChanged: (value: boolean) => void;
-  isCodeTyping: React.RefObject<boolean>;
-  setIsCodeTyping: (value: boolean) => void;
-
-  invalidFileNodes: {
-    [uid: TNodeUid]: true;
-  };
-  addInvalidFileNodes: (...uids: TNodeUid[]) => void;
-  removeInvalidFileNodes: (...uids: TNodeUid[]) => void;
 
   importProject: (
     fsType: TProjectContext,

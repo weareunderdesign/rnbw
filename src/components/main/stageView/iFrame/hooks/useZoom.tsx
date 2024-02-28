@@ -6,15 +6,13 @@ import {
   useRef,
   useState,
 } from "react";
-import { MainContext } from "@_redux/main";
 import { useAppState } from "@_redux/useAppState";
 
 export const useZoom = (
   iframeRefState: HTMLIFrameElement | null,
   isEditingRef: MutableRefObject<boolean>,
 ) => {
-  const { isCodeTyping } = useContext(MainContext);
-  const { activePanel } = useAppState();
+  const { activePanel, isCodeTyping } = useAppState();
   const [zoomLevel, setZoomLevel] = useState(1);
 
   const activePanelRef = useRef(activePanel);
@@ -39,7 +37,7 @@ export const useZoom = (
     (event: KeyboardEvent) => {
       if (
         activePanelRef.current === "code" ||
-        isCodeTyping.current ||
+        isCodeTyping ||
         isEditingRef.current
       )
         return;
@@ -64,7 +62,7 @@ export const useZoom = (
           break;
       }
     },
-    [setZoom, zoomLevel, activePanelRef.current, isCodeTyping.current],
+    [setZoom, zoomLevel, activePanelRef.current, isCodeTyping],
   );
 
   useEffect(() => {

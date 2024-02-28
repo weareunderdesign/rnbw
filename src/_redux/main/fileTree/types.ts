@@ -18,6 +18,9 @@ export type TFileTreeReducerState = {
 
   doingFileAction: boolean;
   lastFileAction: TFileAction;
+  invalidFileNodes: {
+    [uid: TNodeUid]: true;
+  };
 };
 
 export type TWorkspace = {

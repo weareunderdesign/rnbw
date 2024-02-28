@@ -14,8 +14,10 @@ import {
 import { TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import {
+  addInvalidFileNodes,
   FileTree_Event_RedoActionType,
   FileTree_Event_UndoActionType,
+  removeInvalidFileNodes,
   setDoingFileAction,
   setFileAction,
   TFileAction,
@@ -32,13 +34,9 @@ export const useFileTreeEvent = () => {
     fileEventPastLength,
     didUndo,
     didRedo,
-  } = useAppState();
-  const {
     fileHandlers,
-    addInvalidFileNodes,
-    removeInvalidFileNodes,
-    triggerCurrentProjectReload,
-  } = useContext(MainContext);
+  } = useAppState();
+  const { triggerCurrentProjectReload } = useContext(MainContext);
 
   const clearFutureHistoryTriggerRef = useRef(false);
   const lastFileActionRef = useRef<TFileAction>({ action: null });
@@ -120,7 +118,7 @@ export const useFileTreeEvent = () => {
       }
 
       dispatch(setDoingFileAction(true));
-      addInvalidFileNodes(...uids);
+      dispatch(addInvalidFileNodes([...uids]));
       await FileActions.remove({
         projectContext: project.context,
         fileTree,
@@ -136,21 +134,13 @@ export const useFileTreeEvent = () => {
             );
         },
       });
-      removeInvalidFileNodes(...uids);
+      dispatch(removeInvalidFileNodes([...uids]));
       dispatch(setDoingFileAction(false));
 
       // reload the current project
       triggerCurrentProjectReload();
     },
-    [
-      didRedo,
-      didUndo,
-      addInvalidFileNodes,
-      removeInvalidFileNodes,
-      project,
-      fileTree,
-      fileHandlers,
-    ],
+    [didRedo, didUndo, project, fileTree, fileHandlers],
   );
   const _rename = useCallback(
     async ({ orgUid, newUid }: { orgUid: TNodeUid; newUid: TNodeUid }) => {
@@ -165,7 +155,7 @@ export const useFileTreeEvent = () => {
 
       const newName = getFullnameFromUid(newUid);
       dispatch(setDoingFileAction(true));
-      addInvalidFileNodes(node.uid);
+      dispatch(addInvalidFileNodes([node.uid]));
       await FileActions.rename({
         projectContext: project.context,
         fileTree,
@@ -181,21 +171,13 @@ export const useFileTreeEvent = () => {
             console.log(done ? "successfully renamed" : "not renamed");
         },
       });
-      removeInvalidFileNodes(node.uid);
+      dispatch(removeInvalidFileNodes([node.uid]));
       dispatch(setDoingFileAction(false));
 
       // reload the current project
       triggerCurrentProjectReload();
     },
-    [
-      didRedo,
-      didUndo,
-      addInvalidFileNodes,
-      removeInvalidFileNodes,
-      project,
-      fileTree,
-      fileHandlers,
-    ],
+    [didRedo, didUndo, project, fileTree, fileHandlers],
   );
 
   const _move = useCallback(
@@ -211,7 +193,7 @@ export const useFileTreeEvent = () => {
       const targetUids = uids.map(({ newUid }) => getParentUidFromUid(newUid));
 
       dispatch(setDoingFileAction(true));
-      addInvalidFileNodes(...orgUids);
+      dispatch(addInvalidFileNodes([...orgUids]));
       await FileActions.move({
         projectContext: project.context,
         fileTree,
@@ -230,18 +212,12 @@ export const useFileTreeEvent = () => {
             );
         },
       });
-      removeInvalidFileNodes(...orgUids);
+      dispatch(removeInvalidFileNodes([...orgUids]));
       dispatch(setDoingFileAction(false));
 
       // reload the current project
       triggerCurrentProjectReload();
     },
-    [
-      addInvalidFileNodes,
-      removeInvalidFileNodes,
-      project,
-      fileTree,
-      fileHandlers,
-    ],
+    [project, fileTree, fileHandlers],
   );
 };

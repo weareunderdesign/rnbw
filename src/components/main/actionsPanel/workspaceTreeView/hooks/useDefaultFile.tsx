@@ -5,8 +5,8 @@ import { useAppState } from "@_redux/useAppState";
 import { useCallback, useContext, useEffect } from "react";
 
 export const useDefaultFileCreate = () => {
-  const { project, fileTree, initialFileUidToOpen } = useAppState();
-  const { fileHandlers, triggerCurrentProjectReload } = useContext(MainContext);
+  const { project, fileTree, initialFileUidToOpen, fileHandlers } = useAppState();
+  const { triggerCurrentProjectReload } = useContext(MainContext);
 
   const createDefaultFile = useCallback(async () => {
     await FileActions.create({

@@ -11,7 +11,7 @@ import { useNavigatorPanelHandlers } from "../hooks";
 export const DefaultPanel = () => {
   const { project, fileTree, currentFileUid } = useAppState();
 
-  const { filesReferenceData } = useContext(MainContext);
+  const { filesReferenceData } = useAppState();
 
   const fileNode = useMemo(
     () => fileTree[currentFileUid],

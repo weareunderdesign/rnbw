@@ -24,6 +24,7 @@ export const useAppState = () => {
         hoveredFileUid,
         doingFileAction,
         lastFileAction,
+        invalidFileNodes,
       },
       fileEvent: {
         past: fileEventPast,
@@ -73,12 +74,27 @@ export const useAppState = () => {
         didRedo,
         loading,
       },
+      reference: {
+        filesReferenceData,
+        htmlReferenceData,
+        isContentProgrammaticallyChanged,
+        isCodeTyping,
+      },
+      project: {
+        projectHandlers,
+        currentProjectFileHandle,
+        fileHandlers,
+        recentProjectNames,
+        recentProjectHandlers,
+        recentProjectContexts,
+      },
       cmdk: {
         cmdkOpen,
         cmdkPages,
         currentCmdkPage,
         cmdkSearchContent,
         currentCommand,
+        cmdkReferenceData,
       },
     },
   } = useSelector((state: AppState) => state);
@@ -110,6 +126,7 @@ export const useAppState = () => {
 
     doingFileAction,
     lastFileAction,
+    invalidFileNodes,
 
     fileAction,
     fileEventPast,
@@ -167,11 +184,24 @@ export const useAppState = () => {
     didRedo,
     loading,
 
+    filesReferenceData,
+    htmlReferenceData,
+    isContentProgrammaticallyChanged,
+    isCodeTyping,
+
+    projectHandlers,
+    currentProjectFileHandle,
+    fileHandlers,
+    recentProjectNames,
+    recentProjectHandlers,
+    recentProjectContexts,
+
     cmdkOpen,
     cmdkPages,
     currentCmdkPage,
 
     cmdkSearchContent,
     currentCommand,
+    cmdkReferenceData,
   };
 };
