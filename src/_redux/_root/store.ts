@@ -6,6 +6,8 @@ export default function configureAppStore(initialState = {}) {
     reducer: createReducer(),
     preloadedState: initialState,
     devTools: process.env.NODE_ENV !== "production",
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware({ serializableCheck: false }),
   });
 
   return store;
