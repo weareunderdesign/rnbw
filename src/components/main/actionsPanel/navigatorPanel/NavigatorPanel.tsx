@@ -26,10 +26,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
     filesReferenceData,
   } = useAppState();
 
-  const {
-    // open project
-    importProject,
-  } = useContext(MainContext);
+  const { importProject } = useContext(MainContext);
 
   const [faviconFallback, setFaviconFallback] = useState(false);
   useFavicon(setFaviconFallback);

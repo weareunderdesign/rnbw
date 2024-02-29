@@ -8,7 +8,15 @@ import WorkspaceTreeView from "./workspaceTreeView";
 export default function ActionsPanel() {
   return useMemo(() => {
     return (
-      <div id="ActionsPanel" className="border-right background-primary">
+      <div
+        id="ActionsPanel"
+        className="border-right background-primary"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+        }}
+      >
         <NavigatorPanel />
         <div
           style={{
@@ -20,7 +28,7 @@ export default function ActionsPanel() {
           <WorkspaceTreeView />
           <NodeTreeView />
         </div>
-        {false && <SettingsPanel />}
+        <SettingsPanel />
       </div>
     );
   }, []);
