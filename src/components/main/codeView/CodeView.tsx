@@ -206,7 +206,7 @@ export default function CodeView() {
             zIndex: 999,
             overflow: "hidden",
           }}
-          className={"border radius-s background-primary shadow"}
+          className="border-left background-primary"
           onClick={onPanelClick}
         >
           <Editor

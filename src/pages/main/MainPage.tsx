@@ -66,12 +66,8 @@ export default function MainPage() {
   // get,set
   const { addRunningActions, removeRunningActions } = useRunningActions();
 
-  const {
-    monacoEditorRef,
-    setMonacoEditorRef,
-    iframeRefRef,
-    setIframeRefRef,
-  } = useReferneces();
+  const { monacoEditorRef, setMonacoEditorRef, iframeRefRef, setIframeRefRef } =
+    useReferneces();
 
   // hooks
   const {
