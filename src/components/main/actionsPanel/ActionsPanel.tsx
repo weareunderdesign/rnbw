@@ -8,10 +8,7 @@ import WorkspaceTreeView from "./workspaceTreeView";
 export default function ActionsPanel() {
   return useMemo(() => {
     return (
-      <div
-        id="ActionsPanel"
-        className="border radius-s background-primary shadow"
-      >
+      <div id="ActionsPanel" className="border-right background-primary">
         <NavigatorPanel />
         <div
           style={{
