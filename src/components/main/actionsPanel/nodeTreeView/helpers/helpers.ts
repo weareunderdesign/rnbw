@@ -201,9 +201,22 @@ export const isPastingAllowed = ({
       groupName: "Add",
     });
 
-    return nodeToAdd.every((node) =>
-      Object.values(data["Elements"]).some((obj) => obj["Context"] === node),
-    );
+    const targetNode = nodeTree[uid];
+    const parentTarget = targetNode.parentUid;
+    if (!parentTarget) return;
+
+    return nodeToAdd.every((node: string) => {
+      if (node.split("-").length > 2) {
+        return (
+          htmlReferenceData?.elements[nodeTree[parentTarget]?.displayName]
+            ?.Contain === "All"
+        );
+      } else {
+        return Object.values(data["Elements"]).some(
+          (obj) => obj["Context"] === node,
+        );
+      }
+    });
   };
 
   const allowedArray = selectedNodes.map((selectedNode: TNode, i: number) => {
