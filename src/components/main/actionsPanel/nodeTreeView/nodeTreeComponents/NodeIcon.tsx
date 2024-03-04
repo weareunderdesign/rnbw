@@ -6,7 +6,6 @@ import { THtmlElementsReference } from "@_types/main";
 const spanStyles: React.CSSProperties = {
   width: "calc(100% - 32px)",
   textOverflow: "ellipsis",
-  overflow: "hidden",
   whiteSpace: "nowrap",
 };
 
