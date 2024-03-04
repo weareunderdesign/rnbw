@@ -185,7 +185,7 @@ const NodeTreeView = () => {
         width: "100%",
         height: "100%",
         overflow: "auto",
-        padding: "16px 0",
+        paddingBottom:"16px",
         maxHeight: "calc(100vh - 42px)",
       }}
       onClick={onPanelClick}
