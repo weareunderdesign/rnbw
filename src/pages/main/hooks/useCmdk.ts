@@ -264,7 +264,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
         return;
       }
       // skip monaco-editor shortkeys and general coding
-      if (activePanel === "code") {
+      if (activePanel === "code" || activePanel === "settings") {
         if (!(cmdk.cmd && !cmdk.shift && !cmdk.alt && cmdk.key === "KeyS")) {
           return;
         }
@@ -283,10 +283,10 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
             keyObj.key.length === 0
               ? ""
               : keyObj.key === "\\"
-              ? "Backslash"
-              : (keyObj.key.length === 1 ? "Key" : "") +
-                keyObj.key[0].toUpperCase() +
-                keyObj.key.slice(1);
+                ? "Backslash"
+                : (keyObj.key.length === 1 ? "Key" : "") +
+                  keyObj.key[0].toUpperCase() +
+                  keyObj.key.slice(1);
 
           if (
             cmdk.cmd === keyObj.cmd &&

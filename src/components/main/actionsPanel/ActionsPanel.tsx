@@ -15,6 +15,7 @@ export default function ActionsPanel() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
+          height: "100%",
         }}
       >
         <NavigatorPanel />
@@ -23,6 +24,8 @@ export default function ActionsPanel() {
             display: "grid",
             gridTemplateRows: "repeat(auto-fit, minmax(50px, 1fr))",
             height: "100%",
+            flexGrow: 1,
+            overflowY: "auto",
           }}
         >
           <WorkspaceTreeView />

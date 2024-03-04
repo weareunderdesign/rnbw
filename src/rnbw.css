@@ -52,19 +52,16 @@ body.inheritCursors * {
 
 /* react-complex-tree ul-li */
 #root #NodeTreeView ul,
-#root #FileTreeView ul {
+#root #FileTreeView ul,
+#root #SettingsView ul {
   padding: 0px;
+  list-style-type: none;
 }
 
 #root #NodeTreeView ul > li,
 #root #FileTreeView ul > li {
   line-height: 100%;
   padding: 0px;
-}
-
-#root #NodeTreeView ul > li::marker,
-#root #FileTreeView ul > li::marker {
-  display: none;
 }
 
 /* cmdk modal */
