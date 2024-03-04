@@ -7,7 +7,7 @@ welcome to rnbw!
 to learn rnbw, go to https://guide.rnbw.dev.
 
 ## run it locally:
-1. npm install --force
+1. npm install
 2. npm start
 3. visit `http://localhost:8080/`
 
