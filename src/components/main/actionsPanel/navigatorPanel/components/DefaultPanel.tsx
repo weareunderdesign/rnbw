@@ -38,7 +38,6 @@ export const DefaultPanel = () => {
             maxWidth: "60px",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
-            overflow: "hidden",
           }}
         >
           {project.name}
@@ -68,7 +67,6 @@ export const DefaultPanel = () => {
               width: "60px",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
-              overflow: "hidden",
             }}
           >
             {fileName}

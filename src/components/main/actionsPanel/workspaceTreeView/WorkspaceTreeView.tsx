@@ -453,7 +453,6 @@ export default function WorkspaceTreeView() {
                     style={{
                       width: "100%",
                       textOverflow: "ellipsis",
-                      overflow: "hidden",
                       whiteSpace: "nowrap",
                     }}
                   >

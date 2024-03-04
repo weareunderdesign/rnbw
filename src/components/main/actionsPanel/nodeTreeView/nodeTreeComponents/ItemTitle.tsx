@@ -11,7 +11,6 @@ export const ItemTitle: FC<ItemTitleProps> = React.memo(({ title }) => {
       style={{
         width: "100%",
         textOverflow: "ellipsis",
-        overflow: "hidden",
         whiteSpace: "nowrap",
       }}
     >
