@@ -51,6 +51,7 @@ const parseHtml = (content: string): THtmlParserResponse => {
           endOffset: 0,
         },
       },
+      sequenceContent: content,
     };
     const seedNodes: THtmlNode[] = [nodeTree[RootNodeUid]];
     let _uid = 0;
@@ -72,6 +73,7 @@ const parseHtml = (content: string): THtmlParserResponse => {
       parentUid: TNodeUid,
       node: THtmlDomNode,
       nodeTree: THtmlNodeTreeData,
+      sequencedUid?: TNodeUid,
     ) => {
       const {
         startLine = 0,
@@ -87,8 +89,19 @@ const parseHtml = (content: string): THtmlParserResponse => {
       nodeTree[parentUid].children.push(uid);
       nodeTree[parentUid].isEntity = false;
 
+      if (!node.attrs) node.attrs = [];
+      node.attrs.push({ name: StageNodeIdAttr, value: uid });
+      node.attrs.push({
+        name: "data-sequenced-uid",
+        value: sequencedUid,
+      });
+
       nodeTree[uid] = {
         uid,
+        sequenceContent: content.substring(
+          node.sourceCodeLocation.startOffset,
+          node.sourceCodeLocation.endOffset,
+        ),
         parentUid: parentUid,
 
         displayName: node.nodeName,
@@ -119,9 +132,6 @@ const parseHtml = (content: string): THtmlParserResponse => {
           },
         },
       };
-
-      if (!node.attrs) node.attrs = [];
-      node.attrs.push({ name: StageNodeIdAttr, value: uid });
     };
 
     while (seedNodes.length) {
@@ -130,13 +140,14 @@ const parseHtml = (content: string): THtmlParserResponse => {
 
       node.data.childNodes.map((child: THtmlDomNode) => {
         const uid = String(++_uid);
+        const _seqUid = uid;
 
         if (child.nodeName === "title") {
           window.document.title =
             child?.childNodes?.[0]?.value ?? RainbowAppName;
         }
 
-        proceedWithNode(uid, node.uid, child, nodeTree);
+        proceedWithNode(uid, node.uid, child, nodeTree, _seqUid);
         seedNodes.push(nodeTree[uid]);
       });
     }

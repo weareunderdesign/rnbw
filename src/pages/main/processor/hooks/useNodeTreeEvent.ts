@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 
 import morphdom from "morphdom";
 import { useDispatch } from "react-redux";
@@ -28,6 +28,7 @@ import {
   focusNodeTreeNode,
   selectNodeTreeNodes,
   setExpandedNodeTreeNodes,
+  setLastNodesContents,
   setNeedToSelectCode,
   setNeedToSelectNodePaths,
   setNeedToSelectNodeUids,
@@ -46,6 +47,7 @@ import {
   markChangedFolders,
 } from "../helpers";
 import { setLoadingFalse, setLoadingTrue } from "@_redux/main/processor";
+import { RootNodeUid } from "@_constants/main";
 
 export const useNodeTreeEvent = () => {
   const dispatch = useDispatch();
@@ -65,6 +67,7 @@ export const useNodeTreeEvent = () => {
     needToSelectCode,
     nExpandedItems,
     nFocusedItem,
+    lastNodesContents,
     syncConfigs,
     webComponentOpen,
   } = useAppState();
@@ -92,6 +95,13 @@ export const useNodeTreeEvent = () => {
     dispatch(selectNodeTreeNodes(selectedNodeUids));
   }, [selectedNodeUids]);
 
+  const getSubString = (content: string): string => {
+    const startIndex = content.indexOf("<");
+    const endIndex = content.indexOf(">", startIndex);
+    const substring = content.substring(startIndex, endIndex + 1);
+    return substring;
+  };
+  const [newSequenceContent, setNewSequenceContent] = useState<string>("");
   useEffect(() => {
     isCurrentFileContentChanged.current = true;
     // validate
@@ -225,6 +235,19 @@ export const useNodeTreeEvent = () => {
       }
     }
 
+    if (validNodeTree[selectedNodeUids[0]]) {
+      const parentUid = validNodeTree[selectedNodeUids[0]].parentUid
+        ? validNodeTree[selectedNodeUids[0]].parentUid
+        : RootNodeUid;
+      const selectedNodeSequenceContent =
+        validNodeTree[selectedNodeUids[0]].sequenceContent;
+      const parentNodeSequenceContent =
+        validNodeTree[parentUid!].sequenceContent;
+      setNewSequenceContent(
+        parentNodeSequenceContent.replace(selectedNodeSequenceContent, ""),
+      );
+      dispatch(setLastNodesContents(newSequenceContent));
+    }
     // sync node-tree
     dispatch(setNodeTree(nodeTree));
     const _validNodeTree = getValidNodeTree(nodeTree);
@@ -254,12 +277,26 @@ export const useNodeTreeEvent = () => {
       const validExpandedItems = nExpandedItems.filter(
         (uid) => _validNodeTree[uid] && _validNodeTree[uid].isEntity === false,
       );
-      const needToExpandItems: TNodeUid[] = isSelectedNodeUidsChanged.current
-        ? getNeedToExpandNodeUids(_validNodeTree, selectedNodeUids)
-        : [];
-      dispatch(
-        setExpandedNodeTreeNodes([...validExpandedItems, ...needToExpandItems]),
+      // const needToExpandItems: TNodeUid[] = isSelectedNodeUidsChanged.current
+      //   ? getNeedToExpandNodeUids(_validNodeTree, selectedNodeUids)
+      //   : [];
+      // console.log("TreeView-lastNodesContents", lastNodesContents);
+      const lastNodeUids = [];
+      for (let uid in _validNodeTree) {
+        for (let lastNodeUid in lastNodesContents) {
+          if (
+            lastNodesContents[lastNodeUid] ==
+            _validNodeTree[uid].sequenceContent
+          ) {
+            lastNodeUids.push(uid);
+          }
+        }
+      }
+      const needToExpandItems = getNeedToExpandNodeUids(
+        _validNodeTree,
+        lastNodeUids,
       );
+      dispatch(setExpandedNodeTreeNodes([...needToExpandItems]));
 
       if (!isSelectedNodeUidsChanged.current) {
         // this change is from 'node actions' or 'typing in code-view'
@@ -305,7 +342,7 @@ export const useNodeTreeEvent = () => {
     }
     dispatch(setLoadingFalse());
     removeRunningActions(["processor-update"]);
-  }, [currentFileContent, currentFileUid]);
+  }, [currentFileContent, currentFileUid, newSequenceContent]);
 
   // expand nodes that need to be expanded when it's just select-event
   useEffect(() => {
