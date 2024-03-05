@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 
 import { setActivePanel } from "@_redux/main/processor";
@@ -6,6 +6,7 @@ import { SVGIconI } from "@_components/common";
 
 import { SettingsPanelProps } from "./types";
 import { SettingsView } from "../settingsView/SettingsView";
+import { SettingsForm } from "../settingsView/SettingsForm";
 
 export default function SettingsPanel(props: SettingsPanelProps) {
   const dispatch = useDispatch();
@@ -14,26 +15,40 @@ export default function SettingsPanel(props: SettingsPanelProps) {
     dispatch(setActivePanel("settings"));
   }, []);
 
+  const [showForm, setShowForm] = useState(false);
+
   return useMemo(() => {
     return (
-      <div>
+      <>
         <div
           id="SettingsPanel"
           className="border-top border-bottom padding-m"
-          style={{
-            height: "45px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
           onClick={onPanelClick}
         >
-          <span className="text-s">Settings</span>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <div className="text-s">Settings</div>
 
-          <SVGIconI {...{ class: "icon-xs" }}>plus</SVGIconI>
+            {!showForm && (
+              <div
+                onClick={() => {
+                  setShowForm(true);
+                }}
+              >
+                <SVGIconI {...{ class: "icon-xs" }}>plus</SVGIconI>
+              </div>
+            )}
+          </div>
+          {showForm && <SettingsForm setShowForm={setShowForm} />}
         </div>
+
         <SettingsView />
-      </div>
+      </>
     );
-  }, [onPanelClick]);
+  }, [onPanelClick, showForm]);
 }

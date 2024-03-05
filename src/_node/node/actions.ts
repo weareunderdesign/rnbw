@@ -833,47 +833,58 @@ export const addAttr = ({
   nodeTree,
   focusedItem,
   codeViewInstanceModel,
+  cb,
+  fb,
 }: {
   attrName: string;
   attrValue: string;
   nodeTree: TNodeTreeData;
   focusedItem: TNodeUid;
   codeViewInstanceModel: editor.ITextModel;
+  cb?: () => void;
+  fb?: () => void;
 }) => {
-  const focusedNode = nodeTree[focusedItem];
-  const { startTag } = focusedNode.data.sourceCodeLocation;
+  try {
+    const focusedNode = nodeTree[focusedItem];
+    const { startTag } = focusedNode.data.sourceCodeLocation;
 
-  const text = codeViewInstanceModel.getValueInRange(
-    new Range(
-      startTag.startLine,
-      startTag.startCol,
-      startTag.endLine,
-      startTag.endCol - 1,
-    ),
-  );
-  const attr = `${attrName}="${attrValue}"`;
-  const pattern = new RegExp(`${attrName}="(.*?)"`, "g");
-  const replace = pattern.test(text);
-  const content = replace ? text.replace(pattern, attr) : ` ${attr}`;
+    const text = codeViewInstanceModel.getValueInRange(
+      new Range(
+        startTag.startLine,
+        startTag.startCol,
+        startTag.endLine,
+        startTag.endCol - 1,
+      ),
+    );
+    const attr = `${attrName}="${attrValue}"`;
+    const pattern = new RegExp(`${attrName}="(.*?)"`, "g");
+    const replace = pattern.test(text);
+    const content = replace ? text.replace(pattern, attr) : ` ${attr}`;
 
-  if (startTag) {
-    const edit = {
-      range: replace
-        ? new Range(
-            startTag.startLine,
-            startTag.startCol,
-            startTag.endLine,
-            startTag.endCol - 1,
-          )
-        : new Range(
-            startTag.endLine,
-            startTag.endCol - 1,
-            startTag.endLine,
-            startTag.endCol - 1,
-          ),
-      text: content,
-    };
-    codeViewInstanceModel.applyEdits([edit]);
+    if (startTag) {
+      const edit = {
+        range: replace
+          ? new Range(
+              startTag.startLine,
+              startTag.startCol,
+              startTag.endLine,
+              startTag.endCol - 1,
+            )
+          : new Range(
+              startTag.endLine,
+              startTag.endCol - 1,
+              startTag.endLine,
+              startTag.endCol - 1,
+            ),
+        text: content,
+      };
+      codeViewInstanceModel.applyEdits([edit]);
+    }
+
+    cb && cb();
+  } catch (err) {
+    LogAllow && console.log(err);
+    fb && fb();
   }
 };
 

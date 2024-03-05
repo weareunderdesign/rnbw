@@ -194,6 +194,12 @@ body.inheritCursors * {
   transition: 0.3s all;
 }
 
+#SettingsPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .action-panel-wrapper {
   width: 10px;
   height: 100%;
@@ -223,4 +229,13 @@ body.inheritCursors * {
 }
 .sideButton_hidden {
   visibility: hidden;
+}
+.attribute-input {
+  word-wrap: break-word;
+  min-height: 14px;
+  background: transparent;
+  outline: none;
+  border: none;
+  width: 100%;
+  display: inline-block;
 }
