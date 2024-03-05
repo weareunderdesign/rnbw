@@ -1,1 +1,3 @@
-export type SettingsPanelProps = {};
+export type SettingsFormProps = {
+  setShowForm: React.Dispatch<React.SetStateAction<boolean>>;
+};

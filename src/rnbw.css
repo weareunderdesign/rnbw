@@ -200,6 +200,12 @@ body.inheritCursors * {
   gap: 12px;
 }
 
+.settings-item {
+  display: grid;
+  grid-template-columns: 50px 1fr 16px;
+  align-items: center;
+}
+
 .action-panel-wrapper {
   width: 10px;
   height: 100%;
@@ -215,19 +221,19 @@ body.inheritCursors * {
   transform: translateX(0px);
 }
 
-.sideButton {
+.action-button {
   visibility: visible;
   height: 16px;
-  width: 16px;
+  width: 16px !important;
   display: flex;
   justify-content: center;
   align-items: center;
 }
-.sideButton:hover {
+.action-button:hover {
   background-color: var(--color-secondary-background);
   border-radius: 4px;
 }
-.sideButton_hidden {
+.action-button-hidden {
   visibility: hidden;
 }
 .attribute-input {
@@ -238,4 +244,9 @@ body.inheritCursors * {
   border: none;
   width: 100%;
   display: inline-block;
+  padding: 0;
+}
+.attribute-input:hover,
+.attribute-input:focus {
+  outline: 1px solid var(--color-tertiary-background);
 }

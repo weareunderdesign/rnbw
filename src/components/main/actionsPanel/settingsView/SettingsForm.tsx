@@ -1,14 +1,17 @@
 import React, { useRef } from "react";
 import { useAttributeHandler } from "./hooks/useAttributeHandler";
+import { SettingsFormProps } from "../settingsPanel/types";
+import { SVGIconI } from "@_components/common";
 
-export const SettingsForm = ({ setShowForm }: { setShowForm: any }) => {
+export const SettingsForm = ({ setShowForm }: SettingsFormProps) => {
   const attributeRef = useRef<HTMLInputElement>(null);
   const valueRef = useRef<HTMLInputElement>(null);
+
   const { changeAttribute } = useAttributeHandler();
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== "Enter") return;
-    if (event.target === valueRef.current) {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter") return;
+    if (e.target === valueRef.current) {
       handleSubmit();
     } else {
       valueRef.current?.focus();
@@ -24,7 +27,7 @@ export const SettingsForm = ({ setShowForm }: { setShowForm: any }) => {
   };
 
   return (
-    <form className="flex align-center justify-start gap-s p">
+    <form className="settings-item gap-m">
       <input
         ref={attributeRef}
         placeholder="Attribute"
@@ -40,6 +43,9 @@ export const SettingsForm = ({ setShowForm }: { setShowForm: any }) => {
         onKeyDown={handleKeyDown}
         onBlur={handleSubmit}
       />
+      <div className="action-button" onClick={() => setShowForm(false)}>
+        <SVGIconI {...{ class: "icon-xs" }}>cross</SVGIconI>
+      </div>
     </form>
   );
 };

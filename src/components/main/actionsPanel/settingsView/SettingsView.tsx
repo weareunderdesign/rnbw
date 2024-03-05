@@ -1,16 +1,20 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useDispatch } from "react-redux";
 
 import { StageNodeIdAttr } from "@_node/file";
 import { useAppState } from "@_redux/useAppState";
-
-import { useDispatch } from "react-redux";
 import { setActivePanel } from "@_redux/main/processor";
+import { SVGIconI } from "@_components/common";
 import { useAttributeHandler } from "./hooks/useAttributeHandler";
 
 let excludedAttributes: string[] = [StageNodeIdAttr];
 
 export const SettingsView = () => {
+  const dispatch = useDispatch();
+
   const { nodeTree, nFocusedItem } = useAppState();
+  const { changeAttribute, deleteAttribute } = useAttributeHandler();
+
   const filteredAttributes = useMemo(
     () =>
       Object.entries(nodeTree[nFocusedItem]?.data?.attribs ?? {})
@@ -24,10 +28,6 @@ export const SettingsView = () => {
         ),
     [nFocusedItem, nodeTree],
   );
-
-  const dispatch = useDispatch();
-  const { changeAttribute } = useAttributeHandler();
-
   const [attrArray, setAttrArray] = useState({ ...filteredAttributes });
 
   useEffect(() => {
@@ -35,31 +35,41 @@ export const SettingsView = () => {
   }, [filteredAttributes]);
 
   const handleChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>, key: string) => {
-      setAttrArray({ ...attrArray, [key]: event.target.value });
+    (e: React.ChangeEvent<HTMLInputElement>, key: string) => {
+      setAttrArray({ ...attrArray, [key]: e.target.value });
     },
     [],
+  );
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>, key: string) => {
+      if (e.key !== "Enter") return;
+      changeAttribute(key, attrArray[key] as string);
+    },
+    [attrArray],
   );
 
   return (
     <div id="SettingsView" onClick={() => dispatch(setActivePanel("settings"))}>
       <ul>
         {Object.keys(filteredAttributes).map((key) => (
-          <li
-            key={key}
-            className="align-center justify-start padding-m gap-m"
-            style={{ height: "38px" }}
-          >
-            <p className="text-s" style={{ minWidth: "50px" }}>
-              {key}
-            </p>
+          <li key={key} className="settings-item gap-m padding-m">
+            <span className="text-s">{key}</span>
 
             <input
               className="text-s attribute-input"
               value={(attrArray[key] || "") as string}
               onBlur={() => changeAttribute(key, attrArray[key] as string)}
               onChange={(e) => handleChange(e, key)}
+              onKeyDown={(e) => handleKeyDown(e, key)}
             />
+
+            <div
+              className="action-button"
+              onClick={() => deleteAttribute(key, attrArray[key] as string)}
+            >
+              <SVGIconI {...{ class: "icon-xs" }}>cross</SVGIconI>
+            </div>
           </li>
         ))}
       </ul>

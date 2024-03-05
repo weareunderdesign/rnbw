@@ -4,11 +4,10 @@ import { useDispatch } from "react-redux";
 import { setActivePanel } from "@_redux/main/processor";
 import { SVGIconI } from "@_components/common";
 
-import { SettingsPanelProps } from "./types";
 import { SettingsView } from "../settingsView/SettingsView";
 import { SettingsForm } from "../settingsView/SettingsForm";
 
-export default function SettingsPanel(props: SettingsPanelProps) {
+export default function SettingsPanel() {
   const dispatch = useDispatch();
 
   const onPanelClick = useCallback(() => {
@@ -25,17 +24,12 @@ export default function SettingsPanel(props: SettingsPanelProps) {
           className="border-top border-bottom padding-m"
           onClick={onPanelClick}
         >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
+          <div className="flex justify-stretch align-center">
             <div className="text-s">Settings</div>
 
             {!showForm && (
               <div
+                className="action-button"
                 onClick={() => {
                   setShowForm(true);
                 }}
