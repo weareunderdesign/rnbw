@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 
-import { StageNodeIdAttr } from "@_node/file";
+import { DataSequencedUid, StageNodeIdAttr } from "@_node/file";
 import { useAppState } from "@_redux/useAppState";
 import { setActivePanel } from "@_redux/main/processor";
 import { SVGIconI } from "@_components/common";
 import { useAttributeHandler } from "./hooks/useAttributeHandler";
 
-let excludedAttributes: string[] = [StageNodeIdAttr];
+let excludedAttributes: string[] = [StageNodeIdAttr, DataSequencedUid];
 
 export const SettingsView = () => {
   const dispatch = useDispatch();
