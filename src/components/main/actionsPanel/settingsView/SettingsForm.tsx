@@ -3,7 +3,10 @@ import { useAttributeHandler } from "./hooks/useAttributeHandler";
 import { SettingsFormProps } from "../settingsPanel/types";
 import { SVGIconI } from "@_components/common";
 
-export const SettingsForm = ({ setShowForm }: SettingsFormProps) => {
+export const SettingsForm = ({
+  setShowForm,
+  setAttributes,
+}: SettingsFormProps) => {
   const attributeRef = useRef<HTMLInputElement>(null);
   const valueRef = useRef<HTMLInputElement>(null);
 
@@ -23,7 +26,13 @@ export const SettingsForm = ({ setShowForm }: SettingsFormProps) => {
     const value = valueRef.current?.value;
 
     if (!attribute || value === undefined) return;
-    changeAttribute(attribute, value, () => setShowForm(false));
+    changeAttribute(attribute, value, () => {
+      setShowForm(false);
+      setAttributes((prev: Record<string, string>) => ({
+        [`${attribute}`]: value,
+        ...prev,
+      }));
+    });
   };
 
   return (
