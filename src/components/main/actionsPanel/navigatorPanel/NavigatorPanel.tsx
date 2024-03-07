@@ -78,7 +78,12 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
             alignItems: "center",
           }}
         >
-          <div className="gap-s" onClick={onPanelClick} ref={navigatorPanelRef}>
+          <div
+            className="gap-s"
+            style={{ overflow: "hidden" }}
+            onClick={onPanelClick}
+            ref={navigatorPanelRef}
+          >
             {!navigatorDropdownType ? (
               <DefaultPanel />
             ) : navigatorDropdownType === "workspace" ? (
