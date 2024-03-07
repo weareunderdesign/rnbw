@@ -7,7 +7,8 @@
 body {
   cursor: default !important;
 }
-body *:not(.panelResize):hover {
+#CodeView *:hover,
+#StageView *:hover {
   cursor: default !important;
 }
 .target {
@@ -178,7 +179,6 @@ body.inheritCursors * {
 
 #CodeView {
   transition: 0.3s all;
-  cursor: default;
 }
 
 #ActionsPanel {
