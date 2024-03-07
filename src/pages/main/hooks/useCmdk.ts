@@ -2,7 +2,7 @@ import { useCallback, useEffect } from "react";
 
 import { CustomDirectoryPickerOptions } from "file-system-access/lib/showDirectoryPicker";
 import { delMany } from "idb-keyval";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 import { LogAllow } from "@_constants/global";
@@ -38,6 +38,7 @@ import { getCommandKey } from "@_services/global";
 import { TCmdkKeyMap, TCmdkReferenceData } from "@_types/main";
 
 import { setSystemTheme } from "../helper";
+import { ActionCreators as UndoActionCreators } from "redux-undo";
 
 interface IUseCmdk {
   cmdkReferenceData: TCmdkReferenceData;
@@ -59,8 +60,11 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     fileAction,
     fileEventPastLength,
     fileEventFutureLength,
+    nodeEventPast,
     nodeEventPastLength,
     nodeEventFutureLength,
+    currentFileContent,
+    selectedNodeUids,
     iframeLoading,
     doingAction,
     activePanel,
@@ -134,7 +138,6 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
   }, [project]);
   const onUndo = useCallback(() => {
     if (doingAction || doingFileAction || iframeLoading) return;
-
     if (activePanel === "file") {
       if (fileEventPastLength === 0) {
         LogAllow && console.log("Undo - FileTree - it is the origin state");
@@ -147,7 +150,17 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
         LogAllow && console.log("Undo - NodeTree - it is the origin state");
         return;
       }
-      dispatch({ type: NodeTree_Event_UndoActionType });
+      if (
+        currentFileContent !==
+          nodeEventPast[nodeEventPastLength - 1].currentFileContent &&
+        selectedNodeUids ===
+          nodeEventPast[nodeEventPastLength - 1].selectedNodeUids
+      ) {
+        dispatch({ type: NodeTree_Event_UndoActionType });
+        dispatch({ type: NodeTree_Event_UndoActionType });
+      } else {
+        dispatch({ type: NodeTree_Event_UndoActionType });
+      }
     }
 
     dispatch(setDidUndo(true));
@@ -283,10 +296,10 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
             keyObj.key.length === 0
               ? ""
               : keyObj.key === "\\"
-              ? "Backslash"
-              : (keyObj.key.length === 1 ? "Key" : "") +
-                keyObj.key[0].toUpperCase() +
-                keyObj.key.slice(1);
+                ? "Backslash"
+                : (keyObj.key.length === 1 ? "Key" : "") +
+                  keyObj.key[0].toUpperCase() +
+                  keyObj.key.slice(1);
 
           if (
             cmdk.cmd === keyObj.cmd &&
