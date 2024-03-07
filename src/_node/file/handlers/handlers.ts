@@ -11,7 +11,7 @@ import {
   THtmlNodeTreeData,
   THtmlParserResponse,
 } from "../../node/type/html";
-import { StageNodeIdAttr } from "./constants";
+import { DataSequencedUid, StageNodeIdAttr } from "./constants";
 
 const parseHtml = (content: string): THtmlParserResponse => {
   const htmlDom = parse5.parse(content, {
@@ -92,7 +92,7 @@ const parseHtml = (content: string): THtmlParserResponse => {
       if (!node.attrs) node.attrs = [];
       node.attrs.push({ name: StageNodeIdAttr, value: uid });
       node.attrs.push({
-        name: "data-sequenced-uid",
+        name: DataSequencedUid,
         value: sequencedUid,
       });
 

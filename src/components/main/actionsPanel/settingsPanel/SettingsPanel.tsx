@@ -1,19 +1,75 @@
-import React, { useCallback, useMemo } from "react";
-
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 
+import { StageNodeIdAttr, DataSequencedUid } from "@_node/file";
+import { useAppState } from "@_redux/useAppState";
 import { setActivePanel } from "@_redux/main/processor";
+import { SVGIconI } from "@_components/common";
 
-import { SettingsPanelProps } from "./types";
+import { SettingsView } from "../settingsView/SettingsView";
+import { SettingsForm } from "../settingsView/SettingsForm";
 
-export default function SettingsPanel(props: SettingsPanelProps) {
+const excludedAttributes: string[] = [StageNodeIdAttr, DataSequencedUid];
+
+export default function SettingsPanel() {
   const dispatch = useDispatch();
+  const { nodeTree, nFocusedItem } = useAppState();
 
-  const onPanelClick = useCallback((e: React.MouseEvent) => {
+  const [attributes, setAttributes] = useState({});
+  const [showForm, setShowForm] = useState(false);
+
+  const attributesArray = useMemo(() => Object.keys(attributes), [attributes]);
+
+  useEffect(() => {
+    const filteredAttributes = nodeTree[nFocusedItem]?.data?.attribs || {};
+    const filtered = Object.fromEntries(
+      Object.entries(filteredAttributes)
+        .filter(([key]) => !excludedAttributes.includes(key))
+        .reverse(),
+    );
+    setAttributes(filtered);
+  }, [nodeTree, nFocusedItem]);
+
+  const onPanelClick = useCallback(() => {
     dispatch(setActivePanel("settings"));
   }, []);
 
   return useMemo(() => {
-    return <div id="SettingsPanel" onClick={onPanelClick}></div>;
-  }, [onPanelClick]);
+    return (
+      <div
+        id="SettingsPanel"
+        className="border-top border-bottom padding-m"
+        onClick={onPanelClick}
+      >
+        <div
+          className="flex justify-stretch align-center"
+          style={{ height: "16px" }}
+        >
+          <div className="text-s">Settings</div>
+
+          {!showForm && (
+            <div
+              className="action-button"
+              onClick={() => {
+                setShowForm(true);
+              }}
+            >
+              <SVGIconI {...{ class: "icon-xs" }}>plus</SVGIconI>
+            </div>
+          )}
+        </div>
+
+        {showForm && (
+          <SettingsForm
+            setShowForm={setShowForm}
+            setAttributes={setAttributes}
+          />
+        )}
+
+        {!!attributesArray.length && (
+          <SettingsView attributes={attributes} setAttributes={setAttributes} />
+        )}
+      </div>
+    );
+  }, [onPanelClick, showForm, attributes, attributesArray]);
 }

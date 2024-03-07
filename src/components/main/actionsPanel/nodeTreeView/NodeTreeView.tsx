@@ -228,10 +228,10 @@ const NodeTreeView = () => {
                 e.shiftKey
                   ? props.context.selectUpTo()
                   : getCommandKey(e, osType)
-                  ? props.context.isSelected
-                    ? props.context.unselectItem()
-                    : props.context.addToSelectedItems()
-                  : props.context.selectItem();
+                    ? props.context.isSelected
+                      ? props.context.unselectItem()
+                      : props.context.addToSelectedItems()
+                    : props.context.selectItem();
 
                 dispatch(setActivePanel("node"));
 

@@ -827,6 +827,121 @@ const edit = ({
   }
 };
 
+export const addAttr = ({
+  attrName,
+  attrValue,
+  nodeTree,
+  focusedItem,
+  codeViewInstanceModel,
+  cb,
+  fb,
+}: {
+  attrName: string;
+  attrValue: string;
+  nodeTree: TNodeTreeData;
+  focusedItem: TNodeUid;
+  codeViewInstanceModel: editor.ITextModel;
+  cb?: () => void;
+  fb?: () => void;
+}) => {
+  try {
+    const focusedNode = nodeTree[focusedItem];
+    const { startTag } = focusedNode.data.sourceCodeLocation;
+
+    const text = codeViewInstanceModel.getValueInRange(
+      new Range(
+        startTag.startLine,
+        startTag.startCol,
+        startTag.endLine,
+        startTag.endCol - 1,
+      ),
+    );
+    const attr = `${attrName}="${attrValue}"`;
+    const pattern = new RegExp(`${attrName}="(.*?)"`, "g");
+    const replace = pattern.test(text);
+    const content = replace ? text.replace(pattern, attr) : ` ${attr}`;
+
+    if (startTag) {
+      const edit = {
+        range: replace
+          ? new Range(
+              startTag.startLine,
+              startTag.startCol,
+              startTag.endLine,
+              startTag.endCol - 1,
+            )
+          : new Range(
+              startTag.endLine,
+              startTag.endCol - 1,
+              startTag.endLine,
+              startTag.endCol - 1,
+            ),
+        text: content,
+      };
+      codeViewInstanceModel.applyEdits([edit]);
+    }
+
+    cb && cb();
+  } catch (err) {
+    LogAllow && console.log(err);
+    fb && fb();
+  }
+};
+export const removeAttr = ({
+  attrName,
+  attrValue,
+  nodeTree,
+  focusedItem,
+  codeViewInstanceModel,
+  cb,
+  fb,
+}: {
+  attrName: string;
+  attrValue?: string;
+  nodeTree: TNodeTreeData;
+  focusedItem: TNodeUid;
+  codeViewInstanceModel: editor.ITextModel;
+  cb?: () => void;
+  fb?: () => void;
+}) => {
+  try {
+    const focusedNode = nodeTree[focusedItem];
+    const { startTag } = focusedNode.data.sourceCodeLocation;
+
+    const text = codeViewInstanceModel.getValueInRange(
+      new Range(
+        startTag.startLine,
+        startTag.startCol,
+        startTag.endLine,
+        startTag.endCol - 1,
+      ),
+    );
+
+    const pattern = new RegExp(`${attrName}="${attrValue}"`, "g");
+    const singleAttrPattern = new RegExp(`${attrName}`, "g");
+    const content = pattern.test(text)
+      ? text.replace(pattern, "")
+      : text.replace(singleAttrPattern, "");
+
+    if (startTag) {
+      const edit = {
+        range: new Range(
+          startTag.startLine,
+          startTag.startCol,
+          startTag.endLine,
+          startTag.endCol - 1,
+        ),
+        text: content,
+      };
+      codeViewInstanceModel.applyEdits([edit]);
+    }
+
+    cb && cb();
+  } catch (err) {
+    LogAllow && console.log(err);
+    fb && fb();
+  }
+};
 export const NodeActions = {
   add,
   remove,
@@ -839,4 +954,6 @@ export const NodeActions = {
   group,
   ungroup,
   edit,
+  addAttr,
+  removeAttr,
 };

@@ -277,7 +277,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
         return;
       }
       // skip monaco-editor shortkeys and general coding
-      if (activePanel === "code") {
+      if (activePanel === "code" || activePanel === "settings") {
         if (!(cmdk.cmd && !cmdk.shift && !cmdk.alt && cmdk.key === "KeyS")) {
           return;
         }

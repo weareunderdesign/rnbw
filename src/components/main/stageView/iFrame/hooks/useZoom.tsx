@@ -1,7 +1,6 @@
 import {
   MutableRefObject,
   useCallback,
-  useContext,
   useEffect,
   useRef,
   useState,
@@ -37,6 +36,7 @@ export const useZoom = (
     (event: KeyboardEvent) => {
       if (
         activePanelRef.current === "code" ||
+        activePanelRef.current === "settings" ||
         isCodeTyping ||
         isEditingRef.current
       )

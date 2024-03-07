@@ -33,7 +33,7 @@ export const PanelButton = () => {
 
   return (
     <div
-      className={`sideButton ${!isHover && showActionsPanel ? "sideButton_hidden" : ""}`}
+      className={`action-button ${!isHover && showActionsPanel ? "action-button-hidden" : ""}`}
       onClick={(e) => {
         e.stopPropagation();
         dispatch(setShowActionsPanel(!showActionsPanel));

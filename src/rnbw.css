@@ -52,19 +52,16 @@ body.inheritCursors * {
 
 /* react-complex-tree ul-li */
 #root #NodeTreeView ul,
-#root #FileTreeView ul {
+#root #FileTreeView ul,
+#root #SettingsView ul {
   padding: 0px;
+  list-style-type: none;
 }
 
 #root #NodeTreeView ul > li,
 #root #FileTreeView ul > li {
   line-height: 100%;
   padding: 0px;
-}
-
-#root #NodeTreeView ul > li::marker,
-#root #FileTreeView ul > li::marker {
-  display: none;
 }
 
 /* cmdk modal */
@@ -197,6 +194,18 @@ body.inheritCursors * {
   transition: 0.3s all;
 }
 
+#SettingsPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.settings-item {
+  display: grid;
+  grid-template-columns: 50px 1fr 16px;
+  align-items: center;
+}
+
 .action-panel-wrapper {
   width: 10px;
   height: 100%;
@@ -204,7 +213,7 @@ body.inheritCursors * {
 }
 
 .action-panel-wrapper > #ActionsPanel {
-  width: 10px;
+  width: 240px;
   transform: translateX(-300px);
 }
 
@@ -212,18 +221,32 @@ body.inheritCursors * {
   transform: translateX(0px);
 }
 
-.sideButton {
+.action-button {
   visibility: visible;
   height: 16px;
-  width: 16px;
+  width: 16px !important;
   display: flex;
   justify-content: center;
   align-items: center;
 }
-.sideButton:hover {
+.action-button:hover {
   background-color: var(--color-secondary-background);
   border-radius: 4px;
 }
-.sideButton_hidden {
+.action-button-hidden {
   visibility: hidden;
+}
+.attribute-input {
+  word-wrap: break-word;
+  min-height: 14px;
+  background: transparent;
+  outline: none;
+  border: none;
+  width: 100%;
+  display: inline-block;
+  padding: 0;
+}
+.attribute-input:hover,
+.attribute-input:focus {
+  outline: 1px solid var(--color-tertiary-background);
 }
