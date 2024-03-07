@@ -7,7 +7,7 @@
 body {
   cursor: default !important;
 }
-body *:hover {
+body *:not(.panelResize):hover {
   cursor: default !important;
 }
 .target {
@@ -173,16 +173,12 @@ body.inheritCursors * {
 /* panels style */
 
 .panelResize {
-  width: 3px;
-}
-.panelResize:hover,
-.panelResize:active {
-  background-color: var(--color-secondary-background);
-  cursor: col-resize !important;
+  width: 1px;
 }
 
 #CodeView {
   transition: 0.3s all;
+  cursor: default;
 }
 
 #ActionsPanel {
