@@ -39,9 +39,8 @@ import { useNodeTreeCallback } from "./hooks/useNodeTreeCallback";
 import { useNodeViewState } from "./hooks/useNodeViewState";
 import { Container } from "./nodeTreeComponents/Container";
 import { DragBetweenLine } from "./nodeTreeComponents/DragBetweenLine";
-import { ItemArrow } from "./nodeTreeComponents/ItemArrow";
-import { ItemTitle } from "./nodeTreeComponents/ItemTitle";
 import { NodeIcon } from "./nodeTreeComponents/NodeIcon";
+import { ItemArrow, ItemTitle } from "@_components/common/treeComponents";
 
 const AutoExpandDelayOnDnD = 1 * 1000;
 const dragAndDropConfig = {
@@ -185,7 +184,7 @@ const NodeTreeView = () => {
         width: "100%",
         height: "100%",
         overflow: "auto",
-        paddingBottom:"16px",
+        paddingBottom: "16px",
         maxHeight: "calc(100vh - 42px)",
       }}
       onClick={onPanelClick}
@@ -350,10 +349,18 @@ const NodeTreeView = () => {
             );
           },
 
-          renderItemArrow: (props) => (
-            <ItemArrow {...props} addRunningActions={addRunningActions} />
-          ),
-          renderItemTitle: (props) => <ItemTitle {...props} />,
+          renderItemArrow: ({ item, context }) => {
+            const onClick = useCallback(() => {
+              addRunningActions(["nodeTreeView-arrow"]);
+              context.toggleExpandedState();
+            }, [context]);
+
+            return (
+              <ItemArrow item={item} context={context} onClick={onClick} />
+            );
+          },
+
+          renderItemTitle: ({ title }) => <ItemTitle title={title} />,
           renderDragBetweenLine: (props) => <DragBetweenLine {...props} />,
         }}
         props={{

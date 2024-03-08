@@ -13,6 +13,7 @@ import {
 import { useFavicon, useNavigatorPanelHandlers } from "./hooks";
 import { NavigatorPanelProps } from "./types";
 import { PanelButton } from "./components/PanelButton";
+import { PanelHeader } from "@_components/common/panelHeader";
 
 export default function NavigatorPanel(props: NavigatorPanelProps) {
   const {
@@ -69,15 +70,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
   return useMemo(() => {
     return currentFileUid !== "" ? (
       <>
-        <div
-          id="NavigatorPanel"
-          className="border-bottom padding-m"
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
+        <PanelHeader id="NavigatorPanel" className="border-bottom padding-m">
           <div
             className="gap-s"
             style={{ overflow: "hidden" }}
@@ -95,7 +88,8 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
             )}
           </div>
           <PanelButton />
-        </div>
+        </PanelHeader>
+
         {navigatorDropdownType && (
           <AdditionalPanel navigatorPanel={navigatorPanelRef.current} />
         )}

@@ -1,4 +1,4 @@
-import React, { FC, useContext, useRef } from "react";
+import React, { FC, useRef } from "react";
 
 import cx from "classnames";
 
@@ -16,7 +16,8 @@ interface AdditionalPanelProps {
 export const AdditionalPanel: FC<AdditionalPanelProps> = ({
   navigatorPanel,
 }) => {
-  const { workspace, project, navigatorDropdownType, projectHandlers } = useAppState();
+  const { workspace, project, navigatorDropdownType, projectHandlers } =
+    useAppState();
 
   const navigatorDropDownRef = useRef<HTMLDivElement | null>(null);
 

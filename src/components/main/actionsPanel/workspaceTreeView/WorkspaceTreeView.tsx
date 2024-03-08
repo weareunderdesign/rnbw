@@ -43,6 +43,7 @@ import {
 } from "./hooks";
 import { useSaveCommand } from "@_pages/main/processor/hooks";
 import { setWebComponentOpen } from "@_redux/main/stageView";
+import { ItemArrow, ItemTitle } from "@_components/common/treeComponents";
 
 const AutoExpandDelayOnDnD = 1 * 1000;
 export default function WorkspaceTreeView() {
@@ -66,11 +67,8 @@ export default function WorkspaceTreeView() {
     recentProjectContexts,
     invalidFileNodes,
   } = useAppState();
-  const {
-    addRunningActions,
-    removeRunningActions,
-    importProject,
-  } = useContext(MainContext);
+  const { addRunningActions, removeRunningActions, importProject } =
+    useContext(MainContext);
   const navigate = useNavigate();
   const { project, "*": rest } = useParams();
 
@@ -239,8 +237,8 @@ export default function WorkspaceTreeView() {
                     nodeData.kind === "directory"
                       ? "folder"
                       : nodeData.ext
-                      ? nodeData.ext.slice(1)
-                      : nodeData.ext
+                        ? nodeData.ext.slice(1)
+                        : nodeData.ext
                   ];
                 return refData;
               }, []);
@@ -396,10 +394,10 @@ export default function WorkspaceTreeView() {
                             props.item.data?.parentUid === "ROOT"
                               ? "home"
                               : fileReferenceData &&
-                                fileReferenceData["Icon"] &&
-                                fileReferenceData["Icon"] !== "md"
-                              ? fileReferenceData["Icon"]
-                              : "page"}
+                                  fileReferenceData["Icon"] &&
+                                  fileReferenceData["Icon"] !== "md"
+                                ? fileReferenceData["Icon"]
+                                : "page"}
                           </SVGIconI>
                         ) : (
                           <div className="icon-xs">
@@ -424,50 +422,24 @@ export default function WorkspaceTreeView() {
                 </>
               );
             },
-            renderItemArrow: ({ item, context }) => {
-              return (
-                <>
-                  {item.isFolder ? (
-                    context.isExpanded ? (
-                      <SVGIconI {...{ class: "icon-xs" }}>down</SVGIconI>
-                    ) : (
-                      <SVGIconII {...{ class: "icon-xs" }}>right</SVGIconII>
-                    )
-                  ) : (
-                    <div className="icon-xs"></div>
-                  )}
-                </>
-              );
-            },
-            renderItemTitle: (props) => {
-              const fileOrDirectoryTitle = props?.title;
-              const fileExt = !!props.item?.data?.data?.ext
-                ? `.${props.item?.data?.data?.ext}`
+            renderItemArrow: ({ item, context }) => (
+              <ItemArrow item={item} context={context} />
+            ),
+            renderItemTitle: ({ title, item }) => {
+              const fileOrDirectoryTitle = title;
+              const fileExt = !!item?.data?.data?.ext
+                ? `.${item?.data?.data?.ext}`
                 : "";
               const fileOrDirTitle = fileOrDirectoryTitle + fileExt;
 
               return (
-                <>
-                  <span
-                    className="justify-start text-s gap-s align-center"
-                    style={{
-                      width: "100%",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {fileOrDirTitle}
-                    {fileTree[props.item.data.uid] &&
-                      (fileTree[props.item.data.uid].data as TFileNodeData)
-                        .changed && (
-                        <div
-                          className="radius-s foreground-primary"
-                          title="unsaved file"
-                          style={{ width: "6px", height: "6px" }}
-                        />
-                      )}
-                  </span>
-                </>
+                <ItemTitle
+                  title={fileOrDirTitle}
+                  isChanged={
+                    fileTree[item.data.uid] &&
+                    (fileTree[item.data.uid].data as TFileNodeData).changed
+                  }
+                />
               );
             },
             renderRenameInput: (props) => {
@@ -509,10 +481,7 @@ export default function WorkspaceTreeView() {
                       onChange={onChange}
                       onBlur={onBlur}
                     />
-                    <button
-                      ref={props.submitButtonRef}
-                      className={"hidden"}
-                    ></button>
+                    <button ref={props.submitButtonRef} className={"hidden"} />
                   </form>
                 </>
               );

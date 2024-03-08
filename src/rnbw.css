@@ -4,9 +4,7 @@
   outline-style: solid;
   outline-offset: -1px;
 }
-body {
-  cursor: default !important;
-}
+body,
 #CodeView *:hover,
 #StageView *:hover {
   cursor: default !important;
@@ -14,19 +12,10 @@ body {
 .target {
   cursor: move;
 }
-.dragging-tree * {
-  cursor: default !important;
-  cursor: -webkit-default !important;
-  cursor: -moz-default !important;
-  cursor: default !important;
-}
-body.inheritCursors * {
-  cursor: inherit !important;
-}
+
 .outline-none {
   outline: none;
 }
-
 .outline-default {
   outline-color: var(--color-tertiary-background);
 }
@@ -34,19 +23,15 @@ body.inheritCursors * {
 .outline-primary {
   outline-color: var(--color-primary);
 }
-
 .outline-positive {
   outline-color: var(--color-positive);
 }
-
 .outline-negative {
   outline-color: var(--color-negative);
 }
-
 .outline-solid {
   outline-style: solid;
 }
-
 .outline-dotted {
   outline-style: dotted;
 }
@@ -74,7 +59,6 @@ body.inheritCursors * {
 
 [cmdk-dialog] {
   position: fixed;
-
   top: 50vh;
   left: 50vw;
   transform: translate(-50%, -50%);
@@ -102,7 +86,6 @@ body.inheritCursors * {
 [cmdk-list] {
   min-width: 195px;
   width: auto;
-
   scroll-padding-block-start: 8px;
   scroll-padding-block-end: 8px;
 }
@@ -173,7 +156,7 @@ body.inheritCursors * {
 }
 /* panels style */
 
-.panelResize {
+.panel-resize {
   width: 1px;
 }
 
@@ -190,7 +173,7 @@ body.inheritCursors * {
   transition: 0.3s all;
 }
 
-#SettingsPanel {
+#Settings {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -198,7 +181,7 @@ body.inheritCursors * {
 
 .settings-item {
   display: grid;
-  grid-template-columns: 50px 1fr 16px;
+  grid-template-columns: 50px 1fr 20px;
   align-items: center;
 }
 
@@ -219,8 +202,7 @@ body.inheritCursors * {
 
 .action-button {
   visibility: visible;
-  height: 16px;
-  width: 16px !important;
+  padding: 4px;
   display: flex;
   justify-content: center;
   align-items: center;

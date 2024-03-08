@@ -52,13 +52,13 @@ export default function ResizablePanels({
           {showActionsPanel && actionPanel}
         </Panel>
 
-        {showActionsPanel && <PanelResizeHandle className="panelResize" />}
+        {showActionsPanel && <PanelResizeHandle className="panel-resize" />}
 
         <Panel defaultSize={sizes[1]} minSize={30}>
           {stageView}
         </Panel>
 
-        {showCodeView && <PanelResizeHandle className="panelResize" />}
+        {showCodeView && <PanelResizeHandle className="panel-resize" />}
 
         <Panel
           ref={codeViewRef}
