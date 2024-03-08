@@ -1,5 +1,3 @@
-import { Buffer } from "buffer";
-
 export const _fs = window.Filer.fs;
 export const _path = window.Filer.path;
 export const _sh = new _fs.Shell();
