@@ -411,7 +411,7 @@ export const downloadIDBProject = async (
   projectPath: string,
 ): Promise<void> => {
   return new Promise<void>(async (resolve, reject) => {
-    alert("Downloading project, please wait...")
+    alert("Downloading project, please wait...");
     try {
       const zip = new JSZip();
 
