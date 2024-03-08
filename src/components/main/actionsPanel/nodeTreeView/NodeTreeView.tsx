@@ -185,7 +185,7 @@ const NodeTreeView = () => {
         width: "100%",
         height: "100%",
         overflow: "auto",
-        paddingBottom:"16px",
+        paddingBottom: "16px",
         maxHeight: "calc(100vh - 42px)",
       }}
       onClick={onPanelClick}
@@ -291,33 +291,21 @@ const NodeTreeView = () => {
 
             return (
               <li
-                className={cx(
-                  props.context.isSelected && "background-secondary",
-
-                  props.context.isDraggingOver && "",
-                  props.context.isDraggingOverParent && "",
-
-                  props.context.isFocused && "",
-                )}
+                className={`${props.context.isSelected && "background-secondary"}`}
                 {...props.context.itemContainerWithChildrenProps}
               >
                 <div
                   key={`NodeTreeView-${props.item.index}${props.item.data.data.nodeName}`}
                   id={`NodeTreeView-${props.item.index}`}
-                  className={cx(
-                    "justify-stretch",
-                    "padding-xs",
-                    "outline-default",
-
+                  className={`justify-stretch padding-xs outline-default ${
                     props.context.isSelected &&
-                      "background-tertiary outline-none",
+                    "background-tertiary outline-none"
+                  } ${
                     !props.context.isSelected &&
-                      props.context.isFocused &&
-                      "outline",
-
-                    props.context.isDraggingOver && "outline",
-                    props.context.isDraggingOverParent && "",
-                  )}
+                    props.context.isFocused &&
+                    "outline"
+                  } ${props.context.isDraggingOver && "outline"}
+                  `}
                   style={{
                     flexWrap: "nowrap",
                     paddingLeft: `${props.depth * 18}px`,

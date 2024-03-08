@@ -66,11 +66,8 @@ export default function WorkspaceTreeView() {
     recentProjectContexts,
     invalidFileNodes,
   } = useAppState();
-  const {
-    addRunningActions,
-    removeRunningActions,
-    importProject,
-  } = useContext(MainContext);
+  const { addRunningActions, removeRunningActions, importProject } =
+    useContext(MainContext);
   const navigate = useNavigate();
   const { project, "*": rest } = useParams();
 
@@ -239,8 +236,8 @@ export default function WorkspaceTreeView() {
                     nodeData.kind === "directory"
                       ? "folder"
                       : nodeData.ext
-                      ? nodeData.ext.slice(1)
-                      : nodeData.ext
+                        ? nodeData.ext.slice(1)
+                        : nodeData.ext
                   ];
                 return refData;
               }, []);
@@ -335,37 +332,27 @@ export default function WorkspaceTreeView() {
               return (
                 <>
                   <li
-                    className={cx(
-                      props.context.isSelected && "background-secondary",
-
-                      props.context.isDraggingOver && "",
-                      props.context.isDraggingOverParent && "",
-
-                      props.context.isFocused && "",
-                    )}
+                    className={`
+                      ${props.context.isSelected && "background-secondary"}`}
                     {...props.context.itemContainerWithChildrenProps}
                   >
                     <div
                       id={`FileTreeView-${generateQuerySelector(
                         props.item.index.toString(),
                       )}`}
-                      className={cx(
-                        "justify-stretch",
-                        "padding-xs",
-                        "outline-default",
-                        "gap-s",
-
-                        props.context.isSelected &&
-                          "background-tertiary outline-none",
-                        !props.context.isSelected &&
+                      className={`
+                        justify-stretch padding-xs outline-default gap-s ${
+                          props.context.isSelected &&
+                          "background-tertiary outline-none"
+                        }
+                        ${
+                          !props.context.isSelected &&
                           props.context.isFocused &&
-                          "outline",
-
-                        props.context.isDraggingOver && "outline",
-                        props.context.isDraggingOverParent && "",
-
-                        invalidFileNodes[props.item.data.uid] && "opacity-m",
-                      )}
+                          "outline"
+                        }
+                        ${props.context.isDraggingOver && "outline"}
+                        ${invalidFileNodes[props.item.data.uid] && "opacity-m"}
+                      `}
                       style={{
                         flexWrap: "nowrap",
                         paddingLeft: `${props.depth * 18}px`,
@@ -396,10 +383,10 @@ export default function WorkspaceTreeView() {
                             props.item.data?.parentUid === "ROOT"
                               ? "home"
                               : fileReferenceData &&
-                                fileReferenceData["Icon"] &&
-                                fileReferenceData["Icon"] !== "md"
-                              ? fileReferenceData["Icon"]
-                              : "page"}
+                                  fileReferenceData["Icon"] &&
+                                  fileReferenceData["Icon"] !== "md"
+                                ? fileReferenceData["Icon"]
+                                : "page"}
                           </SVGIconI>
                         ) : (
                           <div className="icon-xs">
@@ -498,7 +485,7 @@ export default function WorkspaceTreeView() {
                       id={"FileTreeView-RenameInput"}
                       {...props.inputProps}
                       ref={props.inputRef}
-                      className={cx("text-s")}
+                      className={`text-s`}
                       style={{
                         outline: "none",
                         margin: "0",

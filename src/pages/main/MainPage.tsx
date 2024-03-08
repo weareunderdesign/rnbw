@@ -262,10 +262,8 @@ export default function MainPage() {
         >
           {/* search input */}
           <div
-            className={cx(
-              "gap-m box-l padding-m justify-start",
-              validMenuItemCount === 0 ? "" : "border-bottom",
-            )}
+            className={`gap-m box-l padding-m justify-start ${validMenuItemCount === 0 ? "" : "border-bottom"}
+            `}
           >
             <Command.Input
               value={cmdkSearchContent}
@@ -604,10 +602,7 @@ export default function MainPage() {
             {(currentCmdkPage === "Add" || currentCmdkPage === "Jumpstart") &&
               false && (
                 <div
-                  className={cx(
-                    "box align-center border-left padding-l text-l",
-                    !!hoveredMenuItemDescription ? "" : "opacity-m",
-                  )}
+                  className={`box align-center border-left padding-l text-l ${!!hoveredMenuItemDescription ? "" : "opacity-m"}`}
                 >
                   {!!hoveredMenuItemDescription
                     ? hoveredMenuItemDescription
