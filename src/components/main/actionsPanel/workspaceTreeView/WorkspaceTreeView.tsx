@@ -6,7 +6,6 @@ import React, {
   useRef,
 } from "react";
 
-import cx from "classnames";
 import { debounce } from "lodash";
 import { DraggingPositionItem } from "react-complex-tree";
 import { useDispatch } from "react-redux";

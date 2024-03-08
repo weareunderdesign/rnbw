@@ -1,6 +1,4 @@
 import React, { useCallback, useEffect } from "react";
-
-import cx from "classnames";
 import { Command } from "cmdk";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
