@@ -37,6 +37,7 @@ import {
   setActivePanel,
   setNavigatorDropdownType,
 } from "@_redux/main/processor";
+import { AnyFunction } from "./types";
 
 export const addDefaultCmdkActions = (
   cmdkReferenceData: TCmdkReferenceData,
@@ -416,3 +417,16 @@ export const setSystemTheme = () => {
     document.documentElement.setAttribute("data-theme", "light");
   }
 };
+
+
+
+export function debounce<F extends AnyFunction>(func: F, wait: number): (...args: Parameters<F>) => void {
+  let timeoutId: ReturnType<typeof setTimeout>;
+
+  return function debounced(...args: Parameters<F>) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      func(...args);
+    }, wait);
+  };
+}

@@ -7,7 +7,7 @@ import React, {
   useState,
 } from "react";
 
-import { debounce } from "lodash";
+
 import { useDispatch } from "react-redux";
 
 import { TreeView } from "@_components/common";
@@ -17,6 +17,7 @@ import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { THtmlNodeData } from "@_node/index";
 import { TNode, TNodeUid } from "@_node/types";
 import {
+  debounce,
   isWebComponentDblClicked,
   onWebComponentDblClick,
   scrollToElement,

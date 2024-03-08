@@ -7,3 +7,5 @@ export type ResizablePanelsProps = {
   stageView: ReactNode;
   codeView: ReactNode;
 };
+
+export type AnyFunction = (...args: any[]) => any;

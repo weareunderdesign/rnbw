@@ -6,7 +6,6 @@ import React, {
   useRef,
 } from "react";
 
-import { debounce } from "lodash";
 import { DraggingPositionItem } from "react-complex-tree";
 import { useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
@@ -42,6 +41,7 @@ import {
 } from "./hooks";
 import { useSaveCommand } from "@_pages/main/processor/hooks";
 import { setWebComponentOpen } from "@_redux/main/stageView";
+import { debounce } from "@_pages/main/helper";
 
 const AutoExpandDelayOnDnD = 1 * 1000;
 export default function WorkspaceTreeView() {

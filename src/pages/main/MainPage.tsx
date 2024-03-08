@@ -2,8 +2,6 @@ import React, { useCallback, useEffect } from "react";
 import { Command } from "cmdk";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { debounce } from "lodash";
-
 import { Loader, SVGIcon, Notification } from "@_components/common";
 import { ActionsPanel, CodeView, StageView } from "@_components/main";
 import { LogAllow } from "@_constants/global";
@@ -38,6 +36,7 @@ import {
 } from "./hooks";
 import Processor from "./processor";
 import ResizablePanels from "./ResizablePanels";
+import { debounce } from "./helper";
 
 export default function MainPage() {
   // redux

@@ -11,8 +11,8 @@ import { useAppState } from "@_redux/useAppState";
 
 import { saveFileContent } from "../helpers";
 import { setCurrentCommand } from "@_redux/main/cmdk";
-import { debounce } from "lodash";
 import { setLoadingFalse, setLoadingTrue } from "@_redux/main/processor";
+import { debounce } from "@_pages/main/helper";
 
 export const useSaveCommand = () => {
   const dispatch = useDispatch();

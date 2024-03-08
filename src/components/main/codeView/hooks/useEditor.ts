@@ -7,7 +7,6 @@ import {
   useState,
 } from "react";
 
-import { debounce } from "lodash";
 import { editor, KeyCode, KeyMod } from "monaco-editor";
 import { useDispatch } from "react-redux";
 
@@ -31,6 +30,7 @@ import {
   setIsCodeTyping,
   setIsContentProgrammaticallyChanged,
 } from "@_redux/main/reference";
+import { debounce } from "@_pages/main/helper";
 
 const useEditor = () => {
   const dispatch = useDispatch();
