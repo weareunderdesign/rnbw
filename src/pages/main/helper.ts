@@ -14,6 +14,7 @@ import {
 } from "@_redux/main/fileTree";
 import { FileTree_Event_ClearActionType } from "@_redux/main/fileTree/event";
 import {
+  clearLastNodesContents,
   clearNodeTreeViewState,
   setNodeTree,
   setValidNodeTree,
@@ -122,6 +123,7 @@ export const clearProjectSession = (dispatch: Dispatch<AnyAction>) => {
   dispatch(setInitialFileUidToOpen(""));
   dispatch(setCurrentFileUid(""));
   dispatch(setPrevFileUid(""));
+  dispatch(clearLastNodesContents());
   dispatch(setPrevRenderableFileUid(""));
   dispatch(clearFileTreeViewState());
   dispatch({ type: FileTree_Event_ClearActionType });

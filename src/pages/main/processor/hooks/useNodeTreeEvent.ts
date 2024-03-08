@@ -101,7 +101,6 @@ export const useNodeTreeEvent = () => {
     const substring = content.substring(startIndex, endIndex + 1);
     return substring;
   };
-  const [newSequenceContent, setNewSequenceContent] = useState<string>("");
   useEffect(() => {
     isCurrentFileContentChanged.current = true;
     // validate
@@ -235,19 +234,19 @@ export const useNodeTreeEvent = () => {
       }
     }
 
-    if (validNodeTree[selectedNodeUids[0]]) {
-      const parentUid = validNodeTree[selectedNodeUids[0]].parentUid
-        ? validNodeTree[selectedNodeUids[0]].parentUid
-        : RootNodeUid;
-      const selectedNodeSequenceContent =
-        validNodeTree[selectedNodeUids[0]].sequenceContent;
-      const parentNodeSequenceContent =
-        validNodeTree[parentUid!].sequenceContent;
-      setNewSequenceContent(
-        parentNodeSequenceContent.replace(selectedNodeSequenceContent, ""),
-      );
-      dispatch(setLastNodesContents(newSequenceContent));
-    }
+    // if (validNodeTree[selectedNodeUids[0]]) {
+    //   const parentUid = validNodeTree[selectedNodeUids[0]].parentUid
+    //     ? validNodeTree[selectedNodeUids[0]].parentUid
+    //     : RootNodeUid;
+    //   const selectedNodeSequenceContent =
+    //     validNodeTree[selectedNodeUids[0]].sequenceContent;
+    //   const parentNodeSequenceContent =
+    //     validNodeTree[parentUid!].sequenceContent;
+    //   setNewSequenceContent(
+    //     parentNodeSequenceContent.replace(selectedNodeSequenceContent, ""),
+    //   );
+    //   dispatch(setLastNodesContents(newSequenceContent));
+    // }
     // sync node-tree
     dispatch(setNodeTree(nodeTree));
     const _validNodeTree = getValidNodeTree(nodeTree);
@@ -296,9 +295,7 @@ export const useNodeTreeEvent = () => {
         _validNodeTree,
         lastNodeUids,
       );
-      dispatch(
-        setExpandedNodeTreeNodes([...validExpandedItems, ...needToExpandItems]),
-      );
+      dispatch(setExpandedNodeTreeNodes([...needToExpandItems]));
       if (!isSelectedNodeUidsChanged.current) {
         // this change is from 'node actions' or 'typing in code-view'
         let _selectedNodeUids: TNodeUid[] = [];
@@ -343,7 +340,7 @@ export const useNodeTreeEvent = () => {
     }
     dispatch(setLoadingFalse());
     removeRunningActions(["processor-update"]);
-  }, [currentFileContent, currentFileUid, newSequenceContent]);
+  }, [currentFileContent, currentFileUid]);
 
   // expand nodes that need to be expanded when it's just select-event
   useEffect(() => {

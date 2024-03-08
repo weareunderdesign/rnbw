@@ -24,6 +24,7 @@ import {
 import {
   NodeTree_Event_RedoActionType,
   NodeTree_Event_UndoActionType,
+  setExpandedNodeTreeNodes,
 } from "@_redux/main/nodeTree";
 import {
   setAutoSave,
@@ -39,6 +40,10 @@ import { TCmdkKeyMap, TCmdkReferenceData } from "@_types/main";
 
 import { setSystemTheme } from "../helper";
 import { ActionCreators as UndoActionCreators } from "redux-undo";
+import {
+  getNeedToExpandNodeUids,
+  getValidNodeTree,
+} from "../processor/helpers";
 
 interface IUseCmdk {
   cmdkReferenceData: TCmdkReferenceData;
@@ -75,6 +80,8 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     cmdkOpen,
     cmdkPages,
     currentCommand,
+    nodeTree,
+    lastNodesContents,
   } = useAppState();
 
   // handlers

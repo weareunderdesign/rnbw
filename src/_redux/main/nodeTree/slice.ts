@@ -158,6 +158,9 @@ const nodeTreeSlice = createSlice({
           ? [...state.lastNodesContents]
           : [...state.lastNodesContents, newNodeContent];
     },
+    clearLastNodesContents(state) {
+      state.lastNodesContents = [];
+    },
   },
 });
 export const {
@@ -177,5 +180,6 @@ export const {
   clearNodeTreeViewState,
   setCopiedNodeDisplayName,
   setLastNodesContents,
+  clearLastNodesContents,
 } = nodeTreeSlice.actions;
 export const NodeTreeReducer = nodeTreeSlice.reducer;

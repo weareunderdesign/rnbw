@@ -17,10 +17,17 @@ import { markSelectedElements } from "./helpers";
 import { useCmdk, useMouseEvents, useSyncNode } from "./hooks";
 import { setLoadingFalse, setLoadingTrue } from "@_redux/main/processor";
 import { useZoom } from "./hooks/useZoom";
+import { setLastNodesContents } from "@_redux/main/nodeTree";
 
 export const IFrame = () => {
   const dispatch = useDispatch();
-  const { needToReloadIframe, iframeSrc, project } = useAppState();
+  const {
+    needToReloadIframe,
+    iframeSrc,
+    project,
+    validNodeTree,
+    selectedNodeUids,
+  } = useAppState();
   const { iframeRefRef, setIframeRefRef } = useContext(MainContext);
 
   const [iframeRefState, setIframeRefState] =
@@ -94,6 +101,13 @@ export const IFrame = () => {
 
           htmlNode.addEventListener("click", (e: MouseEvent) => {
             e.preventDefault();
+
+            validNodeTree[selectedNodeUids[0]] &&
+              dispatch(
+                setLastNodesContents(
+                  validNodeTree[selectedNodeUids[0]].sequenceContent,
+                ),
+              );
             onClick(e);
           });
           htmlNode.addEventListener("dblclick", (e: MouseEvent) => {
