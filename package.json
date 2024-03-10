@@ -8,6 +8,19 @@
     "deploy": "gh-pages -d dist",
     "pretty": "prettier --write \"src/**/*.*\""
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "src/**/*.{js,jsx,ts,tsx}": [
+      "prettier --write",
+      "eslint --fix",
+      "tsc --noEmit",
+      "git add"
+    ]
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -52,6 +65,8 @@
     "file-loader": "^6.2.0",
     "gh-pages": "^4.0.0",
     "html-webpack-plugin": "^5.5.0",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
     "monaco-editor-webpack-plugin": "^7.0.1",
     "prettier": "^3.0.3",
     "sass": "^1.55.0",

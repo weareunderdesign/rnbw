@@ -119,9 +119,9 @@ export const clearProjectSession = (dispatch: Dispatch<AnyAction>) => {
       favicon: null,
     }),
   );
-  dispatch(setFileTree({}));
-  dispatch(setInitialFileUidToOpen(""));
-  dispatch(setCurrentFileUid(""));
+        dispatch(setFileTree({}));
+        dispatch(setInitialFileUidToOpen(""));
+     dispatch(setCurrentFileUid(""));
   dispatch(setPrevFileUid(""));
   dispatch(setPrevRenderableFileUid(""));
   dispatch(clearFileTreeViewState());
