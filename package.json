@@ -13,7 +13,7 @@
     "src/**/*.{js,jsx,ts,tsx}": [
       "prettier --write",
       "eslint --fix",
-      "tsc --noEmit",
+      "tsc",
       "git add"
     ]
   },

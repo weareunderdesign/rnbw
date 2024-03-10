@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { DOMElement } from "react";
 
 import { Document } from "parse5/dist/tree-adapters/default";

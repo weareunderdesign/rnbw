@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react/prop-types */
+/* eslint-disable react/display-name */
 import React, { FC } from "react";
 
 interface ContainerProps {

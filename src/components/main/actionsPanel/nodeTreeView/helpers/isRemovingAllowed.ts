@@ -9,7 +9,7 @@ export const isRemovingAllowed = (
   let htmlTagCount = 0,
     bodyTagCount = 0,
     headTagCount = 0;
-  for (let x in nodeTree) {
+  for (const x in nodeTree) {
     (nodeTree[x]?.data as THtmlNodeData).name === "html" &&
       (nodeTree[x]?.data as THtmlNodeData).type === "tag" &&
       htmlTagCount++;
@@ -20,6 +20,7 @@ export const isRemovingAllowed = (
       (nodeTree[x]?.data as THtmlNodeData).type === "tag" &&
       headTagCount++;
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   uids.map((_uid: any) => {
     const node = nodeTree[_uid];
     const nodeData = nodeTree[_uid].data as THtmlNodeData;

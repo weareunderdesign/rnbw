@@ -1,5 +1,3 @@
-import { useContext } from "react";
-
 import { DraggingPosition, TreeItem, TreeItemIndex } from "react-complex-tree";
 
 import { getValidNodeUids } from "@_node/helpers";
@@ -14,7 +12,7 @@ import { useDispatch } from "react-redux";
 export const useNodeTreeCallback = (
   isDragging: React.MutableRefObject<boolean>,
 ) => {
-  const { validNodeTree, htmlReferenceData, lastNodesContents } = useAppState();
+  const { validNodeTree, htmlReferenceData } = useAppState();
   const dispatch = useDispatch();
 
   const { onMove } = useNodeActionHandlers();
@@ -25,8 +23,8 @@ export const useNodeTreeCallback = (
     dispatch(setLastNodesContents(validNodeTree[items[0]].sequenceContent));
     cb_selectNode(items as TNodeUid[]);
   };
-  const onFocusItem = (item: TreeItem) => {
-    cb_focusNode(item.index as TNodeUid);
+  const onFocusItem = () => {
+    cb_focusNode();
   };
   const onExpandItem = (item: TreeItem) => {
     cb_expandNode(item.index as TNodeUid);

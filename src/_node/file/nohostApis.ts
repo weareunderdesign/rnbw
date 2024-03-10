@@ -1,3 +1,5 @@
+//FIXME: This file is a temporary solution to use the Filer API in the browser.
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export const _fs = window.Filer.fs;
 export const _path = window.Filer.path;
 export const _sh = new _fs.Shell();

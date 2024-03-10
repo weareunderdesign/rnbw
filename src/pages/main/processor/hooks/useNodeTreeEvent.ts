@@ -95,12 +95,6 @@ export const useNodeTreeEvent = () => {
     dispatch(selectNodeTreeNodes(selectedNodeUids));
   }, [selectedNodeUids]);
 
-  const getSubString = (content: string): string => {
-    const startIndex = content.indexOf("<");
-    const endIndex = content.indexOf(">", startIndex);
-    const substring = content.substring(startIndex, endIndex + 1);
-    return substring;
-  };
   const [newSequenceContent, setNewSequenceContent] = useState<string>("");
   useEffect(() => {
     isCurrentFileContentChanged.current = true;
@@ -144,7 +138,9 @@ export const useNodeTreeEvent = () => {
         if (fileData.ext === "html") {
           dispatch(setIframeSrc(`rnbw${previewPath}`));
         }
-      } catch (err) {}
+      } catch (err) {
+        LogAllow && console.error(err);
+      }
       dispatch(setDoingFileAction(false));
       dispatch(setLoadingFalse());
     })();
@@ -160,6 +156,7 @@ export const useNodeTreeEvent = () => {
     } else {
       // dom-diff using morph
       if (fileData.ext === "html") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const iframe: any = document.getElementById("iframeId");
         if (iframe) {
           const iframeDoc = iframe.contentDocument;
@@ -282,8 +279,8 @@ export const useNodeTreeEvent = () => {
       //   : [];
       // console.log("TreeView-lastNodesContents", lastNodesContents);
       const lastNodeUids = [];
-      for (let uid in _validNodeTree) {
-        for (let lastNodeUid in lastNodesContents) {
+      for (const uid in _validNodeTree) {
+        for (const lastNodeUid in lastNodesContents) {
           if (
             lastNodesContents[lastNodeUid] ==
             _validNodeTree[uid].sequenceContent
@@ -301,7 +298,7 @@ export const useNodeTreeEvent = () => {
       );
       if (!isSelectedNodeUidsChanged.current) {
         // this change is from 'node actions' or 'typing in code-view'
-        let _selectedNodeUids: TNodeUid[] = [];
+        const _selectedNodeUids: TNodeUid[] = [];
 
         if (needToSelectNodePaths) {
           LogAllow && console.log("it's a rnbw-change from node-actions");

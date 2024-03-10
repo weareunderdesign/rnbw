@@ -60,6 +60,7 @@ export const sortUidsByMinStartIndex = (
     return start1 - start2; // Sort in descending order
   });
 };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getCopiedContent = (uid: TNodeUid, iframe: any) => {
   const ele = iframe?.contentWindow?.document?.querySelector(
     `[${StageNodeIdAttr}="${uid}"]`,

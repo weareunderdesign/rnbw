@@ -38,7 +38,6 @@ import { getCommandKey } from "@_services/global";
 import { TCmdkKeyMap, TCmdkReferenceData } from "@_types/main";
 
 import { setSystemTheme } from "../helper";
-import { ActionCreators as UndoActionCreators } from "redux-undo";
 
 interface IUseCmdk {
   cmdkReferenceData: TCmdkReferenceData;

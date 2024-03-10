@@ -464,6 +464,7 @@ export default function MainPage() {
                                   (currentCmdkPage === "Turn into" &&
                                     command.Group === "Recent")
                                 ) {
+                                  //ts-expect-error FIXME: fix this
                                 } else {
                                   dispatch(
                                     setCurrentCommand({ action: command.Name }),
@@ -599,9 +600,9 @@ export default function MainPage() {
             {(currentCmdkPage === "Add" || currentCmdkPage === "Jumpstart") &&
               false && (
                 <div
-                  className={`box align-center border-left padding-l text-l ${!!hoveredMenuItemDescription ? "" : "opacity-m"}`}
+                  className={`box align-center border-left padding-l text-l ${hoveredMenuItemDescription ? "" : "opacity-m"}`}
                 >
-                  {!!hoveredMenuItemDescription
+                  {hoveredMenuItemDescription
                     ? hoveredMenuItemDescription
                     : "Description"}
                 </div>

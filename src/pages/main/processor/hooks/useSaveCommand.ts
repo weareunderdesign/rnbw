@@ -29,6 +29,7 @@ export const useSaveCommand = () => {
         break;
       case "SaveAll":
         onSaveProject();
+        break;
       default:
         return;
     }
@@ -45,7 +46,9 @@ export const useSaveCommand = () => {
     if (fileData.changed) {
       try {
         await saveFileContent(project, fileHandlers, currentFileUid, fileData);
-      } catch (err) {}
+      } catch (err) {
+        console.error(err);
+      }
 
       while (file) {
         file.data.changed = false;

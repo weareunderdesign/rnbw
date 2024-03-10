@@ -7,6 +7,7 @@ export type TNodeEventReducerState = {
 
 export type TNodeEvent = {
   type: TNodeEventType;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   param: any[];
 } | null;
 export type TNodeEventType =
