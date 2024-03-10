@@ -70,7 +70,7 @@ const add = ({
     }
     const closingTag = `</${tagName}>`;
 
-    const tagContent = !!HTMLElement.Content ? HTMLElement.Content : "";
+    const tagContent = HTMLElement.Content ? HTMLElement.Content : "";
 
     const codeViewText =
       HTMLElement.Contain === "None"
@@ -122,14 +122,8 @@ const add = ({
     fb && fb();
   }
 };
-const remove = ({
-  dispatch,
-  nodeTree,
-  selectedUids,
-  codeViewInstanceModel,
-  formatCode,
-  fb,
-  cb,
+function remove({
+  dispatch, nodeTree, selectedUids, codeViewInstanceModel, formatCode, fb, cb,
 }: {
   dispatch: Dispatch<AnyAction>;
   nodeTree: TNodeTreeData;
@@ -138,14 +132,13 @@ const remove = ({
   formatCode: boolean;
   fb?: () => void;
   cb?: () => void;
-}) => {
+}) {
   try {
     const sortedUids = sortUidsByMaxEndIndex(selectedUids, nodeTree);
     sortedUids.forEach((uid) => {
       const node = nodeTree[uid];
       if (node) {
-        const { startCol, startLine, endCol, endLine } =
-          node.data.sourceCodeLocation;
+        const { startCol, startLine, endCol, endLine } = node.data.sourceCodeLocation;
         const edit = {
           range: new Range(startLine, startCol, endLine, endCol),
           text: "",
@@ -166,7 +159,7 @@ const remove = ({
     fb && fb();
     LogAllow && console.log(err);
   }
-};
+}
 
 const cut = async ({
   dispatch,
@@ -578,15 +571,16 @@ const rename = ({
     }
     const closingTag = `</${tagName}>`;
 
-    const tagContent = !!HTMLElement.Content ? HTMLElement.Content : "";
+    
 
     // **********************************************************
     // will replace with pureTagCode when we will not want to keep origianl innerHtml of the target node
     // **********************************************************
-    const pureTagCode =
-      HTMLElement.Contain === "None"
-        ? openingTag
-        : `${openingTag}${tagContent}${closingTag}`;
+    // const tagContent = HTMLElement.Content ? HTMLElement.Content : "";
+    // const pureTagCode =
+    //   HTMLElement.Contain === "None"
+    //     ? openingTag
+    //     : `${openingTag}${tagContent}${closingTag}`;
 
     const focusedNode = nodeTree[targetUid];
 
