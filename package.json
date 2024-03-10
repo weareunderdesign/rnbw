@@ -6,16 +6,14 @@
     "build": "cpx public/svg-icon.config.json dist -C && cpx public/nohost-sw.js dist -C && webpack --progress --mode production",
     "start": "webpack serve --mode development",
     "deploy": "gh-pages -d dist",
-    "prepare": "husky install",
     "lint": "eslint src",
-    "precommit": "npm run lint && lint-staged"
+    "pre-commit": "npm run lint && lint-staged"
   },
   "husky": {
     "hooks": {
       "pre-commit": "echo \"pre-commit hook\" && npm run precommit"
     }
   },
- 
   "lint-staged": {
     "src/**/*.{js,jsx,ts,tsx}": [
       "prettier --write",

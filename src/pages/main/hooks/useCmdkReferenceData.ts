@@ -3,13 +3,13 @@ import { useEffect, useMemo, useState } from "react";
 import { getMany } from "idb-keyval";
 
 import { LogAllow } from "@_constants/global";
-import { TProjectContext } from "@_redux/main/fileTree";
 import { useAppState } from "@_redux/useAppState";
-// @ts-ignore
+
+//@ts-expect-error csv files
 import cmdkRefActions from "@_ref/cmdk.ref/Actions.csv";
-// @ts-ignore
+//@ts-expect-error csv files
 import cmdkRefJumpstart from "@_ref/cmdk.ref/Jumpstart.csv";
-// @ts-ignore
+//@ts-expect-error csv files
 import filesRef from "@_ref/rfrncs/Files.csv";
 import {
   TCmdkContext,
