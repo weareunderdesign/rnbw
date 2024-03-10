@@ -7,7 +7,7 @@
     "start": "webpack serve --mode development",
     "deploy": "gh-pages -d dist",
     "lint": "eslint src",
-    "pre-commit": "npm run lint && lint-staged"
+    "precommit": "npm run lint && lint-staged"
   },
   "husky": {
     "hooks": {
