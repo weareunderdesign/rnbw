@@ -12,7 +12,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm run precommit"
+      "pre-commit": "echo \"pre-commit hook\" && npm run precommit"
     }
   },
  
