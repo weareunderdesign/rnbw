@@ -70,7 +70,11 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
   return useMemo(() => {
     return currentFileUid !== "" ? (
       <>
-        <PanelHeader id="NavigatorPanel" className="border-bottom padding-m">
+        <PanelHeader
+          id="NavigatorPanel"
+          className="border-bottom padding-m"
+          height="12px"
+        >
           <div
             className="gap-s"
             style={{ overflow: "hidden" }}
