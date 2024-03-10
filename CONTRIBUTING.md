@@ -16,7 +16,7 @@ the contributors’ community can be found on [github discussions](), where you 
 3. run the project from the root directory.
     
     ```
-    npm install --force
+    npm install
     ```
     
     ```
