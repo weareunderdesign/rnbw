@@ -37,10 +37,13 @@ import { THtmlElementsReference } from "@_types/main";
 import { useCmdk } from "./hooks/useCmdk";
 import { useNodeTreeCallback } from "./hooks/useNodeTreeCallback";
 import { useNodeViewState } from "./hooks/useNodeViewState";
-import { Container } from "./nodeTreeComponents/Container";
 import { DragBetweenLine } from "./nodeTreeComponents/DragBetweenLine";
 import { NodeIcon } from "./nodeTreeComponents/NodeIcon";
-import { ItemArrow, ItemTitle } from "@_components/common/treeComponents";
+import {
+  ItemArrow,
+  ItemTitle,
+  Container,
+} from "@_components/common/treeComponents";
 
 const AutoExpandDelayOnDnD = 1 * 1000;
 const dragAndDropConfig = {

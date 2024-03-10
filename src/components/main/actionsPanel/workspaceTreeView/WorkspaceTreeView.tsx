@@ -43,7 +43,11 @@ import {
 } from "./hooks";
 import { useSaveCommand } from "@_pages/main/processor/hooks";
 import { setWebComponentOpen } from "@_redux/main/stageView";
-import { ItemArrow, ItemTitle } from "@_components/common/treeComponents";
+import {
+  Container,
+  ItemArrow,
+  ItemTitle,
+} from "@_components/common/treeComponents";
 
 const AutoExpandDelayOnDnD = 1 * 1000;
 export default function WorkspaceTreeView() {
@@ -213,12 +217,8 @@ export default function WorkspaceTreeView() {
           expandedItems={expandedItems}
           selectedItems={selectedItems}
           renderers={{
-            renderTreeContainer: ({ containerProps, children }) => {
-              return <ul {...containerProps}>{children}</ul>;
-            },
-            renderItemsContainer: ({ containerProps, children }) => {
-              return <ul {...containerProps}>{children}</ul>;
-            },
+            renderTreeContainer: (props) => <Container {...props} />,
+            renderItemsContainer: (props) => <Container {...props} />,
 
             renderItem: (props) => {
               useEffect(() => {
