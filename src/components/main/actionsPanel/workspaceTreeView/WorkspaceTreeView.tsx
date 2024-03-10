@@ -13,7 +13,7 @@ import { useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { RootNodeUid } from "@_constants/main";
-import { SVGIconI, SVGIconII, TreeView } from "@_components/common";
+import { SVGIconI, TreeView } from "@_components/common";
 import {
   getNormalizedPath,
   createURLPath,
@@ -47,6 +47,7 @@ import {
   Container,
   ItemArrow,
   ItemTitle,
+  TreeItem,
 } from "@_components/common/treeComponents";
 
 const AutoExpandDelayOnDnD = 1 * 1000;
@@ -332,60 +333,21 @@ export default function WorkspaceTreeView() {
 
               return (
                 <>
-                  <li
-                    className={cx(
-                      props.context.isSelected && "background-secondary",
-
-                      props.context.isDraggingOver && "",
-                      props.context.isDraggingOverParent && "",
-
-                      props.context.isFocused && "",
-                    )}
-                    {...props.context.itemContainerWithChildrenProps}
-                  >
-                    <div
-                      id={`FileTreeView-${generateQuerySelector(
-                        props.item.index.toString(),
-                      )}`}
-                      className={cx(
-                        "justify-stretch",
-                        "padding-xs",
-                        "outline-default",
-                        "gap-s",
-
-                        props.context.isSelected &&
-                          "background-tertiary outline-none",
-                        !props.context.isSelected &&
-                          props.context.isFocused &&
-                          "outline",
-
-                        props.context.isDraggingOver && "outline",
-                        props.context.isDraggingOverParent && "",
-
-                        invalidFileNodes[props.item.data.uid] && "opacity-m",
-                      )}
-                      style={{
-                        flexWrap: "nowrap",
-                        paddingLeft: `${props.depth * 18}px`,
-                      }}
-                      {...props.context.itemContainerWithoutChildrenProps}
-                      {...props.context.interactiveElementProps}
-                      onClick={onClick}
-                      onFocus={() => {}}
-                      onMouseEnter={onMouseEnter}
-                      onMouseLeave={onMouseLeave}
-                      onDragStart={onDragStart}
-                      onDragEnter={onDragEnter}
-                    >
-                      <div
-                        className="gap-s padding-xs"
-                        style={{
-                          width: "fit-content",
-                          paddingRight: `0px`,
-                        }}
-                      >
-                        {props.arrow}
-
+                  <TreeItem
+                    {...props}
+                    id={`FileTreeView-${generateQuerySelector(
+                      props.item.index.toString(),
+                    )}`}
+                    eventHandlers={{
+                      onClick: onClick,
+                      onMouseEnter: onMouseEnter,
+                      onMouseLeave: onMouseLeave,
+                      onFocus: () => {},
+                      onDragStart: onDragStart,
+                      onDragEnter: onDragEnter,
+                    }}
+                    nodeIcon={
+                      <>
                         {fileReferenceData ? (
                           <SVGIconI {...{ class: "icon-xs" }}>
                             {props.item.data?.data.kind === "file" &&
@@ -408,17 +370,10 @@ export default function WorkspaceTreeView() {
                             </SVGIconI>
                           </div>
                         )}
-                      </div>
-
-                      {props.title}
-                    </div>
-
-                    {props.context.isExpanded ? (
-                      <>
-                        <div>{props.children}</div>
+                        {props.title}
                       </>
-                    ) : null}
-                  </li>
+                    }
+                  />
                 </>
               );
             },
@@ -465,7 +420,10 @@ export default function WorkspaceTreeView() {
 
               return (
                 <>
-                  <form {...props.formProps} className={"box"}>
+                  <form
+                    {...props.formProps}
+                    className={"align-center justify-start"}
+                  >
                     <input
                       id={"FileTreeView-RenameInput"}
                       {...props.inputProps}
@@ -477,6 +435,7 @@ export default function WorkspaceTreeView() {
                         border: "none",
                         padding: "0",
                         background: "transparent",
+                        height: "12px",
                       }}
                       onChange={onChange}
                       onBlur={onBlur}

@@ -7,7 +7,6 @@ import React, {
   useState,
 } from "react";
 
-import cx from "classnames";
 import { debounce } from "lodash";
 import { useDispatch } from "react-redux";
 
@@ -43,6 +42,7 @@ import {
   ItemArrow,
   ItemTitle,
   Container,
+  TreeItem,
 } from "@_components/common/treeComponents";
 
 const AutoExpandDelayOnDnD = 1 * 1000;
@@ -292,63 +292,29 @@ const NodeTreeView = () => {
             };
 
             return (
-              <li
-                className={cx(
-                  props.context.isSelected && "background-secondary",
-
-                  props.context.isDraggingOver && "",
-                  props.context.isDraggingOverParent && "",
-
-                  props.context.isFocused && "",
-                )}
-                {...props.context.itemContainerWithChildrenProps}
-              >
-                <div
-                  key={`NodeTreeView-${props.item.index}${props.item.data.data.nodeName}`}
-                  id={`NodeTreeView-${props.item.index}`}
-                  className={cx(
-                    "justify-stretch",
-                    "padding-xs",
-                    "outline-default",
-
-                    props.context.isSelected &&
-                      "background-tertiary outline-none",
-                    !props.context.isSelected &&
-                      props.context.isFocused &&
-                      "outline",
-
-                    props.context.isDraggingOver && "outline",
-                    props.context.isDraggingOverParent && "",
-                  )}
-                  style={{
-                    flexWrap: "nowrap",
-                    paddingLeft: `${props.depth * 18}px`,
-                  }}
-                  {...props.context.itemContainerWithoutChildrenProps}
-                  {...props.context.interactiveElementProps}
-                  onClick={onClick}
-                  onDoubleClick={onDoubleClick}
-                  onMouseEnter={onMouseEnter}
-                  onMouseLeave={onMouseLeave}
-                  onFocus={() => {}}
-                  onDragStart={onDragStart}
-                  onDragEnter={onDragEnter}
-                >
-                  <div className="gap-s padding-xs" style={{ width: "100%" }}>
-                    {props.arrow}
-
-                    <NodeIcon
-                      {...{
-                        htmlElementReferenceData,
-                        nodeName: props.item.data.data.nodeName,
-                        componentTitle: props.title,
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {props.context.isExpanded ? <div>{props.children}</div> : null}
-              </li>
+              <TreeItem
+                {...props}
+                key={`NodeTreeView-${props.item.index}${props.item.data.data.nodeName}`}
+                id={`NodeTreeView-${props.item.index}`}
+                eventHandlers={{
+                  onClick: onClick,
+                  onDoubleClick: onDoubleClick,
+                  onMouseEnter: onMouseEnter,
+                  onMouseLeave: onMouseLeave,
+                  onFocus: () => {},
+                  onDragStart: onDragStart,
+                  onDragEnter: onDragEnter,
+                }}
+                nodeIcon={
+                  <NodeIcon
+                    {...{
+                      htmlElementReferenceData,
+                      nodeName: props.item.data.data.nodeName,
+                      componentTitle: props.title,
+                    }}
+                  />
+                }
+              />
             );
           },
 

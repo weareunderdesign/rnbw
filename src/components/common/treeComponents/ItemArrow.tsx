@@ -1,14 +1,7 @@
 import React, { FC } from "react";
 
-import { TreeItem, TreeItemRenderContext } from "react-complex-tree";
-
 import { SVGIconI, SVGIconII } from "@_components/common";
-
-interface ItemArrowProps {
-  item: TreeItem<any>;
-  context: TreeItemRenderContext<never>;
-  onClick?: () => void;
-}
+import { ItemArrowProps } from "./types";
 
 export const ItemArrow: FC<ItemArrowProps> = React.memo(
   ({ item, context, onClick }) => {

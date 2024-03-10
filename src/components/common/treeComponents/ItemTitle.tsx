@@ -1,9 +1,5 @@
 import React, { FC } from "react";
-
-interface ItemTitleProps {
-  title: string;
-  isChanged?: boolean;
-}
+import { ItemTitleProps } from "./types";
 
 export const ItemTitle: FC<ItemTitleProps> = React.memo(
   ({ title, isChanged = false }) => {
@@ -17,6 +13,7 @@ export const ItemTitle: FC<ItemTitleProps> = React.memo(
         }}
       >
         {title}
+
         {isChanged && (
           <div
             className="radius-s foreground-primary"
