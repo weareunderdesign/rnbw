@@ -349,18 +349,20 @@ export default function WorkspaceTreeView() {
                     nodeIcon={
                       <>
                         {fileReferenceData ? (
-                          <SVGIconI {...{ class: "icon-xs" }}>
-                            {props.item.data?.data.kind === "file" &&
-                            props.item.data?.data.name === "index" &&
-                            props.item.data?.data.type === "html" &&
-                            props.item.data?.parentUid === "ROOT"
-                              ? "home"
-                              : fileReferenceData &&
-                                  fileReferenceData["Icon"] &&
-                                  fileReferenceData["Icon"] !== "md"
-                                ? fileReferenceData["Icon"]
-                                : "page"}
-                          </SVGIconI>
+                          <div className="icon-xs">
+                            <SVGIconI {...{ class: "icon-xs" }}>
+                              {props.item.data?.data.kind === "file" &&
+                              props.item.data?.data.name === "index" &&
+                              props.item.data?.data.type === "html" &&
+                              props.item.data?.parentUid === "ROOT"
+                                ? "home"
+                                : fileReferenceData &&
+                                    fileReferenceData["Icon"] &&
+                                    fileReferenceData["Icon"] !== "md"
+                                  ? fileReferenceData["Icon"]
+                                  : "page"}
+                            </SVGIconI>
+                          </div>
                         ) : (
                           <div className="icon-xs">
                             <SVGIconI {...{ class: "icon-xs" }}>
