@@ -12,7 +12,7 @@ import { useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { RootNodeUid } from "@_constants/main";
-import { SVGIconI, SVGIconII, TreeView } from "@_components/common";
+import { SVGIconI, TreeView } from "@_components/common";
 import {
   getNormalizedPath,
   createURLPath,
@@ -43,6 +43,12 @@ import {
 import { useSaveCommand } from "@_pages/main/processor/hooks";
 import { setWebComponentOpen } from "@_redux/main/stageView";
 import { debounce } from "@_pages/main/helper";
+import {
+  Container,
+  ItemArrow,
+  ItemTitle,
+  TreeItem,
+} from "@_components/common/treeComponents";
 
 const AutoExpandDelayOnDnD = 1 * 1000;
 export default function WorkspaceTreeView() {
@@ -210,12 +216,8 @@ export default function WorkspaceTreeView() {
           expandedItems={expandedItems}
           selectedItems={selectedItems}
           renderers={{
-            renderTreeContainer: ({ containerProps, children }) => {
-              return <ul {...containerProps}>{children}</ul>;
-            },
-            renderItemsContainer: ({ containerProps, children }) => {
-              return <ul {...containerProps}>{children}</ul>;
-            },
+            renderTreeContainer: (props) => <Container {...props} />,
+            renderItemsContainer: (props) => <Container {...props} />,
 
             renderItem: (props) => {
               useEffect(() => {
@@ -328,52 +330,24 @@ export default function WorkspaceTreeView() {
               const onMouseLeave = () => dispatch(setHoveredFileUid(""));
 
               return (
-                <>
-                  <li
-                    className={`
-                      ${props.context.isSelected && "background-secondary"}`}
-                    {...props.context.itemContainerWithChildrenProps}
-                  >
-                    <div
-                      id={`FileTreeView-${generateQuerySelector(
-                        props.item.index.toString(),
-                      )}`}
-                      className={`
-                        justify-stretch padding-xs outline-default gap-s ${
-                          props.context.isSelected &&
-                          "background-tertiary outline-none"
-                        }
-                        ${
-                          !props.context.isSelected &&
-                          props.context.isFocused &&
-                          "outline"
-                        }
-                        ${props.context.isDraggingOver && "outline"}
-                        ${invalidFileNodes[props.item.data.uid] && "opacity-m"}
-                      `}
-                      style={{
-                        flexWrap: "nowrap",
-                        paddingLeft: `${props.depth * 18}px`,
-                      }}
-                      {...props.context.itemContainerWithoutChildrenProps}
-                      {...props.context.interactiveElementProps}
-                      onClick={onClick}
-                      onFocus={() => {}}
-                      onMouseEnter={onMouseEnter}
-                      onMouseLeave={onMouseLeave}
-                      onDragStart={onDragStart}
-                      onDragEnter={onDragEnter}
-                    >
-                      <div
-                        className="gap-s padding-xs"
-                        style={{
-                          width: "fit-content",
-                          paddingRight: `0px`,
-                        }}
-                      >
-                        {props.arrow}
-
-                        {fileReferenceData ? (
+                <TreeItem
+                  {...props}
+                  id={`FileTreeView-${generateQuerySelector(
+                    props.item.index.toString(),
+                  )}`}
+                  invalidFileNodes={invalidFileNodes}
+                  eventHandlers={{
+                    onClick: onClick,
+                    onMouseEnter: onMouseEnter,
+                    onMouseLeave: onMouseLeave,
+                    onFocus: () => {},
+                    onDragStart: onDragStart,
+                    onDragEnter: onDragEnter,
+                  }}
+                  nodeIcon={
+                    <>
+                      {fileReferenceData ? (
+                        <div className="icon-xs">
                           <SVGIconI {...{ class: "icon-xs" }}>
                             {props.item.data?.data.kind === "file" &&
                             props.item.data?.data.name === "index" &&
@@ -386,73 +360,40 @@ export default function WorkspaceTreeView() {
                                 ? fileReferenceData["Icon"]
                                 : "page"}
                           </SVGIconI>
-                        ) : (
-                          <div className="icon-xs">
-                            <SVGIconI {...{ class: "icon-xs" }}>
-                              {props.item.data?.data.kind === "file"
-                                ? "page"
-                                : "folder"}
-                            </SVGIconI>
-                          </div>
-                        )}
-                      </div>
-
+                        </div>
+                      ) : (
+                        <div className="icon-xs">
+                          <SVGIconI {...{ class: "icon-xs" }}>
+                            {props.item.data?.data.kind === "file"
+                              ? "page"
+                              : "folder"}
+                          </SVGIconI>
+                        </div>
+                      )}
                       {props.title}
-                    </div>
-
-                    {props.context.isExpanded ? (
-                      <>
-                        <div>{props.children}</div>
-                      </>
-                    ) : null}
-                  </li>
-                </>
+                    </>
+                  }
+                />
               );
             },
-            renderItemArrow: ({ item, context }) => {
-              return (
-                <>
-                  {item.isFolder ? (
-                    context.isExpanded ? (
-                      <SVGIconI {...{ class: "icon-xs" }}>down</SVGIconI>
-                    ) : (
-                      <SVGIconII {...{ class: "icon-xs" }}>right</SVGIconII>
-                    )
-                  ) : (
-                    <div className="icon-xs"></div>
-                  )}
-                </>
-              );
-            },
-            renderItemTitle: (props) => {
-              const fileOrDirectoryTitle = props?.title;
-              const fileExt = props.item?.data?.data?.ext
-                ? `.${props.item?.data?.data?.ext}`
+            renderItemArrow: ({ item, context }) => (
+              <ItemArrow item={item} context={context} />
+            ),
+            renderItemTitle: ({ title, item }) => {
+              const fileOrDirectoryTitle = title;
+              const fileExt = item?.data?.data?.ext
+                ? `.${item?.data?.data?.ext}`
                 : "";
               const fileOrDirTitle = fileOrDirectoryTitle + fileExt;
 
               return (
-                <>
-                  <span
-                    className="justify-start text-s gap-s align-center"
-                    style={{
-                      width: "100%",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {fileOrDirTitle}
-                    {fileTree[props.item.data.uid] &&
-                      (fileTree[props.item.data.uid].data as TFileNodeData)
-                        .changed && (
-                        <div
-                          className="radius-s foreground-primary"
-                          title="unsaved file"
-                          style={{ width: "6px", height: "6px" }}
-                        />
-                      )}
-                  </span>
-                </>
+                <ItemTitle
+                  title={fileOrDirTitle}
+                  isChanged={
+                    fileTree[item.data.uid] &&
+                    (fileTree[item.data.uid].data as TFileNodeData).changed
+                  }
+                />
               );
             },
             renderRenameInput: (props) => {
@@ -478,7 +419,10 @@ export default function WorkspaceTreeView() {
 
               return (
                 <>
-                  <form {...props.formProps} className={"box"}>
+                  <form
+                    {...props.formProps}
+                    className={"align-center justify-start"}
+                  >
                     <input
                       id={"FileTreeView-RenameInput"}
                       {...props.inputProps}
@@ -490,14 +434,12 @@ export default function WorkspaceTreeView() {
                         border: "none",
                         padding: "0",
                         background: "transparent",
+                        height: "12px",
                       }}
                       onChange={onChange}
                       onBlur={onBlur}
                     />
-                    <button
-                      ref={props.submitButtonRef}
-                      className={"hidden"}
-                    ></button>
+                    <button ref={props.submitButtonRef} className={"hidden"} />
                   </form>
                 </>
               );

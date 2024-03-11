@@ -39,11 +39,14 @@ import { THtmlElementsReference } from "@_types/main";
 import { useCmdk } from "./hooks/useCmdk";
 import { useNodeTreeCallback } from "./hooks/useNodeTreeCallback";
 import { useNodeViewState } from "./hooks/useNodeViewState";
-import { Container } from "./nodeTreeComponents/Container";
 import { DragBetweenLine } from "./nodeTreeComponents/DragBetweenLine";
-import { ItemArrow } from "./nodeTreeComponents/ItemArrow";
-import { ItemTitle } from "./nodeTreeComponents/ItemTitle";
 import { NodeIcon } from "./nodeTreeComponents/NodeIcon";
+import {
+  ItemArrow,
+  ItemTitle,
+  Container,
+  TreeItem,
+} from "@_components/common/treeComponents";
 
 const AutoExpandDelayOnDnD = 1 * 1000;
 const dragAndDropConfig = {
@@ -292,58 +295,44 @@ const NodeTreeView = () => {
             };
 
             return (
-              <li
-                className={`${props.context.isSelected && "background-secondary"}`}
-                {...props.context.itemContainerWithChildrenProps}
-              >
-                <div
-                  key={`NodeTreeView-${props.item.index}${props.item.data.data.nodeName}`}
-                  id={`NodeTreeView-${props.item.index}`}
-                  className={`justify-stretch padding-xs outline-default ${
-                    props.context.isSelected &&
-                    "background-tertiary outline-none"
-                  } ${
-                    !props.context.isSelected &&
-                    props.context.isFocused &&
-                    "outline"
-                  } ${props.context.isDraggingOver && "outline"}
-                  `}
-                  style={{
-                    flexWrap: "nowrap",
-                    paddingLeft: `${props.depth * 18}px`,
-                  }}
-                  {...props.context.itemContainerWithoutChildrenProps}
-                  {...props.context.interactiveElementProps}
-                  onClick={onClick}
-                  onDoubleClick={onDoubleClick}
-                  onMouseEnter={onMouseEnter}
-                  onMouseLeave={onMouseLeave}
-                  onFocus={() => {}}
-                  onDragStart={onDragStart}
-                  onDragEnter={onDragEnter}
-                >
-                  <div className="gap-s padding-xs" style={{ width: "100%" }}>
-                    {props.arrow}
-
-                    <NodeIcon
-                      {...{
-                        htmlElementReferenceData,
-                        nodeName: props.item.data.data.nodeName,
-                        componentTitle: props.title,
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {props.context.isExpanded ? <div>{props.children}</div> : null}
-              </li>
+              <TreeItem
+                {...props}
+                key={`NodeTreeView-${props.item.index}${props.item.data.data.nodeName}`}
+                id={`NodeTreeView-${props.item.index}`}
+                eventHandlers={{
+                  onClick: onClick,
+                  onDoubleClick: onDoubleClick,
+                  onMouseEnter: onMouseEnter,
+                  onMouseLeave: onMouseLeave,
+                  onFocus: () => {},
+                  onDragStart: onDragStart,
+                  onDragEnter: onDragEnter,
+                }}
+                nodeIcon={
+                  <NodeIcon
+                    {...{
+                      htmlElementReferenceData,
+                      nodeName: props.item.data.data.nodeName,
+                      componentTitle: props.title,
+                    }}
+                  />
+                }
+              />
             );
           },
 
-          renderItemArrow: (props) => (
-            <ItemArrow {...props} addRunningActions={addRunningActions} />
-          ),
-          renderItemTitle: (props) => <ItemTitle {...props} />,
+          renderItemArrow: ({ item, context }) => {
+            const onClick = useCallback(() => {
+              addRunningActions(["nodeTreeView-arrow"]);
+              context.toggleExpandedState();
+            }, [context]);
+
+            return (
+              <ItemArrow item={item} context={context} onClick={onClick} />
+            );
+          },
+
+          renderItemTitle: ({ title }) => <ItemTitle title={title} />,
           renderDragBetweenLine: (props) => <DragBetweenLine {...props} />,
         }}
         props={{

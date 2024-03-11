@@ -12,6 +12,7 @@ import {
 } from "./constants";
 import { useFavicon, useNavigatorPanelHandlers } from "./hooks";
 import { PanelButton } from "./components/PanelButton";
+import { PanelHeader } from "@_components/common/panelHeader";
 
 export default function NavigatorPanel() {
   const {
@@ -68,16 +69,17 @@ export default function NavigatorPanel() {
   return useMemo(() => {
     return currentFileUid !== "" ? (
       <>
-        <div
+        <PanelHeader
           id="NavigatorPanel"
           className="border-bottom padding-m"
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
+          height="12px"
         >
-          <div className="gap-s" onClick={onPanelClick} ref={navigatorPanelRef}>
+          <div
+            className="gap-s"
+            style={{ overflow: "hidden" }}
+            onClick={onPanelClick}
+            ref={navigatorPanelRef}
+          >
             {!navigatorDropdownType ? (
               <DefaultPanel />
             ) : navigatorDropdownType === "workspace" ? (
@@ -89,7 +91,8 @@ export default function NavigatorPanel() {
             )}
           </div>
           <PanelButton />
-        </div>
+        </PanelHeader>
+
         {navigatorDropdownType && (
           <AdditionalPanel navigatorPanel={navigatorPanelRef.current} />
         )}

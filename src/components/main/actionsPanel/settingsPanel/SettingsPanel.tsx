@@ -8,6 +8,7 @@ import { SVGIconI } from "@_components/common";
 
 import { SettingsView } from "../settingsView/SettingsView";
 import { SettingsForm } from "../settingsView/SettingsForm";
+import { PanelHeader } from "@_components/common/panelHeader";
 
 const excludedAttributes: string[] = [StageNodeIdAttr, DataSequencedUid];
 
@@ -37,14 +38,11 @@ export default function SettingsPanel() {
   return useMemo(() => {
     return (
       <div
-        id="SettingsPanel"
-        className="border-top border-bottom padding-m"
+        id="Settings"
         onClick={onPanelClick}
+        className="border-bottom padding-m"
       >
-        <div
-          className="flex justify-stretch align-center"
-          style={{ height: "16px" }}
-        >
+        <PanelHeader>
           <div className="text-s">Settings</div>
 
           {!showForm && (
@@ -57,7 +55,7 @@ export default function SettingsPanel() {
               <SVGIconI {...{ class: "icon-xs" }}>plus</SVGIconI>
             </div>
           )}
-        </div>
+        </PanelHeader>
 
         {showForm && (
           <SettingsForm
