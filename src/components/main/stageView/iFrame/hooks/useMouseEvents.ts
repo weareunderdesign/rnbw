@@ -1,6 +1,4 @@
 import { useCallback, useContext, useRef } from "react";
-
-import { debounce } from "lodash";
 import { useDispatch } from "react-redux";
 
 import { LogAllow } from "@_constants/global";
@@ -20,6 +18,7 @@ import {
   selectAllText,
 } from "../helpers";
 import {
+  debounce,
   isWebComponentDblClicked,
   onWebComponentDblClick,
 } from "@_pages/main/helper";
@@ -55,12 +54,12 @@ export const useMouseEvents = ({
   const mostRecentClickedNodeUidRef = useRef<TNodeUid>(""); //This is used because dbl clikc event was not able to receive the uid of the node that was clicked
 
   // hoveredNodeUid
-  const onMouseEnter = useCallback((e: MouseEvent) => {}, []);
+  const onMouseEnter = useCallback(() => {}, []);
   const onMouseMove = useCallback((e: MouseEvent) => {
     const { uid } = getValidElementWithUid(e.target as HTMLElement);
     uid && dispatch(setHoveredNodeUid(uid));
   }, []);
-  const onMouseLeave = (e: MouseEvent) => {
+  const onMouseLeave = () => {
     dispatch(setHoveredNodeUid(""));
   };
 

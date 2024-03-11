@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useContext } from "react";
 
 import { NodeActions } from "@_node/node";

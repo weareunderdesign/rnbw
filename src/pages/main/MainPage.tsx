@@ -1,11 +1,7 @@
 import React, { useCallback, useEffect } from "react";
-
-import cx from "classnames";
 import { Command } from "cmdk";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { debounce } from "lodash";
-
 import { Loader, SVGIcon, Notification } from "@_components/common";
 import { ActionsPanel, CodeView, StageView } from "@_components/main";
 import { LogAllow } from "@_constants/global";
@@ -40,6 +36,7 @@ import {
 } from "./hooks";
 import Processor from "./processor";
 import ResizablePanels from "./ResizablePanels";
+import { debounce } from "./helper";
 
 export default function MainPage() {
   // redux
@@ -262,10 +259,8 @@ export default function MainPage() {
         >
           {/* search input */}
           <div
-            className={cx(
-              "gap-m box-l padding-m justify-start",
-              validMenuItemCount === 0 ? "" : "border-bottom",
-            )}
+            className={`gap-m box-l padding-m justify-start ${validMenuItemCount === 0 ? "" : "border-bottom"}
+            `}
           >
             <Command.Input
               value={cmdkSearchContent}
@@ -469,6 +464,7 @@ export default function MainPage() {
                                   (currentCmdkPage === "Turn into" &&
                                     command.Group === "Recent")
                                 ) {
+                                  //ts-expect-error FIXME: fix this
                                 } else {
                                   dispatch(
                                     setCurrentCommand({ action: command.Name }),
@@ -604,12 +600,9 @@ export default function MainPage() {
             {(currentCmdkPage === "Add" || currentCmdkPage === "Jumpstart") &&
               false && (
                 <div
-                  className={cx(
-                    "box align-center border-left padding-l text-l",
-                    !!hoveredMenuItemDescription ? "" : "opacity-m",
-                  )}
+                  className={`box align-center border-left padding-l text-l ${hoveredMenuItemDescription ? "" : "opacity-m"}`}
                 >
-                  {!!hoveredMenuItemDescription
+                  {hoveredMenuItemDescription
                     ? hoveredMenuItemDescription
                     : "Description"}
                 </div>

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 
 import { LogAllow } from "@_constants/global";
-// @ts-ignore
+// @ts-expect-error - no types
 import filesRef from "@_ref/rfrncs/Files.csv";
-// @ts-ignore
+// @ts-expect-error - no types
 import htmlRefElements from "@_ref/rfrncs/HTML Elements.csv";
 import {
   TFilesReference,

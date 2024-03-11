@@ -10,8 +10,8 @@ export const addNodeToTree = (
   newNode: TNode,
   tmpMaxUid: TNodeUid,
 ) => {
-  let _parent = tree[nodeTree[focusedItem].parentUid!];
-  for (let x in _tree) {
+  const _parent = tree[nodeTree[focusedItem].parentUid!];
+  for (const x in _tree) {
     if (x === "text") continue;
     if (x === "ROOT") {
       _tree[x].uid = String(Number(tmpMaxUid) + 1);

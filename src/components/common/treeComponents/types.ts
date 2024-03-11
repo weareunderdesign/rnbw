@@ -15,6 +15,10 @@ export interface TreeItemProps<T = any, C extends string = never> {
   children: ReactNode | null;
   arrow: ReactNode;
   context: TreeItemRenderContext<C>;
+  item?: TreeItem<T>;
+  invalidFileNodes?: {
+    [uid: string]: true;
+  };
 }
 export interface EventHandlers {
   onClick: MouseEventHandler<HTMLElement>;

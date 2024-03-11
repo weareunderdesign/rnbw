@@ -63,8 +63,8 @@ export const getNodeUidByCodeSelection = (
         focusedItem = nodeData.valid
           ? uid
           : validNodeTree[node.parentUid!].children.length
-          ? null
-          : node.parentUid;
+            ? null
+            : node.parentUid;
         break;
       }
     }

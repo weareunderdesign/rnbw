@@ -17,7 +17,9 @@ const parseHtml = (content: string): THtmlParserResponse => {
   const htmlDom = parse5.parse(content, {
     scriptingEnabled: true,
     sourceCodeLocationInfo: true,
-    onParseError: (err) => {},
+    onParseError: (err) => {
+      console.error(err);
+    },
   });
 
   const nodeTree: THtmlNodeTreeData = {};

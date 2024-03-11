@@ -1,3 +1,6 @@
+/* eslint-disable react/prop-types */
+/* eslint-disable react/display-name */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { FC, useEffect } from "react";
 import { DraggingPosition, DraggingPositionItem } from "react-complex-tree";
 
@@ -40,9 +43,9 @@ export const DragBetweenLine: FC<DragBetweenLine> = React.memo(
             draggingPosition.linePosition === "top"
               ? "0px"
               : draggingPosition.targetType === "between-items" &&
-                draggingPosition.linePosition === "bottom"
-              ? "-2px"
-              : "-2px",
+                  draggingPosition.linePosition === "bottom"
+                ? "-2px"
+                : "-2px",
           left: `${draggingPosition.depth * 10 + 20}px`,
           height: "2px",
         }}

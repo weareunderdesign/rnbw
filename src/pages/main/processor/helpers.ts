@@ -63,8 +63,8 @@ export const getNodeUidToBeSelectedAtFirst = (validNodeTree: TNodeTreeData) => {
   return bodyNode === null
     ? uids[0]
     : bodyNode.children.length > 0
-    ? bodyNode.children[0]
-    : bodyNode.uid;
+      ? bodyNode.children[0]
+      : bodyNode.uid;
 };
 export const getNeedToExpandNodeUids = (
   validNodeTree: TNodeTreeData,

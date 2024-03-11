@@ -6,10 +6,7 @@ import { useAppState } from "@_redux/useAppState";
 
 import { useNodeActionsHandler } from "./useNodeActionsHandler";
 
-interface IUseCmdk {
-  openFileUid: React.MutableRefObject<string>;
-}
-export const useCmdk = ({ openFileUid }: IUseCmdk) => {
+export const useCmdk = () => {
   const { activePanel, currentCommand } = useAppState();
 
   const { onAdd, onRemove, onCut, onCopy, onPaste, onDuplicate } =

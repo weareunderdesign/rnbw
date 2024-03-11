@@ -11,8 +11,8 @@ import { useAppState } from "@_redux/useAppState";
 
 import { saveFileContent } from "../helpers";
 import { setCurrentCommand } from "@_redux/main/cmdk";
-import { debounce } from "lodash";
 import { setLoadingFalse, setLoadingTrue } from "@_redux/main/processor";
+import { debounce } from "@_pages/main/helper";
 
 export const useSaveCommand = () => {
   const dispatch = useDispatch();
@@ -29,6 +29,7 @@ export const useSaveCommand = () => {
         break;
       case "SaveAll":
         onSaveProject();
+        break;
       default:
         return;
     }
@@ -45,7 +46,9 @@ export const useSaveCommand = () => {
     if (fileData.changed) {
       try {
         await saveFileContent(project, fileHandlers, currentFileUid, fileData);
-      } catch (err) {}
+      } catch (err) {
+        console.error(err);
+      }
 
       while (file) {
         file.data.changed = false;

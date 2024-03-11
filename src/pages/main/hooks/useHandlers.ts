@@ -16,7 +16,6 @@ import {
   getIndexHtmlContent,
   loadIDBProject,
   loadLocalProject,
-  TFileHandlerCollection,
 } from "@_node/file";
 import {
   setCurrentFileUid,
@@ -32,7 +31,6 @@ import {
   setLoadingFalse,
   setLoadingTrue,
   setNavigatorDropdownType,
-  setShowActionsPanel,
 } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 
@@ -227,7 +225,7 @@ export const useHandlers = () => {
       dispatch(setFileHandlers(_fileHandlers));
       // need to open another file if the current open file is deleted
       if (deletedUidsObj[currentFileUid] || !currentFileUid) {
-        if (!!_initialFileUidToOpen) {
+        if (_initialFileUidToOpen !== "") {
           dispatch(setCurrentFileUid(_initialFileUidToOpen));
           dispatch(
             setCurrentFileContent(
@@ -253,7 +251,7 @@ export const useHandlers = () => {
       dispatch(setFileTree(_fileTree));
       // need to open another file if the current open file is deleted
       if (deletedUidsObj[currentFileUid]) {
-        if (!!_initialFileUidToOpen) {
+        if (_initialFileUidToOpen !== "") {
           dispatch(setCurrentFileUid(_initialFileUidToOpen));
           dispatch(
             setCurrentFileContent(

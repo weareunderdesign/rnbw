@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, {
   useCallback,
   useContext,
@@ -6,8 +7,6 @@ import React, {
   useRef,
 } from "react";
 
-import cx from "classnames";
-import { debounce } from "lodash";
 import { DraggingPositionItem } from "react-complex-tree";
 import { useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
@@ -43,6 +42,7 @@ import {
 } from "./hooks";
 import { useSaveCommand } from "@_pages/main/processor/hooks";
 import { setWebComponentOpen } from "@_redux/main/stageView";
+import { debounce } from "@_pages/main/helper";
 import {
   Container,
   ItemArrow,
@@ -90,9 +90,7 @@ export default function WorkspaceTreeView() {
   } = useNodeActionsHandler();
   const { onSaveCurrentFile } = useSaveCommand();
 
-  useCmdk({
-    openFileUid,
-  });
+  useCmdk();
   useDefaultFileCreate();
 
   // open default initial html file
@@ -321,7 +319,7 @@ export default function WorkspaceTreeView() {
                 debounce(cb_expandNode, AutoExpandDelayOnDnD),
                 [cb_expandNode],
               );
-              const onDragEnter = (e: React.DragEvent) => {
+              const onDragEnter = () => {
                 if (!props.context.isExpanded) {
                   debouncedExpand(props.item.index as TNodeUid);
                 }
@@ -332,51 +330,50 @@ export default function WorkspaceTreeView() {
               const onMouseLeave = () => dispatch(setHoveredFileUid(""));
 
               return (
-                <>
-                  <TreeItem
-                    {...props}
-                    id={`FileTreeView-${generateQuerySelector(
-                      props.item.index.toString(),
-                    )}`}
-                    eventHandlers={{
-                      onClick: onClick,
-                      onMouseEnter: onMouseEnter,
-                      onMouseLeave: onMouseLeave,
-                      onFocus: () => {},
-                      onDragStart: onDragStart,
-                      onDragEnter: onDragEnter,
-                    }}
-                    nodeIcon={
-                      <>
-                        {fileReferenceData ? (
-                          <div className="icon-xs">
-                            <SVGIconI {...{ class: "icon-xs" }}>
-                              {props.item.data?.data.kind === "file" &&
-                              props.item.data?.data.name === "index" &&
-                              props.item.data?.data.type === "html" &&
-                              props.item.data?.parentUid === "ROOT"
-                                ? "home"
-                                : fileReferenceData &&
-                                    fileReferenceData["Icon"] &&
-                                    fileReferenceData["Icon"] !== "md"
-                                  ? fileReferenceData["Icon"]
-                                  : "page"}
-                            </SVGIconI>
-                          </div>
-                        ) : (
-                          <div className="icon-xs">
-                            <SVGIconI {...{ class: "icon-xs" }}>
-                              {props.item.data?.data.kind === "file"
-                                ? "page"
-                                : "folder"}
-                            </SVGIconI>
-                          </div>
-                        )}
-                        {props.title}
-                      </>
-                    }
-                  />
-                </>
+                <TreeItem
+                  {...props}
+                  id={`FileTreeView-${generateQuerySelector(
+                    props.item.index.toString(),
+                  )}`}
+                  invalidFileNodes={invalidFileNodes}
+                  eventHandlers={{
+                    onClick: onClick,
+                    onMouseEnter: onMouseEnter,
+                    onMouseLeave: onMouseLeave,
+                    onFocus: () => {},
+                    onDragStart: onDragStart,
+                    onDragEnter: onDragEnter,
+                  }}
+                  nodeIcon={
+                    <>
+                      {fileReferenceData ? (
+                        <div className="icon-xs">
+                          <SVGIconI {...{ class: "icon-xs" }}>
+                            {props.item.data?.data.kind === "file" &&
+                            props.item.data?.data.name === "index" &&
+                            props.item.data?.data.type === "html" &&
+                            props.item.data?.parentUid === "ROOT"
+                              ? "home"
+                              : fileReferenceData &&
+                                  fileReferenceData["Icon"] &&
+                                  fileReferenceData["Icon"] !== "md"
+                                ? fileReferenceData["Icon"]
+                                : "page"}
+                          </SVGIconI>
+                        </div>
+                      ) : (
+                        <div className="icon-xs">
+                          <SVGIconI {...{ class: "icon-xs" }}>
+                            {props.item.data?.data.kind === "file"
+                              ? "page"
+                              : "folder"}
+                          </SVGIconI>
+                        </div>
+                      )}
+                      {props.title}
+                    </>
+                  }
+                />
               );
             },
             renderItemArrow: ({ item, context }) => (
@@ -384,7 +381,7 @@ export default function WorkspaceTreeView() {
             ),
             renderItemTitle: ({ title, item }) => {
               const fileOrDirectoryTitle = title;
-              const fileExt = !!item?.data?.data?.ext
+              const fileExt = item?.data?.data?.ext
                 ? `.${item?.data?.data?.ext}`
                 : "";
               const fileOrDirTitle = fileOrDirectoryTitle + fileExt;
@@ -430,7 +427,7 @@ export default function WorkspaceTreeView() {
                       id={"FileTreeView-RenameInput"}
                       {...props.inputProps}
                       ref={props.inputRef}
-                      className={cx("text-s")}
+                      className={`text-s`}
                       style={{
                         outline: "none",
                         margin: "0",

@@ -1,12 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
-
-import { debounce } from "lodash";
-
 import { TreeViewData } from "@_components/common/treeView/types";
 import { RootNodeUid, ShortDelay } from "@_constants/main";
-import { _path } from "@_node/file";
 import { TNode, TNodeUid } from "@_node/types";
-import { scrollToElement } from "@_pages/main/helper";
+import { debounce, scrollToElement } from "@_pages/main/helper";
 import { useAppState } from "@_redux/useAppState";
 import { addClass, generateQuerySelector, removeClass } from "@_services/main";
 

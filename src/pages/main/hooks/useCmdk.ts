@@ -2,7 +2,7 @@ import { useCallback, useEffect } from "react";
 
 import { CustomDirectoryPickerOptions } from "file-system-access/lib/showDirectoryPicker";
 import { delMany } from "idb-keyval";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 import { LogAllow } from "@_constants/global";
@@ -38,7 +38,6 @@ import { getCommandKey } from "@_services/global";
 import { TCmdkKeyMap, TCmdkReferenceData } from "@_types/main";
 
 import { setSystemTheme } from "../helper";
-import { ActionCreators as UndoActionCreators } from "redux-undo";
 
 interface IUseCmdk {
   cmdkReferenceData: TCmdkReferenceData;

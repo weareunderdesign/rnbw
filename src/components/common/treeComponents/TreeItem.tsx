@@ -1,34 +1,35 @@
 import React from "react";
-import cx from "classnames";
 import { TreeItemProps } from "./types";
 
 export const TreeItem = (props: TreeItemProps) => {
-  const { context, children, depth, arrow, eventHandlers, key, id, nodeIcon } =
-    props;
+  const {
+    context,
+    children,
+    depth,
+    arrow,
+    eventHandlers,
+    key,
+    id,
+    nodeIcon,
+    item,
+    invalidFileNodes,
+  } = props;
 
   return (
     <li
-      className={cx(
-        context.isSelected && "background-secondary",
-        context.isDraggingOver && "",
-        context.isDraggingOverParent && "",
-        context.isFocused && "",
-      )}
+      className={`${context.isSelected && "background-secondary"}`}
       {...context.itemContainerWithChildrenProps}
     >
       <div
         key={key}
         id={id}
-        className={cx(
-          "justify-stretch",
-          "padding-xs",
-          "outline-default",
-
-          context.isSelected && "background-tertiary outline-none",
-          !context.isSelected && context.isFocused && "outline",
-          context.isDraggingOver && "outline",
-          context.isDraggingOverParent && "",
-        )}
+        className={`justify-stretch padding-xs outline-default ${
+          props.context.isSelected && "background-tertiary outline-none"
+        } ${
+          !props.context.isSelected && props.context.isFocused && "outline"
+        } ${props.context.isDraggingOver && "outline"}
+        
+        ${invalidFileNodes?.[item?.data?.uid] && "opacity-m"}`}
         style={{
           flexWrap: "nowrap",
           paddingLeft: `${depth * 18}px`,
@@ -37,11 +38,7 @@ export const TreeItem = (props: TreeItemProps) => {
         {...context.interactiveElementProps}
         {...eventHandlers}
       >
-        <div
-          className="gap-s padding-xs"
-          style={{ width: "100%" }}
-          //   style={{ width: "fit-content" }}
-        >
+        <div className="gap-s padding-xs" style={{ width: "100%" }}>
           {arrow}
 
           {nodeIcon}

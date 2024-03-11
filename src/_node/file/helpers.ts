@@ -1,5 +1,5 @@
 import { FileChangeAlertMessage, RootNodeUid } from "@_constants/main";
-// @ts-ignore
+// @ts-expect-error - no types for this package
 import htmlRefElements from "@_ref/rfrncs/HTML Elements.csv";
 import {
   THtmlElementsReference,
@@ -7,11 +7,7 @@ import {
 } from "@_types/main";
 
 import {
-  _getIDBDirectoryOrFileStat,
   _path,
-  _readIDBFile,
-  _removeIDBDirectoryOrFile,
-  _writeIDBFile,
   TFileHandlerCollection,
   TFileHandlerInfoObj,
   TFileNodeData,
@@ -27,10 +23,10 @@ export const sortFilesByASC = (handlerObj: TFileHandlerInfoObj) => {
       return handlerObj[a].kind === "file" && handlerObj[b].kind === "directory"
         ? 1
         : handlerObj[a].kind === "directory" && handlerObj[b].kind === "file"
-        ? -1
-        : handlerObj[a].name > handlerObj[b].name
-        ? 1
-        : -1;
+          ? -1
+          : handlerObj[a].name > handlerObj[b].name
+            ? 1
+            : -1;
     });
   });
 };
@@ -52,8 +48,8 @@ export const getInitialFileUidToOpen = (handlerObj: TFileHandlerInfoObj) => {
     indexHtmlUid !== ""
       ? indexHtmlUid
       : firstHtmlUid !== ""
-      ? firstHtmlUid
-      : "";
+        ? firstHtmlUid
+        : "";
 
   return initialFileUidToOpen;
 };

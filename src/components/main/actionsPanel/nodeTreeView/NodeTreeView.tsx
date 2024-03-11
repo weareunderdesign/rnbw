@@ -1,3 +1,6 @@
+/* eslint-disable react/prop-types */
+//FIXME: This file is a temporary solution to use the Filer API in the browser.
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, {
   useCallback,
   useContext,
@@ -7,7 +10,6 @@ import React, {
   useState,
 } from "react";
 
-import { debounce } from "lodash";
 import { useDispatch } from "react-redux";
 
 import { TreeView } from "@_components/common";
@@ -17,6 +19,7 @@ import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { THtmlNodeData } from "@_node/index";
 import { TNode, TNodeUid } from "@_node/types";
 import {
+  debounce,
   isWebComponentDblClicked,
   onWebComponentDblClick,
   scrollToElement,
@@ -284,7 +287,7 @@ const NodeTreeView = () => {
               isDragging.current = true;
             };
 
-            const onDragEnter = (e: React.DragEvent) => {
+            const onDragEnter = () => {
               if (!props.context.isExpanded) {
                 setNextToExpand(props.item.index as TNodeUid);
                 debouncedExpand(props.item.index as TNodeUid);
