@@ -1,6 +1,4 @@
 import { useCallback, useContext, useRef } from "react";
-
-import { debounce } from "lodash";
 import { useDispatch } from "react-redux";
 
 import { LogAllow } from "@_constants/global";
@@ -20,6 +18,7 @@ import {
   selectAllText,
 } from "../helpers";
 import {
+  debounce,
   isWebComponentDblClicked,
   onWebComponentDblClick,
 } from "@_pages/main/helper";

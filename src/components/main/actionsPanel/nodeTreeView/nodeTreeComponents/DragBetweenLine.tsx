@@ -40,9 +40,9 @@ export const DragBetweenLine: FC<DragBetweenLine> = React.memo(
             draggingPosition.linePosition === "top"
               ? "0px"
               : draggingPosition.targetType === "between-items" &&
-                draggingPosition.linePosition === "bottom"
-              ? "-2px"
-              : "-2px",
+                  draggingPosition.linePosition === "bottom"
+                ? "-2px"
+                : "-2px",
           left: `${draggingPosition.depth * 10 + 20}px`,
           height: "2px",
         }}

@@ -1,5 +1,4 @@
 import { Buffer } from "buffer";
-import FileSaver from "file-saver";
 import { FileSystemFileHandle } from "file-system-access";
 import JSZip from "jszip";
 
@@ -412,6 +411,7 @@ export const downloadIDBProject = async (
   projectPath: string,
 ): Promise<void> => {
   return new Promise<void>(async (resolve, reject) => {
+    alert("Downloading project, please wait...");
     try {
       const zip = new JSZip();
 
@@ -456,9 +456,16 @@ export const downloadIDBProject = async (
           }),
         );
       }
+      alert("Project downloaded successfully");
 
       const projectBlob = await zip.generateAsync({ type: "blob" });
-      FileSaver.saveAs(projectBlob, `${projectName}.zip`);
+      const url = URL.createObjectURL(projectBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${projectName}.zip`;
+      link.click();
+      URL.revokeObjectURL(url);
+      resolve();
 
       resolve();
     } catch (err) {

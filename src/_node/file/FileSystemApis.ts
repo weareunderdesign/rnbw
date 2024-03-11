@@ -389,8 +389,8 @@ const generateNewNameForLocalDirectoryOrFile = async ({
             ? `${name} copy`
             : `${name} copy (${index})`
           : index === 0
-          ? `${name} copy.${ext}`
-          : `${name} copy (${index}).${ext}`;
+            ? `${name} copy.${ext}`
+            : `${name} copy (${index}).${ext}`;
     }
   }
   return newName;
@@ -423,8 +423,8 @@ const generateNewNameForIDBDirectoryOrFile = async ({
             ? `${name} copy`
             : `${name} copy (${index})`
           : index === 0
-          ? `${name} copy.${ext}`
-          : `${name} copy (${index}).${ext}`;
+            ? `${name} copy.${ext}`
+            : `${name} copy (${index}).${ext}`;
     }
   }
   return newName;

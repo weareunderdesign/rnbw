@@ -21,7 +21,6 @@
     "idb-keyval": "^6.2.0",
     "js-beautify": "^1.14.11",
     "jszip": "^3.10.1",
-    "lodash": "^4.17.21",
     "monaco-editor": "^0.41.0",
     "morphdom": "^2.7.1",
     "parse5": "^7.1.2",

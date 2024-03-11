@@ -1,7 +1,4 @@
 import React, { FC, useContext, useRef } from "react";
-
-import cx from "classnames";
-
 import { SVGIcon } from "@_components/common";
 import { TProject } from "@_redux/main/fileTree";
 import { useAppState } from "@_redux/useAppState";
@@ -16,7 +13,8 @@ interface AdditionalPanelProps {
 export const AdditionalPanel: FC<AdditionalPanelProps> = ({
   navigatorPanel,
 }) => {
-  const { workspace, project, navigatorDropdownType, projectHandlers } = useAppState();
+  const { workspace, project, navigatorDropdownType, projectHandlers } =
+    useAppState();
 
   const navigatorDropDownRef = useRef<HTMLDivElement | null>(null);
 
@@ -60,11 +58,7 @@ export const AdditionalPanel: FC<AdditionalPanelProps> = ({
             ) : (
               <div
                 key={index}
-                className={cx(
-                  "navigator-project-item",
-                  "justify-stretch padding-s",
-                  isSelected(_project, project),
-                )}
+                className={`navigator-project-item justify-stretch padding-s ${isSelected(_project, project)}`}
                 onClick={(e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
                   onClick(e, _project);
                 }}

@@ -16,10 +16,10 @@ export const getCommandKey = (
   return osType === "Windows"
     ? e.ctrlKey
     : osType === "Mac"
-    ? e.metaKey
-    : osType === "Linux"
-    ? e.ctrlKey
-    : false;
+      ? e.metaKey
+      : osType === "Linux"
+        ? e.ctrlKey
+        : false;
 };
 export const getSystemTheme = (): TTheme => {
   if (

@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useRef } from "react";
 
-import { debounce } from "lodash";
 
 import { ShortDelay } from "@_constants/main";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
-import { scrollToElement } from "@_pages/main/helper";
+import { debounce, scrollToElement } from "@_pages/main/helper";
 import { useAppState } from "@_redux/useAppState";
 
 import {
