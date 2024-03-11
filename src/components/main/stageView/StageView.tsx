@@ -2,11 +2,11 @@ import React, { useCallback, useMemo } from "react";
 import { useDispatch } from "react-redux";
 
 import IFrame from "./iFrame";
-import { StageViewProps } from "./types";
+
 import { setActivePanel } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 
-export default function StageView(props: StageViewProps) {
+export default function StageView() {
   const dispatch = useDispatch();
   const onClick = useCallback(() => {
     dispatch(setActivePanel("stage"));

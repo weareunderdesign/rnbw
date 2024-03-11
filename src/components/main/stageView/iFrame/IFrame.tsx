@@ -82,14 +82,14 @@ export const IFrame = () => {
           headNode.appendChild(js);
 
           // define event handlers
-          htmlNode.addEventListener("mouseenter", (e: MouseEvent) => {
-            onMouseEnter(e);
+          htmlNode.addEventListener("mouseenter", () => {
+            onMouseEnter();
           });
           htmlNode.addEventListener("mousemove", (e: MouseEvent) => {
             onMouseMove(e);
           });
-          htmlNode.addEventListener("mouseleave", (e: MouseEvent) => {
-            onMouseLeave(e);
+          htmlNode.addEventListener("mouseleave", () => {
+            onMouseLeave();
           });
 
           htmlNode.addEventListener("click", (e: MouseEvent) => {

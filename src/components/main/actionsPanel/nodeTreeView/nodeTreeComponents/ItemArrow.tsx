@@ -1,3 +1,6 @@
+/* eslint-disable react/prop-types */
+/* eslint-disable react/display-name */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { FC, useCallback } from "react";
 
 import { TreeItem, TreeItemRenderContext } from "react-complex-tree";

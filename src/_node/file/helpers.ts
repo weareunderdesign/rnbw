@@ -1,5 +1,5 @@
 import { FileChangeAlertMessage, RootNodeUid } from "@_constants/main";
-// @ts-ignore
+// @ts-expect-error - no types for this package
 import htmlRefElements from "@_ref/rfrncs/HTML Elements.csv";
 import {
   THtmlElementsReference,
@@ -7,11 +7,7 @@ import {
 } from "@_types/main";
 
 import {
-  _getIDBDirectoryOrFileStat,
   _path,
-  _readIDBFile,
-  _removeIDBDirectoryOrFile,
-  _writeIDBFile,
   TFileHandlerCollection,
   TFileHandlerInfoObj,
   TFileNodeData,

@@ -1,3 +1,5 @@
+//FIXME: This file is a temporary solution to use the Filer API in the browser.
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import JSZip from "jszip";
 
 import { TBasicNodeData, TNode, TNodeTreeData, TNodeUid } from "../";

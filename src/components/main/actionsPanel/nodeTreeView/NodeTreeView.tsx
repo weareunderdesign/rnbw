@@ -1,3 +1,6 @@
+/* eslint-disable react/prop-types */
+//FIXME: This file is a temporary solution to use the Filer API in the browser.
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, {
   useCallback,
   useContext,
@@ -6,7 +9,6 @@ import React, {
   useRef,
   useState,
 } from "react";
-
 
 import { useDispatch } from "react-redux";
 
@@ -282,7 +284,7 @@ const NodeTreeView = () => {
               isDragging.current = true;
             };
 
-            const onDragEnter = (e: React.DragEvent) => {
+            const onDragEnter = () => {
               if (!props.context.isExpanded) {
                 setNextToExpand(props.item.index as TNodeUid);
                 debouncedExpand(props.item.index as TNodeUid);

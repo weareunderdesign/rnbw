@@ -17,7 +17,10 @@ export default function ResizablePanels({
 
   const [sizes, setSizes] = useState([actionsPanelWidth, 50, codeViewWidth]);
 
+  //FIXME: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const actionPanelRef = useRef<any>(null);
+  //eslint-disable-next-line @typescript-eslint/no-explicit-any
   const codeViewRef = useRef<any>(null);
 
   useEffect(() => {

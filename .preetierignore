@@ -1,0 +1,5 @@
+
+# Ignore everything except the content inside the src directory
+/*
+!/src
+/src/*

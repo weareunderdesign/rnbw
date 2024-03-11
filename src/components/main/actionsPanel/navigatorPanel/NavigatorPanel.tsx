@@ -11,10 +11,9 @@ import {
   unsavedProjectLightImg,
 } from "./constants";
 import { useFavicon, useNavigatorPanelHandlers } from "./hooks";
-import { NavigatorPanelProps } from "./types";
 import { PanelButton } from "./components/PanelButton";
 
-export default function NavigatorPanel(props: NavigatorPanelProps) {
+export default function NavigatorPanel() {
   const {
     theme,
     navigatorDropdownType,
@@ -43,7 +42,7 @@ export default function NavigatorPanel(props: NavigatorPanelProps) {
   }, [fileTree]);
 
   useEffect(() => {
-    let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+    const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
     if (link) {
       link.href = unsavedProject
         ? theme === "Light"

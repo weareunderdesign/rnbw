@@ -6,7 +6,6 @@ import { LogAllow } from "@_constants/global";
 import { FileChangeAlertMessage } from "@_constants/main";
 import { FileActions } from "@_node/apis";
 import {
-  _path,
   confirmAlert,
   getFullnameFromUid,
   getParentUidFromUid,
@@ -127,10 +126,11 @@ export const useFileTreeEvent = () => {
         fb: () => {
           LogAllow && console.error("error while removing file system");
         },
-        cb: (allDone: boolean) => {
+        cb: (allDone: unknown): void => {
+          const isAllDone = allDone as boolean;
           LogAllow &&
             console.log(
-              allDone ? "all is successfully removed" : "some is not removed",
+              isAllDone ? "all is successfully removed" : "some is not removed",
             );
         },
       });
@@ -166,9 +166,9 @@ export const useFileTreeEvent = () => {
         fb: () => {
           LogAllow && console.error("error while renaming file system");
         },
-        cb: (done: boolean) => {
+        cb: (allDone: boolean | undefined) => {
           LogAllow &&
-            console.log(done ? "successfully renamed" : "not renamed");
+            console.log(allDone ? "successfully renamed" : "not renamed");
         },
       });
       dispatch(removeInvalidFileNodes([node.uid]));
@@ -205,7 +205,7 @@ export const useFileTreeEvent = () => {
         fb: () => {
           LogAllow && console.error("error while moving file system");
         },
-        cb: (allDone: boolean) => {
+        cb: (allDone: boolean | undefined) => {
           LogAllow &&
             console.log(
               allDone ? "all is successfully moved" : "some is not moved",

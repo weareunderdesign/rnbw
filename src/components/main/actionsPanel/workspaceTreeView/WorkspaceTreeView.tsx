@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, {
   useCallback,
   useContext,
@@ -83,9 +84,7 @@ export default function WorkspaceTreeView() {
   } = useNodeActionsHandler();
   const { onSaveCurrentFile } = useSaveCommand();
 
-  useCmdk({
-    openFileUid,
-  });
+  useCmdk();
   useDefaultFileCreate();
 
   // open default initial html file
@@ -318,7 +317,7 @@ export default function WorkspaceTreeView() {
                 debounce(cb_expandNode, AutoExpandDelayOnDnD),
                 [cb_expandNode],
               );
-              const onDragEnter = (e: React.DragEvent) => {
+              const onDragEnter = () => {
                 if (!props.context.isExpanded) {
                   debouncedExpand(props.item.index as TNodeUid);
                 }
@@ -427,7 +426,7 @@ export default function WorkspaceTreeView() {
             },
             renderItemTitle: (props) => {
               const fileOrDirectoryTitle = props?.title;
-              const fileExt = !!props.item?.data?.data?.ext
+              const fileExt = props.item?.data?.data?.ext
                 ? `.${props.item?.data?.data?.ext}`
                 : "";
               const fileOrDirTitle = fileOrDirectoryTitle + fileExt;

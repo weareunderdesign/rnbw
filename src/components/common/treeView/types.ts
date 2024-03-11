@@ -24,6 +24,7 @@ export type TreeViewProps = {
   renderers?: TreeRenderProps;
 
   props: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [prop: string]: any;
   };
 

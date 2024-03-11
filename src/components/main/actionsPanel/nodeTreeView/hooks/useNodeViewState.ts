@@ -25,12 +25,9 @@ export function useNodeViewState() {
   } = useAppState();
   const { addRunningActions, removeRunningActions } = useContext(MainContext);
 
-  const cb_focusNode = useCallback(
-    (uid: TNodeUid) => {
-      removeRunningActions(["nodeTreeView-focus"]);
-    },
-    [removeRunningActions],
-  );
+  const cb_focusNode = useCallback(() => {
+    removeRunningActions(["nodeTreeView-focus"]);
+  }, [removeRunningActions]);
 
   const cb_selectNode = useCallback(
     (uids: TNodeUid[]) => {
