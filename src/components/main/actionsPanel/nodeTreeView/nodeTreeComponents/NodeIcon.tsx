@@ -18,11 +18,6 @@ export const NodeIcon = ({
   nodeName: string;
   componentTitle?: React.ReactNode;
 }) => {
-  console.log(
-    { htmlElementReferenceData, nodeName, componentTitle },
-    "NodeIcon",
-  );
-
   let icon = "component";
   let name = componentTitle;
   if (htmlElementReferenceData) {
