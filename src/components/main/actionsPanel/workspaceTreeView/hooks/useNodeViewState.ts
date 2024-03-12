@@ -20,6 +20,7 @@ interface IUseNodeViewState {
 }
 export const useNodeViewState = ({ invalidFileNodes }: IUseNodeViewState) => {
   const dispatch = useDispatch();
+
   const {
     fileTree,
     fFocusedItem: focusedItem,
@@ -41,6 +42,7 @@ export const useNodeViewState = ({ invalidFileNodes }: IUseNodeViewState) => {
     },
     [invalidFileNodes, focusedItem, fileTree],
   );
+
   const cb_selectNode = useCallback(
     (uids: TNodeUid[]) => {
       let _uids = [...uids];
@@ -70,6 +72,7 @@ export const useNodeViewState = ({ invalidFileNodes }: IUseNodeViewState) => {
     },
     [invalidFileNodes, fileTree, selectedItems, selectedItemsObj],
   );
+
   const cb_expandNode = useCallback(
     (uid: TNodeUid) => {
       if (
@@ -84,6 +87,7 @@ export const useNodeViewState = ({ invalidFileNodes }: IUseNodeViewState) => {
     },
     [invalidFileNodes, fileTree, expandedItemsObj],
   );
+
   const cb_collapseNode = useCallback(
     (uid: TNodeUid) => {
       if (
