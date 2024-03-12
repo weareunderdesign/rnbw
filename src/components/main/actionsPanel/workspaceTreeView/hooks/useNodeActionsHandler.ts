@@ -93,7 +93,6 @@ export const useNodeActionsHandler = () => {
           valid: false,
           ext,
         },
-        sequenceContent: "",
       };
       node.children.unshift(tmpNode.uid);
       _fileTree[tmpNode.uid] = tmpNode;

@@ -19,7 +19,6 @@ const nodeTreeReducerInitialState: TNodeTreeReducerState = {
     selectedItems: [],
     selectedItemsObj: {},
   },
-  lastNodesContents: [],
   hoveredNodeUid: "",
   copiedNodeDisplayName: [],
 };
@@ -151,13 +150,6 @@ const nodeTreeSlice = createSlice({
       const copiedNodeDisplayName = action.payload;
       state.copiedNodeDisplayName = copiedNodeDisplayName;
     },
-    setLastNodesContents(state, action: PayloadAction<string>) {
-      const newNodeContent = action.payload;
-      state.lastNodesContents =
-        state.lastNodesContents.indexOf(newNodeContent) !== -1
-          ? [...state.lastNodesContents]
-          : [...state.lastNodesContents, newNodeContent];
-    },
   },
 });
 export const {
@@ -176,6 +168,5 @@ export const {
   setHoveredNodeUid,
   clearNodeTreeViewState,
   setCopiedNodeDisplayName,
-  setLastNodesContents,
 } = nodeTreeSlice.actions;
 export const NodeTreeReducer = nodeTreeSlice.reducer;

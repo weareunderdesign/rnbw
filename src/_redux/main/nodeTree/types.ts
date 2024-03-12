@@ -13,5 +13,4 @@ export type TNodeTreeReducerState = {
   nodeTreeViewState: TTreeViewState;
   hoveredNodeUid: TNodeUid;
   copiedNodeDisplayName: string[];
-  lastNodesContents: TNodeUid[];
 };
