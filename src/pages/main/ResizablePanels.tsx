@@ -1,5 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import {
+  Panel,
+  PanelGroup,
+  PanelResizeHandle,
+  ImperativePanelHandle,
+} from "react-resizable-panels";
 import { useAppState } from "@_redux/useAppState";
 import { ResizablePanelsProps } from "./types";
 
@@ -17,11 +22,8 @@ export default function ResizablePanels({
 
   const [sizes, setSizes] = useState([actionsPanelWidth, 50, codeViewWidth]);
 
-  //FIXME: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const actionPanelRef = useRef<any>(null);
-  //eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const codeViewRef = useRef<any>(null);
+  const actionPanelRef = useRef<ImperativePanelHandle>(null);
+  const codeViewRef = useRef<ImperativePanelHandle>(null);
 
   useEffect(() => {
     showActionsPanel
@@ -51,23 +53,25 @@ export default function ResizablePanels({
           defaultSize={sizes[0]}
           minSize={showActionsPanel ? 5 : 0}
           maxSize={50}
+          order={1}
         >
           {showActionsPanel && actionPanel}
         </Panel>
 
-        {showActionsPanel && <PanelResizeHandle className="panel-resize" />}
+        <PanelResizeHandle className="panel-resize" />
 
-        <Panel defaultSize={sizes[1]} minSize={30}>
+        <Panel defaultSize={sizes[1]} minSize={30} order={2}>
           {stageView}
         </Panel>
 
-        {showCodeView && <PanelResizeHandle className="panel-resize" />}
+        <PanelResizeHandle className="panel-resize" />
 
         <Panel
           ref={codeViewRef}
           defaultSize={sizes[2]}
           minSize={showCodeView ? 5 : 0}
           maxSize={50}
+          order={3}
         >
           {codeView}
         </Panel>
