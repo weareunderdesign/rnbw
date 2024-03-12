@@ -6,21 +6,17 @@ import { useAppState } from "@_redux/useAppState";
 
 import { useNodeActionHandlers } from "./useNodeActionHandlers";
 import { useNodeViewState } from "./useNodeViewState";
-import { setLastNodesContents } from "@_redux/main/nodeTree";
-import { useDispatch } from "react-redux";
 
 export const useNodeTreeCallback = (
   isDragging: React.MutableRefObject<boolean>,
 ) => {
   const { validNodeTree, htmlReferenceData } = useAppState();
-  const dispatch = useDispatch();
 
   const { onMove } = useNodeActionHandlers();
   const { cb_focusNode, cb_selectNode, cb_expandNode, cb_collapseNode } =
     useNodeViewState();
 
   const onSelectItems = (items: TreeItemIndex[]) => {
-    dispatch(setLastNodesContents(validNodeTree[items[0]].sequenceContent));
     cb_selectNode(items as TNodeUid[]);
   };
   const onFocusItem = () => {

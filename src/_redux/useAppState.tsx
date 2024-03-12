@@ -43,7 +43,6 @@ export const useAppState = () => {
           selectedItems: nSelectedItems,
           selectedItemsObj: nSelectedItemsObj,
         },
-        lastNodesContents,
         hoveredNodeUid,
         copiedNodeDisplayName,
       },
@@ -146,7 +145,6 @@ export const useAppState = () => {
     nExpandedItemsObj,
     nSelectedItems,
     nSelectedItemsObj,
-    lastNodesContents,
     hoveredNodeUid,
     copiedNodeDisplayName,
 
