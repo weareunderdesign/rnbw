@@ -189,6 +189,7 @@ body,
   width: 2px;
   height: 100%;
   position: absolute;
+  z-index: 10;
 }
 
 .action-panel-wrapper > #ActionsPanel {
