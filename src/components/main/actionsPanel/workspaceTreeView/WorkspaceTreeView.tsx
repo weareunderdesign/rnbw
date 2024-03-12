@@ -220,6 +220,7 @@ export default function WorkspaceTreeView() {
             renderItemsContainer: (props) => <Container {...props} />,
 
             renderItem: (props) => {
+              // rename the newly created file
               useEffect(() => {
                 const node = props.item.data as TNode;
                 if (!node.data.valid) {
@@ -329,6 +330,34 @@ export default function WorkspaceTreeView() {
                 dispatch(setHoveredFileUid(props.item.index as TNodeUid));
               const onMouseLeave = () => dispatch(setHoveredFileUid(""));
 
+              const NodeIcon = () => {
+                if (fileReferenceData) {
+                  return (
+                    <div className="icon-xs">
+                      <SVGIconI {...{ class: "icon-xs" }}>
+                        {props.item.data?.data.kind === "file" &&
+                        props.item.data?.data.name === "index" &&
+                        props.item.data?.data.type === "html" &&
+                        props.item.data?.parentUid === "ROOT"
+                          ? "home"
+                          : fileReferenceData &&
+                              fileReferenceData["Icon"] &&
+                              fileReferenceData["Icon"] !== "md"
+                            ? fileReferenceData["Icon"]
+                            : "page"}
+                      </SVGIconI>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="icon-xs">
+                    <SVGIconI {...{ class: "icon-xs" }}>
+                      {props.item.data?.isEntity ? "page" : "folder"}
+                    </SVGIconI>
+                  </div>
+                );
+              };
               return (
                 <TreeItem
                   {...props}
@@ -346,30 +375,7 @@ export default function WorkspaceTreeView() {
                   }}
                   nodeIcon={
                     <>
-                      {fileReferenceData ? (
-                        <div className="icon-xs">
-                          <SVGIconI {...{ class: "icon-xs" }}>
-                            {props.item.data?.data.kind === "file" &&
-                            props.item.data?.data.name === "index" &&
-                            props.item.data?.data.type === "html" &&
-                            props.item.data?.parentUid === "ROOT"
-                              ? "home"
-                              : fileReferenceData &&
-                                  fileReferenceData["Icon"] &&
-                                  fileReferenceData["Icon"] !== "md"
-                                ? fileReferenceData["Icon"]
-                                : "page"}
-                          </SVGIconI>
-                        </div>
-                      ) : (
-                        <div className="icon-xs">
-                          <SVGIconI {...{ class: "icon-xs" }}>
-                            {props.item.data?.data.kind === "file"
-                              ? "page"
-                              : "folder"}
-                          </SVGIconI>
-                        </div>
-                      )}
+                      <NodeIcon />
                       {props.title}
                     </>
                   }
