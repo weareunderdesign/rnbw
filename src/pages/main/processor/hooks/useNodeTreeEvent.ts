@@ -228,6 +228,7 @@ export const useNodeTreeEvent = () => {
           } catch (err) {
             toast("Some changes in the code are incorrect", {
               type: "error",
+              toastId: "Some changes in the code are incorrect",
             });
             console.error(err, "error");
           }
