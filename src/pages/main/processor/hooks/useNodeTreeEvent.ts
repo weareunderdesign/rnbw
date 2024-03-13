@@ -46,6 +46,7 @@ import {
   markChangedFolders,
 } from "../helpers";
 import { setLoadingFalse, setLoadingTrue } from "@_redux/main/processor";
+import { toast } from "react-toastify";
 
 export const useNodeTreeEvent = () => {
   const dispatch = useDispatch();
@@ -159,71 +160,77 @@ export const useNodeTreeEvent = () => {
           const iframeHtml = iframeDoc.getElementsByTagName("html")[0];
           const updatedHtml = contentInApp;
           if (!iframeHtml || !updatedHtml) return;
+          try {
+            morphdom(iframeHtml, updatedHtml, {
+              onBeforeElUpdated: function (fromEl, toEl) {
+                //check if the node is script or style
+                if (
+                  fromEl.nodeName === "SCRIPT" ||
+                  fromEl.nodeName === "LINK" ||
+                  fromEl.nodeName === "STYLE"
+                ) {
+                  return false;
+                }
+                const fromElRnbwId = fromEl.getAttribute(StageNodeIdAttr);
 
-          morphdom(iframeHtml, updatedHtml, {
-            onBeforeElUpdated: function (fromEl, toEl) {
-              //check if the node is script or style
-              if (
-                fromEl.nodeName === "SCRIPT" ||
-                fromEl.nodeName === "LINK" ||
-                fromEl.nodeName === "STYLE"
-              ) {
-                return false;
-              }
-              const fromElRnbwId = fromEl.getAttribute(StageNodeIdAttr);
-
-              if (toEl.nodeName.includes("-")) return false;
-              if (
-                syncConfigs?.matchIds &&
-                !!fromElRnbwId &&
-                syncConfigs.matchIds.includes(fromElRnbwId)
-              ) {
+                if (toEl.nodeName.includes("-")) return false;
+                if (
+                  syncConfigs?.matchIds &&
+                  !!fromElRnbwId &&
+                  syncConfigs.matchIds.includes(fromElRnbwId)
+                ) {
+                  return true;
+                } else if (fromEl.isEqualNode(toEl)) {
+                  return false;
+                } else if (toEl.nodeName === "HTML") {
+                  //copy the attributes
+                  for (let i = 0; i < fromEl.attributes.length; i++) {
+                    toEl.setAttribute(
+                      fromEl.attributes[i].name,
+                      fromEl.attributes[i].value,
+                    );
+                  }
+                  if (fromEl.isEqualNode(toEl)) return false;
+                }
                 return true;
-              } else if (fromEl.isEqualNode(toEl)) {
-                return false;
-              } else if (toEl.nodeName === "HTML") {
-                //copy the attributes
-                for (let i = 0; i < fromEl.attributes.length; i++) {
-                  toEl.setAttribute(
-                    fromEl.attributes[i].name,
-                    fromEl.attributes[i].value,
-                  );
+              },
+              onElUpdated: function (el) {
+                if (el.nodeName === "HTML") {
+                  //copy the attributes
+                  for (let i = 0; i < el.attributes.length; i++) {
+                    iframeHtml.setAttribute(
+                      el.attributes[i].name,
+                      el.attributes[i].value,
+                    );
+                  }
                 }
-                if (fromEl.isEqualNode(toEl)) return false;
-              }
-              return true;
-            },
-            onElUpdated: function (el) {
-              if (el.nodeName === "HTML") {
-                //copy the attributes
-                for (let i = 0; i < el.attributes.length; i++) {
-                  iframeHtml.setAttribute(
-                    el.attributes[i].name,
-                    el.attributes[i].value,
-                  );
+              },
+              onBeforeNodeDiscarded: function (node: Node) {
+                const elementNode = node as Element;
+                const ifPreserveNode = elementNode.getAttribute
+                  ? elementNode.getAttribute(PreserveRnbwNode)
+                  : false;
+                if (ifPreserveNode) {
+                  return false;
                 }
-              }
-            },
-            onBeforeNodeDiscarded: function (node: Node) {
-              const elementNode = node as Element;
-              const ifPreserveNode = elementNode.getAttribute
-                ? elementNode.getAttribute(PreserveRnbwNode)
-                : false;
-              if (ifPreserveNode) {
-                return false;
-              }
-              // script and style should not be discarded
-              if (
-                elementNode.nodeName === "SCRIPT" ||
-                elementNode.nodeName === "LINK" ||
-                elementNode.nodeName === "STYLE"
-              ) {
-                return false;
-              }
+                // script and style should not be discarded
+                if (
+                  elementNode.nodeName === "SCRIPT" ||
+                  elementNode.nodeName === "LINK" ||
+                  elementNode.nodeName === "STYLE"
+                ) {
+                  return false;
+                }
 
-              return true;
-            },
-          });
+                return true;
+              },
+            });
+          } catch (err) {
+            toast("Some changes in the code are incorrect", {
+              type: "error",
+            });
+            console.error(err, "error");
+          }
         }
       }
     }

@@ -11,7 +11,12 @@ import {
   THtmlNodeTreeData,
   THtmlParserResponse,
 } from "../../node/type/html";
-import { DataSequencedUid, StageNodeIdAttr } from "./constants";
+import {
+  DataSequencedUid,
+  PARSING_ERROR_MESSAGES,
+  StageNodeIdAttr,
+} from "./constants";
+import { toast } from "react-toastify";
 
 const parseHtml = (content: string): THtmlParserResponse => {
   const htmlDom = parse5.parse(content, {
@@ -19,6 +24,10 @@ const parseHtml = (content: string): THtmlParserResponse => {
     sourceCodeLocationInfo: true,
     onParseError: (err) => {
       console.error(err);
+
+      if (PARSING_ERROR_MESSAGES.hasOwnProperty(err.code)) {
+        toast(PARSING_ERROR_MESSAGES[err.code], { type: "error" });
+      }
     },
   });
 
