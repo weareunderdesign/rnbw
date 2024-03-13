@@ -6,6 +6,7 @@ import { TNodeUid } from "@_node/types";
 const codeViewReducerInitialState: TCodeViewReducerState = {
   editingNodeUid: null,
   codeViewTabSize: 4,
+  codeErrors: false,
 };
 const codeViewSlice = createSlice({
   name: "codeView",
@@ -19,8 +20,15 @@ const codeViewSlice = createSlice({
       const codeViewTabSize = action.payload;
       state.codeViewTabSize = codeViewTabSize;
     },
+    setCodeErrors(state, action: PayloadAction<boolean>) {
+      const codeErrors = action.payload;
+      state.codeErrors = codeErrors;
+    },
   },
 });
-export const { setEditingNodeUidInCodeView, setCodeViewTabSize } =
-  codeViewSlice.actions;
-export const CodeViewReduer = codeViewSlice.reducer;
+export const {
+  setEditingNodeUidInCodeView,
+  setCodeViewTabSize,
+  setCodeErrors,
+} = codeViewSlice.actions;
+export const CodeViewReducer = codeViewSlice.reducer;

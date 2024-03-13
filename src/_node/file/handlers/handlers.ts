@@ -19,10 +19,12 @@ import {
 import { toast } from "react-toastify";
 
 const parseHtml = (content: string): THtmlParserResponse => {
+  let hasParseError = false;
   const htmlDom = parse5.parse(content, {
     scriptingEnabled: true,
     sourceCodeLocationInfo: true,
     onParseError: (err) => {
+      hasParseError = true;
       console.error(err);
 
       if (PARSING_ERROR_MESSAGES.hasOwnProperty(err.code)) {
@@ -167,6 +169,7 @@ const parseHtml = (content: string): THtmlParserResponse => {
     contentInApp,
     nodeTree,
     htmlDom,
+    hasParseError,
   };
 };
 

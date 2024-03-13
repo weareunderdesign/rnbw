@@ -51,4 +51,4 @@ export const {
   setCurrentCommand,
   setCmdkReferenceData,
 } = cmdkSlice.actions;
-export const CmdkReduer = cmdkSlice.reducer;
+export const CmdkReducer = cmdkSlice.reducer;

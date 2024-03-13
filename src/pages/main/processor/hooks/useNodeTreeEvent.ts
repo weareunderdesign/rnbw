@@ -16,7 +16,10 @@ import { getNodeUidsFromPaths } from "@_node/helpers";
 import { TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { setCurrentCommand } from "@_redux/main/cmdk";
-import { setEditingNodeUidInCodeView } from "@_redux/main/codeView";
+import {
+  setCodeErrors,
+  setEditingNodeUidInCodeView,
+} from "@_redux/main/codeView";
 import {
   setDoingFileAction,
   setFileTreeNodes,
@@ -103,10 +106,11 @@ export const useNodeTreeEvent = () => {
     // parse new file content
     const file = structuredClone(fileTree[currentFileUid]);
     const fileData = file.data;
-    const { contentInApp, nodeTree } = parseFile(
+    const { contentInApp, nodeTree, hasParseError } = parseFile(
       fileData.ext,
       currentFileContent,
     );
+    dispatch(setCodeErrors(hasParseError));
 
     fileData.content = currentFileContent;
 
@@ -230,6 +234,7 @@ export const useNodeTreeEvent = () => {
               type: "error",
               toastId: "Some changes in the code are incorrect",
             });
+            dispatch(setCodeErrors(true));
             console.error(err, "error");
           }
         }

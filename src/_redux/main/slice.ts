@@ -1,7 +1,7 @@
 import { combineReducers } from "@reduxjs/toolkit";
 
-import { CmdkReduer } from "./cmdk";
-import { CodeViewReduer } from "./codeView";
+import { CmdkReducer } from "./cmdk";
+import { CodeViewReducer } from "./codeView";
 import { FileTreeReducer } from "./fileTree";
 import { FileEventReducer } from "./fileTree/event";
 import { NodeTreeReducer } from "./nodeTree";
@@ -16,7 +16,7 @@ export const MainReducer = combineReducers({
   project: ProjectReducer,
   processor: ProcessorReduer,
 
-  cmdk: CmdkReduer,
+  cmdk: CmdkReducer,
 
   fileTree: FileTreeReducer,
   fileEvent: FileEventReducer,
@@ -24,7 +24,7 @@ export const MainReducer = combineReducers({
   nodeTree: NodeTreeReducer,
   nodeEvent: NodeEventReducer,
 
-  codeView: CodeViewReduer,
+  codeView: CodeViewReducer,
 
   stageView: StageViewReducer,
 });
