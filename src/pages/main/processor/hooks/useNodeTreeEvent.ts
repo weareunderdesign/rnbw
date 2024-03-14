@@ -71,13 +71,14 @@ export const useNodeTreeEvent = () => {
     nFocusedItem,
     syncConfigs,
     webComponentOpen,
-    codeErrors,
   } = useAppState();
   const { addRunningActions, removeRunningActions, iframeRefRef } =
     useContext(MainContext);
 
   const isSelectedNodeUidsChanged = useRef(false);
   const isCurrentFileContentChanged = useRef(false);
+  const isCodeErrorsExist = useRef(false);
+
   useEffect(() => {
     isSelectedNodeUidsChanged.current = false;
     isCurrentFileContentChanged.current = false;
@@ -229,9 +230,10 @@ export const useNodeTreeEvent = () => {
                 return true;
               },
             });
-            dispatch(setCodeErrors(false));
+            isCodeErrorsExist.current = false;
           } catch (err) {
-            dispatch(setCodeErrors(true));
+            isCodeErrorsExist.current = true;
+
             toast("Some changes in the code are incorrect", {
               type: "error",
               toastId: "Some changes in the code are incorrect",
@@ -241,6 +243,8 @@ export const useNodeTreeEvent = () => {
         }
       }
     }
+    dispatch(setCodeErrors(isCodeErrorsExist.current));
+    if (isCodeErrorsExist.current) return;
 
     // sync node-tree
     dispatch(setNodeTree(nodeTree));
