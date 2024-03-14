@@ -15,19 +15,17 @@ import { PARSING_ERROR_MESSAGES, StageNodeIdAttr } from "./constants";
 import { toast } from "react-toastify";
 
 const parseHtml = (content: string): THtmlParserResponse => {
-  let hasParseError = false;
   const htmlDom = parse5.parse(content, {
     scriptingEnabled: true,
     sourceCodeLocationInfo: true,
     onParseError: (err) => {
-      hasParseError = true;
       console.error(err);
 
       if (
         Object.prototype.hasOwnProperty.call(PARSING_ERROR_MESSAGES, err.code)
       ) {
         toast(PARSING_ERROR_MESSAGES[err.code], {
-          type: "error",
+          type: "warning",
           toastId: PARSING_ERROR_MESSAGES[err.code],
         });
       }
@@ -167,7 +165,6 @@ const parseHtml = (content: string): THtmlParserResponse => {
     contentInApp,
     nodeTree,
     htmlDom,
-    hasParseError,
   };
 };
 

@@ -42,5 +42,4 @@ export type THtmlParserResponse = {
   contentInApp: string;
   nodeTree: TNodeTreeData;
   htmlDom: Document;
-  hasParseError: boolean;
 };

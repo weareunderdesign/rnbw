@@ -108,7 +108,7 @@ export const useNodeTreeEvent = () => {
     // parse new file content
     const file = structuredClone(fileTree[currentFileUid]);
     const fileData = file.data;
-    const { contentInApp, nodeTree, hasParseError } = parseFile(
+    const { contentInApp, nodeTree } = parseFile(
       fileData.ext,
       currentFileContent,
     );
