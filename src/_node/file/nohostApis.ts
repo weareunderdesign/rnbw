@@ -6,8 +6,13 @@ export const _sh = new _fs.Shell();
 
 export const _createIDBDirectory = async (path: string): Promise<void> => {
   return new Promise<void>((resolve, reject) => {
-    _fs.mkdir(path, (err: any) => {
-      err ? reject(err) : resolve();
+    _fs.exists(path, function (exists:any) {
+      if (!exists) 
+      {        
+        _fs.mkdir(path, (err: any) => {
+          err ? reject(err) : resolve();
+        });
+      }
     });
   });
 };
