@@ -10,12 +10,13 @@ import { TProject } from "@_redux/main/fileTree";
 import {
   setActivePanel,
   setNavigatorDropdownType,
+  setShowFilePanel,
 } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 
 export const useNavigatorPanelHandlers = () => {
   const dispatch = useDispatch();
-  const { fileTree, navigatorDropdownType } = useAppState();
+  const { fileTree, navigatorDropdownType, showFilePanel } = useAppState();
 
   const {
     // open project
@@ -67,6 +68,7 @@ export const useNavigatorPanelHandlers = () => {
 
   const onPanelClick = () => {
     dispatch(setActivePanel("file"));
+    dispatch(setShowFilePanel(!showFilePanel));
   };
 
   return {

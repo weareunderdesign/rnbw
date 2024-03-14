@@ -68,6 +68,7 @@ export const useAppState = () => {
         clipboardData,
         showActionsPanel,
         showCodeView,
+        showFilePanel,
         autoSave,
         formatCode,
         didUndo,
@@ -176,6 +177,7 @@ export const useAppState = () => {
 
     showActionsPanel,
     showCodeView,
+    showFilePanel,
 
     autoSave,
     formatCode,

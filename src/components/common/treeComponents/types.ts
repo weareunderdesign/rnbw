@@ -9,7 +9,6 @@ import { TreeItem, TreeItemRenderContext } from "react-complex-tree";
 
 export interface TreeItemProps<T = any, C extends string = never> {
   eventHandlers: EventHandlers;
-  key?: string;
   id: string;
   nodeIcon: ReactNode;
   depth: number;

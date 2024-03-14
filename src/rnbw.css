@@ -159,6 +159,9 @@ body,
 .panel-resize {
   width: 1px;
 }
+.panel-resize-vertical {
+  height: 1px;
+}
 
 #CodeView {
   transition: 0.3s all;

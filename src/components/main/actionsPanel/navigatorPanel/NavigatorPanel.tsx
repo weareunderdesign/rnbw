@@ -24,6 +24,7 @@ export default function NavigatorPanel() {
     fileTree,
     currentFileUid,
     filesReferenceData,
+    showFilePanel,
   } = useAppState();
 
   const { importProject } = useContext(MainContext);
@@ -76,18 +77,14 @@ export default function NavigatorPanel() {
         >
           <div
             className="gap-s"
-            style={{ overflow: "hidden" }}
+            style={{ overflow: "hidden", width: "100%" }}
             onClick={onPanelClick}
             ref={navigatorPanelRef}
           >
-            {!navigatorDropdownType ? (
-              <DefaultPanel />
-            ) : navigatorDropdownType === "workspace" ? (
-              <></>
-            ) : navigatorDropdownType === "project" ? (
+            {showFilePanel ? (
               <ProjectPanel unsavedProject={unsavedProject} />
             ) : (
-              <></>
+              !navigatorDropdownType && <DefaultPanel />
             )}
           </div>
           <PanelButton />
@@ -118,5 +115,6 @@ export default function NavigatorPanel() {
     unsavedProject,
     theme,
     faviconFallback,
+    showFilePanel,
   ]);
 }
