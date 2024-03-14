@@ -71,6 +71,7 @@ export const useNodeTreeEvent = () => {
     nFocusedItem,
     syncConfigs,
     webComponentOpen,
+    codeErrors,
   } = useAppState();
   const { addRunningActions, removeRunningActions, iframeRefRef } =
     useContext(MainContext);
@@ -110,7 +111,6 @@ export const useNodeTreeEvent = () => {
       fileData.ext,
       currentFileContent,
     );
-    dispatch(setCodeErrors(hasParseError));
 
     fileData.content = currentFileContent;
 
@@ -229,17 +229,19 @@ export const useNodeTreeEvent = () => {
                 return true;
               },
             });
+            dispatch(setCodeErrors(false));
           } catch (err) {
+            dispatch(setCodeErrors(true));
             toast("Some changes in the code are incorrect", {
               type: "error",
               toastId: "Some changes in the code are incorrect",
             });
-            dispatch(setCodeErrors(true));
             console.error(err, "error");
           }
         }
       }
     }
+
     // sync node-tree
     dispatch(setNodeTree(nodeTree));
     const _validNodeTree = getValidNodeTree(nodeTree);
