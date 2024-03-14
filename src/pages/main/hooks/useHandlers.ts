@@ -213,7 +213,6 @@ export const useHandlers = () => {
         _fileHandlers,
         _fileTree,
         _initialFileUidToOpen,
-        deletedUidsObj,
         deletedUids,
       } = await loadLocalProject(
         currentProjectFileHandle as FileSystemDirectoryHandle,
@@ -225,18 +224,18 @@ export const useHandlers = () => {
       dispatch(setFileHandlers(_fileHandlers));
       // need to open another file if the current open file is deleted
       // if (deletedUidsObj[currentFileUid] || !currentFileUid) {
-        if (_initialFileUidToOpen !== "") {
-          dispatch(setCurrentFileUid(_initialFileUidToOpen));
-          dispatch(
-            setCurrentFileContent(
-              _fileTree[_initialFileUidToOpen].data.content ||
-                getIndexHtmlContent(),
-            ),
-          );
-        } else {
-          dispatch(setCurrentFileUid(""));
-          dispatch(setCurrentFileContent(""));
-        }
+      if (_initialFileUidToOpen !== "") {
+        dispatch(setCurrentFileUid(_initialFileUidToOpen));
+        dispatch(
+          setCurrentFileContent(
+            _fileTree[_initialFileUidToOpen].data.content ||
+              getIndexHtmlContent(),
+          ),
+        );
+      } else {
+        dispatch(setCurrentFileUid(""));
+        dispatch(setCurrentFileContent(""));
+      }
       // } else {
 
       // }
