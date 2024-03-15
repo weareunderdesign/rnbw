@@ -1,109 +1,62 @@
-import React, {
-  useContext,
-  useMemo,
-} from 'react';
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
+import NavigatorPanel from "./navigatorPanel";
+import NodeTreeView from "./nodeTreeView";
+import SettingsPanel from "./settingsPanel";
+import WorkspaceTreeView from "./workspaceTreeView";
 import {
-  useDispatch,
-  useSelector,
-} from 'react-redux';
+  ImperativePanelHandle,
+  Panel,
+  PanelGroup,
+  PanelResizeHandle,
+} from "react-resizable-panels";
+import { useAppState } from "@_redux/useAppState";
 
-import {
-  ffSelector,
-  globalSelector,
-  MainContext,
-  navigatorSelector,
-} from '@_redux/main';
+export default function ActionsPanel() {
+  const { showFilePanel } = useAppState();
 
-import NavigatorPanel from './navigatorPanel';
-import NodeTreeView from './nodeTreeView';
-import SettingsPanel from './settingsPanel';
-import { ActionsPanelProps } from './types';
-import WorkspaceTreeView from './workspaceTreeView';
+  const [sizes, setSizes] = useState([0, 100]);
+  const filePanelRef = useRef<ImperativePanelHandle>(null);
 
-export default function ActionsPanel(props: ActionsPanelProps) {
-  const dispatch = useDispatch()
-  // -------------------------------------------------------------- global state --------------------------------------------------------------
-  const { file } = useSelector(navigatorSelector)
-  const { fileAction } = useSelector(globalSelector)
-  const { focusedItem, expandedItems, expandedItemsObj, selectedItems, selectedItemsObj } = useSelector(ffSelector)
-  const {
-    // global action
-    addRunningActions, removeRunningActions,
-    // navigator
-    workspace,
-    project,
-    navigatorDropDownType, setNavigatorDropDownType,
-    // node actions
-    activePanel, setActivePanel,
-    clipboardData, setClipboardData,
-    event, setEvent,
-    // actions panel
-    showActionsPanel,
-    // file tree view
-    initialFileToOpen, setInitialFileToOpen,
-    fsPending, setFSPending,
-    ffTree, setFFTree, setFFNode,
-    ffHandlers, setFFHandlers,
-    ffHoveredItem, setFFHoveredItem,
-    isHms, setIsHms,
-    ffAction, setFFAction,
-    currentFileUid, setCurrentFileUid,
-    // node tree view
-    fnHoveredItem, setFNHoveredItem,
-    nodeTree, setNodeTree,
-    validNodeTree, setValidNodeTree,
-    nodeMaxUid, setNodeMaxUid,
-    // stage view
-    iframeLoading, setIFrameLoading,
-    iframeSrc, setIFrameSrc,
-    fileInfo, setFileInfo,
-    needToReloadIFrame, setNeedToReloadIFrame,
-    linkToOpen, setLinkToOpen,
-    // code view
-    codeEditing, setCodeEditing,
-    codeChanges, setCodeChanges,
-    tabSize, setTabSize,
-    newFocusedNodeUid, setNewFocusedNodeUid,
-    // processor
-    updateOpt, setUpdateOpt,
-    // references
-    filesReferenceData, htmlReferenceData, cmdkReferenceData,
-    // cmdk
-    currentCommand, setCurrentCommand,
-    cmdkOpen, setCmdkOpen,
-    cmdkPages, setCmdkPages, cmdkPage,
-    // other
-    osType,
-    theme,
-    // toasts
-    addMessage, removeMessage,
-  } = useContext(MainContext)
+  useEffect(() => {
+    showFilePanel
+      ? filePanelRef.current?.resize(50)
+      : filePanelRef.current?.resize(0);
+  }, [showFilePanel]);
 
   return useMemo(() => {
-    return <>
+    return (
       <div
-        id='ActionsPanel'
-        className='border radius-s background-primary shadow'
+        id="ActionsPanel"
+        className="border-right background-primary"
         style={{
-          position: 'absolute',
-          top: props.offsetTop,
-          left: props.offsetLeft,
-          width: props.width,
-          height: props.height,
-
-          overflow: 'hidden',
-
-          ...(showActionsPanel ? {} : { width: '0', overflow: 'hidden', border: 'none' }),
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          height: "100%",
         }}
       >
         <NavigatorPanel />
-        <WorkspaceTreeView />
-        <NodeTreeView />
-        {false && <SettingsPanel />}
+        <PanelGroup onLayout={setSizes} direction="vertical">
+          <Panel
+            ref={filePanelRef}
+            defaultSize={sizes[0]}
+            minSize={showFilePanel ? 10 : 0}
+            maxSize={80}
+            order={0}
+            className={`${showFilePanel && "border-bottom"}`}
+          >
+            <WorkspaceTreeView />
+          </Panel>
+          {showFilePanel && (
+            <PanelResizeHandle className="panel-resize-vertical" />
+          )}
+          <Panel defaultSize={sizes[1]} minSize={10} maxSize={100} order={1}>
+            <NodeTreeView />
+          </Panel>
+        </PanelGroup>
+        <SettingsPanel />
       </div>
-    </>
-  }, [
-    props, showActionsPanel,
-  ])
+    );
+  }, [sizes, showFilePanel]);
 }

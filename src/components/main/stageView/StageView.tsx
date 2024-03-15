@@ -1,30 +1,29 @@
-import React, {
-  useCallback,
-  useContext,
-  useMemo,
-} from 'react';
+import React, { useCallback, useMemo } from "react";
+import { useDispatch } from "react-redux";
 
-import { MainContext } from '@_redux/main';
+import IFrame from "./iFrame";
 
-import IFrame from './iFrame';
-import { StageViewProps } from './types';
+import { setActivePanel } from "@_redux/main/processor";
+import { useAppState } from "@_redux/useAppState";
 
-export default function StageView(props: StageViewProps) {
-  const { iframeSrc, setActivePanel } = useContext(MainContext)
-
-  const onPanelClick = useCallback(() => {
-    setActivePanel('stage')
-  }, [])
-
+export default function StageView() {
+  const dispatch = useDispatch();
+  const onClick = useCallback(() => {
+    dispatch(setActivePanel("stage"));
+  }, []);
+  const { showCodeView } = useAppState();
   return useMemo(() => {
-    return <>
-      <div
-        id="StageView"
-        className='view'
-        onClick={onPanelClick}
-      >
-        <IFrame />
-      </div>
-    </>
-  }, [iframeSrc, onPanelClick])
+    return (
+      <>
+        <div
+          id="StageView"
+          className={showCodeView ? "" : "view"}
+          onClick={onClick}
+          style={{ height: "100%" }}
+        >
+          <IFrame />
+        </div>
+      </>
+    );
+  }, []);
 }

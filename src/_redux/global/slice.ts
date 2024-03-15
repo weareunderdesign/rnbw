@@ -1,21 +1,25 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { TGlobalReducerState } from './types';
+import { TGlobalReducerState, TOsType, TTheme } from "./types";
 
-// initial state of reducer
-const initialState: TGlobalReducerState = {
-}
-
-// create the slice
+const globalReducerInitialState: TGlobalReducerState = {
+  osType: "Windows",
+  theme: "System",
+};
 const slice = createSlice({
-  name: 'global',
-  initialState,
+  name: "global",
+  initialState: globalReducerInitialState,
   reducers: {
+    setOsType(state, action: PayloadAction<TOsType>) {
+      const osType = action.payload;
+      state.osType = osType;
+    },
+
+    setTheme(state, action: PayloadAction<TTheme>) {
+      const theme = action.payload;
+      state.theme = theme;
+    },
   },
-})
-
-// export the actions and reducer
-export const {
-} = slice.actions
-
-export const GlobalReducer = slice.reducer
+});
+export const { setOsType, setTheme } = slice.actions;
+export const GlobalReducer = slice.reducer;

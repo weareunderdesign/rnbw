@@ -1,33 +1,52 @@
-import { TFileNodeData } from './file';
-import {
-  THtmlDomNodeData,
-  THtmlNodeData,
-  THtmlReferenceData,
-} from './html';
+import { THtmlReferenceData } from "@_types/main";
 
-export type TNodeUid = string
 export type TNode = {
-  uid: TNodeUid,
-  parentUid: TNodeUid | null,
-  name: string,
-  isEntity: boolean,
-  children: TNodeUid[],
-  data: TNormalNodeData | TFileNodeData | THtmlNodeData | THtmlDomNodeData,
-}
-export type TNormalNodeData = {
-  valid: boolean,
-  [propName: string]: any,
-}
+  uid: TNodeUid;
+  parentUid: TNodeUid | null;
+
+  displayName: string;
+
+  isEntity: boolean;
+  children: TNodeUid[];
+
+  data: TNodeData;
+};
+
+export type TNodeUid = string;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type TNodeData = TBasicNodeData & { [propName: string]: any };
+
+export type TBasicNodeData = {
+  valid: boolean;
+};
+
 export type TNodeTreeData = {
-  [uid: TNodeUid]: TNode,
-}
-export type TNodeTreeContext = 'file' | 'html'
-export type TNodeApiResponse = {
-  tree: TNodeTreeData,
-  nodeMaxUid?: TNodeUid,
-  deletedUids?: TNodeUid[],
-  addedUidMap?: Map<TNodeUid, TNodeUid>,
-  position?: number,
-  lastNodeUid?: TNodeUid,
-}
-export type TNodeReferenceData = THtmlReferenceData
+  [uid: TNodeUid]: TNode;
+};
+
+export type TNodeSourceCodeLocation = {
+  startLine: number;
+  startCol: number;
+  startOffset: number;
+  endLine: number;
+  endCol: number;
+  endOffset: number;
+  startTag?: Omit<TNodeSourceCodeLocation, "startTag" | "endTag">;
+  endTag?: Omit<TNodeSourceCodeLocation, "startTag" | "endTag">;
+};
+
+export type TNodeActionType =
+  | "add"
+  | "remove"
+  | "cut"
+  | "copy"
+  | "paste"
+  | "duplicate"
+  | "move"
+  | "rename" // "turn into" for node tree - "rename" for file tree
+  | "group"
+  | "ungroup"
+  | "text-edit";
+
+export type TNodeReferenceData = THtmlReferenceData;

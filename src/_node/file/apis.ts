@@ -1,601 +1,475 @@
-import { Buffer } from 'buffer';
-import FileSaver from 'file-saver';
-import JSZip from 'jszip';
+import { Buffer } from "buffer";
+import { FileSystemFileHandle } from "file-system-access";
+import JSZip from "jszip";
 
+import { LogAllow } from "@_constants/global";
 import {
+  ParsableFileTypes,
   RootNodeUid,
   StagePreviewPathPrefix,
-} from '@_constants/main';
-// @ts-ignore
-import htmlRefElements from '@_ref/rfrncs/HTML Elements.csv';
-import { SystemDirectories } from '@_ref/SystemDirectories';
-import { verifyFileHandlerPermission } from '@_services/main';
-import { TOsType } from '@_types/global';
-import { TFileType } from '@_types/main';
+} from "@_constants/main";
+import { TOsType } from "@_redux/global";
+import { SystemDirectories } from "@_ref/SystemDirectories";
+import { verifyFileHandlerPermission } from "@_services/main";
 
 import {
+  fileHandlers,
+  getIndexHtmlContent,
   getSubNodeUidsByBfs,
-  parseHtml,
-  serializeHtml,
+  TFileHandlerCollection,
+  TFileNode,
+  TFileNodeData,
+  TFileNodeTreeData,
   TFileParserResponse,
-  THtmlElementsReference,
-  THtmlElementsReferenceData,
-  THtmlNodeData,
-  THtmlReferenceData,
-  TNodeReferenceData,
-  TNodeTreeData,
+  TIDBProjectLoaderBaseResponse,
+  TLocalProjectLoaderBaseResponse,
   TNodeUid,
-} from '../';
+} from "../";
+import { getInitialFileUidToOpen, sortFilesByASC } from "./helpers";
 import {
-  TFileHandlerInfo,
-  TFileHandlerInfoObj,
-  TIDBFileInfo,
-  TIDBFileInfoObj,
-  TZipFileInfo,
-} from './types';
+  _createIDBDirectory,
+  _getIDBDirectoryOrFileStat,
+  _path,
+  _readIDBDirectory,
+  _readIDBFile,
+  _removeIDBDirectoryOrFile,
+  _writeIDBFile,
+} from "./nohostApis";
+import { TFileHandlerInfo, TFileHandlerInfoObj, TZipFileInfo } from "./types";
 
-export const _fs = window.Filer.fs
-export const _path = window.Filer.path
-export const _sh = new _fs.Shell()
+export const initIDBProject = (projectPath: string): Promise<void> => {
+  return new Promise<void>((resolve, reject) => {
+    // remove original
+    _removeIDBDirectoryOrFile(projectPath)
+      .then(() => {
+        // create a new project
+        createIDBProject(projectPath)
+          .then(() => resolve())
+          .catch((err) => reject(err));
+      })
+      .catch((err) => {
+        LogAllow && console.error("error while removing IDB project", err);
+        reject(err);
+      });
+  });
+};
 
-export const initIDBProject = async (projectPath: string): Promise<void> => {
-  return new Promise<void>(async (resolve, reject) => {
-    // remove original welcome project
-    try {
-      await removeFileSystem(projectPath)
-    } catch (err) {
-
-    }
-
-    // create new welcome project
-    try {
-      await createIDBProject(projectPath)
-      resolve()
-    } catch (err) {
-      reject(err)
-    }
-  })
-}
 export const createIDBProject = async (projectPath: string): Promise<void> => {
-  return new Promise<void>(async (resolve, reject) => {
-    try {
-      // create root directory
-      await createDirectory(projectPath)
+  try {
+    // create project directory
+    await _createIDBDirectory(projectPath);
 
-      const htmlElementsReferenceData: THtmlElementsReferenceData = {}
-      htmlRefElements.map((htmlRefElement: THtmlElementsReference) => {
-        const pureTag = htmlRefElement['Name'] === 'Comment' ? 'comment' : htmlRefElement['Tag']?.slice(1, htmlRefElement['Tag'].length - 1)
-        htmlElementsReferenceData[pureTag] = htmlRefElement
-      })
-      
-      // create index.html
-      const indexHtmlPath = `${projectPath}/index.html`
-      let doctype = '<!DOCTYPE html>\n';
-      let html = htmlElementsReferenceData['html'].Content ? `<html>\n` + htmlElementsReferenceData['html'].Content + `\n</html>` : '';
-      const indexHtmlContent = doctype + html
-      
-//       `<!DOCTYPE html>
-// <html lang="en">
-//     <head>
-//         <meta charset="UTF-8">
-//         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-//         <meta http-equiv="X-UA-Compatible" content="ie=edge">
-//         <title>rnbw</title>
-//         <meta name="description" content="rainbow">
-//         <meta property="og:title" content="design. develop. ship.">
-//         <link rel="icon" href="images/favicon.png">
-//         <link rel="stylesheet" href="https://unpkg.com/renecss/dist/rene.min.css">
-//         <script type="module" src="https://unpkg.com/@rainbowapp/svg-icon.js/dist/svg-icon.min.js"></script>
-//         <script defer data-domain="rnbw.company" src="https://plausible.io/js/script.js"></script>
-//     </head>
+    // create index.html
+    const indexHtmlPath = `${projectPath}/index.html`;
+    const indexHtmlContent = getIndexHtmlContent();
+    await _writeIDBFile(indexHtmlPath, indexHtmlContent);
 
-//     <body>
-//         <div class="view align-center direction-row">
-//             <div class="page">
-//                 <div class="align-center">
-//                     <img src="https://rnbw.company/images/rnbwcolor.svg" class="box-m"></img>
-//                 </div>
-//                 <div class="align-center">
-//                     <div class="box-m">
-//                         <h4 class="text-center">
-//                             welcome to rnbw! hit
-//                             <span class="padding-s radius-s background-secondary">A</span>
-//                             to add something. hit
-//                             <span class="padding-s radius-s background-secondary">W</span>
-//                             to do something. hit
-//                             <span class="padding-s radius-s background-secondary">J</span>
-//                             to jumpstart. hit
-//                             <span class="padding-s radius-s background-secondary">O</span>
-//                             to open a project. that's it, you'll get the rest of
-//                             it!
-//                         </h4>
-//                     </div>
-//                 </div>
+    // If all operations are successful, resolve the promise
+    return Promise.resolve();
+  } catch (err) {
+    // If an error occurs, log it and reject the promise
+    LogAllow && console.error("error while creating IDB project", err);
+    return Promise.reject(err);
+  }
+};
 
-//                 <img class="dark" src="https://rnbw.company/images/keyboard-dark.svg"></img>
-//                 <img class="light" src="https://rnbw.company/images/keyboard-light.svg"></img>
-//                 <div class="direction-column gap-xl">
-//                     <div class="box direction-row">
-//                         <p>
-//                             rnbw is an environment to design in the web medium.
-//                             build websites, apps, and design systems. create
-//                             with popular libraries or make your stuff. while you
-//                             act on your ideas, HTML & CSS are generated in the
-//                             background.
-//                         </p>
-//                     </div>
-//                     <div class="box direction-row">
-//                         <p>
-//                             your design is an unlimited living product. it helps
-//                             you embrace HTML, CSS (and JS!) as the ultimate
-//                             design tool and common ground with your development
-//                             workflows. when your design is done, it’s done.
-//                         </p>
-//                     </div>
-//                 </div>
-//                 <rnbw-nav></rnbw-nav>
-//             </div>
-//         </div>
-//         <rnbw-footer></rnbw-footer>
-//     </body>
-//     <script src="https://rnbw.company/rnbw-nav.js"></script>
-//     <script src="https://rnbw.company/rnbw-footer.js"></script>
-// </html>`
-      await writeFile(indexHtmlPath, indexHtmlContent)
-
-      resolve()
-    } catch (err) {
-      reject(err)
+export const loadIDBProject = async (
+  projectPath: string,
+  isReload: boolean = false,
+  fileTree?: TFileNodeTreeData,
+): Promise<TIDBProjectLoaderBaseResponse> => {
+  try {
+    const deletedUidsObj: { [uid: TNodeUid]: true } = {};
+    if (isReload) {
+      getSubNodeUidsByBfs(
+        RootNodeUid,
+        fileTree as TFileNodeTreeData,
+        false,
+      ).map((uid) => {
+        deletedUidsObj[uid] = true;
+      });
     }
-  })
-}
-export const loadIDBProject = async (projectPath: string): Promise<TIDBFileInfoObj> => {
-  return new Promise<TIDBFileInfoObj>(async (resolve, reject) => {
-    try {
-      // build project-root
-      const rootHandler: TIDBFileInfo = {
-        uid: RootNodeUid,
-        parentUid: null,
-        children: [],
-        path: projectPath,
-        kind: 'directory',
-        name: 'welcome',
-      }
-      const handlerObj: TIDBFileInfoObj = { [RootNodeUid]: rootHandler }
 
-      // loop through the project
-      const dirHandlers: TIDBFileInfo[] = [rootHandler]
-      while (dirHandlers.length) {
-        const { uid, path } = dirHandlers.shift() as TIDBFileInfo
-
-        const entries = await readDir(path)
-        await Promise.all(entries.map(async (entry) => {
-          // skip stage preview files
-          if (entry.startsWith(StagePreviewPathPrefix)) return
-
-          // build handler
-          const c_uid = _path.join(uid, entry) as string
-          const c_path = _path.join(path, entry) as string
-          const stats = await getStat(c_path)
-          const c_name = entry
-          const c_kind = stats.type === 'DIRECTORY' ? 'directory' : 'file'
-
-          // skip hidden files
-          if (c_name[0] === '.') return
-
-          const c_ext = _path.extname(c_name) as string
-          const nameArr = c_name.split('.')
-          nameArr.length > 1 && nameArr.pop()
-          const _c_name = nameArr.join('.')
-
-          const handlerInfo: TIDBFileInfo = {
-            uid: c_uid,
-            parentUid: uid,
-            children: [],
-            path: c_path,
-            kind: c_kind,
-            name: c_kind === 'directory' ? c_name : _c_name,
-            ext: c_ext,
-            content: c_kind === 'directory' ? undefined : await readFile(c_path),
-          }
-
-          // update handler-obj
-          handlerObj[uid].children.push(c_uid)
-          handlerObj[c_uid] = handlerInfo
-
-          c_kind === 'directory' && dirHandlers.push(handlerInfo)
-        }))
-      }
-
-      resolve(handlerObj)
-    } catch (err) {
-      reject(err)
-    }
-  })
-}
-export const reloadIDBProject = async (projectPath: string, ffTree: TNodeTreeData): Promise<{ handlerObj: TIDBFileInfoObj, deletedUids: TNodeUid[] }> => {
-  return new Promise<{ handlerObj: TIDBFileInfoObj, deletedUids: TNodeUid[] }>(async (resolve, reject) => {
-    try {
-      // build project-root
-      const rootHandler: TIDBFileInfo = {
-        uid: RootNodeUid,
-        parentUid: null,
-        children: [],
-        path: projectPath,
-        kind: 'directory',
-        name: 'welcome',
-      }
-      const handlerObj: TIDBFileInfoObj = { [RootNodeUid]: rootHandler }
-
-      const orgUids: { [uid: TNodeUid]: true } = {}
-      getSubNodeUidsByBfs(RootNodeUid, ffTree, false).map(uid => {
-        orgUids[uid] = true
-      })
-
-      // loop through the project
-      const dirHandlers: TIDBFileInfo[] = [rootHandler]
-      while (dirHandlers.length) {
-        const { uid, path } = dirHandlers.shift() as TIDBFileInfo
-
-        const entries = await readDir(path)
-        await Promise.all(entries.map(async (entry) => {
-          // skip stage preview files
-          if (entry.startsWith(StagePreviewPathPrefix)) return
-
-          // build handler
-          const c_uid = _path.join(uid, entry) as string
-          const c_path = _path.join(path, entry) as string
-          const stats = await getStat(c_path)
-          const c_name = entry
-          const c_kind = stats.type === 'DIRECTORY' ? 'directory' : 'file'
-
-          // skip hidden files
-          if (c_name[0] === '.') return
-
-          const c_ext = _path.extname(c_name) as string
-          const nameArr = c_name.split('.')
-          nameArr.length > 1 && nameArr.pop()
-          const _c_name = nameArr.join('.')
-
-          delete orgUids[c_uid]
-
-          const handlerInfo: TIDBFileInfo = {
-            uid: c_uid,
-            parentUid: uid,
-            children: [],
-            path: c_path,
-            kind: c_kind,
-            name: c_kind === 'directory' ? c_name : _c_name,
-            ext: c_ext,
-            content: c_kind === 'directory' ? undefined : await readFile(c_path),
-          }
-
-          // update handler-obj
-          handlerObj[uid].children.push(c_uid)
-          handlerObj[c_uid] = handlerInfo
-
-          c_kind === 'directory' && dirHandlers.push(handlerInfo)
-        }))
-      }
-
-      resolve({ handlerObj, deletedUids: Object.keys(orgUids) })
-    } catch (err) {
-      reject(err)
-    }
-  })
-}
-
-export const loadLocalProject = async (projectHandle: FileSystemDirectoryHandle, osType: TOsType): Promise<TFileHandlerInfoObj> => {
-  return new Promise(async (res, rej) => {
-    // verify project-handler permission
-    if (!(await verifyFileHandlerPermission(projectHandle))) rej('project handler permission error')
-
-    // build project-root
+    // build project root-handler
     const rootHandler: TFileHandlerInfo = {
       uid: RootNodeUid,
       parentUid: null,
-      path: `/${projectHandle.name}`,
-      kind: 'directory',
-      name: projectHandle.name,
-      handler: projectHandle,
       children: [],
-    }
-    const handlerArr: TFileHandlerInfo[] = [rootHandler]
-    const handlerObj: TFileHandlerInfoObj = { [RootNodeUid]: rootHandler }
+
+      path: projectPath,
+      kind: "directory",
+      name: "welcome",
+    };
+    const handlerObj: TFileHandlerInfoObj = { [RootNodeUid]: rootHandler };
 
     // loop through the project
-    const dirHandlers: TFileHandlerInfo[] = [rootHandler]
+    const dirHandlers: TFileHandlerInfo[] = [rootHandler];
     while (dirHandlers.length) {
-      const { uid, path, handler } = dirHandlers.shift() as TFileHandlerInfo
-      try {
-        for await (const entry of (handler as FileSystemDirectoryHandle).values()) {
-          // skip system directories
-          if (SystemDirectories[osType][entry.name]) continue
+      const { uid: p_uid, path: p_path } =
+        dirHandlers.shift() as TFileHandlerInfo;
 
-          // build handler
-          const c_uid = _path.join(uid, entry.name) as string
-          const c_path = _path.join(path, entry.name) as string
-          const c_kind = entry.kind
-          const c_name = entry.name
-          const c_handler = entry
+      const entries = await _readIDBDirectory(p_path);
+      await Promise.all(
+        entries.map(async (entry) => {
+          // skip stage preview files & hidden files
+          if (entry.startsWith(StagePreviewPathPrefix) || entry[0] === ".")
+            return;
 
-          // skip hidden files
-          if (c_name[0] === '.') continue
+          // build c_handler
+          const c_uid = _path.join(p_uid, entry) as string;
+          const c_path = _path.join(p_path, entry) as string;
+          const stats = await _getIDBDirectoryOrFileStat(c_path);
+          const c_kind = stats.type === "DIRECTORY" ? "directory" : "file";
 
-          const c_ext = _path.extname(c_name) as string
-          const nameArr = c_name.split('.')
-          nameArr.length > 1 && nameArr.pop()
-          const _c_name = nameArr.join('.')
+          const nameArr = entry.split(".");
+          const c_ext = nameArr.length > 1 ? nameArr.pop() : undefined;
+          const c_name = nameArr.join(".");
 
-          const handlerInfo: TFileHandlerInfo = {
+          const c_content =
+            c_kind === "directory" ? undefined : await _readIDBFile(c_path);
+
+          const c_handlerInfo: TFileHandlerInfo = {
             uid: c_uid,
-            parentUid: uid,
+            parentUid: p_uid,
+            children: [],
+
             path: c_path,
             kind: c_kind,
-            name: c_kind === 'directory' ? c_name : _c_name,
+            name: c_kind === "directory" ? entry : c_name,
+
             ext: c_ext,
-            handler: c_handler,
-            children: [],
-          }
+            content: c_content,
+          };
 
-          // update handler-arr, handler-obj
-          handlerArr.push(handlerInfo)
-          handlerObj[uid].children.push(c_uid)
-          handlerObj[c_uid] = handlerInfo
+          // update handlerObj & dirHandlers
+          handlerObj[c_uid] = c_handlerInfo;
+          handlerObj[p_uid].children.push(c_uid);
+          c_kind === "directory" && dirHandlers.push(c_handlerInfo);
 
-          c_kind === 'directory' && dirHandlers.push(handlerInfo)
-        }
-      } catch (err) {
-        rej(err)
-      }
+          // remove c_uid from deletedUids array
+          delete deletedUidsObj[c_uid];
+        }),
+      );
     }
 
-    // build idb
-    try {
-      await Promise.all(handlerArr.map(async (_handler) => {
-        const { uid, kind, path, handler } = _handler
-        if (kind === 'directory') {
-          // create directory
-          await createDirectory(path)
-        } else {
-          // read and store file content
-          const fileEntry = await (handler as FileSystemFileHandle).getFile()
-          const contentBuffer = Buffer.from(await fileEntry.arrayBuffer())
-          handlerObj[uid].content = contentBuffer
-          await writeFile(path, contentBuffer)
-        }
-      }))
-    } catch (err) {
-    }
+    // sort by ASC directory/file
+    sortFilesByASC(handlerObj);
+    // define the initialFileUidToOpen
+    const _initialFileUidToOpen = getInitialFileUidToOpen(handlerObj);
 
-    res(handlerObj)
-  })
-}
-export const reloadLocalProject = async (projectHandle: FileSystemDirectoryHandle, ffTree: TNodeTreeData, osType: TOsType, files: TNodeUid[] = []): Promise<{ handlerObj: TFileHandlerInfoObj, deletedUids: TNodeUid[] }> => {
-  return new Promise(async (res, rej) => {
+    // build fileTree
+    const _fileTree: TFileNodeTreeData = {};
+    Object.keys(handlerObj).map((uid) => {
+      const { parentUid, children, path, kind, name, ext, content } =
+        handlerObj[uid];
+
+      const parsable = kind === "file" && ParsableFileTypes[ext as string];
+      const fileContent = parsable ? content?.toString() : "";
+
+      _fileTree[uid] = {
+        uid,
+        parentUid: parentUid,
+
+        displayName: name,
+
+        isEntity: kind === "file",
+        children: [...children],
+
+        data: {
+          valid: true,
+
+          path: path,
+
+          kind: kind,
+          name: name,
+          ext: ext,
+
+          orgContent: fileContent,
+          content: fileContent,
+          contentInApp: "",
+
+          changed: false,
+        } as TFileNodeData,
+      } as TFileNode;
+    });
+
+    return {
+      _fileTree,
+      _initialFileUidToOpen,
+      deletedUidsObj,
+      deletedUids: Object.keys(deletedUidsObj),
+    };
+  } catch (err) {
+    LogAllow && console.error("error in loadIDBProject API", err);
+    throw err;
+  }
+};
+
+export const loadLocalProject = async (
+  projectHandle: FileSystemDirectoryHandle,
+  osType: TOsType,
+  isReload: boolean = false,
+  fileTree?: TFileNodeTreeData,
+): Promise<TLocalProjectLoaderBaseResponse> => {
+  try {
     // verify project-handler permission
-    if (!(await verifyFileHandlerPermission(projectHandle))) rej('project handler permission error')
+    if (!(await verifyFileHandlerPermission(projectHandle)))
+      throw "project handler permission error";
 
-    // build project-root
+    const deletedUidsObj: { [uid: TNodeUid]: true } = {};
+    if (isReload) {
+      getSubNodeUidsByBfs(
+        RootNodeUid,
+        fileTree as TFileNodeTreeData,
+        false,
+      ).map((uid) => {
+        deletedUidsObj[uid] = true;
+      });
+    }
+
+    // build project root-handler
     const rootHandler: TFileHandlerInfo = {
       uid: RootNodeUid,
       parentUid: null,
-      path: `/${projectHandle.name}`,
-      kind: 'directory',
-      name: projectHandle.name,
-      handler: projectHandle,
       children: [],
-    }
-    const handlerArr: TFileHandlerInfo[] = []
-    const handlerObj: TFileHandlerInfoObj = { [RootNodeUid]: rootHandler }
 
-    const orgUids: { [uid: TNodeUid]: true } = {}
-    getSubNodeUidsByBfs(RootNodeUid, ffTree, false).map(uid => {
-      orgUids[uid] = true
-    })
+      path: `/${projectHandle.name}`,
+      kind: "directory",
+      name: projectHandle.name,
+
+      handler: projectHandle,
+    };
+    const handlerArr: TFileHandlerInfo[] = [rootHandler];
+    const handlerObj: TFileHandlerInfoObj = { [RootNodeUid]: rootHandler };
 
     // loop through the project
-    const dirHandlers: TFileHandlerInfo[] = [rootHandler]
+    const dirHandlers: TFileHandlerInfo[] = [rootHandler];
     while (dirHandlers.length) {
-      const { uid, path, handler } = dirHandlers.shift() as TFileHandlerInfo
-      try {
-        for await (const entry of (handler as FileSystemDirectoryHandle).values()) {
-          // skip system directories
-          if (SystemDirectories[osType][entry.name]) continue
+      const {
+        uid: p_uid,
+        path: p_path,
+        handler: p_handler,
+      } = dirHandlers.shift() as TFileHandlerInfo;
 
-          // build handler
-          const c_uid = _path.join(uid, entry.name) as string
-          const c_path = _path.join(path, entry.name) as string
-          const c_kind = entry.kind
-          const c_name = entry.name
-          const c_handler = entry
+      for await (const entry of (
+        p_handler as FileSystemDirectoryHandle
+      ).values()) {
+        // skip system directories & hidden files
+        if (SystemDirectories[osType][entry.name] || entry.name[0] === ".")
+          continue;
 
-          // skip hidden files
-          if (c_name[0] === '.') continue
+        // build c_handler
+        const c_uid = _path.join(p_uid, entry.name) as string;
+        const c_path = _path.join(p_path, entry.name) as string;
 
-          const c_ext = _path.extname(c_name) as string
-          const nameArr = c_name.split('.')
-          nameArr.length > 1 && nameArr.pop()
-          const _c_name = nameArr.join('.')
+        const c_kind = entry.kind;
 
-          delete orgUids[c_uid]
+        const nameArr = entry.name.split(".");
+        const c_ext = nameArr.length > 1 ? nameArr.pop() : undefined;
+        const c_name = nameArr.join(".");
 
-          const handlerInfo: TFileHandlerInfo = {
-            uid: c_uid,
-            parentUid: uid,
-            path: c_path,
-            kind: c_kind,
-            name: c_kind === 'directory' ? c_name : _c_name,
-            ext: c_ext,
-            handler: c_handler,
-            children: [],
-          }
-
-          // update handler-arr, handler-obj
-          handlerObj[uid].children.push(c_uid)
-          handlerObj[c_uid] = handlerInfo
-          if (files.length === 0) {
-            if (!ffTree[c_uid]) {
-              handlerArr.push(handlerInfo)
-            }
-          }
-          else {
-            if (files.filter(file => file === c_uid).length > 0) {
-              handlerArr.push(handlerInfo)
-            }
-          }
-
-          c_kind === 'directory' && dirHandlers.push(handlerInfo)
+        let c_content: Uint8Array | undefined = undefined;
+        if (c_kind === "file") {
+          const fileEntry = await (entry as FileSystemFileHandle).getFile();
+          c_content = Buffer.from(await fileEntry.arrayBuffer());
         }
-      } catch (err) {
-        rej(err)
+
+        const c_handlerInfo: TFileHandlerInfo = {
+          uid: c_uid,
+          parentUid: p_uid,
+          children: [],
+
+          path: c_path,
+          kind: c_kind,
+          name: c_kind === "directory" ? entry.name : c_name,
+
+          ext: c_ext,
+          content: c_content,
+
+          handler: entry,
+        };
+
+        // update handler-arr, handler-obj
+        handlerObj[p_uid].children.push(c_uid);
+        handlerObj[c_uid] = c_handlerInfo;
+        handlerArr.push(c_handlerInfo);
+        c_kind === "directory" && dirHandlers.push(c_handlerInfo);
+
+        // remove c_uid from deletedUids array
+        delete deletedUidsObj[c_uid];
       }
     }
 
-    // build idb
-    try {
-      await Promise.all(handlerArr.map(async (_handler) => {
-        const { uid, kind, path, handler } = _handler
-        if (kind === 'directory') {
-          // create directory
-          await createDirectory(path)
+    // sort by ASC directory/file
+    sortFilesByASC(handlerObj);
+    // define the initialFileUidToOpen
+    const _initialFileUidToOpen = getInitialFileUidToOpen(handlerObj);
+
+    // build fileTree and fileHandlers
+    const _fileTree: TFileNodeTreeData = {};
+    const _fileHandlers: TFileHandlerCollection = {};
+    Object.keys(handlerObj).map((uid) => {
+      const { parentUid, children, path, kind, name, ext, content, handler } =
+        handlerObj[uid];
+
+      const parsable = kind === "file" && ParsableFileTypes[ext as string];
+      const fileContent = parsable ? content?.toString() : "";
+
+      _fileTree[uid] = {
+        uid,
+        parentUid: parentUid,
+
+        displayName: name,
+
+        isEntity: kind === "file",
+        children: [...children],
+
+        data: {
+          valid: true,
+
+          path: path,
+
+          kind: kind,
+          name: name,
+          ext: ext ?? "",
+
+          orgContent: fileContent,
+          content: fileContent,
+          contentInApp: "",
+
+          changed: false,
+        } as TFileNodeData,
+      } as TFileNode;
+
+      _fileHandlers[uid] = handler as FileSystemHandle;
+    });
+
+    return {
+      handlerArr,
+      _fileHandlers,
+      _fileTree,
+      _initialFileUidToOpen,
+      deletedUidsObj,
+      deletedUids: Object.keys(deletedUidsObj),
+    };
+  } catch (err) {
+    LogAllow && console.log("error in loadLocalProject API", err);
+    throw err;
+  }
+};
+
+export const buildNohostIDB = async (
+  handlerArr: TFileHandlerInfo[],
+  deletedPaths: TNodeUid[] = [],
+): Promise<void> => {
+  try {
+    // Remove deleted paths
+    await Promise.all(
+      deletedPaths.map(async (path) => {
+        try {
+          await _removeIDBDirectoryOrFile(path);
+        } catch (err) {
+          console.error("Error while removing IDB project", err);
+        }
+      }),
+    );
+
+    // Process handlerArr
+    await Promise.all(
+      handlerArr.map(async (_handler) => {
+        const { kind, path, content } = _handler;
+        if (kind === "directory") {
+          try {
+            await _createIDBDirectory(path);
+          } catch (err) {
+            console.error("Error while creating IDB directory", err);
+          }
         } else {
-          // read and store file content
-          const fileEntry = await (handler as FileSystemFileHandle).getFile()
-          const contentBuffer = Buffer.from(await fileEntry.arrayBuffer())
-          handlerObj[uid].content = contentBuffer
-          await writeFile(path, contentBuffer)
+          try {
+            await _writeIDBFile(path, content as Uint8Array);
+          } catch (err) {
+            console.error("Error while writing IDB file", err);
+          }
         }
-      }))
-    } catch (err) {
-    }
+      }),
+    );
 
-    res({ handlerObj, deletedUids: Object.keys(orgUids) })
-  })
-}
+    return; // Resolve the promise
+  } catch (err) {
+    console.error("Error in buildNohostIDB API", err);
+    throw err; // Reject the promise
+  }
+};
 
-export const downloadProject = async (projectPath: string): Promise<void> => {
-  return new Promise<void>(async (resolve, reject) => {
-    try {
-      const zip = new JSZip()
+export const downloadIDBProject = async (
+  projectPath: string,
+): Promise<void> => {
+  try {
+    alert("Downloading project, please wait...");
 
-      // build project-root
-      const projectName = projectPath.slice(1)
-      const rootFolder = zip.folder(projectName)
-      const rootHandler: TZipFileInfo = {
-        path: projectPath,
-        zip: rootFolder,
-      }
+    const zip = new JSZip();
 
-      // loop through the project
-      const dirHandlers: TZipFileInfo[] = [rootHandler]
-      while (dirHandlers.length) {
-        const { path, zip } = dirHandlers.shift() as TZipFileInfo
+    // Build project root
+    const projectName = projectPath.slice(1);
+    const rootFolder = zip.folder(projectName);
+    const rootHandler: TZipFileInfo = {
+      path: projectPath,
+      zip: rootFolder,
+    };
 
-        const entries = await readDir(path)
-        await Promise.all(entries.map(async (entry) => {
-          // skip stage preview files
-          if (entry.startsWith(StagePreviewPathPrefix)) return
+    // Loop through the project
+    const dirHandlers: TZipFileInfo[] = [rootHandler];
+    while (dirHandlers.length) {
+      const { path, zip } = dirHandlers.shift() as TZipFileInfo;
 
-          // build handler
-          const c_path = _path.join(path, entry) as string
-          const stats = await getStat(c_path)
-          const c_name = entry
-          const c_kind = stats.type === 'DIRECTORY' ? 'directory' : 'file'
+      const entries = await _readIDBDirectory(path);
+      await Promise.all(
+        entries.map(async (entry) => {
+          // Skip stage preview files
+          if (entry.startsWith(StagePreviewPathPrefix)) return;
 
-          let c_zip: JSZip | null | undefined
-          if (c_kind === 'directory') {
-            c_zip = zip?.folder(c_name)
+          // Build handler
+          const c_path = _path.join(path, entry) as string;
+          const stats = await _getIDBDirectoryOrFileStat(c_path);
+          const c_name = entry;
+          const c_kind = stats.type === "DIRECTORY" ? "directory" : "file";
+
+          let c_zip: JSZip | null | undefined;
+          if (c_kind === "directory") {
+            c_zip = zip?.folder(c_name);
           } else {
-            const content = await readFile(c_path)
-            c_zip = zip?.file(c_name, content)
+            const content = await _readIDBFile(c_path);
+            c_zip = zip?.file(c_name, content);
           }
 
           const handlerInfo: TZipFileInfo = {
             path: c_path,
             zip: c_zip,
-          }
-          c_kind === 'directory' && dirHandlers.push(handlerInfo)
-        }))
-      }
-
-      const projectBlob = await zip.generateAsync({ type: 'blob' })
-      FileSaver.saveAs(projectBlob, `${projectName}.zip`)
-
-      resolve()
-    } catch (err) {
-      reject(err)
+          };
+          c_kind === "directory" && dirHandlers.push(handlerInfo);
+        }),
+      );
     }
-  })
-}
+    alert("Project downloaded successfully");
 
-export const createDirectory = async (path: string): Promise<void> => {
-  return new Promise<void>((resolve, reject) => {
-    _fs.mkdir(path, (err: any) => {
-      err ? reject(err) : resolve()
-    })
-  })
-}
-export const readFile = async (path: string): Promise<Uint8Array> => {
-  return new Promise<Uint8Array>((resolve, reject) => {
-    _fs.readFile(path, (err: any, data: Buffer) => {
-      err ? reject(err) : resolve(data)
-    })
-  })
-}
-export const writeFile = async (path: string, content: Uint8Array | string): Promise<void> => {
-  return new Promise<void>((resolve, reject) => {
-    _fs.writeFile(path, content, (err: any) => {
-      err ? reject(err) : resolve()
-    })
-  })
-}
-export const removeFileSystem = async (path: string): Promise<void> => {
-  return new Promise<void>((resolve, reject) => {
-    _sh.rm(path, { recursive: true }, (err: any) => {
-      err ? reject(err) : resolve()
-    })
-  })
-}
-export const readDir = async (path: string): Promise<string[]> => {
-  return new Promise<string[]>((resolve, reject) => {
-    _fs.readdir(path, (err: any, files: string[]) => {
-      err ? reject(err) : resolve(files)
-    })
-  })
-}
-export const getStat = async (path: string): Promise<any> => {
-  return new Promise<any>((resolve, reject) => {
-    _fs.stat(path, (err: any, stats: any) => {
-      err ? reject(err) : resolve(stats)
-    })
-  })
-}
+    const projectBlob = await zip.generateAsync({ type: "blob" });
+    const url = URL.createObjectURL(projectBlob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${projectName}.zip`;
+    link.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error("Error in downloadIDBProject API", err);
+    throw err;
+  }
+};
 
-export const parseFile = (type: TFileType, content: string, referenceData: TNodeReferenceData, osType: TOsType, keepNodeUids: null | boolean = false, nodeMaxUid: TNodeUid = ''): TFileParserResponse => {
-  if (type === 'html') {
-    return parseHtml(content, referenceData as THtmlReferenceData, osType, keepNodeUids, nodeMaxUid)
-  } else {
-    return {
-      formattedContent: '',
-      contentInApp: '',
-      tree: {},
-      nodeMaxUid: '0',
-    }
-  }
-}
-export const serializeFile = (type: TFileType, tree: TNodeTreeData, referenceData: TNodeReferenceData, osType: TOsType): THtmlNodeData | string => {
-  if (type === 'html') {
-    return serializeHtml(tree, referenceData as THtmlReferenceData, osType)
-  }
-  return ''
-}
-
-export const getNormalizedPath = (path: string): { isAbsolutePath: boolean, normalizedPath: string } => {
-  if (path.startsWith('https://') || path.startsWith('http://')) {
-    return { isAbsolutePath: true, normalizedPath: path }
-  }
-  const isAbsolutePath = _path.isAbsolute(path)
-  const normalizedPath = _path.normalize(path)
-  return { isAbsolutePath, normalizedPath }
-}
+export const parseFile = (
+  ext: string,
+  content: string,
+): TFileParserResponse => {
+  return fileHandlers[ext]
+    ? fileHandlers[ext](content)
+    : { contentInApp: "", nodeTree: {}, htmlDom: null };
+};

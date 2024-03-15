@@ -1,1 +1,2 @@
-export const ToastDuration = 3 * 1000
+export const RainbowAppName = "rnbw";
+export const LogAllow = true;

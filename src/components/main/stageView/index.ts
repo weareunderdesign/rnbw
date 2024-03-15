@@ -1,8 +1,3 @@
-import IFrame from './iFrame';
-import StageView from './StageView';
+import StageView from "./StageView";
 
-export default StageView
-
-export * from './types'
-
-export { IFrame };
+export default StageView;

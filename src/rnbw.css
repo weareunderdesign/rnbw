@@ -4,26 +4,18 @@
   outline-style: solid;
   outline-offset: -1px;
 }
-body{
-   cursor:default !important;
-}
-body *:hover{
-  cursor:default !important;
-}
-.target {cursor:move}
-.dragging-tree * {
+body,
+#CodeView *:hover,
+#StageView *:hover {
   cursor: default !important;
-	cursor: -webkit-default !important;
-	cursor:    -moz-default !important;
-	cursor:         default !important; 
 }
-body.inheritCursors * {
-  cursor: inherit !important;
+.target {
+  cursor: move;
 }
+
 .outline-none {
   outline: none;
 }
-
 .outline-default {
   outline-color: var(--color-tertiary-background);
 }
@@ -31,38 +23,31 @@ body.inheritCursors * {
 .outline-primary {
   outline-color: var(--color-primary);
 }
-
 .outline-positive {
   outline-color: var(--color-positive);
 }
-
 .outline-negative {
   outline-color: var(--color-negative);
 }
-
 .outline-solid {
   outline-style: solid;
 }
-
 .outline-dotted {
   outline-style: dotted;
 }
 
 /* react-complex-tree ul-li */
 #root #NodeTreeView ul,
-#root #FileTreeView ul {
+#root #FileTreeView ul,
+#root #SettingsView ul {
   padding: 0px;
+  list-style-type: none;
 }
 
-#root #NodeTreeView ul>li,
-#root #FileTreeView ul>li {
+#root #NodeTreeView ul > li,
+#root #FileTreeView ul > li {
   line-height: 100%;
   padding: 0px;
-}
-
-#root #NodeTreeView ul>li::marker,
-#root #FileTreeView ul>li::marker {
-  display: none;
 }
 
 /* cmdk modal */
@@ -74,7 +59,6 @@ body.inheritCursors * {
 
 [cmdk-dialog] {
   position: fixed;
-
   top: 50vh;
   left: 50vw;
   transform: translate(-50%, -50%);
@@ -102,7 +86,6 @@ body.inheritCursors * {
 [cmdk-list] {
   min-width: 195px;
   width: auto;
-
   scroll-padding-block-start: 8px;
   scroll-padding-block-end: 8px;
 }
@@ -111,7 +94,7 @@ body.inheritCursors * {
   cursor: pointer;
 }
 
-[cmdk-item][aria-selected=true] {
+[cmdk-item][aria-selected="true"] {
   /* rene.css -> .background-secondary */
   background-color: var(--color-secondary-background);
   color: var(--color-secondary-foreground);
@@ -145,7 +128,7 @@ body.inheritCursors * {
 
 .navigator-project-item-name {
   /* rene.css -> .opacity-m */
-  opacity: .5;
+  opacity: 0.5;
 }
 
 .navigator-project-item.selected .navigator-project-item-icon,
@@ -159,11 +142,11 @@ body.inheritCursors * {
 .navigator-project-item:hover .navigator-project-item-name {
   opacity: 1;
 }
-.monaco-editor{
+.monaco-editor {
   width: 100% !important;
   height: 100% !important;
 }
-.overflow-guard{
+.overflow-guard {
   width: 100% !important;
   height: 100% !important;
 }
@@ -171,6 +154,81 @@ body.inheritCursors * {
   height: 100% !important;
   width: calc(100% - 64px) !important;
 }
+/* panels style */
+
+.panel-resize {
+  width: 1px;
+}
+.panel-resize-vertical {
+  height: 1px;
+}
+
 #CodeView {
   transition: 0.3s all;
+}
+
+#ActionsPanel {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  z-index: 999;
+  transition: 0.3s all;
+}
+
+#Settings {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.settings-item {
+  display: grid;
+  grid-template-columns: 50px 1fr 20px;
+  align-items: center;
+}
+
+.action-panel-wrapper {
+  width: 2px;
+  height: 100%;
+  position: absolute;
+  z-index: 10;
+}
+
+.action-panel-wrapper > #ActionsPanel {
+  width: 240px;
+  transform: translateX(-300px);
+}
+
+.action-panel-wrapper:hover > #ActionsPanel {
+  transform: translateX(0px);
+}
+
+.action-button {
+  visibility: visible;
+  padding: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.action-button:hover {
+  background-color: var(--color-secondary-background);
+  border-radius: 4px;
+}
+.action-button-hidden {
+  visibility: hidden;
+}
+.attribute-input {
+  word-wrap: break-word;
+  min-height: 14px;
+  background: transparent;
+  outline: none;
+  border: none;
+  width: 100%;
+  display: inline-block;
+  padding: 0;
+}
+.attribute-input:hover,
+.attribute-input:focus {
+  outline: 1px solid var(--color-tertiary-background);
 }

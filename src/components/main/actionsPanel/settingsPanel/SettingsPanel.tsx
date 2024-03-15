@@ -1,74 +1,73 @@
-import React, {
-  useCallback,
-  useContext,
-  useMemo,
-} from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useDispatch } from "react-redux";
 
-import { useDispatch } from 'react-redux';
+import { StageNodeIdAttr, DataSequencedUid } from "@_node/file";
+import { useAppState } from "@_redux/useAppState";
+import { setActivePanel } from "@_redux/main/processor";
+import { SVGIconI } from "@_components/common";
 
-import { MainContext } from '@_redux/main';
+import { SettingsView } from "../settingsView/SettingsView";
+import { SettingsForm } from "../settingsView/SettingsForm";
+import { PanelHeader } from "@_components/common/panelHeader";
 
-import { SettingsPanelProps } from './types';
+const excludedAttributes: string[] = [StageNodeIdAttr, DataSequencedUid];
 
-export default function SettingsPanel(props: SettingsPanelProps) {
-  const dispatch = useDispatch()
-  // -------------------------------------------------------------- global state --------------------------------------------------------------
-  const {
-    // global action
-    addRunningActions, removeRunningActions,
-    // node actions
-    activePanel, setActivePanel,
-    clipboardData, setClipboardData,
-    event, setEvent,
-    // file tree view
-    fsPending, setFSPending,
-    ffTree, setFFTree, setFFNode,
-    ffHandlers, setFFHandlers,
-    ffHoveredItem, setFFHoveredItem,
-    isHms, setIsHms,
-    ffAction, setFFAction,
-    currentFileUid, setCurrentFileUid,
-    // node tree view
-    fnHoveredItem, setFNHoveredItem,
-    nodeTree, setNodeTree,
-    validNodeTree, setValidNodeTree,
-    nodeMaxUid, setNodeMaxUid,
-    // stage view
-    iframeLoading, setIFrameLoading,
-    iframeSrc, setIFrameSrc,
-    fileInfo, setFileInfo,
-    needToReloadIFrame, setNeedToReloadIFrame,
-    // code view
-    codeEditing, setCodeEditing,
-    codeChanges, setCodeChanges,
-    tabSize, setTabSize,
-    newFocusedNodeUid, setNewFocusedNodeUid,
-    // processor
-    updateOpt, setUpdateOpt,
-    // references
-    filesReferenceData, htmlReferenceData, cmdkReferenceData,
-    // cmdk
-    currentCommand, setCurrentCommand,
-    cmdkOpen, setCmdkOpen,
-    cmdkPages, setCmdkPages, cmdkPage,
-    // other
-    osType,
-    theme,
-    // toasts
-    addMessage, removeMessage,
-  } = useContext(MainContext)
-  // -------------------------------------------------------------- own --------------------------------------------------------------
-  const onPanelClick = useCallback((e: React.MouseEvent) => {
-    setActivePanel('settings')
-  }, [])
+export default function SettingsPanel() {
+  const dispatch = useDispatch();
+  const { nodeTree, nFocusedItem } = useAppState();
+
+  const [attributes, setAttributes] = useState({});
+  const [showForm, setShowForm] = useState(false);
+
+  const attributesArray = useMemo(() => Object.keys(attributes), [attributes]);
+
+  useEffect(() => {
+    const filteredAttributes = nodeTree[nFocusedItem]?.data?.attribs || {};
+    const filtered = Object.fromEntries(
+      Object.entries(filteredAttributes)
+        .filter(([key]) => !excludedAttributes.includes(key))
+        .reverse(),
+    );
+    setAttributes(filtered);
+  }, [nodeTree, nFocusedItem]);
+
+  const onPanelClick = useCallback(() => {
+    dispatch(setActivePanel("settings"));
+  }, []);
 
   return useMemo(() => {
-    return <>
+    return (
       <div
-        id="SettingsPanel"
+        id="Settings"
         onClick={onPanelClick}
+        className="border-bottom padding-m"
       >
+        <PanelHeader>
+          <div className="text-s">Settings</div>
+
+          {!showForm && (
+            <div
+              className="action-button"
+              onClick={() => {
+                setShowForm(true);
+              }}
+            >
+              <SVGIconI {...{ class: "icon-xs" }}>plus</SVGIconI>
+            </div>
+          )}
+        </PanelHeader>
+
+        {showForm && (
+          <SettingsForm
+            setShowForm={setShowForm}
+            setAttributes={setAttributes}
+          />
+        )}
+
+        {!!attributesArray.length && (
+          <SettingsView attributes={attributes} setAttributes={setAttributes} />
+        )}
       </div>
-    </>
-  }, [onPanelClick])
+    );
+  }, [onPanelClick, showForm, attributes, attributesArray]);
 }

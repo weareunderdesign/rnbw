@@ -1,52 +1,46 @@
-import React, {
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import React, { useEffect, useMemo, useState } from "react";
 
-import {
-  BrowserRouter as Router,
-  Route,
-  Routes,
-} from 'react-router-dom';
-import { Workbox } from 'workbox-window';
+import { HashRouter as Router, Route, Routes } from "react-router-dom";
+import { Workbox } from "workbox-window";
 
-import { LogAllow } from '@_constants/main';
-import MainPage from '@_pages/main';
+import { LogAllow } from "@_constants/global";
+import MainPage from "@_pages/main";
 
-import { AppProps } from './types';
-
-export default function App(props: AppProps) {
-  // setup nohost
-  const [nohostReady, setNohostReady] = useState(false)
+export default function App() {
+  // setup nohost-serviceworker
+  const [nohostReady, setNohostReady] = useState(false);
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      const wb = new Workbox('/nohost-sw.js?route=rnbw')
+    if ("serviceWorker" in navigator) {
+      const wb = new Workbox("/nohost-sw.js?route=rnbw");
       wb.register().then(() => {
-        setNohostReady(true)
-      })
+        setNohostReady(true);
+        LogAllow && console.log("nohost ready");
+      });
     }
-  }, [])
-  useEffect(() => {
-    LogAllow && nohostReady && console.log('nohost ready')
-  }, [nohostReady])
+  }, []);
 
   return useMemo(() => {
-    return <>
-      {nohostReady ? <Router>
-        <Routes>
-          <Route path="/" element={<MainPage />} />
-        </Routes>
-      </Router> : null}
-    </>
-  }, [nohostReady])
+    return (
+      <>
+        {nohostReady ? (
+          <Router>
+            <Routes>
+              <Route path="/" element={<MainPage />} />
+              <Route path="/:project/*" element={<MainPage />} />
+            </Routes>
+          </Router>
+        ) : null}
+      </>
+    );
+  }, [nohostReady]);
 }
 
 // extend global interfaces for nohost
 declare global {
   interface Window {
-    Filer: any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Filer: any;
   }
 }
-
-window.Filer = window.Filer
+// eslint-disable-next-line no-self-assign
+window.Filer = window.Filer;
