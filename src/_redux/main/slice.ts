@@ -12,7 +12,6 @@ import { StageViewReducer } from "./stageView";
 import { ProjectReducer } from "./project";
 
 import { persistReducer } from "redux-persist";
-import persistStore from "redux-persist/es/persistStore";
 import createWebStorage from "redux-persist/es/storage/createWebStorage";
 
 export function createPersistStore() {
@@ -32,7 +31,8 @@ export function createPersistStore() {
   }
   return createWebStorage("local");
 }
-const storage = typeof window !== "undefined"
+const storage =
+  typeof window !== "undefined"
     ? createWebStorage("local")
     : createPersistStore();
 

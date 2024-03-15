@@ -3,6 +3,7 @@ import { SVGIconI } from "@_components/common";
 import { TFilesReference } from "@_types/main";
 import { TreeItem } from "react-complex-tree";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface NodeIconProps<T = any> {
   fileReferenceData: TFilesReference;
   item: TreeItem<T>;
