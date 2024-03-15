@@ -12,7 +12,7 @@ import { useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { RootNodeUid } from "@_constants/main";
-import { SVGIconI, TreeView } from "@_components/common";
+import { TreeView } from "@_components/common";
 import {
   getNormalizedPath,
   createURLPath,
@@ -49,6 +49,7 @@ import {
   ItemTitle,
   TreeItem,
 } from "@_components/common/treeComponents";
+import { NodeIcon } from "./workspaceComponents/NodeIcon";
 
 const AutoExpandDelayOnDnD = 1 * 1000;
 export default function WorkspaceTreeView() {
@@ -61,7 +62,6 @@ export default function WorkspaceTreeView() {
     fExpandedItems: expandedItems,
     fSelectedItems: selectedItems,
     linkToOpen,
-    navigatorDropdownType,
     autoSave,
     activePanel,
     prevRenderableFileUid,
@@ -187,330 +187,293 @@ export default function WorkspaceTreeView() {
     openFromURL();
   }, [project, rest, recentProjectHandlers]);
 
-  return currentFileUid === "" || navigatorDropdownType === "project" ? (
-    <>
-      <div
-        id="FileTreeView"
-        style={{
-          position: "relative",
-          top: 0,
-          left: 0,
-          width: "100%",
-          maxHeight: "calc(50vh)",
-          height: "auto",
-          overflow: "auto",
+  return (
+    <div
+      id="FileTreeView"
+      style={{
+        width: "100%",
+        height: "100%",
+        overflow: "auto",
+      }}
+      onClick={onPanelClick}
+    >
+      <TreeView
+        width={"100%"}
+        height={"auto"}
+        info={{ id: "file-tree-view" }}
+        data={fileTreeViewData}
+        focusedItem={focusedItem}
+        expandedItems={expandedItems}
+        selectedItems={selectedItems}
+        renderers={{
+          renderTreeContainer: (props) => <Container {...props} />,
+          renderItemsContainer: (props) => <Container {...props} />,
 
-          ...(navigatorDropdownType ? { zIndex: 2 } : {}),
-        }}
-        className={
-          navigatorDropdownType ? "border-bottom background-primary" : ""
-        }
-        onClick={onPanelClick}
-      >
-        <TreeView
-          width={"100%"}
-          height={"auto"}
-          info={{ id: "file-tree-view" }}
-          data={fileTreeViewData}
-          focusedItem={focusedItem}
-          expandedItems={expandedItems}
-          selectedItems={selectedItems}
-          renderers={{
-            renderTreeContainer: (props) => <Container {...props} />,
-            renderItemsContainer: (props) => <Container {...props} />,
+          renderItem: (props) => {
+            // rename the newly created file
+            useEffect(() => {
+              const node = props.item.data as TNode;
+              if (!node.data.valid) {
+                props.context.selectItem();
+                props.context.startRenamingItem();
+              }
+            }, []);
 
-            renderItem: (props) => {
-              // rename the newly created file
-              useEffect(() => {
-                const node = props.item.data as TNode;
-                if (!node.data.valid) {
-                  props.context.selectItem();
-                  props.context.startRenamingItem();
-                }
-              }, []);
-
-              const fileReferenceData = useMemo<TFilesReference>(() => {
-                const node = props.item.data as TNode;
-                const nodeData = node.data as TFileNodeData;
-                const refData =
-                  filesReferenceData[
-                    nodeData.kind === "directory"
-                      ? "folder"
+            const fileReferenceData = useMemo<TFilesReference>(() => {
+              const node = props.item.data as TNode;
+              const nodeData = node.data as TFileNodeData;
+              const refData =
+                filesReferenceData[
+                  nodeData.kind === "directory"
+                    ? "folder"
+                    : nodeData.ext
+                      ? nodeData.ext.slice(1)
                       : nodeData.ext
-                        ? nodeData.ext.slice(1)
-                        : nodeData.ext
-                  ];
-                return refData;
-              }, []);
+                ];
+              return refData;
+            }, []);
 
-              const onClick = useCallback(
-                async (e: React.MouseEvent) => {
-                  e.stopPropagation();
-                  const isFile =
-                    fileTree[props.item.data.uid].data.kind === "file";
+            const onClick = useCallback(
+              async (e: React.MouseEvent) => {
+                e.stopPropagation();
+                const isFile =
+                  fileTree[props.item.data.uid].data.kind === "file";
 
-                  const newURL = createURLPath(
-                    props.item.data.uid,
-                    RootNodeUid,
-                    fileTree[RootNodeUid]?.displayName,
-                  );
-
-                  if (isFile) {
-                    navigate(newURL);
-                    dispatch(setLoadingFalse());
-
-                    props.item.data.uid !== currentFileUid &&
-                      dispatch(setLoadingTrue());
-                  }
-
-                  try {
-                    const promises = [];
-
-                    if (fileTree[currentFileUid]?.data?.changed && autoSave) {
-                      promises.push(onSaveCurrentFile());
-                    }
-                    openFileUid.current = props.item.data.uid;
-                    // Skip click-event from an inline rename input
-                    const targetId = e.target && (e.target as HTMLElement).id;
-                    if (targetId === "FileTreeView-RenameInput") {
-                      return;
-                    }
-
-                    if (!props.context.isFocused) {
-                      props.context.focusItem();
-                      focusedItemRef.current = props.item.index as TNodeUid;
-                    }
-                    if (e.shiftKey) {
-                      promises.push(props.context.selectUpTo());
-                    } else if (e.ctrlKey) {
-                      promises.push(
-                        props.context.isSelected
-                          ? props.context.unselectItem()
-                          : props.context.addToSelectedItems(),
-                      );
-                    } else {
-                      promises.push(props.context.selectItem());
-                      if (props.item.isFolder) {
-                        promises.push(props.context.toggleExpandedState());
-                      } else {
-                        promises.push(props.context.primaryAction());
-                      }
-                    }
-
-                    promises.push(dispatch(setActivePanel("file")));
-                    // Wait for all promises to resolve
-                    await Promise.all(promises);
-                  } finally {
-                    isFile && dispatch(setLoadingFalse());
-                  }
-                },
-                [props.item, props.context, fileTree, autoSave, currentFileUid],
-              );
-
-              const onDragStart = (e: React.DragEvent) => {
-                const target = e.target as HTMLElement;
-                e.dataTransfer.setDragImage(
-                  target,
-                  window.outerWidth,
-                  window.outerHeight,
+                const newURL = createURLPath(
+                  props.item.data.uid,
+                  RootNodeUid,
+                  fileTree[RootNodeUid]?.displayName,
                 );
-                props.context.startDragging();
-              };
-              const debouncedExpand = useCallback(
-                debounce(cb_expandNode, AutoExpandDelayOnDnD),
-                [cb_expandNode],
-              );
-              const onDragEnter = () => {
-                if (!props.context.isExpanded) {
-                  debouncedExpand(props.item.index as TNodeUid);
-                }
-              };
 
-              const onMouseEnter = () =>
-                dispatch(setHoveredFileUid(props.item.index as TNodeUid));
-              const onMouseLeave = () => dispatch(setHoveredFileUid(""));
+                if (isFile) {
+                  navigate(newURL);
+                  dispatch(setLoadingFalse());
 
-              const NodeIcon = () => {
-                if (fileReferenceData) {
-                  return (
-                    <div className="icon-xs">
-                      <SVGIconI {...{ class: "icon-xs" }}>
-                        {props.item.data?.data.kind === "file" &&
-                        props.item.data?.data.name === "index" &&
-                        props.item.data?.data.type === "html" &&
-                        props.item.data?.parentUid === "ROOT"
-                          ? "home"
-                          : fileReferenceData &&
-                              fileReferenceData["Icon"] &&
-                              fileReferenceData["Icon"] !== "md"
-                            ? fileReferenceData["Icon"]
-                            : "page"}
-                      </SVGIconI>
-                    </div>
-                  );
+                  props.item.data.uid !== currentFileUid &&
+                    dispatch(setLoadingTrue());
                 }
 
-                return (
-                  <div className="icon-xs">
-                    <SVGIconI {...{ class: "icon-xs" }}>
-                      {props.item.data?.isEntity ? "page" : "folder"}
-                    </SVGIconI>
-                  </div>
-                );
-              };
-              return (
-                <TreeItem
-                  {...props}
-                  id={`FileTreeView-${generateQuerySelector(
-                    props.item.index.toString(),
-                  )}`}
-                  invalidFileNodes={invalidFileNodes}
-                  eventHandlers={{
-                    onClick: onClick,
-                    onMouseEnter: onMouseEnter,
-                    onMouseLeave: onMouseLeave,
-                    onFocus: () => {},
-                    onDragStart: onDragStart,
-                    onDragEnter: onDragEnter,
-                  }}
-                  nodeIcon={
-                    <>
-                      <NodeIcon />
-                      {props.title}
-                    </>
-                  }
-                />
-              );
-            },
-            renderItemArrow: ({ item, context }) => (
-              <ItemArrow item={item} context={context} />
-            ),
-            renderItemTitle: ({ title, item }) => {
-              const fileOrDirectoryTitle = title;
-              const fileExt = item?.data?.data?.ext
-                ? `.${item?.data?.data?.ext}`
-                : "";
-              const fileOrDirTitle = fileOrDirectoryTitle + fileExt;
+                try {
+                  const promises = [];
 
-              return (
-                <ItemTitle
-                  title={fileOrDirTitle}
-                  isChanged={
-                    fileTree[item.data.uid] &&
-                    (fileTree[item.data.uid].data as TFileNodeData).changed
+                  if (fileTree[currentFileUid]?.data?.changed && autoSave) {
+                    promises.push(onSaveCurrentFile());
                   }
-                />
-              );
-            },
-            renderRenameInput: (props) => {
-              const onChange = useCallback(
-                (e: React.ChangeEvent<HTMLInputElement>) => {
-                  props.inputProps.onChange && props.inputProps.onChange(e);
-                },
-                [props.inputProps],
-              );
+                  openFileUid.current = props.item.data.uid;
+                  // Skip click-event from an inline rename input
+                  const targetId = e.target && (e.target as HTMLElement).id;
+                  if (targetId === "FileTreeView-RenameInput") {
+                    return;
+                  }
 
-              const onBlur = useCallback(
-                (e: React.FocusEvent<HTMLInputElement, Element>) => {
-                  props.inputProps.onBlur && props.inputProps.onBlur(e);
-                  props.formProps.onSubmit &&
-                    props.formProps.onSubmit(
-                      new Event(
-                        "",
-                      ) as unknown as React.FormEvent<HTMLFormElement>,
+                  if (!props.context.isFocused) {
+                    props.context.focusItem();
+                    focusedItemRef.current = props.item.index as TNodeUid;
+                  }
+                  if (e.shiftKey) {
+                    promises.push(props.context.selectUpTo());
+                  } else if (e.ctrlKey) {
+                    promises.push(
+                      props.context.isSelected
+                        ? props.context.unselectItem()
+                        : props.context.addToSelectedItems(),
                     );
-                },
-                [props.inputProps, props.formProps],
-              );
+                  } else {
+                    promises.push(props.context.selectItem());
+                    if (props.item.isFolder) {
+                      promises.push(props.context.toggleExpandedState());
+                    } else {
+                      promises.push(props.context.primaryAction());
+                    }
+                  }
 
-              return (
-                <>
-                  <form
-                    {...props.formProps}
-                    className={"align-center justify-start"}
-                  >
-                    <input
-                      id={"FileTreeView-RenameInput"}
-                      {...props.inputProps}
-                      ref={props.inputRef}
-                      className={`text-s`}
-                      style={{
-                        outline: "none",
-                        margin: "0",
-                        border: "none",
-                        padding: "0",
-                        background: "transparent",
-                        height: "12px",
-                      }}
-                      onChange={onChange}
-                      onBlur={onBlur}
+                  promises.push(dispatch(setActivePanel("file")));
+                  // Wait for all promises to resolve
+                  await Promise.all(promises);
+                } finally {
+                  isFile && dispatch(setLoadingFalse());
+                }
+              },
+              [props.item, props.context, fileTree, autoSave, currentFileUid],
+            );
+
+            const onDragStart = (e: React.DragEvent) => {
+              const target = e.target as HTMLElement;
+              e.dataTransfer.setDragImage(
+                target,
+                window.outerWidth,
+                window.outerHeight,
+              );
+              props.context.startDragging();
+            };
+            const debouncedExpand = useCallback(
+              debounce(cb_expandNode, AutoExpandDelayOnDnD),
+              [cb_expandNode],
+            );
+            const onDragEnter = () => {
+              if (!props.context.isExpanded) {
+                debouncedExpand(props.item.index as TNodeUid);
+              }
+            };
+
+            const onMouseEnter = () =>
+              dispatch(setHoveredFileUid(props.item.index as TNodeUid));
+            const onMouseLeave = () => dispatch(setHoveredFileUid(""));
+
+            return (
+              <TreeItem
+                {...props}
+                key={`FileTreeView-${props.item.index}${props.item.data.data.nodeName}`}
+                id={`FileTreeView-${generateQuerySelector(
+                  props.item.index.toString(),
+                )}`}
+                invalidFileNodes={invalidFileNodes}
+                eventHandlers={{
+                  onClick: onClick,
+                  onMouseEnter: onMouseEnter,
+                  onMouseLeave: onMouseLeave,
+                  onFocus: () => {},
+                  onDragStart: onDragStart,
+                  onDragEnter: onDragEnter,
+                }}
+                nodeIcon={
+                  <>
+                    <NodeIcon
+                      item={props.item}
+                      fileReferenceData={fileReferenceData}
                     />
-                    <button ref={props.submitButtonRef} className={"hidden"} />
-                  </form>
-                </>
+                    {props.title}
+                  </>
+                }
+              />
+            );
+          },
+          renderItemArrow: ({ item, context }) => (
+            <ItemArrow item={item} context={context} />
+          ),
+          renderItemTitle: ({ title, item }) => {
+            const fileOrDirectoryTitle = title;
+            const fileExt = item?.data?.data?.ext
+              ? `.${item?.data?.data?.ext}`
+              : "";
+            const fileOrDirTitle = fileOrDirectoryTitle + fileExt;
+
+            return (
+              <ItemTitle
+                title={fileOrDirTitle}
+                isChanged={
+                  fileTree[item.data.uid] &&
+                  (fileTree[item.data.uid].data as TFileNodeData).changed
+                }
+              />
+            );
+          },
+          renderRenameInput: (props) => {
+            const onChange = useCallback(
+              (e: React.ChangeEvent<HTMLInputElement>) => {
+                props.inputProps.onChange && props.inputProps.onChange(e);
+              },
+              [props.inputProps],
+            );
+
+            const onBlur = useCallback(
+              (e: React.FocusEvent<HTMLInputElement, Element>) => {
+                props.inputProps.onBlur && props.inputProps.onBlur(e);
+                props.formProps.onSubmit &&
+                  props.formProps.onSubmit(
+                    new Event(
+                      "",
+                    ) as unknown as React.FormEvent<HTMLFormElement>,
+                  );
+              },
+              [props.inputProps, props.formProps],
+            );
+
+            return (
+              <>
+                <form
+                  {...props.formProps}
+                  className={"align-center justify-start"}
+                >
+                  <input
+                    id={"FileTreeView-RenameInput"}
+                    {...props.inputProps}
+                    ref={props.inputRef}
+                    className={`text-s`}
+                    style={{
+                      outline: "none",
+                      margin: "0",
+                      border: "none",
+                      padding: "0",
+                      background: "transparent",
+                      height: "12px",
+                    }}
+                    onChange={onChange}
+                    onBlur={onBlur}
+                  />
+                  <button ref={props.submitButtonRef} className={"hidden"} />
+                </form>
+              </>
+            );
+          },
+        }}
+        props={{
+          canDragAndDrop: true,
+          canDropOnFolder: true,
+          canDropOnNonFolder: false,
+          canReorderItems: false,
+
+          canSearch: false,
+          canSearchByStartingTyping: false,
+          canRename: true,
+        }}
+        callbacks={{
+          onStartRenamingItem: (item) => {
+            cb_startRenamingNode(item.index as TNodeUid);
+          },
+          onAbortRenamingItem: (item) => {
+            cb_abortRenamingNode(item);
+          },
+          onRenameItem: (item, name) => {
+            cb_renameNode(item, name);
+          },
+
+          onSelectItems: (items) => {
+            cb_selectNode(items as TNodeUid[]);
+          },
+          onFocusItem: (item) => {
+            cb_focusNode(item.index as TNodeUid);
+          },
+          onExpandItem: (item) => {
+            cb_expandNode(item.index as TNodeUid);
+          },
+          onCollapseItem: (item) => {
+            cb_collapseNode(item.index as TNodeUid);
+          },
+
+          onPrimaryAction: (item) => {
+            item.data.data.valid
+              ? cb_readNode(item.index as TNodeUid)
+              : removeRunningActions(["fileTreeView-read"]);
+          },
+
+          onDrop: (items, target) => {
+            const targetUid = (target as DraggingPositionItem)
+              .targetItem as TNodeUid;
+            if (invalidFileNodes[targetUid]) return;
+            const uids = items
+              .map((item) => item.index as TNodeUid)
+              .filter(
+                (uid) =>
+                  !invalidFileNodes[uid] &&
+                  fileTree[uid].parentUid !== targetUid,
               );
-            },
-          }}
-          props={{
-            canDragAndDrop: true,
-            canDropOnFolder: true,
-            canDropOnNonFolder: false,
-            canReorderItems: false,
+            if (uids.length === 0) return;
 
-            canSearch: false,
-            canSearchByStartingTyping: false,
-            canRename: true,
-          }}
-          callbacks={{
-            onStartRenamingItem: (item) => {
-              cb_startRenamingNode(item.index as TNodeUid);
-            },
-            onAbortRenamingItem: (item) => {
-              cb_abortRenamingNode(item);
-            },
-            onRenameItem: (item, name) => {
-              cb_renameNode(item, name);
-            },
-
-            onSelectItems: (items) => {
-              cb_selectNode(items as TNodeUid[]);
-            },
-            onFocusItem: (item) => {
-              cb_focusNode(item.index as TNodeUid);
-            },
-            onExpandItem: (item) => {
-              cb_expandNode(item.index as TNodeUid);
-            },
-            onCollapseItem: (item) => {
-              cb_collapseNode(item.index as TNodeUid);
-            },
-
-            onPrimaryAction: (item) => {
-              item.data.data.valid
-                ? cb_readNode(item.index as TNodeUid)
-                : removeRunningActions(["fileTreeView-read"]);
-            },
-
-            onDrop: (items, target) => {
-              const targetUid = (target as DraggingPositionItem)
-                .targetItem as TNodeUid;
-              if (invalidFileNodes[targetUid]) return;
-              const uids = items
-                .map((item) => item.index as TNodeUid)
-                .filter(
-                  (uid) =>
-                    !invalidFileNodes[uid] &&
-                    fileTree[uid].parentUid !== targetUid,
-                );
-              if (uids.length === 0) return;
-
-              cb_moveNode(uids, targetUid);
-            },
-          }}
-        />
-      </div>
-    </>
-  ) : (
-    <></>
+            cb_moveNode(uids, targetUid);
+          },
+        }}
+      />
+    </div>
   );
 }

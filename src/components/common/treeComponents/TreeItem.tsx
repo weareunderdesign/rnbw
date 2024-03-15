@@ -8,7 +8,6 @@ export const TreeItem = (props: TreeItemProps) => {
     depth,
     arrow,
     eventHandlers,
-    key,
     id,
     nodeIcon,
     item,
@@ -19,10 +18,9 @@ export const TreeItem = (props: TreeItemProps) => {
     <li
       className={`${context.isSelected && "background-secondary"}`}
       {...context.itemContainerWithChildrenProps}
+      id={id}
     >
       <div
-        key={key}
-        id={id}
         className={`justify-stretch padding-xs outline-default ${
           props.context.isSelected && "background-tertiary outline-none"
         } ${

@@ -11,6 +11,7 @@ export type TProcessorReducerState = {
 
   showActionsPanel: boolean;
   showCodeView: boolean;
+  showFilePanel: boolean;
 
   autoSave: boolean;
   formatCode: boolean;
