@@ -267,14 +267,38 @@ export const useNodeActionHandlers = () => {
         return;
       }
 
+      const nodeToAdd = selectedUids.map(
+        (uid) => `Node-<${nodeTree[uid]?.displayName}>`,
+      );
+
+      const {
+        isAllowed,
+        selectedUids: targetUids,
+        skipPosition,
+      } = isPastingAllowed({
+        selectedItems: [targetUid],
+        nodeTree,
+        htmlReferenceData,
+        nodeToAdd,
+        validNodeTree,
+        isMove: true,
+      });
+
+      if (!isAllowed) {
+        toast("Pasting not allowed", {
+          type: "error",
+        });
+        return;
+      }
+
       dispatch(setIsContentProgrammaticallyChanged(true));
       NodeActions.move({
         dispatch,
         nodeTree,
         selectedUids,
-        targetUid,
-        isBetween,
-        position,
+        targetUid: targetUids[0],
+        isBetween: skipPosition ? false : isBetween,
+        position: skipPosition ? 0 : position,
         codeViewInstanceModel,
         formatCode,
         fb: () => dispatch(setIsContentProgrammaticallyChanged(false)),
