@@ -45,9 +45,9 @@ export const initIDBProject = (projectPath: string): Promise<void> => {
         // create a new project
         createIDBProject(projectPath)
           .then(() => resolve())
-          .catch(err => reject(err));
+          .catch((err) => reject(err));
       })
-      .catch(err => {
+      .catch((err) => {
         LogAllow && console.error("error while removing IDB project", err);
         reject(err);
       });
@@ -72,7 +72,6 @@ export const createIDBProject = async (projectPath: string): Promise<void> => {
     return Promise.reject(err);
   }
 };
-
 
 export const loadIDBProject = async (
   projectPath: string,
@@ -310,16 +309,8 @@ export const loadLocalProject = async (
     const _fileTree: TFileNodeTreeData = {};
     const _fileHandlers: TFileHandlerCollection = {};
     Object.keys(handlerObj).map((uid) => {
-      const {
-        parentUid,
-        children,
-        path,
-        kind,
-        name,
-        ext,
-        content,
-        handler,
-      } = handlerObj[uid];
+      const { parentUid, children, path, kind, name, ext, content, handler } =
+        handlerObj[uid];
 
       const parsable = kind === "file" && ParsableFileTypes[ext as string];
       const fileContent = parsable ? content?.toString() : "";
@@ -473,7 +464,6 @@ export const downloadIDBProject = async (
     throw err;
   }
 };
-
 
 export const parseFile = (
   ext: string,

@@ -16,7 +16,10 @@ import { getNodeUidsFromPaths } from "@_node/helpers";
 import { TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { setCurrentCommand } from "@_redux/main/cmdk";
-import { setEditingNodeUidInCodeView } from "@_redux/main/codeView";
+import {
+  setCodeErrors,
+  setEditingNodeUidInCodeView,
+} from "@_redux/main/codeView";
 import {
   setDoingFileAction,
   setFileTreeNodes,
@@ -74,6 +77,8 @@ export const useNodeTreeEvent = () => {
 
   const isSelectedNodeUidsChanged = useRef(false);
   const isCurrentFileContentChanged = useRef(false);
+  const isCodeErrorsExist = useRef(false);
+
   useEffect(() => {
     isSelectedNodeUidsChanged.current = false;
     isCurrentFileContentChanged.current = false;
@@ -225,15 +230,22 @@ export const useNodeTreeEvent = () => {
                 return true;
               },
             });
+            isCodeErrorsExist.current = false;
           } catch (err) {
+            isCodeErrorsExist.current = true;
+
             toast("Some changes in the code are incorrect", {
               type: "error",
+              toastId: "Some changes in the code are incorrect",
             });
             console.error(err, "error");
           }
         }
       }
     }
+    dispatch(setCodeErrors(isCodeErrorsExist.current));
+    if (isCodeErrorsExist.current) return;
+
     // sync node-tree
     dispatch(setNodeTree(nodeTree));
     const _validNodeTree = getValidNodeTree(nodeTree);

@@ -24,7 +24,10 @@ const parseHtml = (content: string): THtmlParserResponse => {
       if (
         Object.prototype.hasOwnProperty.call(PARSING_ERROR_MESSAGES, err.code)
       ) {
-        toast(PARSING_ERROR_MESSAGES[err.code], { type: "error" });
+        toast(PARSING_ERROR_MESSAGES[err.code], {
+          type: "warning",
+          toastId: PARSING_ERROR_MESSAGES[err.code],
+        });
       }
     },
   });

@@ -39,6 +39,7 @@ export default function CodeView() {
 
     editingNodeUidInCodeView,
     isCodeTyping,
+    codeErrors,
   } = useAppState();
   const { monacoEditorRef } = useContext(MainContext);
 
@@ -206,7 +207,7 @@ export default function CodeView() {
             zIndex: 999,
             overflow: "hidden",
           }}
-          className="border-left background-primary"
+          className={`border-left background-primary ${codeErrors && "outline border outline-negative"}`}
           onClick={onPanelClick}
         >
           <Editor
@@ -235,5 +236,6 @@ export default function CodeView() {
     language,
     currentFileContent,
     editorConfigs,
+    codeErrors,
   ]);
 }

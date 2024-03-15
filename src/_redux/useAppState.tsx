@@ -59,7 +59,11 @@ export const useAppState = () => {
         syncConfigs,
         webComponentOpen,
       },
-      codeView: { editingNodeUid: editingNodeUidInCodeView, codeViewTabSize },
+      codeView: {
+        editingNodeUid: editingNodeUidInCodeView,
+        codeViewTabSize,
+        codeErrors,
+      },
       processor: {
         doingAction,
         navigatorDropdownType,
@@ -165,6 +169,7 @@ export const useAppState = () => {
 
     editingNodeUidInCodeView,
     codeViewTabSize,
+    codeErrors,
 
     doingAction,
 
