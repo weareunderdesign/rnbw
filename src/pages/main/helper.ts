@@ -120,9 +120,9 @@ export const clearProjectSession = (dispatch: Dispatch<AnyAction>) => {
       favicon: null,
     }),
   );
-        dispatch(setFileTree({}));
-        dispatch(setInitialFileUidToOpen(""));
-     dispatch(setCurrentFileUid(""));
+  dispatch(setFileTree({}));
+  dispatch(setInitialFileUidToOpen(""));
+  dispatch(setCurrentFileUid(""));
   dispatch(setPrevFileUid(""));
   dispatch(setPrevRenderableFileUid(""));
   dispatch(clearFileTreeViewState());
@@ -181,7 +181,6 @@ export const fileCmdk = ({
   data: TCmdkGroupData;
   cmdkSearchContent: string;
   groupName: string;
-
 }) => {
   const fileNode = fileTree[fFocusedItem];
   if (fileNode) {
@@ -207,7 +206,7 @@ export const fileCmdk = ({
     });
   }
   data["Files"] = data["Files"].filter(
-    (element:  TCmdkReference) => element.Featured || !!cmdkSearchContent,
+    (element: TCmdkReference) => element.Featured || !!cmdkSearchContent,
   );
   if (data["Files"].length === 0) {
     delete data["Files"];
@@ -219,12 +218,14 @@ export const elementsCmdk = ({
   htmlReferenceData,
   data,
   groupName,
+  isMove = false,
 }: {
   nodeTree: TNodeTreeData;
   nFocusedItem: TNodeUid;
   htmlReferenceData: THtmlReferenceData;
   data: TCmdkGroupData;
   groupName: string;
+  isMove?: boolean;
 }) => {
   let flag = true;
   for (const x in nodeTree) {
@@ -237,7 +238,11 @@ export const elementsCmdk = ({
     const htmlNode = nodeTree[nFocusedItem];
     if (htmlNode && htmlNode.parentUid && htmlNode.parentUid !== RootNodeUid) {
       const parentNode = nodeTree[htmlNode.parentUid!];
-      const refData = htmlReferenceData.elements[parentNode.displayName];
+      const refData =
+        htmlReferenceData.elements[
+          isMove ? htmlNode.displayName : parentNode.displayName
+        ];
+
       if (refData) {
         if (refData.Contain === "All") {
           Object.keys(htmlReferenceData.elements).map((tag: string) => {
@@ -434,9 +439,10 @@ export const setSystemTheme = () => {
   }
 };
 
-
-
-export function debounce<F extends AnyFunction>(func: F, wait: number): (...args: Parameters<F>) => void {
+export function debounce<F extends AnyFunction>(
+  func: F,
+  wait: number,
+): (...args: Parameters<F>) => void {
   let timeoutId: ReturnType<typeof setTimeout>;
 
   return function debounced(...args: Parameters<F>) {
