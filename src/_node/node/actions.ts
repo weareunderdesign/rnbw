@@ -55,27 +55,29 @@ const add = ({
   cb?: () => void;
 }) => {
   try {
+    const commentTag = "!--...--";
     const tagName = actionName.slice(
       AddNodeActionPrefix.length + 2,
       actionName.length - 1,
     );
     const htmlReferenceData = referenceData as THtmlReferenceData;
-    const HTMLElement = htmlReferenceData.elements[tagName];
+    const HTMLElement =
+      htmlReferenceData.elements[tagName === commentTag ? "comment" : tagName];
 
-    let openingTag = HTMLElement.Tag;
-    if (HTMLElement.Attributes) {
-      const tagArray = openingTag.split("");
-      tagArray.splice(tagArray.length - 1, 0, ` ${HTMLElement.Attributes}`);
-      openingTag = tagArray.join("");
+    let openingTag = HTMLElement?.Tag || "";
+    if (HTMLElement?.Attributes) {
+      openingTag = openingTag.replace(">", ` ${HTMLElement.Attributes}>`);
     }
     const closingTag = `</${tagName}>`;
 
-    const tagContent = HTMLElement.Content ? HTMLElement.Content : "";
+    const tagContent = HTMLElement?.Content || "";
 
     const codeViewText =
-      HTMLElement.Contain === "None"
-        ? openingTag
-        : `${openingTag}${tagContent}${closingTag}`;
+      tagName === commentTag
+        ? tagContent
+        : HTMLElement?.Contain === "None"
+          ? openingTag
+          : `${openingTag}${tagContent}${closingTag}`;
 
     const sortedUids = sortUidsByMaxEndIndex(selectedItems, nodeTree);
     sortedUids.forEach((uid) => {
@@ -123,7 +125,13 @@ const add = ({
   }
 };
 function remove({
-  dispatch, nodeTree, selectedUids, codeViewInstanceModel, formatCode, fb, cb,
+  dispatch,
+  nodeTree,
+  selectedUids,
+  codeViewInstanceModel,
+  formatCode,
+  fb,
+  cb,
 }: {
   dispatch: Dispatch<AnyAction>;
   nodeTree: TNodeTreeData;
@@ -138,7 +146,8 @@ function remove({
     sortedUids.forEach((uid) => {
       const node = nodeTree[uid];
       if (node) {
-        const { startCol, startLine, endCol, endLine } = node.data.sourceCodeLocation;
+        const { startCol, startLine, endCol, endLine } =
+          node.data.sourceCodeLocation;
         const edit = {
           range: new Range(startLine, startCol, endLine, endCol),
           text: "",
@@ -563,15 +572,13 @@ const rename = ({
     const htmlReferenceData = referenceData as THtmlReferenceData;
     const HTMLElement = htmlReferenceData.elements[tagName];
 
-    let openingTag = HTMLElement.Tag;
-    if (HTMLElement.Attributes) {
+    let openingTag = HTMLElement?.Tag;
+    if (HTMLElement?.Attributes) {
       const tagArray = openingTag.split("");
-      tagArray.splice(tagArray.length - 1, 0, ` ${HTMLElement.Attributes}`);
+      tagArray.splice(tagArray.length - 1, 0, ` ${HTMLElement?.Attributes}`);
       openingTag = tagArray.join("");
     }
     const closingTag = `</${tagName}>`;
-
-    
 
     // **********************************************************
     // will replace with pureTagCode when we will not want to keep origianl innerHtml of the target node
