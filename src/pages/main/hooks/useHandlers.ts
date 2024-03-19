@@ -45,7 +45,7 @@ import {
 import { html_beautify } from "js-beautify";
 
 export const useHandlers = () => {
-  const { currentProjectFileHandle } = useAppState();
+  const { currentProjectFileHandle, formatCode } = useAppState();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const {
@@ -229,7 +229,7 @@ export const useHandlers = () => {
         dispatch(setCurrentFileUid(_initialFileUidToOpen));
         dispatch(
           setCurrentFileContent(
-            html_beautify(_fileTree[_initialFileUidToOpen].data.content) ||
+            (formatCode ? html_beautify(_fileTree[_initialFileUidToOpen].data.content) : _fileTree[_initialFileUidToOpen].data.content) ||
               getIndexHtmlContent(),
           ),
         );
@@ -257,7 +257,7 @@ export const useHandlers = () => {
           dispatch(setCurrentFileUid(_initialFileUidToOpen));
           dispatch(
             setCurrentFileContent(
-              html_beautify(_fileTree[_initialFileUidToOpen].data.content),
+              formatCode ? html_beautify(_fileTree[_initialFileUidToOpen].data.content): _fileTree[_initialFileUidToOpen].data.content,
             ),
           );
         } else {
