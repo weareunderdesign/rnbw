@@ -42,9 +42,11 @@ import {
   setRecentProjectHandlers,
   setRecentProjectNames,
 } from "@_redux/main/project";
+import { html_beautify } from "js-beautify";
 
 export const useHandlers = () => {
   const { currentProjectFileHandle } = useAppState();
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const {
@@ -141,6 +143,14 @@ export const useHandlers = () => {
               projectHandle as FileSystemDirectoryHandle,
             ),
           );
+          const persistProcessor = JSON.parse(
+            "" + localStorage.getItem("persist:processor"),
+          );
+          if (persistProcessor.formatCode == "true") {
+            _fileTree[_initialFileUidToOpen].data.content = html_beautify(
+              _fileTree[_initialFileUidToOpen].data.content,
+            );
+          }
 
           dispatch(setFileTree(_fileTree));
           dispatch(setInitialFileUidToOpen(_initialFileUidToOpen));
@@ -228,7 +238,7 @@ export const useHandlers = () => {
         dispatch(setCurrentFileUid(_initialFileUidToOpen));
         dispatch(
           setCurrentFileContent(
-            _fileTree[_initialFileUidToOpen].data.content ||
+            (_fileTree[_initialFileUidToOpen].data.content) ||
               getIndexHtmlContent(),
           ),
         );
