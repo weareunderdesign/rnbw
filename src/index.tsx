@@ -1,4 +1,5 @@
 import "./rnbw.css";
+import "renecss/dist/rene.min.css";
 
 import React from "react";
 
