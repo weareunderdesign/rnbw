@@ -42,6 +42,7 @@ import {
   setRecentProjectHandlers,
   setRecentProjectNames,
 } from "@_redux/main/project";
+import { html_beautify } from "js-beautify";
 
 export const useHandlers = () => {
   const { currentProjectFileHandle } = useAppState();
@@ -228,7 +229,7 @@ export const useHandlers = () => {
         dispatch(setCurrentFileUid(_initialFileUidToOpen));
         dispatch(
           setCurrentFileContent(
-            _fileTree[_initialFileUidToOpen].data.content ||
+            html_beautify(_fileTree[_initialFileUidToOpen].data.content) ||
               getIndexHtmlContent(),
           ),
         );
@@ -256,7 +257,7 @@ export const useHandlers = () => {
           dispatch(setCurrentFileUid(_initialFileUidToOpen));
           dispatch(
             setCurrentFileContent(
-              _fileTree[_initialFileUidToOpen].data.content,
+              html_beautify(_fileTree[_initialFileUidToOpen].data.content),
             ),
           );
         } else {
