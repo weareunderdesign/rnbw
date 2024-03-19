@@ -97,23 +97,21 @@ export default function CodeView() {
       endLine: endLineNumber,
     } = sourceCodeLocation;
 
-    setTimeout(() => {
-      monacoEditor.setSelection({
+    monacoEditor.setSelection({
+      startLineNumber,
+      startColumn,
+      endLineNumber,
+      endColumn,
+    });
+    monacoEditor.revealRangeInCenter(
+      {
         startLineNumber,
         startColumn,
         endLineNumber,
         endColumn,
-      });
-      monacoEditor.revealRangeInCenter(
-        {
-          startLineNumber,
-          startColumn,
-          endLineNumber,
-          endColumn,
-        },
-        1,
-      );
-    }, 3000);
+      },
+      1,
+    );
     
   }, [validNodeTree, nFocusedItem, activePanel]);
 
