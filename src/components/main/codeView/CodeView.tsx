@@ -112,6 +112,7 @@ export default function CodeView() {
       },
       1,
     );
+    
   }, [validNodeTree, nFocusedItem, activePanel]);
 
   useEffect(() => {
