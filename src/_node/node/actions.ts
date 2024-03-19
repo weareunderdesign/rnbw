@@ -221,7 +221,10 @@ const cut = async ({
     })();
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
-    const code = html_beautify(codeViewInstanceModel.getValue());
+    const code = formatCode
+      ? html_beautify(codeViewInstanceModel.getValue())
+      : codeViewInstanceModel.getValue();
+
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
