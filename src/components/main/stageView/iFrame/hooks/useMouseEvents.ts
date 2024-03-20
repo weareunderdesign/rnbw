@@ -15,6 +15,7 @@ import { setActivePanel } from "@_redux/main/processor";
 import {
   editHtmlContent,
   getValidElementWithUid,
+  isChildrenHasWebComponents,
   selectAllText,
 } from "../helpers";
 import {
@@ -46,6 +47,7 @@ export const useMouseEvents = ({
   const {
     fileTree,
     validNodeTree,
+    nodeTree,
     fExpandedItemsObj: expandedItemsObj,
     formatCode,
     htmlReferenceData,
@@ -167,8 +169,9 @@ export const useMouseEvents = ({
         const nodeData = node.data as THtmlNodeData;
         console.log("nodeData", mostRecentClickedNodeUidRef.current);
 
-        if (["html", "head", "body", "img", "div"].includes(nodeData.name))
+        if (["html", "head", "body", "img", "div"].includes(nodeData.nodeName))
           return;
+        if (isChildrenHasWebComponents({ nodeTree, uid })) return;
 
         const { startTag, endTag } = nodeData.sourceCodeLocation;
         if (startTag && endTag && contentEditableUidRef.current !== uid) {
@@ -189,6 +192,7 @@ export const useMouseEvents = ({
       nodeTreeRef,
       validNodeTree,
       mostRecentClickedNodeUidRef.current,
+      nodeTree,
     ],
   );
 
