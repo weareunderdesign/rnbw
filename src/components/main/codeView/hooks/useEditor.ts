@@ -180,12 +180,11 @@ const useEditor = () => {
 
       dispatch(setIsCodeTyping(true));
 
-      debouncedOnChange(value);
-      // if (isContentProgrammaticallyChanged) {
-      //    (value);
-      // } else {
-      //   longDebouncedOnChange(value);
-      // }
+      if (isContentProgrammaticallyChanged) {
+        debouncedOnChange(value);
+      } else {
+        onChange(value);
+      }
     },
     [debouncedOnChange, longDebouncedOnChange],
   );
