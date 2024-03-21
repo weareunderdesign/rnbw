@@ -7,7 +7,7 @@ import {
   useState,
 } from "react";
 
-import { editor, KeyCode, KeyMod } from "monaco-editor";
+import { editor, IKeyboardEvent, KeyCode, KeyMod } from "monaco-editor";
 import { useDispatch } from "react-redux";
 
 import {
@@ -38,6 +38,8 @@ const useEditor = () => {
     theme: _theme,
     autoSave,
     isContentProgrammaticallyChanged,
+    needToSelectCode,
+    needToSelectNodePaths,
   } = useAppState();
   const {
     monacoEditorRef,
@@ -93,9 +95,11 @@ const useEditor = () => {
     null,
   );
   const codeSelectionRef = useRef<TCodeSelection | null>(null);
+  const isCodeEditingView = useRef(false);
 
   useEffect(() => {
     codeSelectionRef.current = codeSelection;
+    isCodeEditingView.current = true;
   }, [codeSelection]);
 
   const setCodeSelection = useCallback(() => {
@@ -142,6 +146,7 @@ const useEditor = () => {
   // handleOnChange
   const onChange = useCallback(
     (value: string) => {
+
       dispatch(setCurrentFileContent(value));
       dispatch(
         setNeedToSelectCode(
@@ -160,6 +165,10 @@ const useEditor = () => {
     },
     [debouncedAutoSave, autoSave],
   );
+
+  const handleKeyDown = (e: IKeyboardEvent) => {
+    isCodeEditingView.current = true;
+  }
 
   const debouncedOnChange = useCallback(
     debounce((value) => {
@@ -180,8 +189,9 @@ const useEditor = () => {
 
       dispatch(setIsCodeTyping(true));
 
-      if (isContentProgrammaticallyChanged) {
-        debouncedOnChange(value);
+      if (isCodeEditingView.current) {
+        longDebouncedOnChange(value);
+        isCodeEditingView.current = false;
       } else {
         onChange(value);
       }
@@ -206,7 +216,7 @@ const useEditor = () => {
   return {
     handleEditorDidMount,
     handleOnChange,
-
+    handleKeyDown,
     theme,
 
     language,

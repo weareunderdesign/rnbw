@@ -46,7 +46,7 @@ export default function CodeView() {
   const {
     handleEditorDidMount,
     handleOnChange,
-
+    handleKeyDown,
     theme,
 
     language,
@@ -57,6 +57,8 @@ export default function CodeView() {
     codeSelection,
   } = useEditor();
   useCmdk();
+
+  monacoEditorRef.current?.onKeyDown(handleKeyDown);
 
   const onPanelClick = useCallback(() => {
     dispatch(setActivePanel("code"));
