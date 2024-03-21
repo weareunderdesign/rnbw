@@ -18,6 +18,7 @@ import {
   loadLocalProject,
 } from "@_node/file";
 import {
+  focusFileTreeNode,
   setCurrentFileUid,
   setDoingFileAction,
   setFileTree,
@@ -224,6 +225,7 @@ export const useHandlers = () => {
         _fileTree,
         _initialFileUidToOpen,
         deletedUids,
+        deletedUidsObj,
       } = await loadLocalProject(
         currentProjectFileHandle as FileSystemDirectoryHandle,
         osType,
@@ -234,7 +236,7 @@ export const useHandlers = () => {
       dispatch(setFileHandlers(_fileHandlers));
       // need to open another file if the current open file is deleted
       // if (deletedUidsObj[currentFileUid] || !currentFileUid) {
-      if (_initialFileUidToOpen !== "") {
+      if (_initialFileUidToOpen !== "" || deletedUidsObj[currentFileUid]) {
         dispatch(setCurrentFileUid(_initialFileUidToOpen));
         dispatch(
           setCurrentFileContent(
@@ -242,6 +244,7 @@ export const useHandlers = () => {
               getIndexHtmlContent(),
           ),
         );
+        dispatch(focusFileTreeNode(_initialFileUidToOpen));
       } else {
         dispatch(setCurrentFileUid(""));
         dispatch(setCurrentFileContent(""));

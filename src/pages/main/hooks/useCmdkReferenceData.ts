@@ -261,6 +261,7 @@ export const useCmdkReferenceData = ({
 
     return data;
   }, [
+    filesRef,
     fileTree,
     fFocusedItem,
     nodeTree,
