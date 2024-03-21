@@ -119,8 +119,12 @@ export const editHtmlContent = ({
   if (contentEditableElement) {
     contentEditableElement.setAttribute("contenteditable", "false");
     //the first \n is replaced by "" as the first line break that is by default added by the contenteditable
-    let content = contentEditableElement.innerHTML.replace(/\n/, "");
-    content = content.replace(/\n/g, "<br/>");
+    const content = contentEditableElement.innerHTML
+      .replace(/\n/, "")
+      .replace(
+        /data-rnbw-stage-node-id="\d+"|rnbwdev-rnbw-element-(select|hover)=""/g,
+        "",
+      );
 
     dispatch(setIsContentProgrammaticallyChanged(true));
     NodeActions.edit({
@@ -156,4 +160,28 @@ export const openNewPage = (ele: HTMLElement) => {
   if (anchorElement.href) {
     window.open(anchorElement.href, "_blank", "noreferrer");
   }
+};
+export const isChildrenHasWebComponents = ({
+  nodeTree,
+  uid,
+}: {
+  nodeTree: TNodeTreeData;
+  uid: TNodeUid;
+}) => {
+  const stack = [uid];
+
+  while (stack.length > 0) {
+    const currentUid = stack.pop();
+    if (!currentUid || !nodeTree[currentUid]) continue;
+    if (
+      nodeTree[currentUid].displayName.includes("-") ||
+      nodeTree[currentUid].displayName === "svg"
+    )
+      return true;
+
+    const children = nodeTree[currentUid].children || [];
+    stack.push(...children);
+  }
+
+  return false;
 };
