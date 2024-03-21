@@ -673,7 +673,7 @@ const group = ({
       nodeTree[sortedUids[0]].data.sourceCodeLocation;
     const edit = {
       range: new Range(startLine, startCol, startLine, startCol),
-      text: `<div>${code}</div>`,
+      text: code,
     };
     codeViewInstanceModel.applyEdits([edit]);
 
