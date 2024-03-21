@@ -312,9 +312,6 @@ const paste = async ({
   try {
     let code = await window.navigator.clipboard.readText();
     if (spanPaste) code = `<span>${code}</span>`;
-    else {
-      code = `<div>${code}</div>`;
-    }
     pasteCode({
       nodeTree,
       focusedItem: targetUid,
@@ -676,7 +673,7 @@ const group = ({
       nodeTree[sortedUids[0]].data.sourceCodeLocation;
     const edit = {
       range: new Range(startLine, startCol, startLine, startCol),
-      text: `<div>${code}</div>`,
+      text: code,
     };
     codeViewInstanceModel.applyEdits([edit]);
 
