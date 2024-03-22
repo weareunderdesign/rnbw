@@ -110,8 +110,8 @@ const parseHtml = (content: string): THtmlParserResponse => {
 
         data: {
           childNodes: node.childNodes,
-
-          valid: node.nodeName !== "#documentType" && node.nodeName !== "#text",
+          valid: true,
+          // valid: node.nodeName !== "#documentType" && node.nodeName !== "#text",
 
           nodeName: node.nodeName,
           tagName: node.tagName || "",

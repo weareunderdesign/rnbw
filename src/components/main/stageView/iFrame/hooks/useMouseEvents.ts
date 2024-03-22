@@ -68,6 +68,7 @@ export const useMouseEvents = ({
   // click, dblclick handlers
   const onClick = useCallback((e: MouseEvent) => {
     dispatch(setActivePanel("stage"));
+    console.log(e.target, "e.target");
 
     const { uid } = getValidElementWithUid(e.target as HTMLElement);
     if (uid) {
@@ -170,6 +171,12 @@ export const useMouseEvents = ({
         console.log("nodeData", mostRecentClickedNodeUidRef.current);
 
         if (["html", "head", "body", "img", "div"].includes(nodeData.nodeName))
+          return;
+        if (
+          !nodeTree[uid].children.some(
+            (childUId) => validNodeTree[childUId]?.displayName === "#text",
+          )
+        )
           return;
         if (isChildrenHasWebComponents({ nodeTree, uid })) return;
 

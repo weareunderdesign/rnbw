@@ -27,24 +27,36 @@ export const getValidElementWithUid = (
 export const markSelectedElements = (
   iframeRef: HTMLIFrameElement | null,
   uids: TNodeUid[],
+  nodeTree: TNodeTreeData,
 ) => {
   uids.map((uid) => {
     // if it's a web component, should select its first child element
     let selectedElement = iframeRef?.contentWindow?.document?.querySelector(
       `[${StageNodeIdAttr}="${uid}"]`,
     );
+    console.log(selectedElement, "selectedElement");
+
     const isValid: null | string = selectedElement?.firstElementChild
       ? selectedElement?.firstElementChild.getAttribute(StageNodeIdAttr)
       : "";
+
     isValid === null
       ? (selectedElement = selectedElement?.firstElementChild)
       : null;
     selectedElement?.setAttribute("rnbwdev-rnbw-element-select", "");
+
+    if (!selectedElement && nodeTree[uid]?.displayName === "#text") {
+      const selectedElement = iframeRef?.contentWindow?.document?.querySelector(
+        `[${StageNodeIdAttr}="${nodeTree[uid].parentUid}"]`,
+      );
+      selectedElement?.setAttribute("rnbwdev-rnbw-element-select", "");
+    }
   });
 };
 export const unmarkSelectedElements = (
   iframeRef: HTMLIFrameElement | null,
   uids: TNodeUid[],
+  nodeTree: TNodeTreeData,
 ) => {
   uids.map((uid) => {
     // if it's a web component, should select its first child element
@@ -58,6 +70,13 @@ export const unmarkSelectedElements = (
       ? (selectedElement = selectedElement?.firstElementChild)
       : null;
     selectedElement?.removeAttribute("rnbwdev-rnbw-element-select");
+
+    if (!selectedElement && nodeTree[uid]?.displayName === "#text") {
+      const selectedElement = iframeRef?.contentWindow?.document?.querySelector(
+        `[${StageNodeIdAttr}="${nodeTree[uid].parentUid}"]`,
+      );
+      selectedElement?.removeAttribute("rnbwdev-rnbw-element-select");
+    }
   });
 };
 

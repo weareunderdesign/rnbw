@@ -20,7 +20,7 @@ import { useZoom } from "./hooks/useZoom";
 
 export const IFrame = () => {
   const dispatch = useDispatch();
-  const { needToReloadIframe, iframeSrc, project } = useAppState();
+  const { needToReloadIframe, iframeSrc, project, nodeTree } = useAppState();
   const { iframeRefRef, setIframeRefRef } = useContext(MainContext);
 
   const [iframeRefState, setIframeRefState] =
@@ -108,7 +108,11 @@ export const IFrame = () => {
         }
 
         // mark selected elements on load
-        markSelectedElements(iframeRefState, selectedItemsRef.current);
+        markSelectedElements(
+          iframeRefState,
+          selectedItemsRef.current,
+          nodeTree,
+        );
 
         dispatch(setIframeLoading(false));
         project.context === "local" && dispatch(setLoadingFalse());
