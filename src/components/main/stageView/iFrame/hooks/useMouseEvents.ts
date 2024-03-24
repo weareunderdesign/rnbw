@@ -13,7 +13,9 @@ import { setSelectedNodeUids } from "@_redux/main/nodeTree/event";
 import { setActivePanel } from "@_redux/main/processor";
 
 import {
+  areArraysEqual,
   editHtmlContent,
+  getBodyChild,
   getValidElementWithUid,
   isChildrenHasWebComponents,
   selectAllText,
@@ -58,80 +60,77 @@ export const useMouseEvents = ({
   // hoveredNodeUid
   const onMouseEnter = useCallback(() => {}, []);
   const onMouseMove = useCallback((e: MouseEvent) => {
-    const { uid } = getValidElementWithUid(e.target as HTMLElement);
-    uid && dispatch(setHoveredNodeUid(uid));
+    if (e.ctrlKey || e.metaKey) {
+      const { uid } = getValidElementWithUid(e.target as HTMLElement);
+      uid && dispatch(setHoveredNodeUid(uid));
+    }
   }, []);
   const onMouseLeave = () => {
     dispatch(setHoveredNodeUid(""));
   };
 
   // click, dblclick handlers
-  const onClick = useCallback((e: MouseEvent) => {
-    dispatch(setActivePanel("stage"));
-    console.log(e.target, "e.target");
+  const onClick = useCallback(
+    (e: MouseEvent) => {
+      dispatch(setActivePanel("stage"));
 
-    const { uid } = getValidElementWithUid(e.target as HTMLElement);
-    if (uid) {
-      mostRecentClickedNodeUidRef.current = uid;
-      // update selectedNodeUids
-      (() => {
-        const uids = e.shiftKey
-          ? getValidNodeUids(
-              nodeTreeRef.current,
-              Array(...new Set([...selectedItemsRef.current, uid])),
-            )
-          : [uid];
+      const { uid } = getValidElementWithUid(e.target as HTMLElement);
+      if (uid) {
+        mostRecentClickedNodeUidRef.current = uid;
+        // update selectedNodeUids
+        (() => {
+          const uids = e.shiftKey
+            ? getValidNodeUids(
+                nodeTreeRef.current,
+                Array(...new Set([...selectedItemsRef.current, uid])),
+              )
+            : [uid];
 
-        // check if it's a new state
-        let same = false;
-        if (selectedItemsRef.current.length === uids.length) {
-          same = true;
-          for (
-            let index = 0, len = selectedItemsRef.current.length;
-            index < len;
-            ++index
-          ) {
-            if (selectedItemsRef.current[index] !== uids[index]) {
-              same = false;
-              break;
-            }
+          let targetUids = uids;
+          if (e.ctrlKey || e.metaKey) {
+            targetUids = uids;
+          } else {
+            targetUids = getBodyChild({ uids, nodeTree });
           }
+
+          // check if it's a new state
+          const same = areArraysEqual(selectedItemsRef.current, targetUids);
+          !same && dispatch(setSelectedNodeUids(targetUids));
+        })();
+
+        // content-editable operation
+        if (
+          contentEditableUidRef.current &&
+          contentEditableUidRef.current !== uid &&
+          iframeRefRef.current
+        ) {
+          isEditingRef.current = false;
+          const contentEditableUid = contentEditableUidRef.current;
+          contentEditableUidRef.current = "";
+
+          const codeViewInstance = monacoEditorRef.current;
+          const codeViewInstanceModel = codeViewInstance?.getModel();
+          if (!codeViewInstance || !codeViewInstanceModel) {
+            LogAllow &&
+              console.error(
+                `Monaco Editor ${!codeViewInstance ? "" : "Model"} is undefined`,
+              );
+            return;
+          }
+
+          editHtmlContent({
+            dispatch,
+            iframeRef: iframeRefRef.current,
+            nodeTree: nodeTreeRef.current,
+            contentEditableUid,
+            codeViewInstanceModel,
+            formatCode,
+          });
         }
-
-        !same && dispatch(setSelectedNodeUids(uids));
-      })();
-
-      // content-editable operation
-      if (
-        contentEditableUidRef.current &&
-        contentEditableUidRef.current !== uid &&
-        iframeRefRef.current
-      ) {
-        isEditingRef.current = false;
-        const contentEditableUid = contentEditableUidRef.current;
-        contentEditableUidRef.current = "";
-
-        const codeViewInstance = monacoEditorRef.current;
-        const codeViewInstanceModel = codeViewInstance?.getModel();
-        if (!codeViewInstance || !codeViewInstanceModel) {
-          LogAllow &&
-            console.error(
-              `Monaco Editor ${!codeViewInstance ? "" : "Model"} is undefined`,
-            );
-          return;
-        }
-
-        editHtmlContent({
-          dispatch,
-          iframeRef: iframeRefRef.current,
-          nodeTree: nodeTreeRef.current,
-          contentEditableUid,
-          codeViewInstanceModel,
-          formatCode,
-        });
       }
-    }
-  }, []);
+    },
+    [nodeTree],
+  );
 
   const debouncedSelectAllText = useCallback(
     debounce(selectAllText, ShortDelay),

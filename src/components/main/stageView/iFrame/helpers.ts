@@ -204,3 +204,36 @@ export const isChildrenHasWebComponents = ({
 
   return false;
 };
+export const areArraysEqual = (arr1: string[], arr2: string[]) => {
+  let same = false;
+  if (arr1.length === arr2.length) {
+    same = true;
+    for (let index = 0, len = arr1.length; index < len; ++index) {
+      if (arr1[index] !== arr2[index]) {
+        same = false;
+        break;
+      }
+    }
+  }
+  return same;
+};
+export const getBodyChild = ({
+  uids,
+  nodeTree,
+}: {
+  uids: TNodeUid[];
+  nodeTree: TNodeTreeData;
+}) => {
+  const bodyChildren = uids.map((currentUid) => {
+    let current: string = currentUid;
+    let parentUid = nodeTree[currentUid]?.parentUid;
+
+    while (parentUid && nodeTree[parentUid]?.displayName !== "body") {
+      current = parentUid;
+      parentUid = nodeTree[parentUid]?.parentUid;
+    }
+
+    return current;
+  });
+  return bodyChildren;
+};
