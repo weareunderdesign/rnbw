@@ -61,12 +61,26 @@ export const useMouseEvents = ({
 
   // hoveredNodeUid
   const onMouseEnter = useCallback(() => {}, []);
-  const onMouseMove = useCallback((e: MouseEvent) => {
-    if (e.ctrlKey || e.metaKey) {
+  const onMouseMove = useCallback(
+    (e: MouseEvent) => {
       const { uid } = getValidElementWithUid(e.target as HTMLElement);
-      uid && dispatch(setHoveredNodeUid(uid));
-    }
-  }, []);
+      if (!uid) return;
+      if (e.ctrlKey || e.metaKey) {
+        uid && dispatch(setHoveredNodeUid(uid));
+      } else {
+        const sameParents = isSameParents({
+          currentUid: uid,
+          nodeTree,
+          selectedUid: selectedItemsRef.current[0],
+        });
+        const targetUids = sameParents
+          ? [sameParents]
+          : getBodyChild({ uids: [uid], nodeTree });
+        dispatch(setHoveredNodeUid(targetUids[0]));
+      }
+    },
+    [nodeTree],
+  );
   const onMouseLeave = () => {
     dispatch(setHoveredNodeUid(""));
   };
