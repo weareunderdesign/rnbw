@@ -34,7 +34,6 @@ export const markSelectedElements = (
     let selectedElement = iframeRef?.contentWindow?.document?.querySelector(
       `[${StageNodeIdAttr}="${uid}"]`,
     );
-    console.log(selectedElement, "selectedElement");
 
     const isValid: null | string = selectedElement?.firstElementChild
       ? selectedElement?.firstElementChild.getAttribute(StageNodeIdAttr)
@@ -236,4 +235,43 @@ export const getBodyChild = ({
     return current;
   });
   return bodyChildren;
+};
+
+export const getChild = ({
+  currentUid,
+  nodeTree,
+  selectedUid,
+}: {
+  currentUid: TNodeUid;
+  nodeTree: TNodeTreeData;
+  selectedUid: TNodeUid;
+}) => {
+  let current: string = currentUid;
+  let parentUid = nodeTree[currentUid]?.parentUid;
+
+  while (parentUid && parentUid !== selectedUid) {
+    current = parentUid;
+    parentUid = nodeTree[parentUid]?.parentUid;
+  }
+
+  return current;
+};
+export const isSameParents = ({
+  currentUid,
+  nodeTree,
+  selectedUid,
+}: {
+  currentUid: TNodeUid;
+  nodeTree: TNodeTreeData;
+  selectedUid: TNodeUid;
+}) => {
+  let current: string = currentUid;
+  let parentUid = nodeTree[currentUid]?.parentUid;
+
+  while (parentUid && parentUid !== nodeTree[selectedUid].parentUid) {
+    current = parentUid;
+    parentUid = nodeTree[parentUid]?.parentUid;
+  }
+
+  return parentUid == nodeTree[selectedUid].parentUid ? current : false;
 };
