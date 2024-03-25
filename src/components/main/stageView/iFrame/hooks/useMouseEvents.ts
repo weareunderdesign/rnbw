@@ -77,72 +77,72 @@ export const useMouseEvents = ({
       dispatch(setActivePanel("stage"));
 
       const { uid } = getValidElementWithUid(e.target as HTMLElement);
-      if (uid) {
-        mostRecentClickedNodeUidRef.current = uid;
-        // update selectedNodeUids
-        (() => {
-          const updatedSelectedItems = selectedItemsRef.current.includes(uid)
-            ? selectedItemsRef.current.filter((item) => item !== uid)
-            : [...selectedItemsRef.current, uid];
-          const uids = e.shiftKey
-            ? getValidNodeUids(
-                nodeTreeRef.current,
-                Array(...new Set(updatedSelectedItems)),
-              )
-            : [uid];
+      if (!uid) return;
+      mostRecentClickedNodeUidRef.current = uid;
 
-          let targetUids = uids;
-          if (e.ctrlKey || e.metaKey) {
-            targetUids = uids;
-          } else {
-            // need to understand if uid has same parents with selectedUId
-            const sameParents = isSameParents({
-              currentUid: uid,
-              nodeTree,
-              selectedUid: selectedItemsRef.current[0],
-            });
-            targetUids = sameParents
-              ? [sameParents]
-              : getBodyChild({ uids, nodeTree });
-          }
+      // update selectedNodeUids
+      (() => {
+        const updatedSelectedItems = selectedItemsRef.current.includes(uid)
+          ? selectedItemsRef.current.filter((item) => item !== uid)
+          : [...selectedItemsRef.current, uid];
+        const uids = e.shiftKey
+          ? getValidNodeUids(
+              nodeTreeRef.current,
+              Array.from(new Set(updatedSelectedItems)),
+            )
+          : [uid];
 
-          // check if it's a new state
-          const same = areArraysEqual(selectedItemsRef.current, targetUids);
-          !same && dispatch(setSelectedNodeUids(targetUids));
-        })();
-
-        // content-editable operation
-        if (
-          contentEditableUidRef.current &&
-          contentEditableUidRef.current !== uid &&
-          iframeRefRef.current
-        ) {
-          isEditingRef.current = false;
-          const contentEditableUid = contentEditableUidRef.current;
-          contentEditableUidRef.current = "";
-
-          const codeViewInstance = monacoEditorRef.current;
-          const codeViewInstanceModel = codeViewInstance?.getModel();
-          if (!codeViewInstance || !codeViewInstanceModel) {
-            LogAllow &&
-              console.error(
-                `Monaco Editor ${!codeViewInstance ? "" : "Model"} is undefined`,
-              );
-            return;
-          }
-
-          editHtmlContent({
-            dispatch,
-            iframeRef: iframeRefRef.current,
-            nodeTree: nodeTreeRef.current,
-            contentEditableUid,
-            codeViewInstanceModel,
-            formatCode,
+        let targetUids = uids;
+        if (e.ctrlKey || e.metaKey) {
+          targetUids = uids;
+        } else {
+          // need to understand if uid has same parents with selectedUId
+          const sameParents = isSameParents({
+            currentUid: uid,
+            nodeTree,
+            selectedUid: selectedItemsRef.current[0],
           });
+          targetUids = sameParents
+            ? [sameParents]
+            : getBodyChild({ uids, nodeTree });
         }
+
+        // check if it's a new state
+        const same = areArraysEqual(selectedItemsRef.current, targetUids);
+        !same && dispatch(setSelectedNodeUids(targetUids));
+      })();
+
+      // content-editable operation
+      if (
+        contentEditableUidRef.current &&
+        contentEditableUidRef.current !== uid &&
+        iframeRefRef.current
+      ) {
+        isEditingRef.current = false;
+        const contentEditableUid = contentEditableUidRef.current;
+        contentEditableUidRef.current = "";
+
+        const codeViewInstance = monacoEditorRef.current;
+        const codeViewInstanceModel = codeViewInstance?.getModel();
+        if (!codeViewInstance || !codeViewInstanceModel) {
+          LogAllow &&
+            console.error(
+              `Monaco Editor ${!codeViewInstance ? "" : "Model"} is undefined`,
+            );
+          return;
+        }
+
+        editHtmlContent({
+          dispatch,
+          iframeRef: iframeRefRef.current,
+          nodeTree: nodeTreeRef.current,
+          contentEditableUid,
+          codeViewInstanceModel,
+          formatCode,
+        });
       }
     },
-    [nodeTree, selectedItemsRef],
+    [nodeTree, nodeTreeRef, selectedItemsRef],
   );
 
   const debouncedSelectAllText = useCallback(
@@ -154,9 +154,7 @@ export const useMouseEvents = ({
       const ele = e.target as HTMLElement;
       const uid: TNodeUid | null = ele.getAttribute(StageNodeIdAttr);
 
-      const { uid: dbClickedUd } = getValidElementWithUid(
-        e.target as HTMLElement,
-      );
+      const { uid: dbClickedUd } = getValidElementWithUid(ele);
       if (!uid) {
         // when dbl-click on a web component
         isEditingRef.current = false;
