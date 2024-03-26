@@ -20,7 +20,7 @@ export default function ActionsPanel() {
 
   useEffect(() => {
     showFilePanel
-      ? filePanelRef.current?.resize(50)
+      ? filePanelRef.current?.resize(20)
       : filePanelRef.current?.resize(0);
   }, [showFilePanel]);
 
@@ -42,7 +42,7 @@ export default function ActionsPanel() {
             ref={filePanelRef}
             defaultSize={sizes[0]}
             minSize={showFilePanel ? 10 : 0}
-            maxSize={80}
+            maxSize={50}
             order={0}
             className={`${showFilePanel && "border-bottom"}`}
           >
