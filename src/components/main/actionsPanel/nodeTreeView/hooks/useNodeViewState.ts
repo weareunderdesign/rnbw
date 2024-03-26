@@ -47,8 +47,6 @@ export function useNodeViewState() {
           return;
         }
       }
-      console.log(_uids, "_uids");
-
       dispatch(setSelectedNodeUids(_uids));
 
       // update file - WIP

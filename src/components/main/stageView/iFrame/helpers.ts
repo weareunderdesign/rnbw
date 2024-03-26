@@ -272,6 +272,5 @@ export const isSameParents = ({
     current = parentUid;
     parentUid = nodeTree[parentUid]?.parentUid;
   }
-
-  return parentUid == nodeTree[selectedUid].parentUid ? current : false;
+  return parentUid == nodeTree[selectedUid]?.parentUid ? current : false;
 };

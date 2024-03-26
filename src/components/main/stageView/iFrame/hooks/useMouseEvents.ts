@@ -18,7 +18,7 @@ import {
   getBodyChild,
   getChild,
   getValidElementWithUid,
-  isChildrenHasWebComponents,
+  // isChildrenHasWebComponents,
   isSameParents,
   selectAllText,
 } from "../helpers";
@@ -91,9 +91,10 @@ export const useMouseEvents = ({
       dispatch(setActivePanel("stage"));
 
       const { uid } = getValidElementWithUid(e.target as HTMLElement);
+      console.log(uid, "<<<<<< uid");
+
       if (!uid) return;
       mostRecentClickedNodeUidRef.current = uid;
-
       // update selectedNodeUids
       (() => {
         const updatedSelectedItems = selectedItemsRef.current.includes(uid)
@@ -113,12 +114,13 @@ export const useMouseEvents = ({
           // need to understand if uid has same parents with selectedUId
           const sameParents = isSameParents({
             currentUid: uid,
-            nodeTree,
+            nodeTree: validNodeTree,
             selectedUid: selectedItemsRef.current[0],
           });
+
           targetUids = sameParents
             ? [sameParents]
-            : getBodyChild({ uids, nodeTree });
+            : getBodyChild({ uids, nodeTree: validNodeTree });
         }
 
         // check if it's a new state
@@ -156,7 +158,7 @@ export const useMouseEvents = ({
         });
       }
     },
-    [nodeTree, nodeTreeRef, selectedItemsRef],
+    [validNodeTree, nodeTreeRef, selectedItemsRef],
   );
 
   const debouncedSelectAllText = useCallback(
@@ -168,7 +170,7 @@ export const useMouseEvents = ({
       const ele = e.target as HTMLElement;
       const uid: TNodeUid | null = ele.getAttribute(StageNodeIdAttr);
 
-      const { uid: dbClickedUd } = getValidElementWithUid(ele);
+      const { uid: dbClickedUid } = getValidElementWithUid(ele);
       if (!uid) {
         // when dbl-click on a web component
         isEditingRef.current = false;
@@ -193,41 +195,38 @@ export const useMouseEvents = ({
           }
         }
       } else {
-        if (!dbClickedUd) return;
+        if (!dbClickedUid) return;
+
         const targetUid = getChild({
-          currentUid: dbClickedUd,
-          nodeTree,
+          currentUid: dbClickedUid,
+          nodeTree: validNodeTree,
           selectedUid: selectedItemsRef.current[0],
         });
+
         const same = areArraysEqual(selectedItemsRef.current, [targetUid]);
         !same &&
           dispatch(
             setSelectedNodeUids([
-              targetUid !== RootNodeUid ? targetUid : dbClickedUd,
+              targetUid !== RootNodeUid ? targetUid : dbClickedUid,
             ]),
           );
 
         if (targetUid !== RootNodeUid) return;
-        const node = nodeTreeRef.current[dbClickedUd];
+        if (!ele.getAttribute("rnbw-text-element")) return;
+
+        dispatch(setSelectedNodeUids([dbClickedUid]));
+
+        const node = nodeTreeRef.current[dbClickedUid];
         const nodeData = node.data as THtmlNodeData;
+        const { startLine, endLine } = nodeData.sourceCodeLocation;
 
-        if (["html", "head", "body", "img"].includes(nodeData.nodeName)) return;
         if (
-          !nodeTree[dbClickedUd].children.some(
-            (childUId) => validNodeTree[childUId]?.displayName === "#text",
-          )
-        )
-          return;
-        if (isChildrenHasWebComponents({ nodeTree, uid: dbClickedUd })) return;
-
-        const { startTag, endTag } = nodeData.sourceCodeLocation;
-        if (
-          startTag &&
-          endTag &&
-          contentEditableUidRef.current !== dbClickedUd
+          startLine &&
+          endLine &&
+          contentEditableUidRef.current !== dbClickedUid
         ) {
           isEditingRef.current = true;
-          contentEditableUidRef.current = dbClickedUd;
+          contentEditableUidRef.current = dbClickedUid;
           ele.setAttribute("contenteditable", "true");
           ele.focus();
           debouncedSelectAllText(iframeRefRef.current, ele);
