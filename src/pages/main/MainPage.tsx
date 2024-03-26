@@ -110,10 +110,9 @@ export default function MainPage() {
   }, [cmdkReferenceJumpstart]);
 
   // reload project after local file changes
-  const debouncedCurrentProjectReload = useCallback(
-    debounce(triggerCurrentProjectReload, CodeViewSyncDelay),
-    [triggerCurrentProjectReload, fileTree, currentFileUid],
-  );
+  const debouncedCurrentProjectReload = useCallback(() => {
+    if (autoSave) debounce(triggerCurrentProjectReload, CodeViewSyncDelay);
+  }, [triggerCurrentProjectReload, fileTree, currentFileUid]);
 
   const handleVisibilityChange = useCallback(() => {
     if (document.visibilityState === "visible") {
