@@ -7,7 +7,7 @@ import {
   useState,
 } from "react";
 
-import { editor, IKeyboardEvent, KeyCode, KeyMod } from "monaco-editor";
+import { editor, KeyCode, KeyMod } from "monaco-editor";
 import { useDispatch } from "react-redux";
 
 import {
@@ -34,13 +34,7 @@ import { debounce } from "@_pages/main/helper";
 
 const useEditor = () => {
   const dispatch = useDispatch();
-  const {
-    theme: _theme,
-    autoSave,
-    isContentProgrammaticallyChanged,
-    needToSelectCode,
-    needToSelectNodePaths,
-  } = useAppState();
+  const { theme: _theme, autoSave } = useAppState();
   const {
     monacoEditorRef,
     setMonacoEditorRef,
@@ -146,7 +140,6 @@ const useEditor = () => {
   // handleOnChange
   const onChange = useCallback(
     (value: string) => {
-
       dispatch(setCurrentFileContent(value));
       dispatch(
         setNeedToSelectCode(
@@ -166,9 +159,9 @@ const useEditor = () => {
     [debouncedAutoSave, autoSave],
   );
 
-  const handleKeyDown = (e: IKeyboardEvent) => {
+  const handleKeyDown = () => {
     isCodeEditingView.current = true;
-  }
+  };
 
   const debouncedOnChange = useCallback(
     debounce((value) => {
