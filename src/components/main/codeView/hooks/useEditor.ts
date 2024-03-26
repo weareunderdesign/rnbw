@@ -34,7 +34,7 @@ import { debounce } from "@_pages/main/helper";
 
 const useEditor = () => {
   const dispatch = useDispatch();
-  const { theme: _theme, autoSave } = useAppState();
+  const { theme: _theme, autoSave, isCodeTyping } = useAppState();
   const {
     monacoEditorRef,
     setMonacoEditorRef,
@@ -128,8 +128,10 @@ const useEditor = () => {
       );
 
       editor.onDidChangeCursorPosition((event) => {
-        (event.source === "mouse" || event.source === "keyboard") &&
-          setCodeSelection();
+        if(isCodeTyping) {
+          (event.source === "mouse" || event.source === "keyboard") &&
+            setCodeSelection();
+        }
       });
     },
     [setCodeSelection],

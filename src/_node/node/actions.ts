@@ -15,6 +15,9 @@ import { getValidNodeTree } from "@_pages/main/processor/helpers";
 import {
   setCopiedNodeDisplayName,
   setNeedToSelectNodePaths,
+  setNodeTree,
+  setSelectedNodeUids,
+  focusNodeTreeNode
 } from "@_redux/main/nodeTree";
 import { THtmlReferenceData } from "@_types/main";
 
@@ -792,6 +795,7 @@ const ungroup = ({
 };
 
 const edit = ({
+  dispatch,
   nodeTree,
   targetUid,
   content,
@@ -800,6 +804,7 @@ const edit = ({
   fb,
   cb,
 }: {
+  dispatch: Dispatch<AnyAction>;
   nodeTree: TNodeTreeData;
   targetUid: TNodeUid;
   content: string;
@@ -820,6 +825,20 @@ const edit = ({
       ? html_beautify(codeViewInstanceModel.getValue())
       : codeViewInstanceModel.getValue();
     codeViewInstanceModel.setValue(code);
+
+    const oldNodeTree = nodeTree[targetUid].data.sourceCodeLocation;
+    const offset = content.length - (oldNodeTree.endTag.startCol - oldNodeTree.startTag.endCol)
+    oldNodeTree.endCol += offset;
+    oldNodeTree.endOffset += offset;
+    oldNodeTree.endTag.endCol += offset;
+    oldNodeTree.endTag.endOffset += offset;
+    oldNodeTree.endTag.startCol += offset;
+    oldNodeTree.endTag.startOffset += offset;
+    nodeTree[targetUid].data.sourceCodeLocation = oldNodeTree;
+
+    dispatch(setNodeTree(nodeTree));
+    dispatch(focusNodeTreeNode(targetUid));
+    // dispatch(setSelectedNodeUids([targetUid]));
 
     cb && cb();
   } catch (err) {
