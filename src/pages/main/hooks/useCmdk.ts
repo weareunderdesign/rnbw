@@ -197,10 +197,10 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     fileEventFutureLength,
     nodeEventFutureLength,
   ]);
-  const onToogleCodeView = useCallback(() => {
+  const onToggleCodeView = useCallback(() => {
     dispatch(setShowCodeView(!showCodeView));
   }, [showCodeView]);
-  const onToogleActionsPanel = useCallback(() => {
+  const onToggleActionsPanel = useCallback(() => {
     dispatch(setShowActionsPanel(!showActionsPanel));
   }, [showActionsPanel]);
   const onOpenGuidePage = useCallback(() => {
@@ -251,6 +251,11 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     dispatch(setShowCodeView(false));
   }, []);
 
+  const openAllPanel = useCallback(() => {
+    dispatch(setShowActionsPanel(true));
+    dispatch(setShowCodeView(true));
+  }, []);
+
   const KeyDownEventListener = useCallback(
     (e: KeyboardEvent) => {
       // cmdk obj for the current command
@@ -267,7 +272,8 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
         return;
       }
       if (e.key === "Escape") {
-        !cmdkOpen && closeAllPanel();
+        (!cmdkOpen && showActionsPanel) || (showCodeView && closeAllPanel());
+        !cmdkOpen && !showActionsPanel && !showCodeView && openAllPanel();
         return;
       }
       // skip inline rename input in file-tree-view
@@ -364,10 +370,10 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
         onAdd();
         break;
       case "Code":
-        onToogleCodeView();
+        onToggleCodeView();
         break;
       case "Design":
-        onToogleActionsPanel();
+        onToggleActionsPanel();
         break;
       case "Guide":
         onOpenGuidePage();
