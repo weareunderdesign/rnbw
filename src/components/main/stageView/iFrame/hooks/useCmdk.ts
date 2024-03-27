@@ -33,7 +33,7 @@ export const useCmdk = ({
   const { formatCode } = useAppState();
 
   const onKeyDown = useCallback(
-    (e: KeyboardEvent) => {
+    (e: KeyboardEvent, allPanelsClosed: boolean) => {
       // cmdk obj for the current command
       const cmdk: TCmdkKeyMap = {
         cmd: getCommandKey(e, osType),
@@ -117,8 +117,13 @@ export const useCmdk = ({
         }
       } else {
         if (e.code === "Escape") {
-          dispatch(setShowActionsPanel(false));
-          dispatch(setShowCodeView(false));
+          if (allPanelsClosed) {
+            dispatch(setShowActionsPanel(true));
+            dispatch(setShowCodeView(true));
+          } else {
+            dispatch(setShowActionsPanel(false));
+            dispatch(setShowCodeView(false));
+          }
         }
         if (action) {
           LogAllow && console.log("action to be run by cmdk: ", action);

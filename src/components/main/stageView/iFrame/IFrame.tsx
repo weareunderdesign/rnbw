@@ -20,8 +20,15 @@ import { useZoom } from "./hooks/useZoom";
 
 export const IFrame = () => {
   const dispatch = useDispatch();
-  const { needToReloadIframe, iframeSrc, project } = useAppState();
+  const {
+    needToReloadIframe,
+    iframeSrc,
+    project,
+    showActionsPanel,
+    showCodeView,
+  } = useAppState();
   const { iframeRefRef, setIframeRefRef } = useContext(MainContext);
+  const allPanelsClosedRef = useRef(!showActionsPanel && !showCodeView);
 
   const [iframeRefState, setIframeRefState] =
     useState<HTMLIFrameElement | null>(null);
@@ -50,6 +57,9 @@ export const IFrame = () => {
       linkTagUidRef,
     });
 
+  useEffect(() => {
+    allPanelsClosedRef.current = !showActionsPanel && !showCodeView;
+  }, [showActionsPanel, showCodeView]);
   // init iframe
   useEffect(() => {
     setIframeRefRef(iframeRefState);
@@ -66,7 +76,9 @@ export const IFrame = () => {
 
         if (htmlNode && headNode) {
           // enable cmdk
-          htmlNode.addEventListener("keydown", onKeyDown);
+          htmlNode.addEventListener("keydown", (e: KeyboardEvent) => {
+            onKeyDown(e, allPanelsClosedRef.current);
+          });
 
           // add rnbw css
           const style = _document.createElement("style");
