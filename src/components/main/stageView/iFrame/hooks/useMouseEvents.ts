@@ -64,11 +64,7 @@ export const useMouseEvents = ({
       const { uid } = getValidElementWithUid(e.target as HTMLElement);
       if (!uid) return;
       if (e.ctrlKey || e.metaKey) {
-        const currentUid =
-          validNodeTree[uid]?.displayName == "#text"
-            ? validNodeTree[uid]?.parentUid || uid
-            : uid;
-        currentUid && dispatch(setHoveredNodeUid(currentUid));
+        dispatch(setHoveredNodeUid(uid));
       } else {
         const isSelectedChild = isChild({
           currentUid: uid,
@@ -112,11 +108,7 @@ export const useMouseEvents = ({
 
         let targetUids = uids;
         if (e.ctrlKey || e.metaKey) {
-          targetUids = uids.map((uid) =>
-            validNodeTree[uid]?.displayName == "#text"
-              ? validNodeTree[uid]?.parentUid || uid
-              : uid,
-          );
+          targetUids = uids;
         } else {
           const sameParents = isSameParents({
             currentUid: uid,
