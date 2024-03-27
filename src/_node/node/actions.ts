@@ -35,6 +35,7 @@ import {
 } from "./helpers";
 import { Dispatch } from "react";
 import { AnyAction } from "@reduxjs/toolkit";
+import { fileHandlers } from "@_node/file/handlers"
 
 const add = ({
   dispatch,
@@ -826,19 +827,8 @@ const edit = ({
       : codeViewInstanceModel.getValue();
     codeViewInstanceModel.setValue(code);
 
-    const oldNodeTree = nodeTree[targetUid].data.sourceCodeLocation;
-    const offset = content.length - (oldNodeTree.endTag.startCol - oldNodeTree.startTag.endCol)
-    oldNodeTree.endCol += offset;
-    oldNodeTree.endOffset += offset;
-    oldNodeTree.endTag.endCol += offset;
-    oldNodeTree.endTag.endOffset += offset;
-    oldNodeTree.endTag.startCol += offset;
-    oldNodeTree.endTag.startOffset += offset;
-    nodeTree[targetUid].data.sourceCodeLocation = oldNodeTree;
-
-    dispatch(setNodeTree(nodeTree));
+    dispatch(setNodeTree(reCalcSourceCodeLocation(code)));
     dispatch(focusNodeTreeNode(targetUid));
-    // dispatch(setSelectedNodeUids([targetUid]));
 
     cb && cb();
   } catch (err) {
@@ -977,3 +967,8 @@ export const NodeActions = {
   addAttr,
   removeAttr,
 };
+export const reCalcSourceCodeLocation = (content:string) => {
+  const htmlParser = fileHandlers['html'];
+  const { nodeTree } = htmlParser(content);
+  return nodeTree;
+}
