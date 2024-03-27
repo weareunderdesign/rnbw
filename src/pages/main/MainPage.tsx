@@ -111,7 +111,7 @@ export default function MainPage() {
 
   // reload project after local file changes
   const debouncedCurrentProjectReload = useCallback(() => {
-    if (autoSave) debounce(triggerCurrentProjectReload, CodeViewSyncDelay);
+    if (autoSave) debounce(triggerCurrentProjectReload, CodeViewSyncDelay)();
   }, [triggerCurrentProjectReload, fileTree, currentFileUid, autoSave]);
 
   const handleVisibilityChange = useCallback(() => {
