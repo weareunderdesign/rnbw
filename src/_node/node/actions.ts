@@ -16,8 +16,6 @@ import {
   setCopiedNodeDisplayName,
   setNeedToSelectNodePaths,
   setNodeTree,
-  setSelectedNodeUids,
-  focusNodeTreeNode
 } from "@_redux/main/nodeTree";
 import { THtmlReferenceData } from "@_types/main";
 
@@ -828,7 +826,6 @@ const edit = ({
     codeViewInstanceModel.setValue(code);
 
     dispatch(setNodeTree(reCalcSourceCodeLocation(code)));
-    dispatch(focusNodeTreeNode(targetUid));
 
     cb && cb();
   } catch (err) {

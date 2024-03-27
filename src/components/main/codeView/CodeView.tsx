@@ -170,6 +170,28 @@ export default function CodeView() {
     }
   }, [nFocusedItem]);
 
+  useEffect(() => {
+    if(nFocusedItem === "") return;
+    const monacoEditor = monacoEditorRef.current;
+    if (!monacoEditor) return;
+    const node = validNodeTree[nFocusedItem];
+    if(!node) return;
+    const sourceCodeLocation = node.data.sourceCodeLocation;
+    if (!sourceCodeLocation) return;
+    const {
+      startLine: startLineNumber,
+      startCol: startColumn,
+      endCol: endColumn,
+      endLine: endLineNumber,
+    } = sourceCodeLocation;
+    monacoEditor.setSelection({
+      startLineNumber,
+      startColumn,
+      endLineNumber,
+      endColumn,
+    });
+  }, [nodeTree]);
+
   // code select -> selectedUids
   useEffect(() => {
     if (!codeSelection || isCodeTyping) return;
