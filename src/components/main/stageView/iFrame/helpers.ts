@@ -179,30 +179,7 @@ export const openNewPage = (ele: HTMLElement) => {
     window.open(anchorElement.href, "_blank", "noreferrer");
   }
 };
-export const isChildrenHasWebComponents = ({
-  nodeTree,
-  uid,
-}: {
-  nodeTree: TNodeTreeData;
-  uid: TNodeUid;
-}) => {
-  const stack = [uid];
 
-  while (stack.length > 0) {
-    const currentUid = stack.pop();
-    if (!currentUid || !nodeTree[currentUid]) continue;
-    if (
-      nodeTree[currentUid].displayName.includes("-") ||
-      nodeTree[currentUid].displayName === "svg"
-    )
-      return true;
-
-    const children = nodeTree[currentUid].children || [];
-    stack.push(...children);
-  }
-
-  return false;
-};
 export const areArraysEqual = (arr1: string[], arr2: string[]) => {
   let same = false;
   if (arr1.length === arr2.length) {
@@ -231,13 +208,45 @@ export const getBodyChild = ({
       current = parentUid;
       parentUid = nodeTree[parentUid]?.parentUid;
     }
+    const rootIndex = nodeTree[current].children.findIndex(
+      (uid) => nodeTree[uid].displayName === "html",
+    );
+
+    if (rootIndex !== -1) {
+      const htmlNode = nodeTree[nodeTree[current].children[rootIndex]];
+      const bodyIndex = htmlNode.children.findIndex(
+        (uid) => nodeTree[uid].displayName === "body",
+      );
+      if (bodyIndex !== -1) {
+        current = htmlNode.children[bodyIndex];
+      }
+    }
 
     return current;
   });
+
   return bodyChildren;
 };
 
-export const getChild = ({
+export const isSameParents = ({
+  currentUid,
+  nodeTree,
+  selectedUid,
+}: {
+  currentUid: TNodeUid;
+  nodeTree: TNodeTreeData;
+  selectedUid: TNodeUid;
+}) => {
+  let current: string = currentUid;
+  let parentUid = nodeTree[currentUid]?.parentUid;
+
+  while (parentUid && parentUid !== nodeTree[selectedUid]?.parentUid) {
+    current = parentUid;
+    parentUid = nodeTree?.[parentUid]?.parentUid;
+  }
+  return parentUid == nodeTree[selectedUid]?.parentUid ? current : false;
+};
+export const isChild = ({
   currentUid,
   nodeTree,
   selectedUid,
@@ -251,26 +260,7 @@ export const getChild = ({
 
   while (parentUid && parentUid !== selectedUid) {
     current = parentUid;
-    parentUid = nodeTree[parentUid]?.parentUid;
-  }
-
-  return current;
-};
-export const isSameParents = ({
-  currentUid,
-  nodeTree,
-  selectedUid,
-}: {
-  currentUid: TNodeUid;
-  nodeTree: TNodeTreeData;
-  selectedUid: TNodeUid;
-}) => {
-  let current: string = currentUid;
-  let parentUid = nodeTree[currentUid]?.parentUid;
-
-  while (parentUid && parentUid !== nodeTree[selectedUid].parentUid) {
-    current = parentUid;
     parentUid = nodeTree?.[parentUid]?.parentUid;
   }
-  return parentUid == nodeTree[selectedUid]?.parentUid ? current : false;
+  return parentUid == selectedUid ? current : false;
 };
