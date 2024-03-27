@@ -66,20 +66,24 @@ export const useMouseEvents = ({
       const { uid } = getValidElementWithUid(e.target as HTMLElement);
       if (!uid) return;
       if (e.ctrlKey || e.metaKey) {
-        uid && dispatch(setHoveredNodeUid(uid));
+        const currentUid =
+          validNodeTree[uid]?.displayName == "#text"
+            ? validNodeTree[uid]?.parentUid || uid
+            : uid;
+        currentUid && dispatch(setHoveredNodeUid(currentUid));
       } else {
         const sameParents = isSameParents({
           currentUid: uid,
-          nodeTree,
+          nodeTree: nodeTreeRef.current,
           selectedUid: selectedItemsRef.current[0],
         });
         const targetUids = sameParents
           ? [sameParents]
-          : getBodyChild({ uids: [uid], nodeTree });
+          : getBodyChild({ uids: [uid], nodeTree: nodeTreeRef.current });
         dispatch(setHoveredNodeUid(targetUids[0]));
       }
     },
-    [nodeTree],
+    [validNodeTree],
   );
   const onMouseLeave = () => {
     dispatch(setHoveredNodeUid(""));
@@ -109,18 +113,22 @@ export const useMouseEvents = ({
 
         let targetUids = uids;
         if (e.ctrlKey || e.metaKey) {
-          targetUids = uids;
+          targetUids = uids.map((uid) =>
+            validNodeTree[uid]?.displayName == "#text"
+              ? validNodeTree[uid]?.parentUid || uid
+              : uid,
+          );
         } else {
           // need to understand if uid has same parents with selectedUId
           const sameParents = isSameParents({
             currentUid: uid,
-            nodeTree: validNodeTree,
+            nodeTree: nodeTreeRef.current,
             selectedUid: selectedItemsRef.current[0],
           });
 
           targetUids = sameParents
             ? [sameParents]
-            : getBodyChild({ uids, nodeTree: validNodeTree });
+            : getBodyChild({ uids, nodeTree: nodeTreeRef.current });
         }
 
         // check if it's a new state
@@ -199,7 +207,7 @@ export const useMouseEvents = ({
 
         const targetUid = getChild({
           currentUid: dbClickedUid,
-          nodeTree: validNodeTree,
+          nodeTree: nodeTreeRef.current,
           selectedUid: selectedItemsRef.current[0],
         });
 
@@ -243,6 +251,7 @@ export const useMouseEvents = ({
       validNodeTree,
       mostRecentClickedNodeUidRef.current,
       nodeTree,
+      selectedItemsRef,
     ],
   );
 
