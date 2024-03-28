@@ -49,6 +49,7 @@ export const IFrame = () => {
     contentEditableUidRef,
     isEditingRef,
     hoveredItemRef,
+    selectedItemsRef,
   });
   const { onMouseEnter, onMouseMove, onMouseLeave, onClick, onDblClick } =
     useMouseEvents({

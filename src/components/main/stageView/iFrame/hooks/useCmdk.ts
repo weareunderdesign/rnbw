@@ -20,6 +20,7 @@ interface IUseCmdkProps {
   contentEditableUidRef: React.MutableRefObject<TNodeUid>;
   isEditingRef: React.MutableRefObject<boolean>;
   hoveredItemRef: React.MutableRefObject<TNodeUid>;
+  selectedItemsRef: React.MutableRefObject<TNodeUid[]>;
 }
 
 export const useCmdk = ({
@@ -28,6 +29,7 @@ export const useCmdk = ({
   contentEditableUidRef,
   isEditingRef,
   hoveredItemRef,
+  selectedItemsRef,
 }: IUseCmdkProps) => {
   const dispatch = useDispatch();
   const { osType, cmdkReferenceData } = useAppState();
@@ -141,7 +143,11 @@ export const useCmdk = ({
 
   const onKeyUp = useCallback(
     (e: KeyboardEvent) => {
-      if (!hoveredItemRef.current) return;
+      if (
+        !hoveredItemRef.current ||
+        selectedItemsRef.current.includes(hoveredItemRef.current)
+      )
+        return;
 
       if (
         ((osType === "Windows" || osType === "Linux") && e.key == "Control") ||
