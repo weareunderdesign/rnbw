@@ -24,7 +24,7 @@ import {
 } from "@_redux/main/nodeTree";
 import { useAppState } from "@_redux/useAppState";
 
-import { getCodeViewTheme, getLanguageFromExtension } from "../helpers";
+import { getCodeViewTheme, getLanguageFromExtension, getNodeUidByCodeSelection } from "../helpers";
 import { TCodeSelection } from "../types";
 import { useSaveCommand } from "@_pages/main/processor/hooks";
 import {
@@ -35,7 +35,7 @@ import { debounce } from "@_pages/main/helper";
 
 const useEditor = () => {
   const dispatch = useDispatch();
-  const { theme: _theme, autoSave, isCodeTyping } = useAppState();
+  const { theme: _theme, autoSave, isCodeTyping, nodeTree, validNodeTree, } = useAppState();
   const {
     monacoEditorRef,
     setMonacoEditorRef,
@@ -144,14 +144,15 @@ const useEditor = () => {
   const onChange = useCallback(
     (value: string) => {
       dispatch(setCurrentFileContent(value));
+      const selectedRange:any = monacoEditorRef.current?.getSelection();
       dispatch(
         setNeedToSelectCode(
-          codeSelectionRef.current
+          selectedRange
             ? {
-                startLineNumber: codeSelectionRef.current.startLineNumber,
-                startColumn: codeSelectionRef.current.startColumn,
-                endLineNumber: codeSelectionRef.current.endLineNumber,
-                endColumn: codeSelectionRef.current.endColumn,
+                startLineNumber: selectedRange.startLineNumber,
+                startColumn: selectedRange.startColumn,
+                endLineNumber: selectedRange.endLineNumber,
+                endColumn: selectedRange.endColumn,
               }
             : null,
         ),
@@ -184,8 +185,6 @@ const useEditor = () => {
       if (value === undefined) return;
       dispatch(setIsCodeTyping(true));
       dispatch(focusNodeTreeNode(""));
-      console.log('lelele!', isCodeTyping);
-
       if (isCodeEditingView.current) {
         longDebouncedOnChange(value);
         isCodeEditingView.current = false;

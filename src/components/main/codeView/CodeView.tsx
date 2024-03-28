@@ -20,7 +20,6 @@ import { Editor, loader } from "@monaco-editor/react";
 import { useCmdk, useEditor } from "./hooks";
 import { getNodeUidByCodeSelection } from "./helpers";
 import { setEditingNodeUidInCodeView } from "@_redux/main/codeView";
-import { setIsContentProgrammaticallyChanged } from "@_redux/main/reference";
 
 loader.config({ monaco });
 
@@ -40,9 +39,7 @@ export default function CodeView() {
 
     editingNodeUidInCodeView,
     isCodeTyping,
-    codeErrors,
-    needToSelectCode,
-    isContentProgrammaticallyChanged
+    codeErrors
   } = useAppState();
   const { monacoEditorRef } = useContext(MainContext);
 
