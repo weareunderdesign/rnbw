@@ -182,7 +182,7 @@ const NodeTreeView = () => {
     [cb_expandNode, nextToExpand],
   );
 
-  return currentFileUid !== "" ? (
+  return currentFileUid !== "" && !!htmlReferenceData ? (
     <div
       id="NodeTreeView"
       style={{
@@ -210,12 +210,13 @@ const NodeTreeView = () => {
               useMemo<THtmlElementsReference>(() => {
                 const node = props.item.data as TNode;
                 const nodeData = node.data as THtmlNodeData;
-                const refData =
-                  htmlReferenceData.elements[
-                    nodeData.nodeName === "!doctype"
-                      ? "!DOCTYPE"
-                      : nodeData.nodeName
-                  ];
+                let nodeName = nodeData.nodeName;
+                if (nodeName === "!doctype") {
+                  nodeName = "!DOCTYPE";
+                } else if (nodeName === "#comment") {
+                  nodeName = "comment";
+                }
+                const refData = htmlReferenceData.elements[nodeName];
                 return refData;
               }, [props.item.data, cb_expandNode]);
 
