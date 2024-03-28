@@ -31,26 +31,24 @@ export const IFrame = () => {
 
   const contentEditableUidRef = useRef<TNodeUid>("");
   const isEditingRef = useRef(false);
-  const linkTagUidRef = useRef<TNodeUid>("");
 
   // hooks
-  const { nodeTreeRef, focusedItemRef, selectedItemsRef } =
+  const { nodeTreeRef, hoveredItemRef, selectedItemsRef } =
     useSyncNode(iframeRefState);
-  const { onKeyDown } = useCmdk({
+  const { onKeyDown, onKeyUp } = useCmdk({
     iframeRefRef,
     nodeTreeRef,
     contentEditableUidRef,
     isEditingRef,
+    hoveredItemRef,
   });
   const { onMouseEnter, onMouseMove, onMouseLeave, onClick, onDblClick } =
     useMouseEvents({
       iframeRefRef,
       nodeTreeRef,
-      focusedItemRef,
       selectedItemsRef,
       contentEditableUidRef,
       isEditingRef,
-      linkTagUidRef,
     });
 
   // init iframe
@@ -103,7 +101,10 @@ export const IFrame = () => {
             e.preventDefault();
             onDblClick(e);
           });
-
+          htmlNode.addEventListener("keyup", (e: KeyboardEvent) => {
+            e.preventDefault();
+            onKeyUp(e);
+          });
           // disable contextmenu
           _document.addEventListener("contextmenu", (e: MouseEvent) => {
             e.preventDefault();

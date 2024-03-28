@@ -208,17 +208,17 @@ export const getBodyChild = ({
       current = parentUid;
       parentUid = nodeTree[parentUid]?.parentUid;
     }
-    const rootIndex = nodeTree[current].children.findIndex(
-      (uid) => nodeTree[uid].displayName === "html",
+    const rootIndex = nodeTree[current]?.children?.findIndex(
+      (uid) => nodeTree[uid]?.displayName === "html",
     );
 
     if (rootIndex !== -1) {
-      const htmlNode = nodeTree[nodeTree[current].children[rootIndex]];
-      const bodyIndex = htmlNode.children.findIndex(
-        (uid) => nodeTree[uid].displayName === "body",
+      const htmlNode = nodeTree[nodeTree[current]?.children[rootIndex]];
+      const bodyIndex = htmlNode?.children?.findIndex(
+        (uid) => nodeTree[uid]?.displayName === "body",
       );
       if (bodyIndex !== -1) {
-        current = htmlNode.children[bodyIndex];
+        current = htmlNode?.children[bodyIndex];
       }
     }
 

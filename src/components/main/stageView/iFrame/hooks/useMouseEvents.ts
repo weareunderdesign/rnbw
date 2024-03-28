@@ -27,15 +27,14 @@ import {
   onWebComponentDblClick,
 } from "@_pages/main/helper";
 import { useAppState } from "@_redux/useAppState";
+import { getCommandKey } from "@_services/global";
 
 interface IUseMouseEventsProps {
   iframeRefRef: React.MutableRefObject<HTMLIFrameElement | null>;
   nodeTreeRef: React.MutableRefObject<TNodeTreeData>;
-  focusedItemRef: React.MutableRefObject<TNodeUid>;
   selectedItemsRef: React.MutableRefObject<TNodeUid[]>;
   contentEditableUidRef: React.MutableRefObject<TNodeUid>;
   isEditingRef: React.MutableRefObject<boolean>;
-  linkTagUidRef: React.MutableRefObject<TNodeUid>;
 }
 
 export const useMouseEvents = ({
@@ -53,6 +52,7 @@ export const useMouseEvents = ({
     fExpandedItemsObj: expandedItemsObj,
     formatCode,
     htmlReferenceData,
+    osType,
   } = useAppState();
 
   const mostRecentClickedNodeUidRef = useRef<TNodeUid>(""); //This is used because dbl clikc event was not able to receive the uid of the node that was clicked
@@ -63,8 +63,9 @@ export const useMouseEvents = ({
     (e: MouseEvent) => {
       const { uid } = getValidElementWithUid(e.target as HTMLElement);
       if (!uid) return;
-      if (e.ctrlKey || e.metaKey) {
+      if (getCommandKey(e, osType)) {
         dispatch(setHoveredNodeUid(uid));
+        iframeRefRef.current?.focus();
       } else {
         const isSelectedChild = isChild({
           currentUid: uid,
@@ -80,7 +81,7 @@ export const useMouseEvents = ({
         dispatch(setHoveredNodeUid(targetUids[0]));
       }
     },
-    [validNodeTree],
+    [validNodeTree, osType],
   );
   const onMouseLeave = () => {
     dispatch(setHoveredNodeUid(""));
@@ -107,7 +108,7 @@ export const useMouseEvents = ({
           : [uid];
 
         let targetUids = uids;
-        if (e.ctrlKey || e.metaKey) {
+        if (getCommandKey(e, osType)) {
           targetUids = uids;
         } else {
           const sameParents = isSameParents({
@@ -156,7 +157,7 @@ export const useMouseEvents = ({
         });
       }
     },
-    [validNodeTree, nodeTreeRef, selectedItemsRef],
+    [validNodeTree, nodeTreeRef, selectedItemsRef, osType],
   );
 
   const debouncedSelectAllText = useCallback(
