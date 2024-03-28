@@ -20,6 +20,7 @@ import { Editor, loader } from "@monaco-editor/react";
 import { useCmdk, useEditor } from "./hooks";
 import { getNodeUidByCodeSelection } from "./helpers";
 import { setEditingNodeUidInCodeView } from "@_redux/main/codeView";
+import { setIsContentProgrammaticallyChanged } from "@_redux/main/reference";
 
 loader.config({ monaco });
 
@@ -40,6 +41,8 @@ export default function CodeView() {
     editingNodeUidInCodeView,
     isCodeTyping,
     codeErrors,
+    needToSelectCode,
+    isContentProgrammaticallyChanged
   } = useAppState();
   const { monacoEditorRef } = useContext(MainContext);
 
@@ -118,6 +121,7 @@ export default function CodeView() {
   }, [validNodeTree, nFocusedItem, activePanel]);
 
   useEffect(() => {
+    if(isCodeTyping) return;
     const monacoEditor = monacoEditorRef.current;
     if (!monacoEditor) return;
 
@@ -171,6 +175,7 @@ export default function CodeView() {
   }, [nFocusedItem]);
 
   useEffect(() => {
+    if(isCodeTyping) return;
     if(nFocusedItem === "") return;
     const monacoEditor = monacoEditorRef.current;
     if (!monacoEditor) return;
@@ -178,6 +183,12 @@ export default function CodeView() {
     if(!node) return;
     const sourceCodeLocation = node.data.sourceCodeLocation;
     if (!sourceCodeLocation) return;
+    // skip typing in code-view
+    if (editingNodeUidInCodeView === nFocusedItem) {
+      focusedItemRef.current = nFocusedItem;
+      dispatch(setEditingNodeUidInCodeView(""));
+      return;
+    }
     const {
       startLine: startLineNumber,
       startCol: startColumn,

@@ -20,6 +20,7 @@ import { setCodeViewTabSize } from "@_redux/main/codeView";
 import {
   setCurrentFileContent,
   setNeedToSelectCode,
+  focusNodeTreeNode
 } from "@_redux/main/nodeTree";
 import { useAppState } from "@_redux/useAppState";
 
@@ -181,8 +182,9 @@ const useEditor = () => {
   const handleOnChange = useCallback(
     (value: string | undefined) => {
       if (value === undefined) return;
-
       dispatch(setIsCodeTyping(true));
+      dispatch(focusNodeTreeNode(""));
+      console.log('lelele!', isCodeTyping);
 
       if (isCodeEditingView.current) {
         longDebouncedOnChange(value);
