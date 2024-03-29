@@ -39,6 +39,7 @@ import {
   setNavigatorDropdownType,
 } from "@_redux/main/processor";
 import { AnyFunction } from "./types";
+import { toast } from "react-toastify";
 
 export const addDefaultCmdkActions = (
   cmdkReferenceData: TCmdkReferenceData,
@@ -386,7 +387,7 @@ export const onWebComponentDblClick = ({
               src.startsWith("https") ||
               src.startsWith("//")
             ) {
-              alert("rnbw couldn't find it's source file");
+              toast.error("rnbw couldn't find it's source file");
               break;
             } else {
               dispatch(setWebComponentOpen(true));
@@ -417,7 +418,7 @@ export const onWebComponentDblClick = ({
     }
   }
   if (!exist) {
-    alert("rnbw couldn't find it's source file");
+    toast.error("rnbw couldn't find it's source file");
   }
 };
 

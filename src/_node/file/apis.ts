@@ -36,6 +36,7 @@ import {
   _writeIDBFile,
 } from "./nohostApis";
 import { TFileHandlerInfo, TFileHandlerInfoObj, TZipFileInfo } from "./types";
+import { toast } from "react-toastify";
 
 export const initIDBProject = (projectPath: string): Promise<void> => {
   return new Promise<void>((resolve, reject) => {
@@ -405,8 +406,7 @@ export const downloadIDBProject = async (
   projectPath: string,
 ): Promise<void> => {
   try {
-    alert("Downloading project, please wait...");
-
+    toast("Downloading project, please wait...");
     const zip = new JSZip();
 
     // Build project root
@@ -450,7 +450,7 @@ export const downloadIDBProject = async (
         }),
       );
     }
-    alert("Project downloaded successfully");
+    toast.success("Project downloaded successfully");
 
     const projectBlob = await zip.generateAsync({ type: "blob" });
     const url = URL.createObjectURL(projectBlob);
