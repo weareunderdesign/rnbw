@@ -671,6 +671,8 @@ const group = ({
 
     const { startLine, startCol } =
       nodeTree[sortedUids[0]].data.sourceCodeLocation;
+
+    code = `<div>${code}</div>`;
     const edit = {
       range: new Range(startLine, startCol, startLine, startCol),
       text: code,
