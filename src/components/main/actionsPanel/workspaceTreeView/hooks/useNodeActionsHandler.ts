@@ -36,7 +36,7 @@ import {
   TFileAction,
 } from "@_redux/main/fileTree";
 import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
-import { setClipboardData, setShowCodeView } from "@_redux/main/processor";
+import { setClipboardData } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 
 export const useNodeActionsHandler = () => {
@@ -120,7 +120,6 @@ export const useNodeActionsHandler = () => {
         LogAllow && console.error("error while removing file system");
       },
       cb: (allDone: boolean | undefined) => {
-
         LogAllow &&
           console.log(
             allDone ? "all is successfully removed" : "some is not removed",
@@ -199,7 +198,6 @@ export const useNodeActionsHandler = () => {
         LogAllow && console.error("error while pasting file system");
       },
       cb: (allDone: boolean | undefined) => {
-
         LogAllow &&
           console.log(
             allDone ? "all is successfully pasted" : "some is not pasted",
@@ -277,7 +275,6 @@ export const useNodeActionsHandler = () => {
         LogAllow && console.error("error while duplicating file system");
       },
       cb: (allDone: boolean | unknown) => {
-
         LogAllow &&
           console.log(
             allDone
@@ -364,7 +361,7 @@ export const useNodeActionsHandler = () => {
           fb: () => {
             LogAllow && console.error("error while renaming file system");
           },
-          cb: (allDone: boolean|undefined) => {
+          cb: (allDone: boolean | undefined) => {
             LogAllow &&
               console.log(allDone ? "successfully renamed" : "not renamed");
             // add to event history
@@ -456,8 +453,6 @@ export const useNodeActionsHandler = () => {
       dispatch(setCurrentFileContent(nodeData.content));
 
       removeRunningActions(["fileTreeView-read"]);
-
-      showCodeView === false && dispatch(setShowCodeView(true));
     },
     [
       addRunningActions,
@@ -512,7 +507,7 @@ export const useNodeActionsHandler = () => {
         fb: () => {
           LogAllow && console.error("error while moving file system");
         },
-        cb: (allDone: boolean|undefined) => {
+        cb: (allDone: boolean | undefined) => {
           LogAllow &&
             console.log(
               allDone ? "all is successfully moved" : "some is not moved",
