@@ -21,6 +21,7 @@
   "license": "ISC",
   "dependencies": {
     "@monaco-editor/react": "^4.4.6",
+    "@rainbowapp/svg-icon.js": "^1.4.0",
     "@reduxjs/toolkit": "^2.1.0",
     "buffer": "^6.0.3",
     "classnames": "^2.3.2",
@@ -33,6 +34,7 @@
     "monaco-editor": "^0.41.0",
     "morphdom": "^2.7.1",
     "parse5": "^7.1.2",
+    "raincons": "^1.0.0",
     "react": "^18.2.0",
     "react-complex-tree": "^2.0.0",
     "react-dom": "^18.2.0",

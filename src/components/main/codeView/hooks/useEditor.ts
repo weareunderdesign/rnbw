@@ -20,11 +20,11 @@ import { setCodeViewTabSize } from "@_redux/main/codeView";
 import {
   setCurrentFileContent,
   setNeedToSelectCode,
-  focusNodeTreeNode
+  focusNodeTreeNode,
 } from "@_redux/main/nodeTree";
 import { useAppState } from "@_redux/useAppState";
 
-import { getCodeViewTheme, getLanguageFromExtension, getNodeUidByCodeSelection } from "../helpers";
+import { getCodeViewTheme, getLanguageFromExtension } from "../helpers";
 import { TCodeSelection } from "../types";
 import { useSaveCommand } from "@_pages/main/processor/hooks";
 import {
@@ -35,7 +35,7 @@ import { debounce } from "@_pages/main/helper";
 
 const useEditor = () => {
   const dispatch = useDispatch();
-  const { theme: _theme, autoSave, isCodeTyping, nodeTree, validNodeTree, } = useAppState();
+  const { theme: _theme, autoSave, isCodeTyping } = useAppState();
   const {
     monacoEditorRef,
     setMonacoEditorRef,
@@ -129,7 +129,7 @@ const useEditor = () => {
       );
 
       editor.onDidChangeCursorPosition((event) => {
-        if(isCodeTyping) {
+        if (isCodeTyping) {
           (event.source === "mouse" || event.source === "keyboard") &&
             setCodeSelection();
         }
@@ -144,7 +144,8 @@ const useEditor = () => {
   const onChange = useCallback(
     (value: string) => {
       dispatch(setCurrentFileContent(value));
-      const selectedRange:any = monacoEditorRef.current?.getSelection();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const selectedRange: any = monacoEditorRef.current?.getSelection();
       dispatch(
         setNeedToSelectCode(
           selectedRange
