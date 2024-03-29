@@ -26,6 +26,7 @@ import {
   NodeTree_Event_UndoActionType,
 } from "@_redux/main/nodeTree";
 import {
+  setActivePanel,
   setAutoSave,
   setDidRedo,
   setDidUndo,
@@ -249,6 +250,17 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
   const closeAllPanel = useCallback(() => {
     dispatch(setShowActionsPanel(false));
     dispatch(setShowCodeView(false));
+    //focus on stage
+    dispatch(setActivePanel("stage"));
+    const iframe: HTMLIFrameElement | null = document.getElementById(
+      "iframeId",
+    ) as HTMLIFrameElement;
+    if (iframe) {
+      const contentWindow = iframe.contentWindow;
+      if (contentWindow) {
+        contentWindow.focus();
+      }
+    }
   }, []);
 
   const openAllPanel = useCallback(() => {
@@ -272,7 +284,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
         return;
       }
       if (e.key === "Escape") {
-        (!cmdkOpen && showActionsPanel) || (showCodeView && closeAllPanel());
+        !cmdkOpen && (showActionsPanel || showCodeView) && closeAllPanel();
         !cmdkOpen && !showActionsPanel && !showCodeView && openAllPanel();
         return;
       }
