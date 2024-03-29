@@ -16,7 +16,6 @@ import { jss, styles } from "./constants";
 import { markSelectedElements } from "./helpers";
 import { useCmdk, useMouseEvents, useSyncNode } from "./hooks";
 import { setLoadingFalse, setLoadingTrue } from "@_redux/main/processor";
-import { useZoom } from "./hooks/useZoom";
 
 export const IFrame = () => {
   const dispatch = useDispatch();
@@ -34,8 +33,8 @@ export const IFrame = () => {
 
   const [iframeRefState, setIframeRefState] =
     useState<HTMLIFrameElement | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [document, setDocument] = useState<any>("");
+
+  const [document, setDocument] = useState<Document | string | undefined>("");
 
   const contentEditableUidRef = useRef<TNodeUid>("");
   const isEditingRef = useRef(false);
@@ -44,6 +43,7 @@ export const IFrame = () => {
   const { nodeTreeRef, hoveredItemRef, selectedItemsRef } =
     useSyncNode(iframeRefState);
   const { onKeyDown, onKeyUp } = useCmdk({
+    iframeRefState,
     iframeRefRef,
     nodeTreeRef,
     contentEditableUidRef,
@@ -138,9 +138,6 @@ export const IFrame = () => {
     }
   }, [iframeRefState]);
 
-  // zoom iframe
-  useZoom(iframeRefState, isEditingRef);
-
   // reload iframe
   useEffect(() => {
     needToReloadIframe && dispatch(setNeedToReloadIframe(false));
@@ -148,7 +145,7 @@ export const IFrame = () => {
 
   useEffect(() => {
     if (iframeRefState && document) {
-      const iframeDocument = document;
+      const iframeDocument = document as Document;
 
       if (iframeDocument) {
         const wrapTextNodes = (element: HTMLElement) => {

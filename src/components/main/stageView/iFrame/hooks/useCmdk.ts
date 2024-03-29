@@ -1,4 +1,4 @@
-import { useCallback, useContext } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 
 import { useDispatch } from "react-redux";
 
@@ -15,6 +15,7 @@ import { setShowActionsPanel, setShowCodeView } from "@_redux/main/processor";
 import { setHoveredNodeUid } from "@_redux/main/nodeTree";
 
 interface IUseCmdkProps {
+  iframeRefState: HTMLIFrameElement | null;
   iframeRefRef: React.MutableRefObject<HTMLIFrameElement | null>;
   nodeTreeRef: React.MutableRefObject<TNodeTreeData>;
   contentEditableUidRef: React.MutableRefObject<TNodeUid>;
@@ -24,6 +25,7 @@ interface IUseCmdkProps {
 }
 
 export const useCmdk = ({
+  iframeRefState,
   iframeRefRef,
   nodeTreeRef,
   contentEditableUidRef,
@@ -32,11 +34,61 @@ export const useCmdk = ({
   selectedItemsRef,
 }: IUseCmdkProps) => {
   const dispatch = useDispatch();
-  const { osType, cmdkReferenceData } = useAppState();
+  const { osType, cmdkReferenceData, activePanel, isCodeTyping } =
+    useAppState();
   const { monacoEditorRef } = useContext(MainContext);
-
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const activePanelRef = useRef(activePanel);
   const { formatCode } = useAppState();
 
+  useEffect(() => {
+    activePanelRef.current = activePanel;
+  }, [activePanel]);
+
+  const setZoom = useCallback(
+    (level: number) => {
+      setZoomLevel(level);
+      if (!iframeRefState) return;
+      iframeRefState.style.transform = `scale(${level})`;
+      iframeRefState.style.transformOrigin = `top ${
+        level > 1 ? "left" : "center"
+      }`;
+    },
+    [iframeRefState],
+  );
+
+  const handleZoomKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (
+        activePanelRef.current === "code" ||
+        activePanelRef.current === "settings" ||
+        isCodeTyping ||
+        isEditingRef.current
+      )
+        return;
+
+      const key = event.key;
+
+      switch (key) {
+        case "0":
+        case "Escape":
+          setZoom(1);
+          break;
+        case "+":
+          setZoom(zoomLevel + 0.25);
+          break;
+        case "-":
+          setZoom(zoomLevel <= 0.25 ? zoomLevel : zoomLevel - 0.25);
+          break;
+        default:
+          if (key >= "1" && key <= "9") {
+            setZoom(Number(`0.${key}`));
+          }
+          break;
+      }
+    },
+    [setZoom, zoomLevel, activePanelRef.current, isCodeTyping, iframeRefState],
+  );
   const onKeyDown = useCallback(
     (e: KeyboardEvent, allPanelsClosed: boolean) => {
       // cmdk obj for the current command
@@ -121,6 +173,7 @@ export const useCmdk = ({
           }
         }
       } else {
+        handleZoomKeyDown(e);
         if (e.code === "Escape") {
           if (allPanelsClosed) {
             dispatch(setShowActionsPanel(true));
@@ -138,7 +191,7 @@ export const useCmdk = ({
 
       !isEditingRef.current && action && e.preventDefault();
     },
-    [osType, cmdkReferenceData],
+    [osType, cmdkReferenceData, iframeRefState],
   );
 
   const onKeyUp = useCallback(
