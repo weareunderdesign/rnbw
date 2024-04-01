@@ -31,6 +31,7 @@ export const useAttributeHandler = () => {
       dispatch(setIsContentProgrammaticallyChanged(true));
 
       NodeActions.addAttr({
+        dispatch,
         attrName,
         attrValue,
         nodeTree,
@@ -60,6 +61,7 @@ export const useAttributeHandler = () => {
       dispatch(setIsContentProgrammaticallyChanged(true));
 
       NodeActions.removeAttr({
+        dispatch,
         attrName,
         attrValue,
         nodeTree,

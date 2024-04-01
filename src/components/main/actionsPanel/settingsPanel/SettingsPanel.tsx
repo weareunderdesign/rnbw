@@ -69,7 +69,6 @@ export default function SettingsPanel() {
           <div className="text-s">Settings</div>
           <div
             className={`action-button ${!isHover && "action-button-hidden"}`}
-            // className="action-button"
             onClick={() => {
               setShowForm(true);
             }}

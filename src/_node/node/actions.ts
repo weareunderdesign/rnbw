@@ -16,7 +16,7 @@ import {
   setCopiedNodeDisplayName,
   setNeedToSelectNodePaths,
   setNodeTree,
-  focusNodeTreeNode
+  focusNodeTreeNode,
 } from "@_redux/main/nodeTree";
 import { THtmlReferenceData } from "@_types/main";
 
@@ -34,7 +34,7 @@ import {
 } from "./helpers";
 import { Dispatch } from "react";
 import { AnyAction } from "@reduxjs/toolkit";
-import { fileHandlers } from "@_node/file/handlers"
+import { fileHandlers } from "@_node/file/handlers";
 
 const add = ({
   dispatch,
@@ -830,7 +830,7 @@ const edit = ({
 
     dispatch(setNodeTree(reCalcSourceCodeLocation(code)));
     dispatch(focusNodeTreeNode(targetUid));
-    
+
     cb && cb();
   } catch (err) {
     LogAllow && console.log(err);
@@ -844,9 +844,11 @@ export const addAttr = ({
   nodeTree,
   focusedItem,
   codeViewInstanceModel,
+  dispatch,
   cb,
   fb,
 }: {
+  dispatch: Dispatch<AnyAction>;
   attrName: string;
   attrValue: string;
   nodeTree: TNodeTreeData;
@@ -892,6 +894,17 @@ export const addAttr = ({
       codeViewInstanceModel.applyEdits([edit]);
     }
 
+    // predict needToSelectNodePaths
+    const needToSelectNodePaths = (() => {
+      const needToSelectNodePaths: string[] = [];
+      const validNodeTree = getValidNodeTree(nodeTree);
+      const focusedNode = validNodeTree[focusedItem];
+      const newNodePath = focusedNode.data.path;
+      needToSelectNodePaths.push(newNodePath);
+      return needToSelectNodePaths;
+    })();
+    dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
+
     cb && cb();
   } catch (err) {
     LogAllow && console.log(err);
@@ -899,6 +912,7 @@ export const addAttr = ({
   }
 };
 export const removeAttr = ({
+  dispatch,
   attrName,
   attrValue,
   nodeTree,
@@ -907,6 +921,7 @@ export const removeAttr = ({
   cb,
   fb,
 }: {
+  dispatch: Dispatch<AnyAction>;
   attrName: string;
   attrValue?: string;
   nodeTree: TNodeTreeData;
@@ -946,6 +961,16 @@ export const removeAttr = ({
       };
       codeViewInstanceModel.applyEdits([edit]);
     }
+    // predict needToSelectNodePaths
+    const needToSelectNodePaths = (() => {
+      const needToSelectNodePaths: string[] = [];
+      const validNodeTree = getValidNodeTree(nodeTree);
+      const focusedNode = validNodeTree[focusedItem];
+      const newNodePath = focusedNode.data.path;
+      needToSelectNodePaths.push(newNodePath);
+      return needToSelectNodePaths;
+    })();
+    dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
     cb && cb();
   } catch (err) {
@@ -968,8 +993,8 @@ export const NodeActions = {
   addAttr,
   removeAttr,
 };
-export const reCalcSourceCodeLocation = (content:string) => {
-  const htmlParser = fileHandlers['html'];
+export const reCalcSourceCodeLocation = (content: string) => {
+  const htmlParser = fileHandlers["html"];
   const { nodeTree } = htmlParser(content);
   return nodeTree;
-}
+};
