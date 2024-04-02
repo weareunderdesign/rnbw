@@ -12,7 +12,7 @@ export const SettingsView = ({
   attributes,
   setAttributes,
 }: SettingsViewProps) => {
-  const [isHovered, setIsHovered] = useState<TNodeUid | null>(null);
+  const [hoveredUid, setHoveredUid] = useState<TNodeUid | null>(null);
 
   const dispatch = useDispatch();
   const { selectedNodeUids } = useAppState();
@@ -44,8 +44,6 @@ export const SettingsView = ({
 
   const cleanUpValue = useCallback(
     (uid: TNodeUid, key: string) => {
-      console.log({ uid, attrName: key, attrValue: "" }, "cleanUpValue");
-
       changeAttribute({
         uid,
         attrName: key,
@@ -76,10 +74,10 @@ export const SettingsView = ({
     });
 
   const handleMouseEnter = (uid: TNodeUid) => {
-    setIsHovered(uid);
+    setHoveredUid(uid);
   };
   const handleMouseLeave = () => {
-    setIsHovered(null);
+    setHoveredUid(null);
   };
 
   return (
@@ -118,7 +116,7 @@ export const SettingsView = ({
                         checkbox
                       </SVGIconIII>
                     </div>
-                  ) : isHovered === uid ? (
+                  ) : hoveredUid === uid ? (
                     <div className="action-button">
                       <SVGIconI
                         {...{
