@@ -844,6 +844,7 @@ export const addAttr = ({
   nodeTree,
   focusedItem,
   codeViewInstanceModel,
+  selectedItems,
   dispatch,
   cb,
   fb,
@@ -853,6 +854,7 @@ export const addAttr = ({
   attrValue: string;
   nodeTree: TNodeTreeData;
   focusedItem: TNodeUid;
+  selectedItems: TNodeUid[];
   codeViewInstanceModel: editor.ITextModel;
   cb?: () => void;
   fb?: () => void;
@@ -898,9 +900,11 @@ export const addAttr = ({
     const needToSelectNodePaths = (() => {
       const needToSelectNodePaths: string[] = [];
       const validNodeTree = getValidNodeTree(nodeTree);
-      const focusedNode = validNodeTree[focusedItem];
-      const newNodePath = focusedNode.data.path;
-      needToSelectNodePaths.push(newNodePath);
+      selectedItems.map((uid) => {
+        const focusedNode = validNodeTree[uid];
+        const newNodePath = focusedNode.data.path;
+        needToSelectNodePaths.push(newNodePath);
+      });
       return needToSelectNodePaths;
     })();
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
@@ -918,6 +922,7 @@ export const removeAttr = ({
   nodeTree,
   focusedItem,
   codeViewInstanceModel,
+  selectedItems,
   cb,
   fb,
 }: {
@@ -927,6 +932,7 @@ export const removeAttr = ({
   nodeTree: TNodeTreeData;
   focusedItem: TNodeUid;
   codeViewInstanceModel: editor.ITextModel;
+  selectedItems: TNodeUid[];
   cb?: () => void;
   fb?: () => void;
 }) => {
@@ -965,9 +971,11 @@ export const removeAttr = ({
     const needToSelectNodePaths = (() => {
       const needToSelectNodePaths: string[] = [];
       const validNodeTree = getValidNodeTree(nodeTree);
-      const focusedNode = validNodeTree[focusedItem];
-      const newNodePath = focusedNode.data.path;
-      needToSelectNodePaths.push(newNodePath);
+      selectedItems.map((uid) => {
+        const focusedNode = validNodeTree[uid];
+        const newNodePath = focusedNode.data.path;
+        needToSelectNodePaths.push(newNodePath);
+      });
       return needToSelectNodePaths;
     })();
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));

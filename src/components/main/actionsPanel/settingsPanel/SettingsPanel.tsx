@@ -9,33 +9,32 @@ import { SVGIconI } from "@_components/common";
 import { SettingsView } from "../settingsView/SettingsView";
 import { SettingsForm } from "../settingsView/SettingsForm";
 import { PanelHeader } from "@_components/common/panelHeader";
+import { Attribute } from "./types";
 
 const excludedAttributes: string[] = [StageNodeIdAttr, DataSequencedUid];
 
 export default function SettingsPanel() {
   const dispatch = useDispatch();
-  const { nodeTree, nFocusedItem } = useAppState();
+  const { nodeTree, selectedNodeUids } = useAppState();
+  const [attributes, setAttributes] = useState<Attribute>({});
 
-  const [attributes, setAttributes] = useState({});
   const [showForm, setShowForm] = useState(false);
-
-  const attributesArray = useMemo(() => Object.keys(attributes), [attributes]);
+  const [isHover, setIsHovered] = useState(false);
 
   useEffect(() => {
-    const filteredAttributes = nodeTree[nFocusedItem]?.data?.attribs || {};
-    const filtered = Object.fromEntries(
-      Object.entries(filteredAttributes)
-        .filter(([key]) => !excludedAttributes.includes(key))
-        .reverse(),
-    );
-    setAttributes(filtered);
-  }, [nodeTree, nFocusedItem]);
+    const multipleAttr = selectedNodeUids.reduce((acc: Attribute, uid) => {
+      acc[uid] = { ...nodeTree[uid]?.data?.attribs } || {};
+      excludedAttributes.map((item) => {
+        if (acc[uid][item]) delete acc[uid][item];
+      });
+      return acc;
+    }, {});
+    setAttributes(multipleAttr);
+  }, [nodeTree, selectedNodeUids]);
 
   const onPanelClick = useCallback(() => {
     dispatch(setActivePanel("settings"));
   }, []);
-
-  const [isHover, setIsHovered] = useState(false);
 
   useEffect(() => {
     const settingsPanel = document.getElementById("SettingsPanel");
@@ -84,10 +83,10 @@ export default function SettingsPanel() {
           />
         )}
 
-        {!!attributesArray.length && (
+        {Object.values(attributes).some((obj) => !!Object.keys(obj).length) && (
           <SettingsView attributes={attributes} setAttributes={setAttributes} />
         )}
       </div>
     );
-  }, [onPanelClick, showForm, attributes, attributesArray, isHover]);
+  }, [onPanelClick, showForm, attributes, isHover]);
 }
