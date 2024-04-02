@@ -37,7 +37,12 @@ export const SettingsForm = ({
 
   return (
     <form className="settings-item gap-m">
+      <div className="action-button" onClick={() => setShowForm(false)}>
+        <SVGIconI {...{ class: "icon-xs" }}>cross</SVGIconI>
+      </div>
+
       <input
+        style={{ maxWidth: "50px" }}
         ref={attributeRef}
         placeholder="Attribute"
         type="text"
@@ -47,14 +52,12 @@ export const SettingsForm = ({
 
       <input
         ref={valueRef}
+        style={{ textAlign: "end" }}
         placeholder="Value"
         className="text-s attribute-input"
         onKeyDown={handleKeyDown}
         onBlur={handleSubmit}
       />
-      <div className="action-button" onClick={() => setShowForm(false)}>
-        <SVGIconI {...{ class: "icon-xs" }}>cross</SVGIconI>
-      </div>
     </form>
   );
 };

@@ -64,12 +64,9 @@ export const SettingsView = ({
         {Object.keys(attributes).map((key) => (
           <li
             key={key}
-            className="gap-m"
+            className="gap-m settings-item"
             style={{
-              display: "flex",
               padding: 0,
-              alignItems: "center",
-              height: "20px",
             }}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
@@ -105,30 +102,16 @@ export const SettingsView = ({
               </div>
             )}
 
-            <div
-              className="gap-m"
-              style={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <span className="text-s">{key}</span>
-              <input
-                type="text"
-                className="text-s attribute-input"
-                style={{
-                  justifySelf: "end",
-                  minWidth: "20px",
-                  maxWidth: "90%",
-                }}
-                value={(attributes[key] || "") as string}
-                onBlur={() => changeAttribute(key, attributes[key] as string)}
-                onChange={(e) => handleChange(e, key)}
-                onKeyDown={(e) => handleKeyDown(e, key)}
-              />
-            </div>
+            <span className="text-s">{key}</span>
+            <input
+              type="text"
+              className="text-s attribute-input"
+              style={{ textAlign: "end" }}
+              value={(attributes[key] || "") as string}
+              onBlur={() => changeAttribute(key, attributes[key] as string)}
+              onChange={(e) => handleChange(e, key)}
+              onKeyDown={(e) => handleKeyDown(e, key)}
+            />
           </li>
         ))}
       </ul>
