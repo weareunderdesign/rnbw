@@ -1,35 +1,84 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { useDispatch } from "react-redux";
 
 import { setActivePanel } from "@_redux/main/processor";
-import { SVGIconI } from "@_components/common";
+import { SVGIconI, SVGIconII, SVGIconIII } from "@_components/common";
 import { useAttributeHandler } from "./hooks/useAttributeHandler";
 import { SettingsViewProps } from "../settingsPanel/types";
+import { useAppState } from "@_redux/useAppState";
+import { TNodeUid } from "@_node/index";
 
 export const SettingsView = ({
   attributes,
   setAttributes,
 }: SettingsViewProps) => {
+  const [hoveredUid, setHoveredUid] = useState<TNodeUid | null>(null);
+
   const dispatch = useDispatch();
+  const { selectedNodeUids } = useAppState();
   const { changeAttribute, deleteAttribute } = useAttributeHandler();
 
   const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>, key: string) => {
-      setAttributes((prev: Record<string, string>) => ({
+    (e: React.ChangeEvent<HTMLInputElement>, uid: TNodeUid, key: string) => {
+      setAttributes((prev: Record<string, Record<string, string>>) => ({
         ...prev,
-        [key]: e.target.value,
+        [uid]: {
+          ...prev[uid],
+          [key]: e.target.value,
+        },
       }));
     },
     [],
   );
-
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>, key: string) => {
+    (e: React.KeyboardEvent<HTMLInputElement>, uid: TNodeUid, key: string) => {
       if (e.key !== "Enter") return;
-      changeAttribute(key, attributes[key] as string);
+      changeAttribute({
+        uid,
+        attrName: key,
+        attrValue: attributes[uid][key],
+      });
     },
     [attributes, changeAttribute],
   );
+
+  const cleanUpValue = useCallback(
+    (uid: TNodeUid, key: string) => {
+      changeAttribute({
+        uid,
+        attrName: key,
+        attrValue: "",
+        cb: () =>
+          setAttributes((prev: Record<string, Record<string, string>>) => ({
+            ...prev,
+            [uid]: {
+              ...prev[uid],
+              [key]: "",
+            },
+          })),
+      });
+    },
+    [changeAttribute],
+  );
+
+  const handleDelete = (uid: TNodeUid, key: string) =>
+    deleteAttribute({
+      uid,
+      attrName: key,
+      attrValue: attributes[uid][key] as string,
+      cb: () =>
+        setAttributes((prev: Record<string, Record<string, string>>) => {
+          delete prev[uid][key];
+          return { ...prev };
+        }),
+    });
+
+  const handleMouseEnter = (uid: TNodeUid) => {
+    setHoveredUid(uid);
+  };
+  const handleMouseLeave = () => {
+    setHoveredUid(null);
+  };
 
   return (
     <div id="SettingsView" onClick={() => dispatch(setActivePanel("settings"))}>
@@ -40,33 +89,71 @@ export const SettingsView = ({
           gap: "12px",
         }}
       >
-        {Object.keys(attributes).map((key) => (
-          <li key={key} className="settings-item gap-m" style={{ padding: 0 }}>
-            <span className="text-s">{key}</span>
+        {selectedNodeUids.map(
+          (uid) =>
+            attributes?.[uid] &&
+            !!Object.entries(attributes[uid]).length &&
+            Object.keys(attributes[uid])
+              .reverse()
+              .map((key) => (
+                <li
+                  key={key}
+                  className="gap-m settings-item"
+                  style={{
+                    padding: 0,
+                  }}
+                  onMouseEnter={() => handleMouseEnter(uid)}
+                  onMouseLeave={handleMouseLeave}
+                >
+                  {attributes[uid][key] ? (
+                    <div className="icon-button">
+                      <SVGIconIII
+                        {...{
+                          class: "icon-xs",
+                          onClick: () => cleanUpValue(uid, key),
+                        }}
+                      >
+                        checkbox
+                      </SVGIconIII>
+                    </div>
+                  ) : hoveredUid === uid ? (
+                    <div className="action-button">
+                      <SVGIconI
+                        {...{
+                          class: "icon-xs",
+                          onClick: () => handleDelete(uid, key),
+                        }}
+                      >
+                        cross
+                      </SVGIconI>
+                    </div>
+                  ) : (
+                    <div className="icon-button">
+                      <SVGIconII {...{ class: "icon-xs" }}>
+                        checkbox-blank
+                      </SVGIconII>
+                    </div>
+                  )}
 
-            <input
-              className="text-s attribute-input"
-              value={(attributes[key] || "") as string}
-              onBlur={() => changeAttribute(key, attributes[key] as string)}
-              onChange={(e) => handleChange(e, key)}
-              onKeyDown={(e) => handleKeyDown(e, key)}
-            />
-
-            <div
-              className="action-button"
-              onClick={() =>
-                deleteAttribute(key, attributes[key] as string, () =>
-                  setAttributes((prev: Record<string, string>) => {
-                    delete prev[key];
-                    return { ...prev };
-                  }),
-                )
-              }
-            >
-              <SVGIconI {...{ class: "icon-xs" }}>cross</SVGIconI>
-            </div>
-          </li>
-        ))}
+                  <span className="text-s">{key}</span>
+                  <input
+                    type="text"
+                    className="text-s attribute-input"
+                    style={{ textAlign: "end" }}
+                    value={(attributes[uid][key] || "") as string}
+                    onBlur={() =>
+                      changeAttribute({
+                        uid,
+                        attrName: key,
+                        attrValue: attributes[uid][key],
+                      })
+                    }
+                    onChange={(e) => handleChange(e, uid, key)}
+                    onKeyDown={(e) => handleKeyDown(e, uid, key)}
+                  />
+                </li>
+              )),
+        )}
       </ul>
     </div>
   );

@@ -9,52 +9,59 @@ import { SVGIconI } from "@_components/common";
 import { SettingsView } from "../settingsView/SettingsView";
 import { SettingsForm } from "../settingsView/SettingsForm";
 import { PanelHeader } from "@_components/common/panelHeader";
+import { Attribute } from "./types";
 
 const excludedAttributes: string[] = [StageNodeIdAttr, DataSequencedUid];
 
 export default function SettingsPanel() {
   const dispatch = useDispatch();
-  const { nodeTree, nFocusedItem } = useAppState();
+  const { nodeTree, selectedNodeUids } = useAppState();
+  const [attributes, setAttributes] = useState<Attribute>({});
 
-  const [attributes, setAttributes] = useState({});
   const [showForm, setShowForm] = useState(false);
-
-  const attributesArray = useMemo(() => Object.keys(attributes), [attributes]);
+  const [isHover, setIsHovered] = useState(false);
 
   useEffect(() => {
-    const filteredAttributes = nodeTree[nFocusedItem]?.data?.attribs || {};
-    const filtered = Object.fromEntries(
-      Object.entries(filteredAttributes)
-        .filter(([key]) => !excludedAttributes.includes(key))
-        .reverse(),
-    );
-    setAttributes(filtered);
-  }, [nodeTree, nFocusedItem]);
+    const multipleAttr = selectedNodeUids.reduce((acc: Attribute, uid) => {
+      acc[uid] = { ...nodeTree[uid]?.data?.attribs } || {};
+      excludedAttributes.map((item) => {
+        if (acc[uid][item]) delete acc[uid][item];
+      });
+      return acc;
+    }, {});
+
+    setAttributes(multipleAttr);
+  }, [nodeTree, selectedNodeUids]);
 
   const onPanelClick = useCallback(() => {
     dispatch(setActivePanel("settings"));
   }, []);
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+  };
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+  };
 
   return useMemo(() => {
     return (
       <div
-        id="Settings"
+        id="SettingsPanel"
         onClick={onPanelClick}
         className="border-bottom padding-m"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         <PanelHeader>
           <div className="text-s">Settings</div>
-
-          {!showForm && (
-            <div
-              className="action-button"
-              onClick={() => {
-                setShowForm(true);
-              }}
-            >
-              <SVGIconI {...{ class: "icon-xs" }}>plus</SVGIconI>
-            </div>
-          )}
+          <div
+            className={`action-button ${!isHover && "action-button-hidden"}`}
+            onClick={() => {
+              setShowForm(true);
+            }}
+          >
+            <SVGIconI {...{ class: "icon-xs" }}>plus</SVGIconI>
+          </div>
         </PanelHeader>
 
         {showForm && (
@@ -64,10 +71,10 @@ export default function SettingsPanel() {
           />
         )}
 
-        {!!attributesArray.length && (
+        {Object.values(attributes).some((obj) => !!Object.keys(obj).length) && (
           <SettingsView attributes={attributes} setAttributes={setAttributes} />
         )}
       </div>
     );
-  }, [onPanelClick, showForm, attributes, attributesArray]);
+  }, [onPanelClick, showForm, attributes, isHover]);
 }
