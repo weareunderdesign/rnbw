@@ -6,7 +6,7 @@ export const useAppState = () => {
   const {
     global: { osType, theme },
     main: {
-      fileTree: {
+      file: {
         workspace,
         project,
         initialFileUidToOpen,
