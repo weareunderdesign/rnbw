@@ -16,7 +16,6 @@ export type TTreeViewState = {
   expandedItemsObj: {
     [uid: TNodeUid]: true;
   };
-  selectedItems: TNodeUid[];
   selectedItemsObj: {
     [uid: TNodeUid]: true;
   };

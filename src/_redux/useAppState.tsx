@@ -17,7 +17,6 @@ export const useAppState = () => {
         fileTreeViewState: {
           focusedItem: fFocusedItem,
           expandedItemsObj: fExpandedItemsObj,
-          selectedItems: fSelectedItems,
           selectedItemsObj: fSelectedItemsObj,
         },
         hoveredFileUid,
@@ -123,7 +122,6 @@ export const useAppState = () => {
 
     fFocusedItem,
     fExpandedItemsObj,
-    fSelectedItems,
     fSelectedItemsObj,
     hoveredFileUid,
 

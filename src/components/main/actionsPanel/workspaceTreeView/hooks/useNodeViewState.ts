@@ -1,3 +1,4 @@
+import { getObjKeys } from "@_pages/main/helper";
 import { useCallback, useContext } from "react";
 
 import { useDispatch } from "react-redux";
@@ -25,7 +26,6 @@ export const useNodeViewState = ({ invalidFileNodes }: IUseNodeViewState) => {
     fileTree,
     fFocusedItem: focusedItem,
     fExpandedItemsObj: expandedItemsObj,
-    fSelectedItems: selectedItems,
     fSelectedItemsObj: selectedItemsObj,
   } = useAppState();
   const { removeRunningActions } = useContext(MainContext);
@@ -53,7 +53,7 @@ export const useNodeViewState = ({ invalidFileNodes }: IUseNodeViewState) => {
       }
 
       _uids = getValidNodeUids(fileTree, _uids);
-      if (_uids.length === selectedItems.length) {
+      if (_uids.length === getObjKeys(selectedItemsObj).length) {
         let same = true;
         for (const _uid of _uids) {
           if (!selectedItemsObj[_uid]) {
@@ -70,7 +70,7 @@ export const useNodeViewState = ({ invalidFileNodes }: IUseNodeViewState) => {
       dispatch(selectFileTreeNodes(_uids));
       removeRunningActions(["fileTreeView-select"]);
     },
-    [invalidFileNodes, fileTree, selectedItems, selectedItemsObj],
+    [invalidFileNodes, fileTree, selectedItemsObj],
   );
 
   const cb_expandNode = useCallback(

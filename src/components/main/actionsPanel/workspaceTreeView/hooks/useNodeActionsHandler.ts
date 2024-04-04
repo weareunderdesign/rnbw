@@ -1,4 +1,4 @@
-import { useCallback, useContext } from "react";
+import { useCallback, useContext, useMemo } from "react";
 
 import { TreeItem } from "react-complex-tree";
 import { useDispatch } from "react-redux";
@@ -22,7 +22,7 @@ import {
 } from "@_node/file";
 import { getValidNodeUids } from "@_node/helpers";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
-import { clearFileSession } from "@_pages/main/helper";
+import { clearFileSession, getObjKeys } from "@_pages/main/helper";
 import { MainContext } from "@_redux/main";
 import {
   addInvalidFileNodes,
@@ -48,7 +48,7 @@ export const useNodeActionsHandler = () => {
     showCodeView,
     fFocusedItem: focusedItem,
     fExpandedItemsObj: expandedItemsObj,
-    fSelectedItems: selectedItems,
+    fSelectedItemsObj,
     clipboardData,
     webComponentOpen,
     htmlReferenceData,
@@ -60,6 +60,10 @@ export const useNodeActionsHandler = () => {
     removeRunningActions,
     triggerCurrentProjectReload,
   } = useContext(MainContext);
+  const selectedItems = useMemo(
+    () => getObjKeys(fSelectedItemsObj),
+    [fSelectedItemsObj],
+  );
 
   // Add & Remove
   const onAdd = useCallback(

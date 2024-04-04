@@ -18,7 +18,6 @@ const fileTreeReducerInitialState: TFileTreeReducerState = {
   fileTreeViewState: {
     focusedItem: "",
     expandedItemsObj: {},
-    selectedItems: [],
     selectedItemsObj: {},
   },
   hoveredFileUid: "",
@@ -85,7 +84,6 @@ const fileTreeSlice = createSlice({
     },
     selectFileTreeNodes(state, action: PayloadAction<TNodeUid[]>) {
       const uids = action.payload;
-      state.fileTreeViewState.selectedItems = uids;
       state.fileTreeViewState.selectedItemsObj = {};
       for (const uid of uids) {
         state.fileTreeViewState.selectedItemsObj[uid] = true;
@@ -113,9 +111,6 @@ const fileTreeSlice = createSlice({
           state.fileTreeViewState.selectedItemsObj[curUid] = true;
         }
       }
-      state.fileTreeViewState.selectedItems = Object.keys(
-        state.fileTreeViewState.selectedItemsObj,
-      );
     },
     setHoveredFileUid(state, action: PayloadAction<TNodeUid>) {
       const hoveredFileUid = action.payload;

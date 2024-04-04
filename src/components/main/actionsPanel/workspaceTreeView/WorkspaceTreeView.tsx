@@ -60,7 +60,7 @@ export default function WorkspaceTreeView() {
     fileTree,
     fFocusedItem: focusedItem,
     fExpandedItemsObj,
-    fSelectedItems: selectedItems,
+    fSelectedItemsObj,
     linkToOpen,
     autoSave,
     activePanel,
@@ -72,6 +72,8 @@ export default function WorkspaceTreeView() {
     recentProjectContexts,
     invalidFileNodes,
   } = useAppState();
+  console.log(focusedItem, "focusedItem");
+
   const { addRunningActions, removeRunningActions, importProject } =
     useContext(MainContext);
   const navigate = useNavigate();
@@ -204,7 +206,7 @@ export default function WorkspaceTreeView() {
         data={fileTreeViewData}
         focusedItem={focusedItem}
         expandedItems={getObjKeys(fExpandedItemsObj)}
-        selectedItems={selectedItems}
+        selectedItems={getObjKeys(fSelectedItemsObj)}
         renderers={{
           renderTreeContainer: (props) => <Container {...props} />,
           renderItemsContainer: (props) => <Container {...props} />,
@@ -422,7 +424,6 @@ export default function WorkspaceTreeView() {
           canDropOnFolder: true,
           canDropOnNonFolder: false,
           canReorderItems: false,
-
           canSearch: false,
           canSearchByStartingTyping: false,
           canRename: true,
