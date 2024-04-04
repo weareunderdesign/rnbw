@@ -42,7 +42,7 @@ import {
 } from "./hooks";
 import { useSaveCommand } from "@_pages/main/processor/hooks";
 import { setWebComponentOpen } from "@_redux/main/stageView";
-import { debounce } from "@_pages/main/helper";
+import { debounce, getObjKeys } from "@_pages/main/helper";
 import {
   Container,
   ItemArrow,
@@ -59,7 +59,7 @@ export default function WorkspaceTreeView() {
     currentFileUid,
     fileTree,
     fFocusedItem: focusedItem,
-    fExpandedItems: expandedItems,
+    fExpandedItemsObj,
     fSelectedItems: selectedItems,
     linkToOpen,
     autoSave,
@@ -203,7 +203,7 @@ export default function WorkspaceTreeView() {
         info={{ id: "file-tree-view" }}
         data={fileTreeViewData}
         focusedItem={focusedItem}
-        expandedItems={expandedItems}
+        expandedItems={getObjKeys(fExpandedItemsObj)}
         selectedItems={selectedItems}
         renderers={{
           renderTreeContainer: (props) => <Container {...props} />,

@@ -453,3 +453,7 @@ export function debounce<F extends AnyFunction>(
     }, wait);
   };
 }
+
+export const getObjKeys = <T>(obj: { [key: string]: T }): string[] => {
+  return Object.keys(obj);
+};

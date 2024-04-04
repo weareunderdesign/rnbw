@@ -10,7 +10,7 @@ export type TNodeTreeReducerState = {
   needToSelectNodePaths: string[] | null;
   needToSelectCode: TCodeSelection | null;
 
-  nodeTreeViewState: TTreeViewState;
+  nodeTreeViewState: TTreeViewState & { expandedItems: TNodeUid[] };
   hoveredNodeUid: TNodeUid;
   copiedNodeDisplayName: string[];
 };

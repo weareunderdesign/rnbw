@@ -16,7 +16,6 @@ export const useAppState = () => {
         fileTree,
         fileTreeViewState: {
           focusedItem: fFocusedItem,
-          expandedItems: fExpandedItems,
           expandedItemsObj: fExpandedItemsObj,
           selectedItems: fSelectedItems,
           selectedItemsObj: fSelectedItemsObj,
@@ -123,7 +122,6 @@ export const useAppState = () => {
     fileTree,
 
     fFocusedItem,
-    fExpandedItems,
     fExpandedItemsObj,
     fSelectedItems,
     fSelectedItemsObj,

@@ -13,7 +13,6 @@ export type TEventHistoryInfo = {
 
 export type TTreeViewState = {
   focusedItem: TNodeUid;
-  expandedItems: TNodeUid[];
   expandedItemsObj: {
     [uid: TNodeUid]: true;
   };
