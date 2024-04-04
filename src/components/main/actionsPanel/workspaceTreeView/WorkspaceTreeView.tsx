@@ -72,7 +72,6 @@ export default function WorkspaceTreeView() {
     recentProjectContexts,
     invalidFileNodes,
   } = useAppState();
-  console.log(focusedItem, "focusedItem");
 
   const { addRunningActions, removeRunningActions, importProject } =
     useContext(MainContext);

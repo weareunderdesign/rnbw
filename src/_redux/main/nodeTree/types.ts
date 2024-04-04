@@ -11,7 +11,6 @@ export type TNodeTreeReducerState = {
   needToSelectCode: TCodeSelection | null;
 
   nodeTreeViewState: TTreeViewState & {
-    expandedItems: TNodeUid[];
     selectedItems: TNodeUid[];
   };
   hoveredNodeUid: TNodeUid;

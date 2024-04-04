@@ -19,6 +19,7 @@ import { THtmlNodeData } from "@_node/index";
 import { TNode, TNodeUid } from "@_node/types";
 import {
   debounce,
+  getObjKeys,
   isWebComponentDblClicked,
   onWebComponentDblClick,
   scrollToElement,
@@ -71,11 +72,11 @@ const NodeTreeView = () => {
     validNodeTree,
 
     nFocusedItem: focusedItem,
-    nExpandedItems: expandedItems,
+    nExpandedItemsObj,
     nSelectedItems: selectedItems,
     hoveredNodeUid,
 
-    fExpandedItemsObj: expandedItemsObj,
+    fExpandedItemsObj,
     htmlReferenceData,
   } = useAppState();
   const { addRunningActions } = useContext(MainContext);
@@ -136,7 +137,7 @@ const NodeTreeView = () => {
     }
 
     return data;
-  }, [validNodeTree, expandedItems]);
+  }, [validNodeTree, nExpandedItemsObj]);
 
   // node view state handlers
   const { cb_expandNode } = useNodeViewState();
@@ -162,7 +163,7 @@ const NodeTreeView = () => {
           wcName: nodeData.nodeName,
           validNodeTree,
           dispatch,
-          expandedItemsObj,
+          expandedItemsObj: fExpandedItemsObj,
           fileTree,
         });
       }
@@ -201,7 +202,7 @@ const NodeTreeView = () => {
         data={nodeTreeViewData}
         focusedItem={focusedItem}
         selectedItems={selectedItems}
-        expandedItems={expandedItems}
+        expandedItems={getObjKeys(nExpandedItemsObj)}
         renderers={{
           renderTreeContainer: (props) => <Container {...props} />,
           renderItemsContainer: (props) => <Container {...props} />,

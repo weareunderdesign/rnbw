@@ -36,7 +36,6 @@ export const useAppState = () => {
         needToSelectCode,
         nodeTreeViewState: {
           focusedItem: nFocusedItem,
-          expandedItems: nExpandedItems,
           expandedItemsObj: nExpandedItemsObj,
           selectedItems: nSelectedItems,
           selectedItemsObj: nSelectedItemsObj,
@@ -142,7 +141,6 @@ export const useAppState = () => {
     needToSelectCode,
 
     nFocusedItem,
-    nExpandedItems,
     nExpandedItemsObj,
     nSelectedItems,
     nSelectedItemsObj,

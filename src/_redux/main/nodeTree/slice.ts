@@ -14,7 +14,6 @@ const nodeTreeReducerInitialState: TNodeTreeReducerState = {
 
   nodeTreeViewState: {
     focusedItem: "",
-    expandedItems: [],
     expandedItemsObj: {},
     selectedItems: [],
     selectedItemsObj: {},
@@ -54,27 +53,27 @@ const nodeTreeSlice = createSlice({
       for (const uid of expandedItems) {
         state.nodeTreeViewState.expandedItemsObj[uid] = true;
       }
-      state.nodeTreeViewState.expandedItems = Object.keys(
-        state.nodeTreeViewState.expandedItemsObj,
-      );
+      // state.nodeTreeViewState.expandedItems = Object.keys(
+      //   state.nodeTreeViewState.expandedItemsObj,
+      // );
     },
     expandNodeTreeNodes(state, action: PayloadAction<TNodeUid[]>) {
       const uids = action.payload;
       for (const uid of uids) {
         state.nodeTreeViewState.expandedItemsObj[uid] = true;
       }
-      state.nodeTreeViewState.expandedItems = Object.keys(
-        state.nodeTreeViewState.expandedItemsObj,
-      );
+      // state.nodeTreeViewState.expandedItems = Object.keys(
+      //   state.nodeTreeViewState.expandedItemsObj,
+      // );
     },
     collapseNodeTreeNodes(state, action: PayloadAction<TNodeUid[]>) {
       const uids = action.payload;
       for (const uid of uids) {
         delete state.nodeTreeViewState.expandedItemsObj[uid];
       }
-      state.nodeTreeViewState.expandedItems = Object.keys(
-        state.nodeTreeViewState.expandedItemsObj,
-      );
+      // state.nodeTreeViewState.expandedItems = Object.keys(
+      //   state.nodeTreeViewState.expandedItemsObj,
+      // );
     },
     selectNodeTreeNodes(state, action: PayloadAction<TNodeUid[]>) {
       const selectedItems = action.payload;
@@ -132,9 +131,9 @@ const nodeTreeSlice = createSlice({
         state.nodeTreeViewState.selectedItemsObj[_addedUid] = true;
       });
 
-      state.nodeTreeViewState.expandedItems = Object.keys(
-        state.nodeTreeViewState.expandedItemsObj,
-      );
+      // state.nodeTreeViewState.expandedItems = Object.keys(
+      //   state.nodeTreeViewState.expandedItemsObj,
+      // );
       state.nodeTreeViewState.selectedItems = Object.keys(
         state.nodeTreeViewState.selectedItemsObj,
       );

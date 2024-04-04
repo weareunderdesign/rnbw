@@ -50,6 +50,7 @@ import {
 } from "../helpers";
 import { setLoadingFalse, setLoadingTrue } from "@_redux/main/processor";
 import { toast } from "react-toastify";
+import { getObjKeys } from "@_pages/main/helper";
 
 export const useNodeTreeEvent = () => {
   const dispatch = useDispatch();
@@ -67,7 +68,7 @@ export const useNodeTreeEvent = () => {
     validNodeTree,
     needToSelectNodePaths,
     needToSelectCode,
-    nExpandedItems,
+    nExpandedItemsObj,
     nFocusedItem,
     syncConfigs,
     webComponentOpen,
@@ -272,7 +273,7 @@ export const useNodeTreeEvent = () => {
       );
     } else {
       markSelectedElements(iframeRefRef.current, [nFocusedItem], nodeTree);
-      const validExpandedItems = nExpandedItems.filter(
+      const validExpandedItems = getObjKeys(nExpandedItemsObj).filter(
         (uid) => _validNodeTree[uid] && _validNodeTree[uid].isEntity === false,
       );
       const needToExpandItems: TNodeUid[] = isSelectedNodeUidsChanged.current
