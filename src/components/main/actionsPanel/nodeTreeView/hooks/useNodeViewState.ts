@@ -11,6 +11,7 @@ import {
   setSelectedNodeUids,
 } from "@_redux/main/nodeTree";
 import { useAppState } from "@_redux/useAppState";
+import { getObjKeys } from "@_pages/main/helper";
 
 export function useNodeViewState() {
   const dispatch = useDispatch();
@@ -20,7 +21,6 @@ export function useNodeViewState() {
     prevRenderableFileUid,
 
     validNodeTree,
-    nSelectedItems: selectedItems,
     nSelectedItemsObj: selectedItemsObj,
   } = useAppState();
   const { addRunningActions, removeRunningActions } = useContext(MainContext);
@@ -34,7 +34,7 @@ export function useNodeViewState() {
       addRunningActions(["nodeTreeView-select"]);
       // validate
       const _uids = getValidNodeUids(validNodeTree, uids);
-      if (_uids.length === selectedItems.length) {
+      if (_uids.length === getObjKeys(selectedItemsObj).length) {
         let same = true;
         for (const _uid of _uids) {
           if (!selectedItemsObj[_uid]) {
@@ -68,7 +68,6 @@ export function useNodeViewState() {
       currentFileUid,
       prevRenderableFileUid,
       validNodeTree,
-      selectedItems,
       selectedItemsObj,
     ],
   );

@@ -15,7 +15,6 @@ const nodeTreeReducerInitialState: TNodeTreeReducerState = {
   nodeTreeViewState: {
     focusedItem: "",
     expandedItemsObj: {},
-    selectedItems: [],
     selectedItemsObj: {},
   },
   hoveredNodeUid: "",
@@ -53,31 +52,21 @@ const nodeTreeSlice = createSlice({
       for (const uid of expandedItems) {
         state.nodeTreeViewState.expandedItemsObj[uid] = true;
       }
-      // state.nodeTreeViewState.expandedItems = Object.keys(
-      //   state.nodeTreeViewState.expandedItemsObj,
-      // );
     },
     expandNodeTreeNodes(state, action: PayloadAction<TNodeUid[]>) {
       const uids = action.payload;
       for (const uid of uids) {
         state.nodeTreeViewState.expandedItemsObj[uid] = true;
       }
-      // state.nodeTreeViewState.expandedItems = Object.keys(
-      //   state.nodeTreeViewState.expandedItemsObj,
-      // );
     },
     collapseNodeTreeNodes(state, action: PayloadAction<TNodeUid[]>) {
       const uids = action.payload;
       for (const uid of uids) {
         delete state.nodeTreeViewState.expandedItemsObj[uid];
       }
-      // state.nodeTreeViewState.expandedItems = Object.keys(
-      //   state.nodeTreeViewState.expandedItemsObj,
-      // );
     },
     selectNodeTreeNodes(state, action: PayloadAction<TNodeUid[]>) {
       const selectedItems = action.payload;
-      state.nodeTreeViewState.selectedItems = selectedItems;
       state.nodeTreeViewState.selectedItemsObj = {};
       for (const uid of selectedItems) {
         state.nodeTreeViewState.selectedItemsObj[uid] = true;
@@ -130,13 +119,6 @@ const nodeTreeSlice = createSlice({
       s_addedUids.map((_addedUid) => {
         state.nodeTreeViewState.selectedItemsObj[_addedUid] = true;
       });
-
-      // state.nodeTreeViewState.expandedItems = Object.keys(
-      //   state.nodeTreeViewState.expandedItemsObj,
-      // );
-      state.nodeTreeViewState.selectedItems = Object.keys(
-        state.nodeTreeViewState.selectedItemsObj,
-      );
     },
     setHoveredNodeUid(state, action: PayloadAction<TNodeUid>) {
       const hoveredNodeUid = action.payload;

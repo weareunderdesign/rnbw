@@ -73,7 +73,7 @@ const NodeTreeView = () => {
 
     nFocusedItem: focusedItem,
     nExpandedItemsObj,
-    nSelectedItems: selectedItems,
+    nSelectedItemsObj,
     hoveredNodeUid,
 
     fExpandedItemsObj,
@@ -201,7 +201,7 @@ const NodeTreeView = () => {
         info={{ id: "node-tree-view" }}
         data={nodeTreeViewData}
         focusedItem={focusedItem}
-        selectedItems={selectedItems}
+        selectedItems={getObjKeys(nSelectedItemsObj)}
         expandedItems={getObjKeys(nExpandedItemsObj)}
         renderers={{
           renderTreeContainer: (props) => <Container {...props} />,

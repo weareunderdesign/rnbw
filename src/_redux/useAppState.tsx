@@ -37,7 +37,6 @@ export const useAppState = () => {
         nodeTreeViewState: {
           focusedItem: nFocusedItem,
           expandedItemsObj: nExpandedItemsObj,
-          selectedItems: nSelectedItems,
           selectedItemsObj: nSelectedItemsObj,
         },
         hoveredNodeUid,
@@ -142,7 +141,6 @@ export const useAppState = () => {
 
     nFocusedItem,
     nExpandedItemsObj,
-    nSelectedItems,
     nSelectedItemsObj,
     hoveredNodeUid,
     copiedNodeDisplayName,

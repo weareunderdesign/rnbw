@@ -1,4 +1,4 @@
-import { useCallback, useContext } from "react";
+import { useCallback, useContext, useMemo } from "react";
 
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
@@ -11,6 +11,7 @@ import { NodeActions } from "@_node/apis";
 import { RootNodeUid } from "@_constants/main";
 import { isPastingAllowed } from "../helpers";
 import { setIsContentProgrammaticallyChanged } from "@_redux/main/reference";
+import { getObjKeys } from "@_pages/main/helper";
 
 export const useNodeActionHandlers = () => {
   const dispatch = useDispatch();
@@ -18,12 +19,17 @@ export const useNodeActionHandlers = () => {
     nodeTree,
     validNodeTree,
     nFocusedItem: focusedItem,
-    nSelectedItems: selectedItems,
+    nSelectedItemsObj,
     formatCode,
     copiedNodeDisplayName,
     htmlReferenceData,
   } = useAppState();
   const { monacoEditorRef } = useContext(MainContext);
+
+  const selectedItems = useMemo(
+    () => getObjKeys(nSelectedItemsObj),
+    [nSelectedItemsObj],
+  );
 
   const onAddNode = useCallback(
     (actionName: string) => {
