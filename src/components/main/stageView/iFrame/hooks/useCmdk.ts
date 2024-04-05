@@ -1,96 +1,113 @@
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useRef } from "react";
 
 import { useDispatch } from "react-redux";
 
 import { LogAllow } from "@_constants/global";
-import { TNodeTreeData, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { setCurrentCommand } from "@_redux/main/cmdk";
-import { useAppState } from "@_redux/useAppState";
 import { getCommandKey } from "@_services/global";
 import { TCmdkKeyMap } from "@_types/main";
 
 import { editHtmlContent, getBodyChild } from "../helpers";
 import { setShowActionsPanel, setShowCodeView } from "@_redux/main/processor";
+import { eventListenersStatesRefType } from "../IFrame";
 import { setHoveredNodeUid } from "@_redux/main/nodeTree";
 
-interface IUseCmdkProps {
-  iframeRefState: HTMLIFrameElement | null;
-  iframeRefRef: React.MutableRefObject<HTMLIFrameElement | null>;
-  nodeTreeRef: React.MutableRefObject<TNodeTreeData>;
-  contentEditableUidRef: React.MutableRefObject<TNodeUid>;
-  isEditingRef: React.MutableRefObject<boolean>;
-  hoveredItemRef: React.MutableRefObject<TNodeUid>;
-  selectedItemsRef: React.MutableRefObject<TNodeUid[]>;
-}
-
-export const useCmdk = ({
-  iframeRefState,
-  iframeRefRef,
-  nodeTreeRef,
-  contentEditableUidRef,
-  isEditingRef,
-  hoveredItemRef,
-  selectedItemsRef,
-}: IUseCmdkProps) => {
+export const useCmdk = () => {
   const dispatch = useDispatch();
-  const { osType, cmdkReferenceData, activePanel, isCodeTyping } =
-    useAppState();
-  const { monacoEditorRef } = useContext(MainContext);
-  const [zoomLevel, setZoomLevel] = useState(1);
-  const activePanelRef = useRef(activePanel);
-  const { formatCode } = useAppState();
 
-  useEffect(() => {
-    activePanelRef.current = activePanel;
-  }, [activePanel]);
+  const { monacoEditorRef } = useContext(MainContext);
+  const zoomLevelRef = useRef(1);
 
   const setZoom = useCallback(
-    (level: number) => {
-      setZoomLevel(level);
+    (level: number, iframeRefState: HTMLIFrameElement | null) => {
+      zoomLevelRef.current = level;
       if (!iframeRefState) return;
       iframeRefState.style.transform = `scale(${level})`;
       iframeRefState.style.transformOrigin = `top ${
         level > 1 ? "left" : "center"
       }`;
     },
-    [iframeRefState],
+    [],
   );
 
   const handleZoomKeyDown = useCallback(
-    (event: KeyboardEvent) => {
+    (
+      event: KeyboardEvent,
+      eventListenerRef: React.MutableRefObject<eventListenersStatesRefType>,
+    ) => {
+      const { activePanel, iframeRefState, isEditingRef, isCodeTyping } =
+        eventListenerRef.current;
       if (
-        activePanelRef.current === "code" ||
-        activePanelRef.current === "settings" ||
+        activePanel === "code" ||
+        activePanel === "settings" ||
         isCodeTyping ||
         isEditingRef.current
       )
         return;
 
       const key = event.key;
+      let _zoomLevel = zoomLevelRef.current;
 
       switch (key) {
         case "0":
         case "Escape":
-          setZoom(1);
+          setZoom(1, iframeRefState);
           break;
         case "+":
-          setZoom(zoomLevel + 0.25);
+          _zoomLevel = _zoomLevel + 0.25;
+          setZoom(_zoomLevel, iframeRefState);
           break;
         case "-":
-          setZoom(zoomLevel <= 0.25 ? zoomLevel : zoomLevel - 0.25);
+          if (_zoomLevel > 0.25) {
+            _zoomLevel = _zoomLevel - 0.25;
+          }
+          setZoom(_zoomLevel, iframeRefState);
           break;
         default:
           if (key >= "1" && key <= "9") {
-            setZoom(Number(`0.${key}`));
+            setZoom(Number(`0.${key}`), iframeRefState);
           }
           break;
       }
     },
-    [setZoom, zoomLevel, activePanelRef.current, isCodeTyping, iframeRefState],
+    [setZoom, zoomLevelRef.current],
+  );
+
+  const handlePanelsToggle = useCallback(
+    (
+      event: KeyboardEvent,
+      eventListenerRef: React.MutableRefObject<eventListenersStatesRefType>,
+    ) => {
+      const { isEditingRef, showActionsPanel, showCodeView } =
+        eventListenerRef.current;
+      if (isEditingRef.current) return;
+      if (event.code === "Escape") {
+        if (!showActionsPanel && !showCodeView) {
+          dispatch(setShowActionsPanel(true));
+          dispatch(setShowCodeView(true));
+        } else {
+          dispatch(setShowActionsPanel(false));
+          dispatch(setShowCodeView(false));
+        }
+      }
+    },
+    [],
   );
   const onKeyDown = useCallback(
-    (e: KeyboardEvent, allPanelsClosed: boolean) => {
+    (
+      e: KeyboardEvent,
+      eventListenerRef: React.MutableRefObject<eventListenersStatesRefType>,
+    ) => {
+      const {
+        isEditingRef,
+        osType,
+        cmdkReferenceData,
+        iframeRefRef,
+        contentEditableUidRef,
+        nodeTreeRef,
+        formatCode,
+      } = eventListenerRef.current;
       // cmdk obj for the current command
       const cmdk: TCmdkKeyMap = {
         cmd: getCommandKey(e, osType),
@@ -173,16 +190,6 @@ export const useCmdk = ({
           }
         }
       } else {
-        handleZoomKeyDown(e);
-        if (e.code === "Escape") {
-          if (allPanelsClosed) {
-            dispatch(setShowActionsPanel(true));
-            dispatch(setShowCodeView(true));
-          } else {
-            dispatch(setShowActionsPanel(false));
-            dispatch(setShowCodeView(false));
-          }
-        }
         if (action) {
           LogAllow && console.log("action to be run by cmdk: ", action);
           dispatch(setCurrentCommand({ action }));
@@ -191,11 +198,21 @@ export const useCmdk = ({
 
       !isEditingRef.current && action && e.preventDefault();
     },
-    [osType, cmdkReferenceData, iframeRefState],
+    [],
   );
 
   const onKeyUp = useCallback(
-    (e: KeyboardEvent) => {
+    (
+      e: KeyboardEvent,
+      eventListenerRef: React.MutableRefObject<eventListenersStatesRefType>,
+    ) => {
+      const {
+        osType,
+        hoveredItemRef,
+        selectedItemsRef,
+        nodeTreeRef,
+        hoveredNodeUid,
+      } = eventListenerRef.current;
       if (
         !hoveredItemRef.current ||
         selectedItemsRef.current.includes(hoveredItemRef.current)
@@ -210,11 +227,11 @@ export const useCmdk = ({
           uids: [hoveredItemRef.current],
           nodeTree: nodeTreeRef.current,
         });
-
-        dispatch(setHoveredNodeUid(targetUid[0]));
+        if (targetUid[0] !== hoveredNodeUid)
+          dispatch(setHoveredNodeUid(targetUid[0]));
       }
     },
-    [osType],
+    [],
   );
-  return { onKeyDown, onKeyUp };
+  return { onKeyDown, onKeyUp, handleZoomKeyDown, handlePanelsToggle };
 };

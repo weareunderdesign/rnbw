@@ -71,6 +71,7 @@ export default function WorkspaceTreeView() {
     recentProjectHandlers,
     recentProjectContexts,
     invalidFileNodes,
+    webComponentOpen,
   } = useAppState();
   const { addRunningActions, removeRunningActions, importProject } =
     useContext(MainContext);
@@ -150,7 +151,7 @@ export default function WorkspaceTreeView() {
   useEffect(
     function RevertWcOpen() {
       if (activePanel !== "code") {
-        dispatch(setWebComponentOpen(false));
+        if (webComponentOpen) dispatch(setWebComponentOpen(false));
         openFile(prevRenderableFileUid);
       }
     },
