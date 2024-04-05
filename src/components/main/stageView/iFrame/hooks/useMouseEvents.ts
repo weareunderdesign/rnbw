@@ -6,7 +6,6 @@ import { ShortDelay } from "@_constants/main";
 import { StageNodeIdAttr } from "@_node/file";
 import { getValidNodeUids } from "@_node/helpers";
 import { THtmlNodeData } from "@_node/node";
-import { TNodeTreeData, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { setHoveredNodeUid } from "@_redux/main/nodeTree";
 import { setSelectedNodeUids } from "@_redux/main/nodeTree/event";
@@ -28,22 +27,27 @@ import {
 } from "@_pages/main/helper";
 import { useAppState } from "@_redux/useAppState";
 import { getCommandKey } from "@_services/global";
+import { eventListenersStatesRefType } from "../IFrame";
+import { TNodeUid } from "@_node/index";
 
-interface IUseMouseEventsProps {
-  iframeRefRef: React.MutableRefObject<HTMLIFrameElement | null>;
-  nodeTreeRef: React.MutableRefObject<TNodeTreeData>;
-  selectedItemsRef: React.MutableRefObject<TNodeUid[]>;
-  contentEditableUidRef: React.MutableRefObject<TNodeUid>;
-  isEditingRef: React.MutableRefObject<boolean>;
-}
+// interface IUseMouseEventsProps {
+//   iframeRefRef: React.MutableRefObject<HTMLIFrameElement | null>;
+//   nodeTreeRef: React.MutableRefObject<TNodeTreeData>;
+//   selectedItemsRef: React.MutableRefObject<TNodeUid[]>;
+//   contentEditableUidRef: React.MutableRefObject<TNodeUid>;
+//   isEditingRef: React.MutableRefObject<boolean>;
+// }
 
-export const useMouseEvents = ({
-  iframeRefRef,
-  nodeTreeRef,
-  selectedItemsRef,
-  contentEditableUidRef,
-  isEditingRef,
-}: IUseMouseEventsProps) => {
+export const useMouseEvents = (
+  eventListenerRef: React.MutableRefObject<eventListenersStatesRefType>,
+) => {
+  const {
+    iframeRefRef,
+    nodeTreeRef,
+    selectedItemsRef,
+    contentEditableUidRef,
+    isEditingRef,
+  } = eventListenerRef.current;
   const dispatch = useDispatch();
   const { monacoEditorRef } = useContext(MainContext);
   const {
@@ -53,6 +57,7 @@ export const useMouseEvents = ({
     formatCode,
     htmlReferenceData,
     osType,
+    activePanel,
   } = useAppState();
 
   const mostRecentClickedNodeUidRef = useRef<TNodeUid>(""); //This is used because dbl clikc event was not able to receive the uid of the node that was clicked
@@ -90,7 +95,7 @@ export const useMouseEvents = ({
   // click, dblclick handlers
   const onClick = useCallback(
     (e: MouseEvent) => {
-      dispatch(setActivePanel("stage"));
+      if (activePanel !== "stage") dispatch(setActivePanel("stage"));
 
       const { uid } = getValidElementWithUid(e.target as HTMLElement);
       if (!uid) return;
@@ -157,7 +162,7 @@ export const useMouseEvents = ({
         });
       }
     },
-    [validNodeTree, nodeTreeRef, selectedItemsRef, osType],
+    [activePanel, formatCode, monacoEditorRef, osType, validNodeTree],
   );
 
   const debouncedSelectAllText = useCallback(
