@@ -206,8 +206,13 @@ export const useCmdk = () => {
       e: KeyboardEvent,
       eventListenerRef: React.MutableRefObject<eventListenersStatesRefType>,
     ) => {
-      const { osType, hoveredItemRef, selectedItemsRef, nodeTreeRef } =
-        eventListenerRef.current;
+      const {
+        osType,
+        hoveredItemRef,
+        selectedItemsRef,
+        nodeTreeRef,
+        hoveredNodeUid,
+      } = eventListenerRef.current;
       if (
         !hoveredItemRef.current ||
         selectedItemsRef.current.includes(hoveredItemRef.current)
@@ -222,8 +227,8 @@ export const useCmdk = () => {
           uids: [hoveredItemRef.current],
           nodeTree: nodeTreeRef.current,
         });
-
-        dispatch(setHoveredNodeUid(targetUid[0]));
+        if (targetUid[0] !== hoveredNodeUid)
+          dispatch(setHoveredNodeUid(targetUid[0]));
       }
     },
     [],

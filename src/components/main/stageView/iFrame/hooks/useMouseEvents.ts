@@ -49,11 +49,12 @@ export const useMouseEvents = () => {
         contentEditableUidRef,
         iframeRefRef,
         osType,
+        hoveredNodeUid,
       } = eventListenerRef.current;
       const { uid } = getValidElementWithUid(e.target as HTMLElement);
       if (!uid) return;
       if (getCommandKey(e, osType)) {
-        dispatch(setHoveredNodeUid(uid));
+        if (hoveredNodeUid !== uid) dispatch(setHoveredNodeUid(uid));
         iframeRefRef.current?.focus();
       } else {
         const isSelectedChild = isChild({
@@ -67,7 +68,9 @@ export const useMouseEvents = () => {
             ? [selectedItemsRef.current[0]]
             : getBodyChild({ uids: [uid], nodeTree: nodeTreeRef.current });
 
-        dispatch(setHoveredNodeUid(targetUids[0]));
+        if (targetUids[0] !== hoveredNodeUid) {
+          dispatch(setHoveredNodeUid(targetUids[0]));
+        }
       }
     },
     [],
@@ -181,6 +184,7 @@ export const useMouseEvents = () => {
         htmlReferenceData,
         fileTree,
         validNodeTree,
+        hoveredNodeUid,
       } = eventListenerRef.current;
       const ele = e.target as HTMLElement;
       const uid: TNodeUid | null = ele.getAttribute(StageNodeIdAttr);
@@ -218,7 +222,7 @@ export const useMouseEvents = () => {
           !targetUid ? uid : targetUid,
         ]);
         !same && dispatch(setSelectedNodeUids([!targetUid ? uid : targetUid]));
-        dispatch(setHoveredNodeUid(""));
+        if (hoveredNodeUid !== "") dispatch(setHoveredNodeUid(""));
 
         if (targetUid) return;
         if (!ele.getAttribute("rnbw-text-element")) return;
