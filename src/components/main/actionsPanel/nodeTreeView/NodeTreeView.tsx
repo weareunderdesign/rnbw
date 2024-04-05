@@ -269,7 +269,7 @@ const NodeTreeView = () => {
             };
 
             const onMouseLeave = useCallback(() => {
-              dispatch(setHoveredNodeUid(""));
+              if (hoveredNodeUid !== "") dispatch(setHoveredNodeUid(""));
             }, []);
 
             const onDragStart = (e: React.DragEvent) => {
