@@ -23,14 +23,9 @@ import { jss, styles } from "./constants";
 import { markSelectedElements } from "./helpers";
 import { useCmdk, useMouseEvents, useSyncNode } from "./hooks";
 import { setLoadingFalse, setLoadingTrue } from "@_redux/main/processor";
-import { TCmdkReferenceData } from "@_redux/main/cmdk";
-import { TOsType } from "@_redux/global";
 
-export interface eventListenersStatesRefType {
-  showCodeView: boolean;
-  showActionsPanel: boolean;
-  needToReloadIframe: boolean;
-  iframeSrc: string | null;
+type AppStateReturnType = ReturnType<typeof useAppState>;
+export interface eventListenersStatesRefType extends AppStateReturnType {
   iframeRefState: HTMLIFrameElement | null;
   iframeRefRef: React.MutableRefObject<HTMLIFrameElement | null>;
   nodeTreeRef: React.MutableRefObject<TNodeTreeData>;
@@ -38,12 +33,8 @@ export interface eventListenersStatesRefType {
   isEditingRef: React.MutableRefObject<boolean>;
   hoveredItemRef: React.MutableRefObject<TNodeUid>;
   selectedItemsRef: React.MutableRefObject<TNodeUid[]>;
-  activePanel: string;
-  osType: TOsType;
-  cmdkReferenceData: TCmdkReferenceData;
-  isCodeTyping: boolean;
-  formatCode: boolean;
 }
+
 export const IFrame = () => {
   const [iframeRefState, setIframeRefState] =
     useState<HTMLIFrameElement | null>(null);
@@ -51,31 +42,16 @@ export const IFrame = () => {
   const contentEditableUidRef = useRef<TNodeUid>("");
   const isEditingRef = useRef(false);
   const dispatch = useDispatch();
-  const {
-    needToReloadIframe,
-    iframeSrc,
-    project,
-    showActionsPanel,
-    showCodeView,
-    nodeTree,
-    validNodeTree,
-    activePanel,
-    osType,
-    cmdkReferenceData,
-    isCodeTyping,
-    formatCode,
-  } = useAppState();
+  const appState: AppStateReturnType = useAppState();
+  const { nodeTree, project, needToReloadIframe, validNodeTree, iframeSrc } =
+    appState;
   const { iframeRefRef, setIframeRefRef } = useContext(MainContext);
-  const allPanelsClosedRef = useRef(!showActionsPanel && !showCodeView);
   // hooks
   const { nodeTreeRef, hoveredItemRef, selectedItemsRef } =
     useSyncNode(iframeRefState);
 
   const eventListenersStatesRef = useRef<eventListenersStatesRefType>({
-    showCodeView,
-    showActionsPanel,
-    needToReloadIframe,
-    iframeSrc,
+    ...appState,
     iframeRefState,
     iframeRefRef,
     nodeTreeRef,
@@ -83,25 +59,16 @@ export const IFrame = () => {
     isEditingRef,
     hoveredItemRef,
     selectedItemsRef,
-    activePanel,
-    osType,
-    cmdkReferenceData,
-    isCodeTyping,
-    formatCode,
   });
 
   const { onKeyDown, onKeyUp, handlePanelsToggle, handleZoomKeyDown } =
     useCmdk();
   const { onMouseEnter, onMouseMove, onMouseLeave, onClick, onDblClick } =
-    useMouseEvents(eventListenersStatesRef);
-
-  useEffect(() => {
-    allPanelsClosedRef.current = !showActionsPanel && !showCodeView;
-  }, [showActionsPanel, showCodeView]);
+    useMouseEvents();
 
   const addHtmlNodeEventListeners = useCallback(
     (htmlNode: HTMLElement) => {
-      // define event handlers
+      //NOTE: all the values required for the event listeners are stored in the eventListenersStatesRef because the event listeners are not able to access the latest values of the variables due to the closure of the event listeners
 
       // enable cmdk
       htmlNode.addEventListener("keydown", (e: KeyboardEvent) => {
@@ -114,7 +81,7 @@ export const IFrame = () => {
         onMouseEnter();
       });
       htmlNode.addEventListener("mousemove", (e: MouseEvent) => {
-        onMouseMove(e);
+        onMouseMove(e, eventListenersStatesRef);
       });
       htmlNode.addEventListener("mouseleave", () => {
         onMouseLeave();
@@ -122,11 +89,11 @@ export const IFrame = () => {
 
       htmlNode.addEventListener("click", (e: MouseEvent) => {
         e.preventDefault();
-        onClick(e);
+        onClick(e, eventListenersStatesRef);
       });
       htmlNode.addEventListener("dblclick", (e: MouseEvent) => {
         e.preventDefault();
-        onDblClick(e);
+        onDblClick(e, eventListenersStatesRef);
       });
       htmlNode.addEventListener("keyup", (e: KeyboardEvent) => {
         e.preventDefault();
@@ -256,10 +223,7 @@ export const IFrame = () => {
 
   useEffect(() => {
     eventListenersStatesRef.current = {
-      showCodeView,
-      showActionsPanel,
-      needToReloadIframe,
-      iframeSrc,
+      ...appState,
       iframeRefState,
       iframeRefRef,
       nodeTreeRef,
@@ -267,17 +231,10 @@ export const IFrame = () => {
       isEditingRef,
       hoveredItemRef,
       selectedItemsRef,
-      activePanel,
-      osType,
-      cmdkReferenceData,
-      isCodeTyping,
-      formatCode,
     };
   }, [
-    showActionsPanel,
-    showCodeView,
     needToReloadIframe,
-    iframeSrc,
+
     iframeRefState,
     iframeRefRef,
     nodeTreeRef,
@@ -285,11 +242,7 @@ export const IFrame = () => {
     isEditingRef,
     hoveredItemRef,
     selectedItemsRef,
-    activePanel,
-    osType,
-    cmdkReferenceData,
-    isCodeTyping,
-    formatCode,
+    appState,
   ]);
   return useMemo(() => {
     return (
