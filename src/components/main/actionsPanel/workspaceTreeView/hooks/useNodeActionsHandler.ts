@@ -36,7 +36,11 @@ import {
   TFileAction,
 } from "@_redux/main/fileTree";
 import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
-import { setClipboardData } from "@_redux/main/processor";
+import {
+  addRunningAction,
+  removeRunningAction,
+  setClipboardData,
+} from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 
 export const useNodeActionsHandler = () => {
@@ -55,11 +59,7 @@ export const useNodeActionsHandler = () => {
     fileHandlers,
     invalidFileNodes,
   } = useAppState();
-  const {
-    addRunningActions,
-    removeRunningActions,
-    triggerCurrentProjectReload,
-  } = useContext(MainContext);
+  const { triggerCurrentProjectReload } = useContext(MainContext);
   const selectedItems = useMemo(
     () => getObjKeys(fSelectedItemsObj),
     [fSelectedItemsObj],
@@ -419,16 +419,16 @@ export const useNodeActionsHandler = () => {
   );
   const cb_readNode = useCallback(
     (uid: TNodeUid) => {
-      addRunningActions(["fileTreeView-read"]);
+      dispatch(addRunningAction());
 
       // validate
       if (invalidFileNodes[uid]) {
-        removeRunningActions(["fileTreeView-read"]);
+        dispatch(removeRunningAction());
         return;
       }
       const node = structuredClone(fileTree[uid]);
       if (node === undefined || !node.isEntity || currentFileUid === uid) {
-        removeRunningActions(["fileTreeView-read"]);
+        dispatch(removeRunningAction());
         return;
       }
 
@@ -456,11 +456,9 @@ export const useNodeActionsHandler = () => {
       dispatch(setCurrentFileUid(uid));
       dispatch(setCurrentFileContent(nodeData.content));
 
-      removeRunningActions(["fileTreeView-read"]);
+      dispatch(removeRunningAction());
     },
     [
-      addRunningActions,
-      removeRunningActions,
       invalidFileNodes,
       fileTree,
       currentFileUid,

@@ -66,7 +66,6 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     currentFileContent,
     selectedNodeUids,
     iframeLoading,
-    doingAction,
     activePanel,
     showActionsPanel,
     showCodeView,
@@ -75,6 +74,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     cmdkOpen,
     cmdkPages,
     currentCommand,
+    runningAction,
   } = useAppState();
 
   // handlers
@@ -137,7 +137,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     }
   }, [project]);
   const onUndo = useCallback(() => {
-    if (doingAction || doingFileAction || iframeLoading) return;
+    if (!!runningAction || doingFileAction || iframeLoading) return;
     if (activePanel === "file") {
       if (fileEventPastLength === 0) {
         LogAllow && console.log("Undo - FileTree - it is the origin state");
@@ -165,7 +165,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
 
     dispatch(setDidUndo(true));
   }, [
-    doingAction,
+    runningAction,
     doingFileAction,
     iframeLoading,
     activePanel,
@@ -173,7 +173,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     nodeEventPastLength,
   ]);
   const onRedo = useCallback(() => {
-    if (doingAction || doingFileAction || iframeLoading) return;
+    if (!!runningAction || doingFileAction || iframeLoading) return;
 
     if (activePanel === "file") {
       if (fileEventFutureLength === 0) {
@@ -191,7 +191,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
 
     dispatch(setDidRedo(true));
   }, [
-    doingAction,
+    runningAction,
     doingFileAction,
     iframeLoading,
     activePanel,

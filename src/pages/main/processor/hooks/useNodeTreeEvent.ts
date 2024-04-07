@@ -48,7 +48,12 @@ import {
   getValidNodeTree,
   markChangedFolders,
 } from "../helpers";
-import { setLoadingFalse, setLoadingTrue } from "@_redux/main/processor";
+import {
+  addRunningAction,
+  removeRunningAction,
+  setLoadingFalse,
+  setLoadingTrue,
+} from "@_redux/main/processor";
 import { toast } from "react-toastify";
 import { getObjKeys } from "@_pages/main/helper";
 
@@ -73,8 +78,7 @@ export const useNodeTreeEvent = () => {
     syncConfigs,
     webComponentOpen,
   } = useAppState();
-  const { addRunningActions, removeRunningActions, iframeRefRef } =
-    useContext(MainContext);
+  const { iframeRefRef } = useContext(MainContext);
 
   const isSelectedNodeUidsChanged = useRef(false);
   const isCurrentFileContentChanged = useRef(false);
@@ -104,7 +108,7 @@ export const useNodeTreeEvent = () => {
     // validate
     if (!fileTree[currentFileUid] || webComponentOpen) return;
 
-    addRunningActions(["processor-update"]);
+    dispatch(addRunningAction());
 
     // parse new file content
     const file = structuredClone(fileTree[currentFileUid]);
@@ -165,7 +169,10 @@ export const useNodeTreeEvent = () => {
           const iframeDoc = iframe.contentDocument;
           const iframeHtml = iframeDoc.getElementsByTagName("html")[0];
           const updatedHtml = contentInApp;
-          if (!iframeHtml || !updatedHtml) return;
+          if (!iframeHtml || !updatedHtml) {
+            dispatch(removeRunningAction());
+            return;
+          }
           try {
             morphdom(iframeHtml, updatedHtml, {
               onBeforeElUpdated: function (fromEl, toEl) {
@@ -245,7 +252,10 @@ export const useNodeTreeEvent = () => {
       }
     }
     dispatch(setCodeErrors(isCodeErrorsExist.current));
-    if (isCodeErrorsExist.current) return;
+    if (isCodeErrorsExist.current) {
+      dispatch(removeRunningAction());
+      return;
+    }
 
     // sync node-tree
     dispatch(setNodeTree(nodeTree));
@@ -326,7 +336,7 @@ export const useNodeTreeEvent = () => {
       dispatch(setPrevFileUid(currentFileUid));
     }
     dispatch(setLoadingFalse());
-    removeRunningActions(["processor-update"]);
+    dispatch(removeRunningAction());
   }, [currentFileContent, currentFileUid]);
 
   // expand nodes that need to be expanded when it's just select-event

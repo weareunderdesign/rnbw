@@ -74,8 +74,7 @@ export default function WorkspaceTreeView() {
     webComponentOpen,
   } = useAppState();
 
-  const { addRunningActions, removeRunningActions, importProject } =
-    useContext(MainContext);
+  const { importProject } = useContext(MainContext);
   const navigate = useNavigate();
   const { project, "*": rest } = useParams();
 
@@ -98,8 +97,6 @@ export default function WorkspaceTreeView() {
   // open default initial html file
   useEffect(() => {
     if (initialFileUidToOpen !== "" && fileTree[initialFileUidToOpen]) {
-      addRunningActions(["fileTreeView-read"]);
-
       cb_focusNode(initialFileUidToOpen);
       cb_selectNode([initialFileUidToOpen]);
       cb_readNode(initialFileUidToOpen);
@@ -121,16 +118,11 @@ export default function WorkspaceTreeView() {
       if (currentFileUid === uid) return;
       dispatch({ type: FileTree_Event_ClearActionType });
       // focus/select/read the file
-      addRunningActions([
-        "fileTreeView-focus",
-        "fileTreeView-select",
-        "fileTreeView-read",
-      ]);
       cb_focusNode(uid);
       cb_selectNode([uid]);
       cb_readNode(uid);
     },
-    [fileTree, addRunningActions, cb_focusNode, cb_selectNode, cb_readNode],
+    [fileTree, cb_focusNode, cb_selectNode, cb_readNode],
   );
   useEffect(() => {
     if (!linkToOpen || linkToOpen === "") return;
@@ -453,9 +445,7 @@ export default function WorkspaceTreeView() {
           },
 
           onPrimaryAction: (item) => {
-            item.data.data.valid
-              ? cb_readNode(item.index as TNodeUid)
-              : removeRunningActions(["fileTreeView-read"]);
+            item.data.data.valid && cb_readNode(item.index as TNodeUid);
           },
 
           onDrop: (items, target) => {

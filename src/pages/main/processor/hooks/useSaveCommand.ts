@@ -11,7 +11,12 @@ import { useAppState } from "@_redux/useAppState";
 
 import { saveFileContent } from "../helpers";
 import { setCurrentCommand } from "@_redux/main/cmdk";
-import { setLoadingFalse, setLoadingTrue } from "@_redux/main/processor";
+import {
+  addRunningAction,
+  removeRunningAction,
+  setLoadingFalse,
+  setLoadingTrue,
+} from "@_redux/main/processor";
 import { debounce } from "@_pages/main/helper";
 import { html_beautify } from "js-beautify";
 
@@ -25,8 +30,7 @@ export const useSaveCommand = () => {
     fileHandlers,
     formatCode,
   } = useAppState();
-  const { addRunningActions, removeRunningActions, monacoEditorRef } =
-    useContext(MainContext);
+  const { monacoEditorRef } = useContext(MainContext);
 
   useEffect(() => {
     if (!currentCommand) return;
@@ -50,7 +54,7 @@ export const useSaveCommand = () => {
     let file = _ffTree[currentFileUid];
     const fileData = file.data;
 
-    addRunningActions(["processor-save-currentFile"]);
+    dispatch(addRunningAction());
     if (fileData.changed) {
       try {
         const codeViewInstance = monacoEditorRef.current;
@@ -69,8 +73,7 @@ export const useSaveCommand = () => {
         file = _ffTree[file.parentUid!];
       }
     }
-    removeRunningActions(["processor-save-currentFile"]);
-
+    dispatch(removeRunningAction());
     dispatch(setFileTree(_ffTree as TFileNodeTreeData));
     fileData.ext !== "html" && dispatch(setNeedToReloadIframe(true));
     dispatch(setLoadingFalse());

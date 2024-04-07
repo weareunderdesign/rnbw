@@ -1,9 +1,7 @@
 /* eslint-disable react/prop-types */
 //FIXME: This file is a temporary solution to use the Filer API in the browser.
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, {
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -24,7 +22,6 @@ import {
   onWebComponentDblClick,
   scrollToElement,
 } from "@_pages/main/helper";
-import { MainContext } from "@_redux/main";
 
 import { setHoveredNodeUid } from "@_redux/main/nodeTree";
 import {
@@ -79,7 +76,6 @@ const NodeTreeView = () => {
     fExpandedItemsObj,
     htmlReferenceData,
   } = useAppState();
-  const { addRunningActions } = useContext(MainContext);
 
   // ------ sync ------
   // cmdk
@@ -225,10 +221,6 @@ const NodeTreeView = () => {
               (e: React.MouseEvent) => {
                 e.stopPropagation();
 
-                !props.context.isFocused &&
-                  addRunningActions(["nodeTreeView-focus"]);
-                addRunningActions(["nodeTreeView-select"]);
-
                 !props.context.isFocused && props.context.focusItem();
 
                 e.shiftKey
@@ -316,7 +308,6 @@ const NodeTreeView = () => {
 
           renderItemArrow: ({ item, context }) => {
             const onClick = useCallback(() => {
-              addRunningActions(["nodeTreeView-arrow"]);
               context.toggleExpandedState();
             }, [context]);
 

@@ -32,7 +32,6 @@ import {
   useHandlers,
   useInit,
   useReferneces,
-  useRunningActions,
 } from "./hooks";
 import Processor from "./processor";
 import ResizablePanels from "./ResizablePanels";
@@ -60,9 +59,6 @@ export default function MainPage() {
     recentProjectContexts,
   } = useAppState();
 
-  // get,set
-  const { addRunningActions, removeRunningActions } = useRunningActions();
-
   const { monacoEditorRef, setMonacoEditorRef, iframeRefRef, setIframeRefRef } =
     useReferneces();
 
@@ -74,8 +70,6 @@ export default function MainPage() {
     cmdkReferenceAdd,
     cmdkReferenceRename,
   } = useCmdkReferenceData({
-    addRunningActions,
-    removeRunningActions,
     htmlReferenceData,
   });
   const {
@@ -188,9 +182,6 @@ export default function MainPage() {
     <>
       <MainContext.Provider
         value={{
-          addRunningActions,
-          removeRunningActions,
-
           monacoEditorRef,
 
           setMonacoEditorRef,

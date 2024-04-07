@@ -26,9 +26,6 @@ export type TUpdateTreeViewStatePayload = {
 };
 
 export type TMainContext = {
-  addRunningActions: (actionNames: string[]) => void;
-  removeRunningActions: (actionNames: string[]) => void;
-
   monacoEditorRef: IEditorRef;
   setMonacoEditorRef: (
     editorInstance: editor.IStandaloneCodeEditor | null,

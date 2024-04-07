@@ -34,15 +34,12 @@ import {
   setRecentProjectHandlers,
   setRecentProjectNames,
 } from "@_redux/main/project";
+import { addRunningAction, removeRunningAction } from "@_redux/main/processor";
 
 interface IUseCmdkReferenceData {
-  addRunningActions: (actionNames: string[]) => void;
-  removeRunningActions: (actionNames: string[]) => void;
   htmlReferenceData: THtmlReferenceData;
 }
 export const useCmdkReferenceData = ({
-  addRunningActions,
-  removeRunningActions,
   htmlReferenceData,
 }: IUseCmdkReferenceData) => {
   const dispatch = useDispatch();
@@ -65,7 +62,7 @@ export const useCmdkReferenceData = ({
   // reference-cmdk
   useEffect(() => {
     (async () => {
-      addRunningActions(["reference-cmdk"]);
+      dispatch(addRunningAction());
 
       // add default cmdk actions
       const _cmdkReferenceData: TCmdkReferenceData = {};
@@ -189,7 +186,7 @@ export const useCmdkReferenceData = ({
       dispatch(setCmdkReferenceData(_cmdkReferenceData));
       LogAllow && console.log("cmdk map: ", _cmdkReferenceData);
 
-      removeRunningActions(["reference-cmdk"]);
+      dispatch(removeRunningAction());
     })();
   }, []);
 

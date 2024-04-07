@@ -1,5 +1,5 @@
 import { getObjKeys } from "@_pages/main/helper";
-import { useCallback, useContext } from "react";
+import { useCallback } from "react";
 
 import { useDispatch } from "react-redux";
 
@@ -12,7 +12,7 @@ import {
   selectFileTreeNodes,
 } from "@_redux/main/fileTree";
 import { useAppState } from "@_redux/useAppState";
-import { MainContext } from "@_redux/main";
+import { addRunningAction, removeRunningAction } from "@_redux/main/processor";
 
 interface IUseNodeViewState {
   invalidFileNodes: {
@@ -28,27 +28,28 @@ export const useNodeViewState = ({ invalidFileNodes }: IUseNodeViewState) => {
     fExpandedItemsObj: expandedItemsObj,
     fSelectedItemsObj: selectedItemsObj,
   } = useAppState();
-  const { removeRunningActions } = useContext(MainContext);
 
   const cb_focusNode = useCallback(
     (uid: TNodeUid) => {
+      dispatch(addRunningAction());
       if (invalidFileNodes[uid] || focusedItem === uid || !fileTree[uid]) {
-        removeRunningActions(["fileTreeView-focus"]);
+        dispatch(removeRunningAction());
         return;
       }
 
       dispatch(focusFileTreeNode(uid));
-      removeRunningActions(["fileTreeView-focus"]);
+      dispatch(removeRunningAction());
     },
     [invalidFileNodes, focusedItem, fileTree],
   );
 
   const cb_selectNode = useCallback(
     (uids: TNodeUid[]) => {
+      dispatch(addRunningAction());
       let _uids = [...uids];
       _uids = _uids.filter((_uid) => !invalidFileNodes[_uid] && fileTree[_uid]);
       if (_uids.length === 0) {
-        removeRunningActions(["fileTreeView-select"]);
+        dispatch(removeRunningAction());
         return;
       }
 
@@ -62,13 +63,13 @@ export const useNodeViewState = ({ invalidFileNodes }: IUseNodeViewState) => {
           }
         }
         if (same) {
-          removeRunningActions(["fileTreeView-select"]);
+          dispatch(removeRunningAction());
           return;
         }
       }
 
       dispatch(selectFileTreeNodes(_uids));
-      removeRunningActions(["fileTreeView-select"]);
+      dispatch(removeRunningAction());
     },
     [invalidFileNodes, fileTree, selectedItemsObj],
   );

@@ -61,7 +61,7 @@ export const useAppState = () => {
         codeErrors,
       },
       processor: {
-        doingAction,
+        runningAction,
         navigatorDropdownType,
         favicon,
         activePanel,
@@ -164,7 +164,7 @@ export const useAppState = () => {
     codeViewTabSize,
     codeErrors,
 
-    doingAction,
+    runningAction,
 
     navigatorDropdownType,
     favicon,

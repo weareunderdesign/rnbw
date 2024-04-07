@@ -1,15 +1,15 @@
-import { useCallback, useContext } from "react";
+import { useCallback } from "react";
 
 import { useDispatch } from "react-redux";
 
 import { getValidNodeUids } from "@_node/helpers";
 import { TNodeUid } from "@_node/types";
-import { MainContext } from "@_redux/main";
 import {
   collapseNodeTreeNodes,
   expandNodeTreeNodes,
   setSelectedNodeUids,
 } from "@_redux/main/nodeTree";
+import { addRunningAction, removeRunningAction } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 import { getObjKeys } from "@_pages/main/helper";
 
@@ -23,15 +23,15 @@ export function useNodeViewState() {
     validNodeTree,
     nSelectedItemsObj: selectedItemsObj,
   } = useAppState();
-  const { addRunningActions, removeRunningActions } = useContext(MainContext);
 
   const cb_focusNode = useCallback(() => {
-    removeRunningActions(["nodeTreeView-focus"]);
-  }, [removeRunningActions]);
+    dispatch(addRunningAction());
+    dispatch(removeRunningAction());
+  }, []);
 
   const cb_selectNode = useCallback(
     (uids: TNodeUid[]) => {
-      addRunningActions(["nodeTreeView-select"]);
+      dispatch(addRunningAction());
       // validate
       const _uids = getValidNodeUids(validNodeTree, uids);
       if (_uids.length === getObjKeys(selectedItemsObj).length) {
@@ -43,7 +43,7 @@ export function useNodeViewState() {
           }
         }
         if (same) {
-          removeRunningActions(["nodeTreeView-select"]);
+          dispatch(removeRunningAction());
           return;
         }
       }
@@ -59,11 +59,9 @@ export function useNodeViewState() {
         // dispatch({ type: NodeTree_Event_ClearActionType });
       }
 
-      removeRunningActions(["nodeTreeView-select"]);
+      dispatch(removeRunningAction());
     },
     [
-      addRunningActions,
-      removeRunningActions,
       fileTree,
       currentFileUid,
       prevRenderableFileUid,
@@ -72,27 +70,21 @@ export function useNodeViewState() {
     ],
   );
 
-  const cb_expandNode = useCallback(
-    (uid: TNodeUid) => {
-      addRunningActions(["nodeTreeView-arrow"]);
+  const cb_expandNode = useCallback((uid: TNodeUid) => {
+    dispatch(addRunningAction());
 
-      dispatch(expandNodeTreeNodes([uid]));
+    dispatch(expandNodeTreeNodes([uid]));
 
-      removeRunningActions(["nodeTreeView-arrow"]);
-    },
-    [addRunningActions, removeRunningActions],
-  );
+    dispatch(removeRunningAction());
+  }, []);
 
-  const cb_collapseNode = useCallback(
-    (uid: TNodeUid) => {
-      addRunningActions(["nodeTreeView-arrow"]);
+  const cb_collapseNode = useCallback((uid: TNodeUid) => {
+    dispatch(addRunningAction());
 
-      dispatch(collapseNodeTreeNodes([uid]));
+    dispatch(collapseNodeTreeNodes([uid]));
 
-      removeRunningActions(["nodeTreeView-arrow"]);
-    },
-    [addRunningActions, removeRunningActions],
-  );
+    dispatch(removeRunningAction());
+  }, []);
 
   return { cb_focusNode, cb_selectNode, cb_expandNode, cb_collapseNode };
 }
