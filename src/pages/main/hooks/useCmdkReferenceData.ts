@@ -29,11 +29,7 @@ import {
 } from "../helper";
 import { useDispatch } from "react-redux";
 import { setCmdkReferenceData } from "@_redux/main/cmdk";
-import {
-  setRecentProjectContexts,
-  setRecentProjectHandlers,
-  setRecentProjectNames,
-} from "@_redux/main/project";
+import { setRecentProjects } from "@_redux/main/project";
 import { addRunningAction, removeRunningAction } from "@_redux/main/processor";
 
 interface IUseCmdkReferenceData {
@@ -49,9 +45,7 @@ export const useCmdkReferenceData = ({
     nodeTree,
     nFocusedItem,
     cmdkSearchContent,
-    recentProjectNames,
-    recentProjectHandlers,
-    recentProjectContexts,
+    recentProjects,
   } = useAppState();
 
   const [cmdkReferenceJumpstart, setCmdkReferenceJumpstart] =
@@ -101,13 +95,11 @@ export const useCmdkReferenceData = ({
                   "recent-project-handler": sessionInfo[2],
                 };
                 dispatch(
-                  setRecentProjectContexts(_session["recent-project-context"]),
-                );
-                dispatch(
-                  setRecentProjectNames(_session["recent-project-name"]),
-                );
-                dispatch(
-                  setRecentProjectHandlers(_session["recent-project-handler"]),
+                  setRecentProjects({
+                    names: _session["recent-project-name"],
+                    contexts: _session["recent-project-context"],
+                    handlers: _session["recent-project-handler"],
+                  }),
                 );
 
                 for (
@@ -192,10 +184,10 @@ export const useCmdkReferenceData = ({
 
   const cmdkReferneceRecentProject = useMemo(() => {
     const _cmdkReferneceRecentProject: TCmdkReference[] = [];
-    recentProjectContexts.map((_context, index) => {
+    recentProjects.contexts.map((_context, index) => {
       if (_context != "idb") {
         _cmdkReferneceRecentProject.push({
-          Name: recentProjectNames[index],
+          Name: recentProjects.names[index],
           Icon: "folder",
           Description: "",
           "Keyboard Shortcut": [
@@ -213,7 +205,7 @@ export const useCmdkReferenceData = ({
       }
     });
     return _cmdkReferneceRecentProject;
-  }, [recentProjectContexts, recentProjectNames, recentProjectHandlers]);
+  }, [recentProjects]);
   const cmdkReferenceAdd = useMemo<TCmdkGroupData>(() => {
     const data: TCmdkGroupData = {
       Files: [],

@@ -55,8 +55,7 @@ export default function MainPage() {
     cmdkSearchContent,
     htmlReferenceData,
     cmdkReferenceData,
-    recentProjectHandlers,
-    recentProjectContexts,
+    recentProjects,
   } = useAppState();
 
   const { monacoEditorRef, setMonacoEditorRef, iframeRefRef, setIframeRefRef } =
@@ -438,9 +437,9 @@ export default function MainPage() {
                                   const index = Number(command.Context);
 
                                   const projectContext =
-                                    recentProjectContexts[index];
+                                    recentProjects.contexts[index];
                                   const projectHandler =
-                                    recentProjectHandlers[index];
+                                    recentProjects.handlers[index];
                                   navigate("/");
 
                                   confirmFileChanges(fileTree) &&

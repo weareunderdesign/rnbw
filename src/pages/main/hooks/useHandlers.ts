@@ -39,9 +39,7 @@ import { clearProjectSession } from "../helper";
 import {
   setCurrentProjectFileHandle,
   setFileHandlers,
-  setRecentProjectContexts,
-  setRecentProjectHandlers,
-  setRecentProjectNames,
+  setRecentProjects,
 } from "@_redux/main/project";
 import { html_beautify } from "js-beautify";
 
@@ -57,9 +55,7 @@ export const useHandlers = () => {
     fileTree,
     currentFileUid,
     webComponentOpen,
-    recentProjectNames,
-    recentProjectHandlers,
-    recentProjectContexts,
+    recentProjects,
   } = useAppState();
 
   const { "*": rest } = useParams();
@@ -69,9 +65,9 @@ export const useHandlers = () => {
       fsType: TProjectContext,
       projectHandle: FileSystemDirectoryHandle,
     ) => {
-      const _recentProjectContexts = [...recentProjectContexts];
-      const _recentProjectNames = [...recentProjectNames];
-      const _recentProjectHandlers = [...recentProjectHandlers];
+      const _recentProjectContexts = [...recentProjects.contexts];
+      const _recentProjectNames = [...recentProjects.names];
+      const _recentProjectHandlers = [...recentProjects.handlers];
       for (let index = 0; index < _recentProjectContexts.length; ++index) {
         if (
           _recentProjectContexts[index] === fsType &&
@@ -95,16 +91,20 @@ export const useHandlers = () => {
       _recentProjectHandlers.unshift(
         projectHandle as FileSystemDirectoryHandle,
       );
-      dispatch(setRecentProjectContexts(_recentProjectContexts));
-      dispatch(setRecentProjectNames(_recentProjectNames));
-      dispatch(setRecentProjectHandlers(_recentProjectHandlers));
+      dispatch(
+        setRecentProjects({
+          names: _recentProjectNames,
+          contexts: _recentProjectContexts,
+          handlers: _recentProjectHandlers,
+        }),
+      );
       await setMany([
         ["recent-project-context", _recentProjectContexts],
         ["recent-project-name", _recentProjectNames],
         ["recent-project-handler", _recentProjectHandlers],
       ]);
     },
-    [recentProjectContexts, recentProjectNames, recentProjectHandlers],
+    [recentProjects],
   );
 
   const importProject = useCallback(
@@ -240,7 +240,7 @@ export const useHandlers = () => {
         dispatch(setCurrentFileUid(_initialFileUidToOpen));
         dispatch(
           setCurrentFileContent(
-            (_fileTree[_initialFileUidToOpen].data.content) ||
+            _fileTree[_initialFileUidToOpen].data.content ||
               getIndexHtmlContent(),
           ),
         );

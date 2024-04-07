@@ -67,9 +67,7 @@ export default function WorkspaceTreeView() {
     prevRenderableFileUid,
     filesReferenceData,
     currentProjectFileHandle,
-    recentProjectNames,
-    recentProjectHandlers,
-    recentProjectContexts,
+    recentProjects,
     invalidFileNodes,
     webComponentOpen,
   } = useAppState();
@@ -163,11 +161,11 @@ export default function WorkspaceTreeView() {
 
     if (isCurrentProject && isDifferentFile) {
       openFile(pathName);
-    } else if (!isCurrentProject && recentProjectHandlers) {
-      const index = recentProjectNames.indexOf(project);
+    } else if (!isCurrentProject && recentProjects.handlers) {
+      const index = recentProjects.names.indexOf(project);
       if (index >= 0) {
-        const projectContext = recentProjectContexts[index];
-        const projectHandler = recentProjectHandlers[index];
+        const projectContext = recentProjects.contexts[index];
+        const projectHandler = recentProjects.handlers[index];
         if (projectHandler && currentFileUid !== projectHandler.name) {
           confirmFileChanges(fileTree) &&
             importProject(projectContext, projectHandler, true);
@@ -179,7 +177,7 @@ export default function WorkspaceTreeView() {
 
   useEffect(() => {
     openFromURL();
-  }, [project, rest, recentProjectHandlers]);
+  }, [project, rest, recentProjects.handlers]);
 
   return (
     <div
