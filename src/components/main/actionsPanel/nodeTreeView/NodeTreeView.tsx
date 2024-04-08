@@ -61,6 +61,7 @@ const searchConfig = {
 const NodeTreeView = () => {
   const dispatch = useDispatch();
   const {
+    activePanel,
     osType,
     navigatorDropdownType,
     fileTree,
@@ -140,9 +141,9 @@ const NodeTreeView = () => {
   const [nextToExpand, setNextToExpand] = useState<TNodeUid | null>(null);
 
   const onPanelClick = useCallback(() => {
-    dispatch(setActivePanel("node"));
+    activePanel !== "node" && dispatch(setActivePanel("node"));
     navigatorDropdownType && dispatch(setNavigatorDropdownType(null));
-  }, [navigatorDropdownType]);
+  }, [navigatorDropdownType, activePanel]);
 
   // open web component
   const openWebComponent = useCallback(
@@ -231,12 +232,12 @@ const NodeTreeView = () => {
                       : props.context.addToSelectedItems()
                     : props.context.selectItem();
 
-                dispatch(setActivePanel("node"));
+                activePanel !== "node" && dispatch(setActivePanel("node"));
 
                 navigatorDropdownType !== null &&
                   dispatch(setNavigatorDropdownType(null));
               },
-              [props.context, navigatorDropdownType],
+              [props.context, navigatorDropdownType, activePanel],
             );
 
             const onDoubleClick = useCallback(

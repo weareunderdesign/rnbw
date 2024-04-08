@@ -15,7 +15,7 @@ const excludedAttributes: string[] = [StageNodeIdAttr, DataSequencedUid];
 
 export default function SettingsPanel() {
   const dispatch = useDispatch();
-  const { nodeTree, selectedNodeUids } = useAppState();
+  const { nodeTree, selectedNodeUids, activePanel } = useAppState();
   const [attributes, setAttributes] = useState<Attribute>({});
 
   const [showForm, setShowForm] = useState(false);
@@ -34,8 +34,8 @@ export default function SettingsPanel() {
   }, [nodeTree, selectedNodeUids]);
 
   const onPanelClick = useCallback(() => {
-    dispatch(setActivePanel("settings"));
-  }, []);
+    activePanel !== "settings" && dispatch(setActivePanel("settings"));
+  }, [activePanel]);
   const handleMouseEnter = () => {
     setIsHovered(true);
   };

@@ -70,6 +70,7 @@ export default function WorkspaceTreeView() {
     recentProject,
     invalidFileNodes,
     webComponentOpen,
+    hoveredFileUid,
   } = useAppState();
 
   const { importProject } = useContext(MainContext);
@@ -150,8 +151,8 @@ export default function WorkspaceTreeView() {
   );
 
   const onPanelClick = useCallback(() => {
-    dispatch(setActivePanel("file"));
-  }, []);
+    activePanel !== "file" && dispatch(setActivePanel("file"));
+  }, [activePanel]);
 
   const openFromURL = async () => {
     if (!project) return;
@@ -311,9 +312,16 @@ export default function WorkspaceTreeView() {
               }
             };
 
-            const onMouseEnter = () =>
-              dispatch(setHoveredFileUid(props.item.index as TNodeUid));
-            const onMouseLeave = () => dispatch(setHoveredFileUid(""));
+            const onMouseEnter = useCallback(
+              () =>
+                hoveredFileUid !== props.item.index &&
+                dispatch(setHoveredFileUid(props.item.index as TNodeUid)),
+              [props.item.index, hoveredFileUid],
+            );
+            const onMouseLeave = useCallback(
+              () => hoveredFileUid && dispatch(setHoveredFileUid("")),
+              [hoveredFileUid],
+            );
 
             return (
               <TreeItem

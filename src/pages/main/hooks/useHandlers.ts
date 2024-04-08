@@ -267,7 +267,7 @@ export const useHandlers = () => {
   const closeNavigator = useCallback(() => {
     if (webComponentOpen) return;
     navigatorDropdownType !== null && dispatch(setNavigatorDropdownType(null));
-  }, [navigatorDropdownType]);
+  }, [navigatorDropdownType, webComponentOpen]);
 
   return {
     importProject,

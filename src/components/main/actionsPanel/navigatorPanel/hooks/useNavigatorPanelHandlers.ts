@@ -16,7 +16,8 @@ import { useAppState } from "@_redux/useAppState";
 
 export const useNavigatorPanelHandlers = () => {
   const dispatch = useDispatch();
-  const { fileTree, navigatorDropdownType, showFilePanel } = useAppState();
+  const { fileTree, navigatorDropdownType, showFilePanel, activePanel } =
+    useAppState();
 
   const {
     // open project
@@ -30,17 +31,19 @@ export const useNavigatorPanelHandlers = () => {
     }
   }, [navigatorDropdownType]);
 
-  const onProjectClick = () => {
-    dispatch(setNavigatorDropdownType("project"));
-  };
+  const onProjectClick = useCallback(() => {
+    navigatorDropdownType !== "project" &&
+      dispatch(setNavigatorDropdownType("project"));
+  }, [navigatorDropdownType]);
 
-  const onFileClick = () => {
-    dispatch(setNavigatorDropdownType("project"));
-  };
+  const onFileClick = useCallback(() => {
+    navigatorDropdownType !== "project" &&
+      dispatch(setNavigatorDropdownType("project"));
+  }, [navigatorDropdownType]);
 
-  const onCloseDropDown = () => {
-    dispatch(setNavigatorDropdownType(null));
-  };
+  const onCloseDropDown = useCallback(() => {
+    navigatorDropdownType && dispatch(setNavigatorDropdownType(null));
+  }, [navigatorDropdownType]);
 
   const onOpenProject = useCallback(
     (project: TProject) => {
@@ -57,10 +60,10 @@ export const useNavigatorPanelHandlers = () => {
     [fileTree],
   );
 
-  const onPanelClick = () => {
-    dispatch(setActivePanel("file"));
+  const onPanelClick = useCallback(() => {
+    if (activePanel !== "file") dispatch(setActivePanel("file"));
     dispatch(setShowFilePanel(!showFilePanel));
-  };
+  }, [showFilePanel, activePanel]);
 
   return {
     onProjectClick,

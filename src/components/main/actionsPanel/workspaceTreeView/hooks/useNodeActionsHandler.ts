@@ -453,9 +453,8 @@ export const useNodeActionsHandler = () => {
       if (!webComponentOpen) {
         clearFileSession(dispatch);
       }
-      dispatch(setCurrentFileUid(uid));
+      currentFileUid !== uid && dispatch(setCurrentFileUid(uid));
       dispatch(setCurrentFileContent(nodeData.content));
-
       dispatch(removeRunningAction());
     },
     [
