@@ -4,6 +4,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { TUpdateTreeViewStatePayload } from "../types";
 import { TNodeTreeReducerState } from "./types";
 import { TCodeSelection } from "@_components/main/codeView";
+import { getValidNodeTree } from "@_pages/main/processor/helpers";
 
 const nodeTreeReducerInitialState: TNodeTreeReducerState = {
   nodeTree: {},
@@ -27,10 +28,7 @@ const nodeTreeSlice = createSlice({
     setNodeTree(state, actions: PayloadAction<TNodeTreeData>) {
       const nodeTree = actions.payload;
       state.nodeTree = nodeTree;
-    },
-    setValidNodeTree(state, actions: PayloadAction<TNodeTreeData>) {
-      const validNodeTree = actions.payload;
-      state.validNodeTree = validNodeTree;
+      state.validNodeTree = getValidNodeTree(nodeTree);
     },
 
     setNeedToSelectNodePaths(state, action: PayloadAction<string[] | null>) {
@@ -135,7 +133,6 @@ const nodeTreeSlice = createSlice({
 });
 export const {
   setNodeTree,
-  setValidNodeTree,
 
   setNeedToSelectNodePaths,
   setNeedToSelectCode,

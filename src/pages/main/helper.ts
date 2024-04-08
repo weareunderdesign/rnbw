@@ -13,11 +13,7 @@ import {
   setProject,
 } from "@_redux/main/fileTree";
 import { FileTree_Event_ClearActionType } from "@_redux/main/fileTree/event";
-import {
-  clearNodeTreeViewState,
-  setNodeTree,
-  setValidNodeTree,
-} from "@_redux/main/nodeTree";
+import { clearNodeTreeViewState, setNodeTree } from "@_redux/main/nodeTree";
 import {
   NodeTree_Event_ClearActionType,
   NodeTree_Event_JumpToPastActionType,
@@ -133,7 +129,6 @@ export const clearProjectSession = (dispatch: Dispatch<AnyAction>) => {
 };
 export const clearFileSession = (dispatch: Dispatch<AnyAction>) => {
   dispatch(setNodeTree({}));
-  dispatch(setValidNodeTree({}));
   dispatch(clearNodeTreeViewState());
   dispatch({ type: NodeTree_Event_ClearActionType });
   dispatch({ type: NodeTree_Event_JumpToPastActionType, payload: 0 });
@@ -214,14 +209,14 @@ export const fileCmdk = ({
   }
 };
 export const elementsCmdk = ({
-  nodeTree,
+  validNodeTree,
   nFocusedItem,
   htmlReferenceData,
   data,
   groupName,
   isMove = false,
 }: {
-  nodeTree: TNodeTreeData;
+  validNodeTree: TNodeTreeData;
   nFocusedItem: TNodeUid;
   htmlReferenceData: THtmlReferenceData;
   data: TCmdkGroupData;
@@ -229,16 +224,16 @@ export const elementsCmdk = ({
   isMove?: boolean;
 }) => {
   let flag = true;
-  for (const x in nodeTree) {
-    if (nodeTree[x].displayName === "html") {
+  for (const x in validNodeTree) {
+    if (validNodeTree[x].displayName === "html") {
       flag = false;
     }
   }
 
   if (!flag) {
-    const htmlNode = nodeTree[nFocusedItem];
+    const htmlNode = validNodeTree[nFocusedItem];
     if (htmlNode && htmlNode.parentUid && htmlNode.parentUid !== RootNodeUid) {
-      const parentNode = nodeTree[htmlNode.parentUid!];
+      const parentNode = validNodeTree[htmlNode.parentUid!];
       const refData =
         htmlReferenceData.elements[
           isMove ? htmlNode.displayName : parentNode.displayName

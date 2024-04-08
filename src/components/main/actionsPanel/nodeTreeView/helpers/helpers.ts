@@ -173,14 +173,12 @@ export const getDropOptions = (
 
 export const isPastingAllowed = ({
   selectedItems,
-  nodeTree,
   htmlReferenceData,
   nodeToAdd,
   validNodeTree,
   isMove = false,
 }: {
   selectedItems: TNodeUid[];
-  nodeTree: TNodeTreeData;
   htmlReferenceData: THtmlReferenceData;
   nodeToAdd: string[];
   validNodeTree: TNodeTreeData;
@@ -197,7 +195,7 @@ export const isPastingAllowed = ({
     };
 
     elementsCmdk({
-      nodeTree,
+      validNodeTree,
       nFocusedItem: uid,
       htmlReferenceData,
       data,
@@ -205,7 +203,7 @@ export const isPastingAllowed = ({
       isMove,
     });
 
-    const targetNode = nodeTree[uid];
+    const targetNode = validNodeTree[uid];
     const parentTarget = targetNode.parentUid;
     if (!parentTarget) return;
 
@@ -214,8 +212,8 @@ export const isPastingAllowed = ({
         return (
           htmlReferenceData?.elements[
             isMove
-              ? nodeTree[uid]?.displayName
-              : nodeTree[parentTarget]?.displayName
+              ? validNodeTree[uid]?.displayName
+              : validNodeTree[parentTarget]?.displayName
           ]?.Contain === "All"
         );
       } else {

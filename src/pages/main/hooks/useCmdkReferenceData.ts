@@ -43,6 +43,7 @@ export const useCmdkReferenceData = ({
     fileTree,
     fFocusedItem,
     nodeTree,
+    validNodeTree,
     nFocusedItem,
     cmdkSearchContent,
     recentProjects,
@@ -267,7 +268,7 @@ export const useCmdkReferenceData = ({
 
     // Elements
     elementsCmdk({
-      nodeTree,
+      validNodeTree,
       nFocusedItem,
       htmlReferenceData,
       data,
@@ -278,7 +279,7 @@ export const useCmdkReferenceData = ({
     delete data["Recent"];
 
     return data;
-  }, [nodeTree, nFocusedItem, htmlReferenceData]);
+  }, [validNodeTree, nFocusedItem, htmlReferenceData]);
 
   return {
     cmdkReferenceJumpstart,

@@ -36,7 +36,6 @@ import {
   setNeedToSelectNodeUids,
   setNodeTree,
   setSelectedNodeUids,
-  setValidNodeTree,
 } from "@_redux/main/nodeTree";
 import { setIframeSrc, setNeedToReloadIframe } from "@_redux/main/stageView";
 import { useAppState } from "@_redux/useAppState";
@@ -262,7 +261,6 @@ export const useNodeTreeEvent = () => {
     // sync node-tree
     dispatch(setNodeTree(nodeTree));
     const _validNodeTree = getValidNodeTree(nodeTree);
-    dispatch(setValidNodeTree(_validNodeTree));
 
     const uid = getNodeUidToBeSelectedAtFirst(_validNodeTree);
     if (initialFileUidToOpen !== "" && fileTree[initialFileUidToOpen]) {

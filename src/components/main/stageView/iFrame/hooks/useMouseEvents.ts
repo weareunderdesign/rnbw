@@ -194,7 +194,7 @@ export const useMouseEvents = () => {
         if (mostRecentClickedNodeUidRef.current) {
           // when dbl-click on a web component
           const node = nodeTreeRef.current[mostRecentClickedNodeUidRef.current];
-          const nodeData = node.data as THtmlNodeData;
+          const nodeData = node?.data as THtmlNodeData;
           if (
             isWebComponentDblClicked({
               htmlReferenceData,
@@ -230,7 +230,8 @@ export const useMouseEvents = () => {
         dispatch(setSelectedNodeUids([uid]));
 
         const node = nodeTreeRef.current[uid];
-        const nodeData = node.data as THtmlNodeData;
+        if (!node) return;
+        const nodeData = node?.data as THtmlNodeData;
         const { startLine, endLine } = nodeData.sourceCodeLocation;
 
         if (startLine && endLine && contentEditableUidRef.current !== uid) {
