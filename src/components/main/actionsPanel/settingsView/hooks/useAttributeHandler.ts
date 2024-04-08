@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useContext } from "react";
 
 import { NodeActions } from "@_node/node";
@@ -24,7 +23,7 @@ export const useAttributeHandler = () => {
       uid: TNodeUid;
       attrName: string;
       attrValue: string;
-      cb?: any;
+      cb?: () => void;
     }) => {
       const codeViewInstance = monacoEditorRef.current;
       const codeViewInstanceModel = codeViewInstance?.getModel();
@@ -66,7 +65,7 @@ export const useAttributeHandler = () => {
       uid: TNodeUid;
       attrName: string;
       attrValue?: string;
-      cb?: any;
+      cb?: () => void;
     }) => {
       const codeViewInstance = monacoEditorRef.current;
       const codeViewInstanceModel = codeViewInstance?.getModel();

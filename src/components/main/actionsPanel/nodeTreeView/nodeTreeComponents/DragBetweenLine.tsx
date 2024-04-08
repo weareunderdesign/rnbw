@@ -1,5 +1,4 @@
 /* eslint-disable react/prop-types */
-/* eslint-disable react/display-name */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { FC, useEffect } from "react";
 import { DraggingPosition, DraggingPositionItem } from "react-complex-tree";
@@ -53,3 +52,5 @@ export const DragBetweenLine: FC<DragBetweenLine> = React.memo(
     );
   },
 );
+
+DragBetweenLine.displayName = "DragBetweenLine";

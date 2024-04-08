@@ -7,7 +7,7 @@ import {
   useState,
 } from "react";
 
-import { editor, KeyCode, KeyMod } from "monaco-editor";
+import { editor, KeyCode, KeyMod, Selection } from "monaco-editor";
 import { useDispatch } from "react-redux";
 
 import {
@@ -144,8 +144,8 @@ const useEditor = () => {
   const onChange = useCallback(
     (value: string) => {
       dispatch(setCurrentFileContent(value));
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const selectedRange: any = monacoEditorRef.current?.getSelection();
+      const selectedRange: Selection | null =
+        monacoEditorRef.current?.getSelection() || null;
       dispatch(
         setNeedToSelectCode(
           selectedRange
