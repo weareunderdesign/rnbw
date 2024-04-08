@@ -38,10 +38,6 @@ export type THtmlElementsReference = {
   Content: string;
   Attributes: string;
   "Cover Image": string;
-  item: {
-    type: string;
-    data: THtmlElementsReferenceData;
-  };
 };
 
 // cmdk reference
