@@ -1,9 +1,9 @@
-﻿Name,Icon,Description,Keyboard Shortcut,Group
-New,plus,Start a new project,n,Projects
-Open,folder,Open a folder,o,Projects
-Guide,help,Learn something,g,Help
-Support,person,Get some help,,Help
-Community,people,Talk with people,,Help
-Theme,,Switch themes,m,Settings
-Autosave,,Switch autosave,,Settings
-Format Code,,Switch format code,f,Settings
+﻿Name,Icon,Image,Description,Keyboard Shortcut,Group
+New,plus,jumpstart,Start a new project,n,Projects
+Open,folder,jumpstart,Open a folder,o,Projects
+Guide,help,jumpstart,Learn something,g,Help
+Support,person,jumpstart,Get some help,,Help
+Community,people,jumpstart,Talk with people,,Help
+Theme,,jumpstart,Switch themes,m,Settings
+Autosave,,jumpstart,Switch autosave,,Settings
+Format Code,,jumpstart,Switch format code,f,Settings

@@ -286,15 +286,15 @@ export default function MainPage() {
           <div
             className={
               currentCmdkPage !== "Add" &&
-              currentCmdkPage !== "Jumpstart" &&
-              currentCmdkPage !== "Turn into"
+                currentCmdkPage !== "Jumpstart" &&
+                currentCmdkPage !== "Turn into"
                 ? ""
                 : "box-l direction-column align-stretch box"
             }
             style={{
               ...(currentCmdkPage !== "Add" &&
-              currentCmdkPage !== "Jumpstart" &&
-              currentCmdkPage !== "Turn into"
+                currentCmdkPage !== "Jumpstart" &&
+                currentCmdkPage !== "Turn into"
                 ? { width: "100%" }
                 : {}),
               ...(validMenuItemCount === 0
@@ -303,8 +303,8 @@ export default function MainPage() {
             }}
           >
             {/* menu list - left panel */}
-            <div className="padding-m box">
-              <div className="direction-row align-stretch">
+            <div className="padding-m box" style={{ display: "flex", flexDirection: "row" }}>
+              <div className="direction-row align-stretch" style={{ flex: "1" }}>
                 <Command.List
                   style={{
                     maxHeight: "600px",
@@ -475,7 +475,7 @@ export default function MainPage() {
                               <div className="justify-stretch padding-s align-center">
                                 <div className="gap-s align-center">
                                   {currentCmdkPage === "Jumpstart" &&
-                                  command.Name === "Theme" ? (
+                                    command.Name === "Theme" ? (
                                     <>
                                       {/* detect Theme Group and render check boxes */}
                                       <div className="padding-xs">
@@ -531,7 +531,7 @@ export default function MainPage() {
                                     <>
                                       <div className="padding-xs">
                                         {typeof command.Icon === "string" &&
-                                        command["Icon"] !== "" ? (
+                                          command["Icon"] !== "" ? (
                                           <SVGIcon {...{ class: "icon-xs" }}>
                                             {command["Icon"]}
                                           </SVGIcon>
@@ -549,7 +549,7 @@ export default function MainPage() {
                                   {command["Keyboard Shortcut"] &&
                                     (
                                       command[
-                                        "Keyboard Shortcut"
+                                      "Keyboard Shortcut"
                                       ] as TCmdkKeyMap[]
                                     )?.map((keyMap, index) => (
                                       <div className="gap-s" key={index}>
@@ -569,11 +569,11 @@ export default function MainPage() {
                                             {keyMap.key[0].toUpperCase() +
                                               keyMap.key.slice(1) +
                                               (index !==
-                                              (
-                                                command[
+                                                (
+                                                  command[
                                                   "Keyboard Shortcut"
-                                                ] as TCmdkKeyMap[]
-                                              ).length -
+                                                  ] as TCmdkKeyMap[]
+                                                ).length -
                                                 1
                                                 ? ","
                                                 : "")}
@@ -594,7 +594,88 @@ export default function MainPage() {
                   })}
                 </Command.List>
               </div>
+
+
+
+
+
+
+
+
+
+
+              <div style={{ flex: "1", height: "700px", width: "50%", overflowY: "auto", padding: "0 10px" }}>
+                
+                {Object.keys(
+                  currentCmdkPage === "Jumpstart"
+                    ? cmdkReferenceJumpstart
+                    : currentCmdkPage === "Actions"
+                      ? cmdkReferenceActions
+                      : currentCmdkPage === "Add"
+                        ? cmdkReferenceAdd
+                        : currentCmdkPage === "Turn into"
+                          ? cmdkReferenceRename
+                          : {},
+                ).map((groupName: string) => {
+                  return (
+                    <React.Fragment key={groupName}>
+                      {(currentCmdkPage === "Jumpstart"
+                        ? groupName !== "Recent"
+                          ? cmdkReferenceJumpstart[groupName]
+                          : cmdkReferneceRecentProject
+                        : currentCmdkPage === "Actions"
+                          ? cmdkReferenceActions[groupName]
+                          : currentCmdkPage === "Add"
+                            ? cmdkReferenceAdd[groupName]
+                            : currentCmdkPage === "Turn into"
+                              ? cmdkReferenceRename[groupName]
+                              : []
+                      )?.map((command: TCmdkReference, index) => {
+                        const context: TCmdkContext = command.Context as TCmdkContext;
+                        const show =
+                          currentCmdkPage === "Jumpstart" ||
+                          (currentCmdkPage === "Actions" &&
+                            (command.Name === "Add" ||
+                              command.Name === "Turn into" ||
+                              context.all === true ||
+                              (activePanel === "file" &&
+                                (context["file"] === true || false)) ||
+                              ((activePanel === "node" ||
+                                activePanel === "stage") &&
+                                ((fileTree[currentFileUid] &&
+                                  (fileTree[currentFileUid].data as TFileNodeData)
+                                    .ext === "html" &&
+                                  context["html"] === true) ||
+                                  false)))) ||
+                          currentCmdkPage === "Add" ||
+                          currentCmdkPage === "Turn into";
+                          const imagePath = `images/${command.Image}.png`;
+                          return show ? (
+                            <div key={`${command.Name}-${command.Context}-${index}`} className="cmd-description">
+                              <img src={imagePath} width={200} height={300} />
+                              <div className="text-m">{command.Description}</div>
+                            </div>
+                          ) : null;
+                        })}
+                      </React.Fragment>
+                  );
+                })}
+              </div>
             </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
 
             {/* description - right panel */}
             {(currentCmdkPage === "Add" || currentCmdkPage === "Jumpstart") &&

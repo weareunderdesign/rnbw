@@ -7,6 +7,7 @@ export type TFilesReference = {
   Extension: string;
   Type: string;
   Icon: string;
+  Image: string;
   Description: string;
   Featured: string;
 };
@@ -26,6 +27,7 @@ export type THtmlElementsReference = {
   Contain: string;
   Description: string;
   Icon: string;
+  Image: string;
   Content: string;
   Attributes: string;
   "Cover Image": string;

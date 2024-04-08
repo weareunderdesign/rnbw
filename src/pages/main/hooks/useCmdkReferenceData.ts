@@ -200,6 +200,7 @@ export const useCmdkReferenceData = ({
         _cmdkReferneceRecentProject.push({
           Name: recentProjectNames[index],
           Icon: "folder",
+          Image: "",
           Description: "",
           "Keyboard Shortcut": [
             {
@@ -241,6 +242,7 @@ export const useCmdkReferenceData = ({
           Featured: tagRef && tagRef.Featured === "Yes" ? true : false,
           Name: tagRef.Name,
           Icon: tagRef.Icon,
+          Image: tagRef.Image,
           Description: tagRef.Description,
           "Keyboard Shortcut": [
             {

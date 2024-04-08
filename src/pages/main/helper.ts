@@ -47,6 +47,7 @@ export const addDefaultCmdkActions = (
   cmdkReferenceData["Clear"] = {
     Name: "Clear",
     Icon: "",
+    Image: "",
     Description: "",
     "Keyboard Shortcut": [
       {
@@ -64,6 +65,7 @@ export const addDefaultCmdkActions = (
   cmdkReferenceData["Jumpstart"] = {
     Name: "Jumpstart",
     Icon: "",
+    Image: "",
     Description: "",
     "Keyboard Shortcut": [
       {
@@ -81,6 +83,7 @@ export const addDefaultCmdkActions = (
   cmdkReferenceData["Actions"] = {
     Name: "Actions",
     Icon: "",
+    Image: "",
     Description: "",
     "Keyboard Shortcut": [
       {
@@ -98,6 +101,7 @@ export const addDefaultCmdkActions = (
   cmdkReferenceData["Save"] = {
     Name: "Save",
     Icon: "",
+    Image: "",
     Description: "",
     "Keyboard Shortcut": [
       {
@@ -190,6 +194,7 @@ export const fileCmdk = ({
           Featured: fileRef.Featured === "Yes",
           Name: fileRef.Name,
           Icon: fileRef.Icon,
+          Image: fileRef.Image,
           Description: fileRef.Description,
           "Keyboard Shortcut": [
             {
@@ -252,6 +257,7 @@ export const elementsCmdk = ({
                 Featured: tagRef && tagRef.Featured === "Yes" ? true : false,
                 Name: tagRef.Name,
                 Icon: tagRef.Icon,
+                Image: tagRef.Image,
                 Description: tagRef.Description,
                 "Keyboard Shortcut": [
                   {
@@ -279,6 +285,7 @@ export const elementsCmdk = ({
                 Featured: tagRef && tagRef.Featured === "Yes" ? true : false,
                 Name: tagRef.Name,
                 Icon: tagRef.Icon,
+                Image: tagRef.Image,
                 Description: tagRef.Description,
                 "Keyboard Shortcut": [
                   {
@@ -308,6 +315,7 @@ export const elementsCmdk = ({
         Featured: tagRef && tagRef.Featured === "Yes" ? true : false,
         Name: tagRef.Name.toUpperCase(),
         Icon: tagRef.Icon,
+        Image: tagRef.Image,
         Description: tagRef.Description,
         "Keyboard Shortcut": [
           {

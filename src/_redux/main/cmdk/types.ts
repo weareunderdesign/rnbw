@@ -6,6 +6,7 @@ export type TCmdkReference = {
   Featured?: boolean;
   Name: string;
   Icon: string;
+  Image: string;
   Description: string;
   "Keyboard Shortcut": string | TCmdkKeyMap | string[] | TCmdkKeyMap[];
   Group: string;
