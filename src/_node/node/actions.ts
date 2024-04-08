@@ -14,7 +14,6 @@ import {
 import {
   setCopiedNodeDisplayName,
   setNeedToSelectNodePaths,
-  setNodeTree,
   focusNodeTreeNode,
 } from "@_redux/main/nodeTree";
 import { THtmlReferenceData } from "@_types/main";
@@ -33,7 +32,6 @@ import {
 } from "./helpers";
 import { Dispatch } from "react";
 import { AnyAction } from "@reduxjs/toolkit";
-import { fileHandlers } from "@_node/file/handlers";
 
 const add = ({
   dispatch,
@@ -823,7 +821,6 @@ const edit = ({
       : codeViewInstanceModel.getValue();
     codeViewInstanceModel.setValue(code);
 
-    dispatch(setNodeTree(reCalcSourceCodeLocation(code)));
     dispatch(focusNodeTreeNode(targetUid));
 
     cb && cb();
@@ -993,9 +990,4 @@ export const NodeActions = {
   edit,
   addAttr,
   removeAttr,
-};
-export const reCalcSourceCodeLocation = (content: string) => {
-  const htmlParser = fileHandlers["html"];
-  const { nodeTree } = htmlParser(content);
-  return nodeTree;
 };
