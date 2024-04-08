@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from "react";
 
 import { CustomDirectoryPickerOptions } from "file-system-access/lib/showDirectoryPicker";
-import { delMany } from "idb-keyval";
+import { del } from "idb-keyval";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
@@ -80,11 +80,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
   // handlers
   const onClear = useCallback(async () => {
     window.localStorage.clear();
-    await delMany([
-      "recent-project-context",
-      "recent-project-name",
-      "recent-project-handler",
-    ]);
+    await del("recent-project");
   }, []);
   const onJumpstart = useCallback(() => {
     if (cmdkOpen) return;

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { getMany } from "idb-keyval";
+import { get } from "idb-keyval";
 
 import { LogAllow } from "@_constants/global";
 import { useAppState } from "@_redux/useAppState";
@@ -29,7 +29,7 @@ import {
 } from "../helper";
 import { useDispatch } from "react-redux";
 import { setCmdkReferenceData } from "@_redux/main/cmdk";
-import { setRecentProjects } from "@_redux/main/project";
+import { setRecentProject } from "@_redux/main/project";
 import { addRunningAction, removeRunningAction } from "@_redux/main/processor";
 
 interface IUseCmdkReferenceData {
@@ -46,7 +46,7 @@ export const useCmdkReferenceData = ({
     validNodeTree,
     nFocusedItem,
     cmdkSearchContent,
-    recentProjects,
+    recentProject,
   } = useAppState();
 
   const [cmdkReferenceJumpstart, setCmdkReferenceJumpstart] =
@@ -84,32 +84,14 @@ export const useCmdkReferenceData = ({
             _cmdkRefJumpstartData["Recent"] = [];
             // restore last edit session
             try {
-              const sessionInfo = await getMany([
-                "recent-project-context",
-                "recent-project-name",
-                "recent-project-handler",
-              ]);
-              if (sessionInfo[0] && sessionInfo[1] && sessionInfo[2]) {
-                const _session: TSession = {
-                  "recent-project-context": sessionInfo[0],
-                  "recent-project-name": sessionInfo[1],
-                  "recent-project-handler": sessionInfo[2],
-                };
-                dispatch(
-                  setRecentProjects({
-                    names: _session["recent-project-name"],
-                    contexts: _session["recent-project-context"],
-                    handlers: _session["recent-project-handler"],
-                  }),
-                );
+              const sessionInfo: TSession | undefined =
+                await get("recent-project");
+              if (sessionInfo) {
+                dispatch(setRecentProject(sessionInfo));
 
-                for (
-                  let index = 0;
-                  index < _session["recent-project-context"].length;
-                  ++index
-                ) {
+                for (let index = 0; index < sessionInfo.length; ++index) {
                   const _recentProjectCommand = {
-                    Name: _session["recent-project-name"][index],
+                    Name: sessionInfo[index].name,
                     Icon: "folder",
                     Description: "",
                     "Keyboard Shortcut": [
@@ -126,7 +108,7 @@ export const useCmdkReferenceData = ({
                   } as TCmdkReference;
                   _cmdkRefJumpstartData["Recent"].push(_recentProjectCommand);
                 }
-                LogAllow && console.info("last session loaded", _session);
+                LogAllow && console.info("last session loaded", sessionInfo);
               } else {
                 LogAllow && console.log("has no last session");
               }
@@ -183,12 +165,12 @@ export const useCmdkReferenceData = ({
     })();
   }, []);
 
-  const cmdkReferneceRecentProject = useMemo(() => {
-    const _cmdkReferneceRecentProject: TCmdkReference[] = [];
-    recentProjects.contexts.map((_context, index) => {
-      if (_context != "idb") {
-        _cmdkReferneceRecentProject.push({
-          Name: recentProjects.names[index],
+  const cmdkReferenceRecentProject = useMemo(() => {
+    const _cmdkReferenceRecentProject: TCmdkReference[] = [];
+    recentProject.map(({ context }, index) => {
+      if (context != "idb") {
+        _cmdkReferenceRecentProject.push({
+          Name: recentProject[index].name,
           Icon: "folder",
           Description: "",
           "Keyboard Shortcut": [
@@ -205,8 +187,8 @@ export const useCmdkReferenceData = ({
         });
       }
     });
-    return _cmdkReferneceRecentProject;
-  }, [recentProjects]);
+    return _cmdkReferenceRecentProject;
+  }, [recentProject]);
   const cmdkReferenceAdd = useMemo<TCmdkGroupData>(() => {
     const data: TCmdkGroupData = {
       Files: [],
@@ -284,7 +266,7 @@ export const useCmdkReferenceData = ({
   return {
     cmdkReferenceJumpstart,
     cmdkReferenceActions,
-    cmdkReferneceRecentProject,
+    cmdkReferenceRecentProject,
     cmdkReferenceAdd,
     cmdkReferenceRename,
   };

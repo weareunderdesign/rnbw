@@ -55,7 +55,7 @@ export default function MainPage() {
     cmdkSearchContent,
     htmlReferenceData,
     cmdkReferenceData,
-    recentProjects,
+    recentProject,
   } = useAppState();
 
   const { monacoEditorRef, setMonacoEditorRef, iframeRefRef, setIframeRefRef } =
@@ -65,7 +65,7 @@ export default function MainPage() {
   const {
     cmdkReferenceJumpstart,
     cmdkReferenceActions,
-    cmdkReferneceRecentProject,
+    cmdkReferenceRecentProject,
     cmdkReferenceAdd,
     cmdkReferenceRename,
   } = useCmdkReferenceData({
@@ -320,7 +320,7 @@ export default function MainPage() {
                     (currentCmdkPage === "Jumpstart"
                       ? groupName !== "Recent"
                         ? cmdkReferenceJumpstart[groupName]
-                        : cmdkReferneceRecentProject
+                        : cmdkReferenceRecentProject
                       : currentCmdkPage === "Actions"
                         ? cmdkReferenceActions[groupName]
                         : currentCmdkPage === "Add"
@@ -364,7 +364,7 @@ export default function MainPage() {
                         {(currentCmdkPage === "Jumpstart"
                           ? groupName !== "Recent"
                             ? cmdkReferenceJumpstart[groupName]
-                            : cmdkReferneceRecentProject
+                            : cmdkReferenceRecentProject
                           : currentCmdkPage === "Actions"
                             ? cmdkReferenceActions[groupName]
                             : currentCmdkPage === "Add"
@@ -437,9 +437,9 @@ export default function MainPage() {
                                   const index = Number(command.Context);
 
                                   const projectContext =
-                                    recentProjects.contexts[index];
+                                    recentProject[index].context;
                                   const projectHandler =
-                                    recentProjects.handlers[index];
+                                    recentProject[index].handler;
                                   navigate("/");
 
                                   confirmFileChanges(fileTree) &&

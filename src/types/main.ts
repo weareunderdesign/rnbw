@@ -1,10 +1,10 @@
 import { TProjectContext } from "@_redux/main/fileTree";
 
 export type TSession = {
-  "recent-project-context": TProjectContext[];
-  "recent-project-name": string[];
-  "recent-project-handler": (FileSystemDirectoryHandle | null)[];
-};
+  context: TProjectContext;
+  name: string;
+  handler: FileSystemDirectoryHandle | null;
+}[];
 export type TFileNodeType = "*folder" | "html" | "";
 
 // file reference

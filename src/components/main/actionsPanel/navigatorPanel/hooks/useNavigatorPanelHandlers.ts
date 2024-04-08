@@ -1,6 +1,6 @@
 import { useCallback, useContext } from "react";
 
-import { getMany } from "idb-keyval";
+import { get } from "idb-keyval";
 import { useDispatch } from "react-redux";
 
 import { LogAllow } from "@_constants/global";
@@ -24,17 +24,8 @@ export const useNavigatorPanelHandlers = () => {
   } = useContext(MainContext);
 
   const onWorkspaceClick = useCallback(async () => {
-    const sessionInfo = await getMany([
-      "recent-project-context",
-      "recent-project-name",
-      "recent-project-handler",
-    ]);
-    if (
-      sessionInfo[0] &&
-      sessionInfo[1] &&
-      sessionInfo[2] &&
-      navigatorDropdownType !== "workspace"
-    ) {
+    const sessionInfo = await get("recent-project");
+    if (sessionInfo && navigatorDropdownType !== "workspace") {
       dispatch(setNavigatorDropdownType("workspace"));
     }
   }, [navigatorDropdownType]);
