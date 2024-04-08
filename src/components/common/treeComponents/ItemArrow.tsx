@@ -1,13 +1,10 @@
-/* eslint-disable react/prop-types */
-/* eslint-disable react/display-name */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { FC } from "react";
+import React from "react";
 
 import { SVGIconI, SVGIconII } from "@_components/common";
 import { ItemArrowProps } from "./types";
 
-export const ItemArrow: FC<ItemArrowProps> = React.memo(
-  ({ item, context, onClick }) => {
+export const ItemArrow = React.memo(
+  ({ item, context, onClick }: ItemArrowProps) => {
     return (
       <>
         {item.isFolder ? (
@@ -41,3 +38,5 @@ export const ItemArrow: FC<ItemArrowProps> = React.memo(
     );
   },
 );
+
+ItemArrow.displayName = "ItemArrow";

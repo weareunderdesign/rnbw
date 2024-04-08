@@ -158,10 +158,12 @@ export const useNodeTreeEvent = () => {
     } else {
       // dom-diff using morph
       if (fileData.ext === "html") {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const iframe: any = document.getElementById("iframeId");
+        const iframe: HTMLIFrameElement | null = document.getElementById(
+          "iframeId",
+        ) as HTMLIFrameElement;
         if (iframe) {
           const iframeDoc = iframe.contentDocument;
+          if (!iframeDoc) return;
           const iframeHtml = iframeDoc.getElementsByTagName("html")[0];
           const updatedHtml = contentInApp;
           if (!iframeHtml || !updatedHtml) return;
