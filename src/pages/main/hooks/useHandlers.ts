@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { setMany } from "idb-keyval";
+import { set } from "idb-keyval";
 import { useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -39,9 +39,7 @@ import { clearProjectSession } from "../helper";
 import {
   setCurrentProjectFileHandle,
   setFileHandlers,
-  setRecentProjectContexts,
-  setRecentProjectHandlers,
-  setRecentProjectNames,
+  setRecentProject,
 } from "@_redux/main/project";
 import { html_beautify } from "js-beautify";
 
@@ -57,9 +55,7 @@ export const useHandlers = () => {
     fileTree,
     currentFileUid,
     webComponentOpen,
-    recentProjectNames,
-    recentProjectHandlers,
-    recentProjectContexts,
+    recentProject,
   } = useAppState();
 
   const { "*": rest } = useParams();
@@ -69,42 +65,28 @@ export const useHandlers = () => {
       fsType: TProjectContext,
       projectHandle: FileSystemDirectoryHandle,
     ) => {
-      const _recentProjectContexts = [...recentProjectContexts];
-      const _recentProjectNames = [...recentProjectNames];
-      const _recentProjectHandlers = [...recentProjectHandlers];
-      for (let index = 0; index < _recentProjectContexts.length; ++index) {
+      const _recentProject = [...recentProject];
+      for (let index = 0; index < _recentProject.length; ++index) {
         if (
-          _recentProjectContexts[index] === fsType &&
-          projectHandle?.name === _recentProjectNames[index]
+          _recentProject[index].context === fsType &&
+          projectHandle?.name === _recentProject[index].name
         ) {
-          _recentProjectContexts.splice(index, 1);
-          _recentProjectNames.splice(index, 1);
-          _recentProjectHandlers.splice(index, 1);
+          _recentProject.splice(index, 1);
           break;
         }
       }
-      if (_recentProjectContexts.length === RecentProjectCount) {
-        _recentProjectContexts.pop();
-        _recentProjectNames.pop();
-        _recentProjectHandlers.pop();
+      if (_recentProject.length === RecentProjectCount) {
+        _recentProject.pop();
       }
-      _recentProjectContexts.unshift(fsType);
-      _recentProjectNames.unshift(
-        (projectHandle as FileSystemDirectoryHandle).name,
-      );
-      _recentProjectHandlers.unshift(
-        projectHandle as FileSystemDirectoryHandle,
-      );
-      dispatch(setRecentProjectContexts(_recentProjectContexts));
-      dispatch(setRecentProjectNames(_recentProjectNames));
-      dispatch(setRecentProjectHandlers(_recentProjectHandlers));
-      await setMany([
-        ["recent-project-context", _recentProjectContexts],
-        ["recent-project-name", _recentProjectNames],
-        ["recent-project-handler", _recentProjectHandlers],
-      ]);
+      _recentProject.unshift({
+        context: fsType,
+        name: projectHandle.name,
+        handler: projectHandle,
+      });
+      dispatch(setRecentProject(_recentProject));
+      await set("recent-project", _recentProject);
     },
-    [recentProjectContexts, recentProjectNames, recentProjectHandlers],
+    [recentProject],
   );
 
   const importProject = useCallback(
@@ -240,7 +222,7 @@ export const useHandlers = () => {
         dispatch(setCurrentFileUid(_initialFileUidToOpen));
         dispatch(
           setCurrentFileContent(
-            (_fileTree[_initialFileUidToOpen].data.content) ||
+            _fileTree[_initialFileUidToOpen].data.content ||
               getIndexHtmlContent(),
           ),
         );
@@ -285,7 +267,7 @@ export const useHandlers = () => {
   const closeNavigator = useCallback(() => {
     if (webComponentOpen) return;
     navigatorDropdownType !== null && dispatch(setNavigatorDropdownType(null));
-  }, [navigatorDropdownType]);
+  }, [navigatorDropdownType, webComponentOpen]);
 
   return {
     importProject,

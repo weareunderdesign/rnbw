@@ -7,11 +7,12 @@ import { setActivePanel } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 
 export default function StageView() {
+  const { showCodeView, activePanel } = useAppState();
+
   const dispatch = useDispatch();
   const onClick = useCallback(() => {
-    dispatch(setActivePanel("stage"));
-  }, []);
-  const { showCodeView } = useAppState();
+    activePanel !== "stage" && dispatch(setActivePanel("stage"));
+  }, [activePanel]);
   return useMemo(() => {
     return (
       <>

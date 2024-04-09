@@ -32,7 +32,6 @@ import {
   useHandlers,
   useInit,
   useReferneces,
-  useRunningActions,
 } from "./hooks";
 import Processor from "./processor";
 import ResizablePanels from "./ResizablePanels";
@@ -56,12 +55,8 @@ export default function MainPage() {
     cmdkSearchContent,
     htmlReferenceData,
     cmdkReferenceData,
-    recentProjectHandlers,
-    recentProjectContexts,
+    recentProject,
   } = useAppState();
-
-  // get,set
-  const { addRunningActions, removeRunningActions } = useRunningActions();
 
   const { monacoEditorRef, setMonacoEditorRef, iframeRefRef, setIframeRefRef } =
     useReferneces();
@@ -70,12 +65,10 @@ export default function MainPage() {
   const {
     cmdkReferenceJumpstart,
     cmdkReferenceActions,
-    cmdkReferneceRecentProject,
+    cmdkReferenceRecentProject,
     cmdkReferenceAdd,
     cmdkReferenceRename,
   } = useCmdkReferenceData({
-    addRunningActions,
-    removeRunningActions,
     htmlReferenceData,
   });
   const {
@@ -188,9 +181,6 @@ export default function MainPage() {
     <>
       <MainContext.Provider
         value={{
-          addRunningActions,
-          removeRunningActions,
-
           monacoEditorRef,
 
           setMonacoEditorRef,
@@ -330,7 +320,7 @@ export default function MainPage() {
                     (currentCmdkPage === "Jumpstart"
                       ? groupName !== "Recent"
                         ? cmdkReferenceJumpstart[groupName]
-                        : cmdkReferneceRecentProject
+                        : cmdkReferenceRecentProject
                       : currentCmdkPage === "Actions"
                         ? cmdkReferenceActions[groupName]
                         : currentCmdkPage === "Add"
@@ -374,7 +364,7 @@ export default function MainPage() {
                         {(currentCmdkPage === "Jumpstart"
                           ? groupName !== "Recent"
                             ? cmdkReferenceJumpstart[groupName]
-                            : cmdkReferneceRecentProject
+                            : cmdkReferenceRecentProject
                           : currentCmdkPage === "Actions"
                             ? cmdkReferenceActions[groupName]
                             : currentCmdkPage === "Add"
@@ -447,9 +437,9 @@ export default function MainPage() {
                                   const index = Number(command.Context);
 
                                   const projectContext =
-                                    recentProjectContexts[index];
+                                    recentProject[index].context;
                                   const projectHandler =
-                                    recentProjectHandlers[index];
+                                    recentProject[index].handler;
                                   navigate("/");
 
                                   confirmFileChanges(fileTree) &&

@@ -15,7 +15,7 @@ export const SettingsView = ({
   const [hoveredUid, setHoveredUid] = useState<TNodeUid | null>(null);
 
   const dispatch = useDispatch();
-  const { selectedNodeUids } = useAppState();
+  const { selectedNodeUids, activePanel } = useAppState();
   const { changeAttribute, deleteAttribute } = useAttributeHandler();
 
   const handleChange = useCallback(
@@ -81,7 +81,12 @@ export const SettingsView = ({
   };
 
   return (
-    <div id="SettingsView" onClick={() => dispatch(setActivePanel("settings"))}>
+    <div
+      id="SettingsView"
+      onClick={() =>
+        activePanel !== "settings" && dispatch(setActivePanel("settings"))
+      }
+    >
       <ul
         style={{
           display: "flex",

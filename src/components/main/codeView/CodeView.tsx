@@ -39,7 +39,7 @@ export default function CodeView() {
 
     editingNodeUidInCodeView,
     isCodeTyping,
-    codeErrors
+    codeErrors,
   } = useAppState();
   const { monacoEditorRef } = useContext(MainContext);
 
@@ -61,8 +61,8 @@ export default function CodeView() {
   monacoEditorRef.current?.onKeyDown(handleKeyDown);
 
   const onPanelClick = useCallback(() => {
-    dispatch(setActivePanel("code"));
-  }, []);
+    activePanel !== "code" && dispatch(setActivePanel("code"));
+  }, [activePanel]);
 
   // language sync
   useEffect(() => {
@@ -114,11 +114,10 @@ export default function CodeView() {
       },
       1,
     );
-    
   }, [validNodeTree, nFocusedItem, activePanel]);
 
   useEffect(() => {
-    if(isCodeTyping) return;
+    if (isCodeTyping) return;
     const monacoEditor = monacoEditorRef.current;
     if (!monacoEditor) return;
 
@@ -172,12 +171,12 @@ export default function CodeView() {
   }, [nFocusedItem]);
 
   useEffect(() => {
-    if(isCodeTyping) return;
-    if(nFocusedItem === "") return;
+    if (isCodeTyping) return;
+    if (nFocusedItem === "") return;
     const monacoEditor = monacoEditorRef.current;
     if (!monacoEditor) return;
     const node = validNodeTree[nFocusedItem];
-    if(!node) return;
+    if (!node) return;
     const sourceCodeLocation = node.data.sourceCodeLocation;
     if (!sourceCodeLocation) return;
     // skip typing in code-view

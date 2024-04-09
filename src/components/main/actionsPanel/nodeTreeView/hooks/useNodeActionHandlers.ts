@@ -1,4 +1,4 @@
-import { useCallback, useContext } from "react";
+import { useCallback, useContext, useMemo } from "react";
 
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
@@ -11,24 +11,29 @@ import { NodeActions } from "@_node/apis";
 import { RootNodeUid } from "@_constants/main";
 import { isPastingAllowed } from "../helpers";
 import { setIsContentProgrammaticallyChanged } from "@_redux/main/reference";
+import { getObjKeys } from "@_pages/main/helper";
 
 export const useNodeActionHandlers = () => {
   const dispatch = useDispatch();
   const {
-    nodeTree,
     validNodeTree,
     nFocusedItem: focusedItem,
-    nSelectedItems: selectedItems,
+    nSelectedItemsObj,
     formatCode,
     copiedNodeDisplayName,
     htmlReferenceData,
   } = useAppState();
   const { monacoEditorRef } = useContext(MainContext);
 
+  const selectedItems = useMemo(
+    () => getObjKeys(nSelectedItemsObj),
+    [nSelectedItemsObj],
+  );
+
   const onAddNode = useCallback(
     (actionName: string) => {
       if (selectedItems.length === 0) return;
-      const selectedNodes = selectedItems.map((uid) => nodeTree[uid]);
+      const selectedNodes = selectedItems.map((uid) => validNodeTree[uid]);
       const nodeToAdd = actionName.split("-").slice(1).join("-");
       if (
         selectedNodes.some(
@@ -57,7 +62,6 @@ export const useNodeActionHandlers = () => {
 
       const { isAllowed, selectedUids } = isPastingAllowed({
         selectedItems,
-        nodeTree,
         htmlReferenceData,
         nodeToAdd: [nodeToAdd],
         validNodeTree,
@@ -74,14 +78,14 @@ export const useNodeActionHandlers = () => {
         dispatch,
         actionName,
         referenceData: htmlReferenceData,
-        nodeTree,
+        validNodeTree,
         codeViewInstanceModel,
         selectedItems: selectedUids,
         formatCode,
         fb: () => dispatch(setIsContentProgrammaticallyChanged(false)),
       });
     },
-    [nodeTree, focusedItem, htmlReferenceData, validNodeTree],
+    [focusedItem, htmlReferenceData, validNodeTree],
   );
   const onCut = useCallback(async () => {
     if (selectedItems.length === 0) return;
@@ -99,13 +103,13 @@ export const useNodeActionHandlers = () => {
     dispatch(setIsContentProgrammaticallyChanged(true));
     await NodeActions.cut({
       dispatch,
-      nodeTree,
+      validNodeTree,
       selectedUids: selectedItems,
       codeViewInstanceModel,
       formatCode,
       fb: () => dispatch(setIsContentProgrammaticallyChanged(false)),
     });
-  }, [selectedItems, nodeTree]);
+  }, [selectedItems, validNodeTree]);
   const onCopy = useCallback(async () => {
     if (selectedItems.length === 0) return;
 
@@ -122,12 +126,12 @@ export const useNodeActionHandlers = () => {
     dispatch(setIsContentProgrammaticallyChanged(true));
     await NodeActions.copy({
       dispatch,
-      nodeTree,
+      validNodeTree,
       selectedUids: selectedItems,
       codeViewInstanceModel,
       cb: () => dispatch(setIsContentProgrammaticallyChanged(false)),
     });
-  }, [selectedItems, nodeTree]);
+  }, [selectedItems, validNodeTree]);
 
   const onPaste = useCallback(
     async (
@@ -158,7 +162,6 @@ export const useNodeActionHandlers = () => {
 
       const { isAllowed, selectedUids } = isPastingAllowed({
         selectedItems: [focusedItem],
-        nodeTree,
         htmlReferenceData,
         nodeToAdd: copiedNodeDisplayName,
         validNodeTree,
@@ -173,7 +176,7 @@ export const useNodeActionHandlers = () => {
       dispatch(setIsContentProgrammaticallyChanged(true));
       await NodeActions.paste({
         dispatch,
-        nodeTree: validNodeTree,
+        validNodeTree,
         targetUid: selectedUids[0],
         codeViewInstanceModel,
         spanPaste,
@@ -181,13 +184,7 @@ export const useNodeActionHandlers = () => {
         fb: () => dispatch(setIsContentProgrammaticallyChanged(false)),
       });
     },
-    [
-      validNodeTree,
-      focusedItem,
-      copiedNodeDisplayName,
-      nodeTree,
-      htmlReferenceData,
-    ],
+    [validNodeTree, focusedItem, copiedNodeDisplayName, htmlReferenceData],
   );
 
   const onDelete = useCallback(() => {
@@ -205,7 +202,7 @@ export const useNodeActionHandlers = () => {
 
     if (
       selectedItems.some((uid) =>
-        ["html", "head", "body"].includes(nodeTree[uid].displayName),
+        ["html", "head", "body"].includes(validNodeTree[uid].displayName),
       )
     ) {
       LogAllow && console.error("Deleting nodes not allowed");
@@ -215,13 +212,13 @@ export const useNodeActionHandlers = () => {
     dispatch(setIsContentProgrammaticallyChanged(true));
     NodeActions.remove({
       dispatch,
-      nodeTree,
+      validNodeTree,
       selectedUids: selectedItems,
       codeViewInstanceModel,
       formatCode,
       fb: () => dispatch(setIsContentProgrammaticallyChanged(false)),
     });
-  }, [selectedItems, nodeTree]);
+  }, [selectedItems, validNodeTree]);
   const onDuplicate = useCallback(() => {
     if (selectedItems.length === 0) return;
 
@@ -238,13 +235,13 @@ export const useNodeActionHandlers = () => {
     dispatch(setIsContentProgrammaticallyChanged(true));
     NodeActions.duplicate({
       dispatch,
-      nodeTree,
+      validNodeTree,
       selectedUids: selectedItems,
       codeViewInstanceModel,
       formatCode,
       fb: () => dispatch(setIsContentProgrammaticallyChanged(false)),
     });
-  }, [selectedItems, nodeTree]);
+  }, [selectedItems, validNodeTree]);
   const onMove = useCallback(
     ({
       selectedUids,
@@ -268,7 +265,7 @@ export const useNodeActionHandlers = () => {
       }
 
       const nodeToAdd = selectedUids.map(
-        (uid) => `Node-<${nodeTree[uid]?.displayName}>`,
+        (uid) => `Node-<${validNodeTree[uid]?.displayName}>`,
       );
 
       const {
@@ -277,7 +274,6 @@ export const useNodeActionHandlers = () => {
         skipPosition,
       } = isPastingAllowed({
         selectedItems: [targetUid],
-        nodeTree,
         htmlReferenceData,
         nodeToAdd,
         validNodeTree,
@@ -294,7 +290,7 @@ export const useNodeActionHandlers = () => {
       dispatch(setIsContentProgrammaticallyChanged(true));
       NodeActions.move({
         dispatch,
-        nodeTree,
+        validNodeTree,
         selectedUids,
         targetUid: targetUids[0],
         isBetween: skipPosition ? false : isBetween,
@@ -304,11 +300,11 @@ export const useNodeActionHandlers = () => {
         fb: () => dispatch(setIsContentProgrammaticallyChanged(false)),
       });
     },
-    [nodeTree],
+    [validNodeTree],
   );
   const onTurnInto = useCallback(
     (actionName: string) => {
-      const focusedNode = nodeTree[focusedItem];
+      const focusedNode = validNodeTree[focusedItem];
       if (!focusedNode) return;
 
       const codeViewInstance = monacoEditorRef.current;
@@ -326,14 +322,14 @@ export const useNodeActionHandlers = () => {
         dispatch,
         actionName,
         referenceData: htmlReferenceData,
-        nodeTree,
+        validNodeTree,
         targetUid: focusedItem,
         codeViewInstanceModel,
         formatCode,
         fb: () => dispatch(setIsContentProgrammaticallyChanged(false)),
       });
     },
-    [nodeTree, focusedItem],
+    [validNodeTree, focusedItem],
   );
   const onGroup = useCallback(() => {
     if (selectedItems.length === 0) return;
@@ -351,7 +347,7 @@ export const useNodeActionHandlers = () => {
     dispatch(setIsContentProgrammaticallyChanged(true));
     NodeActions.group({
       dispatch,
-      nodeTree: validNodeTree,
+      validNodeTree,
       selectedUids: selectedItems,
       codeViewInstanceModel,
       formatCode,
@@ -374,7 +370,7 @@ export const useNodeActionHandlers = () => {
     dispatch(setIsContentProgrammaticallyChanged(true));
     NodeActions.ungroup({
       dispatch,
-      nodeTree: validNodeTree,
+      validNodeTree,
       selectedUids: selectedItems,
       codeViewInstanceModel,
       formatCode,

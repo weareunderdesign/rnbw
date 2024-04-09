@@ -4,6 +4,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { TUpdateTreeViewStatePayload } from "../types";
 import { TNodeTreeReducerState } from "./types";
 import { TCodeSelection } from "@_components/main/codeView";
+import { getValidNodeTree } from "@_pages/main/processor/helpers";
 
 const nodeTreeReducerInitialState: TNodeTreeReducerState = {
   nodeTree: {},
@@ -14,9 +15,7 @@ const nodeTreeReducerInitialState: TNodeTreeReducerState = {
 
   nodeTreeViewState: {
     focusedItem: "",
-    expandedItems: [],
     expandedItemsObj: {},
-    selectedItems: [],
     selectedItemsObj: {},
   },
   hoveredNodeUid: "",
@@ -29,10 +28,7 @@ const nodeTreeSlice = createSlice({
     setNodeTree(state, actions: PayloadAction<TNodeTreeData>) {
       const nodeTree = actions.payload;
       state.nodeTree = nodeTree;
-    },
-    setValidNodeTree(state, actions: PayloadAction<TNodeTreeData>) {
-      const validNodeTree = actions.payload;
-      state.validNodeTree = validNodeTree;
+      state.validNodeTree = getValidNodeTree(nodeTree);
     },
 
     setNeedToSelectNodePaths(state, action: PayloadAction<string[] | null>) {
@@ -54,31 +50,21 @@ const nodeTreeSlice = createSlice({
       for (const uid of expandedItems) {
         state.nodeTreeViewState.expandedItemsObj[uid] = true;
       }
-      state.nodeTreeViewState.expandedItems = Object.keys(
-        state.nodeTreeViewState.expandedItemsObj,
-      );
     },
     expandNodeTreeNodes(state, action: PayloadAction<TNodeUid[]>) {
       const uids = action.payload;
       for (const uid of uids) {
         state.nodeTreeViewState.expandedItemsObj[uid] = true;
       }
-      state.nodeTreeViewState.expandedItems = Object.keys(
-        state.nodeTreeViewState.expandedItemsObj,
-      );
     },
     collapseNodeTreeNodes(state, action: PayloadAction<TNodeUid[]>) {
       const uids = action.payload;
       for (const uid of uids) {
         delete state.nodeTreeViewState.expandedItemsObj[uid];
       }
-      state.nodeTreeViewState.expandedItems = Object.keys(
-        state.nodeTreeViewState.expandedItemsObj,
-      );
     },
     selectNodeTreeNodes(state, action: PayloadAction<TNodeUid[]>) {
       const selectedItems = action.payload;
-      state.nodeTreeViewState.selectedItems = selectedItems;
       state.nodeTreeViewState.selectedItemsObj = {};
       for (const uid of selectedItems) {
         state.nodeTreeViewState.selectedItemsObj[uid] = true;
@@ -131,13 +117,6 @@ const nodeTreeSlice = createSlice({
       s_addedUids.map((_addedUid) => {
         state.nodeTreeViewState.selectedItemsObj[_addedUid] = true;
       });
-
-      state.nodeTreeViewState.expandedItems = Object.keys(
-        state.nodeTreeViewState.expandedItemsObj,
-      );
-      state.nodeTreeViewState.selectedItems = Object.keys(
-        state.nodeTreeViewState.selectedItemsObj,
-      );
     },
     setHoveredNodeUid(state, action: PayloadAction<TNodeUid>) {
       const hoveredNodeUid = action.payload;
@@ -154,7 +133,6 @@ const nodeTreeSlice = createSlice({
 });
 export const {
   setNodeTree,
-  setValidNodeTree,
 
   setNeedToSelectNodePaths,
   setNeedToSelectCode,
