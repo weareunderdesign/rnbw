@@ -35,7 +35,7 @@ import { debounce } from "@_pages/main/helper";
 
 const useEditor = () => {
   const dispatch = useDispatch();
-  const { theme: _theme, autoSave, isCodeTyping } = useAppState();
+  const { theme: _theme, autoSave, isCodeTyping, nFocusedItem } = useAppState();
   const {
     monacoEditorRef,
     setMonacoEditorRef,
@@ -158,8 +158,8 @@ const useEditor = () => {
             : null,
         ),
       );
-      dispatch(setIsCodeTyping(false));
       autoSave && debouncedAutoSave();
+      dispatch(setIsCodeTyping(false));
     },
     [debouncedAutoSave, autoSave],
   );
@@ -184,8 +184,8 @@ const useEditor = () => {
   const handleOnChange = useCallback(
     (value: string | undefined) => {
       if (value === undefined) return;
-      dispatch(setIsCodeTyping(true));
-      dispatch(focusNodeTreeNode(""));
+      !isCodeTyping && dispatch(setIsCodeTyping(true));
+      nFocusedItem !== "" && dispatch(focusNodeTreeNode(""));
       if (isCodeEditingView.current) {
         longDebouncedOnChange(value);
         isCodeEditingView.current = false;
