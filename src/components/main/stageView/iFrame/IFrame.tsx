@@ -72,9 +72,11 @@ export const IFrame = () => {
 
       // enable cmdk
       htmlNode.addEventListener("keydown", (e: KeyboardEvent) => {
+        //handlePanelsToggle should be called before onKeyDown as on onKeyDown the contentEditiable editing is set to false and the panels are toggled. But we don't need to toggle the panels if the user is editing the contentEditable
+        handlePanelsToggle(e, eventListenersStatesRef);
+
         onKeyDown(e, eventListenersStatesRef);
         handleZoomKeyDown(e, eventListenersStatesRef);
-        handlePanelsToggle(e, eventListenersStatesRef);
       });
 
       htmlNode.addEventListener("mouseenter", () => {
@@ -236,14 +238,15 @@ export const IFrame = () => {
     needToReloadIframe,
 
     iframeRefState,
-    iframeRefRef,
-    nodeTreeRef,
-    contentEditableUidRef,
-    isEditingRef,
-    hoveredItemRef,
-    selectedItemsRef,
+    iframeRefRef.current,
+    nodeTreeRef.current,
+    contentEditableUidRef.current,
+    isEditingRef.current,
+    hoveredItemRef.current,
+    selectedItemsRef.current,
     appState,
   ]);
+
   return useMemo(() => {
     return (
       <>
