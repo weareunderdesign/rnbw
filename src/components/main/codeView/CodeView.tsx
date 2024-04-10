@@ -171,8 +171,8 @@ export default function CodeView() {
   }, [nFocusedItem]);
 
   useEffect(() => {
-    if (isCodeTyping) return;
-    if (nFocusedItem === "") return;
+    if (activePanel === "code" || isCodeTyping || nFocusedItem === "") return;
+
     const monacoEditor = monacoEditorRef.current;
     if (!monacoEditor) return;
     const node = validNodeTree[nFocusedItem];
