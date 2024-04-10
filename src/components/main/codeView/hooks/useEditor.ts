@@ -129,10 +129,8 @@ const useEditor = () => {
       );
 
       editor.onDidChangeCursorPosition((event) => {
-        if (isCodeTyping) {
-          (event.source === "mouse" || event.source === "keyboard") &&
-            setCodeSelection();
-        }
+        (event.source === "mouse" || event.source === "keyboard") &&
+          setCodeSelection();
       });
     },
     [setCodeSelection],
