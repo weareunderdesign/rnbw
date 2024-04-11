@@ -34,3 +34,13 @@ export default function App() {
     );
   }, [nohostReady]);
 }
+
+// extend global interfaces for nohost
+declare global {
+  interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Filer: any;
+  }
+}
+// eslint-disable-next-line no-self-assign
+window.Filer = window.Filer;

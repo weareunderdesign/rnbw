@@ -78,7 +78,6 @@ module.exports = {
         },
       },
     ],
-    exprContextCritical: false
   },
   plugins: [
     new HtmlWebpackPlugin({
