@@ -33,6 +33,10 @@ import {
 import { Dispatch } from "react";
 import { AnyAction } from "@reduxjs/toolkit";
 
+// helperModel added to update the code in the codeViewInstanceModel
+// once when the action is executed, this improves the History Management
+const helperModel = editor.createModel("", "html");
+
 const add = ({
   dispatch,
   actionName,
@@ -55,6 +59,8 @@ const add = ({
   cb?: () => void;
 }) => {
   try {
+    helperModel.setValue(codeViewInstanceModel.getValue());
+
     const commentTag = "!--...--";
     const tagName = actionName.slice(
       AddNodeActionPrefix.length + 2,
@@ -89,7 +95,7 @@ const add = ({
           range: new Range(endLine, endCol, endLine, endCol),
           text: codeViewText,
         };
-        codeViewInstanceModel.applyEdits([edit]);
+        helperModel.applyEdits([edit]);
       }
     });
 
@@ -113,8 +119,8 @@ const add = ({
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
     const code = formatCode
-      ? html_beautify(codeViewInstanceModel.getValue())
-      : codeViewInstanceModel.getValue();
+      ? html_beautify(helperModel.getValue())
+      : helperModel.getValue();
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
@@ -141,6 +147,8 @@ function remove({
   cb?: () => void;
 }) {
   try {
+    helperModel.setValue(codeViewInstanceModel.getValue());
+
     const sortedUids = sortUidsByMaxEndIndex(selectedUids, validNodeTree);
     sortedUids.forEach((uid) => {
       const node = validNodeTree[uid];
@@ -151,15 +159,15 @@ function remove({
           range: new Range(startLine, startCol, endLine, endCol),
           text: "",
         };
-        codeViewInstanceModel.applyEdits([edit]);
+        helperModel.applyEdits([edit]);
       }
     });
 
     dispatch(setNeedToSelectNodePaths([]));
 
     const code = formatCode
-      ? html_beautify(codeViewInstanceModel.getValue())
-      : codeViewInstanceModel.getValue();
+      ? html_beautify(helperModel.getValue())
+      : helperModel.getValue();
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
@@ -187,11 +195,13 @@ const cut = async ({
   cb?: () => void;
 }) => {
   try {
+    helperModel.setValue(codeViewInstanceModel.getValue());
+
     await copy({
       dispatch,
       validNodeTree,
       selectedUids,
-      codeViewInstanceModel,
+      codeViewInstanceModel: helperModel,
     });
     dispatch(
       setCopiedNodeDisplayName(
@@ -202,7 +212,7 @@ const cut = async ({
       dispatch,
       validNodeTree,
       selectedUids: selectedUids,
-      codeViewInstanceModel,
+      codeViewInstanceModel: helperModel,
       formatCode,
     });
 
@@ -234,8 +244,8 @@ const cut = async ({
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
     const code = formatCode
-      ? html_beautify(codeViewInstanceModel.getValue())
-      : codeViewInstanceModel.getValue();
+      ? html_beautify(helperModel.getValue())
+      : helperModel.getValue();
 
     codeViewInstanceModel.setValue(code);
 
@@ -312,12 +322,14 @@ const paste = async ({
   cb?: () => void;
 }) => {
   try {
+    helperModel.setValue(codeViewInstanceModel.getValue());
+
     let code = await window.navigator.clipboard.readText();
     if (spanPaste) code = `<span>${code}</span>`;
     pasteCode({
       validNodeTree,
       focusedItem: targetUid,
-      codeViewInstanceModel,
+      codeViewInstanceModel: helperModel,
       code,
     });
 
@@ -353,8 +365,8 @@ const paste = async ({
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
     code = formatCode
-      ? html_beautify(codeViewInstanceModel.getValue())
-      : codeViewInstanceModel.getValue();
+      ? html_beautify(helperModel.getValue())
+      : helperModel.getValue();
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
@@ -381,6 +393,8 @@ const duplicate = ({
   cb?: () => void;
 }) => {
   try {
+    helperModel.setValue(codeViewInstanceModel.getValue());
+
     const sortedUids = sortUidsByMaxEndIndex(selectedUids, validNodeTree);
     sortedUids.forEach((uid) => {
       const node = validNodeTree[uid];
@@ -394,7 +408,7 @@ const duplicate = ({
           range: new Range(endLine, endCol, endLine, endCol),
           text,
         };
-        codeViewInstanceModel.applyEdits([edit]);
+        helperModel.applyEdits([edit]);
       }
     });
 
@@ -420,8 +434,8 @@ const duplicate = ({
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
     const code = formatCode
-      ? html_beautify(codeViewInstanceModel.getValue())
-      : codeViewInstanceModel.getValue();
+      ? html_beautify(helperModel.getValue())
+      : helperModel.getValue();
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
@@ -455,6 +469,8 @@ const move = ({
   cb?: () => void;
 }) => {
   try {
+    helperModel.setValue(codeViewInstanceModel.getValue());
+
     const targetNode = validNodeTree[targetUid];
     const childCount = targetNode.children.length;
 
@@ -469,7 +485,7 @@ const move = ({
     let code = copyCode({
       validNodeTree,
       uids: selectedUids,
-      codeViewInstanceModel,
+      codeViewInstanceModel: helperModel,
     });
 
     let isFirst = true; // isFirst is used to when drop focusedItem to itself
@@ -481,13 +497,13 @@ const move = ({
               validNodeTree,
               focusedItem,
               addToBefore: (isBetween && position === 0) || position === 0,
-              codeViewInstanceModel,
+              codeViewInstanceModel: helperModel,
               code,
             })
           : pasteCodeInsideEmpty({
               validNodeTree,
               focusedItem: targetNode.uid,
-              codeViewInstanceModel,
+              codeViewInstanceModel: helperModel,
               code,
             });
       } else {
@@ -495,7 +511,7 @@ const move = ({
           dispatch,
           validNodeTree,
           selectedUids: [uid],
-          codeViewInstanceModel,
+          codeViewInstanceModel: helperModel,
           formatCode,
         });
       }
@@ -531,8 +547,8 @@ const move = ({
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
     code = formatCode
-      ? html_beautify(codeViewInstanceModel.getValue())
-      : codeViewInstanceModel.getValue();
+      ? html_beautify(helperModel.getValue())
+      : helperModel.getValue();
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
@@ -564,6 +580,8 @@ const rename = ({
   cb?: () => void;
 }) => {
   try {
+    helperModel.setValue(codeViewInstanceModel.getValue());
+
     const tagName = actionName.slice(
       RenameNodeActionPrefix.length + 2,
       actionName.length - 1,
@@ -593,21 +611,21 @@ const rename = ({
     let code = copyCode({
       validNodeTree,
       uids: focusedNode.children,
-      codeViewInstanceModel,
+      codeViewInstanceModel: helperModel,
     });
     const codeToAdd = `${openingTag}${code}${closingTag}`;
     remove({
       dispatch,
       validNodeTree,
       selectedUids: [targetUid],
-      codeViewInstanceModel,
+      codeViewInstanceModel: helperModel,
       formatCode,
     });
     pasteCode({
       validNodeTree,
       focusedItem: targetUid,
       addToBefore: true,
-      codeViewInstanceModel,
+      codeViewInstanceModel: helperModel,
       code: codeToAdd,
     });
 
@@ -624,8 +642,8 @@ const rename = ({
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
     code = formatCode
-      ? html_beautify(codeViewInstanceModel.getValue())
-      : codeViewInstanceModel.getValue();
+      ? html_beautify(helperModel.getValue())
+      : helperModel.getValue();
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
@@ -653,17 +671,19 @@ const group = ({
   cb?: () => void;
 }) => {
   try {
+    helperModel.setValue(codeViewInstanceModel.getValue());
+
     const sortedUids = sortUidsByMinStartIndex(selectedUids, validNodeTree);
     let code = copyCode({
       validNodeTree,
       uids: sortedUids,
-      codeViewInstanceModel,
+      codeViewInstanceModel: helperModel,
     });
     remove({
       dispatch,
       validNodeTree,
       selectedUids: selectedUids,
-      codeViewInstanceModel,
+      codeViewInstanceModel: helperModel,
       formatCode,
     });
 
@@ -675,7 +695,7 @@ const group = ({
       range: new Range(startLine, startCol, startLine, startCol),
       text: code,
     };
-    codeViewInstanceModel.applyEdits([edit]);
+    helperModel.applyEdits([edit]);
 
     // predict needToSelectNodePaths
     const needToSelectNodePaths = (() => {
@@ -695,8 +715,8 @@ const group = ({
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
     code = formatCode
-      ? html_beautify(codeViewInstanceModel.getValue())
-      : codeViewInstanceModel.getValue();
+      ? html_beautify(helperModel.getValue())
+      : helperModel.getValue();
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
@@ -724,6 +744,8 @@ const ungroup = ({
   cb?: () => void;
 }) => {
   try {
+    helperModel.setValue(codeViewInstanceModel.getValue());
+
     const sortedUids = sortUidsByMaxEndIndex(selectedUids, validNodeTree);
     sortedUids.map((uid) => {
       const node = validNodeTree[uid];
@@ -733,20 +755,20 @@ const ungroup = ({
       const code = copyCode({
         validNodeTree,
         uids: node.children,
-        codeViewInstanceModel,
+        codeViewInstanceModel: helperModel,
       });
       remove({
         dispatch,
         validNodeTree,
         selectedUids: [uid],
-        codeViewInstanceModel,
+        codeViewInstanceModel: helperModel,
         formatCode,
       });
       const edit = {
         range: new Range(startLine, startCol, startLine, startCol),
         text: code,
       };
-      codeViewInstanceModel.applyEdits([edit]);
+      helperModel.applyEdits([edit]);
     });
 
     // predict needToSelectNodePaths
@@ -778,8 +800,8 @@ const ungroup = ({
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
     const code = formatCode
-      ? html_beautify(codeViewInstanceModel.getValue())
-      : codeViewInstanceModel.getValue();
+      ? html_beautify(helperModel.getValue())
+      : helperModel.getValue();
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
@@ -809,16 +831,18 @@ const edit = ({
   cb?: () => void;
 }) => {
   try {
+    helperModel.setValue(codeViewInstanceModel.getValue());
+
     replaceContent({
       nodeTree,
       focusedItem: targetUid,
       content,
-      codeViewInstanceModel,
+      codeViewInstanceModel: helperModel,
     });
 
     const code = formatCode
-      ? html_beautify(codeViewInstanceModel.getValue())
-      : codeViewInstanceModel.getValue();
+      ? html_beautify(helperModel.getValue())
+      : helperModel.getValue();
     codeViewInstanceModel.setValue(code);
 
     dispatch(focusNodeTreeNode(targetUid));
@@ -837,6 +861,7 @@ export const addAttr = ({
   focusedItem,
   codeViewInstanceModel,
   selectedItems,
+  formatCode,
   dispatch,
   cb,
   fb,
@@ -848,10 +873,13 @@ export const addAttr = ({
   focusedItem: TNodeUid;
   selectedItems: TNodeUid[];
   codeViewInstanceModel: editor.ITextModel;
+  formatCode: boolean;
   cb?: () => void;
   fb?: () => void;
 }) => {
   try {
+    helperModel.setValue(codeViewInstanceModel.getValue());
+
     const focusedNode = validNodeTree[focusedItem];
     const { startTag } = focusedNode.data.sourceCodeLocation;
 
@@ -885,7 +913,7 @@ export const addAttr = ({
             ),
         text: content,
       };
-      codeViewInstanceModel.applyEdits([edit]);
+      helperModel.applyEdits([edit]);
     }
 
     // predict needToSelectNodePaths
@@ -899,6 +927,11 @@ export const addAttr = ({
       return needToSelectNodePaths;
     })();
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
+
+    const code = formatCode
+      ? html_beautify(helperModel.getValue())
+      : helperModel.getValue();
+    codeViewInstanceModel.setValue(code);
 
     cb && cb();
   } catch (err) {
@@ -914,6 +947,7 @@ export const removeAttr = ({
   focusedItem,
   codeViewInstanceModel,
   selectedItems,
+  formatCode,
   cb,
   fb,
 }: {
@@ -924,10 +958,13 @@ export const removeAttr = ({
   focusedItem: TNodeUid;
   codeViewInstanceModel: editor.ITextModel;
   selectedItems: TNodeUid[];
+  formatCode: boolean;
   cb?: () => void;
   fb?: () => void;
 }) => {
   try {
+    helperModel.setValue(codeViewInstanceModel.getValue());
+
     const focusedNode = validNodeTree[focusedItem];
     const { startTag } = focusedNode.data.sourceCodeLocation;
 
@@ -956,7 +993,7 @@ export const removeAttr = ({
         ),
         text: content,
       };
-      codeViewInstanceModel.applyEdits([edit]);
+      helperModel.applyEdits([edit]);
     }
     // predict needToSelectNodePaths
     const needToSelectNodePaths = (() => {
@@ -969,6 +1006,11 @@ export const removeAttr = ({
       return needToSelectNodePaths;
     })();
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
+
+    const code = formatCode
+      ? html_beautify(helperModel.getValue())
+      : helperModel.getValue();
+    codeViewInstanceModel.setValue(code);
 
     cb && cb();
   } catch (err) {
