@@ -9,7 +9,7 @@ import { setIsContentProgrammaticallyChanged } from "@_redux/main/reference";
 import { TNodeUid } from "@_node/index";
 
 export const useAttributeHandler = () => {
-  const { validNodeTree, selectedNodeUids } = useAppState();
+  const { validNodeTree, selectedNodeUids, formatCode } = useAppState();
   const { monacoEditorRef } = useContext(MainContext);
   const dispatch = useDispatch();
 
@@ -48,11 +48,12 @@ export const useAttributeHandler = () => {
         focusedItem: uid,
         selectedItems: selectedNodeUids,
         codeViewInstanceModel,
+        formatCode,
         cb,
         fb: () => dispatch(setIsContentProgrammaticallyChanged(false)),
       });
     },
-    [validNodeTree, monacoEditorRef, selectedNodeUids],
+    [validNodeTree, monacoEditorRef, selectedNodeUids, formatCode],
   );
 
   const deleteAttribute = useCallback(
@@ -89,11 +90,12 @@ export const useAttributeHandler = () => {
         selectedItems: selectedNodeUids,
         focusedItem: uid,
         codeViewInstanceModel,
+        formatCode,
         cb,
         fb: () => dispatch(setIsContentProgrammaticallyChanged(false)),
       });
     },
-    [validNodeTree, monacoEditorRef, selectedNodeUids],
+    [validNodeTree, monacoEditorRef, selectedNodeUids, formatCode],
   );
   return { changeAttribute, deleteAttribute };
 };
