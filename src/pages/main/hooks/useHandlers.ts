@@ -242,25 +242,25 @@ export const useHandlers = () => {
         deletedUids.map((uid) => fileTree[uid].data.path),
       );
     } else {
-      const { _fileTree, _initialFileUidToOpen, deletedUidsObj, deletedUids } =
-        await loadIDBProject(DefaultProjectPath, true, fileTree);
-      dispatch(setFileTree(_fileTree));
-      // need to open another file if the current open file is deleted
-      if (deletedUidsObj[currentFileUid]) {
-        if (_initialFileUidToOpen !== "") {
-          dispatch(setCurrentFileUid(_initialFileUidToOpen));
-          dispatch(
-            setCurrentFileContent(
-              _fileTree[_initialFileUidToOpen].data.content,
-            ),
-          );
-        } else {
-          dispatch(setCurrentFileUid(""));
-          dispatch(setCurrentFileContent(""));
-        }
-      }
-      // update file tree view state
-      dispatch(updateFileTreeViewState({ deletedUids: deletedUids }));
+      // const { _fileTree, _initialFileUidToOpen, deletedUidsObj, deletedUids } =
+      //   await loadIDBProject(DefaultProjectPath, true, fileTree);
+      // dispatch(setFileTree(_fileTree));
+      // // need to open another file if the current open file is deleted
+      // if (deletedUidsObj[currentFileUid]) {
+      //   if (_initialFileUidToOpen !== "") {
+      //     dispatch(setCurrentFileUid(_initialFileUidToOpen));
+      //     dispatch(
+      //       setCurrentFileContent(
+      //         _fileTree[_initialFileUidToOpen].data.content,
+      //       ),
+      //     );
+      //   } else {
+      //     dispatch(setCurrentFileUid(""));
+      //     dispatch(setCurrentFileContent(""));
+      //   }
+      // }
+      // // update file tree view state
+      // dispatch(updateFileTreeViewState({ deletedUids: deletedUids }));
     }
   }, [project, currentProjectFileHandle, osType, fileTree, currentFileUid]);
 
