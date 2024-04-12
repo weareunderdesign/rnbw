@@ -27,6 +27,7 @@
     "classnames": "^2.3.2",
     "cmdk": "^0.1.20",
     "file-system-access": "^1.0.4",
+    "filer": "^1.4.1",
     "idb-keyval": "^6.2.0",
     "js-beautify": "^1.14.11",
     "jszip": "^3.10.1",

@@ -17,8 +17,9 @@ interface FilerStats {
 }
 
 /* eslint-disable @typescript-eslint/no-var-requires */
-export const _fs = window.Filer.fs;
-export const _path = window.Filer.path;
+const Filer = require("filer");
+export const _fs = Filer.fs;
+export const _path = Filer.path;
 export const _sh = new _fs.Shell();
 
 export const _createIDBDirectory = async (path: string): Promise<void> => {
