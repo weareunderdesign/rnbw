@@ -56,7 +56,7 @@ export const _removeIDBDirectoryOrFile = async (
   return new Promise<void>((resolve, reject) => {
     _fs.access(path, _fs.constants.F_OK, (err: Error) => {
       if (err) {
-        if (err.message === "ENOENT") {
+        if (err.name === "ENOENT") {
           // Path does not exist, resolve immediately
           resolve();
         } else {
