@@ -50,6 +50,9 @@ export const initIDBProject = (projectPath: string): Promise<void> => {
       })
       .catch((err) => {
         LogAllow && console.error("error while removing IDB project", err);
+        createIDBProject(projectPath)
+          .then(() => resolve())
+          .catch((err) => reject(err));
         reject(err);
       });
   });
