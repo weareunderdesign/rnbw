@@ -129,8 +129,14 @@ const useEditor = () => {
       );
 
       editor.onDidChangeCursorPosition((event) => {
-        (event.source === "mouse" || event.source === "keyboard") &&
+        const selection = editor.getSelection();
+        if (event.source === "mouse") {
+          if (selection && selection.isEmpty()) {
+            setCodeSelection();
+          }
+        } else if (event.source === "keyboard") {
           setCodeSelection();
+        }
       });
     },
     [setCodeSelection],
