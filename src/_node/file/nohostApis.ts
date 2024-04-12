@@ -45,8 +45,14 @@ export const _writeIDBFile = async (
   content: Uint8Array | string,
 ): Promise<void> => {
   return new Promise<void>((resolve, reject) => {
-    _fs.writeFile(path, content, (err: Error) => {
-      err ? reject(err) : resolve();
+    //check if the path exists in the idb
+    _fs.exists(path, function (exists: boolean) {
+      if (!exists) {
+        //create the file
+        _fs.writeFile(path, content, (err: Error) => {
+          err ? reject(err) : resolve();
+        });
+      }
     });
   });
 };
