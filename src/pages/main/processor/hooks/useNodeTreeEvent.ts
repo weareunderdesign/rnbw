@@ -140,7 +140,11 @@ export const useNodeTreeEvent = () => {
       dispatch(setLoadingTrue());
       try {
         const previewPath = getPreviewPath(fileTree, file);
-        await _writeIDBFile(previewPath, fileData.contentInApp as string);
+        try {
+          await _writeIDBFile(previewPath, fileData.contentInApp as string);
+        } catch (err) {
+          console.log(err);
+        }
         if (fileData.ext === "html") {
           dispatch(setIframeSrc(`rnbw${previewPath}`));
         }

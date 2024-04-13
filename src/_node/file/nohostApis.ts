@@ -46,13 +46,8 @@ export const _writeIDBFile = async (
 ): Promise<void> => {
   return new Promise<void>((resolve, reject) => {
     //check if the path exists in the idb
-    _fs.exists(path, function (exists: boolean) {
-      if (!exists) {
-        //create the file
-        _fs.writeFile(path, content, (err: Error) => {
-          err ? reject(err) : resolve();
-        });
-      }
+    _fs.writeFile(path, content, (err: Error) => {
+      err ? reject(err) : resolve();
     });
   });
 };
