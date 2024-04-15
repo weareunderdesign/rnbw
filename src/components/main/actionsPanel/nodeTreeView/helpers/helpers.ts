@@ -170,6 +170,48 @@ export const getDropOptions = (
 
   return { position, isBetween, order, targetendOffset, targetUid };
 };
+export const addTextNodeToElements = (data: TCmdkGroupData) => {
+  data["Elements"].push({
+    Featured: false,
+    Name: "text",
+    Icon: "comment",
+    Description: "text element",
+    "Keyboard Shortcut": [
+      {
+        cmd: false,
+        shift: false,
+        alt: false,
+        key: "",
+        click: false,
+      },
+    ],
+    Group: "",
+    Context: `Node-<#text>`,
+  });
+};
+export const isAllElementPastingAllowed = ({
+  htmlReferenceData,
+  validNodeTree,
+  uid,
+  isMove,
+}: {
+  htmlReferenceData: THtmlReferenceData;
+  validNodeTree: TNodeTreeData;
+  uid: TNodeUid;
+  isMove?: boolean;
+}) => {
+  const targetNode = validNodeTree[uid];
+  const parentTarget = targetNode.parentUid;
+  if (!parentTarget) return;
+
+  return (
+    htmlReferenceData?.elements[
+      isMove
+        ? validNodeTree[uid]?.displayName
+        : validNodeTree[parentTarget]?.displayName
+    ]?.Contain === "All"
+  );
+};
 
 export const isPastingAllowed = ({
   selectedItems,
@@ -203,20 +245,26 @@ export const isPastingAllowed = ({
       isMove,
     });
 
-    const targetNode = validNodeTree[uid];
-    const parentTarget = targetNode.parentUid;
-    if (!parentTarget) return;
-
     return nodeToAdd.every((node: string) => {
       if (node.split("-").length > 2) {
-        return (
-          htmlReferenceData?.elements[
-            isMove
-              ? validNodeTree[uid]?.displayName
-              : validNodeTree[parentTarget]?.displayName
-          ]?.Contain === "All"
-        );
+        return isAllElementPastingAllowed({
+          htmlReferenceData,
+          validNodeTree,
+          uid,
+          isMove,
+        });
       } else {
+        if (node === "Node-<#text>") {
+          const textNodeAllowed = isAllElementPastingAllowed({
+            htmlReferenceData,
+            validNodeTree,
+            uid,
+            isMove,
+          });
+
+          textNodeAllowed && addTextNodeToElements(data);
+        }
+
         return Object.values(data["Elements"]).some(
           (obj) => obj["Context"] === node,
         );
