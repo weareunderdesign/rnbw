@@ -6,21 +6,18 @@ import { useAppState } from "@_redux/useAppState";
 import { LogAllow } from "@_constants/global";
 import { useDispatch } from "react-redux";
 import { setIsContentProgrammaticallyChanged } from "@_redux/main/reference";
-import { TNodeUid } from "@_node/index";
 
 export const useAttributeHandler = () => {
-  const { validNodeTree, selectedNodeUids, formatCode } = useAppState();
+  const { validNodeTree, nFocusedItem, formatCode } = useAppState();
   const { monacoEditorRef } = useContext(MainContext);
   const dispatch = useDispatch();
 
   const changeAttribute = useCallback(
     ({
-      uid,
       attrName,
       attrValue,
       cb,
     }: {
-      uid: TNodeUid;
       attrName: string;
       attrValue: string;
       cb?: () => void;
@@ -45,25 +42,22 @@ export const useAttributeHandler = () => {
         attrName,
         attrValue,
         validNodeTree,
-        focusedItem: uid,
-        selectedItems: selectedNodeUids,
+        focusedItem: nFocusedItem,
         codeViewInstanceModel,
         formatCode,
         cb,
         fb: () => dispatch(setIsContentProgrammaticallyChanged(false)),
       });
     },
-    [validNodeTree, monacoEditorRef, selectedNodeUids, formatCode],
+    [validNodeTree, monacoEditorRef, nFocusedItem, formatCode],
   );
 
   const deleteAttribute = useCallback(
     ({
-      uid,
       attrName,
       attrValue,
       cb,
     }: {
-      uid: TNodeUid;
       attrName: string;
       attrValue?: string;
       cb?: () => void;
@@ -87,15 +81,14 @@ export const useAttributeHandler = () => {
         attrName,
         attrValue,
         validNodeTree,
-        selectedItems: selectedNodeUids,
-        focusedItem: uid,
+        focusedItem: nFocusedItem,
         codeViewInstanceModel,
         formatCode,
         cb,
         fb: () => dispatch(setIsContentProgrammaticallyChanged(false)),
       });
     },
-    [validNodeTree, monacoEditorRef, selectedNodeUids, formatCode],
+    [validNodeTree, monacoEditorRef, nFocusedItem, formatCode],
   );
   return { changeAttribute, deleteAttribute };
 };
