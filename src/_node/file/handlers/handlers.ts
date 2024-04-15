@@ -79,6 +79,13 @@ const parseHtml = (content: string): THtmlParserResponse => {
       });
       return attribs;
     };
+
+    const isValidNode = (node: THtmlDomNode) => {
+      return node.nodeName == "#documentType" || node.nodeName == "#text"
+        ? !!node?.value?.replace(/[\n\s]/g, "").length
+        : true;
+    };
+
     const proceedWithNode = (
       uid: TNodeUid,
       parentUid: TNodeUid,
@@ -110,10 +117,7 @@ const parseHtml = (content: string): THtmlParserResponse => {
 
         data: {
           childNodes: node.childNodes,
-          valid:
-            node.nodeName == "#documentType" || node.nodeName == "#text"
-              ? !!node?.value?.replace(/[\n\s]/g, "").length
-              : true,
+          valid: isValidNode(node),
 
           nodeName: node.nodeName,
           tagName: node.tagName || "",

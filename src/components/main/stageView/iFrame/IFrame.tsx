@@ -182,44 +182,51 @@ export const IFrame = () => {
   useEffect(() => {
     if (iframeRefState && document) {
       const iframeDocument = document as Document;
+      if (!iframeDocument) return;
 
-      if (iframeDocument) {
-        const wrapTextNodes = (element: HTMLElement) => {
-          const childNodes = element.childNodes;
+      const wrapTextNodes = (element: HTMLElement) => {
+        const childNodes = element.childNodes;
 
-          for (let i = 0; i < childNodes.length; i++) {
-            const node = childNodes[i];
+        for (let i = 0; i < childNodes.length; i++) {
+          const node = childNodes[i];
+          if (!node) continue;
 
-            if (node && node.nodeType === Node.TEXT_NODE) {
-              if (!node?.nodeValue?.replace(/[\n\s]/g, "").length) continue;
-              const span = iframeDocument.createElement("span");
-              const text = iframeDocument.createTextNode(node.nodeValue || "");
-              const uid = element.getAttribute("data-rnbw-stage-node-id");
+          if (node.nodeType === Node.TEXT_NODE) {
+            const nodeValue = node.nodeValue?.replace(/[\n\s]/g, "");
 
-              if (!uid) continue;
-              const nodeChildren = validNodeTree[uid]?.children;
+            if (!nodeValue) continue;
 
-              const filterArr = nodeChildren?.filter(
-                (uid) =>
-                  validNodeTree[uid]?.data?.textContent == node.nodeValue,
-              );
+            const span = iframeDocument.createElement("span");
+            const text = iframeDocument.createTextNode(node.nodeValue || "");
+            const uid = element.getAttribute("data-rnbw-stage-node-id");
 
-              span.appendChild(text);
-              span.setAttribute("rnbw-text-element", "true");
-              span.setAttribute(
-                "data-rnbw-stage-node-id",
-                `${filterArr?.length ? filterArr[0] : i}`,
-              );
+            if (!uid) continue;
 
-              node.parentNode && node.parentNode.replaceChild(span, node);
-            } else if (node && node.nodeType === Node.ELEMENT_NODE) {
-              wrapTextNodes(node as HTMLElement);
+            const nodeChildren = validNodeTree[uid]?.children;
+            const filterArr = nodeChildren?.filter(
+              (uid) => validNodeTree[uid]?.data?.textContent == node.nodeValue,
+            );
+
+            if (!filterArr || !filterArr.length) {
+              element.setAttribute("rnbw-text-element", "true");
+              continue;
             }
-          }
-        };
 
-        wrapTextNodes(iframeDocument.body);
-      }
+            span.appendChild(text);
+            span.setAttribute("rnbw-text-element", "true");
+            span.setAttribute(
+              "data-rnbw-stage-node-id",
+              `${filterArr?.length ? filterArr[0] : i}`,
+            );
+
+            node.parentNode?.replaceChild(span, node);
+          } else if (node.nodeType === Node.ELEMENT_NODE) {
+            wrapTextNodes(node as HTMLElement);
+          }
+        }
+      };
+
+      wrapTextNodes(iframeDocument.body);
     }
   }, [iframeRefState, document, needToReloadIframe, validNodeTree]);
 
