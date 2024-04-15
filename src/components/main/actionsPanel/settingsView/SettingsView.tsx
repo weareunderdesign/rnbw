@@ -4,80 +4,70 @@ import { useDispatch } from "react-redux";
 import { setActivePanel } from "@_redux/main/processor";
 import { SVGIconI, SVGIconII, SVGIconIII } from "@_components/common";
 import { useAttributeHandler } from "./hooks/useAttributeHandler";
-import { SettingsViewProps } from "../settingsPanel/types";
+import { Attribute, SettingsViewProps } from "../settingsPanel/types";
 import { useAppState } from "@_redux/useAppState";
-import { TNodeUid } from "@_node/index";
 
 export const SettingsView = ({
   attributes,
   setAttributes,
 }: SettingsViewProps) => {
-  const [hoveredUid, setHoveredUid] = useState<TNodeUid | null>(null);
+  const [hoveredAttr, setHoveredAttr] = useState<string | null>(null);
 
   const dispatch = useDispatch();
-  const { selectedNodeUids, activePanel } = useAppState();
+  const { activePanel } = useAppState();
   const { changeAttribute, deleteAttribute } = useAttributeHandler();
 
   const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>, uid: TNodeUid, key: string) => {
-      setAttributes((prev: Record<string, Record<string, string>>) => ({
+    (e: React.ChangeEvent<HTMLInputElement>, attribute: string) => {
+      setAttributes((prev: Attribute) => ({
         ...prev,
-        [uid]: {
-          ...prev[uid],
-          [key]: e.target.value,
-        },
+        [attribute]: e.target.value,
       }));
     },
     [],
   );
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>, uid: TNodeUid, key: string) => {
+    (e: React.KeyboardEvent<HTMLInputElement>, attribute: string) => {
       if (e.key !== "Enter") return;
       changeAttribute({
-        uid,
-        attrName: key,
-        attrValue: attributes[uid][key],
+        attrName: attribute,
+        attrValue: attributes[attribute],
       });
     },
     [attributes, changeAttribute],
   );
 
   const cleanUpValue = useCallback(
-    (uid: TNodeUid, key: string) => {
+    (attribute: string) => {
       changeAttribute({
-        uid,
-        attrName: key,
+        attrName: attribute,
         attrValue: "",
         cb: () =>
-          setAttributes((prev: Record<string, Record<string, string>>) => ({
+          setAttributes((prev: Attribute) => ({
             ...prev,
-            [uid]: {
-              ...prev[uid],
-              [key]: "",
-            },
+            [attribute]: "",
           })),
       });
     },
     [changeAttribute],
   );
 
-  const handleDelete = (uid: TNodeUid, key: string) =>
+  const handleDelete = (attribute: string) =>
     deleteAttribute({
-      uid,
-      attrName: key,
-      attrValue: attributes[uid][key] as string,
+      attrName: attribute,
+      attrValue: attributes[attribute] as string,
       cb: () =>
-        setAttributes((prev: Record<string, Record<string, string>>) => {
-          delete prev[uid][key];
+        setAttributes((prev: Attribute) => {
+          delete prev[attribute];
           return { ...prev };
         }),
     });
 
-  const handleMouseEnter = (uid: TNodeUid) => {
-    setHoveredUid(uid);
+  const handleMouseEnter = (attribute: string) => {
+    setHoveredAttr(attribute);
   };
   const handleMouseLeave = () => {
-    setHoveredUid(null);
+    setHoveredAttr(null);
   };
 
   return (
@@ -94,71 +84,61 @@ export const SettingsView = ({
           gap: "12px",
         }}
       >
-        {selectedNodeUids.map(
-          (uid) =>
-            attributes?.[uid] &&
-            !!Object.entries(attributes[uid]).length &&
-            Object.keys(attributes[uid])
-              .reverse()
-              .map((key) => (
-                <li
-                  key={key}
-                  className="gap-m settings-item"
-                  style={{
-                    padding: 0,
+        {Object.keys(attributes).map((attribute) => (
+          <li
+            key={attribute}
+            className="gap-m settings-item"
+            style={{
+              padding: 0,
+            }}
+            onMouseEnter={() => handleMouseEnter(attribute)}
+            onMouseLeave={handleMouseLeave}
+          >
+            {attributes[attribute] ? (
+              <div className="icon-button">
+                <SVGIconIII
+                  {...{
+                    class: "icon-xs",
+                    onClick: () => cleanUpValue(attribute),
                   }}
-                  onMouseEnter={() => handleMouseEnter(uid)}
-                  onMouseLeave={handleMouseLeave}
                 >
-                  {attributes[uid][key] ? (
-                    <div className="icon-button">
-                      <SVGIconIII
-                        {...{
-                          class: "icon-xs",
-                          onClick: () => cleanUpValue(uid, key),
-                        }}
-                      >
-                        checkbox
-                      </SVGIconIII>
-                    </div>
-                  ) : hoveredUid === uid ? (
-                    <div className="action-button">
-                      <SVGIconI
-                        {...{
-                          class: "icon-xs",
-                          onClick: () => handleDelete(uid, key),
-                        }}
-                      >
-                        cross
-                      </SVGIconI>
-                    </div>
-                  ) : (
-                    <div className="icon-button">
-                      <SVGIconII {...{ class: "icon-xs" }}>
-                        checkbox-blank
-                      </SVGIconII>
-                    </div>
-                  )}
+                  checkbox
+                </SVGIconIII>
+              </div>
+            ) : hoveredAttr === attribute ? (
+              <div className="action-button">
+                <SVGIconI
+                  {...{
+                    class: "icon-xs",
+                    onClick: () => handleDelete(attribute),
+                  }}
+                >
+                  cross
+                </SVGIconI>
+              </div>
+            ) : (
+              <div className="icon-button">
+                <SVGIconII {...{ class: "icon-xs" }}>checkbox-blank</SVGIconII>
+              </div>
+            )}
 
-                  <span className="text-s">{key}</span>
-                  <input
-                    type="text"
-                    className="text-s attribute-input"
-                    style={{ textAlign: "end" }}
-                    value={(attributes[uid][key] || "") as string}
-                    onBlur={() =>
-                      changeAttribute({
-                        uid,
-                        attrName: key,
-                        attrValue: attributes[uid][key],
-                      })
-                    }
-                    onChange={(e) => handleChange(e, uid, key)}
-                    onKeyDown={(e) => handleKeyDown(e, uid, key)}
-                  />
-                </li>
-              )),
-        )}
+            <span className="text-s">{attribute}</span>
+            <input
+              type="text"
+              className="text-s attribute-input"
+              style={{ textAlign: "end" }}
+              value={(attributes[attribute] || "") as string}
+              onBlur={() =>
+                changeAttribute({
+                  attrName: attribute,
+                  attrValue: attributes[attribute],
+                })
+              }
+              onChange={(e) => handleChange(e, attribute)}
+              onKeyDown={(e) => handleKeyDown(e, attribute)}
+            />
+          </li>
+        ))}
       </ul>
     </div>
   );

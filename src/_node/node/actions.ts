@@ -860,7 +860,6 @@ export const addAttr = ({
   validNodeTree,
   focusedItem,
   codeViewInstanceModel,
-  selectedItems,
   formatCode,
   dispatch,
   cb,
@@ -871,7 +870,6 @@ export const addAttr = ({
   attrValue: string;
   validNodeTree: TNodeTreeData;
   focusedItem: TNodeUid;
-  selectedItems: TNodeUid[];
   codeViewInstanceModel: editor.ITextModel;
   formatCode: boolean;
   cb?: () => void;
@@ -919,11 +917,9 @@ export const addAttr = ({
     // predict needToSelectNodePaths
     const needToSelectNodePaths = (() => {
       const needToSelectNodePaths: string[] = [];
-      selectedItems.map((uid) => {
-        const focusedNode = validNodeTree[uid];
-        const newNodePath = focusedNode.data.path;
-        needToSelectNodePaths.push(newNodePath);
-      });
+      const focusedNode = validNodeTree[focusedItem];
+      const newNodePath = focusedNode.data.path;
+      needToSelectNodePaths.push(newNodePath);
       return needToSelectNodePaths;
     })();
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
@@ -946,7 +942,6 @@ export const removeAttr = ({
   validNodeTree,
   focusedItem,
   codeViewInstanceModel,
-  selectedItems,
   formatCode,
   cb,
   fb,
@@ -957,7 +952,6 @@ export const removeAttr = ({
   validNodeTree: TNodeTreeData;
   focusedItem: TNodeUid;
   codeViewInstanceModel: editor.ITextModel;
-  selectedItems: TNodeUid[];
   formatCode: boolean;
   cb?: () => void;
   fb?: () => void;
@@ -998,11 +992,9 @@ export const removeAttr = ({
     // predict needToSelectNodePaths
     const needToSelectNodePaths = (() => {
       const needToSelectNodePaths: string[] = [];
-      selectedItems.map((uid) => {
-        const focusedNode = validNodeTree[uid];
-        const newNodePath = focusedNode.data.path;
-        needToSelectNodePaths.push(newNodePath);
-      });
+      const focusedNode = validNodeTree[focusedItem];
+      const newNodePath = focusedNode.data.path;
+      needToSelectNodePaths.push(newNodePath);
       return needToSelectNodePaths;
     })();
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
