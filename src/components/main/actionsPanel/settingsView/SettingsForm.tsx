@@ -1,9 +1,7 @@
 import React, { useRef } from "react";
 import { useAttributeHandler } from "./hooks/useAttributeHandler";
-import { SettingsFormProps } from "../settingsPanel/types";
+import { Attribute, SettingsFormProps } from "../settingsPanel/types";
 import { SVGIconI } from "@_components/common";
-import { useAppState } from "@_redux/useAppState";
-import { TNodeUid } from "@_node/index";
 
 export const SettingsForm = ({
   setShowForm,
@@ -11,7 +9,6 @@ export const SettingsForm = ({
 }: SettingsFormProps) => {
   const attributeRef = useRef<HTMLInputElement>(null);
   const valueRef = useRef<HTMLInputElement>(null);
-  const { selectedNodeUids } = useAppState();
 
   const { changeAttribute } = useAttributeHandler();
 
@@ -29,23 +26,16 @@ export const SettingsForm = ({
     const value = valueRef.current?.value;
 
     if (!attribute || value === undefined) return;
-
-    selectedNodeUids.map((uid: TNodeUid) => {
-      changeAttribute({
-        uid,
-        attrName: attribute,
-        attrValue: value,
-        cb: () => {
-          setShowForm(false);
-          setAttributes((prev: Record<string, Record<string, string>>) => ({
-            ...prev,
-            [uid]: {
-              ...prev[uid],
-              [`${attribute}`]: value,
-            },
-          }));
-        },
-      });
+    changeAttribute({
+      attrName: attribute,
+      attrValue: value,
+      cb: () => {
+        setShowForm(false);
+        setAttributes((prev: Attribute) => ({
+          [`${attribute}`]: value,
+          ...prev,
+        }));
+      },
     });
   };
 

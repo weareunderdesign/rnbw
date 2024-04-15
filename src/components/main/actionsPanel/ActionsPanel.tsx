@@ -13,7 +13,7 @@ import {
 import { useAppState } from "@_redux/useAppState";
 
 export default function ActionsPanel() {
-  const { showFilePanel } = useAppState();
+  const { showFilePanel, selectedNodeUids } = useAppState();
 
   const [sizes, setSizes] = useState([0, 100]);
   const filePanelRef = useRef<ImperativePanelHandle>(null);
@@ -55,8 +55,8 @@ export default function ActionsPanel() {
             <NodeTreeView />
           </Panel>
         </PanelGroup>
-        <SettingsPanel />
+        {selectedNodeUids.length == 1 && <SettingsPanel />}
       </div>
     );
-  }, [sizes, showFilePanel]);
+  }, [sizes, showFilePanel, selectedNodeUids]);
 }
