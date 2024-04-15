@@ -8,7 +8,11 @@ import { setCurrentCommand } from "@_redux/main/cmdk";
 import { getCommandKey } from "@_services/global";
 import { TCmdkKeyMap } from "@_types/main";
 
-import { editHtmlContent, getBodyChild } from "../helpers";
+import {
+  editHtmlContent,
+  getBodyChild,
+  getValidElementWithUid,
+} from "../helpers";
 import { setShowActionsPanel, setShowCodeView } from "@_redux/main/processor";
 import { eventListenersStatesRefType } from "../IFrame";
 import { setHoveredNodeUid } from "@_redux/main/nodeTree";
@@ -107,8 +111,19 @@ export const useCmdk = () => {
         contentEditableUidRef,
         nodeTreeRef,
         formatCode,
+        hoveredTargetRef,
+        hoveredNodeUid,
       } = eventListenerRef.current;
       // cmdk obj for the current command
+
+      if (getCommandKey(e, osType)) {
+        iframeRefRef.current?.focus();
+        const { uid } = getValidElementWithUid(
+          hoveredTargetRef.current as HTMLElement,
+        );
+        if (!uid) return;
+        if (hoveredNodeUid !== uid) dispatch(setHoveredNodeUid(uid));
+      }
       const cmdk: TCmdkKeyMap = {
         cmd: getCommandKey(e, osType),
         shift: e.shiftKey,
