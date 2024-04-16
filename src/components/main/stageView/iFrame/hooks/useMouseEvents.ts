@@ -245,6 +245,16 @@ export const useMouseEvents = () => {
     },
     [debouncedSelectAllText, mostRecentClickedNodeUidRef.current],
   );
+  const onMouseOver = useCallback(
+    (
+      e: MouseEvent,
+      eventListenerRef: React.MutableRefObject<eventListenersStatesRefType>,
+    ) => {
+      const { hoveredTargetRef } = eventListenerRef.current;
+      hoveredTargetRef.current = e.target;
+    },
+    [],
+  );
 
   return {
     onMouseLeave,
@@ -252,5 +262,6 @@ export const useMouseEvents = () => {
     onMouseEnter,
     onClick,
     onDblClick,
+    onMouseOver,
   };
 };

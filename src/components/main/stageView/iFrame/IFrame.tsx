@@ -33,6 +33,7 @@ export interface eventListenersStatesRefType extends AppStateReturnType {
   isEditingRef: React.MutableRefObject<boolean>;
   hoveredItemRef: React.MutableRefObject<TNodeUid>;
   selectedItemsRef: React.MutableRefObject<TNodeUid[]>;
+  hoveredTargetRef: React.MutableRefObject<EventTarget | null>;
 }
 
 export const IFrame = () => {
@@ -49,7 +50,7 @@ export const IFrame = () => {
   // hooks
   const { nodeTreeRef, hoveredItemRef, selectedItemsRef } =
     useSyncNode(iframeRefState);
-
+  const hoveredTargetRef = useRef(null);
   const eventListenersStatesRef = useRef<eventListenersStatesRefType>({
     ...appState,
     iframeRefState,
@@ -59,12 +60,19 @@ export const IFrame = () => {
     isEditingRef,
     hoveredItemRef,
     selectedItemsRef,
+    hoveredTargetRef,
   });
 
   const { onKeyDown, onKeyUp, handlePanelsToggle, handleZoomKeyDown } =
     useCmdk();
-  const { onMouseEnter, onMouseMove, onMouseLeave, onClick, onDblClick } =
-    useMouseEvents();
+  const {
+    onMouseEnter,
+    onMouseMove,
+    onMouseLeave,
+    onClick,
+    onDblClick,
+    onMouseOver,
+  } = useMouseEvents();
 
   const addHtmlNodeEventListeners = useCallback(
     (htmlNode: HTMLElement) => {
@@ -89,6 +97,9 @@ export const IFrame = () => {
         onMouseLeave();
       });
 
+      htmlNode.addEventListener("mouseover", (e: MouseEvent) => {
+        onMouseOver(e, eventListenersStatesRef);
+      });
       htmlNode.addEventListener("click", (e: MouseEvent) => {
         e.preventDefault();
         onClick(e, eventListenersStatesRef);
@@ -145,7 +156,7 @@ export const IFrame = () => {
 
     // mark selected elements on load
     markSelectedElements(iframeRefState, selectedItemsRef.current, nodeTree);
-
+    iframeRefState?.focus();
     dispatch(setIframeLoading(false));
     project.context === "local" && dispatch(setLoadingFalse());
   }, [
@@ -240,6 +251,7 @@ export const IFrame = () => {
       isEditingRef,
       hoveredItemRef,
       selectedItemsRef,
+      hoveredTargetRef,
     };
   }, [
     needToReloadIframe,
