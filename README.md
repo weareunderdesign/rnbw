@@ -112,13 +112,11 @@ the contributors’ community can be found on [github discussions](), where you 
     ```
     
 4. visit `http://localhost:8080/`
-5. create a branch locally.
+5. create a branch locally, based on the dev branch.
 7. follow the [project board](https://github.com/orgs/rnbwdev/projects/4/views/1) and take the first to-do that makes sense to you. go top-down.
     1. focus on the terms and specs for each task.
     2. make sure you fully understand it before you begin.
-8. code!
-    1. please keep the best practices and code style and follow any formatting and testing guidelines specific to this repo.
-    2. collaborate. collaborate. collaborate. share what you do, did and will do.
+8. code! please keep the best practices and code style and follow any formatting and testing guidelines specific to this repo.
 9. commit changes to your branch. (don’t rush to push the latest code to your branch. that’s a waste of time.)
 10. keep your branch always in sync with the dev branch.
 
