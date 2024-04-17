@@ -18,7 +18,7 @@ const processorReducerInitialState: TProcessorReducerState = {
   showCodeView: true,
   showFilePanel: false,
 
-  autoSave: false,
+  autoSave: true,
   formatCode: false,
 
   didUndo: false,
