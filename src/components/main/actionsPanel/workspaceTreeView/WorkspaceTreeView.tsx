@@ -121,7 +121,7 @@ export default function WorkspaceTreeView() {
       cb_selectNode([uid]);
       cb_readNode(uid);
     },
-    [fileTree, cb_focusNode, cb_selectNode, cb_readNode],
+    [fileTree, cb_focusNode, cb_selectNode, cb_readNode, currentFileUid],
   );
   useEffect(() => {
     if (!linkToOpen || linkToOpen === "") return;
@@ -143,8 +143,10 @@ export default function WorkspaceTreeView() {
   useEffect(
     function RevertWcOpen() {
       if (activePanel !== "code") {
-        if (webComponentOpen) dispatch(setWebComponentOpen(false));
-        openFile(prevRenderableFileUid);
+        if (webComponentOpen) {
+          dispatch(setWebComponentOpen(false));
+          openFile(prevRenderableFileUid);
+        }
       }
     },
     [activePanel],
