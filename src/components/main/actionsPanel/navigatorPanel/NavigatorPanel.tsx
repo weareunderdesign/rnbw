@@ -5,7 +5,6 @@ import { useAppState } from "@_redux/useAppState";
 
 import { AdditionalPanel, DefaultPanel, ProjectPanel } from "./components";
 import {
-  projectDarkImg,
   projectLightImg,
   unsavedProjectDarkImg,
   unsavedProjectLightImg,
@@ -50,9 +49,7 @@ export default function NavigatorPanel() {
         ? theme === "Light"
           ? unsavedProjectLightImg
           : unsavedProjectDarkImg
-        : theme === "Light"
-          ? projectLightImg
-          : projectDarkImg;
+        : projectLightImg;
     }
   }, [unsavedProject, theme]);
 
