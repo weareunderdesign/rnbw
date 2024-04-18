@@ -49,7 +49,7 @@ export default function MainPage() {
     fileTree,
     activePanel,
     autoSave,
-    formatCode,
+    // formatCode, // TODO: it is temorally commented - in future it is possibly used or removed
     cmdkOpen,
     cmdkPages,
     currentCmdkPage,
@@ -420,7 +420,7 @@ export default function MainPage() {
                                 // keep modal open when toogling theme or go "Add" menu from "Actions" menu
                                 command.Name !== "Theme" &&
                                   command.Name !== "Autosave" &&
-                                  command.Name !== "Format Code" &&
+                                  // command.Name !== "Format Code" && // TODO: it is temorally commented - in future it is possibly used or removed
                                   command.Name !== "Add" &&
                                   command.Name !== "Turn into" &&
                                   dispatch(setCmdkOpen(false));
@@ -509,25 +509,28 @@ export default function MainPage() {
                                         </span>
                                       </div>
                                     </>
-                                  ) : command.Name === "Format Code" ? (
-                                    <>
-                                      {/* detect Format code */}
-                                      <div className="padding-xs">
-                                        <div className="radius-m icon-xs align-center background-tertiary"></div>
-                                      </div>
-                                      <div className="gap-s align-center">
-                                        <span className="text-m opacity-m">
-                                          Format Code
-                                        </span>
-                                        <span className="text-s opacity-m">
-                                          /
-                                        </span>
-                                        <span className="text-m">
-                                          {formatCode ? "On" : "Off"}
-                                        </span>
-                                      </div>
-                                    </>
                                   ) : (
+                                    // TODO: it is temorally commented - in future it is possibly used or removed
+                                    // If return this option - we have to add the string "Format Code,,Switch format code,f,Settings" to the 'Jumpstart.csv' file
+                                    // : command.Name === "Format Code" ? (
+                                    //   <>
+                                    //     {/* detect Format code */}
+                                    //     <div className="padding-xs">
+                                    //       <div className="radius-m icon-xs align-center background-tertiary"></div>
+                                    //     </div>
+                                    //     <div className="gap-s align-center">
+                                    //       <span className="text-m opacity-m">
+                                    //         Format Code
+                                    //       </span>
+                                    //       <span className="text-s opacity-m">
+                                    //         /
+                                    //       </span>
+                                    //       <span className="text-m">
+                                    //         {formatCode ? "On" : "Off"}
+                                    //       </span>
+                                    //     </div>
+                                    //   </>
+                                    // )
                                     <>
                                       <div className="padding-xs">
                                         {typeof command.Icon === "string" &&

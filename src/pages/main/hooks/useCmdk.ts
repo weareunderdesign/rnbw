@@ -242,9 +242,10 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     dispatch(setAutoSave(!autoSave));
   }, [autoSave]);
 
-  const onToggleFormatCode = useCallback(() => {
-    dispatch(setFormatCode(!formatCode));
-  }, [formatCode]);
+  // TODO: it is temorally commented - in future it is possibly used or removed
+  // const onToggleFormatCode = useCallback(() => {
+  //   dispatch(setFormatCode(!formatCode));
+  // }, [formatCode]);
 
   const closeAllPanel = useCallback(() => {
     dispatch(setShowActionsPanel(false));
@@ -388,9 +389,10 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
         onToggleAutoSave();
         break;
 
-      case "Format Code":
-        onToggleFormatCode();
-        break;
+      // TODO: it is temorally commented - in future it is possibly used or removed
+      // case "Format Code":
+      //   onToggleFormatCode();
+      //   break;
 
       default:
         return;
