@@ -180,6 +180,13 @@ export const useNodeTreeEvent = () => {
           }
           try {
             morphdom(iframeHtml, updatedHtml, {
+              getNodeKey: (node: Node) => {
+                // Use data-rnbw-stage-node-id attribute as the key instead id
+                if (node instanceof HTMLElement && node?.hasAttribute("id")) {
+                  return node?.getAttribute(StageNodeIdAttr);
+                }
+                return null;
+              },
               onBeforeElUpdated: function (fromEl, toEl) {
                 //check if the node is script or style
                 if (

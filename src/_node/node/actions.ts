@@ -890,7 +890,7 @@ export const addAttr = ({
       ),
     );
     const attr = `${attrName}="${attrValue}"`;
-    const pattern = new RegExp(`${attrName}="(.*?)"`, "g");
+    const pattern = new RegExp(`${attrName}=(["'])(.*?)\\1`, "g");
     const replace = pattern.test(text);
     const content = replace ? text.replace(pattern, attr) : ` ${attr}`;
 
@@ -971,7 +971,7 @@ export const removeAttr = ({
       ),
     );
 
-    const pattern = new RegExp(`${attrName}="${attrValue}"`, "g");
+    const pattern = new RegExp(`${attrName}=(["'])${attrValue}\\1`, "g");
     const singleAttrPattern = new RegExp(`${attrName}`, "g");
     const content = pattern.test(text)
       ? text.replace(pattern, "")

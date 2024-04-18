@@ -13,9 +13,9 @@ export const getValidElementWithUid = (
   ele: HTMLElement,
 ): { uid: TNodeUid | null; element: HTMLElement } => {
   let validElement = ele;
-  let uid: TNodeUid | null = validElement.getAttribute(StageNodeIdAttr);
+  let uid: TNodeUid | null = validElement?.getAttribute(StageNodeIdAttr);
   while (!uid) {
-    const parentElement = validElement.parentElement;
+    const parentElement = validElement?.parentElement;
     if (!parentElement) break;
 
     uid = parentElement.getAttribute(StageNodeIdAttr);
