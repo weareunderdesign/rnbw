@@ -33,6 +33,7 @@ import { TFileNodeData, TFileNodeTreeData, createURLPath } from "@_node/index";
 import {
   setActivePanel,
   setNavigatorDropdownType,
+  setShowFilePanel,
 } from "@_redux/main/processor";
 import { AnyFunction } from "./types";
 import { toast } from "react-toastify";
@@ -391,6 +392,7 @@ export const onWebComponentDblClick = ({
             } else {
               dispatch(setInitialFileUidToOpen(fileTree[x].uid));
               dispatch(setNavigatorDropdownType("project"));
+              dispatch(setShowFilePanel(true));
               dispatch(setActivePanel("code"));
               filePath = createURLPath(
                 fileTree[x].uid,
