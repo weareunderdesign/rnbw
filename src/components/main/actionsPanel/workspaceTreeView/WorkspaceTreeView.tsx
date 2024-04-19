@@ -35,7 +35,6 @@ import {
   useSync,
 } from "./hooks";
 import { useSaveCommand } from "@_pages/main/processor/hooks";
-import { setWebComponentOpen } from "@_redux/main/stageView";
 import { debounce, getObjKeys } from "@_pages/main/helper";
 import {
   Container,
@@ -63,7 +62,6 @@ export default function WorkspaceTreeView() {
     currentProjectFileHandle,
     recentProject,
     invalidFileNodes,
-    webComponentOpen,
     hoveredFileUid,
   } = useAppState();
 
@@ -132,11 +130,8 @@ export default function WorkspaceTreeView() {
 
   useEffect(
     function RevertWcOpen() {
-      if (activePanel !== "code") {
-        if (webComponentOpen) {
-          dispatch(setWebComponentOpen(false));
-          openFile(renderableFileUid);
-        }
+      if (activePanel === "stage") {
+        openFile(renderableFileUid);
       }
     },
     [activePanel],

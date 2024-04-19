@@ -13,10 +13,7 @@ import { LogAllow } from "@_constants/global";
 import { PreserveRnbwNode } from "@_node/file/handlers/constants";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
-import {
-  setIframeLoading,
-  setNeedToReloadIframe,
-} from "@_redux/main/stageView";
+import { setIframeLoading } from "@_redux/main/stageView";
 import { useAppState } from "@_redux/useAppState";
 
 import { jss, styles } from "./constants";
@@ -44,7 +41,7 @@ export const IFrame = () => {
   const isEditingRef = useRef(false);
   const dispatch = useDispatch();
   const appState: AppStateReturnType = useAppState();
-  const { nodeTree, project, needToReloadIframe, validNodeTree, iframeSrc } =
+  const { nodeTree, project, validNodeTree, iframeSrc, renderableFileUid } =
     appState;
   const { iframeRefRef, setIframeRefRef } = useContext(MainContext);
   // hooks
@@ -185,11 +182,6 @@ export const IFrame = () => {
     };
   }, [iframeRefState]);
 
-  // reload iframe
-  useEffect(() => {
-    needToReloadIframe && dispatch(setNeedToReloadIframe(false));
-  }, [needToReloadIframe]);
-
   useEffect(() => {
     if (iframeRefState && document) {
       const iframeDocument = document as Document;
@@ -239,7 +231,7 @@ export const IFrame = () => {
 
       wrapTextNodes(iframeDocument.body);
     }
-  }, [iframeRefState, document, needToReloadIframe, validNodeTree]);
+  }, [iframeRefState, document, validNodeTree]);
 
   useEffect(() => {
     eventListenersStatesRef.current = {
@@ -254,8 +246,6 @@ export const IFrame = () => {
       hoveredTargetRef,
     };
   }, [
-    needToReloadIframe,
-
     iframeRefState,
     iframeRefRef.current,
     nodeTreeRef.current,
@@ -269,8 +259,9 @@ export const IFrame = () => {
   return useMemo(() => {
     return (
       <>
-        {iframeSrc && !needToReloadIframe && (
+        {iframeSrc && (
           <iframe
+            key={renderableFileUid}
             ref={setIframeRefState}
             id={"iframeId"}
             src={iframeSrc}
@@ -283,5 +274,5 @@ export const IFrame = () => {
         )}
       </>
     );
-  }, [iframeSrc, needToReloadIframe]);
+  }, [iframeSrc]);
 };
