@@ -4,11 +4,7 @@ import { MainContext } from "@_redux/main";
 import { useAppState } from "@_redux/useAppState";
 
 import { AdditionalPanel, DefaultPanel, ProjectPanel } from "./components";
-import {
-  projectLightImg,
-  unsavedProjectDarkImg,
-  unsavedProjectLightImg,
-} from "./constants";
+import { projectLightImg, unsavedProjectLightImg } from "./constants";
 import { useFavicon, useNavigatorPanelHandlers } from "./hooks";
 import { PanelButton } from "./components/PanelButton";
 import { PanelHeader } from "@_components/common/panelHeader";
@@ -45,11 +41,7 @@ export default function NavigatorPanel() {
   useEffect(() => {
     const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
     if (link) {
-      link.href = unsavedProject
-        ? theme === "Light"
-          ? unsavedProjectLightImg
-          : unsavedProjectDarkImg
-        : projectLightImg;
+      link.href = unsavedProject ? unsavedProjectLightImg : projectLightImg;
     }
   }, [unsavedProject, theme]);
 
