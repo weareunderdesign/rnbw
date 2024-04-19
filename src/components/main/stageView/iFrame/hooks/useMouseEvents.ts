@@ -6,15 +6,18 @@ import { ShortDelay } from "@_constants/main";
 import { StageNodeIdAttr } from "@_node/file";
 import { getValidNodeUids } from "@_node/helpers";
 import { THtmlNodeData } from "@_node/node";
-import { TNodeTreeData, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { setHoveredNodeUid } from "@_redux/main/nodeTree";
 import { setSelectedNodeUids } from "@_redux/main/nodeTree/event";
 import { setActivePanel } from "@_redux/main/processor";
 
 import {
+  areArraysEqual,
   editHtmlContent,
+  getBodyChild,
   getValidElementWithUid,
+  isChild,
+  isSameParents,
   selectAllText,
 } from "../helpers";
 import {
@@ -22,80 +25,111 @@ import {
   isWebComponentDblClicked,
   onWebComponentDblClick,
 } from "@_pages/main/helper";
-import { useAppState } from "@_redux/useAppState";
 
-interface IUseMouseEventsProps {
-  iframeRefRef: React.MutableRefObject<HTMLIFrameElement | null>;
-  nodeTreeRef: React.MutableRefObject<TNodeTreeData>;
-  focusedItemRef: React.MutableRefObject<TNodeUid>;
-  selectedItemsRef: React.MutableRefObject<TNodeUid[]>;
-  contentEditableUidRef: React.MutableRefObject<TNodeUid>;
-  isEditingRef: React.MutableRefObject<boolean>;
-  linkTagUidRef: React.MutableRefObject<TNodeUid>;
-}
+import { getCommandKey } from "@_services/global";
+import { eventListenersStatesRefType } from "../IFrame";
+import { TNodeUid } from "@_node/index";
 
-export const useMouseEvents = ({
-  iframeRefRef,
-  nodeTreeRef,
-  selectedItemsRef,
-  contentEditableUidRef,
-  isEditingRef,
-}: IUseMouseEventsProps) => {
+export const useMouseEvents = () => {
   const dispatch = useDispatch();
   const { monacoEditorRef } = useContext(MainContext);
-  const {
-    fileTree,
-    validNodeTree,
-    fExpandedItemsObj: expandedItemsObj,
-    formatCode,
-    htmlReferenceData,
-  } = useAppState();
 
   const mostRecentClickedNodeUidRef = useRef<TNodeUid>(""); //This is used because dbl clikc event was not able to receive the uid of the node that was clicked
 
   // hoveredNodeUid
   const onMouseEnter = useCallback(() => {}, []);
-  const onMouseMove = useCallback((e: MouseEvent) => {
-    const { uid } = getValidElementWithUid(e.target as HTMLElement);
-    uid && dispatch(setHoveredNodeUid(uid));
-  }, []);
+  const onMouseMove = useCallback(
+    (
+      e: MouseEvent,
+      eventListenerRef: React.MutableRefObject<eventListenersStatesRefType>,
+    ) => {
+      const {
+        nodeTreeRef,
+        selectedItemsRef,
+        contentEditableUidRef,
+        iframeRefRef,
+        osType,
+        hoveredNodeUid,
+      } = eventListenerRef.current;
+      const { uid } = getValidElementWithUid(e.target as HTMLElement);
+      if (!uid) return;
+      if (getCommandKey(e, osType)) {
+        if (hoveredNodeUid !== uid) dispatch(setHoveredNodeUid(uid));
+        iframeRefRef.current?.focus();
+      } else {
+        const isSelectedChild = isChild({
+          currentUid: uid,
+          nodeTree: nodeTreeRef.current,
+          selectedUid: selectedItemsRef.current[0],
+        });
+
+        const targetUids =
+          isSelectedChild || uid == contentEditableUidRef.current
+            ? [selectedItemsRef.current[0]]
+            : getBodyChild({ uids: [uid], nodeTree: nodeTreeRef.current });
+
+        if (targetUids[0] !== hoveredNodeUid) {
+          dispatch(setHoveredNodeUid(targetUids[0]));
+        }
+      }
+    },
+    [],
+  );
   const onMouseLeave = () => {
     dispatch(setHoveredNodeUid(""));
   };
 
   // click, dblclick handlers
-  const onClick = useCallback((e: MouseEvent) => {
-    dispatch(setActivePanel("stage"));
+  const onClick = useCallback(
+    (
+      e: MouseEvent,
+      eventListenerRef: React.MutableRefObject<eventListenersStatesRefType>,
+    ) => {
+      const {
+        nodeTreeRef,
+        selectedItemsRef,
+        contentEditableUidRef,
+        iframeRefRef,
+        isEditingRef,
+        activePanel,
+        osType,
+        formatCode,
+      } = eventListenerRef.current;
+      if (activePanel !== "stage") dispatch(setActivePanel("stage"));
 
-    const { uid } = getValidElementWithUid(e.target as HTMLElement);
-    if (uid) {
+      const { uid } = getValidElementWithUid(e.target as HTMLElement);
+      if (!uid) return;
       mostRecentClickedNodeUidRef.current = uid;
       // update selectedNodeUids
       (() => {
+        const updatedSelectedItems = selectedItemsRef.current.includes(uid)
+          ? selectedItemsRef.current.filter((item) => item !== uid)
+          : [...selectedItemsRef.current, uid];
         const uids = e.shiftKey
           ? getValidNodeUids(
               nodeTreeRef.current,
-              Array(...new Set([...selectedItemsRef.current, uid])),
+              Array.from(new Set(updatedSelectedItems)),
             )
           : [uid];
 
-        // check if it's a new state
-        let same = false;
-        if (selectedItemsRef.current.length === uids.length) {
-          same = true;
-          for (
-            let index = 0, len = selectedItemsRef.current.length;
-            index < len;
-            ++index
-          ) {
-            if (selectedItemsRef.current[index] !== uids[index]) {
-              same = false;
-              break;
-            }
-          }
+        let targetUids = uids;
+        if (getCommandKey(e, osType)) {
+          targetUids = uids;
+        } else {
+          const sameParents = isSameParents({
+            currentUid: uid,
+            nodeTree: nodeTreeRef.current,
+            selectedUid: selectedItemsRef.current[0],
+          });
+
+          targetUids = sameParents
+            ? [sameParents]
+            : getBodyChild({ uids, nodeTree: nodeTreeRef.current });
         }
 
-        !same && dispatch(setSelectedNodeUids(uids));
+        // check if it's a new state
+        const same = areArraysEqual(selectedItemsRef.current, targetUids);
+        !same && dispatch(setSelectedNodeUids(targetUids));
       })();
 
       // content-editable operation
@@ -127,25 +161,40 @@ export const useMouseEvents = ({
           formatCode,
         });
       }
-    }
-  }, []);
+    },
+    [monacoEditorRef],
+  );
 
   const debouncedSelectAllText = useCallback(
     debounce(selectAllText, ShortDelay),
     [],
   );
   const onDblClick = useCallback(
-    (e: MouseEvent) => {
+    (
+      e: MouseEvent,
+      eventListenerRef: React.MutableRefObject<eventListenersStatesRefType>,
+    ) => {
+      const {
+        nodeTreeRef,
+        selectedItemsRef,
+        contentEditableUidRef,
+        isEditingRef,
+        iframeRefRef,
+        fExpandedItemsObj,
+        htmlReferenceData,
+        fileTree,
+        validNodeTree,
+        hoveredNodeUid,
+      } = eventListenerRef.current;
       const ele = e.target as HTMLElement;
       const uid: TNodeUid | null = ele.getAttribute(StageNodeIdAttr);
 
       if (!uid) {
-        // when dbl-click on a web component
         isEditingRef.current = false;
         if (mostRecentClickedNodeUidRef.current) {
           // when dbl-click on a web component
           const node = nodeTreeRef.current[mostRecentClickedNodeUidRef.current];
-          const nodeData = node.data as THtmlNodeData;
+          const nodeData = node?.data as THtmlNodeData;
           if (
             isWebComponentDblClicked({
               htmlReferenceData,
@@ -154,7 +203,7 @@ export const useMouseEvents = ({
           ) {
             onWebComponentDblClick({
               dispatch,
-              expandedItemsObj,
+              expandedItemsObj: fExpandedItemsObj,
               fileTree,
               validNodeTree,
               wcName: nodeData.nodeName,
@@ -163,15 +212,29 @@ export const useMouseEvents = ({
           }
         }
       } else {
+        const targetUid = isChild({
+          currentUid: uid,
+          nodeTree: nodeTreeRef.current,
+          selectedUid: selectedItemsRef.current[0],
+        });
+
+        const same = areArraysEqual(selectedItemsRef.current, [
+          !targetUid ? uid : targetUid,
+        ]);
+        !same && dispatch(setSelectedNodeUids([!targetUid ? uid : targetUid]));
+        if (hoveredNodeUid !== "") dispatch(setHoveredNodeUid(""));
+
+        if (targetUid) return;
+        if (!ele.getAttribute("rnbw-text-element")) return;
+
+        dispatch(setSelectedNodeUids([uid]));
+
         const node = nodeTreeRef.current[uid];
-        const nodeData = node.data as THtmlNodeData;
-        console.log("nodeData", mostRecentClickedNodeUidRef.current);
+        if (!node) return;
+        const nodeData = node?.data as THtmlNodeData;
+        const { startLine, endLine } = nodeData.sourceCodeLocation;
 
-        if (["html", "head", "body", "img", "div"].includes(nodeData.name))
-          return;
-
-        const { startTag, endTag } = nodeData.sourceCodeLocation;
-        if (startTag && endTag && contentEditableUidRef.current !== uid) {
+        if (startLine && endLine && contentEditableUidRef.current !== uid) {
           isEditingRef.current = true;
           contentEditableUidRef.current = uid;
           ele.setAttribute("contenteditable", "true");
@@ -180,16 +243,17 @@ export const useMouseEvents = ({
         }
       }
     },
-    [
-      contentEditableUidRef,
-      debouncedSelectAllText,
-      expandedItemsObj,
-      fileTree,
-      htmlReferenceData,
-      nodeTreeRef,
-      validNodeTree,
-      mostRecentClickedNodeUidRef.current,
-    ],
+    [debouncedSelectAllText, mostRecentClickedNodeUidRef.current],
+  );
+  const onMouseOver = useCallback(
+    (
+      e: MouseEvent,
+      eventListenerRef: React.MutableRefObject<eventListenersStatesRefType>,
+    ) => {
+      const { hoveredTargetRef } = eventListenerRef.current;
+      hoveredTargetRef.current = e.target;
+    },
+    [],
   );
 
   return {
@@ -198,5 +262,6 @@ export const useMouseEvents = ({
     onMouseEnter,
     onClick,
     onDblClick,
+    onMouseOver,
   };
 };

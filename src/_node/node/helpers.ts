@@ -3,17 +3,17 @@ import { editor, Range } from "monaco-editor";
 import { TNodeTreeData, TNodeUid } from "../";
 
 export const copyCode = ({
-  nodeTree,
+  validNodeTree,
   uids,
   codeViewInstanceModel,
 }: {
-  nodeTree: TNodeTreeData;
+  validNodeTree: TNodeTreeData;
   uids: TNodeUid[];
   codeViewInstanceModel: editor.ITextModel;
 }): string => {
   let copiedCode = "";
   uids.forEach((uid) => {
-    const node = nodeTree[uid];
+    const node = validNodeTree[uid];
     if (node) {
       const { startLine, startCol, endLine, endCol } =
         node.data.sourceCodeLocation;
@@ -27,19 +27,19 @@ export const copyCode = ({
 };
 
 export const pasteCode = ({
-  nodeTree,
+  validNodeTree,
   focusedItem,
   addToBefore = false,
   codeViewInstanceModel,
   code,
 }: {
-  nodeTree: TNodeTreeData;
+  validNodeTree: TNodeTreeData;
   focusedItem: TNodeUid;
   addToBefore?: boolean;
   codeViewInstanceModel: editor.ITextModel;
   code: string;
 }) => {
-  const focusedNode = nodeTree[focusedItem];
+  const focusedNode = validNodeTree[focusedItem];
   const { startLine, startCol, endLine, endCol } =
     focusedNode.data.sourceCodeLocation;
   const edit = {
@@ -55,18 +55,18 @@ export const pasteCode = ({
 };
 
 export const pasteCodeInsideEmpty = ({
-  nodeTree,
+  validNodeTree,
   focusedItem,
   codeViewInstanceModel,
   code,
 }: {
-  nodeTree: TNodeTreeData;
+  validNodeTree: TNodeTreeData;
   focusedItem: TNodeUid;
   addToBefore?: boolean;
   codeViewInstanceModel: editor.ITextModel;
   code: string;
 }) => {
-  const focusedNode = nodeTree[focusedItem];
+  const focusedNode = validNodeTree[focusedItem];
   const { startTag } = focusedNode.data.sourceCodeLocation;
   const edit = {
     range: new Range(
@@ -92,7 +92,8 @@ export const replaceContent = ({
   codeViewInstanceModel: editor.ITextModel;
 }) => {
   const focusedNode = nodeTree[focusedItem];
-  const { startTag, endTag } = focusedNode.data.sourceCodeLocation;
+  const { startTag, endTag, startLine, endLine, startCol, endCol } =
+    focusedNode.data.sourceCodeLocation;
   if (startTag && endTag) {
     const edit = {
       range: new Range(
@@ -101,6 +102,12 @@ export const replaceContent = ({
         endTag.startLine,
         endTag.startCol,
       ),
+      text: content,
+    };
+    codeViewInstanceModel.applyEdits([edit]);
+  } else if (startLine && endLine && startCol && endCol) {
+    const edit = {
+      range: new Range(startLine, startCol, endLine, endCol),
       text: content,
     };
     codeViewInstanceModel.applyEdits([edit]);

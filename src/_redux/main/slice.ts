@@ -49,7 +49,7 @@ export const MainReducer = combineReducers({
 
   cmdk: CmdkReducer,
 
-  fileTree: FileTreeReducer,
+  file: FileTreeReducer,
   fileEvent: FileEventReducer,
 
   nodeTree: NodeTreeReducer,

@@ -8,7 +8,11 @@ export type TProjectReducerState = {
   projectHandlers: TFileHandlerCollection;
   currentProjectFileHandle: FileSystemDirectoryHandle | null;
   fileHandlers: TFileHandlerCollection;
-  recentProjectNames: string[];
-  recentProjectHandlers: (FileSystemDirectoryHandle | null)[];
-  recentProjectContexts: TProjectContext[];
+  recentProject: TRecentProject[];
+};
+
+export type TRecentProject = {
+  name: string;
+  handler: FileSystemDirectoryHandle | null;
+  context: TProjectContext;
 };

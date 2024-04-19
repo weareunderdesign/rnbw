@@ -1,6 +1,6 @@
 import { useCallback, useContext } from "react";
 
-import { getMany } from "idb-keyval";
+import { get } from "idb-keyval";
 import { useDispatch } from "react-redux";
 
 import { LogAllow } from "@_constants/global";
@@ -16,7 +16,8 @@ import { useAppState } from "@_redux/useAppState";
 
 export const useNavigatorPanelHandlers = () => {
   const dispatch = useDispatch();
-  const { fileTree, navigatorDropdownType, showFilePanel } = useAppState();
+  const { fileTree, navigatorDropdownType, showFilePanel, activePanel } =
+    useAppState();
 
   const {
     // open project
@@ -24,32 +25,25 @@ export const useNavigatorPanelHandlers = () => {
   } = useContext(MainContext);
 
   const onWorkspaceClick = useCallback(async () => {
-    const sessionInfo = await getMany([
-      "recent-project-context",
-      "recent-project-name",
-      "recent-project-handler",
-    ]);
-    if (
-      sessionInfo[0] &&
-      sessionInfo[1] &&
-      sessionInfo[2] &&
-      navigatorDropdownType !== "workspace"
-    ) {
+    const sessionInfo = await get("recent-project");
+    if (sessionInfo && navigatorDropdownType !== "workspace") {
       dispatch(setNavigatorDropdownType("workspace"));
     }
   }, [navigatorDropdownType]);
 
-  const onProjectClick = () => {
-    dispatch(setNavigatorDropdownType("project"));
-  };
+  const onProjectClick = useCallback(() => {
+    navigatorDropdownType !== "project" &&
+      dispatch(setNavigatorDropdownType("project"));
+  }, [navigatorDropdownType]);
 
-  const onFileClick = () => {
-    dispatch(setNavigatorDropdownType("project"));
-  };
+  const onFileClick = useCallback(() => {
+    navigatorDropdownType !== "project" &&
+      dispatch(setNavigatorDropdownType("project"));
+  }, [navigatorDropdownType]);
 
-  const onCloseDropDown = () => {
-    dispatch(setNavigatorDropdownType(null));
-  };
+  const onCloseDropDown = useCallback(() => {
+    navigatorDropdownType && dispatch(setNavigatorDropdownType(null));
+  }, [navigatorDropdownType]);
 
   const onOpenProject = useCallback(
     (project: TProject) => {
@@ -66,10 +60,10 @@ export const useNavigatorPanelHandlers = () => {
     [fileTree],
   );
 
-  const onPanelClick = () => {
-    dispatch(setActivePanel("file"));
+  const onPanelClick = useCallback(() => {
+    if (activePanel !== "file") dispatch(setActivePanel("file"));
     dispatch(setShowFilePanel(!showFilePanel));
-  };
+  }, [showFilePanel, activePanel]);
 
   return {
     onProjectClick,

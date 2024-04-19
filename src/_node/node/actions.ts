@@ -11,10 +11,10 @@ import {
   NodePathSplitter,
   RenameNodeActionPrefix,
 } from "@_constants/main";
-import { getValidNodeTree } from "@_pages/main/processor/helpers";
 import {
   setCopiedNodeDisplayName,
   setNeedToSelectNodePaths,
+  focusNodeTreeNode,
 } from "@_redux/main/nodeTree";
 import { THtmlReferenceData } from "@_types/main";
 
@@ -33,11 +33,15 @@ import {
 import { Dispatch } from "react";
 import { AnyAction } from "@reduxjs/toolkit";
 
+// helperModel added to update the code in the codeViewInstanceModel
+// once when the action is executed, this improves the History Management
+const helperModel = editor.createModel("", "html");
+
 const add = ({
   dispatch,
   actionName,
   referenceData,
-  nodeTree,
+  validNodeTree,
   selectedItems,
   codeViewInstanceModel,
   formatCode,
@@ -47,7 +51,7 @@ const add = ({
   dispatch: Dispatch<AnyAction>;
   actionName: string;
   referenceData: TNodeReferenceData;
-  nodeTree: TNodeTreeData;
+  validNodeTree: TNodeTreeData;
   selectedItems: TNodeUid[];
   codeViewInstanceModel: editor.ITextModel;
   formatCode: boolean;
@@ -55,31 +59,35 @@ const add = ({
   cb?: () => void;
 }) => {
   try {
+    helperModel.setValue(codeViewInstanceModel.getValue());
+
+    const commentTag = "!--...--";
     const tagName = actionName.slice(
       AddNodeActionPrefix.length + 2,
       actionName.length - 1,
     );
     const htmlReferenceData = referenceData as THtmlReferenceData;
-    const HTMLElement = htmlReferenceData.elements[tagName];
+    const HTMLElement =
+      htmlReferenceData.elements[tagName === commentTag ? "comment" : tagName];
 
-    let openingTag = HTMLElement.Tag;
-    if (HTMLElement.Attributes) {
-      const tagArray = openingTag.split("");
-      tagArray.splice(tagArray.length - 1, 0, ` ${HTMLElement.Attributes}`);
-      openingTag = tagArray.join("");
+    let openingTag = HTMLElement?.Tag || "";
+    if (HTMLElement?.Attributes) {
+      openingTag = openingTag.replace(">", ` ${HTMLElement.Attributes}>`);
     }
     const closingTag = `</${tagName}>`;
 
-    const tagContent = HTMLElement.Content ? HTMLElement.Content : "";
+    const tagContent = HTMLElement?.Content || "";
 
     const codeViewText =
-      HTMLElement.Contain === "None"
-        ? openingTag
-        : `${openingTag}${tagContent}${closingTag}`;
+      tagName === commentTag
+        ? tagContent
+        : HTMLElement?.Contain === "None"
+          ? openingTag
+          : `${openingTag}${tagContent}${closingTag}`;
 
-    const sortedUids = sortUidsByMaxEndIndex(selectedItems, nodeTree);
+    const sortedUids = sortUidsByMaxEndIndex(selectedItems, validNodeTree);
     sortedUids.forEach((uid) => {
-      const node = nodeTree[uid];
+      const node = validNodeTree[uid];
       if (node) {
         const { endCol, endLine } = node.data.sourceCodeLocation;
 
@@ -87,14 +95,13 @@ const add = ({
           range: new Range(endLine, endCol, endLine, endCol),
           text: codeViewText,
         };
-        codeViewInstanceModel.applyEdits([edit]);
+        helperModel.applyEdits([edit]);
       }
     });
 
     // predict needToSelectNodePaths
     const needToSelectNodePaths = (() => {
       const needToSelectNodePaths: string[] = [];
-      const validNodeTree = getValidNodeTree(nodeTree);
       const sortedUids = sortUidsByMinStartIndex(selectedItems, validNodeTree);
       const addedChildCount: { [uid: TNodeUid]: number } = {};
       sortedUids.map((uid) => {
@@ -112,8 +119,8 @@ const add = ({
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
     const code = formatCode
-      ? html_beautify(codeViewInstanceModel.getValue())
-      : codeViewInstanceModel.getValue();
+      ? html_beautify(helperModel.getValue())
+      : helperModel.getValue();
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
@@ -123,10 +130,16 @@ const add = ({
   }
 };
 function remove({
-  dispatch, nodeTree, selectedUids, codeViewInstanceModel, formatCode, fb, cb,
+  dispatch,
+  validNodeTree,
+  selectedUids,
+  codeViewInstanceModel,
+  formatCode,
+  fb,
+  cb,
 }: {
   dispatch: Dispatch<AnyAction>;
-  nodeTree: TNodeTreeData;
+  validNodeTree: TNodeTreeData;
   selectedUids: TNodeUid[];
   codeViewInstanceModel: editor.ITextModel;
   formatCode: boolean;
@@ -134,24 +147,27 @@ function remove({
   cb?: () => void;
 }) {
   try {
-    const sortedUids = sortUidsByMaxEndIndex(selectedUids, nodeTree);
+    helperModel.setValue(codeViewInstanceModel.getValue());
+
+    const sortedUids = sortUidsByMaxEndIndex(selectedUids, validNodeTree);
     sortedUids.forEach((uid) => {
-      const node = nodeTree[uid];
+      const node = validNodeTree[uid];
       if (node) {
-        const { startCol, startLine, endCol, endLine } = node.data.sourceCodeLocation;
+        const { startCol, startLine, endCol, endLine } =
+          node.data.sourceCodeLocation;
         const edit = {
           range: new Range(startLine, startCol, endLine, endCol),
           text: "",
         };
-        codeViewInstanceModel.applyEdits([edit]);
+        helperModel.applyEdits([edit]);
       }
     });
 
     dispatch(setNeedToSelectNodePaths([]));
 
     const code = formatCode
-      ? html_beautify(codeViewInstanceModel.getValue())
-      : codeViewInstanceModel.getValue();
+      ? html_beautify(helperModel.getValue())
+      : helperModel.getValue();
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
@@ -163,7 +179,7 @@ function remove({
 
 const cut = async ({
   dispatch,
-  nodeTree,
+  validNodeTree,
   selectedUids,
   codeViewInstanceModel,
   formatCode,
@@ -171,7 +187,7 @@ const cut = async ({
   cb,
 }: {
   dispatch: Dispatch<AnyAction>;
-  nodeTree: TNodeTreeData;
+  validNodeTree: TNodeTreeData;
   selectedUids: TNodeUid[];
   codeViewInstanceModel: editor.ITextModel;
   formatCode: boolean;
@@ -179,24 +195,30 @@ const cut = async ({
   cb?: () => void;
 }) => {
   try {
-    await copy({ dispatch, nodeTree, selectedUids, codeViewInstanceModel });
+    helperModel.setValue(codeViewInstanceModel.getValue());
+
+    await copy({
+      dispatch,
+      validNodeTree,
+      selectedUids,
+      codeViewInstanceModel: helperModel,
+    });
     dispatch(
       setCopiedNodeDisplayName(
-        selectedUids.map((uid) => `Node-<${nodeTree[uid].displayName}>`),
+        selectedUids.map((uid) => `Node-<${validNodeTree[uid].displayName}>`),
       ),
     );
     remove({
       dispatch,
-      nodeTree,
+      validNodeTree,
       selectedUids: selectedUids,
-      codeViewInstanceModel,
+      codeViewInstanceModel: helperModel,
       formatCode,
     });
 
     // predict needToSelectNodePaths
     const needToSelectNodePaths = (() => {
       const needToSelectNodePaths: string[] = [];
-      const validNodeTree = getValidNodeTree(nodeTree);
       const sortedUids = sortUidsByMinStartIndex(selectedUids, validNodeTree);
       const removedChildCount: { [uid: TNodeUid]: number } = {};
       sortedUids.map((uid) => {
@@ -221,7 +243,10 @@ const cut = async ({
     })();
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
-    const code = html_beautify(codeViewInstanceModel.getValue());
+    const code = formatCode
+      ? html_beautify(helperModel.getValue())
+      : helperModel.getValue();
+
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
@@ -232,23 +257,23 @@ const cut = async ({
 };
 const copy = async ({
   dispatch,
-  nodeTree,
+  validNodeTree,
   selectedUids,
   codeViewInstanceModel,
   fb,
   cb,
 }: {
   dispatch: Dispatch<AnyAction>;
-  nodeTree: TNodeTreeData;
+  validNodeTree: TNodeTreeData;
   selectedUids: TNodeUid[];
   codeViewInstanceModel: editor.ITextModel;
   fb?: () => void;
   cb?: () => void;
 }) => {
   try {
-    const sortedUids = sortUidsByMinStartIndex(selectedUids, nodeTree);
+    const sortedUids = sortUidsByMinStartIndex(selectedUids, validNodeTree);
     const copiedCode = copyCode({
-      nodeTree,
+      validNodeTree,
       uids: sortedUids,
       codeViewInstanceModel,
     });
@@ -256,14 +281,13 @@ const copy = async ({
 
     dispatch(
       setCopiedNodeDisplayName(
-        selectedUids.map((uid) => `Node-<${nodeTree[uid].displayName}>`),
+        selectedUids.map((uid) => `Node-<${validNodeTree[uid].displayName}>`),
       ),
     );
 
     // predict needToSelectNodePaths
     const needToSelectNodePaths = (() => {
       const needToSelectNodePaths: string[] = [];
-      const validNodeTree = getValidNodeTree(nodeTree);
       selectedUids.map((uid) => {
         const node = validNodeTree[uid];
         needToSelectNodePaths.push(node.data.path);
@@ -280,7 +304,7 @@ const copy = async ({
 };
 const paste = async ({
   dispatch,
-  nodeTree,
+  validNodeTree,
   targetUid,
   codeViewInstanceModel,
   spanPaste,
@@ -289,7 +313,7 @@ const paste = async ({
   cb,
 }: {
   dispatch: Dispatch<AnyAction>;
-  nodeTree: TNodeTreeData;
+  validNodeTree: TNodeTreeData;
   targetUid: TNodeUid;
   codeViewInstanceModel: editor.ITextModel;
   spanPaste?: boolean;
@@ -298,22 +322,20 @@ const paste = async ({
   cb?: () => void;
 }) => {
   try {
+    helperModel.setValue(codeViewInstanceModel.getValue());
+
     let code = await window.navigator.clipboard.readText();
     if (spanPaste) code = `<span>${code}</span>`;
-    else {
-      code = `<div>${code}</div>`;
-    }
     pasteCode({
-      nodeTree,
+      validNodeTree,
       focusedItem: targetUid,
-      codeViewInstanceModel,
+      codeViewInstanceModel: helperModel,
       code,
     });
 
     // predict needToSelectNodePaths
     const needToSelectNodePaths = (() => {
       const needToSelectNodePaths: string[] = [];
-      const validNodeTree = getValidNodeTree(nodeTree);
       const focusedNode = validNodeTree[targetUid];
       const parentNode = validNodeTree[focusedNode.parentUid as TNodeUid];
       const focusedNodeChildIndex = getNodeChildIndex(parentNode, focusedNode);
@@ -343,8 +365,8 @@ const paste = async ({
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
     code = formatCode
-      ? html_beautify(codeViewInstanceModel.getValue())
-      : codeViewInstanceModel.getValue();
+      ? html_beautify(helperModel.getValue())
+      : helperModel.getValue();
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
@@ -355,7 +377,7 @@ const paste = async ({
 };
 const duplicate = ({
   dispatch,
-  nodeTree,
+  validNodeTree,
   selectedUids,
   codeViewInstanceModel,
   formatCode,
@@ -363,7 +385,7 @@ const duplicate = ({
   cb,
 }: {
   dispatch: Dispatch<AnyAction>;
-  nodeTree: TNodeTreeData;
+  validNodeTree: TNodeTreeData;
   selectedUids: TNodeUid[];
   codeViewInstanceModel: editor.ITextModel;
   formatCode: boolean;
@@ -371,9 +393,11 @@ const duplicate = ({
   cb?: () => void;
 }) => {
   try {
-    const sortedUids = sortUidsByMaxEndIndex(selectedUids, nodeTree);
+    helperModel.setValue(codeViewInstanceModel.getValue());
+
+    const sortedUids = sortUidsByMaxEndIndex(selectedUids, validNodeTree);
     sortedUids.forEach((uid) => {
-      const node = nodeTree[uid];
+      const node = validNodeTree[uid];
       if (node) {
         const { startCol, startLine, endCol, endLine } =
           node.data.sourceCodeLocation;
@@ -384,14 +408,13 @@ const duplicate = ({
           range: new Range(endLine, endCol, endLine, endCol),
           text,
         };
-        codeViewInstanceModel.applyEdits([edit]);
+        helperModel.applyEdits([edit]);
       }
     });
 
     // predict needToSelectNodePaths
     const needToSelectNodePaths = (() => {
       const needToSelectNodePaths: string[] = [];
-      const validNodeTree = getValidNodeTree(nodeTree);
       const sortedUids = sortUidsByMinStartIndex(selectedUids, validNodeTree);
       const addedChildCount: { [uid: TNodeUid]: number } = {};
       sortedUids.map((uid) => {
@@ -411,8 +434,8 @@ const duplicate = ({
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
     const code = formatCode
-      ? html_beautify(codeViewInstanceModel.getValue())
-      : codeViewInstanceModel.getValue();
+      ? html_beautify(helperModel.getValue())
+      : helperModel.getValue();
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
@@ -424,7 +447,7 @@ const duplicate = ({
 
 const move = ({
   dispatch,
-  nodeTree,
+  validNodeTree,
   selectedUids,
   targetUid,
   isBetween,
@@ -435,7 +458,7 @@ const move = ({
   cb,
 }: {
   dispatch: Dispatch<AnyAction>;
-  nodeTree: TNodeTreeData;
+  validNodeTree: TNodeTreeData;
   selectedUids: TNodeUid[];
   targetUid: TNodeUid;
   isBetween: boolean;
@@ -446,7 +469,9 @@ const move = ({
   cb?: () => void;
 }) => {
   try {
-    const targetNode = getValidNodeTree(nodeTree)[targetUid];
+    helperModel.setValue(codeViewInstanceModel.getValue());
+
+    const targetNode = validNodeTree[targetUid];
     const childCount = targetNode.children.length;
 
     const focusedItem = isBetween
@@ -454,13 +479,13 @@ const move = ({
       : targetNode.children[0];
     const sortedUids = sortUidsByMaxEndIndex(
       [...selectedUids, focusedItem],
-      nodeTree,
+      validNodeTree,
     );
 
     let code = copyCode({
-      nodeTree,
+      validNodeTree,
       uids: selectedUids,
-      codeViewInstanceModel,
+      codeViewInstanceModel: helperModel,
     });
 
     let isFirst = true; // isFirst is used to when drop focusedItem to itself
@@ -469,24 +494,24 @@ const move = ({
         isFirst = false;
         focusedItem
           ? pasteCode({
-              nodeTree,
+              validNodeTree,
               focusedItem,
               addToBefore: (isBetween && position === 0) || position === 0,
-              codeViewInstanceModel,
+              codeViewInstanceModel: helperModel,
               code,
             })
           : pasteCodeInsideEmpty({
-              nodeTree,
+              validNodeTree,
               focusedItem: targetNode.uid,
-              codeViewInstanceModel,
+              codeViewInstanceModel: helperModel,
               code,
             });
       } else {
         remove({
           dispatch,
-          nodeTree,
+          validNodeTree,
           selectedUids: [uid],
-          codeViewInstanceModel,
+          codeViewInstanceModel: helperModel,
           formatCode,
         });
       }
@@ -495,7 +520,6 @@ const move = ({
     // predict needToSelectNodePaths
     const needToSelectNodePaths = (() => {
       const needToSelectNodePaths: string[] = [];
-      const validNodeTree = getValidNodeTree(nodeTree);
       const targetNode = validNodeTree[targetUid];
 
       let directChildCount = 0;
@@ -523,8 +547,8 @@ const move = ({
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
     code = formatCode
-      ? html_beautify(codeViewInstanceModel.getValue())
-      : codeViewInstanceModel.getValue();
+      ? html_beautify(helperModel.getValue())
+      : helperModel.getValue();
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
@@ -538,7 +562,7 @@ const rename = ({
   dispatch,
   actionName,
   referenceData,
-  nodeTree,
+  validNodeTree,
   targetUid,
   codeViewInstanceModel,
   formatCode,
@@ -548,7 +572,7 @@ const rename = ({
   dispatch: Dispatch<AnyAction>;
   actionName: string;
   referenceData: THtmlReferenceData;
-  nodeTree: TNodeTreeData;
+  validNodeTree: TNodeTreeData;
   targetUid: TNodeUid;
   codeViewInstanceModel: editor.ITextModel;
   formatCode: boolean;
@@ -556,6 +580,8 @@ const rename = ({
   cb?: () => void;
 }) => {
   try {
+    helperModel.setValue(codeViewInstanceModel.getValue());
+
     const tagName = actionName.slice(
       RenameNodeActionPrefix.length + 2,
       actionName.length - 1,
@@ -563,15 +589,13 @@ const rename = ({
     const htmlReferenceData = referenceData as THtmlReferenceData;
     const HTMLElement = htmlReferenceData.elements[tagName];
 
-    let openingTag = HTMLElement.Tag;
-    if (HTMLElement.Attributes) {
+    let openingTag = HTMLElement?.Tag;
+    if (HTMLElement?.Attributes) {
       const tagArray = openingTag.split("");
-      tagArray.splice(tagArray.length - 1, 0, ` ${HTMLElement.Attributes}`);
+      tagArray.splice(tagArray.length - 1, 0, ` ${HTMLElement?.Attributes}`);
       openingTag = tagArray.join("");
     }
     const closingTag = `</${tagName}>`;
-
-    
 
     // **********************************************************
     // will replace with pureTagCode when we will not want to keep origianl innerHtml of the target node
@@ -582,33 +606,32 @@ const rename = ({
     //     ? openingTag
     //     : `${openingTag}${tagContent}${closingTag}`;
 
-    const focusedNode = nodeTree[targetUid];
+    const focusedNode = validNodeTree[targetUid];
 
     let code = copyCode({
-      nodeTree,
+      validNodeTree,
       uids: focusedNode.children,
-      codeViewInstanceModel,
+      codeViewInstanceModel: helperModel,
     });
     const codeToAdd = `${openingTag}${code}${closingTag}`;
     remove({
       dispatch,
-      nodeTree,
+      validNodeTree,
       selectedUids: [targetUid],
-      codeViewInstanceModel,
+      codeViewInstanceModel: helperModel,
       formatCode,
     });
     pasteCode({
-      nodeTree,
+      validNodeTree,
       focusedItem: targetUid,
       addToBefore: true,
-      codeViewInstanceModel,
+      codeViewInstanceModel: helperModel,
       code: codeToAdd,
     });
 
     // predict needToSelectNodePaths
     const needToSelectNodePaths = (() => {
       const needToSelectNodePaths: string[] = [];
-      const validNodeTree = getValidNodeTree(nodeTree);
       const focusedNode = validNodeTree[targetUid];
       const parentNode = validNodeTree[focusedNode.parentUid as TNodeUid];
       const focusedNodeChildIndex = getNodeChildIndex(parentNode, focusedNode);
@@ -619,8 +642,8 @@ const rename = ({
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
     code = formatCode
-      ? html_beautify(codeViewInstanceModel.getValue())
-      : codeViewInstanceModel.getValue();
+      ? html_beautify(helperModel.getValue())
+      : helperModel.getValue();
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
@@ -632,7 +655,7 @@ const rename = ({
 
 const group = ({
   dispatch,
-  nodeTree,
+  validNodeTree,
   selectedUids,
   codeViewInstanceModel,
   formatCode,
@@ -640,7 +663,7 @@ const group = ({
   cb,
 }: {
   dispatch: Dispatch<AnyAction>;
-  nodeTree: TNodeTreeData;
+  validNodeTree: TNodeTreeData;
   selectedUids: TNodeUid[];
   codeViewInstanceModel: editor.ITextModel;
   formatCode: boolean;
@@ -648,32 +671,35 @@ const group = ({
   cb?: () => void;
 }) => {
   try {
-    const sortedUids = sortUidsByMinStartIndex(selectedUids, nodeTree);
+    helperModel.setValue(codeViewInstanceModel.getValue());
+
+    const sortedUids = sortUidsByMinStartIndex(selectedUids, validNodeTree);
     let code = copyCode({
-      nodeTree,
+      validNodeTree,
       uids: sortedUids,
-      codeViewInstanceModel,
+      codeViewInstanceModel: helperModel,
     });
     remove({
       dispatch,
-      nodeTree,
+      validNodeTree,
       selectedUids: selectedUids,
-      codeViewInstanceModel,
+      codeViewInstanceModel: helperModel,
       formatCode,
     });
 
     const { startLine, startCol } =
-      nodeTree[sortedUids[0]].data.sourceCodeLocation;
+      validNodeTree[sortedUids[0]].data.sourceCodeLocation;
+
+    code = `<div>${code}</div>`;
     const edit = {
       range: new Range(startLine, startCol, startLine, startCol),
-      text: `<div>${code}</div>`,
+      text: code,
     };
-    codeViewInstanceModel.applyEdits([edit]);
+    helperModel.applyEdits([edit]);
 
     // predict needToSelectNodePaths
     const needToSelectNodePaths = (() => {
       const needToSelectNodePaths: string[] = [];
-      const validNodeTree = getValidNodeTree(nodeTree);
       const sortedUids = sortUidsByMinStartIndex(selectedUids, validNodeTree);
       const targetNode = validNodeTree[sortedUids[0]];
       const targetParentNode = validNodeTree[targetNode.parentUid as TNodeUid];
@@ -689,8 +715,8 @@ const group = ({
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
     code = formatCode
-      ? html_beautify(codeViewInstanceModel.getValue())
-      : codeViewInstanceModel.getValue();
+      ? html_beautify(helperModel.getValue())
+      : helperModel.getValue();
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
@@ -702,7 +728,7 @@ const group = ({
 
 const ungroup = ({
   dispatch,
-  nodeTree,
+  validNodeTree,
   selectedUids,
   codeViewInstanceModel,
   formatCode,
@@ -710,7 +736,7 @@ const ungroup = ({
   cb,
 }: {
   dispatch: Dispatch<AnyAction>;
-  nodeTree: TNodeTreeData;
+  validNodeTree: TNodeTreeData;
   selectedUids: TNodeUid[];
   codeViewInstanceModel: editor.ITextModel;
   formatCode: boolean;
@@ -718,35 +744,36 @@ const ungroup = ({
   cb?: () => void;
 }) => {
   try {
-    const sortedUids = sortUidsByMaxEndIndex(selectedUids, nodeTree);
+    helperModel.setValue(codeViewInstanceModel.getValue());
+
+    const sortedUids = sortUidsByMaxEndIndex(selectedUids, validNodeTree);
     sortedUids.map((uid) => {
-      const node = nodeTree[uid];
+      const node = validNodeTree[uid];
       if (node.children.length === 0) return;
 
       const { startLine, startCol } = node.data.sourceCodeLocation;
       const code = copyCode({
-        nodeTree,
+        validNodeTree,
         uids: node.children,
-        codeViewInstanceModel,
+        codeViewInstanceModel: helperModel,
       });
       remove({
         dispatch,
-        nodeTree,
+        validNodeTree,
         selectedUids: [uid],
-        codeViewInstanceModel,
+        codeViewInstanceModel: helperModel,
         formatCode,
       });
       const edit = {
         range: new Range(startLine, startCol, startLine, startCol),
         text: code,
       };
-      codeViewInstanceModel.applyEdits([edit]);
+      helperModel.applyEdits([edit]);
     });
 
     // predict needToSelectNodePaths
     const needToSelectNodePaths = (() => {
       const needToSelectNodePaths: string[] = [];
-      const validNodeTree = getValidNodeTree(nodeTree);
       const sortedUids = sortUidsByMinStartIndex(selectedUids, validNodeTree);
       const addedChildCount: { [uid: TNodeUid]: number } = {};
       sortedUids.map((uid) => {
@@ -773,8 +800,8 @@ const ungroup = ({
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
     const code = formatCode
-      ? html_beautify(codeViewInstanceModel.getValue())
-      : codeViewInstanceModel.getValue();
+      ? html_beautify(helperModel.getValue())
+      : helperModel.getValue();
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
@@ -785,6 +812,7 @@ const ungroup = ({
 };
 
 const edit = ({
+  dispatch,
   nodeTree,
   targetUid,
   content,
@@ -793,6 +821,7 @@ const edit = ({
   fb,
   cb,
 }: {
+  dispatch: Dispatch<AnyAction>;
   nodeTree: TNodeTreeData;
   targetUid: TNodeUid;
   content: string;
@@ -802,17 +831,21 @@ const edit = ({
   cb?: () => void;
 }) => {
   try {
+    helperModel.setValue(codeViewInstanceModel.getValue());
+
     replaceContent({
       nodeTree,
       focusedItem: targetUid,
       content,
-      codeViewInstanceModel,
+      codeViewInstanceModel: helperModel,
     });
 
     const code = formatCode
-      ? html_beautify(codeViewInstanceModel.getValue())
-      : codeViewInstanceModel.getValue();
+      ? html_beautify(helperModel.getValue())
+      : helperModel.getValue();
     codeViewInstanceModel.setValue(code);
+
+    dispatch(focusNodeTreeNode(targetUid));
 
     cb && cb();
   } catch (err) {
@@ -824,22 +857,28 @@ const edit = ({
 export const addAttr = ({
   attrName,
   attrValue,
-  nodeTree,
+  validNodeTree,
   focusedItem,
   codeViewInstanceModel,
+  formatCode,
+  dispatch,
   cb,
   fb,
 }: {
+  dispatch: Dispatch<AnyAction>;
   attrName: string;
   attrValue: string;
-  nodeTree: TNodeTreeData;
+  validNodeTree: TNodeTreeData;
   focusedItem: TNodeUid;
   codeViewInstanceModel: editor.ITextModel;
+  formatCode: boolean;
   cb?: () => void;
   fb?: () => void;
 }) => {
   try {
-    const focusedNode = nodeTree[focusedItem];
+    helperModel.setValue(codeViewInstanceModel.getValue());
+
+    const focusedNode = validNodeTree[focusedItem];
     const { startTag } = focusedNode.data.sourceCodeLocation;
 
     const text = codeViewInstanceModel.getValueInRange(
@@ -851,7 +890,7 @@ export const addAttr = ({
       ),
     );
     const attr = `${attrName}="${attrValue}"`;
-    const pattern = new RegExp(`${attrName}="(.*?)"`, "g");
+    const pattern = new RegExp(`${attrName}=(["'])(.*?)\\1`, "g");
     const replace = pattern.test(text);
     const content = replace ? text.replace(pattern, attr) : ` ${attr}`;
 
@@ -872,8 +911,23 @@ export const addAttr = ({
             ),
         text: content,
       };
-      codeViewInstanceModel.applyEdits([edit]);
+      helperModel.applyEdits([edit]);
     }
+
+    // predict needToSelectNodePaths
+    const needToSelectNodePaths = (() => {
+      const needToSelectNodePaths: string[] = [];
+      const focusedNode = validNodeTree[focusedItem];
+      const newNodePath = focusedNode.data.path;
+      needToSelectNodePaths.push(newNodePath);
+      return needToSelectNodePaths;
+    })();
+    dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
+
+    const code = formatCode
+      ? html_beautify(helperModel.getValue())
+      : helperModel.getValue();
+    codeViewInstanceModel.setValue(code);
 
     cb && cb();
   } catch (err) {
@@ -882,24 +936,30 @@ export const addAttr = ({
   }
 };
 export const removeAttr = ({
+  dispatch,
   attrName,
   attrValue,
-  nodeTree,
+  validNodeTree,
   focusedItem,
   codeViewInstanceModel,
+  formatCode,
   cb,
   fb,
 }: {
+  dispatch: Dispatch<AnyAction>;
   attrName: string;
   attrValue?: string;
-  nodeTree: TNodeTreeData;
+  validNodeTree: TNodeTreeData;
   focusedItem: TNodeUid;
   codeViewInstanceModel: editor.ITextModel;
+  formatCode: boolean;
   cb?: () => void;
   fb?: () => void;
 }) => {
   try {
-    const focusedNode = nodeTree[focusedItem];
+    helperModel.setValue(codeViewInstanceModel.getValue());
+
+    const focusedNode = validNodeTree[focusedItem];
     const { startTag } = focusedNode.data.sourceCodeLocation;
 
     const text = codeViewInstanceModel.getValueInRange(
@@ -911,7 +971,7 @@ export const removeAttr = ({
       ),
     );
 
-    const pattern = new RegExp(`${attrName}="${attrValue}"`, "g");
+    const pattern = new RegExp(`${attrName}=(["'])${attrValue}\\1`, "g");
     const singleAttrPattern = new RegExp(`${attrName}`, "g");
     const content = pattern.test(text)
       ? text.replace(pattern, "")
@@ -927,8 +987,22 @@ export const removeAttr = ({
         ),
         text: content,
       };
-      codeViewInstanceModel.applyEdits([edit]);
+      helperModel.applyEdits([edit]);
     }
+    // predict needToSelectNodePaths
+    const needToSelectNodePaths = (() => {
+      const needToSelectNodePaths: string[] = [];
+      const focusedNode = validNodeTree[focusedItem];
+      const newNodePath = focusedNode.data.path;
+      needToSelectNodePaths.push(newNodePath);
+      return needToSelectNodePaths;
+    })();
+    dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
+
+    const code = formatCode
+      ? html_beautify(helperModel.getValue())
+      : helperModel.getValue();
+    codeViewInstanceModel.setValue(code);
 
     cb && cb();
   } catch (err) {

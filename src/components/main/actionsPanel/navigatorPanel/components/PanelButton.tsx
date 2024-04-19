@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 
 import { SVGIconI } from "@_components/common";
-import { setShowActionsPanel } from "@_redux/main/processor";
+import { setActivePanel, setShowActionsPanel } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 
 export const PanelButton = () => {
@@ -37,6 +37,7 @@ export const PanelButton = () => {
       onClick={(e) => {
         e.stopPropagation();
         dispatch(setShowActionsPanel(!showActionsPanel));
+        dispatch(setActivePanel("none"));
       }}
     >
       <SVGIconI {...{ class: "icon-xs" }}>

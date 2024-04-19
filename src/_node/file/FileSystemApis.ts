@@ -102,7 +102,10 @@ const removeSingleLocalDirectoryOrFile = async ({
     const entryName =
       nodeData.kind === "directory"
         ? nodeData.name
-        : `${nodeData.name}.${nodeData.ext}`;
+        : nodeData.ext
+          ? `${nodeData.name}.${nodeData.ext}`
+          : `${nodeData.name}`;
+
     await parentHandler.removeEntry(entryName, { recursive: true });
     return true;
   } catch (err) {

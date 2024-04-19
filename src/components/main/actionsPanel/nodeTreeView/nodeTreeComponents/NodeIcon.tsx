@@ -11,11 +11,9 @@ const spanStyles: React.CSSProperties = {
 
 export const NodeIcon = ({
   htmlElementReferenceData,
-  nodeName,
   componentTitle,
 }: {
   htmlElementReferenceData: THtmlElementsReference;
-  nodeName: string;
   componentTitle?: React.ReactNode;
 }) => {
   let icon = "component";
@@ -23,9 +21,6 @@ export const NodeIcon = ({
   if (htmlElementReferenceData) {
     icon = htmlElementReferenceData["Icon"];
     name = htmlElementReferenceData["Name"];
-  } else if (nodeName === "!--...--" || nodeName === "comment") {
-    icon = "bubble";
-    name = "comment";
   }
 
   return (

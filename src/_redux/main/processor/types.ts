@@ -1,8 +1,6 @@
 import { TNodeUid } from "@_node/index";
 
 export type TProcessorReducerState = {
-  doingAction: boolean;
-
   navigatorDropdownType: TNavigatorDropdownType;
   favicon: string;
 
@@ -19,6 +17,7 @@ export type TProcessorReducerState = {
   didUndo: boolean;
   didRedo: boolean;
   loading: number;
+  runningAction: number;
 };
 
 export type TNavigatorDropdownType = "workspace" | "project" | null;

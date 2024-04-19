@@ -1,7 +1,5 @@
-/* eslint-disable react/prop-types */
-/* eslint-disable react/display-name */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { FC, useEffect } from "react";
+import React, { useEffect } from "react";
 import { DraggingPosition, DraggingPositionItem } from "react-complex-tree";
 
 import { addClass, removeClass } from "@_services/main";
@@ -10,8 +8,8 @@ interface DragBetweenLine {
   lineProps: React.HTMLProps<any>;
 }
 
-export const DragBetweenLine: FC<DragBetweenLine> = React.memo(
-  ({ draggingPosition, lineProps }) => {
+export const DragBetweenLine = React.memo(
+  ({ draggingPosition, lineProps }: DragBetweenLine) => {
     const parentUid = (draggingPosition as DraggingPositionItem).parentItem;
 
     useEffect(() => {
@@ -53,3 +51,5 @@ export const DragBetweenLine: FC<DragBetweenLine> = React.memo(
     );
   },
 );
+
+DragBetweenLine.displayName = "DragBetweenLine";

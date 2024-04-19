@@ -1,4 +1,4 @@
-import { useCallback, useContext } from "react";
+import { useCallback, useContext, useMemo } from "react";
 
 import { TreeItem } from "react-complex-tree";
 import { useDispatch } from "react-redux";
@@ -22,7 +22,7 @@ import {
 } from "@_node/file";
 import { getValidNodeUids } from "@_node/helpers";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
-import { clearFileSession } from "@_pages/main/helper";
+import { clearFileSession, getObjKeys } from "@_pages/main/helper";
 import { MainContext } from "@_redux/main";
 import {
   addInvalidFileNodes,
@@ -36,7 +36,11 @@ import {
   TFileAction,
 } from "@_redux/main/fileTree";
 import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
-import { setClipboardData, setShowCodeView } from "@_redux/main/processor";
+import {
+  addRunningAction,
+  removeRunningAction,
+  setClipboardData,
+} from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 
 export const useNodeActionsHandler = () => {
@@ -48,18 +52,18 @@ export const useNodeActionsHandler = () => {
     showCodeView,
     fFocusedItem: focusedItem,
     fExpandedItemsObj: expandedItemsObj,
-    fSelectedItems: selectedItems,
+    fSelectedItemsObj,
     clipboardData,
     webComponentOpen,
     htmlReferenceData,
     fileHandlers,
     invalidFileNodes,
   } = useAppState();
-  const {
-    addRunningActions,
-    removeRunningActions,
-    triggerCurrentProjectReload,
-  } = useContext(MainContext);
+  const { triggerCurrentProjectReload } = useContext(MainContext);
+  const selectedItems = useMemo(
+    () => getObjKeys(fSelectedItemsObj),
+    [fSelectedItemsObj],
+  );
 
   // Add & Remove
   const onAdd = useCallback(
@@ -120,7 +124,6 @@ export const useNodeActionsHandler = () => {
         LogAllow && console.error("error while removing file system");
       },
       cb: (allDone: boolean | undefined) => {
-
         LogAllow &&
           console.log(
             allDone ? "all is successfully removed" : "some is not removed",
@@ -199,7 +202,6 @@ export const useNodeActionsHandler = () => {
         LogAllow && console.error("error while pasting file system");
       },
       cb: (allDone: boolean | undefined) => {
-
         LogAllow &&
           console.log(
             allDone ? "all is successfully pasted" : "some is not pasted",
@@ -277,7 +279,6 @@ export const useNodeActionsHandler = () => {
         LogAllow && console.error("error while duplicating file system");
       },
       cb: (allDone: boolean | unknown) => {
-
         LogAllow &&
           console.log(
             allDone
@@ -364,7 +365,7 @@ export const useNodeActionsHandler = () => {
           fb: () => {
             LogAllow && console.error("error while renaming file system");
           },
-          cb: (allDone: boolean|undefined) => {
+          cb: (allDone: boolean | undefined) => {
             LogAllow &&
               console.log(allDone ? "successfully renamed" : "not renamed");
             // add to event history
@@ -418,16 +419,16 @@ export const useNodeActionsHandler = () => {
   );
   const cb_readNode = useCallback(
     (uid: TNodeUid) => {
-      addRunningActions(["fileTreeView-read"]);
+      dispatch(addRunningAction());
 
       // validate
       if (invalidFileNodes[uid]) {
-        removeRunningActions(["fileTreeView-read"]);
+        dispatch(removeRunningAction());
         return;
       }
       const node = structuredClone(fileTree[uid]);
       if (node === undefined || !node.isEntity || currentFileUid === uid) {
-        removeRunningActions(["fileTreeView-read"]);
+        dispatch(removeRunningAction());
         return;
       }
 
@@ -452,16 +453,11 @@ export const useNodeActionsHandler = () => {
       if (!webComponentOpen) {
         clearFileSession(dispatch);
       }
-      dispatch(setCurrentFileUid(uid));
+      currentFileUid !== uid && dispatch(setCurrentFileUid(uid));
       dispatch(setCurrentFileContent(nodeData.content));
-
-      removeRunningActions(["fileTreeView-read"]);
-
-      showCodeView === false && dispatch(setShowCodeView(true));
+      dispatch(removeRunningAction());
     },
     [
-      addRunningActions,
-      removeRunningActions,
       invalidFileNodes,
       fileTree,
       currentFileUid,
@@ -512,7 +508,7 @@ export const useNodeActionsHandler = () => {
         fb: () => {
           LogAllow && console.error("error while moving file system");
         },
-        cb: (allDone: boolean|undefined) => {
+        cb: (allDone: boolean | undefined) => {
           LogAllow &&
             console.log(
               allDone ? "all is successfully moved" : "some is not moved",
