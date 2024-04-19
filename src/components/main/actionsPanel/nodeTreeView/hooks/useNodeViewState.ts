@@ -18,7 +18,7 @@ export function useNodeViewState() {
   const {
     fileTree,
     currentFileUid,
-    prevRenderableFileUid,
+    renderableFileUid,
 
     validNodeTree,
     nSelectedItemsObj: selectedItemsObj,
@@ -48,23 +48,12 @@ export function useNodeViewState() {
         }
       }
       dispatch(setSelectedNodeUids(_uids));
-
-      // update file - WIP
-      if (currentFileUid !== prevRenderableFileUid) {
-        // const file = fileTree[prevRenderableFileUid];
-        // const fileData = file.data as TFileNodeData;
-        // dispatch(setCurrentFileUid(prevRenderableFileUid));
-        // dispatch(setCurrentFileContent(fileData.content));
-        // dispatch(selectFileTreeNodes([prevRenderableFileUid]));
-        // dispatch({ type: NodeTree_Event_ClearActionType });
-      }
-
       dispatch(removeRunningAction());
     },
     [
       fileTree,
       currentFileUid,
-      prevRenderableFileUid,
+      renderableFileUid,
       validNodeTree,
       selectedItemsObj,
     ],
