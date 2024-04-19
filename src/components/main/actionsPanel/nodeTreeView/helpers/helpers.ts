@@ -170,19 +170,61 @@ export const getDropOptions = (
 
   return { position, isBetween, order, targetendOffset, targetUid };
 };
+export const addTextNodeToElements = (data: TCmdkGroupData) => {
+  data["Elements"].push({
+    Featured: false,
+    Name: "text",
+    Icon: "comment",
+    Description: "text element",
+    "Keyboard Shortcut": [
+      {
+        cmd: false,
+        shift: false,
+        alt: false,
+        key: "",
+        click: false,
+      },
+    ],
+    Group: "",
+    Context: `Node-<#text>`,
+  });
+};
+export const isAllElementPastingAllowed = ({
+  htmlReferenceData,
+  validNodeTree,
+  uid,
+  isMove,
+}: {
+  htmlReferenceData: THtmlReferenceData;
+  validNodeTree: TNodeTreeData;
+  uid: TNodeUid;
+  isMove?: boolean;
+}) => {
+  const targetNode = validNodeTree[uid];
+  const parentTarget = targetNode.parentUid;
+  if (!parentTarget) return;
+
+  return (
+    htmlReferenceData?.elements[
+      isMove
+        ? validNodeTree[uid]?.displayName
+        : validNodeTree[parentTarget]?.displayName
+    ]?.Contain === "All"
+  );
+};
 
 export const isPastingAllowed = ({
   selectedItems,
-  nodeTree,
   htmlReferenceData,
   nodeToAdd,
   validNodeTree,
+  isMove = false,
 }: {
   selectedItems: TNodeUid[];
-  nodeTree: TNodeTreeData;
   htmlReferenceData: THtmlReferenceData;
   nodeToAdd: string[];
   validNodeTree: TNodeTreeData;
+  isMove?: boolean;
 }) => {
   const selectedUids = [...selectedItems];
   const selectedNodes = selectedItems.map((uid) => validNodeTree[uid]);
@@ -195,36 +237,49 @@ export const isPastingAllowed = ({
     };
 
     elementsCmdk({
-      nodeTree,
+      validNodeTree,
       nFocusedItem: uid,
       htmlReferenceData,
       data,
       groupName: "Add",
+      isMove,
     });
-
-    const targetNode = nodeTree[uid];
-    const parentTarget = targetNode.parentUid;
-    if (!parentTarget) return;
 
     return nodeToAdd.every((node: string) => {
       if (node.split("-").length > 2) {
-        return (
-          htmlReferenceData?.elements[nodeTree[parentTarget]?.displayName]
-            ?.Contain === "All"
-        );
+        return isAllElementPastingAllowed({
+          htmlReferenceData,
+          validNodeTree,
+          uid,
+          isMove,
+        });
       } else {
+        if (node === "Node-<#text>") {
+          const textNodeAllowed = isAllElementPastingAllowed({
+            htmlReferenceData,
+            validNodeTree,
+            uid,
+            isMove,
+          });
+
+          textNodeAllowed && addTextNodeToElements(data);
+        }
+
         return Object.values(data["Elements"]).some(
           (obj) => obj["Context"] === node,
         );
       }
     });
   };
+  let skipPosition;
 
   const allowedArray = selectedNodes.map((selectedNode: TNode, i: number) => {
     let addingAllowed =
       (selectedNode.displayName == "body" &&
         selectedNode.children.length == 0) ||
       checkAddingAllowed(selectedNode.uid);
+    skipPosition = !addingAllowed;
+
     if (
       !addingAllowed &&
       selectedNode?.parentUid &&
@@ -236,5 +291,9 @@ export const isPastingAllowed = ({
     return addingAllowed;
   });
 
-  return { isAllowed: !allowedArray.includes(false), selectedUids };
+  return {
+    isAllowed: !allowedArray.includes(false),
+    selectedUids,
+    skipPosition,
+  };
 };

@@ -46,7 +46,7 @@ export default function CodeView() {
   const {
     handleEditorDidMount,
     handleOnChange,
-
+    handleKeyDown,
     theme,
 
     language,
@@ -58,9 +58,11 @@ export default function CodeView() {
   } = useEditor();
   useCmdk();
 
+  monacoEditorRef.current?.onKeyDown(handleKeyDown);
+
   const onPanelClick = useCallback(() => {
-    dispatch(setActivePanel("code"));
-  }, []);
+    activePanel !== "code" && dispatch(setActivePanel("code"));
+  }, [activePanel]);
 
   // language sync
   useEffect(() => {
@@ -115,6 +117,7 @@ export default function CodeView() {
   }, [validNodeTree, nFocusedItem, activePanel]);
 
   useEffect(() => {
+    if (isCodeTyping) return;
     const monacoEditor = monacoEditorRef.current;
     if (!monacoEditor) return;
 
@@ -166,6 +169,35 @@ export default function CodeView() {
       hightlightFocusedNodeSourceCode();
     }
   }, [nFocusedItem]);
+
+  useEffect(() => {
+    if (activePanel === "code" || isCodeTyping || nFocusedItem === "") return;
+
+    const monacoEditor = monacoEditorRef.current;
+    if (!monacoEditor) return;
+    const node = validNodeTree[nFocusedItem];
+    if (!node) return;
+    const sourceCodeLocation = node.data.sourceCodeLocation;
+    if (!sourceCodeLocation) return;
+    // skip typing in code-view
+    if (editingNodeUidInCodeView === nFocusedItem) {
+      focusedItemRef.current = nFocusedItem;
+      dispatch(setEditingNodeUidInCodeView(""));
+      return;
+    }
+    const {
+      startLine: startLineNumber,
+      startCol: startColumn,
+      endCol: endColumn,
+      endLine: endLineNumber,
+    } = sourceCodeLocation;
+    monacoEditor.setSelection({
+      startLineNumber,
+      startColumn,
+      endLineNumber,
+      endColumn,
+    });
+  }, [nodeTree]);
 
   // code select -> selectedUids
   useEffect(() => {

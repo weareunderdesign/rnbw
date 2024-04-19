@@ -7,10 +7,11 @@ export type SettingsFormProps = {
   >;
 };
 export type SettingsViewProps = {
-  attributes: Record<string, string>;
+  attributes: Attribute;
   setAttributes: React.Dispatch<
     React.SetStateAction<{
       [key: string]: string;
     }>
   >;
 };
+export type Attribute = Record<string, string>;

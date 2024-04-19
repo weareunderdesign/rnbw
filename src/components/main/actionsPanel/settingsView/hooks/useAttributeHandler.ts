@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useContext } from "react";
 
 import { NodeActions } from "@_node/node";
@@ -9,12 +8,20 @@ import { useDispatch } from "react-redux";
 import { setIsContentProgrammaticallyChanged } from "@_redux/main/reference";
 
 export const useAttributeHandler = () => {
-  const { nodeTree, nFocusedItem } = useAppState();
+  const { validNodeTree, nFocusedItem } = useAppState();
   const { monacoEditorRef } = useContext(MainContext);
   const dispatch = useDispatch();
 
   const changeAttribute = useCallback(
-    (attrName: string, attrValue: string, cb?: any) => {
+    ({
+      attrName,
+      attrValue,
+      cb,
+    }: {
+      attrName: string;
+      attrValue: string;
+      cb?: () => void;
+    }) => {
       const codeViewInstance = monacoEditorRef.current;
       const codeViewInstanceModel = codeViewInstance?.getModel();
 
@@ -31,20 +38,29 @@ export const useAttributeHandler = () => {
       dispatch(setIsContentProgrammaticallyChanged(true));
 
       NodeActions.addAttr({
+        dispatch,
         attrName,
         attrValue,
-        nodeTree,
+        validNodeTree,
         focusedItem: nFocusedItem,
         codeViewInstanceModel,
         cb,
         fb: () => dispatch(setIsContentProgrammaticallyChanged(false)),
       });
     },
-    [nodeTree, nFocusedItem, monacoEditorRef],
+    [validNodeTree, monacoEditorRef, nFocusedItem],
   );
 
   const deleteAttribute = useCallback(
-    (attrName: string, attrValue?: string, cb?: any) => {
+    ({
+      attrName,
+      attrValue,
+      cb,
+    }: {
+      attrName: string;
+      attrValue?: string;
+      cb?: () => void;
+    }) => {
       const codeViewInstance = monacoEditorRef.current;
       const codeViewInstanceModel = codeViewInstance?.getModel();
 
@@ -60,16 +76,17 @@ export const useAttributeHandler = () => {
       dispatch(setIsContentProgrammaticallyChanged(true));
 
       NodeActions.removeAttr({
+        dispatch,
         attrName,
         attrValue,
-        nodeTree,
+        validNodeTree,
         focusedItem: nFocusedItem,
         codeViewInstanceModel,
         cb,
         fb: () => dispatch(setIsContentProgrammaticallyChanged(false)),
       });
     },
-    [nodeTree, nFocusedItem, monacoEditorRef],
+    [validNodeTree, monacoEditorRef, nFocusedItem],
   );
   return { changeAttribute, deleteAttribute };
 };

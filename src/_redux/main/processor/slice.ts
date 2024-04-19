@@ -8,8 +8,6 @@ import {
 } from "./types";
 
 const processorReducerInitialState: TProcessorReducerState = {
-  doingAction: false,
-
   navigatorDropdownType: null,
   favicon: "",
 
@@ -25,15 +23,12 @@ const processorReducerInitialState: TProcessorReducerState = {
   didUndo: false,
   didRedo: false,
   loading: 0,
+  runningAction: 0,
 };
 const processorSlice = createSlice({
   name: "processor",
   initialState: processorReducerInitialState,
   reducers: {
-    setDoingAction(state, action: PayloadAction<boolean>) {
-      const doingAction = action.payload;
-      state.doingAction = doingAction;
-    },
     setNavigatorDropdownType(
       state,
       action: PayloadAction<TNavigatorDropdownType>,
@@ -86,11 +81,15 @@ const processorSlice = createSlice({
     setLoadingFalse(state) {
       state.loading = Math.max(0, state.loading - 1);
     },
+    addRunningAction(state) {
+      state.runningAction += 1;
+    },
+    removeRunningAction(state) {
+      state.runningAction = Math.max(0, state.runningAction - 1);
+    },
   },
 });
 export const {
-  setDoingAction,
-
   setNavigatorDropdownType,
   setFavicon,
 
@@ -107,5 +106,8 @@ export const {
   setDidRedo,
   setLoadingTrue,
   setLoadingFalse,
+
+  addRunningAction,
+  removeRunningAction,
 } = processorSlice.actions;
 export const ProcessorReduer = processorSlice.reducer;

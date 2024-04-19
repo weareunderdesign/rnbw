@@ -1,10 +1,8 @@
-/* eslint-disable react/prop-types */
-/* eslint-disable react/display-name */
-import React, { FC } from "react";
+import React from "react";
 import { ItemTitleProps } from "./types";
 
-export const ItemTitle: FC<ItemTitleProps> = React.memo(
-  ({ title, isChanged = false }) => {
+export const ItemTitle = React.memo(
+  ({ title, isChanged = false }: ItemTitleProps) => {
     return (
       <span
         className="justify-start text-s gap-s align-center"
@@ -27,3 +25,4 @@ export const ItemTitle: FC<ItemTitleProps> = React.memo(
     );
   },
 );
+ItemTitle.displayName = "ItemTitle";

@@ -84,7 +84,7 @@ export default function NavigatorPanel() {
             {showFilePanel ? (
               <ProjectPanel unsavedProject={unsavedProject} />
             ) : (
-              !navigatorDropdownType && <DefaultPanel />
+              <DefaultPanel />
             )}
           </div>
           <PanelButton />

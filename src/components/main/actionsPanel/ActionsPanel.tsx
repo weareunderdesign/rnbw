@@ -13,14 +13,14 @@ import {
 import { useAppState } from "@_redux/useAppState";
 
 export default function ActionsPanel() {
-  const { showFilePanel } = useAppState();
+  const { showFilePanel, selectedNodeUids } = useAppState();
 
   const [sizes, setSizes] = useState([0, 100]);
   const filePanelRef = useRef<ImperativePanelHandle>(null);
 
   useEffect(() => {
     showFilePanel
-      ? filePanelRef.current?.resize(50)
+      ? filePanelRef.current?.resize(20)
       : filePanelRef.current?.resize(0);
   }, [showFilePanel]);
 
@@ -42,7 +42,7 @@ export default function ActionsPanel() {
             ref={filePanelRef}
             defaultSize={sizes[0]}
             minSize={showFilePanel ? 10 : 0}
-            maxSize={80}
+            maxSize={50}
             order={0}
             className={`${showFilePanel && "border-bottom"}`}
           >
@@ -55,8 +55,8 @@ export default function ActionsPanel() {
             <NodeTreeView />
           </Panel>
         </PanelGroup>
-        <SettingsPanel />
+        {selectedNodeUids.length == 1 && <SettingsPanel />}
       </div>
     );
-  }, [sizes, showFilePanel]);
+  }, [sizes, showFilePanel, selectedNodeUids]);
 }

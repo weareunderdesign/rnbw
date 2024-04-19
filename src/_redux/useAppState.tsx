@@ -6,7 +6,7 @@ export const useAppState = () => {
   const {
     global: { osType, theme },
     main: {
-      fileTree: {
+      file: {
         workspace,
         project,
         initialFileUidToOpen,
@@ -16,9 +16,7 @@ export const useAppState = () => {
         fileTree,
         fileTreeViewState: {
           focusedItem: fFocusedItem,
-          expandedItems: fExpandedItems,
           expandedItemsObj: fExpandedItemsObj,
-          selectedItems: fSelectedItems,
           selectedItemsObj: fSelectedItemsObj,
         },
         hoveredFileUid,
@@ -38,9 +36,7 @@ export const useAppState = () => {
         needToSelectCode,
         nodeTreeViewState: {
           focusedItem: nFocusedItem,
-          expandedItems: nExpandedItems,
           expandedItemsObj: nExpandedItemsObj,
-          selectedItems: nSelectedItems,
           selectedItemsObj: nSelectedItemsObj,
         },
         hoveredNodeUid,
@@ -65,7 +61,7 @@ export const useAppState = () => {
         codeErrors,
       },
       processor: {
-        doingAction,
+        runningAction,
         navigatorDropdownType,
         favicon,
         activePanel,
@@ -88,9 +84,7 @@ export const useAppState = () => {
         projectHandlers,
         currentProjectFileHandle,
         fileHandlers,
-        recentProjectNames,
-        recentProjectHandlers,
-        recentProjectContexts,
+        recentProject,
       },
       cmdk: {
         cmdkOpen,
@@ -122,9 +116,7 @@ export const useAppState = () => {
     fileTree,
 
     fFocusedItem,
-    fExpandedItems,
     fExpandedItemsObj,
-    fSelectedItems,
     fSelectedItemsObj,
     hoveredFileUid,
 
@@ -145,9 +137,7 @@ export const useAppState = () => {
     needToSelectCode,
 
     nFocusedItem,
-    nExpandedItems,
     nExpandedItemsObj,
-    nSelectedItems,
     nSelectedItemsObj,
     hoveredNodeUid,
     copiedNodeDisplayName,
@@ -171,7 +161,7 @@ export const useAppState = () => {
     codeViewTabSize,
     codeErrors,
 
-    doingAction,
+    runningAction,
 
     navigatorDropdownType,
     favicon,
@@ -197,9 +187,7 @@ export const useAppState = () => {
     projectHandlers,
     currentProjectFileHandle,
     fileHandlers,
-    recentProjectNames,
-    recentProjectHandlers,
-    recentProjectContexts,
+    recentProject,
 
     cmdkOpen,
     cmdkPages,

@@ -14,11 +14,11 @@ const excludedAttributes: string[] = [StageNodeIdAttr, DataSequencedUid];
 
 export default function SettingsPanel() {
   const dispatch = useDispatch();
-  const { nodeTree, nFocusedItem } = useAppState();
-
+  const { nodeTree, nFocusedItem, activePanel } = useAppState();
   const [attributes, setAttributes] = useState({});
-  const [showForm, setShowForm] = useState(false);
 
+  const [showForm, setShowForm] = useState(false);
+  const [isHover, setIsHovered] = useState(false);
   const attributesArray = useMemo(() => Object.keys(attributes), [attributes]);
 
   useEffect(() => {
@@ -32,29 +32,34 @@ export default function SettingsPanel() {
   }, [nodeTree, nFocusedItem]);
 
   const onPanelClick = useCallback(() => {
-    dispatch(setActivePanel("settings"));
-  }, []);
+    activePanel !== "settings" && dispatch(setActivePanel("settings"));
+  }, [activePanel]);
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+  };
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+  };
 
   return useMemo(() => {
     return (
       <div
-        id="Settings"
+        id="SettingsPanel"
         onClick={onPanelClick}
         className="border-bottom padding-m"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         <PanelHeader>
           <div className="text-s">Settings</div>
-
-          {!showForm && (
-            <div
-              className="action-button"
-              onClick={() => {
-                setShowForm(true);
-              }}
-            >
-              <SVGIconI {...{ class: "icon-xs" }}>plus</SVGIconI>
-            </div>
-          )}
+          <div
+            className={`action-button ${!isHover && "action-button-hidden"}`}
+            onClick={() => {
+              setShowForm(true);
+            }}
+          >
+            <SVGIconI {...{ class: "icon-xs" }}>plus</SVGIconI>
+          </div>
         </PanelHeader>
 
         {showForm && (
@@ -69,5 +74,5 @@ export default function SettingsPanel() {
         )}
       </div>
     );
-  }, [onPanelClick, showForm, attributes, attributesArray]);
+  }, [onPanelClick, showForm, attributes, isHover, attributesArray]);
 }
