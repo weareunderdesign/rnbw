@@ -19,7 +19,6 @@ import { useAppState } from "@_redux/useAppState";
 import { jss, styles } from "./constants";
 import { markSelectedElements } from "./helpers";
 import { useCmdk, useMouseEvents, useSyncNode } from "./hooks";
-import { setLoadingFalse, setLoadingTrue } from "@_redux/main/processor";
 
 type AppStateReturnType = ReturnType<typeof useAppState>;
 export interface eventListenersStatesRefType extends AppStateReturnType {
@@ -121,6 +120,15 @@ export const IFrame = () => {
     ],
   );
 
+  const isIframeLoaded = useCallback(() => {
+    if (!iframeRefState) return;
+    const _document = iframeRefState.contentWindow?.document;
+    if (_document?.readyState === "complete") {
+      return true;
+    } else {
+      isIframeLoaded();
+    }
+  }, [iframeRefState]);
   const iframeOnload = useCallback(() => {
     LogAllow && console.log("iframe loaded");
 
@@ -129,6 +137,7 @@ export const IFrame = () => {
     const headNode = _document?.head;
     setDocument(_document);
     if (htmlNode && headNode) {
+      setIframeLoading(true);
       // add rnbw css
       const style = _document.createElement("style");
       style.textContent = styles;
@@ -149,13 +158,15 @@ export const IFrame = () => {
       _document.addEventListener("contextmenu", (e: MouseEvent) => {
         e.preventDefault();
       });
+      if (isIframeLoaded()) {
+        dispatch(setIframeLoading(false));
+      }
     }
 
     // mark selected elements on load
     markSelectedElements(iframeRefState, selectedItemsRef.current, nodeTree);
     iframeRefState?.focus();
     dispatch(setIframeLoading(false));
-    project.context === "local" && dispatch(setLoadingFalse());
   }, [
     iframeRefState,
     addHtmlNodeEventListeners,
@@ -169,9 +180,6 @@ export const IFrame = () => {
   useEffect(() => {
     setIframeRefRef(iframeRefState);
     if (iframeRefState) {
-      project.context === "local" && dispatch(setLoadingTrue());
-      dispatch(setIframeLoading(true));
-
       iframeRefState.onload = iframeOnload;
     }
     return () => {

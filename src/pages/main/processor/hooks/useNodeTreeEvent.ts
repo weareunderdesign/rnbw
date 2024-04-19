@@ -140,13 +140,11 @@ export const useNodeTreeEvent = () => {
         const previewPath = getPreviewPath(fileTree, file);
         try {
           dispatch(setDoingFileAction(true));
-          dispatch(setLoadingTrue());
           await _writeIDBFile(previewPath, fileData.contentInApp as string);
         } catch (err) {
           console.log(err);
         } finally {
           dispatch(setDoingFileAction(false));
-          dispatch(setLoadingFalse());
         }
         if (fileData.ext === "html") {
           dispatch(setIframeSrc(`rnbw${previewPath}`));
@@ -282,7 +280,9 @@ export const useNodeTreeEvent = () => {
         ),
       );
     } else if (prevFileUid !== currentFileUid) {
-      dispatch(setLoadingTrue());
+      if (fileData.ext === "html") {
+        dispatch(setLoadingTrue());
+      }
       LogAllow && console.log("it's a new file");
       dispatch(setSelectedNodeUids([uid]));
       dispatch(
@@ -344,7 +344,10 @@ export const useNodeTreeEvent = () => {
     if (prevFileUid !== currentFileUid) {
       dispatch(setPrevFileUid(currentFileUid));
     }
-    dispatch(setLoadingFalse());
+    if (fileData.ext === "html") {
+      dispatch(setLoadingFalse());
+    }
+
     dispatch(removeRunningAction());
   }, [currentFileContent, currentFileUid]);
 

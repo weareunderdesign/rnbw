@@ -18,11 +18,7 @@ import { TNode, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { setHoveredFileUid } from "@_redux/main/fileTree";
 import { FileTree_Event_ClearActionType } from "@_redux/main/fileTree/event";
-import {
-  setActivePanel,
-  setLoadingFalse,
-  setLoadingTrue,
-} from "@_redux/main/processor";
+import { setActivePanel } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 import { generateQuerySelector } from "@_services/main";
 import { TFilesReference } from "@_types/main";
@@ -219,15 +215,6 @@ export default function WorkspaceTreeView() {
             const onClick = useCallback(
               async (e: React.MouseEvent) => {
                 e.stopPropagation();
-                const fileNode = fileTree[props.item.data.uid];
-                const isFile = fileNode?.data?.kind === "file";
-
-                if (isFile) {
-                  dispatch(setLoadingFalse());
-                  props.item.data.uid !== currentFileUid &&
-                    dispatch(setLoadingTrue());
-                }
-
                 try {
                   const promises = [];
 
@@ -266,8 +253,8 @@ export default function WorkspaceTreeView() {
                   await Promise.all(promises);
 
                   openFile(props.item.index as TNodeUid);
-                } finally {
-                  isFile && dispatch(setLoadingFalse());
+                } catch (error) {
+                  console.error(error);
                 }
               },
               [props.item, props.context, fileTree, autoSave, currentFileUid],
