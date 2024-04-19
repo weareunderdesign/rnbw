@@ -29,13 +29,14 @@ import {
 } from "@_types/main";
 import { AnyAction } from "@reduxjs/toolkit";
 import { THtmlNodeData } from "@_node/node";
-import { TFileNodeData, TFileNodeTreeData } from "@_node/index";
+import { TFileNodeData, TFileNodeTreeData, createURLPath } from "@_node/index";
 import {
   setActivePanel,
   setNavigatorDropdownType,
 } from "@_redux/main/processor";
 import { AnyFunction } from "./types";
 import { toast } from "react-toastify";
+import { NavigateFunction } from "react-router-dom";
 
 export const addDefaultCmdkActions = (
   cmdkReferenceData: TCmdkReferenceData,
@@ -344,6 +345,7 @@ export const onWebComponentDblClick = ({
   validNodeTree,
   dispatch,
   expandedItemsObj,
+  navigate,
 }: {
   wcName: string;
   fileTree: TFileNodeTreeData;
@@ -352,8 +354,10 @@ export const onWebComponentDblClick = ({
   expandedItemsObj: {
     [uid: TNodeUid]: true;
   };
+  navigate: NavigateFunction;
 }) => {
   let exist = false;
+  let filePath = "";
   for (const x in fileTree) {
     const defineRegex = /customElements\.define\(\s*['"]([\w-]+)['"]/;
     if (
@@ -389,6 +393,11 @@ export const onWebComponentDblClick = ({
               dispatch(setInitialFileUidToOpen(fileTree[x].uid));
               dispatch(setNavigatorDropdownType("project"));
               dispatch(setActivePanel("code"));
+              filePath = createURLPath(
+                fileTree[x].uid,
+                RootNodeUid,
+                fileTree[RootNodeUid]?.displayName,
+              );
               // expand path to the uid
               const _expandedItems: string[] = [];
               let _file = fileTree[x];
@@ -405,6 +414,7 @@ export const onWebComponentDblClick = ({
               dispatch(expandFileTreeNodes(_expandedItems));
 
               exist = true;
+              navigate(filePath);
               break;
             }
           }
