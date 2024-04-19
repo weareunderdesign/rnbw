@@ -33,6 +33,7 @@ import { TFileNodeData, TFileNodeTreeData } from "@_node/index";
 import {
   setActivePanel,
   setNavigatorDropdownType,
+  setShowFilePanel,
 } from "@_redux/main/processor";
 import { AnyFunction } from "./types";
 import { toast } from "react-toastify";
@@ -388,6 +389,7 @@ export const onWebComponentDblClick = ({
               dispatch(setWebComponentOpen(true));
               dispatch(setInitialFileUidToOpen(fileTree[x].uid));
               dispatch(setNavigatorDropdownType("project"));
+              dispatch(setShowFilePanel(true));
               dispatch(setActivePanel("code"));
               // expand path to the uid
               const _expandedItems: string[] = [];
