@@ -30,8 +30,6 @@ export const useCmdk = ({
   const { osType, cmdkReferenceData } = useAppState();
   const { monacoEditorRef } = useContext(MainContext);
 
-  const { formatCode } = useAppState();
-
   const onKeyDown = useCallback(
     (e: KeyboardEvent) => {
       // cmdk obj for the current command
@@ -107,7 +105,6 @@ export const useCmdk = ({
               nodeTree: nodeTreeRef.current,
               contentEditableUid,
               codeViewInstanceModel,
-              formatCode,
               cb:
                 action === "Save"
                   ? () => dispatch(setCurrentCommand({ action: "SaveForce" }))

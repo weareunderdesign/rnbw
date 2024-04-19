@@ -47,7 +47,6 @@ export const useMouseEvents = ({
     fileTree,
     validNodeTree,
     fExpandedItemsObj: expandedItemsObj,
-    formatCode,
     htmlReferenceData,
   } = useAppState();
 
@@ -124,7 +123,6 @@ export const useMouseEvents = ({
           nodeTree: nodeTreeRef.current,
           contentEditableUid,
           codeViewInstanceModel,
-          formatCode,
         });
       }
     }

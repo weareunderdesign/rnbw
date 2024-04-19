@@ -14,7 +14,6 @@ export type TProcessorReducerState = {
   showFilePanel: boolean;
 
   autoSave: boolean;
-  formatCode: boolean;
 
   didUndo: boolean;
   didRedo: boolean;
