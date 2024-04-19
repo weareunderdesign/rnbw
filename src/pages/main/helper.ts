@@ -18,7 +18,7 @@ import {
   NodeTree_Event_ClearActionType,
   NodeTree_Event_JumpToPastActionType,
 } from "@_redux/main/nodeTree/event";
-import { setIframeSrc, setWebComponentOpen } from "@_redux/main/stageView";
+import { setIframeSrc } from "@_redux/main/stageView";
 import {
   TCmdkGroupData,
   TCmdkKeyMap,
@@ -389,7 +389,6 @@ export const onWebComponentDblClick = ({
               toast.error("rnbw couldn't find it's source file");
               break;
             } else {
-              dispatch(setWebComponentOpen(true));
               dispatch(setInitialFileUidToOpen(fileTree[x].uid));
               dispatch(setNavigatorDropdownType("project"));
               dispatch(setActivePanel("code"));

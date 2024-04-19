@@ -22,7 +22,7 @@ import {
 } from "@_node/file";
 import { getValidNodeUids } from "@_node/helpers";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
-import { clearFileSession, getObjKeys } from "@_pages/main/helper";
+import { getObjKeys } from "@_pages/main/helper";
 import { MainContext } from "@_redux/main";
 import {
   addInvalidFileNodes,
@@ -54,7 +54,6 @@ export const useNodeActionsHandler = () => {
     fExpandedItemsObj: expandedItemsObj,
     fSelectedItemsObj,
     clipboardData,
-    webComponentOpen,
     htmlReferenceData,
     fileHandlers,
     invalidFileNodes,
@@ -450,20 +449,12 @@ export const useNodeActionsHandler = () => {
           nodeData.content = doctype + html;
         }
       }
-      if (!webComponentOpen) {
-        clearFileSession(dispatch);
-      }
+
       currentFileUid !== uid && dispatch(setCurrentFileUid(uid));
       dispatch(setCurrentFileContent(nodeData.content));
       dispatch(removeRunningAction());
     },
-    [
-      invalidFileNodes,
-      fileTree,
-      currentFileUid,
-      showCodeView,
-      webComponentOpen,
-    ],
+    [invalidFileNodes, fileTree, currentFileUid, showCodeView],
   );
   const cb_moveNode = useCallback(
     async (uids: string[], targetUid: TNodeUid) => {

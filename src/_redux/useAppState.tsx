@@ -47,14 +47,7 @@ export const useAppState = () => {
         present: { currentFileContent, selectedNodeUids },
         future: nodeEventFuture,
       },
-      stageView: {
-        iframeSrc,
-        iframeLoading,
-        needToReloadIframe,
-        linkToOpen,
-        syncConfigs,
-        webComponentOpen,
-      },
+      stageView: { iframeSrc, iframeLoading, linkToOpen, syncConfigs },
       codeView: {
         editingNodeUid: editingNodeUidInCodeView,
         codeViewTabSize,
@@ -153,10 +146,8 @@ export const useAppState = () => {
 
     iframeSrc,
     iframeLoading,
-    needToReloadIframe,
     linkToOpen,
     syncConfigs,
-    webComponentOpen,
 
     editingNodeUidInCodeView,
     codeViewTabSize,
