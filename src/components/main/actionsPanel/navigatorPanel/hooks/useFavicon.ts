@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import { useDispatch } from "react-redux";
 
@@ -15,10 +15,28 @@ export const useFavicon = (
 
   const { workspace, project, currentFileUid, validNodeTree } = useAppState();
 
+  const [systemTheme, setSystemTheme] = useState(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'Dark': 'Light')
+
   const isFirst = useRef(true);
   useEffect(() => {
     isFirst.current = true;
   }, [currentFileUid]);
+
+  useEffect(() => {
+    const handleSystemThemeChange = (e: MediaQueryListEvent) => {
+      setSystemTheme(e.matches ? 'Dark': 'Light')
+    };
+     
+    window.matchMedia('(prefers-color-scheme: dark)')
+      .addEventListener('change', handleSystemThemeChange)
+
+
+    return () => {
+      window.matchMedia('(prefers-color-scheme: dark)')
+        .removeEventListener('change', handleSystemThemeChange)
+    }
+  }, []);
+
 
   useEffect(() => {
     setFaviconFallback(false);
@@ -29,4 +47,8 @@ export const useFavicon = (
       });
     }
   }, [validNodeTree]);
+
+  return {
+    systemTheme
+  }
 };
