@@ -13,12 +13,16 @@ import { LogAllow } from "@_constants/global";
 import { PreserveRnbwNode } from "@_node/file/handlers/constants";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
-import { setIframeLoading } from "@_redux/main/stageView";
+import {
+  setIframeLoading,
+  setNeedToReloadIframe,
+} from "@_redux/main/stageView";
 import { useAppState } from "@_redux/useAppState";
 
 import { jss, styles } from "./constants";
 import { markSelectedElements } from "./helpers";
 import { useCmdk, useMouseEvents, useSyncNode } from "./hooks";
+import { setLoadingFalse, setLoadingTrue } from "@_redux/main/processor";
 
 type AppStateReturnType = ReturnType<typeof useAppState>;
 export interface eventListenersStatesRefType extends AppStateReturnType {
@@ -40,7 +44,7 @@ export const IFrame = () => {
   const isEditingRef = useRef(false);
   const dispatch = useDispatch();
   const appState: AppStateReturnType = useAppState();
-  const { nodeTree, project, validNodeTree, iframeSrc, renderableFileUid } =
+  const { nodeTree, project, needToReloadIframe, validNodeTree, iframeSrc } =
     appState;
   const { iframeRefRef, setIframeRefRef } = useContext(MainContext);
   // hooks
@@ -120,15 +124,6 @@ export const IFrame = () => {
     ],
   );
 
-  const isIframeLoaded = useCallback(() => {
-    if (!iframeRefState) return;
-    const _document = iframeRefState.contentWindow?.document;
-    if (_document?.readyState === "complete") {
-      return true;
-    } else {
-      isIframeLoaded();
-    }
-  }, [iframeRefState]);
   const iframeOnload = useCallback(() => {
     LogAllow && console.log("iframe loaded");
 
@@ -137,7 +132,6 @@ export const IFrame = () => {
     const headNode = _document?.head;
     setDocument(_document);
     if (htmlNode && headNode) {
-      setIframeLoading(true);
       // add rnbw css
       const style = _document.createElement("style");
       style.textContent = styles;
@@ -158,15 +152,13 @@ export const IFrame = () => {
       _document.addEventListener("contextmenu", (e: MouseEvent) => {
         e.preventDefault();
       });
-      if (isIframeLoaded()) {
-        dispatch(setIframeLoading(false));
-      }
     }
 
     // mark selected elements on load
     markSelectedElements(iframeRefState, selectedItemsRef.current, nodeTree);
     iframeRefState?.focus();
     dispatch(setIframeLoading(false));
+    project.context === "local" && dispatch(setLoadingFalse());
   }, [
     iframeRefState,
     addHtmlNodeEventListeners,
@@ -180,6 +172,9 @@ export const IFrame = () => {
   useEffect(() => {
     setIframeRefRef(iframeRefState);
     if (iframeRefState) {
+      project.context === "local" && dispatch(setLoadingTrue());
+      dispatch(setIframeLoading(true));
+
       iframeRefState.onload = iframeOnload;
     }
     return () => {
@@ -189,6 +184,11 @@ export const IFrame = () => {
       }
     };
   }, [iframeRefState]);
+
+  // reload iframe
+  useEffect(() => {
+    needToReloadIframe && dispatch(setNeedToReloadIframe(false));
+  }, [needToReloadIframe]);
 
   useEffect(() => {
     if (iframeRefState && document) {
@@ -239,7 +239,7 @@ export const IFrame = () => {
 
       wrapTextNodes(iframeDocument.body);
     }
-  }, [iframeRefState, document, validNodeTree]);
+  }, [iframeRefState, document, needToReloadIframe, validNodeTree]);
 
   useEffect(() => {
     eventListenersStatesRef.current = {
@@ -254,6 +254,8 @@ export const IFrame = () => {
       hoveredTargetRef,
     };
   }, [
+    needToReloadIframe,
+
     iframeRefState,
     iframeRefRef.current,
     nodeTreeRef.current,
@@ -267,9 +269,8 @@ export const IFrame = () => {
   return useMemo(() => {
     return (
       <>
-        {iframeSrc && (
+        {iframeSrc && !needToReloadIframe && (
           <iframe
-            key={renderableFileUid}
             ref={setIframeRefState}
             id={"iframeId"}
             src={iframeSrc}
@@ -282,5 +283,5 @@ export const IFrame = () => {
         )}
       </>
     );
-  }, [iframeSrc]);
+  }, [iframeSrc, needToReloadIframe]);
 };

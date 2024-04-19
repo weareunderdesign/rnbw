@@ -12,7 +12,7 @@ export const useAppState = () => {
         initialFileUidToOpen,
         currentFileUid,
         prevFileUid,
-        renderableFileUid,
+        prevRenderableFileUid,
         fileTree,
         fileTreeViewState: {
           focusedItem: fFocusedItem,
@@ -47,7 +47,14 @@ export const useAppState = () => {
         present: { currentFileContent, selectedNodeUids },
         future: nodeEventFuture,
       },
-      stageView: { iframeSrc, iframeLoading, linkToOpen, syncConfigs },
+      stageView: {
+        iframeSrc,
+        iframeLoading,
+        needToReloadIframe,
+        linkToOpen,
+        syncConfigs,
+        webComponentOpen,
+      },
       codeView: {
         editingNodeUid: editingNodeUidInCodeView,
         codeViewTabSize,
@@ -106,7 +113,7 @@ export const useAppState = () => {
     initialFileUidToOpen,
     currentFileUid,
     prevFileUid,
-    renderableFileUid,
+    prevRenderableFileUid,
     fileTree,
 
     fFocusedItem,
@@ -146,8 +153,10 @@ export const useAppState = () => {
 
     iframeSrc,
     iframeLoading,
+    needToReloadIframe,
     linkToOpen,
     syncConfigs,
+    webComponentOpen,
 
     editingNodeUidInCodeView,
     codeViewTabSize,

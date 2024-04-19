@@ -22,7 +22,7 @@ import {
 } from "@_node/file";
 import { getValidNodeUids } from "@_node/helpers";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
-import { getObjKeys } from "@_pages/main/helper";
+import { clearFileSession, getObjKeys } from "@_pages/main/helper";
 import { MainContext } from "@_redux/main";
 import {
   addInvalidFileNodes,
@@ -32,7 +32,7 @@ import {
   setDoingFileAction,
   setFileAction,
   setFileTree,
-  setRenderableFileUid,
+  setPrevRenderableFileUid,
   TFileAction,
 } from "@_redux/main/fileTree";
 import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
@@ -54,6 +54,7 @@ export const useNodeActionsHandler = () => {
     fExpandedItemsObj: expandedItemsObj,
     fSelectedItemsObj,
     clipboardData,
+    webComponentOpen,
     htmlReferenceData,
     fileHandlers,
     invalidFileNodes,
@@ -433,7 +434,7 @@ export const useNodeActionsHandler = () => {
 
       const nodeData = node.data as TFileNodeData;
       if (RenderableFileTypes[nodeData.ext]) {
-        dispatch(setRenderableFileUid(uid));
+        dispatch(setPrevRenderableFileUid(uid));
         // set initial content of the html if file content is empty
         if (
           nodeData.ext === "html" &&
@@ -449,12 +450,20 @@ export const useNodeActionsHandler = () => {
           nodeData.content = doctype + html;
         }
       }
-
+      if (!webComponentOpen) {
+        clearFileSession(dispatch);
+      }
       currentFileUid !== uid && dispatch(setCurrentFileUid(uid));
       dispatch(setCurrentFileContent(nodeData.content));
       dispatch(removeRunningAction());
     },
-    [invalidFileNodes, fileTree, currentFileUid, showCodeView],
+    [
+      invalidFileNodes,
+      fileTree,
+      currentFileUid,
+      showCodeView,
+      webComponentOpen,
+    ],
   );
   const cb_moveNode = useCallback(
     async (uids: string[], targetUid: TNodeUid) => {

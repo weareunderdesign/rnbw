@@ -6,6 +6,7 @@ import { AutoSaveDelay, RootNodeUid } from "@_constants/main";
 import { TFileNodeTreeData } from "@_node/file";
 import { MainContext } from "@_redux/main";
 import { setFileTree } from "@_redux/main/fileTree";
+import { setNeedToReloadIframe } from "@_redux/main/stageView";
 import { useAppState } from "@_redux/useAppState";
 
 import { saveFileContent } from "../helpers";
@@ -68,6 +69,7 @@ export const useSaveCommand = () => {
     }
     dispatch(removeRunningAction());
     dispatch(setFileTree(_ffTree as TFileNodeTreeData));
+    fileData.ext !== "html" && dispatch(setNeedToReloadIframe(true));
   }, [project, fileTree, fileHandlers, currentFileUid]);
 
   const onSaveProject = useCallback(async () => {}, []);

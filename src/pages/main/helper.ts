@@ -9,7 +9,7 @@ import {
   setFileTree,
   setInitialFileUidToOpen,
   setPrevFileUid,
-  setRenderableFileUid,
+  setPrevRenderableFileUid,
   setProject,
 } from "@_redux/main/fileTree";
 import { FileTree_Event_ClearActionType } from "@_redux/main/fileTree/event";
@@ -18,7 +18,7 @@ import {
   NodeTree_Event_ClearActionType,
   NodeTree_Event_JumpToPastActionType,
 } from "@_redux/main/nodeTree/event";
-import { setIframeSrc } from "@_redux/main/stageView";
+import { setIframeSrc, setWebComponentOpen } from "@_redux/main/stageView";
 import {
   TCmdkGroupData,
   TCmdkKeyMap,
@@ -29,14 +29,13 @@ import {
 } from "@_types/main";
 import { AnyAction } from "@reduxjs/toolkit";
 import { THtmlNodeData } from "@_node/node";
-import { TFileNodeData, TFileNodeTreeData, createURLPath } from "@_node/index";
+import { TFileNodeData, TFileNodeTreeData } from "@_node/index";
 import {
   setActivePanel,
   setNavigatorDropdownType,
 } from "@_redux/main/processor";
 import { AnyFunction } from "./types";
 import { toast } from "react-toastify";
-import { NavigateFunction } from "react-router-dom";
 
 export const addDefaultCmdkActions = (
   cmdkReferenceData: TCmdkReferenceData,
@@ -122,7 +121,7 @@ export const clearProjectSession = (dispatch: Dispatch<AnyAction>) => {
   dispatch(setInitialFileUidToOpen(""));
   dispatch(setCurrentFileUid(""));
   dispatch(setPrevFileUid(""));
-  dispatch(setRenderableFileUid(""));
+  dispatch(setPrevRenderableFileUid(""));
   dispatch(clearFileTreeViewState());
   dispatch({ type: FileTree_Event_ClearActionType });
 
@@ -345,7 +344,6 @@ export const onWebComponentDblClick = ({
   validNodeTree,
   dispatch,
   expandedItemsObj,
-  navigate,
 }: {
   wcName: string;
   fileTree: TFileNodeTreeData;
@@ -354,10 +352,8 @@ export const onWebComponentDblClick = ({
   expandedItemsObj: {
     [uid: TNodeUid]: true;
   };
-  navigate: NavigateFunction;
 }) => {
   let exist = false;
-  let filePath = "";
   for (const x in fileTree) {
     const defineRegex = /customElements\.define\(\s*['"]([\w-]+)['"]/;
     if (
@@ -389,14 +385,10 @@ export const onWebComponentDblClick = ({
               toast.error("rnbw couldn't find it's source file");
               break;
             } else {
+              dispatch(setWebComponentOpen(true));
               dispatch(setInitialFileUidToOpen(fileTree[x].uid));
               dispatch(setNavigatorDropdownType("project"));
               dispatch(setActivePanel("code"));
-              filePath = createURLPath(
-                fileTree[x].uid,
-                RootNodeUid,
-                fileTree[RootNodeUid]?.displayName,
-              );
               // expand path to the uid
               const _expandedItems: string[] = [];
               let _file = fileTree[x];
@@ -413,7 +405,6 @@ export const onWebComponentDblClick = ({
               dispatch(expandFileTreeNodes(_expandedItems));
 
               exist = true;
-              navigate(filePath);
               break;
             }
           }

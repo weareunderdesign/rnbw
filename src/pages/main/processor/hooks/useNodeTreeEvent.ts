@@ -37,7 +37,7 @@ import {
   setNodeTree,
   setSelectedNodeUids,
 } from "@_redux/main/nodeTree";
-import { setIframeSrc } from "@_redux/main/stageView";
+import { setIframeSrc, setNeedToReloadIframe } from "@_redux/main/stageView";
 import { useAppState } from "@_redux/useAppState";
 
 import {
@@ -75,6 +75,7 @@ export const useNodeTreeEvent = () => {
     nExpandedItemsObj,
     nFocusedItem,
     syncConfigs,
+    webComponentOpen,
   } = useAppState();
   const { iframeRefRef } = useContext(MainContext);
 
@@ -104,7 +105,7 @@ export const useNodeTreeEvent = () => {
   useEffect(() => {
     isCurrentFileContentChanged.current = true;
     // validate
-    if (!fileTree[currentFileUid]) return;
+    if (!fileTree[currentFileUid] || webComponentOpen) return;
 
     dispatch(addRunningAction());
 
@@ -135,16 +136,14 @@ export const useNodeTreeEvent = () => {
     dispatch(setFileTreeNodes([file]));
     (async () => {
       // update idb
-
+      dispatch(setDoingFileAction(true));
+      dispatch(setLoadingTrue());
       try {
         const previewPath = getPreviewPath(fileTree, file);
         try {
-          dispatch(setDoingFileAction(true));
           await _writeIDBFile(previewPath, fileData.contentInApp as string);
         } catch (err) {
           console.log(err);
-        } finally {
-          dispatch(setDoingFileAction(false));
         }
         if (fileData.ext === "html") {
           dispatch(setIframeSrc(`rnbw${previewPath}`));
@@ -152,6 +151,8 @@ export const useNodeTreeEvent = () => {
       } catch (err) {
         LogAllow && console.error(err);
       }
+      dispatch(setDoingFileAction(false));
+      dispatch(setLoadingFalse());
     })();
 
     // ---
@@ -159,7 +160,10 @@ export const useNodeTreeEvent = () => {
     // ---
 
     // sync stage-view
-    if (prevFileUid === currentFileUid) {
+    if (prevFileUid !== currentFileUid) {
+      LogAllow && console.log("need to refresh iframe");
+      dispatch(setNeedToReloadIframe(true));
+    } else {
       // dom-diff using morph
       if (fileData.ext === "html") {
         const iframe: HTMLIFrameElement | null = document.getElementById(
@@ -280,9 +284,7 @@ export const useNodeTreeEvent = () => {
         ),
       );
     } else if (prevFileUid !== currentFileUid) {
-      if (fileData.ext === "html") {
-        dispatch(setLoadingTrue());
-      }
+      dispatch(setLoadingTrue());
       LogAllow && console.log("it's a new file");
       dispatch(setSelectedNodeUids([uid]));
       dispatch(
@@ -344,10 +346,7 @@ export const useNodeTreeEvent = () => {
     if (prevFileUid !== currentFileUid) {
       dispatch(setPrevFileUid(currentFileUid));
     }
-    if (fileData.ext === "html") {
-      dispatch(setLoadingFalse());
-    }
-
+    dispatch(setLoadingFalse());
     dispatch(removeRunningAction());
   }, [currentFileContent, currentFileUid]);
 

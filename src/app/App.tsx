@@ -16,7 +16,6 @@ export default function App() {
         setNohostReady(true);
         LogAllow && console.log("nohost ready");
       });
-      window.location.href = "/#";
     }
   }, []);
 
