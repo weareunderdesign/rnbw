@@ -30,7 +30,7 @@ export default function NavigatorPanel() {
   const { importProject } = useContext(MainContext);
 
   const [faviconFallback, setFaviconFallback] = useState(false);
-  useFavicon(setFaviconFallback);
+  const { systemTheme } = useFavicon(setFaviconFallback);
 
   const [unsavedProject, setUnsavedProject] = useState(false);
   useMemo(() => {
@@ -55,6 +55,13 @@ export default function NavigatorPanel() {
           : projectDarkImg;
     }
   }, [unsavedProject, theme]);
+ 
+  useEffect(() => {
+    const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+    if (link) {
+      link.href = systemTheme === "Light" ? projectLightImg : projectDarkImg
+    }
+  }, [systemTheme]);
 
   const navigatorPanelRef = useRef<HTMLDivElement | null>(null);
 
