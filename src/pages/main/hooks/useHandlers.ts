@@ -126,6 +126,14 @@ export const useHandlers = () => {
               projectHandle as FileSystemDirectoryHandle,
             ),
           );
+          const persistProcessor = JSON.parse(
+            "" + localStorage.getItem("persist:processor"),
+          );
+          if (persistProcessor.formatCode == "true") {
+            _fileTree[_initialFileUidToOpen].data.content = html_beautify(
+              _fileTree[_initialFileUidToOpen].data.content,
+            );
+          }
 
           dispatch(setFileTree(_fileTree));
           dispatch(setInitialFileUidToOpen(_initialFileUidToOpen));

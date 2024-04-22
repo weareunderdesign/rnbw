@@ -16,8 +16,14 @@ import { html_beautify } from "js-beautify";
 
 export const useSaveCommand = () => {
   const dispatch = useDispatch();
-  const { project, fileTree, currentFileUid, currentCommand, fileHandlers } =
-    useAppState();
+  const {
+    project,
+    fileTree,
+    currentFileUid,
+    currentCommand,
+    fileHandlers,
+    formatCode,
+  } = useAppState();
   const { monacoEditorRef } = useContext(MainContext);
 
   useEffect(() => {
@@ -46,7 +52,7 @@ export const useSaveCommand = () => {
       try {
         const codeViewInstance = monacoEditorRef.current;
         const codeViewInstanceModel = codeViewInstance?.getModel();
-        if (codeViewInstanceModel) {
+        if (formatCode && codeViewInstanceModel) {
           const code = html_beautify(codeViewInstanceModel.getValue());
           codeViewInstanceModel.setValue(code);
         }

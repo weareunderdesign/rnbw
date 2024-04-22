@@ -118,6 +118,7 @@ export const editHtmlContent = ({
   nodeTree,
   contentEditableUid,
   codeViewInstanceModel,
+  formatCode,
   cb,
 }: {
   dispatch: Dispatch<AnyAction>;
@@ -125,6 +126,7 @@ export const editHtmlContent = ({
   nodeTree: TNodeTreeData;
   contentEditableUid: TNodeUid;
   codeViewInstanceModel: editor.ITextModel;
+  formatCode: boolean;
   cb?: () => void;
 }) => {
   const contentEditableElement =
@@ -149,6 +151,7 @@ export const editHtmlContent = ({
       targetUid: contentEditableUid,
       content: content ? content : "",
       codeViewInstanceModel,
+      formatCode,
       fb: () => setIsContentProgrammaticallyChanged(false),
       cb,
     });

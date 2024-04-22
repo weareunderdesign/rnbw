@@ -8,7 +8,7 @@ import { useDispatch } from "react-redux";
 import { setIsContentProgrammaticallyChanged } from "@_redux/main/reference";
 
 export const useAttributeHandler = () => {
-  const { validNodeTree, nFocusedItem } = useAppState();
+  const { validNodeTree, nFocusedItem, formatCode } = useAppState();
   const { monacoEditorRef } = useContext(MainContext);
   const dispatch = useDispatch();
 
@@ -44,11 +44,12 @@ export const useAttributeHandler = () => {
         validNodeTree,
         focusedItem: nFocusedItem,
         codeViewInstanceModel,
+        formatCode,
         cb,
         fb: () => dispatch(setIsContentProgrammaticallyChanged(false)),
       });
     },
-    [validNodeTree, monacoEditorRef, nFocusedItem],
+    [validNodeTree, monacoEditorRef, nFocusedItem, formatCode],
   );
 
   const deleteAttribute = useCallback(
@@ -82,11 +83,12 @@ export const useAttributeHandler = () => {
         validNodeTree,
         focusedItem: nFocusedItem,
         codeViewInstanceModel,
+        formatCode,
         cb,
         fb: () => dispatch(setIsContentProgrammaticallyChanged(false)),
       });
     },
-    [validNodeTree, monacoEditorRef, nFocusedItem],
+    [validNodeTree, monacoEditorRef, nFocusedItem, formatCode],
   );
   return { changeAttribute, deleteAttribute };
 };
