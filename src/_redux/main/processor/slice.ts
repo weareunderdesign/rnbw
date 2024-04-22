@@ -18,7 +18,8 @@ const processorReducerInitialState: TProcessorReducerState = {
   showCodeView: true,
   showFilePanel: false,
 
-  autoSave: false,
+  autoSave: true,
+  formatCode: false,
 
   didUndo: false,
   didRedo: false,
@@ -67,6 +68,11 @@ const processorSlice = createSlice({
       state.autoSave = autoSave;
     },
 
+    setFormatCode(state, action: PayloadAction<boolean>) {
+      const formatCode = action.payload;
+      state.formatCode = formatCode;
+    },
+
     setDidUndo(state, action: PayloadAction<boolean>) {
       const didUndo = action.payload;
       state.didUndo = didUndo;
@@ -101,6 +107,7 @@ export const {
   setShowFilePanel,
 
   setAutoSave,
+  setFormatCode,
 
   setDidUndo,
   setDidRedo,
