@@ -44,7 +44,6 @@ const add = ({
   validNodeTree,
   selectedItems,
   codeViewInstanceModel,
-  formatCode,
   fb,
   cb,
 }: {
@@ -54,7 +53,6 @@ const add = ({
   validNodeTree: TNodeTreeData;
   selectedItems: TNodeUid[];
   codeViewInstanceModel: editor.ITextModel;
-  formatCode: boolean;
   fb?: () => void;
   cb?: () => void;
 }) => {
@@ -118,9 +116,7 @@ const add = ({
     })();
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
-    const code = formatCode
-      ? html_beautify(helperModel.getValue())
-      : helperModel.getValue();
+    const code = html_beautify(codeViewInstanceModel.getValue());
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
@@ -134,7 +130,6 @@ function remove({
   validNodeTree,
   selectedUids,
   codeViewInstanceModel,
-  formatCode,
   fb,
   cb,
 }: {
@@ -142,7 +137,6 @@ function remove({
   validNodeTree: TNodeTreeData;
   selectedUids: TNodeUid[];
   codeViewInstanceModel: editor.ITextModel;
-  formatCode: boolean;
   fb?: () => void;
   cb?: () => void;
 }) {
@@ -165,9 +159,7 @@ function remove({
 
     dispatch(setNeedToSelectNodePaths([]));
 
-    const code = formatCode
-      ? html_beautify(helperModel.getValue())
-      : helperModel.getValue();
+    const code = html_beautify(codeViewInstanceModel.getValue());
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
@@ -182,7 +174,6 @@ const cut = async ({
   validNodeTree,
   selectedUids,
   codeViewInstanceModel,
-  formatCode,
   fb,
   cb,
 }: {
@@ -190,7 +181,6 @@ const cut = async ({
   validNodeTree: TNodeTreeData;
   selectedUids: TNodeUid[];
   codeViewInstanceModel: editor.ITextModel;
-  formatCode: boolean;
   fb?: () => void;
   cb?: () => void;
 }) => {
@@ -213,7 +203,6 @@ const cut = async ({
       validNodeTree,
       selectedUids: selectedUids,
       codeViewInstanceModel: helperModel,
-      formatCode,
     });
 
     // predict needToSelectNodePaths
@@ -243,10 +232,7 @@ const cut = async ({
     })();
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
-    const code = formatCode
-      ? html_beautify(helperModel.getValue())
-      : helperModel.getValue();
-
+    const code = html_beautify(helperModel.getValue());
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
@@ -308,7 +294,6 @@ const paste = async ({
   targetUid,
   codeViewInstanceModel,
   spanPaste,
-  formatCode,
   fb,
   cb,
 }: {
@@ -317,7 +302,6 @@ const paste = async ({
   targetUid: TNodeUid;
   codeViewInstanceModel: editor.ITextModel;
   spanPaste?: boolean;
-  formatCode: boolean;
   fb?: () => void;
   cb?: () => void;
 }) => {
@@ -364,9 +348,7 @@ const paste = async ({
     })();
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
-    code = formatCode
-      ? html_beautify(helperModel.getValue())
-      : helperModel.getValue();
+    code = html_beautify(codeViewInstanceModel.getValue());
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
@@ -380,7 +362,6 @@ const duplicate = ({
   validNodeTree,
   selectedUids,
   codeViewInstanceModel,
-  formatCode,
   fb,
   cb,
 }: {
@@ -388,7 +369,6 @@ const duplicate = ({
   validNodeTree: TNodeTreeData;
   selectedUids: TNodeUid[];
   codeViewInstanceModel: editor.ITextModel;
-  formatCode: boolean;
   fb?: () => void;
   cb?: () => void;
 }) => {
@@ -433,9 +413,7 @@ const duplicate = ({
     })();
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
-    const code = formatCode
-      ? html_beautify(helperModel.getValue())
-      : helperModel.getValue();
+    const code = html_beautify(codeViewInstanceModel.getValue());
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
@@ -453,7 +431,6 @@ const move = ({
   isBetween,
   position,
   codeViewInstanceModel,
-  formatCode,
   fb,
   cb,
 }: {
@@ -464,7 +441,6 @@ const move = ({
   isBetween: boolean;
   position: number;
   codeViewInstanceModel: editor.ITextModel;
-  formatCode: boolean;
   fb?: () => void;
   cb?: () => void;
 }) => {
@@ -512,7 +488,6 @@ const move = ({
           validNodeTree,
           selectedUids: [uid],
           codeViewInstanceModel: helperModel,
-          formatCode,
         });
       }
     });
@@ -546,9 +521,7 @@ const move = ({
     })();
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
-    code = formatCode
-      ? html_beautify(helperModel.getValue())
-      : helperModel.getValue();
+    code = html_beautify(codeViewInstanceModel.getValue());
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
@@ -565,7 +538,6 @@ const rename = ({
   validNodeTree,
   targetUid,
   codeViewInstanceModel,
-  formatCode,
   fb,
   cb,
 }: {
@@ -575,7 +547,6 @@ const rename = ({
   validNodeTree: TNodeTreeData;
   targetUid: TNodeUid;
   codeViewInstanceModel: editor.ITextModel;
-  formatCode: boolean;
   fb?: () => void;
   cb?: () => void;
 }) => {
@@ -619,7 +590,6 @@ const rename = ({
       validNodeTree,
       selectedUids: [targetUid],
       codeViewInstanceModel: helperModel,
-      formatCode,
     });
     pasteCode({
       validNodeTree,
@@ -641,9 +611,7 @@ const rename = ({
     })();
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
-    code = formatCode
-      ? html_beautify(helperModel.getValue())
-      : helperModel.getValue();
+    code = html_beautify(codeViewInstanceModel.getValue());
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
@@ -658,7 +626,6 @@ const group = ({
   validNodeTree,
   selectedUids,
   codeViewInstanceModel,
-  formatCode,
   fb,
   cb,
 }: {
@@ -666,7 +633,6 @@ const group = ({
   validNodeTree: TNodeTreeData;
   selectedUids: TNodeUid[];
   codeViewInstanceModel: editor.ITextModel;
-  formatCode: boolean;
   fb?: () => void;
   cb?: () => void;
 }) => {
@@ -684,7 +650,6 @@ const group = ({
       validNodeTree,
       selectedUids: selectedUids,
       codeViewInstanceModel: helperModel,
-      formatCode,
     });
 
     const { startLine, startCol } =
@@ -714,9 +679,7 @@ const group = ({
     })();
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
-    code = formatCode
-      ? html_beautify(helperModel.getValue())
-      : helperModel.getValue();
+    code = html_beautify(codeViewInstanceModel.getValue());
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
@@ -731,7 +694,6 @@ const ungroup = ({
   validNodeTree,
   selectedUids,
   codeViewInstanceModel,
-  formatCode,
   fb,
   cb,
 }: {
@@ -739,7 +701,6 @@ const ungroup = ({
   validNodeTree: TNodeTreeData;
   selectedUids: TNodeUid[];
   codeViewInstanceModel: editor.ITextModel;
-  formatCode: boolean;
   fb?: () => void;
   cb?: () => void;
 }) => {
@@ -762,7 +723,6 @@ const ungroup = ({
         validNodeTree,
         selectedUids: [uid],
         codeViewInstanceModel: helperModel,
-        formatCode,
       });
       const edit = {
         range: new Range(startLine, startCol, startLine, startCol),
@@ -799,9 +759,7 @@ const ungroup = ({
     })();
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
-    const code = formatCode
-      ? html_beautify(helperModel.getValue())
-      : helperModel.getValue();
+    const code = html_beautify(codeViewInstanceModel.getValue());
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
@@ -817,7 +775,6 @@ const edit = ({
   targetUid,
   content,
   codeViewInstanceModel,
-  formatCode,
   fb,
   cb,
 }: {
@@ -826,7 +783,6 @@ const edit = ({
   targetUid: TNodeUid;
   content: string;
   codeViewInstanceModel: editor.ITextModel;
-  formatCode: boolean;
   fb?: () => void;
   cb?: () => void;
 }) => {
@@ -840,9 +796,7 @@ const edit = ({
       codeViewInstanceModel: helperModel,
     });
 
-    const code = formatCode
-      ? html_beautify(helperModel.getValue())
-      : helperModel.getValue();
+    const code = html_beautify(codeViewInstanceModel.getValue());
     codeViewInstanceModel.setValue(code);
 
     dispatch(focusNodeTreeNode(targetUid));
@@ -860,7 +814,6 @@ export const addAttr = ({
   validNodeTree,
   focusedItem,
   codeViewInstanceModel,
-  formatCode,
   dispatch,
   cb,
   fb,
@@ -871,7 +824,6 @@ export const addAttr = ({
   validNodeTree: TNodeTreeData;
   focusedItem: TNodeUid;
   codeViewInstanceModel: editor.ITextModel;
-  formatCode: boolean;
   cb?: () => void;
   fb?: () => void;
 }) => {
@@ -924,9 +876,7 @@ export const addAttr = ({
     })();
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
-    const code = formatCode
-      ? html_beautify(helperModel.getValue())
-      : helperModel.getValue();
+    const code = html_beautify(helperModel.getValue());
     codeViewInstanceModel.setValue(code);
 
     cb && cb();
@@ -942,7 +892,6 @@ export const removeAttr = ({
   validNodeTree,
   focusedItem,
   codeViewInstanceModel,
-  formatCode,
   cb,
   fb,
 }: {
@@ -952,7 +901,6 @@ export const removeAttr = ({
   validNodeTree: TNodeTreeData;
   focusedItem: TNodeUid;
   codeViewInstanceModel: editor.ITextModel;
-  formatCode: boolean;
   cb?: () => void;
   fb?: () => void;
 }) => {
@@ -999,9 +947,7 @@ export const removeAttr = ({
     })();
     dispatch(setNeedToSelectNodePaths(needToSelectNodePaths));
 
-    const code = formatCode
-      ? html_beautify(helperModel.getValue())
-      : helperModel.getValue();
+    const code = html_beautify(helperModel.getValue());
     codeViewInstanceModel.setValue(code);
 
     cb && cb();

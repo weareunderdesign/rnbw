@@ -30,7 +30,6 @@ import {
   setAutoSave,
   setDidRedo,
   setDidUndo,
-  setFormatCode,
   setShowActionsPanel,
   setShowCodeView,
 } from "@_redux/main/processor";
@@ -70,7 +69,6 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     showActionsPanel,
     showCodeView,
     autoSave,
-    formatCode,
     cmdkOpen,
     cmdkPages,
     currentCommand,
@@ -244,10 +242,6 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     dispatch(setAutoSave(!autoSave));
   }, [autoSave]);
 
-  const onToggleFormatCode = useCallback(() => {
-    dispatch(setFormatCode(!formatCode));
-  }, [formatCode]);
-
   const closeAllPanel = useCallback(() => {
     dispatch(setShowActionsPanel(false));
     dispatch(setShowCodeView(false));
@@ -405,10 +399,6 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
         break;
       case "Autosave":
         onToggleAutoSave();
-        break;
-
-      case "Format Code":
-        onToggleFormatCode();
         break;
 
       default:

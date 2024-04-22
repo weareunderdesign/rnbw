@@ -110,7 +110,6 @@ export const useCmdk = () => {
         iframeRefRef,
         contentEditableUidRef,
         nodeTreeRef,
-        formatCode,
         hoveredTargetRef,
         hoveredNodeUid,
       } = eventListenerRef.current;
@@ -196,7 +195,6 @@ export const useCmdk = () => {
               nodeTree: nodeTreeRef.current,
               contentEditableUid,
               codeViewInstanceModel,
-              formatCode,
               cb:
                 action === "Save"
                   ? () => dispatch(setCurrentCommand({ action: "SaveForce" }))
