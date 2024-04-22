@@ -29,9 +29,11 @@ import {
 import { getCommandKey } from "@_services/global";
 import { eventListenersStatesRefType } from "../IFrame";
 import { TNodeUid } from "@_node/index";
+import { useNavigate } from "react-router-dom";
 
 export const useMouseEvents = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { monacoEditorRef } = useContext(MainContext);
 
   const mostRecentClickedNodeUidRef = useRef<TNodeUid>(""); //This is used because dbl clikc event was not able to receive the uid of the node that was clicked
@@ -207,6 +209,7 @@ export const useMouseEvents = () => {
               fileTree,
               validNodeTree,
               wcName: nodeData.nodeName,
+              navigate,
             });
             return;
           }

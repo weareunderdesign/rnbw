@@ -24,6 +24,7 @@ import {
   setFileTree,
   setInitialFileUidToOpen,
   setProject,
+  setRenderableFileUid,
   TProjectContext,
   updateFileTreeViewState,
 } from "@_redux/main/fileTree";
@@ -54,7 +55,6 @@ export const useHandlers = () => {
     project,
     fileTree,
     currentFileUid,
-    webComponentOpen,
     recentProject,
   } = useAppState();
 
@@ -220,6 +220,7 @@ export const useHandlers = () => {
 
       if (deletedUidsObj[currentFileUid] || !currentFileUid) {
         dispatch(setCurrentFileUid(_initialFileUidToOpen));
+        dispatch(setRenderableFileUid(_initialFileUidToOpen));
         dispatch(
           setCurrentFileContent(
             _fileTree[_initialFileUidToOpen].data.content ||
@@ -236,9 +237,11 @@ export const useHandlers = () => {
         navigate(pathURL);
       } else if (_initialFileUidToOpen == "") {
         dispatch(setCurrentFileUid(""));
+        dispatch(setRenderableFileUid(""));
         dispatch(setCurrentFileContent(""));
       } else if (currentFileUid) {
         dispatch(setCurrentFileUid(currentFileUid));
+        dispatch(setRenderableFileUid(currentFileUid));
         dispatch(
           setCurrentFileContent(
             _fileTree[currentFileUid].data.content || getIndexHtmlContent(),
@@ -265,6 +268,7 @@ export const useHandlers = () => {
         if (deletedUidsObj[currentFileUid]) {
           if (_initialFileUidToOpen !== "") {
             dispatch(setCurrentFileUid(_initialFileUidToOpen));
+            dispatch(setRenderableFileUid(_initialFileUidToOpen));
             dispatch(
               setCurrentFileContent(
                 _fileTree[_initialFileUidToOpen].data.content,
@@ -272,6 +276,7 @@ export const useHandlers = () => {
             );
           } else {
             dispatch(setCurrentFileUid(""));
+            dispatch(setRenderableFileUid(""));
             dispatch(setCurrentFileContent(""));
           }
         }
@@ -284,9 +289,8 @@ export const useHandlers = () => {
   }, [project, currentProjectFileHandle, osType, fileTree, currentFileUid]);
 
   const closeNavigator = useCallback(() => {
-    if (webComponentOpen) return;
     navigatorDropdownType !== null && dispatch(setNavigatorDropdownType(null));
-  }, [navigatorDropdownType, webComponentOpen]);
+  }, [navigatorDropdownType]);
 
   return {
     importProject,
