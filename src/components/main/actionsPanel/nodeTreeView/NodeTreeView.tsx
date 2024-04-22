@@ -44,6 +44,7 @@ import {
   Container,
   TreeItem,
 } from "@_components/common/treeComponents";
+import { useNavigate } from "react-router-dom";
 
 const AutoExpandDelayOnDnD = 1 * 1000;
 const dragAndDropConfig = {
@@ -77,7 +78,7 @@ const NodeTreeView = () => {
     fExpandedItemsObj,
     htmlReferenceData,
   } = useAppState();
-
+  const navigate = useNavigate();
   // ------ sync ------
   // cmdk
   useCmdk();
@@ -162,6 +163,7 @@ const NodeTreeView = () => {
           dispatch,
           expandedItemsObj: fExpandedItemsObj,
           fileTree,
+          navigate,
         });
       }
     },
