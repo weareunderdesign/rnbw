@@ -57,13 +57,15 @@ export default function NavigatorPanel() {
   }, [unsavedProject, theme]);
 
   useEffect(() => {
+    if (theme !== 'System') return;
+    
     const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
     if (link) {
       link.href = systemTheme === "Light"
           ? projectLightImg
           : projectDarkImg;
     }
-  }, [systemTheme]);
+  }, [systemTheme, theme]);
 
   const navigatorPanelRef = useRef<HTMLDivElement | null>(null);
 

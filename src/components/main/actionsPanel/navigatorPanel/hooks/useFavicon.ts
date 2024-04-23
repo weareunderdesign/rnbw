@@ -13,7 +13,7 @@ export const useFavicon = (
 ) => {
   const dispatch = useDispatch();
 
-  const { workspace, project, currentFileUid, validNodeTree } = useAppState();
+  const { workspace, project, currentFileUid, validNodeTree, theme } = useAppState();
 
   const [systemTheme, setSystemTheme] = useState(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'Dark': 'Light')
 
@@ -23,6 +23,8 @@ export const useFavicon = (
   }, [currentFileUid]);
 
   useEffect(() => {
+    if(theme !== 'System') return;
+
     const handleSystemThemeChange = (e: MediaQueryListEvent) => {
       setSystemTheme(e.matches ? 'Dark': 'Light')
     };
@@ -35,8 +37,7 @@ export const useFavicon = (
       window.matchMedia('(prefers-color-scheme: dark)')
         .removeEventListener('change', handleSystemThemeChange)
     }
-  }, []);
-
+  }, [theme]);
 
   useEffect(() => {
     setFaviconFallback(false);
