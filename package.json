@@ -21,7 +21,6 @@
   "license": "ISC",
   "dependencies": {
     "@monaco-editor/react": "^4.4.6",
-    "@rainbowapp/svg-icon.js": "^1.4.0",
     "@reduxjs/toolkit": "^2.1.0",
     "buffer": "^6.0.3",
     "classnames": "^2.3.2",
@@ -46,6 +45,7 @@
     "redux-persist": "^6.0.0",
     "redux-undo": "^1.0.1",
     "@rnbws/renecss": "^0.0.2",
+    "@rnbws/svg-icon.js": "^0.0.1",
     "workbox-window": "^6.5.4"
   },
   "devDependencies": {
