@@ -54,7 +54,11 @@ export const useSaveCommand = () => {
         const codeViewInstanceModel = codeViewInstance?.getModel();
         if (formatCode && codeViewInstanceModel) {
           const code = html_beautify(codeViewInstanceModel.getValue());
+
+          //get the current cursor position
+          const cursorPosition = codeViewInstance?.getPosition();
           codeViewInstanceModel.setValue(code);
+          codeViewInstance?.setPosition(cursorPosition!);
         }
         await saveFileContent(project, fileHandlers, currentFileUid, fileData);
       } catch (err) {

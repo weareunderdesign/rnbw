@@ -87,6 +87,7 @@ export default function CodeView() {
   const hightlightFocusedNodeSourceCode = useCallback(() => {
     const monacoEditor = monacoEditorRef.current;
     if (!monacoEditor) return;
+    if (activePanel === "code") return;
 
     const node = validNodeTree[nFocusedItem];
     const sourceCodeLocation = node.data.sourceCodeLocation;
