@@ -1,10 +1,9 @@
 import { FileChangeAlertMessage, RootNodeUid } from "@_constants/main";
-// @ts-expect-error - no types for this package
-import htmlRefElements from "@_ref/rfrncs/HTML Elements.csv";
 import {
+  htmlElementsReferences,
   THtmlElementsReference,
-  THtmlElementsReferenceData,
-} from "@_types/main";
+} from "@rnbws/rfrncs.design";
+import { THtmlElementsReferenceData } from "@_types/main";
 
 import {
   _path,
@@ -100,7 +99,7 @@ export const getNormalizedPath = (
 };
 export const getIndexHtmlContent = () => {
   const htmlElementsReferenceData: THtmlElementsReferenceData = {};
-  htmlRefElements.map((htmlRefElement: THtmlElementsReference) => {
+  htmlElementsReferences.map((htmlRefElement: THtmlElementsReference) => {
     const pureTag =
       htmlRefElement["Name"] === "Comment"
         ? "comment"

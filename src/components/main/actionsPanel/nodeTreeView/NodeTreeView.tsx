@@ -31,7 +31,6 @@ import {
 import { useAppState } from "@_redux/useAppState";
 import { getCommandKey } from "@_services/global";
 import { addClass, removeClass } from "@_services/main";
-import { THtmlElementsReference } from "@_types/main";
 
 import { useCmdk } from "./hooks/useCmdk";
 import { useNodeTreeCallback } from "./hooks/useNodeTreeCallback";
@@ -45,6 +44,7 @@ import {
   TreeItem,
 } from "@_components/common/treeComponents";
 import { useNavigate } from "react-router-dom";
+import { THtmlElementsReference } from "@rnbws/rfrncs.design";
 
 const AutoExpandDelayOnDnD = 1 * 1000;
 const dragAndDropConfig = {
