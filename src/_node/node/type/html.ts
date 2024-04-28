@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { DOMElement } from "react";
 
 import { Document } from "parse5/dist/tree-adapters/default";
@@ -27,14 +26,16 @@ export type THtmlNodeData = TNodeData & {
 };
 
 export type THtmlNodeAttribs = {
-  [attrName: string]: any;
+  [attrName: string]: string;
 };
 
 export type THtmlNodeTreeData = {
   [uid: TNodeUid]: THtmlNode;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type THtmlDomNode = DOMElement<any, HTMLElement> & {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [attrName: string]: any;
 };
 

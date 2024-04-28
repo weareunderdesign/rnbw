@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from "react";
 
 import { CustomDirectoryPickerOptions } from "file-system-access/lib/showDirectoryPicker";
-import { delMany } from "idb-keyval";
+import { del } from "idb-keyval";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
@@ -26,6 +26,7 @@ import {
   NodeTree_Event_UndoActionType,
 } from "@_redux/main/nodeTree";
 import {
+  setActivePanel,
   setAutoSave,
   setDidRedo,
   setDidUndo,
@@ -65,7 +66,6 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     currentFileContent,
     selectedNodeUids,
     iframeLoading,
-    doingAction,
     activePanel,
     showActionsPanel,
     showCodeView,
@@ -74,16 +74,14 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     cmdkOpen,
     cmdkPages,
     currentCommand,
+    runningAction,
+    showFilePanel,
   } = useAppState();
 
   // handlers
   const onClear = useCallback(async () => {
     window.localStorage.clear();
-    await delMany([
-      "recent-project-context",
-      "recent-project-name",
-      "recent-project-handler",
-    ]);
+    await del("recent-project");
   }, []);
   const onJumpstart = useCallback(() => {
     if (cmdkOpen) return;
@@ -136,8 +134,8 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     }
   }, [project]);
   const onUndo = useCallback(() => {
-    if (doingAction || doingFileAction || iframeLoading) return;
-    if (activePanel === "file") {
+    if (!!runningAction || doingFileAction || iframeLoading) return;
+    if (activePanel === "file" && showActionsPanel && showFilePanel) {
       if (fileEventPastLength === 0) {
         LogAllow && console.log("Undo - FileTree - it is the origin state");
         return;
@@ -145,7 +143,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
       dispatch(setLastFileAction({ ...fileAction }));
       dispatch({ type: FileTree_Event_UndoActionType });
     } else {
-      if (nodeEventPastLength === 1) {
+      if (nodeEventPastLength <= 2) {
         LogAllow && console.log("Undo - NodeTree - it is the origin state");
         return;
       }
@@ -164,17 +162,19 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
 
     dispatch(setDidUndo(true));
   }, [
-    doingAction,
+    runningAction,
     doingFileAction,
     iframeLoading,
     activePanel,
     fileEventPastLength,
     nodeEventPastLength,
+    showActionsPanel,
+    showFilePanel,
   ]);
   const onRedo = useCallback(() => {
-    if (doingAction || doingFileAction || iframeLoading) return;
+    if (!!runningAction || doingFileAction || iframeLoading) return;
 
-    if (activePanel === "file") {
+    if (activePanel === "file" && showActionsPanel && showFilePanel) {
       if (fileEventFutureLength === 0) {
         LogAllow && console.log("Redo - FileTree - it is the latest state");
         return;
@@ -190,17 +190,19 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
 
     dispatch(setDidRedo(true));
   }, [
-    doingAction,
+    runningAction,
     doingFileAction,
     iframeLoading,
     activePanel,
     fileEventFutureLength,
     nodeEventFutureLength,
+    showActionsPanel,
+    showFilePanel,
   ]);
-  const onToogleCodeView = useCallback(() => {
+  const onToggleCodeView = useCallback(() => {
     dispatch(setShowCodeView(!showCodeView));
   }, [showCodeView]);
-  const onToogleActionsPanel = useCallback(() => {
+  const onToggleActionsPanel = useCallback(() => {
     dispatch(setShowActionsPanel(!showActionsPanel));
   }, [showActionsPanel]);
   const onOpenGuidePage = useCallback(() => {
@@ -249,6 +251,22 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
   const closeAllPanel = useCallback(() => {
     dispatch(setShowActionsPanel(false));
     dispatch(setShowCodeView(false));
+    //focus on stage
+    dispatch(setActivePanel("stage"));
+    const iframe: HTMLIFrameElement | null = document.getElementById(
+      "iframeId",
+    ) as HTMLIFrameElement;
+    if (iframe) {
+      const contentWindow = iframe.contentWindow;
+      if (contentWindow) {
+        contentWindow.focus();
+      }
+    }
+  }, []);
+
+  const openAllPanel = useCallback(() => {
+    dispatch(setShowActionsPanel(true));
+    dispatch(setShowCodeView(true));
   }, []);
 
   const KeyDownEventListener = useCallback(
@@ -267,7 +285,8 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
         return;
       }
       if (e.key === "Escape") {
-        !cmdkOpen && closeAllPanel();
+        !cmdkOpen && (showActionsPanel || showCodeView) && closeAllPanel();
+        !cmdkOpen && !showActionsPanel && !showCodeView && openAllPanel();
         return;
       }
       // skip inline rename input in file-tree-view
@@ -364,10 +383,10 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
         onAdd();
         break;
       case "Code":
-        onToogleCodeView();
+        onToggleCodeView();
         break;
       case "Design":
-        onToogleActionsPanel();
+        onToggleActionsPanel();
         break;
       case "Guide":
         onOpenGuidePage();

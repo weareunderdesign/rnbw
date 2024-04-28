@@ -59,11 +59,14 @@ export const getNodeUidToBeSelectedAtFirst = (validNodeTree: TNodeTreeData) => {
       break;
     }
   }
+  const firstBodyNode = bodyNode?.children.find(
+    (item) => validNodeTree[item].displayName !== "#text",
+  );
 
   return bodyNode === null
     ? uids[0]
     : bodyNode.children.length > 0
-      ? bodyNode.children[0]
+      ? firstBodyNode || bodyNode.children[0]
       : bodyNode.uid;
 };
 export const getNeedToExpandNodeUids = (
@@ -101,6 +104,10 @@ export const markChangedFolders = (
   }
   parentFiles.length && dispatch(setFileTreeNodes(parentFiles));
 };
+const isOnlyTextChild = (node: TNode, nodeTree: TNodeTreeData) =>
+  node.children.length === 1 &&
+  nodeTree[node.children[0]].displayName === "#text";
+
 export const getValidNodeTree = (nodeTree: TNodeTreeData): TNodeTreeData => {
   const _nodeTree = structuredClone(nodeTree);
   const _validNodeTree: TNodeTreeData = {};
@@ -113,6 +120,7 @@ export const getValidNodeTree = (nodeTree: TNodeTreeData): TNodeTreeData => {
     node.children = node.children.filter(
       (c_uid) => _nodeTree[c_uid].data.valid,
     );
+    isOnlyTextChild(node, nodeTree) && (node.children = []);
     node.isEntity = node.children.length === 0;
     _validNodeTree[uid] = node;
   });

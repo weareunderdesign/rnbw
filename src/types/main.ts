@@ -1,23 +1,16 @@
 import { TProjectContext } from "@_redux/main/fileTree";
+import { TFilesReference, THtmlElementsReference } from "@rnbws/rfrncs.design";
 
 export type TSession = {
-  "recent-project-context": TProjectContext[];
-  "recent-project-name": string[];
-  "recent-project-handler": (FileSystemDirectoryHandle | null)[];
-};
+  context: TProjectContext;
+  name: string;
+  handler: FileSystemDirectoryHandle | null;
+}[];
 export type TFileNodeType = "*folder" | "html" | "";
 
 // file reference
 export type TFilesReferenceData = {
   [name: string]: TFilesReference;
-};
-export type TFilesReference = {
-  Name: string;
-  Extension: string;
-  Type: string;
-  Icon: string;
-  Description: string;
-  Featured: string;
 };
 
 // html reference
@@ -26,18 +19,6 @@ export type THtmlReferenceData = {
 };
 export type THtmlElementsReferenceData = {
   [tag: string]: THtmlElementsReference;
-};
-export type THtmlElementsReference = {
-  Featured: string;
-  Tag: string;
-  Name: string;
-  Type: string;
-  Contain: string;
-  Description: string;
-  Icon: string;
-  Content: string;
-  Attributes: string;
-  "Cover Image": string;
 };
 
 // cmdk reference

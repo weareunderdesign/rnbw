@@ -7,7 +7,7 @@ import {
   useState,
 } from "react";
 
-import { editor, KeyCode, KeyMod } from "monaco-editor";
+import { editor, KeyCode, KeyMod, Selection } from "monaco-editor";
 import { useDispatch } from "react-redux";
 
 import {
@@ -20,6 +20,7 @@ import { setCodeViewTabSize } from "@_redux/main/codeView";
 import {
   setCurrentFileContent,
   setNeedToSelectCode,
+  focusNodeTreeNode,
 } from "@_redux/main/nodeTree";
 import { useAppState } from "@_redux/useAppState";
 
@@ -34,11 +35,7 @@ import { debounce } from "@_pages/main/helper";
 
 const useEditor = () => {
   const dispatch = useDispatch();
-  const {
-    theme: _theme,
-    autoSave,
-    isContentProgrammaticallyChanged,
-  } = useAppState();
+  const { theme: _theme, autoSave, isCodeTyping, nFocusedItem } = useAppState();
   const {
     monacoEditorRef,
     setMonacoEditorRef,
@@ -93,9 +90,11 @@ const useEditor = () => {
     null,
   );
   const codeSelectionRef = useRef<TCodeSelection | null>(null);
+  const isCodeEditingView = useRef(false);
 
   useEffect(() => {
     codeSelectionRef.current = codeSelection;
+    isCodeEditingView.current = true;
   }, [codeSelection]);
 
   const setCodeSelection = useCallback(() => {
@@ -130,8 +129,14 @@ const useEditor = () => {
       );
 
       editor.onDidChangeCursorPosition((event) => {
-        (event.source === "mouse" || event.source === "keyboard") &&
+        const selection = editor.getSelection();
+        if (event.source === "mouse") {
+          if (selection && selection.isEmpty()) {
+            setCodeSelection();
+          }
+        } else if (event.source === "keyboard") {
           setCodeSelection();
+        }
       });
     },
     [setCodeSelection],
@@ -143,23 +148,29 @@ const useEditor = () => {
   const onChange = useCallback(
     (value: string) => {
       dispatch(setCurrentFileContent(value));
+      const selectedRange: Selection | null =
+        monacoEditorRef.current?.getSelection() || null;
       dispatch(
         setNeedToSelectCode(
-          codeSelectionRef.current
+          selectedRange
             ? {
-                startLineNumber: codeSelectionRef.current.startLineNumber,
-                startColumn: codeSelectionRef.current.startColumn,
-                endLineNumber: codeSelectionRef.current.endLineNumber,
-                endColumn: codeSelectionRef.current.endColumn,
+                startLineNumber: selectedRange.startLineNumber,
+                startColumn: selectedRange.startColumn,
+                endLineNumber: selectedRange.endLineNumber,
+                endColumn: selectedRange.endColumn,
               }
             : null,
         ),
       );
-      dispatch(setIsCodeTyping(false));
       autoSave && debouncedAutoSave();
+      dispatch(setIsCodeTyping(false));
     },
     [debouncedAutoSave, autoSave],
   );
+
+  const handleKeyDown = () => {
+    isCodeEditingView.current = true;
+  };
 
   const debouncedOnChange = useCallback(
     debounce((value) => {
@@ -177,13 +188,13 @@ const useEditor = () => {
   const handleOnChange = useCallback(
     (value: string | undefined) => {
       if (value === undefined) return;
-
-      dispatch(setIsCodeTyping(true));
-
-      if (isContentProgrammaticallyChanged) {
-        debouncedOnChange(value);
-      } else {
+      !isCodeTyping && dispatch(setIsCodeTyping(true));
+      nFocusedItem !== "" && dispatch(focusNodeTreeNode(""));
+      if (isCodeEditingView.current) {
         longDebouncedOnChange(value);
+        isCodeEditingView.current = false;
+      } else {
+        onChange(value);
       }
     },
     [debouncedOnChange, longDebouncedOnChange],
@@ -206,7 +217,7 @@ const useEditor = () => {
   return {
     handleEditorDidMount,
     handleOnChange,
-
+    handleKeyDown,
     theme,
 
     language,

@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useRef } from "react";
-
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import { ShortDelay } from "@_constants/main";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
-import { debounce, scrollToElement } from "@_pages/main/helper";
+import { debounce, getObjKeys, scrollToElement } from "@_pages/main/helper";
 import { useAppState } from "@_redux/useAppState";
 
 import {
@@ -18,7 +17,7 @@ export const useSyncNode = (iframeRef: HTMLIFrameElement | null) => {
   const {
     nodeTree,
     nFocusedItem: focusedItem,
-    nSelectedItems: selectedItems,
+    nSelectedItemsObj: selectedItemsObj,
     hoveredNodeUid,
   } = useAppState();
 
@@ -56,6 +55,10 @@ export const useSyncNode = (iframeRef: HTMLIFrameElement | null) => {
   }, [focusedItem]);
 
   // selectedItems -> stageView
+  const selectedItems = useMemo(
+    () => getObjKeys(selectedItemsObj),
+    [selectedItemsObj],
+  );
   const selectedItemsRef = useRef<TNodeUid[]>(selectedItems);
   useEffect(() => {
     // check if it's a new state
@@ -74,8 +77,8 @@ export const useSyncNode = (iframeRef: HTMLIFrameElement | null) => {
       if (same) return;
     }
 
-    unmarkSelectedElements(iframeRef, selectedItemsRef.current);
-    markSelectedElements(iframeRef, selectedItems);
+    unmarkSelectedElements(iframeRef, selectedItemsRef.current, nodeTree);
+    markSelectedElements(iframeRef, selectedItems, nodeTree);
     selectedItemsRef.current = [...selectedItems];
   }, [selectedItems]);
 

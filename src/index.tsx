@@ -1,4 +1,6 @@
 import "./rnbw.css";
+import "@rnbws/renecss/dist/rene.min.css";
+import "@rnbws/svg-icon.js";
 
 import React from "react";
 

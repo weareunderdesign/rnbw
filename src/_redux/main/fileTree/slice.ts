@@ -13,13 +13,11 @@ const fileTreeReducerInitialState: TFileTreeReducerState = {
   initialFileUidToOpen: "",
   prevFileUid: "",
   currentFileUid: "",
-  prevRenderableFileUid: "",
+  renderableFileUid: "",
 
   fileTreeViewState: {
     focusedItem: "",
-    expandedItems: [],
     expandedItemsObj: {},
-    selectedItems: [],
     selectedItemsObj: {},
   },
   hoveredFileUid: "",
@@ -63,9 +61,9 @@ const fileTreeSlice = createSlice({
       const prevFileUid = action.payload;
       state.prevFileUid = prevFileUid;
     },
-    setPrevRenderableFileUid(state, action: PayloadAction<TNodeUid>) {
-      const prevRenderableFileUid = action.payload;
-      state.prevRenderableFileUid = prevRenderableFileUid;
+    setRenderableFileUid(state, action: PayloadAction<TNodeUid>) {
+      const renderableFileUid = action.payload;
+      state.renderableFileUid = renderableFileUid;
     },
 
     focusFileTreeNode(state, action: PayloadAction<TNodeUid>) {
@@ -77,22 +75,15 @@ const fileTreeSlice = createSlice({
       for (const uid of uids) {
         state.fileTreeViewState.expandedItemsObj[uid] = true;
       }
-      state.fileTreeViewState.expandedItems = Object.keys(
-        state.fileTreeViewState.expandedItemsObj,
-      );
     },
     collapseFileTreeNodes(state, action: PayloadAction<TNodeUid[]>) {
       const uids = action.payload;
       for (const uid of uids) {
         delete state.fileTreeViewState.expandedItemsObj[uid];
       }
-      state.fileTreeViewState.expandedItems = Object.keys(
-        state.fileTreeViewState.expandedItemsObj,
-      );
     },
     selectFileTreeNodes(state, action: PayloadAction<TNodeUid[]>) {
       const uids = action.payload;
-      state.fileTreeViewState.selectedItems = uids;
       state.fileTreeViewState.selectedItemsObj = {};
       for (const uid of uids) {
         state.fileTreeViewState.selectedItemsObj[uid] = true;
@@ -120,12 +111,6 @@ const fileTreeSlice = createSlice({
           state.fileTreeViewState.selectedItemsObj[curUid] = true;
         }
       }
-      state.fileTreeViewState.expandedItems = Object.keys(
-        state.fileTreeViewState.expandedItemsObj,
-      );
-      state.fileTreeViewState.selectedItems = Object.keys(
-        state.fileTreeViewState.selectedItemsObj,
-      );
     },
     setHoveredFileUid(state, action: PayloadAction<TNodeUid>) {
       const hoveredFileUid = action.payload;
@@ -163,7 +148,7 @@ export const {
   setInitialFileUidToOpen,
   setCurrentFileUid,
   setPrevFileUid,
-  setPrevRenderableFileUid,
+  setRenderableFileUid,
 
   focusFileTreeNode,
   expandFileTreeNodes,

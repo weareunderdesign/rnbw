@@ -9,36 +9,34 @@ import {
   setFileTree,
   setInitialFileUidToOpen,
   setPrevFileUid,
-  setPrevRenderableFileUid,
+  setRenderableFileUid,
   setProject,
 } from "@_redux/main/fileTree";
 import { FileTree_Event_ClearActionType } from "@_redux/main/fileTree/event";
-import {
-  clearNodeTreeViewState,
-  setNodeTree,
-  setValidNodeTree,
-} from "@_redux/main/nodeTree";
+import { clearNodeTreeViewState, setNodeTree } from "@_redux/main/nodeTree";
 import {
   NodeTree_Event_ClearActionType,
   NodeTree_Event_JumpToPastActionType,
 } from "@_redux/main/nodeTree/event";
-import { setIframeSrc, setWebComponentOpen } from "@_redux/main/stageView";
+import { setIframeSrc } from "@_redux/main/stageView";
 import {
   TCmdkGroupData,
   TCmdkKeyMap,
   TCmdkReference,
   TCmdkReferenceData,
-  TFilesReference,
   THtmlReferenceData,
 } from "@_types/main";
 import { AnyAction } from "@reduxjs/toolkit";
 import { THtmlNodeData } from "@_node/node";
-import { TFileNodeData, TFileNodeTreeData } from "@_node/index";
+import { TFileNodeData, TFileNodeTreeData, createURLPath } from "@_node/index";
 import {
   setActivePanel,
   setNavigatorDropdownType,
 } from "@_redux/main/processor";
 import { AnyFunction } from "./types";
+import { toast } from "react-toastify";
+import { NavigateFunction } from "react-router-dom";
+import { TFilesReference } from "@rnbws/rfrncs.design";
 
 export const addDefaultCmdkActions = (
   cmdkReferenceData: TCmdkReferenceData,
@@ -120,11 +118,11 @@ export const clearProjectSession = (dispatch: Dispatch<AnyAction>) => {
       favicon: null,
     }),
   );
-        dispatch(setFileTree({}));
-        dispatch(setInitialFileUidToOpen(""));
-     dispatch(setCurrentFileUid(""));
+  dispatch(setFileTree({}));
+  dispatch(setInitialFileUidToOpen(""));
+  dispatch(setCurrentFileUid(""));
   dispatch(setPrevFileUid(""));
-  dispatch(setPrevRenderableFileUid(""));
+  dispatch(setRenderableFileUid(""));
   dispatch(clearFileTreeViewState());
   dispatch({ type: FileTree_Event_ClearActionType });
 
@@ -132,7 +130,6 @@ export const clearProjectSession = (dispatch: Dispatch<AnyAction>) => {
 };
 export const clearFileSession = (dispatch: Dispatch<AnyAction>) => {
   dispatch(setNodeTree({}));
-  dispatch(setValidNodeTree({}));
   dispatch(clearNodeTreeViewState());
   dispatch({ type: NodeTree_Event_ClearActionType });
   dispatch({ type: NodeTree_Event_JumpToPastActionType, payload: 0 });
@@ -181,7 +178,6 @@ export const fileCmdk = ({
   data: TCmdkGroupData;
   cmdkSearchContent: string;
   groupName: string;
-
 }) => {
   const fileNode = fileTree[fFocusedItem];
   if (fileNode) {
@@ -207,37 +203,43 @@ export const fileCmdk = ({
     });
   }
   data["Files"] = data["Files"].filter(
-    (element:  TCmdkReference) => element.Featured || !!cmdkSearchContent,
+    (element: TCmdkReference) => element.Featured || !!cmdkSearchContent,
   );
   if (data["Files"].length === 0) {
     delete data["Files"];
   }
 };
 export const elementsCmdk = ({
-  nodeTree,
+  validNodeTree,
   nFocusedItem,
   htmlReferenceData,
   data,
   groupName,
+  isMove = false,
 }: {
-  nodeTree: TNodeTreeData;
+  validNodeTree: TNodeTreeData;
   nFocusedItem: TNodeUid;
   htmlReferenceData: THtmlReferenceData;
   data: TCmdkGroupData;
   groupName: string;
+  isMove?: boolean;
 }) => {
   let flag = true;
-  for (const x in nodeTree) {
-    if (nodeTree[x].displayName === "html") {
+  for (const x in validNodeTree) {
+    if (validNodeTree[x].displayName === "html") {
       flag = false;
     }
   }
 
   if (!flag) {
-    const htmlNode = nodeTree[nFocusedItem];
+    const htmlNode = validNodeTree[nFocusedItem];
     if (htmlNode && htmlNode.parentUid && htmlNode.parentUid !== RootNodeUid) {
-      const parentNode = nodeTree[htmlNode.parentUid!];
-      const refData = htmlReferenceData.elements[parentNode.displayName];
+      const parentNode = validNodeTree[htmlNode.parentUid!];
+      const refData =
+        htmlReferenceData.elements[
+          isMove ? htmlNode.displayName : parentNode.displayName
+        ];
+
       if (refData) {
         if (refData.Contain === "All") {
           Object.keys(htmlReferenceData.elements).map((tag: string) => {
@@ -343,6 +345,7 @@ export const onWebComponentDblClick = ({
   validNodeTree,
   dispatch,
   expandedItemsObj,
+  navigate,
 }: {
   wcName: string;
   fileTree: TFileNodeTreeData;
@@ -351,8 +354,10 @@ export const onWebComponentDblClick = ({
   expandedItemsObj: {
     [uid: TNodeUid]: true;
   };
+  navigate: NavigateFunction;
 }) => {
   let exist = false;
+  let filePath = "";
   for (const x in fileTree) {
     const defineRegex = /customElements\.define\(\s*['"]([\w-]+)['"]/;
     if (
@@ -381,13 +386,17 @@ export const onWebComponentDblClick = ({
               src.startsWith("https") ||
               src.startsWith("//")
             ) {
-              alert("rnbw couldn't find it's source file");
+              toast.error("rnbw couldn't find it's source file");
               break;
             } else {
-              dispatch(setWebComponentOpen(true));
               dispatch(setInitialFileUidToOpen(fileTree[x].uid));
               dispatch(setNavigatorDropdownType("project"));
               dispatch(setActivePanel("code"));
+              filePath = createURLPath(
+                fileTree[x].uid,
+                RootNodeUid,
+                fileTree[RootNodeUid]?.displayName,
+              );
               // expand path to the uid
               const _expandedItems: string[] = [];
               let _file = fileTree[x];
@@ -404,6 +413,7 @@ export const onWebComponentDblClick = ({
               dispatch(expandFileTreeNodes(_expandedItems));
 
               exist = true;
+              navigate(filePath);
               break;
             }
           }
@@ -412,7 +422,7 @@ export const onWebComponentDblClick = ({
     }
   }
   if (!exist) {
-    alert("rnbw couldn't find it's source file");
+    toast.error("rnbw couldn't find it's source file");
   }
 };
 
@@ -434,9 +444,10 @@ export const setSystemTheme = () => {
   }
 };
 
-
-
-export function debounce<F extends AnyFunction>(func: F, wait: number): (...args: Parameters<F>) => void {
+export function debounce<F extends AnyFunction>(
+  func: F,
+  wait: number,
+): (...args: Parameters<F>) => void {
   let timeoutId: ReturnType<typeof setTimeout>;
 
   return function debounced(...args: Parameters<F>) {
@@ -446,3 +457,7 @@ export function debounce<F extends AnyFunction>(func: F, wait: number): (...args
     }, wait);
   };
 }
+
+export const getObjKeys = <T>(obj: { [key: string]: T }): string[] => {
+  return Object.keys(obj);
+};

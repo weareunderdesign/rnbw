@@ -1,11 +1,5 @@
 /* eslint-disable react/prop-types */
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-} from "react";
+import React, { useCallback, useContext, useEffect, useMemo } from "react";
 
 import { DraggingPositionItem } from "react-complex-tree";
 import { useDispatch } from "react-redux";
@@ -24,14 +18,9 @@ import { TNode, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { setHoveredFileUid } from "@_redux/main/fileTree";
 import { FileTree_Event_ClearActionType } from "@_redux/main/fileTree/event";
-import {
-  setActivePanel,
-  setLoadingFalse,
-  setLoadingTrue,
-} from "@_redux/main/processor";
+import { setActivePanel } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 import { generateQuerySelector } from "@_services/main";
-import { TFilesReference } from "@_types/main";
 
 import {
   useCmdk,
@@ -41,8 +30,7 @@ import {
   useSync,
 } from "./hooks";
 import { useSaveCommand } from "@_pages/main/processor/hooks";
-import { setWebComponentOpen } from "@_redux/main/stageView";
-import { debounce } from "@_pages/main/helper";
+import { debounce, getObjKeys } from "@_pages/main/helper";
 import {
   Container,
   ItemArrow,
@@ -50,6 +38,7 @@ import {
   TreeItem,
 } from "@_components/common/treeComponents";
 import { NodeIcon } from "./workspaceComponents/NodeIcon";
+import { TFilesReference } from "@rnbws/rfrncs.design";
 
 const AutoExpandDelayOnDnD = 1 * 1000;
 export default function WorkspaceTreeView() {
@@ -59,28 +48,26 @@ export default function WorkspaceTreeView() {
     currentFileUid,
     fileTree,
     fFocusedItem: focusedItem,
-    fExpandedItems: expandedItems,
-    fSelectedItems: selectedItems,
+    fExpandedItemsObj,
+    fSelectedItemsObj,
     linkToOpen,
     autoSave,
     activePanel,
-    prevRenderableFileUid,
+    renderableFileUid,
     filesReferenceData,
     currentProjectFileHandle,
-    recentProjectNames,
-    recentProjectHandlers,
-    recentProjectContexts,
+    recentProject,
     invalidFileNodes,
+    hoveredFileUid,
   } = useAppState();
-  const { addRunningActions, removeRunningActions, importProject } =
-    useContext(MainContext);
+
+  const { importProject } = useContext(MainContext);
   const navigate = useNavigate();
   const { project, "*": rest } = useParams();
 
   const { focusedItemRef, fileTreeViewData } = useSync();
   const { cb_focusNode, cb_selectNode, cb_expandNode, cb_collapseNode } =
     useNodeViewState({ invalidFileNodes });
-  const openFileUid = useRef<TNodeUid>("");
   const {
     cb_startRenamingNode,
     cb_abortRenamingNode,
@@ -96,22 +83,11 @@ export default function WorkspaceTreeView() {
   // open default initial html file
   useEffect(() => {
     if (initialFileUidToOpen !== "" && fileTree[initialFileUidToOpen]) {
-      addRunningActions(["fileTreeView-read"]);
-
       cb_focusNode(initialFileUidToOpen);
       cb_selectNode([initialFileUidToOpen]);
       cb_readNode(initialFileUidToOpen);
     }
   }, [initialFileUidToOpen]);
-
-  useEffect(() => {
-    if (
-      fileTree[openFileUid.current] &&
-      currentFileUid === openFileUid.current
-    ) {
-      openFile(openFileUid.current);
-    }
-  }, [fileTree, currentFileUid]);
 
   // handlle links-open
   const openFile = useCallback(
@@ -119,16 +95,17 @@ export default function WorkspaceTreeView() {
       if (currentFileUid === uid) return;
       dispatch({ type: FileTree_Event_ClearActionType });
       // focus/select/read the file
-      addRunningActions([
-        "fileTreeView-focus",
-        "fileTreeView-select",
-        "fileTreeView-read",
-      ]);
       cb_focusNode(uid);
       cb_selectNode([uid]);
       cb_readNode(uid);
+      const newURL = createURLPath(
+        uid,
+        RootNodeUid,
+        fileTree[RootNodeUid]?.displayName,
+      );
+      navigate(newURL);
     },
-    [fileTree, addRunningActions, cb_focusNode, cb_selectNode, cb_readNode],
+    [fileTree, cb_focusNode, cb_selectNode, cb_readNode, currentFileUid],
   );
   useEffect(() => {
     if (!linkToOpen || linkToOpen === "") return;
@@ -149,19 +126,18 @@ export default function WorkspaceTreeView() {
 
   useEffect(
     function RevertWcOpen() {
-      if (activePanel !== "code") {
-        dispatch(setWebComponentOpen(false));
-        openFile(prevRenderableFileUid);
+      if (activePanel === "stage") {
+        openFile(renderableFileUid);
       }
     },
     [activePanel],
   );
 
   const onPanelClick = useCallback(() => {
-    dispatch(setActivePanel("file"));
-  }, []);
+    activePanel !== "file" && dispatch(setActivePanel("file"));
+  }, [activePanel]);
 
-  const openFromURL = async () => {
+  const openFromURL = useCallback(async () => {
     if (!project) return;
     const pathName = `${RootNodeUid}/${rest}`;
     const isCurrentProject = currentProjectFileHandle?.name === project;
@@ -169,11 +145,14 @@ export default function WorkspaceTreeView() {
 
     if (isCurrentProject && isDifferentFile) {
       openFile(pathName);
-    } else if (!isCurrentProject && recentProjectHandlers) {
-      const index = recentProjectNames.indexOf(project);
+    } else if (!isCurrentProject) {
+      const index = recentProject.findIndex(
+        (_recentProject) => _recentProject.name === project,
+      );
+
       if (index >= 0) {
-        const projectContext = recentProjectContexts[index];
-        const projectHandler = recentProjectHandlers[index];
+        const projectContext = recentProject[index].context;
+        const projectHandler = recentProject[index].handler;
         if (projectHandler && currentFileUid !== projectHandler.name) {
           confirmFileChanges(fileTree) &&
             importProject(projectContext, projectHandler, true);
@@ -181,11 +160,11 @@ export default function WorkspaceTreeView() {
         openFile(pathName);
       }
     }
-  };
+  }, [project, rest, recentProject]);
 
   useEffect(() => {
     openFromURL();
-  }, [project, rest, recentProjectHandlers]);
+  }, [openFromURL]);
 
   return (
     <div
@@ -203,8 +182,8 @@ export default function WorkspaceTreeView() {
         info={{ id: "file-tree-view" }}
         data={fileTreeViewData}
         focusedItem={focusedItem}
-        expandedItems={expandedItems}
-        selectedItems={selectedItems}
+        expandedItems={getObjKeys(fExpandedItemsObj)}
+        selectedItems={getObjKeys(fSelectedItemsObj)}
         renderers={{
           renderTreeContainer: (props) => <Container {...props} />,
           renderItemsContainer: (props) => <Container {...props} />,
@@ -236,30 +215,12 @@ export default function WorkspaceTreeView() {
             const onClick = useCallback(
               async (e: React.MouseEvent) => {
                 e.stopPropagation();
-                const isFile =
-                  fileTree[props.item.data.uid].data.kind === "file";
-
-                const newURL = createURLPath(
-                  props.item.data.uid,
-                  RootNodeUid,
-                  fileTree[RootNodeUid]?.displayName,
-                );
-
-                if (isFile) {
-                  navigate(newURL);
-                  dispatch(setLoadingFalse());
-
-                  props.item.data.uid !== currentFileUid &&
-                    dispatch(setLoadingTrue());
-                }
-
                 try {
                   const promises = [];
 
                   if (fileTree[currentFileUid]?.data?.changed && autoSave) {
                     promises.push(onSaveCurrentFile());
                   }
-                  openFileUid.current = props.item.data.uid;
                   // Skip click-event from an inline rename input
                   const targetId = e.target && (e.target as HTMLElement).id;
                   if (targetId === "FileTreeView-RenameInput") {
@@ -290,8 +251,10 @@ export default function WorkspaceTreeView() {
                   promises.push(dispatch(setActivePanel("file")));
                   // Wait for all promises to resolve
                   await Promise.all(promises);
-                } finally {
-                  isFile && dispatch(setLoadingFalse());
+
+                  openFile(props.item.index as TNodeUid);
+                } catch (error) {
+                  console.error(error);
                 }
               },
               [props.item, props.context, fileTree, autoSave, currentFileUid],
@@ -316,9 +279,16 @@ export default function WorkspaceTreeView() {
               }
             };
 
-            const onMouseEnter = () =>
-              dispatch(setHoveredFileUid(props.item.index as TNodeUid));
-            const onMouseLeave = () => dispatch(setHoveredFileUid(""));
+            const onMouseEnter = useCallback(
+              () =>
+                hoveredFileUid !== props.item.index &&
+                dispatch(setHoveredFileUid(props.item.index as TNodeUid)),
+              [props.item.index, hoveredFileUid],
+            );
+            const onMouseLeave = useCallback(
+              () => hoveredFileUid && dispatch(setHoveredFileUid("")),
+              [hoveredFileUid],
+            );
 
             return (
               <TreeItem
@@ -422,7 +392,6 @@ export default function WorkspaceTreeView() {
           canDropOnFolder: true,
           canDropOnNonFolder: false,
           canReorderItems: false,
-
           canSearch: false,
           canSearchByStartingTyping: false,
           canRename: true,
@@ -452,9 +421,7 @@ export default function WorkspaceTreeView() {
           },
 
           onPrimaryAction: (item) => {
-            item.data.data.valid
-              ? cb_readNode(item.index as TNodeUid)
-              : removeRunningActions(["fileTreeView-read"]);
+            item.data.data.valid && cb_readNode(item.index as TNodeUid);
           },
 
           onDrop: (items, target) => {

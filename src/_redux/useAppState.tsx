@@ -6,19 +6,17 @@ export const useAppState = () => {
   const {
     global: { osType, theme },
     main: {
-      fileTree: {
+      file: {
         workspace,
         project,
         initialFileUidToOpen,
         currentFileUid,
         prevFileUid,
-        prevRenderableFileUid,
+        renderableFileUid,
         fileTree,
         fileTreeViewState: {
           focusedItem: fFocusedItem,
-          expandedItems: fExpandedItems,
           expandedItemsObj: fExpandedItemsObj,
-          selectedItems: fSelectedItems,
           selectedItemsObj: fSelectedItemsObj,
         },
         hoveredFileUid,
@@ -38,9 +36,7 @@ export const useAppState = () => {
         needToSelectCode,
         nodeTreeViewState: {
           focusedItem: nFocusedItem,
-          expandedItems: nExpandedItems,
           expandedItemsObj: nExpandedItemsObj,
-          selectedItems: nSelectedItems,
           selectedItemsObj: nSelectedItemsObj,
         },
         hoveredNodeUid,
@@ -51,21 +47,14 @@ export const useAppState = () => {
         present: { currentFileContent, selectedNodeUids },
         future: nodeEventFuture,
       },
-      stageView: {
-        iframeSrc,
-        iframeLoading,
-        needToReloadIframe,
-        linkToOpen,
-        syncConfigs,
-        webComponentOpen,
-      },
+      stageView: { iframeSrc, iframeLoading, linkToOpen, syncConfigs },
       codeView: {
         editingNodeUid: editingNodeUidInCodeView,
         codeViewTabSize,
         codeErrors,
       },
       processor: {
-        doingAction,
+        runningAction,
         navigatorDropdownType,
         favicon,
         activePanel,
@@ -89,9 +78,7 @@ export const useAppState = () => {
         projectHandlers,
         currentProjectFileHandle,
         fileHandlers,
-        recentProjectNames,
-        recentProjectHandlers,
-        recentProjectContexts,
+        recentProject,
       },
       cmdk: {
         cmdkOpen,
@@ -119,13 +106,11 @@ export const useAppState = () => {
     initialFileUidToOpen,
     currentFileUid,
     prevFileUid,
-    prevRenderableFileUid,
+    renderableFileUid,
     fileTree,
 
     fFocusedItem,
-    fExpandedItems,
     fExpandedItemsObj,
-    fSelectedItems,
     fSelectedItemsObj,
     hoveredFileUid,
 
@@ -146,9 +131,7 @@ export const useAppState = () => {
     needToSelectCode,
 
     nFocusedItem,
-    nExpandedItems,
     nExpandedItemsObj,
-    nSelectedItems,
     nSelectedItemsObj,
     hoveredNodeUid,
     copiedNodeDisplayName,
@@ -163,16 +146,14 @@ export const useAppState = () => {
 
     iframeSrc,
     iframeLoading,
-    needToReloadIframe,
     linkToOpen,
     syncConfigs,
-    webComponentOpen,
 
     editingNodeUidInCodeView,
     codeViewTabSize,
     codeErrors,
 
-    doingAction,
+    runningAction,
 
     navigatorDropdownType,
     favicon,
@@ -199,9 +180,7 @@ export const useAppState = () => {
     projectHandlers,
     currentProjectFileHandle,
     fileHandlers,
-    recentProjectNames,
-    recentProjectHandlers,
-    recentProjectContexts,
+    recentProject,
 
     cmdkOpen,
     cmdkPages,

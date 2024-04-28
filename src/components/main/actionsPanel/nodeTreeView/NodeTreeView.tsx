@@ -1,9 +1,7 @@
 /* eslint-disable react/prop-types */
 //FIXME: This file is a temporary solution to use the Filer API in the browser.
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, {
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -15,16 +13,15 @@ import { useDispatch } from "react-redux";
 import { TreeView } from "@_components/common";
 import { TreeViewData } from "@_components/common/treeView/types";
 import { DargItemImage, RootNodeUid } from "@_constants/main";
-import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { THtmlNodeData } from "@_node/index";
 import { TNode, TNodeUid } from "@_node/types";
 import {
   debounce,
+  getObjKeys,
   isWebComponentDblClicked,
   onWebComponentDblClick,
   scrollToElement,
 } from "@_pages/main/helper";
-import { MainContext } from "@_redux/main";
 
 import { setHoveredNodeUid } from "@_redux/main/nodeTree";
 import {
@@ -34,7 +31,6 @@ import {
 import { useAppState } from "@_redux/useAppState";
 import { getCommandKey } from "@_services/global";
 import { addClass, removeClass } from "@_services/main";
-import { THtmlElementsReference } from "@_types/main";
 
 import { useCmdk } from "./hooks/useCmdk";
 import { useNodeTreeCallback } from "./hooks/useNodeTreeCallback";
@@ -47,6 +43,8 @@ import {
   Container,
   TreeItem,
 } from "@_components/common/treeComponents";
+import { useNavigate } from "react-router-dom";
+import { THtmlElementsReference } from "@rnbws/rfrncs.design";
 
 const AutoExpandDelayOnDnD = 1 * 1000;
 const dragAndDropConfig = {
@@ -64,6 +62,7 @@ const searchConfig = {
 const NodeTreeView = () => {
   const dispatch = useDispatch();
   const {
+    activePanel,
     osType,
     navigatorDropdownType,
     fileTree,
@@ -72,15 +71,14 @@ const NodeTreeView = () => {
     validNodeTree,
 
     nFocusedItem: focusedItem,
-    nExpandedItems: expandedItems,
-    nSelectedItems: selectedItems,
+    nExpandedItemsObj,
+    nSelectedItemsObj,
     hoveredNodeUid,
 
-    fExpandedItemsObj: expandedItemsObj,
+    fExpandedItemsObj,
     htmlReferenceData,
   } = useAppState();
-  const { addRunningActions } = useContext(MainContext);
-
+  const navigate = useNavigate();
   // ------ sync ------
   // cmdk
   useCmdk();
@@ -137,16 +135,16 @@ const NodeTreeView = () => {
     }
 
     return data;
-  }, [validNodeTree, expandedItems]);
+  }, [validNodeTree, nExpandedItemsObj]);
 
   // node view state handlers
   const { cb_expandNode } = useNodeViewState();
   const [nextToExpand, setNextToExpand] = useState<TNodeUid | null>(null);
 
   const onPanelClick = useCallback(() => {
-    dispatch(setActivePanel("node"));
+    activePanel !== "node" && dispatch(setActivePanel("node"));
     navigatorDropdownType && dispatch(setNavigatorDropdownType(null));
-  }, [navigatorDropdownType]);
+  }, [navigatorDropdownType, activePanel]);
 
   // open web component
   const openWebComponent = useCallback(
@@ -163,8 +161,9 @@ const NodeTreeView = () => {
           wcName: nodeData.nodeName,
           validNodeTree,
           dispatch,
-          expandedItemsObj,
+          expandedItemsObj: fExpandedItemsObj,
           fileTree,
+          navigate,
         });
       }
     },
@@ -183,7 +182,7 @@ const NodeTreeView = () => {
     [cb_expandNode, nextToExpand],
   );
 
-  return currentFileUid !== "" ? (
+  return currentFileUid !== "" && !!htmlReferenceData ? (
     <div
       id="NodeTreeView"
       style={{
@@ -201,8 +200,8 @@ const NodeTreeView = () => {
         info={{ id: "node-tree-view" }}
         data={nodeTreeViewData}
         focusedItem={focusedItem}
-        selectedItems={selectedItems}
-        expandedItems={expandedItems}
+        selectedItems={getObjKeys(nSelectedItemsObj)}
+        expandedItems={getObjKeys(nExpandedItemsObj)}
         renderers={{
           renderTreeContainer: (props) => <Container {...props} />,
           renderItemsContainer: (props) => <Container {...props} />,
@@ -211,22 +210,19 @@ const NodeTreeView = () => {
               useMemo<THtmlElementsReference>(() => {
                 const node = props.item.data as TNode;
                 const nodeData = node.data as THtmlNodeData;
-                const refData =
-                  htmlReferenceData.elements[
-                    nodeData.nodeName === "!doctype"
-                      ? "!DOCTYPE"
-                      : nodeData.nodeName
-                  ];
+                let nodeName = nodeData.nodeName;
+                if (nodeName === "!doctype") {
+                  nodeName = "!DOCTYPE";
+                } else if (nodeName === "#comment") {
+                  nodeName = "comment";
+                }
+                const refData = htmlReferenceData.elements[nodeName];
                 return refData;
               }, [props.item.data, cb_expandNode]);
 
             const onClick = useCallback(
               (e: React.MouseEvent) => {
                 e.stopPropagation();
-
-                !props.context.isFocused &&
-                  addRunningActions(["nodeTreeView-focus"]);
-                addRunningActions(["nodeTreeView-select"]);
 
                 !props.context.isFocused && props.context.focusItem();
 
@@ -238,12 +234,12 @@ const NodeTreeView = () => {
                       : props.context.addToSelectedItems()
                     : props.context.selectItem();
 
-                dispatch(setActivePanel("node"));
+                activePanel !== "node" && dispatch(setActivePanel("node"));
 
                 navigatorDropdownType !== null &&
                   dispatch(setNavigatorDropdownType(null));
               },
-              [props.context, navigatorDropdownType],
+              [props.context, navigatorDropdownType, activePanel],
             );
 
             const onDoubleClick = useCallback(
@@ -254,29 +250,21 @@ const NodeTreeView = () => {
               [props.item],
             );
 
-            const onMouseEnter = useCallback((e: React.MouseEvent) => {
-              const ele = e.target as HTMLElement;
-              let _uid: TNodeUid | null = ele.getAttribute("id");
-              // for the elements which are created by js. (ex: Web Component)
-              let newHoveredElement: HTMLElement = ele;
+            const onMouseEnter = () => {
+              let _uid = props?.item?.data?.uid;
               if (_uid === null || _uid === undefined) return;
-              _uid = _uid?.substring(13, _uid.length);
+              let node = validNodeTree[_uid];
               while (!_uid) {
-                const parentEle = newHoveredElement.parentElement;
-                if (!parentEle) break;
-
-                _uid = parentEle.getAttribute(StageNodeIdAttr);
-                !_uid ? (newHoveredElement = parentEle) : null;
+                _uid = node.parentUid;
+                !_uid ? (node = validNodeTree[_uid]) : null;
               }
-
-              // set hovered item
               if (_uid && _uid !== hoveredNodeUid) {
                 dispatch(setHoveredNodeUid(_uid));
               }
-            }, []);
+            };
 
             const onMouseLeave = useCallback(() => {
-              dispatch(setHoveredNodeUid(""));
+              if (hoveredNodeUid !== "") dispatch(setHoveredNodeUid(""));
             }, []);
 
             const onDragStart = (e: React.DragEvent) => {
@@ -323,7 +311,6 @@ const NodeTreeView = () => {
 
           renderItemArrow: ({ item, context }) => {
             const onClick = useCallback(() => {
-              addRunningActions(["nodeTreeView-arrow"]);
               context.toggleExpandedState();
             }, [context]);
 

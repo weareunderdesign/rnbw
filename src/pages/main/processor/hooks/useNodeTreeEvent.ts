@@ -36,9 +36,8 @@ import {
   setNeedToSelectNodeUids,
   setNodeTree,
   setSelectedNodeUids,
-  setValidNodeTree,
 } from "@_redux/main/nodeTree";
-import { setIframeSrc, setNeedToReloadIframe } from "@_redux/main/stageView";
+import { setIframeSrc } from "@_redux/main/stageView";
 import { useAppState } from "@_redux/useAppState";
 
 import {
@@ -48,8 +47,14 @@ import {
   getValidNodeTree,
   markChangedFolders,
 } from "../helpers";
-import { setLoadingFalse, setLoadingTrue } from "@_redux/main/processor";
+import {
+  addRunningAction,
+  removeRunningAction,
+  setLoadingFalse,
+  setLoadingTrue,
+} from "@_redux/main/processor";
 import { toast } from "react-toastify";
+import { getObjKeys } from "@_pages/main/helper";
 
 export const useNodeTreeEvent = () => {
   const dispatch = useDispatch();
@@ -67,13 +72,11 @@ export const useNodeTreeEvent = () => {
     validNodeTree,
     needToSelectNodePaths,
     needToSelectCode,
-    nExpandedItems,
+    nExpandedItemsObj,
     nFocusedItem,
     syncConfigs,
-    webComponentOpen,
   } = useAppState();
-  const { addRunningActions, removeRunningActions, iframeRefRef } =
-    useContext(MainContext);
+  const { iframeRefRef } = useContext(MainContext);
 
   const isSelectedNodeUidsChanged = useRef(false);
   const isCurrentFileContentChanged = useRef(false);
@@ -101,9 +104,9 @@ export const useNodeTreeEvent = () => {
   useEffect(() => {
     isCurrentFileContentChanged.current = true;
     // validate
-    if (!fileTree[currentFileUid] || webComponentOpen) return;
+    if (!fileTree[currentFileUid]) return;
 
-    addRunningActions(["processor-update"]);
+    dispatch(addRunningAction());
 
     // parse new file content
     const file = structuredClone(fileTree[currentFileUid]);
@@ -132,19 +135,23 @@ export const useNodeTreeEvent = () => {
     dispatch(setFileTreeNodes([file]));
     (async () => {
       // update idb
-      dispatch(setDoingFileAction(true));
-      dispatch(setLoadingTrue());
+
       try {
         const previewPath = getPreviewPath(fileTree, file);
-        await _writeIDBFile(previewPath, fileData.contentInApp as string);
+        try {
+          dispatch(setDoingFileAction(true));
+          await _writeIDBFile(previewPath, fileData.contentInApp as string);
+        } catch (err) {
+          console.log(err);
+        } finally {
+          dispatch(setDoingFileAction(false));
+        }
         if (fileData.ext === "html") {
           dispatch(setIframeSrc(`rnbw${previewPath}`));
         }
       } catch (err) {
         LogAllow && console.error(err);
       }
-      dispatch(setDoingFileAction(false));
-      dispatch(setLoadingFalse());
     })();
 
     // ---
@@ -152,21 +159,30 @@ export const useNodeTreeEvent = () => {
     // ---
 
     // sync stage-view
-    if (prevFileUid !== currentFileUid) {
-      LogAllow && console.log("need to refresh iframe");
-      dispatch(setNeedToReloadIframe(true));
-    } else {
+    if (prevFileUid === currentFileUid) {
       // dom-diff using morph
       if (fileData.ext === "html") {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const iframe: any = document.getElementById("iframeId");
+        const iframe: HTMLIFrameElement | null = document.getElementById(
+          "iframeId",
+        ) as HTMLIFrameElement;
         if (iframe) {
           const iframeDoc = iframe.contentDocument;
+          if (!iframeDoc) return;
           const iframeHtml = iframeDoc.getElementsByTagName("html")[0];
           const updatedHtml = contentInApp;
-          if (!iframeHtml || !updatedHtml) return;
+          if (!iframeHtml || !updatedHtml) {
+            dispatch(removeRunningAction());
+            return;
+          }
           try {
             morphdom(iframeHtml, updatedHtml, {
+              getNodeKey: (node: Node) => {
+                // Use data-rnbw-stage-node-id attribute as the key instead id
+                if (node instanceof HTMLElement && node?.hasAttribute("id")) {
+                  return node?.getAttribute(StageNodeIdAttr);
+                }
+                return null;
+              },
               onBeforeElUpdated: function (fromEl, toEl) {
                 //check if the node is script or style
                 if (
@@ -244,12 +260,14 @@ export const useNodeTreeEvent = () => {
       }
     }
     dispatch(setCodeErrors(isCodeErrorsExist.current));
-    if (isCodeErrorsExist.current) return;
+    if (isCodeErrorsExist.current) {
+      dispatch(removeRunningAction());
+      return;
+    }
 
     // sync node-tree
     dispatch(setNodeTree(nodeTree));
     const _validNodeTree = getValidNodeTree(nodeTree);
-    dispatch(setValidNodeTree(_validNodeTree));
 
     const uid = getNodeUidToBeSelectedAtFirst(_validNodeTree);
     if (initialFileUidToOpen !== "" && fileTree[initialFileUidToOpen]) {
@@ -262,7 +280,9 @@ export const useNodeTreeEvent = () => {
         ),
       );
     } else if (prevFileUid !== currentFileUid) {
-      dispatch(setLoadingTrue());
+      if (fileData.ext === "html") {
+        dispatch(setLoadingTrue());
+      }
       LogAllow && console.log("it's a new file");
       dispatch(setSelectedNodeUids([uid]));
       dispatch(
@@ -271,8 +291,8 @@ export const useNodeTreeEvent = () => {
         ),
       );
     } else {
-      markSelectedElements(iframeRefRef.current, [nFocusedItem]);
-      const validExpandedItems = nExpandedItems.filter(
+      markSelectedElements(iframeRefRef.current, [nFocusedItem], nodeTree);
+      const validExpandedItems = getObjKeys(nExpandedItemsObj).filter(
         (uid) => _validNodeTree[uid] && _validNodeTree[uid].isEntity === false,
       );
       const needToExpandItems: TNodeUid[] = isSelectedNodeUidsChanged.current
@@ -316,7 +336,7 @@ export const useNodeTreeEvent = () => {
         // remark selected elements on stage-view
         // it is removed through dom-diff
         // this part is for when the selectedNodeUids is not changed cuz of the same code-format
-        markSelectedElements(iframeRefRef.current, _selectedNodeUids);
+        markSelectedElements(iframeRefRef.current, _selectedNodeUids, nodeTree);
       }
     }
 
@@ -324,8 +344,11 @@ export const useNodeTreeEvent = () => {
     if (prevFileUid !== currentFileUid) {
       dispatch(setPrevFileUid(currentFileUid));
     }
-    dispatch(setLoadingFalse());
-    removeRunningActions(["processor-update"]);
+    if (fileData.ext === "html") {
+      dispatch(setLoadingFalse());
+    }
+
+    dispatch(removeRunningAction());
   }, [currentFileContent, currentFileUid]);
 
   // expand nodes that need to be expanded when it's just select-event
