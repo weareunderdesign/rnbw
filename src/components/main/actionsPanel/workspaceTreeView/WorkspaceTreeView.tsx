@@ -21,7 +21,6 @@ import { FileTree_Event_ClearActionType } from "@_redux/main/fileTree/event";
 import { setActivePanel } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 import { generateQuerySelector } from "@_services/main";
-import { TFilesReference } from "@_types/main";
 
 import {
   useCmdk,
@@ -39,6 +38,7 @@ import {
   TreeItem,
 } from "@_components/common/treeComponents";
 import { NodeIcon } from "./workspaceComponents/NodeIcon";
+import { TFilesReference } from "@rnbws/rfrncs.design";
 
 const AutoExpandDelayOnDnD = 1 * 1000;
 export default function WorkspaceTreeView() {

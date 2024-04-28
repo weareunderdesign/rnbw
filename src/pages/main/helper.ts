@@ -24,7 +24,6 @@ import {
   TCmdkKeyMap,
   TCmdkReference,
   TCmdkReferenceData,
-  TFilesReference,
   THtmlReferenceData,
 } from "@_types/main";
 import { AnyAction } from "@reduxjs/toolkit";
@@ -37,6 +36,7 @@ import {
 import { AnyFunction } from "./types";
 import { toast } from "react-toastify";
 import { NavigateFunction } from "react-router-dom";
+import { TFilesReference } from "@rnbws/rfrncs.design";
 
 export const addDefaultCmdkActions = (
   cmdkReferenceData: TCmdkReferenceData,

@@ -9,8 +9,7 @@ import { useAppState } from "@_redux/useAppState";
 import cmdkRefActions from "@_ref/cmdk.ref/Actions.csv";
 //@ts-expect-error csv files
 import cmdkRefJumpstart from "@_ref/cmdk.ref/Jumpstart.csv";
-//@ts-expect-error csv files
-import filesRef from "@_ref/rfrncs/Files.csv";
+import { filesReferences } from "@rnbws/rfrncs.design";
 import {
   TCmdkContext,
   TCmdkContextScope,
@@ -200,7 +199,7 @@ export const useCmdkReferenceData = ({
     fileCmdk({
       fileTree,
       fFocusedItem,
-      filesRef,
+      filesRef: filesReferences,
       data,
       cmdkSearchContent,
       groupName: "Add",
@@ -233,7 +232,6 @@ export const useCmdkReferenceData = ({
 
     return data;
   }, [
-    filesRef,
     fileTree,
     fFocusedItem,
     nodeTree,
