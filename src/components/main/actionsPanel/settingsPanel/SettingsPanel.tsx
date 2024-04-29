@@ -58,7 +58,7 @@ export default function SettingsPanel() {
               setShowForm(true);
             }}
           >
-            <SVGIconI {...{ class: "icon-xs" }}>plus</SVGIconI>
+            <SVGIconI {...{ class: "icon-xs" }}>raincons/plus</SVGIconI>
           </div>
         </PanelHeader>
 

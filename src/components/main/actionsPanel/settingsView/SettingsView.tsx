@@ -102,7 +102,7 @@ export const SettingsView = ({
                     onClick: () => cleanUpValue(attribute),
                   }}
                 >
-                  checkbox
+                  raincons/checkbox
                 </SVGIconIII>
               </div>
             ) : hoveredAttr === attribute ? (
@@ -113,12 +113,14 @@ export const SettingsView = ({
                     onClick: () => handleDelete(attribute),
                   }}
                 >
-                  cross
+                  raincons/cross
                 </SVGIconI>
               </div>
             ) : (
               <div className="icon-button">
-                <SVGIconII {...{ class: "icon-xs" }}>checkbox-blank</SVGIconII>
+                <SVGIconII {...{ class: "icon-xs" }}>
+                  raincons/checkbox-blank
+                </SVGIconII>
               </div>
             )}
 

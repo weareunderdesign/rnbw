@@ -73,7 +73,9 @@ export const AdditionalPanel: FC<AdditionalPanelProps> = ({
                         src={_project.favicon}
                       />
                     ) : (
-                      <SVGIcon {...{ class: "icon-xs" }}>folder</SVGIcon>
+                      <SVGIcon {...{ class: "icon-xs" }}>
+                        raincons/folder
+                      </SVGIcon>
                     )}
                   </div>
                   <span className="navigator-project-item-name text-s">

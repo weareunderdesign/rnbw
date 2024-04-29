@@ -522,7 +522,7 @@ export default function MainPage() {
                                         {typeof command.Icon === "string" &&
                                         command["Icon"] !== "" ? (
                                           <SVGIcon {...{ class: "icon-xs" }}>
-                                            {command["Icon"]}
+                                            raincons/{command["Icon"]}
                                           </SVGIcon>
                                         ) : (
                                           <div className="icon-xs"></div>
