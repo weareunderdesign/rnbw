@@ -1,26 +1,26 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-// @ts-expect-error no types
-import filesRef from "@_ref/rfrncs/Files.csv";
-// @ts-expect-error no types
-import htmlRefElements from "@_ref/rfrncs/HTML Elements.csv";
+import {
+  htmlElementsReferences,
+  TFilesReference,
+  filesReferences,
+  THtmlElementsReference,
+} from "@rnbws/rfrncs.design";
 
 import {
   TReferenceReducerState,
   TFilesReferenceData,
-  TFilesReference,
   THtmlReferenceData,
   THtmlElementsReferenceData,
-  THtmlElementsReference,
 } from "./types";
 // file reference
 const _filesReferenceData: TFilesReferenceData = {};
-filesRef.map((fileRef: TFilesReference) => {
+filesReferences.map((fileRef: TFilesReference) => {
   _filesReferenceData[fileRef.Extension] = fileRef;
 });
 
 //html reference
 const _htmlElementsReferenceData: THtmlElementsReferenceData = {};
-htmlRefElements.map((htmlRefElement: THtmlElementsReference) => {
+htmlElementsReferences.map((htmlRefElement: THtmlElementsReference) => {
   const pureTag =
     htmlRefElement["Name"] === "Comment"
       ? "comment"

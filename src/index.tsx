@@ -1,6 +1,6 @@
 import "./rnbw.css";
 import "@rnbws/renecss/dist/rene.min.css";
-import "@rainbowapp/svg-icon.js";
+import "@rnbws/svg-icon.js";
 
 import React from "react";
 
