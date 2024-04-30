@@ -26,7 +26,7 @@ export const NodeIcon = ({
   return (
     <>
       <div className="icon-xs">
-        <SVGIconI {...{ class: "icon-xs" }}>{icon} </SVGIconI>
+        <SVGIconI {...{ class: "icon-xs" }}>raincons/{icon} </SVGIconI>
       </div>
       <span className="text-s justify-stretch" style={spanStyles}>
         {name}

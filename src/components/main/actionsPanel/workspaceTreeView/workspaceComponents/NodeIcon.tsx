@@ -13,6 +13,7 @@ export const NodeIcon: FC<NodeIconProps> = ({ fileReferenceData, item }) => {
     return (
       <div className="icon-xs">
         <SVGIconI {...{ class: "icon-xs" }}>
+          raincons/
           {item.data?.data.kind === "file" &&
           item.data?.data.name === "index" &&
           item.data?.data.type === "html" &&
@@ -31,7 +32,7 @@ export const NodeIcon: FC<NodeIconProps> = ({ fileReferenceData, item }) => {
   return (
     <div className="icon-xs">
       <SVGIconI {...{ class: "icon-xs" }}>
-        {item.data?.isEntity ? "page" : "folder"}
+        raincons/{item.data?.isEntity ? "page" : "folder"}
       </SVGIconI>
     </div>
   );

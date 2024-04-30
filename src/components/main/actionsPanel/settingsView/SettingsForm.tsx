@@ -42,7 +42,7 @@ export const SettingsForm = ({
   return (
     <form className="settings-item gap-m">
       <div className="action-button" onClick={() => setShowForm(false)}>
-        <SVGIconI {...{ class: "icon-xs" }}>cross</SVGIconI>
+        <SVGIconI {...{ class: "icon-xs" }}>raincons/cross</SVGIconI>
       </div>
 
       <input

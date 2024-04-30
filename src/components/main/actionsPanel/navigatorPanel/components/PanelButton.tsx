@@ -41,7 +41,7 @@ export const PanelButton = () => {
       }}
     >
       <SVGIconI {...{ class: "icon-xs" }}>
-        {showActionsPanel ? "left" : "right"}
+        raincons/{showActionsPanel ? "left" : "right"}
       </SVGIconI>
     </div>
   );
