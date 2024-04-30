@@ -16,7 +16,7 @@ export const ItemArrow = React.memo(
                   onClick,
                 }}
               >
-                down
+                raincons/down
               </SVGIconI>
             ) : (
               <SVGIconII
@@ -25,7 +25,7 @@ export const ItemArrow = React.memo(
                   onClick,
                 }}
               >
-                right
+                raincons/right
               </SVGIconII>
             )}
           </div>
