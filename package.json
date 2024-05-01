@@ -3,7 +3,7 @@
   "version": "0.0.6",
   "description": "",
   "scripts": {
-    "build": "cpx public/svg-icon.config.json dist -C && cpx public/nohost-sw.js dist -C && webpack --progress --mode production",
+    "build": "cp -r public/. dist && webpack --progress --mode production",
     "start": "webpack serve --mode development",
     "deploy": "gh-pages -d dist",
     "lint": "eslint src",
