@@ -30,7 +30,7 @@ export const DefaultPanel = () => {
   return (
     <>
       <div className="gap-s align-center" onClick={onProjectClick}>
-        <SVGIconI {...{ class: "icon-xs" }}>folder</SVGIconI>
+        <SVGIconI {...{ class: "icon-xs" }}>raincons/folder</SVGIconI>
         <span
           className="text-s"
           style={{
@@ -55,6 +55,7 @@ export const DefaultPanel = () => {
       {fileNode && (
         <div className="gap-s align-center" onClick={onFileClick}>
           <SVGIconI {...{ class: "icon-xs" }}>
+            raincons/
             {isHomeIcon(fileNode)
               ? "home"
               : filesReferenceData[fileExtension] && fileExtension !== "md"
