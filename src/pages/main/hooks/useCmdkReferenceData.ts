@@ -115,7 +115,36 @@ export const useCmdkReferenceData = ({
               LogAllow && console.error("failed to load last session");
             }
           }
-
+          if (
+            groupName === "Projects" &&
+            _cmdkRefJumpstartData["Files"] === undefined
+          ) {
+            _cmdkRefJumpstartData["Files"] = [];
+            if (fileTree && cmdkSearchContent !== "") {
+              for (const key in fileTree) {
+                if (fileTree[key].isEntity) {
+                  const pathFile = fileTree[key].data.path;
+                  const _fileCommand = {
+                    Name: pathFile,
+                    Icon: "page",
+                    Description: "",
+                    "Keyboard Shortcut": [
+                      {
+                        cmd: false,
+                        shift: false,
+                        alt: false,
+                        key: "",
+                        click: false,
+                      },
+                    ],
+                    Group: "Files",
+                    Context: key,
+                  } as TCmdkReference;
+                  _cmdkRefJumpstartData["Files"].push(_fileCommand);
+                }
+              }
+            }
+          }
           _cmdkReferenceData[_command["Name"]] = _command;
         }),
       );
@@ -162,7 +191,7 @@ export const useCmdkReferenceData = ({
 
       dispatch(removeRunningAction());
     })();
-  }, []);
+  }, [fileTree, cmdkSearchContent]);
 
   const cmdkReferenceRecentProject = useMemo(() => {
     const _cmdkReferenceRecentProject: TCmdkReference[] = [];
