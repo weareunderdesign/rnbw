@@ -448,6 +448,12 @@ export default function MainPage() {
                                       projectHandler,
                                     );
                                 } else if (
+                                  currentCmdkPage === "Jumpstart" &&
+                                  command.Group === "Files"
+                                ) {
+                                  const pathFile = command.Name;
+                                  navigate(pathFile);
+                                } else if (
                                   (currentCmdkPage === "Add" &&
                                     command.Group === "Recent") ||
                                   (currentCmdkPage === "Turn into" &&
