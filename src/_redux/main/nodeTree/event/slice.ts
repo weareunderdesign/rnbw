@@ -26,13 +26,7 @@ const nodeEventSlice = createSlice({
     },
     setSelectedNodeUids(state, action: PayloadAction<TNodeUid[]>) {
       const selectedNodeUids = action.payload;
-
-      // if (
-      //   !selectedNodeUids.every((item) => state.selectedNodeUids.includes(item))
-      // ) {
-
       state.selectedNodeUids = [...selectedNodeUids];
-      // }
     },
     setNeedToSelectNodeUids(state, action: PayloadAction<TNodeUid[]>) {
       const needToSelectNodeUids = action.payload;
