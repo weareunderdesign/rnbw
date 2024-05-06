@@ -1,4 +1,11 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { MainContext } from "@_redux/main";
 import { useAppState } from "@_redux/useAppState";
@@ -43,18 +50,45 @@ export default function NavigatorPanel() {
     setUnsavedProject(false);
   }, [fileTree]);
 
-  useEffect(() => {
+  const updateFavicon = useCallback(() => {
     const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+    const lightThemeIcon = unsavedProject
+      ? unsavedProjectLightImg
+      : projectLightImg;
+    const darkThemeIcon = unsavedProject
+      ? unsavedProjectDarkImg
+      : projectDarkImg;
+
+    const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+      .matches
+      ? "Dark"
+      : "Light";
+
     if (link) {
-      link.href = unsavedProject
-        ? theme === "Light"
-          ? unsavedProjectLightImg
-          : unsavedProjectDarkImg
-        : theme === "Light"
-          ? projectLightImg
-          : projectDarkImg;
+      if (systemTheme === "Dark") {
+        link.href = darkThemeIcon;
+      } else {
+        link.href = lightThemeIcon;
+      }
     }
   }, [unsavedProject, theme]);
+
+  useEffect(() => {
+    updateFavicon();
+  }, [updateFavicon]);
+
+  useEffect(() => {
+    const lightTheme = window.matchMedia("(prefers-color-scheme: light)");
+    const darkTheme = window.matchMedia("(prefers-color-scheme: dark)");
+
+    lightTheme.addEventListener("change", updateFavicon);
+    darkTheme.addEventListener("change", updateFavicon);
+
+    return () => {
+      lightTheme.removeEventListener("change", updateFavicon);
+      darkTheme.removeEventListener("change", updateFavicon);
+    };
+  }, [updateFavicon]);
 
   const navigatorPanelRef = useRef<HTMLDivElement | null>(null);
 
