@@ -6,6 +6,7 @@ import { SVGIconI, SVGIconII, SVGIconIII } from "@_components/common";
 import { useAttributeHandler } from "./hooks/useAttributeHandler";
 import { Attribute, SettingsViewProps } from "../settingsPanel/types";
 import { useAppState } from "@_redux/useAppState";
+import useRnbw from "@_services/useRnbw";
 
 export const SettingsView = ({
   attributes,
@@ -15,7 +16,8 @@ export const SettingsView = ({
 
   const dispatch = useDispatch();
   const { activePanel } = useAppState();
-  const { changeAttribute, deleteAttribute } = useAttributeHandler();
+  const { changeAttribute } = useAttributeHandler();
+  const rnbw = useRnbw();
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>, attribute: string) => {
@@ -39,29 +41,22 @@ export const SettingsView = ({
 
   const cleanUpValue = useCallback(
     (attribute: string) => {
-      changeAttribute({
-        attrName: attribute,
-        attrValue: "",
-        cb: () =>
-          setAttributes((prev: Attribute) => ({
-            ...prev,
-            [attribute]: "",
-          })),
+      const existingAttributesObj = rnbw.elements.getElementSettings();
+      const updatedAttribsObj = rnbw.elements.updateSettings({
+        ...existingAttributesObj,
+        [`${attribute}`]: "",
       });
+      updatedAttribsObj && setAttributes(updatedAttribsObj);
     },
-    [changeAttribute],
+    [rnbw.elements, setAttributes],
   );
 
-  const handleDelete = (attribute: string) =>
-    deleteAttribute({
-      attrName: attribute,
-      attrValue: attributes[attribute] as string,
-      cb: () =>
-        setAttributes((prev: Attribute) => {
-          delete prev[attribute];
-          return { ...prev };
-        }),
-    });
+  const handleDelete = (attribute: string) => {
+    const existingAttributesObj = rnbw.elements.getElementSettings();
+    delete existingAttributesObj[attribute];
+    rnbw.elements.updateSettings(existingAttributesObj);
+    setAttributes(existingAttributesObj);
+  };
 
   const handleMouseEnter = (attribute: string) => {
     setHoveredAttr(attribute);

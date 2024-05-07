@@ -2,8 +2,10 @@ import {
   sortUidsByMaxEndIndex,
   sortUidsByMinStartIndex,
 } from "@_components/main/actionsPanel/nodeTreeView/helpers";
+import { eventListenersStatesRefType } from "@_components/main/stageView/iFrame/IFrame";
 import { LogAllow } from "@_constants/global";
 import { RootNodeUid } from "@_constants/main";
+import { StageNodeIdAttr } from "@_node/file";
 
 import { getObjKeys } from "@_pages/main/helper";
 import { MainContext } from "@_redux/main";
@@ -14,10 +16,10 @@ import {
 } from "@_redux/main/nodeTree";
 import { setDidRedo, setDidUndo } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
-import { Iadd } from "@_types/elements.types";
+import { Iadd, IupdateSettings } from "@_types/elements.types";
 import { html_beautify } from "js-beautify";
 import { Range, editor } from "monaco-editor";
-import { useContext, useMemo } from "react";
+import { useCallback, useContext, useMemo } from "react";
 import { useDispatch } from "react-redux";
 
 export default function useElements() {
@@ -188,6 +190,19 @@ export default function useElements() {
     );
   };
 
+  const getElementSettings = () => {
+    const focusedNode = validNodeTree[nFocusedItem];
+    const { startTag } = focusedNode.data.sourceCodeLocation;
+    const attributesKey = startTag.attrs ? Object.keys(startTag.attrs) : [];
+    const existingAttributesObj: { [key: string]: string } = {};
+    if (focusedNode.data.attribs) {
+      attributesKey.forEach((key) => {
+        existingAttributesObj[key] = focusedNode.data.attribs[key];
+      });
+    }
+    return existingAttributesObj;
+  };
+
   //Update
   const cut = async () => {
     if (!checkAllResourcesAvailable || !codeViewInstanceModel) return;
@@ -293,8 +308,88 @@ export default function useElements() {
     codeViewInstanceModel.setValue(code);
   };
   const move = () => {};
-  const updateEditableElement = () => {};
-  const updateSettings = () => {};
+  const updateEditableElement = useCallback(
+    (params: eventListenersStatesRefType) => {
+      const { iframeRefRef, contentEditableUidRef, nodeTreeRef } = params;
+
+      const iframeRef = iframeRefRef.current;
+      const nodeTree = nodeTreeRef.current;
+      const codeViewInstanceModel = monacoEditorRef.current?.getModel();
+      if (!codeViewInstanceModel || !iframeRef) return;
+      const contentEditableUid = contentEditableUidRef.current;
+      const contentEditableElement =
+        iframeRef.contentWindow?.document.querySelector(
+          `[${StageNodeIdAttr}="${contentEditableUid}"]`,
+        ) as HTMLElement;
+
+      if (!contentEditableElement) return;
+
+      contentEditableElement.setAttribute("contenteditable", "false");
+      const content = contentEditableElement.innerHTML
+        .replace(/\n/, "")
+        .replace(
+          /data-rnbw-stage-node-id="\d+"|rnbwdev-rnbw-element-(select|hover)=""/g,
+          "",
+        );
+
+      helperModel.setValue(codeViewInstanceModel.getValue());
+      const focusedNode = nodeTree[nFocusedItem];
+      const { startTag, endTag, startLine, endLine, startCol, endCol } =
+        focusedNode.data.sourceCodeLocation;
+      if (startTag && endTag) {
+        const edit = {
+          range: new Range(
+            startTag.endLine,
+            startTag.endCol,
+            endTag.startLine,
+            endTag.startCol,
+          ),
+          text: content,
+        };
+        helperModel.applyEdits([edit]);
+      } else if (startLine && endLine && startCol && endCol) {
+        const edit = {
+          range: new Range(startLine, startCol, endLine, endCol),
+          text: content,
+        };
+        helperModel.applyEdits([edit]);
+      }
+      const code = html_beautify(helperModel.getValue());
+      codeViewInstanceModel.setValue(code);
+    },
+    [codeViewInstanceModel],
+  );
+
+  const updateSettings = (settings: IupdateSettings) => {
+    if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
+    helperModel.setValue(codeViewInstanceModel.getValue());
+
+    const focusedNode = validNodeTree[nFocusedItem];
+    const attributesString = Object.entries(settings).reduce(
+      (acc, [key, value]) => {
+        //TODO: test for invalid characters
+        return `${acc} ${key}="${value}"`;
+      },
+      "",
+    );
+    const updatedTag = `<${focusedNode.displayName}${attributesString}>`;
+
+    const { startTag } = focusedNode.data.sourceCodeLocation;
+    const edit = {
+      range: new Range(
+        startTag.startLine,
+        startTag.startCol,
+        startTag.endLine,
+        startTag.endCol,
+      ),
+      text: updatedTag,
+    };
+    helperModel.applyEdits([edit]);
+    const code = html_beautify(helperModel.getValue());
+    codeViewInstanceModel.setValue(code);
+    return settings;
+  };
+
   const undo = () => {
     if (nodeEventPastLength <= 2) {
       LogAllow && console.log("Undo - NodeTree - it is the origin state");
@@ -360,6 +455,7 @@ export default function useElements() {
   };
   return {
     getElement,
+    getElementSettings,
     add,
     duplicate,
     getSelectedElements,
