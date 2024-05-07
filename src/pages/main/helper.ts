@@ -5,7 +5,6 @@ import { TNodeTreeData, TNodeUid } from "@_node/types";
 import {
   clearFileTreeViewState,
   expandFileTreeNodes,
-  setCurrentFileUid,
   setFileTree,
   setInitialFileUidToOpen,
   setPrevFileUid,
@@ -17,6 +16,7 @@ import { clearNodeTreeViewState, setNodeTree } from "@_redux/main/nodeTree";
 import {
   NodeTree_Event_ClearActionType,
   NodeTree_Event_JumpToPastActionType,
+  setCurrentFileUid,
 } from "@_redux/main/nodeTree/event";
 import { setIframeSrc } from "@_redux/main/stageView";
 import {

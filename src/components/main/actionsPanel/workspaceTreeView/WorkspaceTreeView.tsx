@@ -17,7 +17,6 @@ import { _path } from "@_node/file/nohostApis";
 import { TNode, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import { setHoveredFileUid } from "@_redux/main/fileTree";
-import { FileTree_Event_ClearActionType } from "@_redux/main/fileTree/event";
 import { setActivePanel } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 import { generateQuerySelector } from "@_services/main";
@@ -93,7 +92,6 @@ export default function WorkspaceTreeView() {
   const openFile = useCallback(
     (uid: TNodeUid) => {
       if (currentFileUid === uid) return;
-      dispatch({ type: FileTree_Event_ClearActionType });
       // focus/select/read the file
       cb_focusNode(uid);
       cb_selectNode([uid]);
@@ -166,6 +164,17 @@ export default function WorkspaceTreeView() {
     openFromURL();
   }, [openFromURL]);
 
+  useEffect(() => {
+    const pathName = `${RootNodeUid}/${rest}`;
+    if (pathName === currentFileUid) return;
+    cb_selectNode([currentFileUid]);
+    const newURL = createURLPath(
+      currentFileUid,
+      RootNodeUid,
+      fileTree[RootNodeUid]?.displayName,
+    );
+    navigate(newURL);
+  }, [currentFileUid]);
   return (
     <div
       id="FileTreeView"
@@ -421,7 +430,7 @@ export default function WorkspaceTreeView() {
           },
 
           onPrimaryAction: (item) => {
-            item.data.data.valid && cb_readNode(item.index as TNodeUid);
+            item.data.data.valid && openFile(item.index as TNodeUid);
           },
 
           onDrop: (items, target) => {

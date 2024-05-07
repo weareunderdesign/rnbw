@@ -55,6 +55,7 @@ import {
 } from "@_redux/main/processor";
 import { toast } from "react-toastify";
 import { getObjKeys } from "@_pages/main/helper";
+import { getFileExtension } from "@_components/main/actionsPanel/navigatorPanel/helpers";
 
 export const useNodeTreeEvent = () => {
   const dispatch = useDispatch();
@@ -75,6 +76,7 @@ export const useNodeTreeEvent = () => {
     nExpandedItemsObj,
     nFocusedItem,
     syncConfigs,
+    nodeEventPast,
   } = useAppState();
   const { iframeRefRef } = useContext(MainContext);
 
@@ -284,7 +286,19 @@ export const useNodeTreeEvent = () => {
         dispatch(setLoadingTrue());
       }
       LogAllow && console.log("it's a new file");
-      dispatch(setSelectedNodeUids([uid]));
+
+      const lastHistoryState = nodeEventPast[nodeEventPast.length - 1];
+      const historyLastFile = lastHistoryState.currentFileUid;
+
+      dispatch(
+        setSelectedNodeUids(
+          getFileExtension(fileTree[currentFileUid]) !== "html"
+            ? selectedNodeUids
+            : historyLastFile === currentFileUid
+              ? lastHistoryState.selectedNodeUids
+              : [uid],
+        ),
+      );
       dispatch(
         setExpandedNodeTreeNodes(
           getNeedToExpandNodeUids(_validNodeTree, [uid]),

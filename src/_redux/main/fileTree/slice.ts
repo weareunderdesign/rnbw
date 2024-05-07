@@ -53,10 +53,6 @@ const fileTreeSlice = createSlice({
       const initialFileUidToOpen = action.payload;
       state.initialFileUidToOpen = initialFileUidToOpen;
     },
-    setCurrentFileUid(state, action: PayloadAction<TNodeUid>) {
-      const currentFileUid = action.payload;
-      state.currentFileUid = currentFileUid;
-    },
     setPrevFileUid(state, action: PayloadAction<TNodeUid>) {
       const prevFileUid = action.payload;
       state.prevFileUid = prevFileUid;
@@ -146,7 +142,6 @@ export const {
   setFileTree,
   setFileTreeNodes,
   setInitialFileUidToOpen,
-  setCurrentFileUid,
   setPrevFileUid,
   setRenderableFileUid,
 
