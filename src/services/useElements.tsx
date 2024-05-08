@@ -16,7 +16,14 @@ import {
 } from "@_redux/main/nodeTree";
 import { setDidRedo, setDidUndo } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
-import { Iadd, IupdateSettings } from "@_types/elements.types";
+import {
+  Iadd,
+  Icopy,
+  Imove,
+  Ipaste,
+  Iremove,
+  IupdateSettings,
+} from "@_types/elements.types";
 import { html_beautify } from "js-beautify";
 import { Range, editor } from "monaco-editor";
 import { useCallback, useContext, useMemo } from "react";
@@ -63,9 +70,17 @@ export default function useElements() {
     return true;
   }
 
-  async function copyAndCutNode() {
-    const sortedUids = sortUidsByMinStartIndex(selectedItems, validNodeTree);
+  async function copyAndCutNode({
+    selectedUids,
+    pasteToClipboard = true,
+  }: {
+    selectedUids?: string[];
+    pasteToClipboard?: boolean;
+  } = {}) {
+    const selected = selectedUids || selectedItems;
+    const sortedUids = sortUidsByMinStartIndex(selected, validNodeTree);
     let copiedCode = "";
+
     sortedUids.forEach((uid) => {
       const node = validNodeTree[uid];
       if (node) {
@@ -86,15 +101,19 @@ export default function useElements() {
         helperModel.applyEdits([edit]);
       }
     });
-    await window.navigator.clipboard.writeText(copiedCode);
+    pasteToClipboard &&
+      (await window.navigator.clipboard.writeText(copiedCode));
+    const updatedCode = html_beautify(helperModel.getValue());
     return {
       sortedUids,
       copiedCode,
+      updatedCode,
     };
   }
+
   //Create
   const add = (params: Iadd) => {
-    const { tagName } = params;
+    const { tagName, skipUpdate } = params;
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
     const commentTag = "!--...--";
     const HTMLElement =
@@ -129,7 +148,8 @@ export default function useElements() {
       }
     });
     const code = html_beautify(helperModel.getValue());
-    codeViewInstanceModel.setValue(code);
+    !skipUpdate && codeViewInstanceModel.setValue(code);
+    return code;
   };
 
   const duplicate = () => {
@@ -164,10 +184,14 @@ export default function useElements() {
     return validNodeTree[uid];
   };
 
-  const copy = async () => {
-    if (!checkAllResourcesAvailable()) return;
-    const sortedUids = sortUidsByMinStartIndex(selectedItems, validNodeTree);
+  const copy = async (params: Icopy = {}) => {
+    const { uids, skipUpdate } = params;
+
+    const selectedUids = uids || selectedItems;
+    if (selectedUids.length === 0 || !codeViewInstanceModel) return;
+    const sortedUids = sortUidsByMinStartIndex(selectedUids, validNodeTree);
     let copiedCode = "";
+
     sortedUids.forEach((uid) => {
       const node = validNodeTree[uid];
       if (node) {
@@ -181,13 +205,18 @@ export default function useElements() {
         copiedCode += text;
       }
     });
-    await window.navigator.clipboard.writeText(copiedCode);
+    if (!skipUpdate) {
+      await window.navigator.clipboard.writeText(copiedCode);
 
-    dispatch(
-      setCopiedNodeDisplayName(
-        selectedItems.map((uid) => `Node-<${validNodeTree[uid].displayName}>`),
-      ),
-    );
+      dispatch(
+        setCopiedNodeDisplayName(
+          selectedItems.map(
+            (uid) => `Node-<${validNodeTree[uid].displayName}>`,
+          ),
+        ),
+      );
+    }
+    return copiedCode;
   };
 
   const getElementSettings = () => {
@@ -217,9 +246,23 @@ export default function useElements() {
     const code = html_beautify(helperModel.getValue());
     codeViewInstanceModel.setValue(code);
   };
-  const paste = async () => {
-    if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
-    const focusedNode = validNodeTree[nFocusedItem];
+
+  const paste = async (params: Ipaste = {}) => {
+    const {
+      content,
+      skipUpdate,
+      pastePosition = "after",
+      targetUid,
+      pasteContent,
+    } = params;
+
+    if (!codeViewInstanceModel) return;
+
+    /* if targetUid is not provided, then the focused node will be the target node */
+    const focusedNode = targetUid
+      ? validNodeTree[targetUid]
+      : validNodeTree[nFocusedItem];
+
     if (
       !focusedNode ||
       !focusedNode.data.sourceCodeLocation ||
@@ -230,29 +273,45 @@ export default function useElements() {
       return;
     }
 
-    helperModel.setValue(codeViewInstanceModel.getValue());
-    let code = await window.navigator.clipboard.readText();
+    const initialCode = content || codeViewInstanceModel.getValue();
+    helperModel.setValue(initialCode);
+
+    let code = pasteContent || (await window.navigator.clipboard.readText());
 
     const { startLine, startCol, endLine, endCol } =
       focusedNode.data.sourceCodeLocation;
 
     /* can be used to paste the copied code before the focused node */
-    const addToBefore = false;
+    let editRange;
+    if (pastePosition === "before") {
+      editRange = new Range(startLine, startCol, startLine, startCol);
+    } else if (pastePosition === "after") {
+      editRange = new Range(endLine, endCol, endLine, endCol);
+    } else {
+      const { startTag } = focusedNode.data.sourceCodeLocation;
+
+      editRange = new Range(
+        startTag.endLine,
+        startTag.endCol,
+        startTag.endLine,
+        startTag.endCol,
+      );
+    }
+
     const edit = {
-      range: new Range(
-        addToBefore ? startLine : endLine,
-        addToBefore ? startCol : endCol,
-        addToBefore ? startLine : endLine,
-        addToBefore ? startCol : endCol,
-      ),
+      range: editRange,
       text: code,
     };
     helperModel.applyEdits([edit]);
 
     code = html_beautify(helperModel.getValue());
-    codeViewInstanceModel.setValue(code);
+    !skipUpdate && codeViewInstanceModel.setValue(code);
+
+    return code;
   };
+
   const plainPaste = () => {};
+
   const group = async () => {
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
     helperModel.setValue(codeViewInstanceModel.getValue());
@@ -269,6 +328,7 @@ export default function useElements() {
     helperModel.applyEdits([edit]);
     codeViewInstanceModel.setValue(html_beautify(helperModel.getValue()));
   };
+
   const ungroup = () => {
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
     helperModel.setValue(codeViewInstanceModel.getValue());
@@ -307,7 +367,64 @@ export default function useElements() {
     const code = html_beautify(helperModel.getValue());
     codeViewInstanceModel.setValue(code);
   };
-  const move = () => {};
+
+  const move = async (params: Imove) => {
+    if (!codeViewInstanceModel) return;
+    /*
+    isBetween is false when we drop on a parent node and is true when we drop inside a parent node which has children
+    isBetween is true even if we drop on the first child of the parent node
+    */
+    const { targetUid, isBetween, position, selectedUids } = params;
+    helperModel.setValue(codeViewInstanceModel.getValue());
+
+    const targetNode = validNodeTree[targetUid];
+
+    // When the position is 0 we need to add inside the target node
+    const focusedItem =
+      isBetween && position === 0
+        ? targetNode.uid
+        : targetNode.children[position - 1];
+
+    const { copiedCode } = await copyAndCutNode({
+      selectedUids,
+      pasteToClipboard: false,
+    });
+
+    const sortedUids = sortUidsByMaxEndIndex(
+      [...selectedUids, focusedItem],
+      validNodeTree,
+    );
+
+    const pastePosition = isBetween && position === 0 ? "inside" : "after";
+    let isFirst = true; // isFirst is used to when drop focusedItem to itself
+
+    sortedUids.forEach(async (uid) => {
+      if (uid === focusedItem && isFirst) {
+        isFirst = false;
+        const pastedCode = (await paste({
+          pasteContent: copiedCode,
+          content: helperModel.getValue(),
+          targetUid: focusedItem,
+          pastePosition,
+        })) as string;
+
+        helperModel.setValue(pastedCode);
+      } else {
+        const updatedCode = remove({
+          content: codeViewInstanceModel.getValue(),
+          uids: [uid],
+          skipUpdate: true,
+        });
+        updatedCode && helperModel.setValue(updatedCode);
+      }
+    });
+
+    const prettyCode = html_beautify(helperModel.getValue(), {
+      preserve_newlines: false,
+    });
+    codeViewInstanceModel.setValue(prettyCode);
+  };
+
   const updateEditableElement = useCallback(
     (params: eventListenersStatesRefType) => {
       const { iframeRefRef, contentEditableUidRef, nodeTreeRef } = params;
@@ -409,6 +526,7 @@ export default function useElements() {
 
     dispatch(setDidUndo(true));
   };
+
   const redo = () => {
     if (nodeEventFutureLength === 0) {
       LogAllow && console.log("Redo - NodeTree - it is the latest state");
@@ -421,12 +539,14 @@ export default function useElements() {
   };
 
   //Delete
-  const remove = () => {
-    if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
+  const remove = (params: Iremove = {}) => {
+    const { uids, skipUpdate, content } = params;
+    const removalUids = uids || selectedItems;
 
+    if (removalUids.length === 0 || !codeViewInstanceModel) return;
     /* The user should not be able to delete the html, head, and body tags. */
     if (
-      selectedItems.some((uid) =>
+      removalUids.some((uid) =>
         ["html", "head", "body"].includes(validNodeTree[uid].displayName),
       )
     ) {
@@ -434,9 +554,10 @@ export default function useElements() {
       return;
     }
 
-    helperModel.setValue(codeViewInstanceModel.getValue());
+    const contentToEdit = content || codeViewInstanceModel.getValue();
+    helperModel.setValue(contentToEdit);
 
-    const sortedUids = sortUidsByMaxEndIndex(selectedItems, validNodeTree);
+    const sortedUids = sortUidsByMaxEndIndex(removalUids, validNodeTree);
     sortedUids.forEach((uid) => {
       const node = validNodeTree[uid];
       if (node) {
@@ -451,7 +572,9 @@ export default function useElements() {
     });
 
     const code = html_beautify(helperModel.getValue());
-    codeViewInstanceModel.setValue(code);
+
+    !skipUpdate && codeViewInstanceModel.setValue(code);
+    return code;
   };
   return {
     getElement,
