@@ -302,7 +302,7 @@ export const useNodeTreeEvent = () => {
               getFileExtension(fileTree[currentFileUid]) !== "html"
               ? selectedNodeUids
               : fileHistory.length
-                ? lastCurrentFileHistoryState.selectedNodeUids
+                ? lastCurrentFileHistoryState?.selectedNodeUids
                 : [uid],
           ),
         );

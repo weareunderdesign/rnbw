@@ -389,7 +389,6 @@ export const onWebComponentDblClick = ({
               toast.error("rnbw couldn't find it's source file");
               break;
             } else {
-              dispatch(setInitialFileUidToOpen(fileTree[x].uid));
               dispatch(setNavigatorDropdownType("project"));
               dispatch(setActivePanel("code"));
               filePath = createURLPath(
