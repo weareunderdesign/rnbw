@@ -77,6 +77,9 @@ export const useNodeTreeEvent = () => {
     nFocusedItem,
     syncConfigs,
     nodeEventPast,
+    didUndo,
+    didRedo,
+    activePanel,
   } = useAppState();
   const { iframeRefRef } = useContext(MainContext);
 
@@ -287,18 +290,22 @@ export const useNodeTreeEvent = () => {
       }
       LogAllow && console.log("it's a new file");
 
-      const lastHistoryState = nodeEventPast[nodeEventPast.length - 1];
-      const historyLastFile = lastHistoryState.currentFileUid;
-
-      dispatch(
-        setSelectedNodeUids(
-          getFileExtension(fileTree[currentFileUid]) !== "html"
-            ? selectedNodeUids
-            : historyLastFile === currentFileUid
-              ? lastHistoryState.selectedNodeUids
-              : [uid],
-        ),
+      const fileHistory = nodeEventPast.filter(
+        (historyState) => historyState.currentFileUid == currentFileUid,
       );
+      const lastCurrentFileHistoryState = fileHistory[fileHistory.length - 1];
+
+      !(didUndo || didRedo) &&
+        dispatch(
+          setNeedToSelectNodeUids(
+            activePanel === "stage" ||
+              getFileExtension(fileTree[currentFileUid]) !== "html"
+              ? selectedNodeUids
+              : fileHistory.length
+                ? lastCurrentFileHistoryState.selectedNodeUids
+                : [uid],
+          ),
+        );
       dispatch(
         setExpandedNodeTreeNodes(
           getNeedToExpandNodeUids(_validNodeTree, [uid]),
