@@ -85,6 +85,29 @@ rainbow is heavily dependent on incredible technologies. if you’re considering
 - [svg-icon.js](https://github.com/rnbwdev/svg-icon.js) - an svg icon component for the web. optimized for smooth design and development experience. it fits into any web framework and can be used anyhow.
 - [raincons](https://github.com/rnbwdev/raincons) - 12x12 icon set.
 
+## bundle
+
+To create `rnbw` bundle file, run the following command:
+
+```
+npm run build
+```
+
+You’ll find the generated file at `/dist/client.bundle.js`
+
+## release
+
+To release `rnbw`, follow these simple steps:
+1. Push Changes in `main` branch.
+2. GitHub Actions will automatically trigger the workflow to release `rnbw`.
+
+### GitHub action workflow overview
+
+The workflow file [`deploy.yml`](https://github.com/rnbwdev/rnbw/blob/main/.github/workflows/deploy.yml) runs ***Build*** and ***Deploy*** jobs.
+
+1. ***Build***: This job is responsible for preparing the project for deployment. It checks out the repository, detects the package manager, sets up Node.js, installs dependencies, builds the project, and uploads the built project.
+2. ***Deploy***:  This job handles the deployment to GitHub Pages.
+
 ## community
 
 join the [community](https://github.com/orgs/rnbwdev/discussions) to chat with other community members, ask questions ideas, and share your work.
