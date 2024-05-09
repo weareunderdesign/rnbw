@@ -204,7 +204,8 @@ export const useMouseEvents = () => {
           htmlReferenceData,
           nodeData,
         }) &&
-        selectedItemsRef.current[0] === uid
+        selectedItemsRef.current[0] === uid &&
+        nodeData.nodeName !== "#text"
       ) {
         onWebComponentDblClick({
           dispatch,
