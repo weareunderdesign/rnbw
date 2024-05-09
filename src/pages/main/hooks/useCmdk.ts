@@ -143,7 +143,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
       dispatch(setLastFileAction({ ...fileAction }));
       dispatch({ type: FileTree_Event_UndoActionType });
     } else {
-      if (nodeEventPastLength <= 2) {
+      if (nodeEventPastLength <= 1) {
         LogAllow && console.log("Undo - NodeTree - it is the origin state");
         return;
       }

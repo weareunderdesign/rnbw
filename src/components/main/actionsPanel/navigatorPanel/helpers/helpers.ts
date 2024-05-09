@@ -1,4 +1,4 @@
-import { TFileNode, TFileNodeData } from "@_node/file";
+import { TFileNode } from "@_node/file";
 import { THtmlNodeData } from "@_node/node";
 import { TNode, TNodeTreeData } from "@_node/types";
 import { TProject, TWorkspace } from "@_redux/main/fileTree";
@@ -20,11 +20,7 @@ export const isSelected = (
 export const getFileNameFromPath = (file: TFileNode) => {
   return file.uid.split("/")[file.uid.split("/").length - 1];
 };
-export const getFileExtension = (node: TNode) =>
-  (node.data as TFileNodeData).ext.substring(
-    1,
-    (node.data as TFileNodeData).ext.length,
-  );
+export const getFileExtension = (node: TFileNode) => node.data.ext;
 
 export const setWorkspaceFavicon = (
   validNodeTree: TNodeTreeData,
