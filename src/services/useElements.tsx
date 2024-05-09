@@ -383,7 +383,9 @@ export default function useElements() {
     const focusedItem =
       isBetween && position === 0
         ? targetNode.uid
-        : targetNode.children[position - 1];
+        : targetNode.children[position - 1]
+          ? targetNode.children[position - 1]
+          : targetNode.uid;
 
     const { copiedCode } = await copyAndCutNode({
       selectedUids,
@@ -395,7 +397,7 @@ export default function useElements() {
       validNodeTree,
     );
 
-    const pastePosition = isBetween && position === 0 ? "inside" : "after";
+    const pastePosition = focusedItem === targetNode.uid ? "inside" : "after";
     let isFirst = true; // isFirst is used to when drop focusedItem to itself
 
     sortedUids.forEach(async (uid) => {
@@ -411,10 +413,10 @@ export default function useElements() {
         helperModel.setValue(pastedCode);
       } else {
         const updatedCode = remove({
-          content: codeViewInstanceModel.getValue(),
           uids: [uid],
           skipUpdate: true,
         });
+
         updatedCode && helperModel.setValue(updatedCode);
       }
     });
