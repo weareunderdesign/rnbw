@@ -22,14 +22,14 @@ export const SettingsForm = ({
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const attribute = attributeRef.current?.value;
     const value = valueRef.current?.value;
 
     if (!attribute || value === undefined) return;
 
     const existingAttributesObj = rnbw.elements.getElementSettings();
-    const updatedAttribsObj = rnbw.elements.updateSettings({
+    const updatedAttribsObj = await rnbw.elements.updateSettings({
       ...existingAttributesObj,
       [`${attribute}`]: value,
     });

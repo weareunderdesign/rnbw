@@ -24,10 +24,22 @@ import {
   Iremove,
   IupdateSettings,
 } from "@_types/elements.types";
-import { html_beautify } from "js-beautify";
+
 import { Range, editor } from "monaco-editor";
 import { useCallback, useContext, useMemo } from "react";
 import { useDispatch } from "react-redux";
+
+/* eslint-disable @typescript-eslint/no-var-requires */
+const Prettier = require("prettier/standalone");
+const htmlParser = require("prettier/parser-html");
+
+async function PrettyCode(code: string) {
+  const prettyCode = await Prettier.format(code, {
+    parser: "html",
+    plugins: [htmlParser],
+  });
+  return prettyCode;
+}
 
 export default function useElements() {
   const {
@@ -103,7 +115,10 @@ export default function useElements() {
     });
     pasteToClipboard &&
       (await window.navigator.clipboard.writeText(copiedCode));
-    const updatedCode = html_beautify(helperModel.getValue());
+    const updatedCode = await Prettier.format(helperModel.getValue(), {
+      parser: "html",
+      plugins: [htmlParser],
+    });
     return {
       sortedUids,
       copiedCode,
@@ -147,7 +162,10 @@ export default function useElements() {
         helperModel.applyEdits([edit]);
       }
     });
-    const code = html_beautify(helperModel.getValue());
+    const code = Prettier.format(helperModel.getValue(), {
+      parser: "html",
+      plugins: [htmlParser],
+    });
     !skipUpdate && codeViewInstanceModel.setValue(code);
     return code;
   };
@@ -171,7 +189,10 @@ export default function useElements() {
         helperModel.applyEdits([edit]);
       }
     });
-    const code = html_beautify(helperModel.getValue());
+    const code = Prettier.format(helperModel.getValue(), {
+      parser: "html",
+      plugins: [htmlParser],
+    });
     codeViewInstanceModel.setValue(code);
   };
 
@@ -243,7 +264,10 @@ export default function useElements() {
         selectedItems.map((uid) => `Node-<${validNodeTree[uid].displayName}>`),
       ),
     );
-    const code = html_beautify(helperModel.getValue());
+    const code = Prettier.format(helperModel.getValue(), {
+      parser: "html",
+      plugins: [htmlParser],
+    });
     codeViewInstanceModel.setValue(code);
   };
 
@@ -304,7 +328,12 @@ export default function useElements() {
     };
     helperModel.applyEdits([edit]);
 
-    code = html_beautify(helperModel.getValue());
+    // code = await PrettyCode(helperModel.getValue());
+    code = await Prettier.format(helperModel.getValue(), {
+      parser: "html",
+      plugins: [htmlParser],
+    });
+
     !skipUpdate && codeViewInstanceModel.setValue(code);
 
     return code;
@@ -326,10 +355,10 @@ export default function useElements() {
     };
 
     helperModel.applyEdits([edit]);
-    codeViewInstanceModel.setValue(html_beautify(helperModel.getValue()));
+    codeViewInstanceModel.setValue(await PrettyCode(helperModel.getValue()));
   };
 
-  const ungroup = () => {
+  const ungroup = async () => {
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
     helperModel.setValue(codeViewInstanceModel.getValue());
 
@@ -364,7 +393,7 @@ export default function useElements() {
       };
       helperModel.applyEdits([removeGroupedCodeEdit, addUngroupedCodeEdit]);
     });
-    const code = html_beautify(helperModel.getValue());
+    const code = await PrettyCode(helperModel.getValue());
     codeViewInstanceModel.setValue(code);
   };
 
@@ -412,7 +441,7 @@ export default function useElements() {
 
         helperModel.setValue(pastedCode);
       } else {
-        const updatedCode = remove({
+        const updatedCode = await remove({
           uids: [uid],
           skipUpdate: true,
         });
@@ -421,14 +450,12 @@ export default function useElements() {
       }
     });
 
-    const prettyCode = html_beautify(helperModel.getValue(), {
-      preserve_newlines: false,
-    });
+    const prettyCode = await PrettyCode(helperModel.getValue());
     codeViewInstanceModel.setValue(prettyCode);
   };
 
   const updateEditableElement = useCallback(
-    (params: eventListenersStatesRefType) => {
+    async (params: eventListenersStatesRefType) => {
       const { iframeRefRef, contentEditableUidRef, nodeTreeRef } = params;
 
       const iframeRef = iframeRefRef.current;
@@ -473,13 +500,13 @@ export default function useElements() {
         };
         helperModel.applyEdits([edit]);
       }
-      const code = html_beautify(helperModel.getValue());
+      const code = await PrettyCode(helperModel.getValue());
       codeViewInstanceModel.setValue(code);
     },
     [codeViewInstanceModel],
   );
 
-  const updateSettings = (settings: IupdateSettings) => {
+  const updateSettings = async (settings: IupdateSettings) => {
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
     helperModel.setValue(codeViewInstanceModel.getValue());
 
@@ -504,7 +531,7 @@ export default function useElements() {
       text: updatedTag,
     };
     helperModel.applyEdits([edit]);
-    const code = html_beautify(helperModel.getValue());
+    const code = await PrettyCode(helperModel.getValue());
     codeViewInstanceModel.setValue(code);
     return settings;
   };
@@ -541,7 +568,7 @@ export default function useElements() {
   };
 
   //Delete
-  const remove = (params: Iremove = {}) => {
+  const remove = async (params: Iremove = {}) => {
     const { uids, skipUpdate, content } = params;
     const removalUids = uids || selectedItems;
 
@@ -573,7 +600,7 @@ export default function useElements() {
       }
     });
 
-    const code = html_beautify(helperModel.getValue());
+    const code = await PrettyCode(helperModel.getValue());
 
     !skipUpdate && codeViewInstanceModel.setValue(code);
     return code;

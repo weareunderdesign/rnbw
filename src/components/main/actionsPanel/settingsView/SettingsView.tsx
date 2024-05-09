@@ -40,9 +40,9 @@ export const SettingsView = ({
   );
 
   const cleanUpValue = useCallback(
-    (attribute: string) => {
+    async (attribute: string) => {
       const existingAttributesObj = rnbw.elements.getElementSettings();
-      const updatedAttribsObj = rnbw.elements.updateSettings({
+      const updatedAttribsObj = await rnbw.elements.updateSettings({
         ...existingAttributesObj,
         [`${attribute}`]: "",
       });
