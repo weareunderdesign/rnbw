@@ -13,13 +13,14 @@ import { RootNodeUid } from "@_constants/main";
 import { TFileNodeData, TNodeUid } from "@_node/index";
 import { MainContext } from "@_redux/main";
 import { setSelectedNodeUids } from "@_redux/main/nodeTree";
-import { setActivePanel } from "@_redux/main/processor";
+import { setActivePanel, setShowCodeView } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 import { Editor, loader } from "@monaco-editor/react";
 
 import { useCmdk, useEditor } from "./hooks";
 import { getNodeUidByCodeSelection } from "./helpers";
 import { setEditingNodeUidInCodeView } from "@_redux/main/codeView";
+import { getFileExtension } from "../actionsPanel/navigatorPanel/helpers";
 
 loader.config({ monaco });
 
@@ -74,7 +75,7 @@ export default function CodeView() {
     extension && updateLanguage(extension);
   }, [fileTree, currentFileUid]);
 
-  //scroll to top on file change
+  // scroll to top on file change
   useEffect(() => {
     const monacoEditor = monacoEditorRef.current;
     if (!monacoEditor) return;
@@ -223,6 +224,15 @@ export default function CodeView() {
     }
   }, [codeSelection]);
 
+  // show codeView when opening a file without design
+  useEffect(() => {
+    const fileNode = fileTree[currentFileUid];
+    if (!fileNode || showCodeView) return;
+
+    const isCurrentFileHtml = getFileExtension(fileNode) === "html";
+    !isCurrentFileHtml && dispatch(setShowCodeView(true));
+  }, [currentFileUid]);
+
   return useMemo(() => {
     return (
       <>
@@ -260,7 +270,6 @@ export default function CodeView() {
     );
   }, [
     onPanelClick,
-    showCodeView,
 
     handleEditorDidMount,
     handleOnChange,

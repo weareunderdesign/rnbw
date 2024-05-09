@@ -15,6 +15,7 @@ import { TNodeEventReducerState } from "./types";
 const nodeEventReducerInitialState: TNodeEventReducerState = {
   currentFileContent: "",
   selectedNodeUids: [],
+  currentFileUid: "",
 };
 const nodeEventSlice = createSlice({
   name: "nodeEvent",
@@ -32,12 +33,17 @@ const nodeEventSlice = createSlice({
       const needToSelectNodeUids = action.payload;
       state.selectedNodeUids = needToSelectNodeUids;
     },
+    setCurrentFileUid(state, action: PayloadAction<TNodeUid>) {
+      const currentFileUid = action.payload;
+      state.currentFileUid = currentFileUid;
+    },
   },
 });
 export const {
   setCurrentFileContent,
   setSelectedNodeUids,
   setNeedToSelectNodeUids,
+  setCurrentFileUid,
 } = nodeEventSlice.actions;
 export const NodeEventReducer = undoable(nodeEventSlice.reducer, {
   limit: NodeTree_Event_StoreLimit,
@@ -55,5 +61,11 @@ export const NodeEventReducer = undoable(nodeEventSlice.reducer, {
       }
     }
     return null;
+  },
+  filter: (action, currentState) => {
+    const ignoreActionTypes = ["nodeEvent/setCurrentFileUid"];
+    if (ignoreActionTypes.includes(action.type)) return false;
+    if (currentState.currentFileUid.split(".")[1] !== "html") return false;
+    return true;
   },
 });

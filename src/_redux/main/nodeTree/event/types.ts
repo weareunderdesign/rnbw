@@ -3,6 +3,7 @@ import { TNodeUid } from "@_node/types";
 export type TNodeEventReducerState = {
   currentFileContent: string;
   selectedNodeUids: TNodeUid[];
+  currentFileUid: string;
 };
 
 export type TNodeEvent = {

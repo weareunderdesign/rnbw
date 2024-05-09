@@ -10,7 +10,6 @@ export const useAppState = () => {
         workspace,
         project,
         initialFileUidToOpen,
-        currentFileUid,
         prevFileUid,
         renderableFileUid,
         fileTree,
@@ -44,7 +43,7 @@ export const useAppState = () => {
       },
       nodeEvent: {
         past: nodeEventPast,
-        present: { currentFileContent, selectedNodeUids },
+        present: { currentFileContent, selectedNodeUids, currentFileUid },
         future: nodeEventFuture,
       },
       stageView: { iframeSrc, iframeLoading, linkToOpen, syncConfigs },

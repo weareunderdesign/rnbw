@@ -28,14 +28,16 @@ import {
   addInvalidFileNodes,
   expandFileTreeNodes,
   removeInvalidFileNodes,
-  setCurrentFileUid,
   setDoingFileAction,
   setFileAction,
   setFileTree,
   setRenderableFileUid,
   TFileAction,
 } from "@_redux/main/fileTree";
-import { setCurrentFileContent } from "@_redux/main/nodeTree/event";
+import {
+  setCurrentFileContent,
+  setCurrentFileUid,
+} from "@_redux/main/nodeTree/event";
 import {
   addRunningAction,
   removeRunningAction,

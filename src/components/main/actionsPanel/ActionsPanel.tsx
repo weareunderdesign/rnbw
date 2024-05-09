@@ -11,9 +11,11 @@ import {
   PanelResizeHandle,
 } from "react-resizable-panels";
 import { useAppState } from "@_redux/useAppState";
+import { getFileExtension } from "./navigatorPanel/helpers";
 
 export default function ActionsPanel() {
-  const { showFilePanel, selectedNodeUids } = useAppState();
+  const { showFilePanel, selectedNodeUids, currentFileUid, fileTree } =
+    useAppState();
 
   const [sizes, setSizes] = useState([0, 100]);
   const filePanelRef = useRef<ImperativePanelHandle>(null);
@@ -23,6 +25,11 @@ export default function ActionsPanel() {
       ? filePanelRef.current?.resize(20)
       : filePanelRef.current?.resize(0);
   }, [showFilePanel]);
+
+  const isCurrentFileHtml = useMemo(() => {
+    const fileNode = fileTree[currentFileUid];
+    return fileNode && getFileExtension(fileNode) === "html";
+  }, [fileTree, currentFileUid]);
 
   return useMemo(() => {
     return (
@@ -52,11 +59,11 @@ export default function ActionsPanel() {
             <PanelResizeHandle className="panel-resize-vertical" />
           )}
           <Panel defaultSize={sizes[1]} minSize={10} maxSize={100} order={1}>
-            <NodeTreeView />
+            {isCurrentFileHtml && <NodeTreeView />}
           </Panel>
         </PanelGroup>
-        {selectedNodeUids.length == 1 && <SettingsPanel />}
+        {selectedNodeUids.length == 1 && isCurrentFileHtml && <SettingsPanel />}
       </div>
     );
-  }, [sizes, showFilePanel, selectedNodeUids]);
+  }, [sizes, showFilePanel, selectedNodeUids, isCurrentFileHtml]);
 }

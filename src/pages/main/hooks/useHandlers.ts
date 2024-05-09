@@ -19,7 +19,6 @@ import {
 } from "@_node/file";
 import {
   focusFileTreeNode,
-  setCurrentFileUid,
   setDoingFileAction,
   setFileTree,
   setInitialFileUidToOpen,
@@ -28,7 +27,10 @@ import {
   TProjectContext,
   updateFileTreeViewState,
 } from "@_redux/main/fileTree";
-import { setCurrentFileContent } from "@_redux/main/nodeTree";
+import {
+  setCurrentFileContent,
+  setCurrentFileUid,
+} from "@_redux/main/nodeTree";
 import {
   setLoadingFalse,
   setLoadingTrue,
