@@ -43,8 +43,10 @@ export const SettingsView = ({
     async (attribute: string) => {
       const existingAttributesObj = rnbw.elements.getElementSettings();
       const updatedAttribsObj = await rnbw.elements.updateSettings({
-        ...existingAttributesObj,
-        [`${attribute}`]: "",
+        settings: {
+          ...existingAttributesObj,
+          [`${attribute}`]: "",
+        },
       });
       updatedAttribsObj && setAttributes(updatedAttribsObj);
     },
@@ -54,7 +56,7 @@ export const SettingsView = ({
   const handleDelete = (attribute: string) => {
     const existingAttributesObj = rnbw.elements.getElementSettings();
     delete existingAttributesObj[attribute];
-    rnbw.elements.updateSettings(existingAttributesObj);
+    rnbw.elements.updateSettings({ settings: existingAttributesObj });
     setAttributes(existingAttributesObj);
   };
 

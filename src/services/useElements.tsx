@@ -506,8 +506,10 @@ export default function useElements() {
     [codeViewInstanceModel],
   );
 
-  const updateSettings = async (settings: IupdateSettings) => {
+  const updateSettings = async (params: IupdateSettings) => {
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
+
+    const { settings, skipUpdate } = params;
     helperModel.setValue(codeViewInstanceModel.getValue());
 
     const focusedNode = validNodeTree[nFocusedItem];
@@ -532,7 +534,7 @@ export default function useElements() {
     };
     helperModel.applyEdits([edit]);
     const code = await PrettyCode(helperModel.getValue());
-    codeViewInstanceModel.setValue(code);
+    !skipUpdate && codeViewInstanceModel.setValue(code);
     return settings;
   };
 

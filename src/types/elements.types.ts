@@ -6,7 +6,10 @@ interface Iadd {
   skipUpdate?: boolean;
 }
 interface IupdateSettings {
-  [key: string]: string;
+  settings: {
+    [key: string]: string;
+  };
+  skipUpdate?: boolean;
 }
 
 interface Icopy {

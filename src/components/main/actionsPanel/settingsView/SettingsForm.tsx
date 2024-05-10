@@ -29,9 +29,12 @@ export const SettingsForm = ({
     if (!attribute || value === undefined) return;
 
     const existingAttributesObj = rnbw.elements.getElementSettings();
+
     const updatedAttribsObj = await rnbw.elements.updateSettings({
-      ...existingAttributesObj,
-      [`${attribute}`]: value,
+      settings: {
+        ...existingAttributesObj,
+        [`${attribute}`]: value,
+      },
     });
     updatedAttribsObj && setAttributes(updatedAttribsObj);
     setShowForm(false);
