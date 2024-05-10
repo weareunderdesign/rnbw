@@ -26,9 +26,15 @@ export const _createIDBDirectory = async (path: string): Promise<void> => {
   return new Promise<void>((resolve, reject) => {
     _fs.exists(path, function (exists: boolean) {
       if (!exists) {
-        _fs.mkdir(path, (err: Error) => {
-          err ? reject(err) : resolve();
+        _fs.mkdir(path, { recursive: true }, (err: Error) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
+          }
         });
+      } else {
+        resolve();
       }
     });
   });

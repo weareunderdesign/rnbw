@@ -45,10 +45,10 @@ export const useSaveCommand = () => {
     if (!fileTree[RootNodeUid]) return;
     const _ffTree = structuredClone(fileTree);
     let file = _ffTree[currentFileUid];
-    const fileData = file.data;
+    const fileData = file?.data;
 
     dispatch(addRunningAction());
-    if (fileData.changed) {
+    if (fileData?.changed) {
       try {
         const codeViewInstance = monacoEditorRef.current;
         const codeViewInstanceModel = codeViewInstance?.getModel();
