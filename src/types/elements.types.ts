@@ -5,6 +5,10 @@ interface Iadd {
   attributes: string;
   skipUpdate?: boolean;
 }
+
+interface Iduplicate {
+  skipUpdate?: boolean;
+}
 interface IupdateSettings {
   settings: {
     [key: string]: string;
@@ -36,4 +40,4 @@ interface Imove {
   skipUpdate?: boolean;
 }
 
-export { Iadd, IupdateSettings, Icopy, Ipaste, Iremove, Imove };
+export { Iadd, Iduplicate, IupdateSettings, Icopy, Ipaste, Iremove, Imove };

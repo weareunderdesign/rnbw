@@ -13,33 +13,23 @@ import {
   NodeTree_Event_RedoActionType,
   NodeTree_Event_UndoActionType,
   setCopiedNodeDisplayName,
+  setSelectedNodeUids,
 } from "@_redux/main/nodeTree";
 import { setDidRedo, setDidUndo } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 import {
   Iadd,
   Icopy,
+  Iduplicate,
   Imove,
   Ipaste,
   Iremove,
   IupdateSettings,
 } from "@_types/elements.types";
-
+import { html_beautify } from "js-beautify";
 import { Range, editor } from "monaco-editor";
 import { useCallback, useContext, useMemo } from "react";
 import { useDispatch } from "react-redux";
-
-/* eslint-disable @typescript-eslint/no-var-requires */
-const Prettier = require("prettier/standalone");
-const htmlParser = require("prettier/parser-html");
-
-async function PrettyCode(code: string) {
-  const prettyCode = await Prettier.format(code, {
-    parser: "html",
-    plugins: [htmlParser],
-  });
-  return prettyCode;
-}
 
 export default function useElements() {
   const {
@@ -115,10 +105,7 @@ export default function useElements() {
     });
     pasteToClipboard &&
       (await window.navigator.clipboard.writeText(copiedCode));
-    const updatedCode = await Prettier.format(helperModel.getValue(), {
-      parser: "html",
-      plugins: [htmlParser],
-    });
+    const updatedCode = html_beautify(helperModel.getValue());
     return {
       sortedUids,
       copiedCode,
@@ -162,16 +149,14 @@ export default function useElements() {
         helperModel.applyEdits([edit]);
       }
     });
-    const code = Prettier.format(helperModel.getValue(), {
-      parser: "html",
-      plugins: [htmlParser],
-    });
+    const code = html_beautify(helperModel.getValue());
     !skipUpdate && codeViewInstanceModel.setValue(code);
     return code;
   };
 
-  const duplicate = () => {
+  const duplicate = (params: Iduplicate = {}) => {
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
+    const { skipUpdate } = params;
     helperModel.setValue(codeViewInstanceModel.getValue());
     const sortedUids = sortUidsByMaxEndIndex(selectedItems, validNodeTree);
     sortedUids.forEach((uid) => {
@@ -189,11 +174,9 @@ export default function useElements() {
         helperModel.applyEdits([edit]);
       }
     });
-    const code = Prettier.format(helperModel.getValue(), {
-      parser: "html",
-      plugins: [htmlParser],
-    });
-    codeViewInstanceModel.setValue(code);
+    const code = html_beautify(helperModel.getValue());
+    !skipUpdate && codeViewInstanceModel.setValue(code);
+    return code;
   };
 
   //Read
@@ -264,10 +247,7 @@ export default function useElements() {
         selectedItems.map((uid) => `Node-<${validNodeTree[uid].displayName}>`),
       ),
     );
-    const code = Prettier.format(helperModel.getValue(), {
-      parser: "html",
-      plugins: [htmlParser],
-    });
+    const code = html_beautify(helperModel.getValue());
     codeViewInstanceModel.setValue(code);
   };
 
@@ -328,12 +308,7 @@ export default function useElements() {
     };
     helperModel.applyEdits([edit]);
 
-    // code = await PrettyCode(helperModel.getValue());
-    code = await Prettier.format(helperModel.getValue(), {
-      parser: "html",
-      plugins: [htmlParser],
-    });
-
+    code = html_beautify(helperModel.getValue());
     !skipUpdate && codeViewInstanceModel.setValue(code);
 
     return code;
@@ -355,10 +330,10 @@ export default function useElements() {
     };
 
     helperModel.applyEdits([edit]);
-    codeViewInstanceModel.setValue(await PrettyCode(helperModel.getValue()));
+    codeViewInstanceModel.setValue(html_beautify(helperModel.getValue()));
   };
 
-  const ungroup = async () => {
+  const ungroup = () => {
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
     helperModel.setValue(codeViewInstanceModel.getValue());
 
@@ -393,7 +368,7 @@ export default function useElements() {
       };
       helperModel.applyEdits([removeGroupedCodeEdit, addUngroupedCodeEdit]);
     });
-    const code = await PrettyCode(helperModel.getValue());
+    const code = html_beautify(helperModel.getValue());
     codeViewInstanceModel.setValue(code);
   };
 
@@ -441,7 +416,7 @@ export default function useElements() {
 
         helperModel.setValue(pastedCode);
       } else {
-        const updatedCode = await remove({
+        const updatedCode = remove({
           uids: [uid],
           skipUpdate: true,
         });
@@ -450,12 +425,14 @@ export default function useElements() {
       }
     });
 
-    const prettyCode = await PrettyCode(helperModel.getValue());
+    const prettyCode = html_beautify(helperModel.getValue(), {
+      preserve_newlines: false,
+    });
     codeViewInstanceModel.setValue(prettyCode);
   };
 
   const updateEditableElement = useCallback(
-    async (params: eventListenersStatesRefType) => {
+    (params: eventListenersStatesRefType) => {
       const { iframeRefRef, contentEditableUidRef, nodeTreeRef } = params;
 
       const iframeRef = iframeRefRef.current;
@@ -500,7 +477,7 @@ export default function useElements() {
         };
         helperModel.applyEdits([edit]);
       }
-      const code = await PrettyCode(helperModel.getValue());
+      const code = html_beautify(helperModel.getValue());
       codeViewInstanceModel.setValue(code);
     },
     [codeViewInstanceModel],
@@ -533,7 +510,7 @@ export default function useElements() {
       text: updatedTag,
     };
     helperModel.applyEdits([edit]);
-    const code = await PrettyCode(helperModel.getValue());
+    const code = html_beautify(helperModel.getValue());
     !skipUpdate && codeViewInstanceModel.setValue(code);
     return settings;
   };
@@ -569,8 +546,12 @@ export default function useElements() {
     dispatch(setDidRedo(true));
   };
 
+  const setSelectedElements = (uids: string[]) => {
+    dispatch(setSelectedNodeUids(uids));
+  };
+
   //Delete
-  const remove = async (params: Iremove = {}) => {
+  const remove = (params: Iremove = {}) => {
     const { uids, skipUpdate, content } = params;
     const removalUids = uids || selectedItems;
 
@@ -602,7 +583,7 @@ export default function useElements() {
       }
     });
 
-    const code = await PrettyCode(helperModel.getValue());
+    const code = html_beautify(helperModel.getValue());
 
     !skipUpdate && codeViewInstanceModel.setValue(code);
     return code;
@@ -614,6 +595,7 @@ export default function useElements() {
     duplicate,
     getSelectedElements,
     copy,
+    setSelectedElements,
     cut,
     paste,
     plainPaste,
