@@ -49,6 +49,7 @@ export default function MainPage() {
     activePanel,
     autoSave,
     formatCode,
+    wordWrap,
     cmdkOpen,
     cmdkPages,
     currentCmdkPage,
@@ -412,6 +413,7 @@ export default function MainPage() {
                                   command.Name !== "Format Code" &&
                                   command.Name !== "Add" &&
                                   command.Name !== "Turn into" &&
+                                  command.Name !== "Word Wrap" &&
                                   dispatch(setCmdkOpen(false));
 
                                 if (command.Name === "Guide") {
@@ -513,6 +515,24 @@ export default function MainPage() {
                                         </span>
                                         <span className="text-m">
                                           {formatCode ? "On" : "Off"}
+                                        </span>
+                                      </div>
+                                    </>
+                                  ) : command.Name === "Word Wrap" ? (
+                                    <>
+                                      {/* detect Word Wrap */}
+                                      <div className="padding-xs">
+                                        <div className="radius-m icon-xs align-center background-tertiary"></div>
+                                      </div>
+                                      <div className="gap-s align-center">
+                                        <span className="text-m opacity-m">
+                                          Word Wrap
+                                        </span>
+                                        <span className="text-s opacity-m">
+                                          /
+                                        </span>
+                                        <span className="text-m">
+                                          {wordWrap ? "On" : "Off"}
                                         </span>
                                       </div>
                                     </>

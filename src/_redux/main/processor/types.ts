@@ -13,6 +13,7 @@ export type TProcessorReducerState = {
 
   autoSave: boolean;
   formatCode: boolean;
+  wordWrap: boolean;
 
   didUndo: boolean;
   didRedo: boolean;

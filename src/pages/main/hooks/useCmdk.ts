@@ -33,6 +33,7 @@ import {
   setFormatCode,
   setShowActionsPanel,
   setShowCodeView,
+  setWordWrap,
 } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 import { getCommandKey } from "@_services/global";
@@ -71,6 +72,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     showCodeView,
     autoSave,
     formatCode,
+    wordWrap,
     cmdkOpen,
     cmdkPages,
     currentCommand,
@@ -248,6 +250,10 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     dispatch(setFormatCode(!formatCode));
   }, [formatCode]);
 
+  const onToggleWordWrap = useCallback(() => {
+    dispatch(setWordWrap(!wordWrap));
+  }, [wordWrap]);
+
   const closeAllPanel = useCallback(() => {
     dispatch(setShowActionsPanel(false));
     dispatch(setShowCodeView(false));
@@ -410,7 +416,9 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
       case "Format Code":
         onToggleFormatCode();
         break;
-
+      case "Word Wrap":
+        onToggleWordWrap();
+        break;
       default:
         return;
     }
