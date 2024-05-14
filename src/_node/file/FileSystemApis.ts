@@ -207,20 +207,20 @@ const _moveLocalFile = async (
     throw "Error while moving a local file.";
   }
 };
-const moveLocalSingleDirectoryOrFile = async ({
+export const moveLocalSingleDirectoryOrFile = async ({
   uid,
   targetUid,
   newName,
   fileTree,
   fileHandlers,
-  isCopy,
+  isCopy = false,
 }: {
   uid: TNodeUid;
   targetUid: TNodeUid;
-  newName: string;
+  newName?: string;
   fileTree: TFileNodeTreeData;
   fileHandlers: TFileHandlerCollection;
-  isCopy: boolean;
+  isCopy?: boolean;
 }): Promise<boolean> => {
   const node = fileTree[uid];
   if (!node) return false;
@@ -245,8 +245,9 @@ const moveLocalSingleDirectoryOrFile = async ({
 
   const nodeData = node.data;
   try {
+    const entityName = newName || nodeData.name;
     if (nodeData.kind === "directory") {
-      const newHandler = await targetHandler.getDirectoryHandle(newName, {
+      const newHandler = await targetHandler.getDirectoryHandle(entityName, {
         create: true,
       });
       await _moveLocalDirectory(
@@ -260,7 +261,7 @@ const moveLocalSingleDirectoryOrFile = async ({
         handler as FileSystemFileHandle,
         parentHandler,
         targetHandler,
-        newName,
+        entityName,
         isCopy,
       );
     }

@@ -26,8 +26,21 @@ interface Iundo {
   steps: number;
 }
 
+interface IcopyFiles {
+  uids: string[];
+}
+
+interface IcutFiles {
+  uids: string[];
+}
+
 interface Iremove {
   uids: string[];
+}
+
+interface IpasteFiles {
+  uids: string[];
+  targetUid: string;
 }
 export {
   IcreateFile,
@@ -38,4 +51,7 @@ export {
   Iredo,
   Iundo,
   Iremove,
+  IcopyFiles,
+  IcutFiles,
+  IpasteFiles,
 };

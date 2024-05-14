@@ -1,8 +1,11 @@
 import { useAppState } from "@_redux/useAppState";
 import {
+  IcopyFiles,
   IcreateFile,
   IcreateFolder,
+  IcutFiles,
   IgetFolderTree,
+  IpasteFiles,
   Iredo,
   Iremove,
   IsetCurrentFile,
@@ -11,6 +14,8 @@ import {
 } from "@_types/files.types";
 import { useDispatch } from "react-redux";
 import { verifyFileHandlerPermission } from "./main";
+import { setClipboardData } from "@_redux/main/processor";
+import { moveLocalSingleDirectoryOrFile } from "@_node/index";
 
 export default function useFiles() {
   const dispatch = useDispatch();
@@ -68,8 +73,26 @@ export default function useFiles() {
   const getSelectedFiles = () => {
     return fSelectedItemsObj;
   };
-  const copySelectedFiles = () => {};
-  const cutSelectedFiles = () => {};
+  const copyFiles = (params: IcopyFiles) => {
+    const { uids } = params;
+    dispatch(
+      setClipboardData({
+        panel: "file",
+        type: "copy",
+        uids,
+      }),
+    );
+  };
+  const cutSelectedFiles = (params: IcutFiles) => {
+    const { uids } = params;
+    dispatch(
+      setClipboardData({
+        panel: "file",
+        type: "cut",
+        uids,
+      }),
+    );
+  };
 
   //Update
   const setCurrentFile = (params: IsetCurrentFile) => {
@@ -95,7 +118,21 @@ export default function useFiles() {
     if (steps < 1) return;
     dispatch({ type: "REDO", payload: steps });
   };
-  const paste = () => {};
+  const paste = async (params: IpasteFiles) => {
+    const { uids, targetUid } = params;
+
+    await Promise.all(
+      /* we are using map instead of forEach because we want to to get the array of all the promises */
+      uids.map(async (uid) => {
+        await moveLocalSingleDirectoryOrFile({
+          fileTree,
+          fileHandlers,
+          uid,
+          targetUid,
+        });
+      }),
+    );
+  };
   const move = () => {};
 
   //Delete
@@ -110,7 +147,7 @@ export default function useFiles() {
     getRootTree,
     getFolderTree,
     getCurrentFile,
-    copySelectedFiles,
+    copySelectedFiles: copyFiles,
     cutSelectedFiles,
     getSelectedFiles,
     setCurrentFile,
