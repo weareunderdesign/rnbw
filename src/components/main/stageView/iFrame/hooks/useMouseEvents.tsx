@@ -188,62 +188,60 @@ export const useMouseEvents = () => {
         validNodeTree,
         hoveredNodeUid,
       } = eventListenerRef.current;
+
       const ele = e.target as HTMLElement;
-      const uid: TNodeUid | null = ele.getAttribute(StageNodeIdAttr);
+      const uid: TNodeUid | null =
+        ele.getAttribute(StageNodeIdAttr) ||
+        mostRecentClickedNodeUidRef.current;
 
-      if (!uid) {
-        isEditingRef.current = false;
-        if (mostRecentClickedNodeUidRef.current) {
-          // when dbl-click on a web component
-          const node = nodeTreeRef.current[mostRecentClickedNodeUidRef.current];
-          const nodeData = node?.data as THtmlNodeData;
-          if (
-            isWebComponentDblClicked({
-              htmlReferenceData,
-              nodeData,
-            })
-          ) {
-            onWebComponentDblClick({
-              dispatch,
-              expandedItemsObj: fExpandedItemsObj,
-              fileTree,
-              validNodeTree,
-              wcName: nodeData.nodeName,
-              navigate,
-            });
-            return;
-          }
-        }
-      } else {
-        const targetUid = isChild({
-          currentUid: uid,
-          nodeTree: nodeTreeRef.current,
-          selectedUid: selectedItemsRef.current[0],
+      const node = nodeTreeRef.current[uid];
+      if (!node) return;
+      const nodeData = node?.data as THtmlNodeData;
+
+      // when dbl-click on a web component
+      if (
+        isWebComponentDblClicked({
+          htmlReferenceData,
+          nodeData,
+        }) &&
+        selectedItemsRef.current[0] === uid &&
+        nodeData.nodeName !== "#text"
+      ) {
+        onWebComponentDblClick({
+          dispatch,
+          expandedItemsObj: fExpandedItemsObj,
+          fileTree,
+          validNodeTree,
+          wcName: nodeData.nodeName,
+          navigate,
         });
+        return;
+      }
 
-        const same = areArraysEqual(selectedItemsRef.current, [
-          !targetUid ? uid : targetUid,
-        ]);
-        !same && dispatch(setSelectedNodeUids([!targetUid ? uid : targetUid]));
-        if (hoveredNodeUid !== "") dispatch(setHoveredNodeUid(""));
+      const targetUid = isChild({
+        currentUid: uid,
+        nodeTree: nodeTreeRef.current,
+        selectedUid: selectedItemsRef.current[0],
+      });
 
-        if (targetUid) return;
-        if (!ele.getAttribute("rnbw-text-element")) return;
+      const same = areArraysEqual(selectedItemsRef.current, [
+        !targetUid ? uid : targetUid,
+      ]);
+      !same && dispatch(setSelectedNodeUids([!targetUid ? uid : targetUid]));
+      if (hoveredNodeUid !== "") dispatch(setHoveredNodeUid(""));
 
-        dispatch(setSelectedNodeUids([uid]));
+      if (targetUid) return;
+      if (!ele.getAttribute("rnbw-text-element")) return;
 
-        const node = nodeTreeRef.current[uid];
-        if (!node) return;
-        const nodeData = node?.data as THtmlNodeData;
-        const { startLine, endLine } = nodeData.sourceCodeLocation;
+      dispatch(setSelectedNodeUids([uid]));
 
-        if (startLine && endLine && contentEditableUidRef.current !== uid) {
-          isEditingRef.current = true;
-          contentEditableUidRef.current = uid;
-          ele.setAttribute("contenteditable", "true");
-          ele.focus();
-          debouncedSelectAllText(iframeRefRef.current, ele);
-        }
+      const { startLine, endLine } = nodeData.sourceCodeLocation;
+      if (startLine && endLine && contentEditableUidRef.current !== uid) {
+        isEditingRef.current = true;
+        contentEditableUidRef.current = uid;
+        ele.setAttribute("contenteditable", "true");
+        ele.focus();
+        debouncedSelectAllText(iframeRefRef.current, ele);
       }
     },
     [debouncedSelectAllText, mostRecentClickedNodeUidRef.current],
