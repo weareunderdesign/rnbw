@@ -89,6 +89,7 @@ export const loadIDBProject = async (
         deletedUidsObj[uid] = true;
       });
     }
+    await _createIDBDirectory(`/${projectPath}`);
 
     // build project root-handler
     const rootHandler: TFileHandlerInfo = {
@@ -344,6 +345,10 @@ export const loadLocalProject = async (
       _fileHandlers[uid] = handler as FileSystemHandle;
     });
 
+    await _createIDBDirectory(
+      `/${(projectHandle as FileSystemDirectoryHandle).name}`,
+    );
+
     return {
       handlerArr,
       _fileHandlers,
@@ -377,14 +382,20 @@ export const buildNohostIDB = async (
     // Process handlerArr
     await Promise.all(
       handlerArr.map(async (_handler) => {
-        const { kind, path, content } = _handler;
+        const { kind, path } = _handler;
         if (kind === "directory") {
           try {
             await _createIDBDirectory(path);
           } catch (err) {
             console.error("Error while creating IDB directory", err);
           }
-        } else {
+        }
+      }),
+    );
+    await Promise.all(
+      handlerArr.map(async (_handler) => {
+        const { kind, path, content } = _handler;
+        if (kind === "file") {
           try {
             await _writeIDBFile(path, content as Uint8Array);
           } catch (err) {
