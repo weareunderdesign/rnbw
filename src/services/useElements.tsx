@@ -75,12 +75,18 @@ export default function useElements() {
   async function copyAndCutNode({
     selectedUids,
     pasteToClipboard = true,
+    sortDsc = false,
   }: {
     selectedUids?: string[];
     pasteToClipboard?: boolean;
+    sortDsc?: boolean;
   } = {}) {
     const selected = selectedUids || selectedItems;
-    const sortedUids = sortUidsByMinStartIndex(selected, validNodeTree);
+
+    /* We are sorting nodes from the max to the min because this way the nodes of max index are deleted first and they do not affect the nodes with index lower to them in terms of the source code location*/
+    const sortedUids = sortDsc
+      ? sortUidsByMaxEndIndex(selected, validNodeTree)
+      : sortUidsByMinStartIndex(selected, validNodeTree);
     let copiedCode = "";
 
     sortedUids.forEach((uid) => {
@@ -241,7 +247,10 @@ export default function useElements() {
     if (!checkAllResourcesAvailable || !codeViewInstanceModel) return;
     helperModel.setValue(codeViewInstanceModel.getValue());
 
-    await copyAndCutNode();
+    await copyAndCutNode({
+      sortDsc: true,
+    });
+
     dispatch(
       setCopiedNodeDisplayName(
         selectedItems.map((uid) => `Node-<${validNodeTree[uid].displayName}>`),
@@ -315,7 +324,23 @@ export default function useElements() {
   };
 
   const plainPaste = () => {};
+  /*
+a-> 1 - 100
+b-> 100 -200
+c-> 200 - 300
+d-> 300 - 400
 
+
+b is deleted, so now new ranges should be changed (which is not updated as we want move operation to be performed as one step)
+
+a-> 1 - 100
+c-> 100 - 200
+d-> 200 - 300
+
+if we paste b below c with old ranges, then b will be pasted from line 200 (if range is not updated) which is wrong
+b should be pasted from line 200 as per the new ranges
+
+*/
   const group = async () => {
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
     helperModel.setValue(codeViewInstanceModel.getValue());
