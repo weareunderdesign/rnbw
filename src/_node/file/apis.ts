@@ -479,7 +479,11 @@ export const parseFile = (
   ext: string,
   content: string,
 ): TFileParserResponse => {
-  return fileHandlers[ext]
-    ? fileHandlers[ext](content)
-    : { contentInApp: "", nodeTree: {}, htmlDom: null };
+  const defaultResponse: TFileParserResponse = {
+    contentInApp: "",
+    nodeTree: {},
+    htmlDom: null,
+  };
+  if (!content || !fileHandlers[ext]) return defaultResponse;
+  return fileHandlers[ext](content);
 };
