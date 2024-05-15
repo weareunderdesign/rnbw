@@ -4,7 +4,7 @@ interface IcreateFile {
 }
 
 interface IcreateFolder {
-  name: string;
+  name?: string;
 }
 
 interface IgetFolderTree {

@@ -17,17 +17,32 @@ import { useDispatch } from "react-redux";
 import { verifyFileHandlerPermission } from "./main";
 import { setClipboardData } from "@_redux/main/processor";
 import {
+  TFileNodeTreeData,
+  TNode,
+  TNodeTreeData,
+  _path,
   moveLocalSingleDirectoryOrFile,
   removeSingleLocalDirectoryOrFile,
 } from "@_node/index";
+import { RootNodeUid, TmpFileNodeUidWhenAddNew } from "@_constants/main";
+import { expandFileTreeNodes, setFileTree } from "@_redux/main/fileTree";
+import { useCallback, useContext } from "react";
+import { MainContext } from "@_redux/main";
 
 export default function useFiles() {
   const dispatch = useDispatch();
-  const { fFocusedItem, fileTree, fileHandlers, fSelectedItemsObj } =
-    useAppState();
+  const {
+    fFocusedItem,
+    fileTree,
+    fileHandlers,
+    fSelectedItemsObj,
+    fExpandedItemsObj,
+  } = useAppState();
+  const { triggerCurrentProjectReload } = useContext(MainContext);
 
   //utilities
   const getParentHandler = (uid: string): FileSystemDirectoryHandle | null => {
+    if (!uid) return fileHandlers[RootNodeUid] as FileSystemDirectoryHandle;
     const parentUid = fileTree[uid].parentUid;
     if (!parentUid) return null;
     const parentNode = fileTree[parentUid];
@@ -36,21 +51,86 @@ export default function useFiles() {
     return parentHandler;
   };
 
-  //Create
-  const createFile = async (params: IcreateFile) => {
-    const { name = "untitled", extension = "html" } = params;
-    const parentHandler = getParentHandler(fFocusedItem);
-    if (!parentHandler) return false;
-    if (!(await verifyFileHandlerPermission(parentHandler))) return false;
-    const nameWithExtension = `${name}.${extension}`;
-    try {
-      await parentHandler.getFileHandle(nameWithExtension, { create: true });
-      return true;
-    } catch (err) {
-      return false;
+  const updatedFileTreeAfterAdding = ({
+    isFolder,
+    ext,
+  }: {
+    isFolder: boolean;
+    ext: string;
+  }) => {
+    // performs a deep clone of the file tree
+    const _fileTree = structuredClone(fileTree) as TNodeTreeData;
+
+    // find the immediate directory of the focused item if it is a file
+    let immediateDir = _fileTree[fFocusedItem];
+    if (!immediateDir) return;
+    if (immediateDir.isEntity) {
+      immediateDir = _fileTree[immediateDir.parentUid!];
     }
+
+    //if the directory is not a RootNode and not already expanded, expand it
+    if (
+      immediateDir.uid !== RootNodeUid &&
+      !fExpandedItemsObj[immediateDir.uid]
+    ) {
+      dispatch(expandFileTreeNodes([immediateDir.uid]));
+    }
+
+    // create tmp node for new file/directory
+    const tmpNode: TNode = {
+      uid: _path.join(immediateDir.uid, TmpFileNodeUidWhenAddNew),
+      parentUid: immediateDir.uid,
+      displayName: "Untitled",
+      isEntity: !isFolder,
+      children: [],
+      data: {
+        valid: false,
+        ext,
+      },
+    };
+
+    // adds the tmp node to the file tree at the beginning of focused item parent's children
+    immediateDir.children.unshift(tmpNode.uid);
+
+    // Assign the tmp node to the file tree
+    _fileTree[tmpNode.uid] = tmpNode;
+
+    // update the file tree
+    dispatch(setFileTree(_fileTree as TFileNodeTreeData));
   };
-  const createFolder = async (params: IcreateFolder) => {
+
+  //Create
+  const createFile = useCallback(
+    async (
+      params: IcreateFile = {
+        name: "untitled",
+        extension: "html",
+      },
+    ) => {
+      const { name = "untitled", extension = "html" } = params;
+
+      const parentHandler = getParentHandler(fFocusedItem);
+      if (!parentHandler) return false;
+      if (!(await verifyFileHandlerPermission(parentHandler))) return false;
+      const nameWithExtension = `${name}.${extension}`;
+      try {
+        await parentHandler.getFileHandle(nameWithExtension, { create: true });
+        return true;
+      } catch (err) {
+        return false;
+      } finally {
+        triggerCurrentProjectReload();
+      }
+    },
+    [
+      fFocusedItem,
+      fileTree,
+      fileHandlers,
+      fSelectedItemsObj,
+      fExpandedItemsObj,
+    ],
+  );
+  const createFolder = async (params: IcreateFolder = {}) => {
     const { name = "untitled" } = params;
     const parentHandler = getParentHandler(fFocusedItem);
     if (!parentHandler) return false;
@@ -60,6 +140,8 @@ export default function useFiles() {
       return true;
     } catch (err) {
       return false;
+    } finally {
+      triggerCurrentProjectReload();
     }
   };
 
@@ -185,5 +267,6 @@ export default function useFiles() {
     paste,
     move,
     remove,
+    updatedFileTreeAfterAdding,
   };
 }

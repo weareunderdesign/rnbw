@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useEffect } from "react";
 
 import { AddFileActionPrefix } from "@_constants/main";
 import { isAddFileAction } from "@_node/helpers";
@@ -12,19 +12,12 @@ export const useCmdk = () => {
   const { onAdd, onRemove, onCut, onCopy, onPaste, onDuplicate } =
     useNodeActionsHandler();
 
-  const onAddNode = useCallback(
-    (actionName: string) => {
-      const type = actionName.slice(AddFileActionPrefix.length + 1);
-      onAdd(type === "folder" ? true : false, type);
-    },
-    [onAdd],
-  );
-
   useEffect(() => {
     if (!currentCommand) return;
 
     if (isAddFileAction(currentCommand.action)) {
-      onAddNode(currentCommand.action);
+      const type = currentCommand.action.slice(AddFileActionPrefix.length + 1);
+      onAdd(type === "folder" ? true : false, type);
       return;
     }
 
