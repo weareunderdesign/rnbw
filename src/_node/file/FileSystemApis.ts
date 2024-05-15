@@ -77,7 +77,7 @@ const createIDBSingleDirectoryOrFile = async ({
   }
 };
 
-const removeSingleLocalDirectoryOrFile = async ({
+export const removeSingleLocalDirectoryOrFile = async ({
   uid,
   fileTree,
   fileHandlers,

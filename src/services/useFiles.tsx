@@ -11,11 +11,15 @@ import {
   IsetCurrentFile,
   IsetCurrentFileContent,
   Iundo,
+  Imove,
 } from "@_types/files.types";
 import { useDispatch } from "react-redux";
 import { verifyFileHandlerPermission } from "./main";
 import { setClipboardData } from "@_redux/main/processor";
-import { moveLocalSingleDirectoryOrFile } from "@_node/index";
+import {
+  moveLocalSingleDirectoryOrFile,
+  removeSingleLocalDirectoryOrFile,
+} from "@_node/index";
 
 export default function useFiles() {
   const dispatch = useDispatch();
@@ -83,7 +87,7 @@ export default function useFiles() {
       }),
     );
   };
-  const cutSelectedFiles = (params: IcutFiles) => {
+  const cutFiles = (params: IcutFiles) => {
     const { uids } = params;
     dispatch(
       setClipboardData({
@@ -119,7 +123,7 @@ export default function useFiles() {
     dispatch({ type: "REDO", payload: steps });
   };
   const paste = async (params: IpasteFiles) => {
-    const { uids, targetUid } = params;
+    const { uids, targetUid, deleteSource } = params;
 
     await Promise.all(
       /* we are using map instead of forEach because we want to to get the array of all the promises */
@@ -129,16 +133,39 @@ export default function useFiles() {
           fileHandlers,
           uid,
           targetUid,
+          isCopy: deleteSource,
         });
       }),
     );
   };
-  const move = () => {};
+  const move = (params: Imove) => {
+    const { targetUid, uids } = params;
+    dispatch({ type: "MOVE_FILES", payload: { uids, targetUid } });
+    try {
+      cutFiles({ uids });
+      paste({ uids, targetUid, deleteSource: true });
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   //Delete
   const remove = (params: Iremove) => {
     const { uids } = params;
     dispatch({ type: "REMOVE_FILES", payload: uids });
+    try {
+      Promise.all(
+        uids.map(async (uid) => {
+          return removeSingleLocalDirectoryOrFile({
+            fileTree,
+            fileHandlers,
+            uid,
+          });
+        }),
+      );
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return {
@@ -148,7 +175,7 @@ export default function useFiles() {
     getFolderTree,
     getCurrentFile,
     copySelectedFiles: copyFiles,
-    cutSelectedFiles,
+    cutSelectedFiles: cutFiles,
     getSelectedFiles,
     setCurrentFile,
     setCurrentFileContent,

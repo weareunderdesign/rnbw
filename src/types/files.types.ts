@@ -41,6 +41,12 @@ interface Iremove {
 interface IpasteFiles {
   uids: string[];
   targetUid: string;
+  deleteSource: boolean;
+}
+
+interface Imove {
+  uids: string[];
+  targetUid: string;
 }
 export {
   IcreateFile,
@@ -54,4 +60,5 @@ export {
   IcopyFiles,
   IcutFiles,
   IpasteFiles,
+  Imove,
 };
