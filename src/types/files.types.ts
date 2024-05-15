@@ -35,7 +35,7 @@ interface IcutFiles {
 }
 
 interface Iremove {
-  uids: string[];
+  uids?: string[];
 }
 
 interface IpasteFiles {

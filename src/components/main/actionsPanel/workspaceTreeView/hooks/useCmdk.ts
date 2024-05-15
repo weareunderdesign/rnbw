@@ -5,11 +5,13 @@ import { isAddFileAction } from "@_node/helpers";
 import { useAppState } from "@_redux/useAppState";
 
 import { useNodeActionsHandler } from "./useNodeActionsHandler";
+import useRnbw from "@_services/useRnbw";
 
 export const useCmdk = () => {
   const { activePanel, currentCommand } = useAppState();
+  const rnbw = useRnbw();
 
-  const { onAdd, onRemove, onCut, onCopy, onPaste, onDuplicate } =
+  const { onAdd, onCut, onCopy, onPaste, onDuplicate } =
     useNodeActionsHandler();
 
   useEffect(() => {
@@ -25,7 +27,8 @@ export const useCmdk = () => {
 
     switch (currentCommand.action) {
       case "Delete":
-        onRemove();
+        // onRemove();
+        rnbw.files.remove();
         break;
       case "Cut":
         onCut();

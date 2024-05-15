@@ -28,6 +28,7 @@ import { RootNodeUid, TmpFileNodeUidWhenAddNew } from "@_constants/main";
 import { expandFileTreeNodes, setFileTree } from "@_redux/main/fileTree";
 import { useCallback, useContext } from "react";
 import { MainContext } from "@_redux/main";
+import { getObjKeys } from "@_pages/main/helper";
 
 export default function useFiles() {
   const dispatch = useDispatch();
@@ -37,6 +38,7 @@ export default function useFiles() {
     fileHandlers,
     fSelectedItemsObj,
     fExpandedItemsObj,
+    invalidFileNodes,
   } = useAppState();
   const { triggerCurrentProjectReload } = useContext(MainContext);
 
@@ -232,12 +234,22 @@ export default function useFiles() {
   };
 
   //Delete
-  const remove = (params: Iremove) => {
+  const remove = (params: Iremove = {}) => {
     const { uids } = params;
-    dispatch({ type: "REMOVE_FILES", payload: uids });
+    const selectedItems = getObjKeys(fSelectedItemsObj);
+    const selectedUids = selectedItems.filter((uid) => !invalidFileNodes[uid]);
+    const _uids = uids || selectedUids;
+    if (_uids.length === 0) return;
+
+    const message = `Are you sure you want to delete them? This action cannot be undone!`;
+    if (!window.confirm(message)) {
+      return;
+    }
+
+    dispatch({ type: "REMOVE_FILES", payload: _uids });
     try {
       Promise.all(
-        uids.map(async (uid) => {
+        _uids.map(async (uid) => {
           return removeSingleLocalDirectoryOrFile({
             fileTree,
             fileHandlers,
@@ -247,6 +259,8 @@ export default function useFiles() {
       );
     } catch (err) {
       console.error(err);
+    } finally {
+      triggerCurrentProjectReload();
     }
   };
 
