@@ -1,4 +1,5 @@
 import useRnbw from "@_services/useRnbw";
+import { html_beautify } from "js-beautify";
 import { Range, editor } from "monaco-editor";
 
 // helperModel added to update the code in the codeViewInstanceModel
@@ -10,20 +11,38 @@ export default function useTurnInto() {
   const selectedElements = rnbw.elements.getSelectedElements();
 
   function turnInto(tagName: string) {
-    selectedElements.forEach((uid) => {
-      //replace the tag name
-      const node = rnbw.elements.getElement(uid);
-      if (node) {
-        const { startCol, startLine, endCol, endLine } =
-          node.data.sourceCodeLocation;
+    const codeViewInstanceModel = rnbw.files.getEditorRef().current?.getModel();
+    if (!codeViewInstanceModel) return;
+    helperModel.setValue(codeViewInstanceModel.getValue());
 
-        const edit = {
-          range: new Range(startLine, startCol, endLine, endCol),
-          text: `<${tagName}>${node.data.content}</${tagName}>`,
-        };
-        helperModel.applyEdits([edit]);
-      }
+    selectedElements.forEach(async (uid) => {
+      const node = rnbw.elements.getElement(uid);
+      if (!node) return;
+      const nodeAttribute = rnbw.elements.getElementSettings(uid);
+
+      const attributeCode = Object.entries(nodeAttribute)
+        .map(([attrName, attrValue]) => `${attrName}="${attrValue}"`)
+        .join(" ");
+
+      const { startTag, endTag, startLine, startCol, endLine, endCol } =
+        node.data.sourceCodeLocation;
+      if (!startTag || !endTag) return;
+      const text = codeViewInstanceModel.getValueInRange(
+        new Range(
+          startTag.endLine,
+          startTag.endCol,
+          endTag.startLine,
+          endTag.startCol,
+        ),
+      );
+      const edit = {
+        range: new Range(startLine, startCol, endLine, endCol),
+        text: `<${tagName} ${attributeCode}>${text}</${tagName}>`,
+      };
+      helperModel.applyEdits([edit]);
     });
+    const code = html_beautify(helperModel.getValue());
+    codeViewInstanceModel.setValue(code);
   }
 
   const config = {

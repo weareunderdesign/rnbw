@@ -2,17 +2,16 @@ import { useEffect } from "react";
 
 import { isAddNodeAction, isRenameNodeAction } from "@_node/helpers";
 import { useAppState } from "@_redux/useAppState";
-
-import { useNodeActionHandlers } from "./useNodeActionHandlers";
+import { AddNodeActionPrefix, RenameNodeActionPrefix } from "@_constants/main";
 import useRnbw from "@_services/useRnbw";
-import { AddNodeActionPrefix } from "@_constants/main";
+import useTurnInto from "@_actions/useTurnInto.actions";
 
 export const useCmdk = () => {
   const { activePanel, currentCommand } = useAppState();
 
-  const { onTurnInto } = useNodeActionHandlers();
-
   const rnbw = useRnbw();
+  const turnInto = useTurnInto();
+
   useEffect(() => {
     if (!currentCommand || !rnbw) return;
 
@@ -32,7 +31,12 @@ export const useCmdk = () => {
     }
 
     if (isRenameNodeAction(currentCommand.action)) {
-      onTurnInto(currentCommand.action);
+      const actionName = currentCommand.action;
+      const tagName = actionName.slice(
+        RenameNodeActionPrefix.length + 2,
+        actionName.length - 1,
+      );
+      turnInto.action(tagName);
       return;
     }
 
