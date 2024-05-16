@@ -21,10 +21,7 @@ import {
   setLastFileAction,
   TProjectContext,
 } from "@_redux/main/fileTree";
-import {
-  NodeTree_Event_RedoActionType,
-  NodeTree_Event_UndoActionType,
-} from "@_redux/main/nodeTree";
+
 import {
   setActivePanel,
   setAutoSave,
@@ -40,6 +37,7 @@ import { getCommandKey } from "@_services/global";
 import { TCmdkKeyMap, TCmdkReferenceData } from "@_types/main";
 
 import { setSystemTheme } from "../helper";
+import useRnbw from "@_services/useRnbw";
 
 interface IUseCmdk {
   cmdkReferenceData: TCmdkReferenceData;
@@ -61,11 +59,8 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     fileAction,
     fileEventPastLength,
     fileEventFutureLength,
-    nodeEventPast,
     nodeEventPastLength,
     nodeEventFutureLength,
-    currentFileContent,
-    selectedNodeUids,
     iframeLoading,
     activePanel,
     showActionsPanel,
@@ -79,6 +74,8 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     runningAction,
     showFilePanel,
   } = useAppState();
+
+  const rnbw = useRnbw();
 
   // handlers
   const onClear = useCallback(async () => {
@@ -145,21 +142,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
       dispatch(setLastFileAction({ ...fileAction }));
       dispatch({ type: FileTree_Event_UndoActionType });
     } else {
-      if (nodeEventPastLength <= 1) {
-        LogAllow && console.log("Undo - NodeTree - it is the origin state");
-        return;
-      }
-      if (
-        currentFileContent !==
-          nodeEventPast[nodeEventPastLength - 1].currentFileContent &&
-        selectedNodeUids ===
-          nodeEventPast[nodeEventPastLength - 1].selectedNodeUids
-      ) {
-        dispatch({ type: NodeTree_Event_UndoActionType });
-        dispatch({ type: NodeTree_Event_UndoActionType });
-      } else {
-        dispatch({ type: NodeTree_Event_UndoActionType });
-      }
+      rnbw.elements.undo();
     }
 
     dispatch(setDidUndo(true));
@@ -183,11 +166,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
       }
       dispatch({ type: FileTree_Event_RedoActionType });
     } else {
-      if (nodeEventFutureLength === 0) {
-        LogAllow && console.log("Redo - NodeTree - it is the latest state");
-        return;
-      }
-      dispatch({ type: NodeTree_Event_RedoActionType });
+      rnbw.elements.redo();
     }
 
     dispatch(setDidRedo(true));

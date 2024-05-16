@@ -1,0 +1,33 @@
+import { useCallback, useContext, useEffect } from "react";
+import { RootNodeUid } from "@_constants/main";
+import { MainContext } from "@_redux/main";
+import { useAppState } from "@_redux/useAppState";
+import useRnbw from "@_services/useRnbw";
+
+export const useWorkspaceInit = () => {
+  const { project, fileTree, initialFileUidToOpen, fileHandlers } =
+    useAppState();
+  const { triggerCurrentProjectReload } = useContext(MainContext);
+  const rnbw = useRnbw();
+
+  const createDefaultFile = useCallback(async () => {
+    if (project?.context === "local") {
+      const noInitialFileToOpen = initialFileUidToOpen === "";
+      const rootFileHandlerExists = fileHandlers[RootNodeUid];
+      const noHtmlFileExistsInRoot = !Object.values(fileTree).some(
+        (node) => node?.data?.ext === "html" && node.parentUid === RootNodeUid,
+      );
+      if (noInitialFileToOpen && noHtmlFileExistsInRoot) {
+        if (rootFileHandlerExists) {
+          //create a default file index.html in the root directory
+          rnbw.files.createFile({ name: "index", extension: "html" });
+          triggerCurrentProjectReload();
+        }
+      }
+    }
+  }, [project, fileTree, fileHandlers, initialFileUidToOpen]);
+
+  useEffect(() => {
+    createDefaultFile();
+  }, [createDefaultFile]);
+};

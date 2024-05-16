@@ -489,9 +489,11 @@ const move = ({
     });
 
     let isFirst = true; // isFirst is used to when drop focusedItem to itself
+
     sortedUids.map((uid) => {
       if (uid === focusedItem && isFirst) {
         isFirst = false;
+
         focusedItem
           ? pasteCode({
               validNodeTree,

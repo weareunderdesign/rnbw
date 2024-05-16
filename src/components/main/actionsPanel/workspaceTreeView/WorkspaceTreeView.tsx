@@ -16,17 +16,24 @@ import {
 import { _path } from "@_node/file/nohostApis";
 import { TNode, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
-import { setHoveredFileUid } from "@_redux/main/fileTree";
+import {
+  TFileAction,
+  addInvalidFileNodes,
+  removeInvalidFileNodes,
+  setFileAction,
+  setFileTree,
+  setHoveredFileUid,
+} from "@_redux/main/fileTree";
 import { setActivePanel } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 import { generateQuerySelector } from "@_services/main";
 
 import {
   useCmdk,
-  useDefaultFileCreate,
   useNodeActionsHandler,
   useNodeViewState,
   useSync,
+  useWorkspaceInit,
 } from "./hooks";
 import { useSaveCommand } from "@_pages/main/processor/hooks";
 import { debounce, getObjKeys } from "@_pages/main/helper";
@@ -38,6 +45,7 @@ import {
 } from "@_components/common/treeComponents";
 import { NodeIcon } from "./workspaceComponents/NodeIcon";
 import { TFilesReference } from "@rnbws/rfrncs.design";
+import useRnbw from "@_services/useRnbw";
 
 const AutoExpandDelayOnDnD = 1 * 1000;
 export default function WorkspaceTreeView() {
@@ -59,6 +67,7 @@ export default function WorkspaceTreeView() {
     invalidFileNodes,
     hoveredFileUid,
   } = useAppState();
+  const rnbw = useRnbw();
 
   const { importProject } = useContext(MainContext);
   const navigate = useNavigate();
@@ -67,17 +76,11 @@ export default function WorkspaceTreeView() {
   const { focusedItemRef, fileTreeViewData } = useSync();
   const { cb_focusNode, cb_selectNode, cb_expandNode, cb_collapseNode } =
     useNodeViewState({ invalidFileNodes });
-  const {
-    cb_startRenamingNode,
-    cb_abortRenamingNode,
-    cb_renameNode,
-    cb_moveNode,
-    cb_readNode,
-  } = useNodeActionsHandler();
+  const { cb_moveNode, cb_readNode } = useNodeActionsHandler();
   const { onSaveCurrentFile } = useSaveCommand();
 
   useCmdk();
-  useDefaultFileCreate();
+  useWorkspaceInit();
 
   // open default initial html file
   useEffect(() => {
@@ -198,7 +201,7 @@ export default function WorkspaceTreeView() {
           renderItemsContainer: (props) => <Container {...props} />,
 
           renderItem: (props) => {
-            // rename the newly created file
+            // rename the newly created file (newly added item in the file tree is invalid by default)
             useEffect(() => {
               const node = props.item.data as TNode;
               if (!node.data.valid) {
@@ -407,13 +410,69 @@ export default function WorkspaceTreeView() {
         }}
         callbacks={{
           onStartRenamingItem: (item) => {
-            cb_startRenamingNode(item.index as TNodeUid);
+            /* if the item is invalid which a newly created item is by default
+            make it valid */
+
+            const uid = item.index as TNodeUid;
+            if (invalidFileNodes[uid]) {
+              dispatch(removeInvalidFileNodes([uid]));
+              return;
+            }
+            dispatch(addInvalidFileNodes([uid]));
           },
           onAbortRenamingItem: (item) => {
-            cb_abortRenamingNode(item);
+            const node = item.data as TNode;
+            const nodeData = node.data as TFileNodeData;
+
+            if (!nodeData.valid) {
+              // deep clone the file tree and
+              const _fileTree = structuredClone(fileTree);
+
+              // find and remove the node whose renaming was aborted
+              _fileTree[node.parentUid!].children = _fileTree[
+                node.parentUid!
+              ].children.filter((c_uid) => c_uid !== node.uid);
+              delete _fileTree[item.data.uid];
+
+              // set the new file tree
+              dispatch(setFileTree(_fileTree));
+            }
+
+            // update the invalid file nodes
+            dispatch(removeInvalidFileNodes([node.uid]));
           },
           onRenameItem: (item, name) => {
-            cb_renameNode(item, name);
+            // cb_renameNode(item, name);
+            const node = item.data as TNode;
+            const nodeData = node.data as TFileNodeData;
+
+            if (nodeData.valid) {
+              //rename the file
+            } else {
+              // create a new file/directory
+              const parentNode = fileTree[node.parentUid!];
+              if (!parentNode) return;
+
+              const newUid = _path.join(parentNode.uid, name);
+              const isFolder = !node.isEntity;
+              if (isFolder) {
+                rnbw.files.createFolder({ name });
+              } else {
+                const ext = nodeData.ext;
+                rnbw.files.createFile({
+                  name: name,
+                  extension: ext,
+                });
+
+                // add the event to the history
+                // add to event history
+                const _fileAction: TFileAction = {
+                  action: "create",
+                  payload: { uids: [newUid] },
+                };
+                dispatch(setFileAction(_fileAction));
+              }
+            }
           },
 
           onSelectItems: (items) => {
