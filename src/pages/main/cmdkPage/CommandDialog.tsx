@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect } from "react";
 import { Command } from "cmdk";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -21,22 +21,13 @@ import {
   useHandlers,
 } from "../hooks";
 import { CommandItem } from "./CommandItem";
-
-const PLACEHOLDERS = {
-  Jumpstart: "Jumpstart...",
-  Actions: "Do something...",
-  Add: "Add something...",
-  "Turn into": "Turn into...",
-};
-
-const COMMANDS_TO_KEEP_MODAL_OPEN = [
-  "Theme",
-  "Autosave",
-  "Format Code",
-  "Add",
-  "Turn into",
-  "Word Wrap",
-];
+import { TCmdkPage } from "./types";
+import {
+  SINGLE_CMDK_PAGE,
+  DEEP_CMDK_PAGE,
+  COMMANDS_TO_KEEP_MODAL_OPEN,
+  PLACEHOLDERS,
+} from "./constants";
 
 export const CommandDialog = () => {
   // redux
@@ -57,78 +48,52 @@ export const CommandDialog = () => {
   } = useAppState();
 
   // hooks
-  const {
-    cmdkReferenceJumpstart,
-    cmdkReferenceActions,
-    cmdkReferenceRecentProject,
-    cmdkReferenceAdd,
-    cmdkReferenceRename,
-  } = useCmdkReferenceData({
-    htmlReferenceData,
-  });
-
+  const cmdkReference = useCmdkReferenceData({ htmlReferenceData });
   const { importProject } = useHandlers();
   const { onClear, onJumpstart } = useCmdk({
     cmdkReferenceData,
     importProject,
   });
-
   const { validMenuItemCount, hoveredMenuItemDescription } = useCmdkModal();
-
+  const isRecent = useCallback(
+    (groupName: string) => {
+      return currentCmdkPage === "Jumpstart" && groupName === "Recent";
+    },
+    [currentCmdkPage],
+  );
   // open Jumpstart menu on startup
   useEffect(() => {
-    Object.keys(cmdkReferenceJumpstart).length !== 0 && onJumpstart();
-  }, [cmdkReferenceJumpstart]);
+    Object.keys(cmdkReference.Jumpstart).length !== 0 && onJumpstart();
+  }, [cmdkReference.Jumpstart]);
 
-  const Groups = useMemo(
-    () => ({
-      Jumpstart: cmdkReferenceJumpstart,
-      Actions: cmdkReferenceActions,
-      Add: cmdkReferenceAdd,
-      "Turn into": cmdkReferenceRename,
-    }),
-    [
-      cmdkReferenceJumpstart,
-      cmdkReferenceActions,
-      cmdkReferenceAdd,
-      cmdkReferenceRename,
-    ],
-  );
-
+  // Get command reference
   const getCmdkReference = useCallback(
-    (groupName: string) => ({
-      Jumpstart:
-        groupName !== "Recent"
-          ? cmdkReferenceJumpstart[groupName]
-          : cmdkReferenceRecentProject,
-      Actions: cmdkReferenceActions[groupName],
-      Add: cmdkReferenceAdd[groupName],
-      "Turn into": cmdkReferenceRename[groupName],
-    }),
-    [
-      cmdkReferenceJumpstart,
-      cmdkReferenceRecentProject,
-      cmdkReferenceActions,
-      cmdkReferenceAdd,
-      cmdkReferenceRename,
-    ],
-  );
+    (groupName: string) => {
+      if (isRecent(groupName)) return cmdkReference.Recent;
 
+      const group = cmdkReference[currentCmdkPage as TCmdkPage];
+      return group?.[groupName] || [];
+    },
+    [cmdkReference, currentCmdkPage],
+  );
+  // determines if need to show a group name or command option
   const isShowItem = useCallback(
     (command: TCmdkReference) => {
       const context: TCmdkContext = command.Context as TCmdkContext;
-      const showPage = ["Jumpstart", "Add", "Turn into"];
+      const isSingleCmdkPage = SINGLE_CMDK_PAGE.includes(currentCmdkPage);
+
+      const isDeepCmdkPage = DEEP_CMDK_PAGE.includes(currentCmdkPage);
+      const isAllContext = context?.all === true;
+      const isFileContext = activePanel === "file" && context?.file;
+      const isHtmlContext =
+        (activePanel === "node" || activePanel === "stage") &&
+        (fileTree[currentFileUid]?.data as TFileNodeData)?.ext === "html" &&
+        context?.html;
+
       return (
-        showPage.includes(currentCmdkPage) ||
+        isSingleCmdkPage ||
         (currentCmdkPage === "Actions" &&
-          (command.Name === "Add" ||
-            command.Name === "Turn into" ||
-            context.all === true ||
-            (activePanel === "file" && context["file"]) ||
-            ((activePanel === "node" || activePanel === "stage") &&
-              (fileTree[currentFileUid]?.data as TFileNodeData)?.ext ===
-                "html" &&
-              context["html"])))
+          (isDeepCmdkPage || isAllContext || isFileContext || isHtmlContext))
       );
     },
     [currentCmdkPage, activePanel, fileTree, currentFileUid],
@@ -153,10 +118,7 @@ export const CommandDialog = () => {
             action: `${RenameActionPrefix}-${command.Context}`,
           }),
         );
-      } else if (
-        currentCmdkPage === "Jumpstart" &&
-        command.Group === "Recent"
-      ) {
+      } else if (isRecent(command.Group)) {
         const index = Number(command.Context);
         const projectContext = recentProject[index].context;
         const projectHandler = recentProject[index].handler;
@@ -171,27 +133,32 @@ export const CommandDialog = () => {
     [currentCmdkPage, recentProject, fileTree],
   );
 
-  const onKeyDown = (e: React.KeyboardEvent) => {
-    const cmdk: TCmdkKeyMap = {
-      cmd: getCommandKey(e as unknown as KeyboardEvent, osType),
-      shift: e.shiftKey,
-      alt: e.altKey,
-      key: e.code,
-      click: false,
-    };
-    if (cmdk.shift && cmdk.cmd && cmdk.key === "KeyR") {
-      onClear();
-    }
-    if (e.code === "Escape" || (e.code === "Backspace" && !cmdkSearchContent)) {
-      if (e.code === "Escape" && cmdkPages.length === 1) {
-        dispatch(setCmdkOpen(false));
-      } else {
-        cmdkPages.length !== 1 &&
-          dispatch(setCmdkPages(cmdkPages.slice(0, -1)));
+  const onKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      const cmdk: TCmdkKeyMap = {
+        cmd: getCommandKey(e as unknown as KeyboardEvent, osType),
+        shift: e.shiftKey,
+        alt: e.altKey,
+        key: e.code,
+        click: false,
+      };
+      if (cmdk.shift && cmdk.cmd && cmdk.key === "KeyR") {
+        onClear();
       }
-    }
-    e.stopPropagation();
-  };
+      if (
+        e.code === "Escape" ||
+        (e.code === "Backspace" && !cmdkSearchContent)
+      ) {
+        if (e.code === "Escape" && cmdkPages.length === 1) {
+          dispatch(setCmdkOpen(false));
+        } else if (cmdkPages.length !== 1) {
+          dispatch(setCmdkPages(cmdkPages.slice(0, -1)));
+        }
+      }
+      e.stopPropagation();
+    },
+    [osType, cmdkSearchContent, cmdkPages],
+  );
   return (
     <Command.Dialog
       open={cmdkOpen}
@@ -213,20 +180,19 @@ export const CommandDialog = () => {
           value={cmdkSearchContent}
           onValueChange={(str: string) => dispatch(setCmdkSearchContent(str))}
           className="justify-start padding-s gap-s text-l background-primary"
-          placeholder={
-            PLACEHOLDERS[currentCmdkPage as keyof typeof PLACEHOLDERS] || ""
-          }
+          placeholder={PLACEHOLDERS[currentCmdkPage as TCmdkPage] || ""}
         />
       </div>
+
       {/* modal content */}
       <div
         className={
-          ["Add", "Jumpstart", "Turn into"].includes(currentCmdkPage)
+          SINGLE_CMDK_PAGE.includes(currentCmdkPage)
             ? "box-l direction-column align-stretch box"
             : ""
         }
         style={{
-          ...(["Add", "Jumpstart", "Turn into"].includes(currentCmdkPage) && {
+          ...(SINGLE_CMDK_PAGE.includes(currentCmdkPage) && {
             width: "100%",
           }),
           ...(validMenuItemCount === 0 && {
@@ -245,18 +211,14 @@ export const CommandDialog = () => {
                 width: "100%",
               }}
             >
+              {/* showing options by groups */}
               {Object.keys(
-                Groups[currentCmdkPage as keyof typeof Groups] || {},
+                cmdkReference[currentCmdkPage as TCmdkPage] || {},
               ).map((groupName: string) => {
                 let groupNameShow = false;
-                (
-                  getCmdkReference(groupName)[
-                    currentCmdkPage as "Jumpstart" | "Actions" | "Add"
-                  ] || []
-                ).map((command: TCmdkReference) => {
+                getCmdkReference(groupName)?.map((command: TCmdkReference) => {
                   groupNameShow = isShowItem(command);
                 });
-
                 return (
                   <Command.Group key={groupName} value={groupName}>
                     {/* group heading label */}
@@ -265,23 +227,18 @@ export const CommandDialog = () => {
                         <span className="text-s opacity-m">{groupName}</span>
                       </div>
                     )}
-                    {(
-                      getCmdkReference(groupName)[
-                        currentCmdkPage as "Jumpstart" | "Actions" | "Add"
-                      ] || []
-                    )?.map((command: TCmdkReference, index) => {
-                      const show = isShowItem(command);
-                      return (
-                        show && (
+                    {/* show command option */}
+                    {getCmdkReference(groupName)?.map(
+                      (command: TCmdkReference, index) =>
+                        isShowItem(command) && (
                           <CommandItem
                             key={`${command.Name}-${command.Context}-${index}`}
                             command={command}
                             index={index}
                             onSelect={onCommandSelect}
                           />
-                        )
-                      );
-                    })}
+                        ),
+                    )}
                   </Command.Group>
                 );
               })}

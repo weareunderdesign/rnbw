@@ -52,7 +52,6 @@ export const useCmdkReferenceData = ({
     useState<TCmdkGroupData>({});
   const [cmdkReferenceActions, setCmdkReferenceActions] =
     useState<TCmdkGroupData>({});
-  console.log("UseCmdkReference");
 
   // reference-cmdk
   useEffect(() => {
@@ -263,10 +262,10 @@ export const useCmdkReferenceData = ({
   }, [validNodeTree, nFocusedItem, htmlReferenceData]);
 
   return {
-    cmdkReferenceJumpstart,
-    cmdkReferenceActions,
-    cmdkReferenceRecentProject,
-    cmdkReferenceAdd,
-    cmdkReferenceRename,
+    Jumpstart: cmdkReferenceJumpstart,
+    Actions: cmdkReferenceActions,
+    Recent: cmdkReferenceRecentProject,
+    Add: cmdkReferenceAdd,
+    "Turn into": cmdkReferenceRename,
   };
 };
