@@ -1,7 +1,8 @@
 import React, { useRef } from "react";
-import { useAttributeHandler } from "./hooks/useAttributeHandler";
-import { Attribute, SettingsFormProps } from "../settingsPanel/types";
+
+import { SettingsFormProps } from "../settingsPanel/types";
 import { SVGIconI } from "@_components/common";
+import useRnbw from "@_services/useRnbw";
 
 export const SettingsForm = ({
   setShowForm,
@@ -10,7 +11,7 @@ export const SettingsForm = ({
   const attributeRef = useRef<HTMLInputElement>(null);
   const valueRef = useRef<HTMLInputElement>(null);
 
-  const { changeAttribute } = useAttributeHandler();
+  const rnbw = useRnbw();
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== "Enter") return;
@@ -21,22 +22,22 @@ export const SettingsForm = ({
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const attribute = attributeRef.current?.value;
     const value = valueRef.current?.value;
 
     if (!attribute || value === undefined) return;
-    changeAttribute({
-      attrName: attribute,
-      attrValue: value,
-      cb: () => {
-        setShowForm(false);
-        setAttributes((prev: Attribute) => ({
-          [`${attribute}`]: value,
-          ...prev,
-        }));
+
+    const existingAttributesObj = rnbw.elements.getElementSettings();
+
+    const updatedAttribsObj = await rnbw.elements.updateSettings({
+      settings: {
+        ...existingAttributesObj,
+        [`${attribute}`]: value,
       },
     });
+    updatedAttribsObj && setAttributes(updatedAttribsObj);
+    setShowForm(false);
   };
 
   return (

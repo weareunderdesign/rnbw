@@ -12,6 +12,7 @@ import { RootNodeUid } from "@_constants/main";
 import { isPastingAllowed } from "../helpers";
 import { setIsContentProgrammaticallyChanged } from "@_redux/main/reference";
 import { getObjKeys } from "@_pages/main/helper";
+import useRnbw from "@_services/useRnbw";
 
 export const useNodeActionHandlers = () => {
   const dispatch = useDispatch();
@@ -24,6 +25,7 @@ export const useNodeActionHandlers = () => {
     htmlReferenceData,
   } = useAppState();
   const { monacoEditorRef } = useContext(MainContext);
+  const rnbw = useRnbw();
 
   const selectedItems = useMemo(
     () => getObjKeys(nSelectedItemsObj),
@@ -288,16 +290,12 @@ export const useNodeActionHandlers = () => {
       }
 
       dispatch(setIsContentProgrammaticallyChanged(true));
-      NodeActions.move({
-        dispatch,
-        validNodeTree,
+
+      rnbw.elements.move({
         selectedUids,
         targetUid: targetUids[0],
         isBetween: skipPosition ? false : isBetween,
         position: skipPosition ? 0 : position,
-        codeViewInstanceModel,
-        formatCode,
-        fb: () => dispatch(setIsContentProgrammaticallyChanged(false)),
       });
     },
     [validNodeTree],
