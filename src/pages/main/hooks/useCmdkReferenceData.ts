@@ -52,6 +52,7 @@ export const useCmdkReferenceData = ({
     useState<TCmdkGroupData>({});
   const [cmdkReferenceActions, setCmdkReferenceActions] =
     useState<TCmdkGroupData>({});
+  console.log("UseCmdkReference");
 
   // reference-cmdk
   useEffect(() => {
