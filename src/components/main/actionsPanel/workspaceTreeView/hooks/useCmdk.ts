@@ -11,8 +11,7 @@ export const useCmdk = () => {
   const { activePanel, currentCommand } = useAppState();
   const rnbw = useRnbw();
 
-  const { onAdd, onCut, onCopy, onPaste, onDuplicate } =
-    useNodeActionsHandler();
+  const { onAdd } = useNodeActionsHandler();
 
   useEffect(() => {
     if (!currentCommand) return;
@@ -27,20 +26,20 @@ export const useCmdk = () => {
 
     switch (currentCommand.action) {
       case "Delete":
-        // onRemove();
         rnbw.files.remove();
         break;
       case "Cut":
-        onCut();
+        rnbw.files.cutFiles();
         break;
       case "Copy":
-        onCopy();
+        rnbw.files.copyFiles();
         break;
       case "Paste":
-        onPaste();
+        rnbw.files.paste();
         break;
       case "Duplicate":
-        onDuplicate();
+        rnbw.files.copyFiles();
+        rnbw.files.paste();
         break;
       default:
         break;

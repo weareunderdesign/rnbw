@@ -196,6 +196,7 @@ const _moveLocalFile = async (
     const newFile = await targetHandler.getFileHandle(newName, {
       create: true,
     });
+
     const content = await (handler as FileSystemFileHandle).getFile();
     const writableStream = await newFile.createWritable();
     await writableStream.write(content);
@@ -245,7 +246,9 @@ export const moveLocalSingleDirectoryOrFile = async ({
 
   const nodeData = node.data;
   try {
-    const entityName = newName || nodeData.name;
+    const entityName =
+      newName || `${nodeData.name}${nodeData.ext ? `.${nodeData.ext}` : ""}`;
+
     if (nodeData.kind === "directory") {
       const newHandler = await targetHandler.getDirectoryHandle(entityName, {
         create: true,

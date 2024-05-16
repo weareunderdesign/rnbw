@@ -27,11 +27,11 @@ interface Iundo {
 }
 
 interface IcopyFiles {
-  uids: string[];
+  uids?: string[];
 }
 
 interface IcutFiles {
-  uids: string[];
+  uids?: string[];
 }
 
 interface Iremove {
@@ -39,9 +39,8 @@ interface Iremove {
 }
 
 interface IpasteFiles {
-  uids: string[];
-  targetUid: string;
-  deleteSource: boolean;
+  targetUid?: string;
+  deleteSource?: boolean;
 }
 
 interface Imove {

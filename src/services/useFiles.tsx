@@ -39,8 +39,10 @@ export default function useFiles() {
     fSelectedItemsObj,
     fExpandedItemsObj,
     invalidFileNodes,
+    clipboardData,
   } = useAppState();
-  const { triggerCurrentProjectReload } = useContext(MainContext);
+  const { triggerCurrentProjectReload, monacoEditorRef } =
+    useContext(MainContext);
 
   //utilities
   const getParentHandler = (uid: string): FileSystemDirectoryHandle | null => {
@@ -161,23 +163,35 @@ export default function useFiles() {
   const getSelectedFiles = () => {
     return fSelectedItemsObj;
   };
-  const copyFiles = (params: IcopyFiles) => {
+  const getEditorRef = () => {
+    return monacoEditorRef;
+  };
+  const copyFiles = (params: IcopyFiles = {}) => {
     const { uids } = params;
+    const selectedItems = getObjKeys(fSelectedItemsObj);
+    const selectedUids = selectedItems.filter((uid) => !invalidFileNodes[uid]);
+    const _uids = uids || selectedUids;
+    if (_uids.length === 0) return;
     dispatch(
       setClipboardData({
         panel: "file",
         type: "copy",
-        uids,
+        uids: _uids,
       }),
     );
   };
-  const cutFiles = (params: IcutFiles) => {
+  const cutFiles = (params: IcutFiles = {}) => {
     const { uids } = params;
+    const selectedItems = getObjKeys(fSelectedItemsObj);
+    const selectedUids = selectedItems.filter((uid) => !invalidFileNodes[uid]);
+    const _uids = uids || selectedUids;
+    if (_uids.length === 0) return;
+
     dispatch(
       setClipboardData({
         panel: "file",
         type: "cut",
-        uids,
+        uids: _uids,
       }),
     );
   };
@@ -206,28 +220,44 @@ export default function useFiles() {
     if (steps < 1) return;
     dispatch({ type: "REDO", payload: steps });
   };
-  const paste = async (params: IpasteFiles) => {
-    const { uids, targetUid, deleteSource } = params;
+  const paste = async (params: IpasteFiles = {}) => {
+    const { targetUid, deleteSource } = params;
 
-    await Promise.all(
-      /* we are using map instead of forEach because we want to to get the array of all the promises */
-      uids.map(async (uid) => {
-        await moveLocalSingleDirectoryOrFile({
-          fileTree,
-          fileHandlers,
-          uid,
-          targetUid,
-          isCopy: deleteSource,
-        });
-      }),
+    const isCopy = deleteSource || clipboardData?.type === "copy";
+    if (!clipboardData || clipboardData.panel !== "file") return;
+    const copiedUids = clipboardData.uids.filter(
+      (uid) => !invalidFileNodes[uid],
     );
+    if (copiedUids.length === 0) return;
+    const targetNode = fileTree[fFocusedItem];
+    if (!targetNode) return;
+
+    const _targetUid = targetUid || fFocusedItem;
+    try {
+      await Promise.all(
+        /* we are using map instead of forEach because we want to to get the array of all the promises */
+        copiedUids.map(async (uid) => {
+          await moveLocalSingleDirectoryOrFile({
+            fileTree,
+            fileHandlers,
+            uid,
+            targetUid: _targetUid,
+            isCopy,
+          });
+        }),
+      );
+    } catch (err) {
+      console.error(err);
+    } finally {
+      triggerCurrentProjectReload();
+    }
   };
   const move = (params: Imove) => {
     const { targetUid, uids } = params;
     dispatch({ type: "MOVE_FILES", payload: { uids, targetUid } });
     try {
       cutFiles({ uids });
-      paste({ uids, targetUid, deleteSource: true });
+      paste({ targetUid, deleteSource: true });
     } catch (err) {
       console.error(err);
     }
@@ -270,8 +300,9 @@ export default function useFiles() {
     getRootTree,
     getFolderTree,
     getCurrentFile,
-    copySelectedFiles: copyFiles,
-    cutSelectedFiles: cutFiles,
+    getEditorRef,
+    copyFiles,
+    cutFiles,
     getSelectedFiles,
     setCurrentFile,
     setCurrentFileContent,
