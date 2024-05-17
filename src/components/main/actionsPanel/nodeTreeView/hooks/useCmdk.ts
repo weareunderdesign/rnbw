@@ -6,6 +6,7 @@ import { useAppState } from "@_redux/useAppState";
 import { useNodeActionHandlers } from "./useNodeActionHandlers";
 import useRnbw from "@_services/useRnbw";
 import { AddNodeActionPrefix } from "@_constants/main";
+import useFormatCode from "../../../../../actions/useFormatCode.action";
 
 export const useCmdk = () => {
   const { activePanel, currentCommand } = useAppState();
@@ -13,6 +14,8 @@ export const useCmdk = () => {
   const { onTurnInto } = useNodeActionHandlers();
 
   const rnbw = useRnbw();
+  const formatCode = useFormatCode();
+
   useEffect(() => {
     if (!currentCommand || !rnbw) return;
 
@@ -59,6 +62,9 @@ export const useCmdk = () => {
         break;
       case "Ungroup":
         rnbw.elements.ungroup();
+        break;
+      case "Format":
+        formatCode.action();
         break;
       default:
         break;
