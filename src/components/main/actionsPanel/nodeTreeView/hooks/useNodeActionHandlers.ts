@@ -20,7 +20,6 @@ export const useNodeActionHandlers = () => {
     validNodeTree,
     nFocusedItem: focusedItem,
     nSelectedItemsObj,
-    formatCode,
     copiedNodeDisplayName,
     htmlReferenceData,
   } = useAppState();
@@ -31,6 +30,7 @@ export const useNodeActionHandlers = () => {
     () => getObjKeys(nSelectedItemsObj),
     [nSelectedItemsObj],
   );
+  const formatCode = false;
 
   const onAddNode = useCallback(
     (actionName: string) => {

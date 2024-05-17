@@ -8,11 +8,10 @@ export const PLACEHOLDERS = {
 
 // commands after which to keep cmdk open
 export const COMMANDS_TO_KEEP_MODAL_OPEN = [
-  "Theme",
-  "Autosave",
-  "Format Code",
   "Add",
   "Turn into",
+  "Theme",
+  "Autosave",
   "Word Wrap",
 ];
 

@@ -27,7 +27,6 @@ import {
   setAutoSave,
   setDidRedo,
   setDidUndo,
-  setFormatCode,
   setShowActionsPanel,
   setShowCodeView,
   setWordWrap,
@@ -66,7 +65,6 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     showActionsPanel,
     showCodeView,
     autoSave,
-    formatCode,
     wordWrap,
     cmdkOpen,
     cmdkPages,
@@ -224,10 +222,6 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
   const onToggleAutoSave = useCallback(() => {
     dispatch(setAutoSave(!autoSave));
   }, [autoSave]);
-
-  const onToggleFormatCode = useCallback(() => {
-    dispatch(setFormatCode(!formatCode));
-  }, [formatCode]);
 
   const onToggleWordWrap = useCallback(() => {
     dispatch(setWordWrap(!wordWrap));
@@ -390,10 +384,6 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
         break;
       case "Autosave":
         onToggleAutoSave();
-        break;
-
-      case "Format Code":
-        onToggleFormatCode();
         break;
       case "Word Wrap":
         onToggleWordWrap();

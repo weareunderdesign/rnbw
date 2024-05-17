@@ -7,17 +7,15 @@ import { CommandItemProps } from "./types";
 import { KeyboardShortcut } from "./KeyboardShortcut";
 
 export const CommandItem = ({ command, index, onSelect }: CommandItemProps) => {
-  const { theme, autoSave, formatCode, wordWrap, currentCmdkPage } =
-    useAppState();
+  const { theme, autoSave, wordWrap, currentCmdkPage } = useAppState();
 
   const settingsProps = useMemo(
     () => ({
       Theme: theme,
       Autosave: autoSave,
-      "Format Code": formatCode,
       "Word Wrap": wordWrap,
     }),
-    [theme, autoSave, formatCode, wordWrap],
+    [theme, autoSave, wordWrap],
   );
 
   const isSettingsGroup = useCallback(() => {
