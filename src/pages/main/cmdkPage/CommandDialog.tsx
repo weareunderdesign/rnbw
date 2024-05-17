@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { Command } from "cmdk";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -28,6 +28,7 @@ import {
   COMMANDS_TO_KEEP_MODAL_OPEN,
   PLACEHOLDERS,
 } from "./constants";
+import { SVGIcon } from "@_components/common";
 
 export const CommandDialog = () => {
   // redux
@@ -105,6 +106,7 @@ export const CommandDialog = () => {
       // keep modal open when toogling theme or go "Add" menu from "Actions" menu
       !COMMANDS_TO_KEEP_MODAL_OPEN.includes(command.Name) &&
         dispatch(setCmdkOpen(false));
+      dispatch(setCmdkSearchContent(""));
 
       if (command.Group === "Add") {
         dispatch(
@@ -159,6 +161,16 @@ export const CommandDialog = () => {
     },
     [osType, cmdkSearchContent, cmdkPages],
   );
+
+  const isPageOpenedFromActions = useMemo(
+    () =>
+      DEEP_CMDK_PAGE.includes(currentCmdkPage) && cmdkPages[0] === "Actions",
+    [currentCmdkPage, cmdkPages],
+  );
+  const onBackIconClick = () => {
+    dispatch(setCmdkPages(["Actions"]));
+    dispatch(setCmdkSearchContent(""));
+  };
   return (
     <Command.Dialog
       open={cmdkOpen}
@@ -173,9 +185,14 @@ export const CommandDialog = () => {
     >
       {/* search input */}
       <div
-        className={`gap-m box-l padding-m justify-start ${validMenuItemCount !== 0 && "border-bottom"}
+        className={`gap-m box-l padding-m justify-start align-center ${validMenuItemCount !== 0 && "border-bottom"}
             `}
       >
+        {isPageOpenedFromActions && (
+          <div className="padding-s action-button" onClick={onBackIconClick}>
+            <SVGIcon {...{ class: "icon-xs" }}>raincons/arrow-left</SVGIcon>
+          </div>
+        )}
         <Command.Input
           value={cmdkSearchContent}
           onValueChange={(str: string) => dispatch(setCmdkSearchContent(str))}
