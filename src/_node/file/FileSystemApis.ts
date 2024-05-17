@@ -223,6 +223,9 @@ export const moveLocalSingleDirectoryOrFile = async ({
   fileHandlers: TFileHandlerCollection;
   isCopy?: boolean;
 }): Promise<boolean> => {
+  /* We check if the source node, target node,
+  and the parent node of the source node exist.
+  */
   const node = fileTree[uid];
   if (!node) return false;
 
@@ -232,6 +235,10 @@ export const moveLocalSingleDirectoryOrFile = async ({
   const targetNode = fileTree[targetUid];
   if (!targetNode) return false;
 
+  /*
+  We verify the permissions of the source node,
+  the parent node of the source node, and the target node.
+  */
   const handler = fileHandlers[uid];
   const parentHandler = fileHandlers[
     parentNode.uid
@@ -245,6 +252,7 @@ export const moveLocalSingleDirectoryOrFile = async ({
     return false;
 
   const nodeData = node.data;
+
   try {
     const entityName =
       newName || `${nodeData.name}${nodeData.ext ? `.${nodeData.ext}` : ""}`;

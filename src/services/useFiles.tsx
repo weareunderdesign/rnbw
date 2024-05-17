@@ -103,6 +103,43 @@ export default function useFiles() {
     dispatch(setFileTree(_fileTree as TFileNodeTreeData));
   };
 
+  const getUniqueIndexedName = async (
+    parentHandler: FileSystemDirectoryHandle,
+    name: string,
+    extension?: string,
+  ) => {
+    let index = 0;
+
+    function getIndexedName() {
+      /*if the extension is provided, then it is a file, 
+      else it is a folder*/
+
+      if (extension)
+        return `${name}${index > 0 ? `(${index})` : ""}.${extension}`;
+      return `${name}${index > 0 ? `(${index})` : ""}`;
+    }
+
+    let uniqueName = null;
+    //We generate a unique indexed name for the file
+    while (uniqueName === null) {
+      const indexedName = getIndexedName();
+      try {
+        //getFileHandle throws an error if the file does not exist
+        if (extension) await parentHandler.getFileHandle(indexedName);
+        else await parentHandler.getDirectoryHandle(indexedName);
+        index++;
+      } catch (err) {
+        //if the error is not NotFoundError, we create the file
+
+        //@ts-expect-error - types are not updated
+        if (err.name === "NotFoundError") {
+          uniqueName = indexedName;
+        }
+      }
+    }
+    return uniqueName;
+  };
+
   //Create
   const createFile = useCallback(
     async (
@@ -112,7 +149,7 @@ export default function useFiles() {
       },
     ) => {
       //We run this function recursively to create a file with a unique name
-      const { name = "untitled", extension = "html", fileIndex = 0 } = params;
+      const { name = "untitled", extension = "html" } = params;
 
       //we check if the parent directory has permission to create a file
       const parentHandler = getParentHandler(fFocusedItem);
@@ -120,42 +157,21 @@ export default function useFiles() {
       if (!(await verifyFileHandlerPermission(parentHandler))) return false;
 
       //We generate a unique indexed name for the file
-      const nameWithExtension = `${name}${fileIndex > 0 ? `(${fileIndex})` : ""}.${extension}`;
-
-      //flag to check if the file already exists
-      let fileAlreadyExists = false;
+      const uniqueIndexedName = await getUniqueIndexedName(
+        parentHandler,
+        name,
+        extension,
+      );
 
       try {
         //getFileHandle throws an error if the file does not exist
-        await parentHandler.getFileHandle(nameWithExtension);
-        fileAlreadyExists = true;
+        await parentHandler.getFileHandle(uniqueIndexedName, {
+          create: true,
+        });
       } catch (err) {
-        //if the error is not NotFoundError, we create the file
-
-        //@ts-expect-error - types are not updated
-        if (err.name !== "NotFoundError") return;
-        try {
-          await parentHandler.getFileHandle(nameWithExtension, {
-            create: true,
-          });
-        } catch (err) {
-          console.error(err);
-        }
+        console.error(err);
       } finally {
-        /*
-        if the file already exists, we recursively call the function 
-        with an incremented index, else we reload the project
-        */
-
-        if (fileAlreadyExists) {
-          createFile({
-            name,
-            extension,
-            fileIndex: fileIndex + 1,
-          });
-        } else {
-          triggerCurrentProjectReload();
-        }
+        triggerCurrentProjectReload();
       }
     },
     [
@@ -166,53 +182,38 @@ export default function useFiles() {
       fExpandedItemsObj,
     ],
   );
-  const createFolder = async (params: IcreateFolder = {}) => {
-    //We run this function recursively to create a file with a unique name
-    const { name = "untitled", folderIndex = 0 } = params;
+  const createFolder = useCallback(
+    async (params: IcreateFolder = {}) => {
+      //We run this function recursively to create a file with a unique name
+      const { name = "untitled" } = params;
 
-    //we check if the parent directory has permission to create a directory
-    const parentHandler = getParentHandler(fFocusedItem);
-    if (!parentHandler) return false;
-    if (!(await verifyFileHandlerPermission(parentHandler))) return;
+      //we check if the parent directory has permission to create a directory
+      const parentHandler = getParentHandler(fFocusedItem);
+      if (!parentHandler) return false;
+      if (!(await verifyFileHandlerPermission(parentHandler))) return;
 
-    //We generate a unique indexed name for the folder
-    const indexedName = `${name}${folderIndex > 0 ? `(${folderIndex})` : ""}`;
+      //We generate a unique indexed name for the file
+      const uniqueIndexedName = await getUniqueIndexedName(parentHandler, name);
 
-    //flag to check if the folder already exists
-    let folderAlreadyExists = false;
-
-    try {
-      //getDirectoryHandle throws an error if the folder does not exist
-      await parentHandler.getDirectoryHandle(indexedName);
-      folderAlreadyExists = true;
-    } catch (err) {
-      //if the error is not NotFoundError, we create the folder
-
-      //@ts-expect-error - types are not updated
-      if (err.name !== "NotFoundError") return;
       try {
-        await parentHandler.getDirectoryHandle(indexedName, {
+        //getDirectoryHandle throws an error if the folder does not exist
+        await parentHandler.getDirectoryHandle(uniqueIndexedName, {
           create: true,
         });
       } catch (err) {
         console.error(err);
-      }
-    } finally {
-      /*
-      if the folder already exists, we recursively call the function 
-      with an incremented index, else we reload the project
-      */
-
-      if (folderAlreadyExists) {
-        createFolder({
-          name,
-          folderIndex: folderIndex + 1,
-        });
-      } else {
+      } finally {
         triggerCurrentProjectReload();
       }
-    }
-  };
+    },
+    [
+      fFocusedItem,
+      fileTree,
+      fileHandlers,
+      fSelectedItemsObj,
+      fExpandedItemsObj,
+    ],
+  );
 
   //Read
   const getRootTree = () => {

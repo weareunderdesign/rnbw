@@ -1,12 +1,10 @@
 interface IcreateFile {
   name: string;
   extension: string;
-  fileIndex?: number;
 }
 
 interface IcreateFolder {
   name?: string;
-  folderIndex?: number;
 }
 
 interface IgetFolderTree {
