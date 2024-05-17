@@ -1,10 +1,10 @@
 interface IcreateFile {
-  name: string;
+  entityName: string;
   extension: string;
 }
 
 interface IcreateFolder {
-  name?: string;
+  entityName?: string;
 }
 
 interface IgetFolderTree {

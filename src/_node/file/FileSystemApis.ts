@@ -18,6 +18,7 @@ import {
   _removeIDBDirectoryOrFile,
   _writeIDBFile,
 } from "./nohostApis";
+import { getUniqueIndexedName } from "@_services/useFileHelpers";
 
 // true: success, false: fail
 const createLocalSingleDirectoryOrFile = async ({
@@ -254,13 +255,19 @@ export const moveLocalSingleDirectoryOrFile = async ({
   const nodeData = node.data;
 
   try {
-    const entityName =
-      newName || `${nodeData.name}${nodeData.ext ? `.${nodeData.ext}` : ""}`;
+    const unqiueEntityName = await getUniqueIndexedName({
+      parentHandler: targetHandler,
+      entityName: newName || nodeData.name,
+      extension: nodeData.ext,
+    });
 
     if (nodeData.kind === "directory") {
-      const newHandler = await targetHandler.getDirectoryHandle(entityName, {
-        create: true,
-      });
+      const newHandler = await targetHandler.getDirectoryHandle(
+        unqiueEntityName,
+        {
+          create: true,
+        },
+      );
       await _moveLocalDirectory(
         handler as FileSystemDirectoryHandle,
         newHandler,
@@ -272,7 +279,7 @@ export const moveLocalSingleDirectoryOrFile = async ({
         handler as FileSystemFileHandle,
         parentHandler,
         targetHandler,
-        entityName,
+        unqiueEntityName,
         isCopy,
       );
     }

@@ -20,7 +20,7 @@ export const useWorkspaceInit = () => {
       if (noInitialFileToOpen && noHtmlFileExistsInRoot) {
         if (rootFileHandlerExists) {
           //create a default file index.html in the root directory
-          rnbw.files.createFile({ name: "index", extension: "html" });
+          rnbw.files.createFile({ entityName: "index", extension: "html" });
           triggerCurrentProjectReload();
         }
       }

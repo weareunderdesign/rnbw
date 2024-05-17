@@ -17,18 +17,14 @@ import { useDispatch } from "react-redux";
 import { verifyFileHandlerPermission } from "./main";
 import { setClipboardData } from "@_redux/main/processor";
 import {
-  TFileNodeTreeData,
-  TNode,
-  TNodeTreeData,
-  _path,
   moveLocalSingleDirectoryOrFile,
   removeSingleLocalDirectoryOrFile,
 } from "@_node/index";
-import { RootNodeUid, TmpFileNodeUidWhenAddNew } from "@_constants/main";
-import { expandFileTreeNodes, setFileTree } from "@_redux/main/fileTree";
+
 import { useCallback, useContext } from "react";
 import { MainContext } from "@_redux/main";
 import { getObjKeys } from "@_pages/main/helper";
+import { useFileHelpers } from "./useFileHelpers";
 
 export default function useFiles() {
   const dispatch = useDispatch();
@@ -41,115 +37,21 @@ export default function useFiles() {
     invalidFileNodes,
     clipboardData,
   } = useAppState();
+  const { getParentHandler, getUniqueIndexedName, updatedFileTreeAfterAdding } =
+    useFileHelpers();
   const { triggerCurrentProjectReload, monacoEditorRef } =
     useContext(MainContext);
-
-  //utilities
-  const getParentHandler = (uid: string): FileSystemDirectoryHandle | null => {
-    if (!uid) return fileHandlers[RootNodeUid] as FileSystemDirectoryHandle;
-    const parentUid = fileTree[uid].parentUid;
-    if (!parentUid) return null;
-    const parentNode = fileTree[parentUid];
-    if (!parentNode) return null;
-    const parentHandler = fileHandlers[parentUid] as FileSystemDirectoryHandle;
-    return parentHandler;
-  };
-
-  const updatedFileTreeAfterAdding = ({
-    isFolder,
-    ext,
-  }: {
-    isFolder: boolean;
-    ext: string;
-  }) => {
-    // performs a deep clone of the file tree
-    const _fileTree = structuredClone(fileTree) as TNodeTreeData;
-
-    // find the immediate directory of the focused item if it is a file
-    let immediateDir = _fileTree[fFocusedItem];
-    if (!immediateDir) return;
-    if (immediateDir.isEntity) {
-      immediateDir = _fileTree[immediateDir.parentUid!];
-    }
-
-    //if the directory is not a RootNode and not already expanded, expand it
-    if (
-      immediateDir.uid !== RootNodeUid &&
-      !fExpandedItemsObj[immediateDir.uid]
-    ) {
-      dispatch(expandFileTreeNodes([immediateDir.uid]));
-    }
-
-    // create tmp node for new file/directory
-    const tmpNode: TNode = {
-      uid: _path.join(immediateDir.uid, TmpFileNodeUidWhenAddNew),
-      parentUid: immediateDir.uid,
-      displayName: "Untitled",
-      isEntity: !isFolder,
-      children: [],
-      data: {
-        valid: false,
-        ext,
-      },
-    };
-
-    // adds the tmp node to the file tree at the beginning of focused item parent's children
-    immediateDir.children.unshift(tmpNode.uid);
-
-    // Assign the tmp node to the file tree
-    _fileTree[tmpNode.uid] = tmpNode;
-
-    // update the file tree
-    dispatch(setFileTree(_fileTree as TFileNodeTreeData));
-  };
-
-  const getUniqueIndexedName = async (
-    parentHandler: FileSystemDirectoryHandle,
-    name: string,
-    extension?: string,
-  ) => {
-    let index = 0;
-
-    function getIndexedName() {
-      /*if the extension is provided, then it is a file, 
-      else it is a folder*/
-
-      if (extension)
-        return `${name}${index > 0 ? `(${index})` : ""}.${extension}`;
-      return `${name}${index > 0 ? `(${index})` : ""}`;
-    }
-
-    let uniqueName = null;
-    //We generate a unique indexed name for the file
-    while (uniqueName === null) {
-      const indexedName = getIndexedName();
-      try {
-        //getFileHandle throws an error if the file does not exist
-        if (extension) await parentHandler.getFileHandle(indexedName);
-        else await parentHandler.getDirectoryHandle(indexedName);
-        index++;
-      } catch (err) {
-        //if the error is not NotFoundError, we create the file
-
-        //@ts-expect-error - types are not updated
-        if (err.name === "NotFoundError") {
-          uniqueName = indexedName;
-        }
-      }
-    }
-    return uniqueName;
-  };
 
   //Create
   const createFile = useCallback(
     async (
       params: IcreateFile = {
-        name: "untitled",
+        entityName: "untitled",
         extension: "html",
       },
     ) => {
       //We run this function recursively to create a file with a unique name
-      const { name = "untitled", extension = "html" } = params;
+      const { entityName = "untitled", extension = "html" } = params;
 
       //we check if the parent directory has permission to create a file
       const parentHandler = getParentHandler(fFocusedItem);
@@ -157,11 +59,11 @@ export default function useFiles() {
       if (!(await verifyFileHandlerPermission(parentHandler))) return false;
 
       //We generate a unique indexed name for the file
-      const uniqueIndexedName = await getUniqueIndexedName(
+      const uniqueIndexedName = await getUniqueIndexedName({
         parentHandler,
-        name,
+        entityName,
         extension,
-      );
+      });
 
       try {
         //getFileHandle throws an error if the file does not exist
@@ -185,7 +87,7 @@ export default function useFiles() {
   const createFolder = useCallback(
     async (params: IcreateFolder = {}) => {
       //We run this function recursively to create a file with a unique name
-      const { name = "untitled" } = params;
+      const { entityName = "untitled" } = params;
 
       //we check if the parent directory has permission to create a directory
       const parentHandler = getParentHandler(fFocusedItem);
@@ -193,7 +95,10 @@ export default function useFiles() {
       if (!(await verifyFileHandlerPermission(parentHandler))) return;
 
       //We generate a unique indexed name for the file
-      const uniqueIndexedName = await getUniqueIndexedName(parentHandler, name);
+      const uniqueIndexedName = await getUniqueIndexedName({
+        parentHandler,
+        entityName,
+      });
 
       try {
         //getDirectoryHandle throws an error if the folder does not exist
@@ -286,19 +191,27 @@ export default function useFiles() {
     if (steps < 1) return;
     dispatch({ type: "REDO", payload: steps });
   };
+
   const paste = async (params: IpasteFiles = {}) => {
     const { targetUid, deleteSource } = params;
 
+    //deleteSource is true if the files are cut
     const isCopy = deleteSource || clipboardData?.type === "copy";
+
+    //checking if the paste operation is on files and something is copied
     if (!clipboardData || clipboardData.panel !== "file") return;
     const copiedUids = clipboardData.uids.filter(
       (uid) => !invalidFileNodes[uid],
     );
     if (copiedUids.length === 0) return;
-    const targetNode = fileTree[fFocusedItem];
-    if (!targetNode) return;
+
+    /*if the targetUid is not provided, 
+    we paste the files in the focused directory */
 
     const _targetUid = targetUid || fFocusedItem;
+    const targetNode = fileTree[_targetUid];
+    if (!targetNode) return;
+
     try {
       await Promise.all(
         /* we are using map instead of forEach because we want to to get the array of all the promises */
@@ -314,9 +227,8 @@ export default function useFiles() {
       );
     } catch (err) {
       console.error(err);
-    } finally {
-      triggerCurrentProjectReload();
     }
+    triggerCurrentProjectReload();
   };
   const move = (params: Imove) => {
     const { targetUid, uids } = params;
