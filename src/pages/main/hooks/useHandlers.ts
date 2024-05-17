@@ -67,26 +67,30 @@ export const useHandlers = () => {
       fsType: TProjectContext,
       projectHandle: FileSystemDirectoryHandle,
     ) => {
-      const _recentProject = [...recentProject];
-      for (let index = 0; index < _recentProject.length; ++index) {
-        if (
-          _recentProject[index].context === fsType &&
-          projectHandle?.name === _recentProject[index].name
-        ) {
-          _recentProject.splice(index, 1);
-          break;
+      try {
+        const _recentProject = [...recentProject];
+        for (let index = 0; index < _recentProject.length; ++index) {
+          if (
+            _recentProject[index].context === fsType &&
+            projectHandle?.name === _recentProject[index].name
+          ) {
+            _recentProject.splice(index, 1);
+            break;
+          }
         }
+        if (_recentProject.length === RecentProjectCount) {
+          _recentProject.pop();
+        }
+        _recentProject.unshift({
+          context: fsType,
+          name: projectHandle.name,
+          handler: projectHandle,
+        });
+        dispatch(setRecentProject(_recentProject));
+        await set("recent-project", _recentProject);
+      } catch (err) {
+        LogAllow && console.log("ERROR while saving recent project", err);
       }
-      if (_recentProject.length === RecentProjectCount) {
-        _recentProject.pop();
-      }
-      _recentProject.unshift({
-        context: fsType,
-        name: projectHandle.name,
-        handler: projectHandle,
-      });
-      dispatch(setRecentProject(_recentProject));
-      await set("recent-project", _recentProject);
     },
     [recentProject],
   );
@@ -202,91 +206,95 @@ export const useHandlers = () => {
   }, [reloadCurrentProjectTrigger]);
 
   const reloadCurrentProject = useCallback(async () => {
-    if (project.context === "local") {
-      const {
-        handlerArr,
-        _fileHandlers,
-        _fileTree,
-        _initialFileUidToOpen,
-        deletedUids,
-        deletedUidsObj,
-      } = await loadLocalProject(
-        currentProjectFileHandle as FileSystemDirectoryHandle,
-        osType,
-        true,
-        fileTree,
-      );
-      dispatch(setFileTree(_fileTree));
-      dispatch(setFileHandlers(_fileHandlers));
-      // need to open another file if the current open file is deleted
-
-      if (deletedUidsObj[currentFileUid] || !currentFileUid) {
-        dispatch(setCurrentFileUid(_initialFileUidToOpen));
-        dispatch(setRenderableFileUid(_initialFileUidToOpen));
-        dispatch(
-          setCurrentFileContent(
-            _fileTree[_initialFileUidToOpen].data.content ||
-              getIndexHtmlContent(),
-          ),
-        );
-        dispatch(focusFileTreeNode(_initialFileUidToOpen));
-
-        const pathURL = createURLPath(
-          _initialFileUidToOpen,
-          RootNodeUid,
-          _fileTree[RootNodeUid]?.displayName,
-        );
-        navigate(pathURL);
-      } else if (_initialFileUidToOpen == "") {
-        dispatch(setCurrentFileUid(""));
-        dispatch(setRenderableFileUid(""));
-        dispatch(setCurrentFileContent(""));
-      } else if (currentFileUid) {
-        dispatch(setCurrentFileUid(currentFileUid));
-        dispatch(setRenderableFileUid(currentFileUid));
-        dispatch(
-          setCurrentFileContent(
-            _fileTree[currentFileUid].data.content || getIndexHtmlContent(),
-          ),
-        );
-      }
-      // update file tree view state
-      dispatch(updateFileTreeViewState({ deletedUids: deletedUids }));
-      // build nohost idb
-      buildNohostIDB(
-        handlerArr,
-        deletedUids.map((uid) => fileTree[uid].data.path),
-      );
-    } else {
-      try {
+    try {
+      if (project.context === "local") {
         const {
+          handlerArr,
+          _fileHandlers,
           _fileTree,
           _initialFileUidToOpen,
-          deletedUidsObj,
           deletedUids,
-        } = await loadIDBProject(DefaultProjectPath, true, fileTree);
+          deletedUidsObj,
+        } = await loadLocalProject(
+          currentProjectFileHandle as FileSystemDirectoryHandle,
+          osType,
+          true,
+          fileTree,
+        );
         dispatch(setFileTree(_fileTree));
+        dispatch(setFileHandlers(_fileHandlers));
         // need to open another file if the current open file is deleted
-        if (deletedUidsObj[currentFileUid]) {
-          if (_initialFileUidToOpen !== "") {
-            dispatch(setCurrentFileUid(_initialFileUidToOpen));
-            dispatch(setRenderableFileUid(_initialFileUidToOpen));
-            dispatch(
-              setCurrentFileContent(
-                _fileTree[_initialFileUidToOpen].data.content,
-              ),
-            );
-          } else {
-            dispatch(setCurrentFileUid(""));
-            dispatch(setRenderableFileUid(""));
-            dispatch(setCurrentFileContent(""));
-          }
+
+        if (deletedUidsObj[currentFileUid] || !currentFileUid) {
+          dispatch(setCurrentFileUid(_initialFileUidToOpen));
+          dispatch(setRenderableFileUid(_initialFileUidToOpen));
+          dispatch(
+            setCurrentFileContent(
+              _fileTree[_initialFileUidToOpen].data.content ||
+                getIndexHtmlContent(),
+            ),
+          );
+          dispatch(focusFileTreeNode(_initialFileUidToOpen));
+
+          const pathURL = createURLPath(
+            _initialFileUidToOpen,
+            RootNodeUid,
+            _fileTree[RootNodeUid]?.displayName,
+          );
+          navigate(pathURL);
+        } else if (_initialFileUidToOpen == "") {
+          dispatch(setCurrentFileUid(""));
+          dispatch(setRenderableFileUid(""));
+          dispatch(setCurrentFileContent(""));
+        } else if (currentFileUid) {
+          dispatch(setCurrentFileUid(currentFileUid));
+          dispatch(setRenderableFileUid(currentFileUid));
+          dispatch(
+            setCurrentFileContent(
+              _fileTree[currentFileUid].data.content || getIndexHtmlContent(),
+            ),
+          );
         }
         // update file tree view state
         dispatch(updateFileTreeViewState({ deletedUids: deletedUids }));
-      } catch (err) {
-        LogAllow && console.log("ERROR while reloading IDB project", err);
+        // build nohost idb
+        buildNohostIDB(
+          handlerArr,
+          deletedUids.map((uid) => fileTree[uid].data.path),
+        );
+      } else {
+        try {
+          const {
+            _fileTree,
+            _initialFileUidToOpen,
+            deletedUidsObj,
+            deletedUids,
+          } = await loadIDBProject(DefaultProjectPath, true, fileTree);
+          dispatch(setFileTree(_fileTree));
+          // need to open another file if the current open file is deleted
+          if (deletedUidsObj[currentFileUid]) {
+            if (_initialFileUidToOpen !== "") {
+              dispatch(setCurrentFileUid(_initialFileUidToOpen));
+              dispatch(setRenderableFileUid(_initialFileUidToOpen));
+              dispatch(
+                setCurrentFileContent(
+                  _fileTree[_initialFileUidToOpen].data.content,
+                ),
+              );
+            } else {
+              dispatch(setCurrentFileUid(""));
+              dispatch(setRenderableFileUid(""));
+              dispatch(setCurrentFileContent(""));
+            }
+          }
+          // update file tree view state
+          dispatch(updateFileTreeViewState({ deletedUids: deletedUids }));
+        } catch (err) {
+          LogAllow && console.log("ERROR while reloading IDB project", err);
+        }
       }
+    } catch (err) {
+      console.log(err);
     }
   }, [project, currentProjectFileHandle, osType, fileTree, currentFileUid]);
 

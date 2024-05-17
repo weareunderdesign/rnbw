@@ -210,7 +210,16 @@ export default function useFiles() {
 
     const _targetUid = targetUid || fFocusedItem;
     const targetNode = fileTree[_targetUid];
+
     if (!targetNode) return;
+
+    //preventing pasting into itself
+    if (!targetNode.isEntity) {
+      if (copiedUids.some((uid) => targetNode.uid.includes(uid))) {
+        alert("You cannot paste a file in itself");
+        return;
+      }
+    }
 
     try {
       await Promise.all(

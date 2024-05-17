@@ -241,9 +241,8 @@ export const moveLocalSingleDirectoryOrFile = async ({
   the parent node of the source node, and the target node.
   */
   const handler = fileHandlers[uid];
-  const parentHandler = fileHandlers[
-    parentNode.uid
-  ] as FileSystemDirectoryHandle;
+  const parentUid = parentNode.uid;
+  const parentHandler = fileHandlers[parentUid] as FileSystemDirectoryHandle;
   const targetHandler = getTargetHandler({ targetUid, fileTree, fileHandlers });
   if (
     !(await verifyFileHandlerPermission(handler)) ||
@@ -255,31 +254,49 @@ export const moveLocalSingleDirectoryOrFile = async ({
   const nodeData = node.data;
 
   try {
-    const unqiueEntityName = await getUniqueIndexedName({
-      parentHandler: targetHandler,
-      entityName: newName || nodeData.name,
-      extension: nodeData.ext,
-    });
+    let uniqueEntityName = newName || nodeData.name;
+    if (isCopy) {
+      uniqueEntityName = await getUniqueIndexedName({
+        parentHandler: targetHandler,
+        entityName: newName || nodeData.name,
+        extension: nodeData.ext,
+      });
+    } else {
+      //ignore paste for cut in the same location
+      if (targetNode.isEntity) {
+        if (targetNode.parentUid === parentNode.uid) {
+          return false;
+        }
+      } else {
+        if (targetNode.uid === parentNode.uid) {
+          return false;
+        }
+      }
+    }
 
     if (nodeData.kind === "directory") {
-      const newHandler = await targetHandler.getDirectoryHandle(
-        unqiueEntityName,
-        {
-          create: true,
-        },
-      );
-      await _moveLocalDirectory(
-        handler as FileSystemDirectoryHandle,
-        newHandler,
-        parentHandler,
-        isCopy,
-      );
+      try {
+        const newHandler = await targetHandler.getDirectoryHandle(
+          uniqueEntityName,
+          {
+            create: true,
+          },
+        );
+        await _moveLocalDirectory(
+          handler as FileSystemDirectoryHandle,
+          newHandler,
+          parentHandler,
+          isCopy,
+        );
+      } catch (err) {
+        console.log(err);
+      }
     } else {
       await _moveLocalFile(
         handler as FileSystemFileHandle,
         parentHandler,
         targetHandler,
-        unqiueEntityName,
+        uniqueEntityName,
         isCopy,
       );
     }
