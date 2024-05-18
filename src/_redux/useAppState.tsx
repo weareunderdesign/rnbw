@@ -62,7 +62,7 @@ export const useAppState = () => {
         showCodeView,
         showFilePanel,
         autoSave,
-        formatCode,
+        wordWrap,
         didUndo,
         didRedo,
         loading,
@@ -165,7 +165,7 @@ export const useAppState = () => {
     showFilePanel,
 
     autoSave,
-    formatCode,
+    wordWrap,
 
     didUndo,
     didRedo,

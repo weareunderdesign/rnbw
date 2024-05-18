@@ -35,7 +35,13 @@ import { debounce } from "@_pages/main/helper";
 
 const useEditor = () => {
   const dispatch = useDispatch();
-  const { theme: _theme, autoSave, isCodeTyping, nFocusedItem } = useAppState();
+  const {
+    theme: _theme,
+    autoSave,
+    isCodeTyping,
+    nFocusedItem,
+    wordWrap,
+  } = useAppState();
   const {
     monacoEditorRef,
     setMonacoEditorRef,
@@ -62,13 +68,10 @@ const useEditor = () => {
     setLanguage(language);
   }, []);
 
-  // editor config variables
-  const [wordWrap, setWordWrap] =
-    useState<editor.IEditorOptions["wordWrap"]>("on");
   const editorConfigs: editor.IEditorConstructionOptions = useMemo(
     () => ({
       contextmenu: true,
-      wordWrap,
+      wordWrap: wordWrap ? "on" : "off",
       minimap: { enabled: false },
       automaticLayout: true,
       selectionHighlight: false,
@@ -224,7 +227,6 @@ const useEditor = () => {
     updateLanguage,
 
     editorConfigs,
-    setWordWrap,
 
     codeSelection,
   };

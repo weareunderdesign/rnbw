@@ -95,7 +95,6 @@ export const useMouseEvents = () => {
         isEditingRef,
         activePanel,
         osType,
-        formatCode,
       } = eventListenerRef.current;
       if (activePanel !== "stage") dispatch(setActivePanel("stage"));
 
@@ -160,7 +159,7 @@ export const useMouseEvents = () => {
           nodeTree: nodeTreeRef.current,
           contentEditableUid,
           codeViewInstanceModel,
-          formatCode,
+          formatCode: false,
         });
       }
     },
