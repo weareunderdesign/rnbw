@@ -12,6 +12,7 @@ import {
   IsetCurrentFileContent,
   Iundo,
   Imove,
+  IrenameFiles,
 } from "@_types/files.types";
 import { useDispatch } from "react-redux";
 import { verifyFileHandlerPermission } from "./main";
@@ -85,14 +86,14 @@ export default function useFiles() {
     ],
   );
   const createFolder = useCallback(
-    async (params: IcreateFolder = {}) => {
+    async (params: IcreateFolder = {}): Promise<string | null> => {
       //We run this function recursively to create a file with a unique name
       const { entityName = "untitled" } = params;
 
       //we check if the parent directory has permission to create a directory
       const parentHandler = getParentHandler(fFocusedItem);
-      if (!parentHandler) return false;
-      if (!(await verifyFileHandlerPermission(parentHandler))) return;
+      if (!parentHandler) return null;
+      if (!(await verifyFileHandlerPermission(parentHandler))) return null;
 
       //We generate a unique indexed name for the file
       const uniqueIndexedName = await getUniqueIndexedName({
@@ -110,6 +111,7 @@ export default function useFiles() {
       } finally {
         triggerCurrentProjectReload();
       }
+      return uniqueIndexedName;
     },
     [
       fFocusedItem,
@@ -180,7 +182,13 @@ export default function useFiles() {
       payload: { uid, content },
     });
   };
-  const rename = () => {};
+  const rename = useCallback(async (params: IrenameFiles) => {
+    const { uid } = params;
+    move({
+      uids: [uid],
+      targetUid: uid,
+    });
+  }, []);
   const undo = (params: Iundo) => {
     const { steps = 1 } = params;
     if (steps < 1) return;
@@ -193,17 +201,20 @@ export default function useFiles() {
   };
 
   const paste = async (params: IpasteFiles = {}) => {
-    const { targetUid, deleteSource } = params;
+    const { uids, targetUid, deleteSource } = params;
 
     //deleteSource is true if the files are cut
-    const isCopy = deleteSource || clipboardData?.type === "copy";
+    const isCopy = !deleteSource || clipboardData?.type === "copy";
 
     //checking if the paste operation is on files and something is copied
-    if (!clipboardData || clipboardData.panel !== "file") return;
-    const copiedUids = clipboardData.uids.filter(
-      (uid) => !invalidFileNodes[uid],
-    );
-    if (copiedUids.length === 0) return;
+    if (!uids && (!clipboardData || clipboardData.panel !== "file")) return;
+    const copiedUids = clipboardData
+      ? clipboardData.uids.filter((uid) => !invalidFileNodes[uid])
+      : [];
+
+    const uidsToPaste = uids || copiedUids;
+
+    if (uidsToPaste.length === 0) return;
 
     /*if the targetUid is not provided, 
     we paste the files in the focused directory */
@@ -215,7 +226,7 @@ export default function useFiles() {
 
     //preventing pasting into itself
     if (!targetNode.isEntity) {
-      if (copiedUids.some((uid) => targetNode.uid.includes(uid))) {
+      if (uidsToPaste.some((uid) => targetNode.uid.includes(uid))) {
         alert("You cannot paste a file in itself");
         return;
       }
@@ -224,7 +235,7 @@ export default function useFiles() {
     try {
       await Promise.all(
         /* we are using map instead of forEach because we want to to get the array of all the promises */
-        copiedUids.map(async (uid) => {
+        uidsToPaste.map(async (uid) => {
           await moveLocalSingleDirectoryOrFile({
             fileTree,
             fileHandlers,

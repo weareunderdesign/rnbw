@@ -76,7 +76,7 @@ export default function WorkspaceTreeView() {
   const { focusedItemRef, fileTreeViewData } = useSync();
   const { cb_focusNode, cb_selectNode, cb_expandNode, cb_collapseNode } =
     useNodeViewState({ invalidFileNodes });
-  const { cb_moveNode, cb_readNode } = useNodeActionsHandler();
+  const { cb_readNode } = useNodeActionsHandler();
   const { onSaveCurrentFile } = useSaveCommand();
 
   useCmdk();
@@ -448,6 +448,18 @@ export default function WorkspaceTreeView() {
 
             if (nodeData.valid) {
               //rename the file
+              rnbw.files.rename({
+                uid: node.uid,
+                newName: entityName,
+                isFolder: !node.isEntity,
+              });
+
+              // add to event history
+              // const _fileAction: TFileAction = {
+              //   action: "rename",
+              //   payload: { orgUid: node.uid, newUid },
+              // };
+              // dispatch(setFileAction(_fileAction));
             } else {
               // create a new file/directory
               const parentNode = fileTree[node.parentUid!];
@@ -505,7 +517,10 @@ export default function WorkspaceTreeView() {
               );
             if (uids.length === 0) return;
 
-            cb_moveNode(uids, targetUid);
+            rnbw.files.move({
+              uids,
+              targetUid,
+            });
           },
         }}
       />

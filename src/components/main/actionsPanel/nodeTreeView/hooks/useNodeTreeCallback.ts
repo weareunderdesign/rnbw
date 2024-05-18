@@ -4,15 +4,15 @@ import { getValidNodeUids } from "@_node/helpers";
 import { TNodeUid } from "@_node/types";
 import { useAppState } from "@_redux/useAppState";
 
-import { useNodeActionHandlers } from "./useNodeActionHandlers";
 import { useNodeViewState } from "./useNodeViewState";
+import useRnbw from "@_services/useRnbw";
 
 export const useNodeTreeCallback = (
   isDragging: React.MutableRefObject<boolean>,
 ) => {
   const { validNodeTree, htmlReferenceData } = useAppState();
+  const rnbw = useRnbw();
 
-  const { onMove } = useNodeActionHandlers();
   const { cb_focusNode, cb_selectNode, cb_expandNode, cb_collapseNode } =
     useNodeViewState();
 
@@ -36,11 +36,12 @@ export const useNodeTreeCallback = (
       targetItem?: TreeItemIndex;
     },
   ) => {
-    const isBetween = target.targetType === "between-items";
+    //TODO: Implement position
+    // const isBetween = target.targetType === "between-items";
     const targetUid = (
       target.targetType === "item" ? target.targetItem : target.parentItem
     ) as TNodeUid;
-    const position = isBetween ? target.childIndex : 0;
+    // const position = isBetween ? target.childIndex : 0;
 
     const validUids = getValidNodeUids(
       validNodeTree,
@@ -53,11 +54,9 @@ export const useNodeTreeCallback = (
 
     if (target.parentItem === "ROOT") return;
 
-    onMove({
-      selectedUids: validUids,
+    rnbw.files.move({
+      uids: validUids,
       targetUid: targetUid as TNodeUid,
-      isBetween,
-      position,
     });
 
     isDragging.current = false;

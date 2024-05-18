@@ -15,6 +15,12 @@ interface IsetCurrentFile {
   uid: string;
 }
 
+interface IrenameFiles {
+  uid: string;
+  newName: string;
+  isFolder?: boolean;
+}
+
 interface IsetCurrentFileContent {
   content: string;
 }
@@ -39,6 +45,7 @@ interface Iremove {
 }
 
 interface IpasteFiles {
+  uids?: string[];
   targetUid?: string;
   deleteSource?: boolean;
 }
@@ -51,6 +58,7 @@ export {
   IcreateFile,
   IcreateFolder,
   IgetFolderTree,
+  IrenameFiles,
   IsetCurrentFile,
   IsetCurrentFileContent,
   Iredo,
