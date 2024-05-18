@@ -12,18 +12,11 @@ import { saveFileContent } from "../helpers";
 import { setCurrentCommand } from "@_redux/main/cmdk";
 import { addRunningAction, removeRunningAction } from "@_redux/main/processor";
 import { debounce } from "@_pages/main/helper";
-import { html_beautify } from "js-beautify";
 
 export const useSaveCommand = () => {
   const dispatch = useDispatch();
-  const {
-    project,
-    fileTree,
-    currentFileUid,
-    currentCommand,
-    fileHandlers,
-    formatCode,
-  } = useAppState();
+  const { project, fileTree, currentFileUid, currentCommand, fileHandlers } =
+    useAppState();
   const { monacoEditorRef } = useContext(MainContext);
 
   useEffect(() => {
@@ -52,8 +45,8 @@ export const useSaveCommand = () => {
       try {
         const codeViewInstance = monacoEditorRef.current;
         const codeViewInstanceModel = codeViewInstance?.getModel();
-        if (formatCode && codeViewInstanceModel) {
-          const code = html_beautify(codeViewInstanceModel.getValue());
+        if (codeViewInstanceModel) {
+          const code = codeViewInstanceModel.getValue();
 
           //get the current cursor position
           const cursorPosition = codeViewInstance?.getPosition();

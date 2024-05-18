@@ -17,7 +17,7 @@ import { setActivePanel, setShowCodeView } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 import { Editor, loader } from "@monaco-editor/react";
 
-import { useCmdk, useEditor } from "./hooks";
+import { useEditor } from "./hooks";
 import { getNodeUidByCodeSelection } from "./helpers";
 import { setEditingNodeUidInCodeView } from "@_redux/main/codeView";
 import { getFileExtension } from "../actionsPanel/navigatorPanel/helpers";
@@ -57,7 +57,6 @@ export default function CodeView() {
 
     codeSelection,
   } = useEditor();
-  useCmdk();
 
   monacoEditorRef.current?.onKeyDown(handleKeyDown);
 

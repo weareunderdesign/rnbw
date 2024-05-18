@@ -8,9 +8,11 @@ import { useDispatch } from "react-redux";
 import { setIsContentProgrammaticallyChanged } from "@_redux/main/reference";
 
 export const useAttributeHandler = () => {
-  const { validNodeTree, nFocusedItem, formatCode } = useAppState();
+  const { validNodeTree, nFocusedItem } = useAppState();
   const { monacoEditorRef } = useContext(MainContext);
   const dispatch = useDispatch();
+
+  const formatCode = false;
 
   const changeAttribute = useCallback(
     ({
