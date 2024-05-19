@@ -185,30 +185,35 @@ export default function useFiles() {
       payload: { uid, content },
     });
   };
-  const rename = useCallback(async (params: IrenameFiles) => {
-    const { uid, newName, extension } = params;
+  const rename = useCallback(
+    async (params: IrenameFiles) => {
+      const { uid, newName, extension } = params;
+      // rename a file/directory
+      const file = fileTree[uid];
 
-    // rename a file/directory
-    const file = fileTree[uid];
+      if (!file) return;
+      const fileData = file.data;
+      if (fileData.changed && !confirmAlert(FileChangeAlertMessage)) return;
 
-    if (!file) return;
-    const fileData = file.data;
-    if (fileData.changed && !confirmAlert(FileChangeAlertMessage)) return;
+      const parentNode = fileTree[file.parentUid!];
+      if (!parentNode) return;
+      const name = extension
+        ? newName
+        : `${newName}${extension ? `.${extension}` : ""}`;
+      // const newUid = _path.join(parentNode.uid, name);
 
-    const parentNode = fileTree[file.parentUid!];
-    if (!parentNode) return;
-    const name = extension ? newName : `${newName}.${extension}`;
-    // const newUid = _path.join(parentNode.uid, name);
-
-    moveLocalSingleDirectoryOrFile({
-      fileTree,
-      fileHandlers,
-      uid,
-      targetUid: parentNode.uid,
-      isCopy: false,
-      newName: name,
-    });
-  }, []);
+      await moveLocalSingleDirectoryOrFile({
+        fileTree,
+        fileHandlers,
+        uid,
+        targetUid: parentNode.uid,
+        isCopy: false,
+        newName: name,
+      });
+      await reloadCurrentProject();
+    },
+    [fileTree],
+  );
   const undo = (params: Iundo) => {
     const { steps = 1 } = params;
     if (steps < 1) return;
@@ -224,7 +229,7 @@ export default function useFiles() {
     const { uids, targetUid, deleteSource } = params;
 
     //deleteSource is true if the files are cut
-    const isCopy = !deleteSource || clipboardData?.type === "copy";
+    const isCopy = !deleteSource && clipboardData?.type === "copy";
 
     //checking if the paste operation is on files and something is copied
     if (!uids && (!clipboardData || clipboardData.panel !== "file")) return;

@@ -227,6 +227,7 @@ export const moveLocalSingleDirectoryOrFile = async ({
   /* We check if the source node, target node,
   and the parent node of the source node exist.
   */
+
   const node = fileTree[uid];
   if (!node) return false;
 
@@ -267,10 +268,6 @@ export const moveLocalSingleDirectoryOrFile = async ({
         if (targetNode.parentUid === parentNode.uid) {
           return false;
         }
-      } else {
-        if (targetNode.uid === parentNode.uid) {
-          return false;
-        }
       }
     }
 
@@ -302,6 +299,7 @@ export const moveLocalSingleDirectoryOrFile = async ({
     }
     return true;
   } catch (err) {
+    console.error(err);
     return false;
   }
 };
