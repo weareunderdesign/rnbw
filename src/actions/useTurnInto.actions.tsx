@@ -20,6 +20,7 @@ export default function useTurnInto() {
       if (!node) return;
       const nodeAttribute = rnbw.elements.getElementSettings(uid);
 
+      // Getting existing tag attributes
       const attributeCode = Object.entries(nodeAttribute)
         .map(([attrName, attrValue]) => `${attrName}="${attrValue}"`)
         .join(" ");
