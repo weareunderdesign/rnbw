@@ -18,6 +18,7 @@ import { useDispatch } from "react-redux";
 import { verifyFileHandlerPermission } from "./main";
 import { setClipboardData } from "@_redux/main/processor";
 import {
+  confirmAlert,
   moveLocalSingleDirectoryOrFile,
   removeSingleLocalDirectoryOrFile,
 } from "@_node/index";
@@ -26,7 +27,8 @@ import { useCallback, useContext } from "react";
 import { MainContext } from "@_redux/main";
 import { getObjKeys } from "@_pages/main/helper";
 import { useFileHelpers } from "./useFileHelpers";
-
+import { useHandlers } from "@_pages/main/hooks";
+import { FileChangeAlertMessage } from "@_constants/main";
 export default function useFiles() {
   const dispatch = useDispatch();
   const {
@@ -42,6 +44,7 @@ export default function useFiles() {
     useFileHelpers();
   const { triggerCurrentProjectReload, monacoEditorRef } =
     useContext(MainContext);
+  const { reloadCurrentProject } = useHandlers();
 
   //Create
   const createFile = useCallback(
@@ -74,7 +77,7 @@ export default function useFiles() {
       } catch (err) {
         console.error(err);
       } finally {
-        triggerCurrentProjectReload();
+        await reloadCurrentProject();
       }
     },
     [
@@ -153,14 +156,14 @@ export default function useFiles() {
       }),
     );
   };
-  const cutFiles = (params: IcutFiles = {}) => {
+  const cutFiles = async (params: IcutFiles = {}) => {
     const { uids } = params;
     const selectedItems = getObjKeys(fSelectedItemsObj);
     const selectedUids = selectedItems.filter((uid) => !invalidFileNodes[uid]);
     const _uids = uids || selectedUids;
     if (_uids.length === 0) return;
 
-    dispatch(
+    await dispatch(
       setClipboardData({
         panel: "file",
         type: "cut",
@@ -183,10 +186,27 @@ export default function useFiles() {
     });
   };
   const rename = useCallback(async (params: IrenameFiles) => {
-    const { uid } = params;
-    move({
-      uids: [uid],
-      targetUid: uid,
+    const { uid, newName, extension } = params;
+
+    // rename a file/directory
+    const file = fileTree[uid];
+
+    if (!file) return;
+    const fileData = file.data;
+    if (fileData.changed && !confirmAlert(FileChangeAlertMessage)) return;
+
+    const parentNode = fileTree[file.parentUid!];
+    if (!parentNode) return;
+    const name = extension ? newName : `${newName}.${extension}`;
+    // const newUid = _path.join(parentNode.uid, name);
+
+    moveLocalSingleDirectoryOrFile({
+      fileTree,
+      fileHandlers,
+      uid,
+      targetUid: parentNode.uid,
+      isCopy: false,
+      newName: name,
     });
   }, []);
   const undo = (params: Iundo) => {
@@ -250,11 +270,11 @@ export default function useFiles() {
     }
     triggerCurrentProjectReload();
   };
-  const move = (params: Imove) => {
+  const move = async (params: Imove) => {
     const { targetUid, uids } = params;
     dispatch({ type: "MOVE_FILES", payload: { uids, targetUid } });
     try {
-      cutFiles({ uids });
+      await cutFiles({ uids });
       paste({ targetUid, deleteSource: true });
     } catch (err) {
       console.error(err);

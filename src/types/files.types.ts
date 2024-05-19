@@ -18,7 +18,7 @@ interface IsetCurrentFile {
 interface IrenameFiles {
   uid: string;
   newName: string;
-  isFolder?: boolean;
+  extension?: string;
 }
 
 interface IsetCurrentFileContent {

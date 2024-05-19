@@ -220,20 +220,20 @@ export const useHandlers = () => {
           true,
           fileTree,
         );
-        dispatch(setFileTree(_fileTree));
-        dispatch(setFileHandlers(_fileHandlers));
+        await dispatch(setFileTree(_fileTree));
+        await dispatch(setFileHandlers(_fileHandlers));
         // need to open another file if the current open file is deleted
 
         if (deletedUidsObj[currentFileUid] || !currentFileUid) {
-          dispatch(setCurrentFileUid(_initialFileUidToOpen));
-          dispatch(setRenderableFileUid(_initialFileUidToOpen));
-          dispatch(
+          await dispatch(setCurrentFileUid(_initialFileUidToOpen));
+          await dispatch(setRenderableFileUid(_initialFileUidToOpen));
+          await dispatch(
             setCurrentFileContent(
               _fileTree[_initialFileUidToOpen].data.content ||
                 getIndexHtmlContent(),
             ),
           );
-          dispatch(focusFileTreeNode(_initialFileUidToOpen));
+          await dispatch(focusFileTreeNode(_initialFileUidToOpen));
 
           const pathURL = createURLPath(
             _initialFileUidToOpen,
@@ -242,20 +242,20 @@ export const useHandlers = () => {
           );
           navigate(pathURL);
         } else if (_initialFileUidToOpen == "") {
-          dispatch(setCurrentFileUid(""));
-          dispatch(setRenderableFileUid(""));
-          dispatch(setCurrentFileContent(""));
+          await dispatch(setCurrentFileUid(""));
+          await dispatch(setRenderableFileUid(""));
+          await dispatch(setCurrentFileContent(""));
         } else if (currentFileUid) {
-          dispatch(setCurrentFileUid(currentFileUid));
-          dispatch(setRenderableFileUid(currentFileUid));
-          dispatch(
+          await dispatch(setCurrentFileUid(currentFileUid));
+          await dispatch(setRenderableFileUid(currentFileUid));
+          await dispatch(
             setCurrentFileContent(
               _fileTree[currentFileUid].data.content || getIndexHtmlContent(),
             ),
           );
         }
         // update file tree view state
-        dispatch(updateFileTreeViewState({ deletedUids: deletedUids }));
+        await dispatch(updateFileTreeViewState({ deletedUids: deletedUids }));
         // build nohost idb
         buildNohostIDB(
           handlerArr,
@@ -269,25 +269,25 @@ export const useHandlers = () => {
             deletedUidsObj,
             deletedUids,
           } = await loadIDBProject(DefaultProjectPath, true, fileTree);
-          dispatch(setFileTree(_fileTree));
+          await dispatch(setFileTree(_fileTree));
           // need to open another file if the current open file is deleted
           if (deletedUidsObj[currentFileUid]) {
             if (_initialFileUidToOpen !== "") {
-              dispatch(setCurrentFileUid(_initialFileUidToOpen));
-              dispatch(setRenderableFileUid(_initialFileUidToOpen));
-              dispatch(
+              await dispatch(setCurrentFileUid(_initialFileUidToOpen));
+              await dispatch(setRenderableFileUid(_initialFileUidToOpen));
+              await dispatch(
                 setCurrentFileContent(
                   _fileTree[_initialFileUidToOpen].data.content,
                 ),
               );
             } else {
-              dispatch(setCurrentFileUid(""));
-              dispatch(setRenderableFileUid(""));
-              dispatch(setCurrentFileContent(""));
+              await dispatch(setCurrentFileUid(""));
+              await dispatch(setRenderableFileUid(""));
+              await dispatch(setCurrentFileContent(""));
             }
           }
           // update file tree view state
-          dispatch(updateFileTreeViewState({ deletedUids: deletedUids }));
+          await dispatch(updateFileTreeViewState({ deletedUids: deletedUids }));
         } catch (err) {
           LogAllow && console.log("ERROR while reloading IDB project", err);
         }

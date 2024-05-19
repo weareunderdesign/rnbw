@@ -451,7 +451,7 @@ export default function WorkspaceTreeView() {
               rnbw.files.rename({
                 uid: node.uid,
                 newName: entityName,
-                isFolder: !node.isEntity,
+                extension: nodeData.ext,
               });
 
               // add to event history
