@@ -19,7 +19,7 @@ const processorReducerInitialState: TProcessorReducerState = {
   showFilePanel: false,
 
   autoSave: true,
-  formatCode: false,
+  wordWrap: false,
 
   didUndo: false,
   didRedo: false,
@@ -67,10 +67,9 @@ const processorSlice = createSlice({
       const autoSave = action.payload;
       state.autoSave = autoSave;
     },
-
-    setFormatCode(state, action: PayloadAction<boolean>) {
-      const formatCode = action.payload;
-      state.formatCode = formatCode;
+    setWordWrap(state, action: PayloadAction<boolean>) {
+      const wordWrap = action.payload;
+      state.wordWrap = wordWrap;
     },
 
     setDidUndo(state, action: PayloadAction<boolean>) {
@@ -107,7 +106,7 @@ export const {
   setShowFilePanel,
 
   setAutoSave,
-  setFormatCode,
+  setWordWrap,
 
   setDidUndo,
   setDidRedo,

@@ -262,10 +262,10 @@ export const useCmdkReferenceData = ({
   }, [validNodeTree, nFocusedItem, htmlReferenceData]);
 
   return {
-    cmdkReferenceJumpstart,
-    cmdkReferenceActions,
-    cmdkReferenceRecentProject,
-    cmdkReferenceAdd,
-    cmdkReferenceRename,
+    Jumpstart: cmdkReferenceJumpstart,
+    Actions: cmdkReferenceActions,
+    Recent: cmdkReferenceRecentProject,
+    Add: cmdkReferenceAdd,
+    "Turn into": cmdkReferenceRename,
   };
 };

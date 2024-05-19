@@ -5,11 +5,13 @@ import { useAppState } from "@_redux/useAppState";
 import { AddNodeActionPrefix, RenameNodeActionPrefix } from "@_constants/main";
 import useRnbw from "@_services/useRnbw";
 import useTurnInto from "@_actions/useTurnInto.actions";
+import useFormatCode from "@_actions/useFormatCode.action";
 
 export const useCmdk = () => {
   const { activePanel, currentCommand } = useAppState();
 
   const rnbw = useRnbw();
+  const formatCode = useFormatCode();
   const turnInto = useTurnInto();
 
   useEffect(() => {
@@ -63,6 +65,9 @@ export const useCmdk = () => {
         break;
       case "Ungroup":
         rnbw.elements.ungroup();
+        break;
+      case "Format":
+        formatCode.action();
         break;
       default:
         break;
