@@ -56,9 +56,12 @@ export default function useElements() {
   without affecting the actual codeViewInstanceModel 
   and then apply the changes to the codeViewInstanceModel all at once.*/
 
-  const helperModel = editor.createModel("", "html");
-  codeViewInstanceModel &&
-    helperModel.setValue(codeViewInstanceModel.getValue());
+  function getEditorModelWithCurrentCode() {
+    const helperModel = editor.createModel("", "html");
+    codeViewInstanceModel &&
+      helperModel.setValue(codeViewInstanceModel.getValue());
+    return helperModel;
+  }
 
   function checkAllResourcesAvailable() {
     if (selectedItems.length === 0) return false;
@@ -82,6 +85,7 @@ export default function useElements() {
     sortDsc?: boolean;
   } = {}) {
     const selected = selectedUids || selectedItems;
+    const helperModel = getEditorModelWithCurrentCode();
 
     /* We are sorting nodes from the max to the min because this way the nodes of max index are deleted first and they do not affect the nodes with index lower to them in terms of the source code location*/
     const sortedUids = sortDsc
@@ -123,6 +127,9 @@ export default function useElements() {
   const add = (params: Iadd) => {
     const { tagName, skipUpdate } = params;
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
+
+    const helperModel = getEditorModelWithCurrentCode();
+
     const commentTag = "!--...--";
     const HTMLElement =
       htmlReferenceData.elements[tagName === commentTag ? "comment" : tagName];
@@ -163,7 +170,9 @@ export default function useElements() {
   const duplicate = (params: Iduplicate = {}) => {
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
     const { skipUpdate } = params;
-    helperModel.setValue(codeViewInstanceModel.getValue());
+
+    const helperModel = getEditorModelWithCurrentCode();
+
     const sortedUids = sortUidsByMaxEndIndex(selectedItems, validNodeTree);
     sortedUids.forEach((uid) => {
       const node = validNodeTree[uid];
@@ -245,6 +254,8 @@ export default function useElements() {
   //Update
   const cut = async () => {
     if (!checkAllResourcesAvailable || !codeViewInstanceModel) return;
+
+    const helperModel = getEditorModelWithCurrentCode();
     helperModel.setValue(codeViewInstanceModel.getValue());
 
     await copyAndCutNode({
@@ -287,6 +298,8 @@ export default function useElements() {
     }
 
     const initialCode = content || codeViewInstanceModel.getValue();
+
+    const helperModel = getEditorModelWithCurrentCode();
     helperModel.setValue(initialCode);
 
     let code = pasteContent || (await window.navigator.clipboard.readText());
@@ -367,6 +380,8 @@ d -> 300 - 400
 */
   const group = async () => {
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
+
+    const helperModel = getEditorModelWithCurrentCode();
     helperModel.setValue(codeViewInstanceModel.getValue());
     const { sortedUids, copiedCode } = await copyAndCutNode();
     const { startLine, startCol } =
@@ -384,6 +399,8 @@ d -> 300 - 400
 
   const ungroup = () => {
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
+
+    const helperModel = getEditorModelWithCurrentCode();
     helperModel.setValue(codeViewInstanceModel.getValue());
 
     const sortedUids = sortUidsByMaxEndIndex(selectedItems, validNodeTree);
@@ -428,7 +445,7 @@ d -> 300 - 400
     isBetween is true even if we drop on the first child of the parent node
     */
     const { targetUid, isBetween, position, selectedUids } = params;
-    helperModel.setValue(codeViewInstanceModel.getValue());
+    const helperModel = getEditorModelWithCurrentCode();
 
     const targetNode = validNodeTree[targetUid];
 
@@ -483,7 +500,7 @@ d -> 300 - 400
   const updateEditableElement = useCallback(
     (params: eventListenersStatesRefType) => {
       const { iframeRefRef, contentEditableUidRef, nodeTreeRef } = params;
-
+      const helperModel = getEditorModelWithCurrentCode();
       const iframeRef = iframeRefRef.current;
       const nodeTree = nodeTreeRef.current;
       const codeViewInstanceModel = monacoEditorRef.current?.getModel();
@@ -536,6 +553,8 @@ d -> 300 - 400
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
 
     const { settings, skipUpdate } = params;
+
+    const helperModel = getEditorModelWithCurrentCode();
     helperModel.setValue(codeViewInstanceModel.getValue());
 
     const focusedNode = validNodeTree[nFocusedItem];
@@ -616,6 +635,8 @@ d -> 300 - 400
     }
 
     const contentToEdit = content || codeViewInstanceModel.getValue();
+
+    const helperModel = getEditorModelWithCurrentCode();
     helperModel.setValue(contentToEdit);
 
     const sortedUids = sortUidsByMaxEndIndex(removalUids, validNodeTree);

@@ -44,5 +44,5 @@ export const useCmdk = () => {
       default:
         break;
     }
-  }, [currentCommand?.action]);
+  }, [currentCommand]);
 };
