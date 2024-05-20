@@ -5,42 +5,14 @@ import { Range, editor } from "monaco-editor";
 // once when the action is executed, this improves the History Management
 const helperModel = editor.createModel("", "html");
 
-import * as prettier from "prettier/standalone";
-import * as htmlParser from "prettier/plugins/html";
 import { sortUidsByMaxEndIndex } from "@_components/main/actionsPanel/nodeTreeView/helpers";
 import { useAppState } from "@_redux/useAppState";
-
-// Prettier supports code range formatting, but it is not supported by htmlParser.
-export async function PrettyCode(code: string, startCol: number) {
-  let prettyCode = await prettier.format(code, {
-    parser: "html",
-    plugins: [htmlParser],
-  });
-  /*  When prettier receives the code, it formats it as independent code (as a separate file),
-      and it does not take into account that you need to keep some initial tabs or spaces
-      to make this code look formatted relative to the other code.
-         
-      The following code checks if the code starts with tabs/spaces and includes
-      them in each line to make it consistent with the rest of the code.
-      This code also checks for blank lines and removes them. */
-
-  if (startCol > 1) {
-    const lines = prettyCode.split("\n");
-    const nonEmptyLines = lines.filter((line) => !/^\s*$/.test(line));
-    const spaces = " ".repeat(startCol - 1);
-
-    const linesWithSpaces = nonEmptyLines.map((line, index) => {
-      return index === 0 ? line : spaces + line;
-    });
-
-    prettyCode = linesWithSpaces.join("\n");
-  }
-
-  return prettyCode;
-}
+import { useElementHelper } from "@_services/useElementHelper";
 
 export default function useFormatCode() {
   const { validNodeTree } = useAppState();
+  const { PrettyCode } = useElementHelper();
+
   const rnbw = useRnbw();
   async function formatCode() {
     const codeViewInstanceModel = rnbw.files.getEditorRef().current?.getModel();

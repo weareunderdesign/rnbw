@@ -1,6 +1,6 @@
 import useRnbw from "@_services/useRnbw";
 import { Range, editor } from "monaco-editor";
-import { PrettyCode } from "./useFormatCode.action";
+import { useElementHelper } from "@_services/useElementHelper";
 
 // helperModel added to update the code in the codeViewInstanceModel
 // once when the action is executed, this improves the History Management
@@ -8,14 +8,15 @@ const helperModel = editor.createModel("", "html");
 
 export default function useTurnInto() {
   const rnbw = useRnbw();
+  const { PrettyCode } = useElementHelper();
   const selectedElements = rnbw.elements.getSelectedElements();
 
-  function turnInto(tagName: string) {
+  async function turnInto(tagName: string) {
     const codeViewInstanceModel = rnbw.files.getEditorRef().current?.getModel();
     if (!codeViewInstanceModel) return;
     helperModel.setValue(codeViewInstanceModel.getValue());
 
-    selectedElements.forEach(async (uid) => {
+    for (const uid of selectedElements) {
       const node = rnbw.elements.getElement(uid);
       if (!node) return;
       const nodeAttribute = rnbw.elements.getElementSettings(uid);
@@ -28,7 +29,7 @@ export default function useTurnInto() {
       const { startTag, endTag, startLine, startCol, endLine, endCol } =
         node.data.sourceCodeLocation;
       if (!startTag || !endTag) return;
-      let text = codeViewInstanceModel.getValueInRange(
+      const innerCode = codeViewInstanceModel.getValueInRange(
         new Range(
           startTag.endLine,
           startTag.endCol,
@@ -36,18 +37,16 @@ export default function useTurnInto() {
           endTag.startCol,
         ),
       );
+      const newCode = `<${tagName} ${attributeCode}>${innerCode}</${tagName}>`;
 
-      text = await PrettyCode(
-        `<${tagName} ${attributeCode}>${text}</${tagName}>`,
-        startCol,
-      );
+      const formattedCode = await PrettyCode(newCode, startCol);
 
       const edit = {
         range: new Range(startLine, startCol, endLine, endCol),
-        text,
+        text: formattedCode,
       };
       helperModel.applyEdits([edit]);
-    });
+    }
     const code = helperModel.getValue();
     codeViewInstanceModel.setValue(code);
   }
