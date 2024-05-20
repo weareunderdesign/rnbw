@@ -238,8 +238,8 @@ export default function useElements() {
     return copiedCode;
   };
 
-  const getElementSettings = () => {
-    const focusedNode = validNodeTree[nFocusedItem];
+  const getElementSettings = (uid?: string) => {
+    const focusedNode = validNodeTree[uid!] || validNodeTree[nFocusedItem];
     const { startTag } = focusedNode.data.sourceCodeLocation;
     const attributesKey = startTag.attrs ? Object.keys(startTag.attrs) : [];
     const existingAttributesObj: { [key: string]: string } = {};

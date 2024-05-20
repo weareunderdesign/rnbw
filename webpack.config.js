@@ -15,7 +15,7 @@ module.exports = {
     port: 8080, // you can change the port
   },
   resolve: {
-    extensions: [".csv", ".ts", ".tsx", ".js", ".jsx"],
+    extensions: [".csv", ".ts", ".tsx", ".js", ".jsx", ".action.tsx"],
     alias: {
       "@_node": path.resolve(__dirname, "src/_node/"),
       "@_redux": path.resolve(__dirname, "src/_redux/"),
@@ -27,6 +27,7 @@ module.exports = {
       "@_pages": path.resolve(__dirname, "src/pages/"),
       "@_services": path.resolve(__dirname, "src/services/"),
       "@_types": path.resolve(__dirname, "src/types/"),
+      "@_actions": path.resolve(__dirname, "src/actions/"),
     },
   },
   module: {
@@ -78,7 +79,7 @@ module.exports = {
         },
       },
     ],
-    exprContextCritical: false
+    exprContextCritical: false,
   },
   plugins: [
     new HtmlWebpackPlugin({
