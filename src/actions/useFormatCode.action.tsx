@@ -11,11 +11,30 @@ import { sortUidsByMaxEndIndex } from "@_components/main/actionsPanel/nodeTreeVi
 import { useAppState } from "@_redux/useAppState";
 
 // Prettier supports code range formatting, but it is not supported by htmlParser.
-async function PrettyCode(code: string) {
-  const prettyCode = await prettier.format(code, {
+export async function PrettyCode(code: string, startCol: number) {
+  let prettyCode = await prettier.format(code, {
     parser: "html",
     plugins: [htmlParser],
   });
+  /*  When prettier receives the code, it formats it as independent code (as a separate file),
+      and it does not take into account that you need to keep some initial tabs or spaces
+      to make this code look formatted relative to the other code.
+         
+      The following code checks if the code starts with tabs/spaces and includes
+      them in each line to make it consistent with the rest of the code.
+      This code also checks for blank lines and removes them. */
+
+  if (startCol > 1) {
+    const lines = prettyCode.split("\n");
+    const nonEmptyLines = lines.filter((line) => !/^\s*$/.test(line));
+    const spaces = " ".repeat(startCol - 1);
+
+    const linesWithSpaces = nonEmptyLines.map((line, index) => {
+      return index === 0 ? line : spaces + line;
+    });
+
+    prettyCode = linesWithSpaces.join("\n");
+  }
 
   return prettyCode;
 }
@@ -41,29 +60,10 @@ export default function useFormatCode() {
           node.data.sourceCodeLocation;
         const range = new Range(startLine, startCol, endLine, endCol);
 
-        let text = await PrettyCode(
+        const text = await PrettyCode(
           codeViewInstanceModel.getValueInRange(range),
+          startCol,
         );
-
-        // When prettier receives the code, it formats it as independent code (as a separate file),
-        // and it does not take into account that you need to keep some initial tabs or spaces
-        // to make this code look formatted relative to the other code.
-
-        // The following code checks if the code starts with tabs/spaces and includes
-        // them in each line to make it consistent with the rest of the code.
-        // This code also checks for blank lines and removes them.
-
-        if (startCol > 1) {
-          const lines = text.split("\n");
-          const nonEmptyLines = lines.filter((line) => !/^\s*$/.test(line));
-          const spaces = " ".repeat(startCol - 1);
-
-          const linesWithSpaces = nonEmptyLines.map((line, index) => {
-            return index === 0 ? line : spaces + line;
-          });
-
-          text = linesWithSpaces.join("\n");
-        }
 
         return { range, text };
       }),

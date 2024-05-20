@@ -1,6 +1,6 @@
 import useRnbw from "@_services/useRnbw";
-import { html_beautify } from "js-beautify";
 import { Range, editor } from "monaco-editor";
+import { PrettyCode } from "./useFormatCode.action";
 
 // helperModel added to update the code in the codeViewInstanceModel
 // once when the action is executed, this improves the History Management
@@ -28,7 +28,7 @@ export default function useTurnInto() {
       const { startTag, endTag, startLine, startCol, endLine, endCol } =
         node.data.sourceCodeLocation;
       if (!startTag || !endTag) return;
-      const text = codeViewInstanceModel.getValueInRange(
+      let text = codeViewInstanceModel.getValueInRange(
         new Range(
           startTag.endLine,
           startTag.endCol,
@@ -36,13 +36,19 @@ export default function useTurnInto() {
           endTag.startCol,
         ),
       );
+
+      text = await PrettyCode(
+        `<${tagName} ${attributeCode}>${text}</${tagName}>`,
+        startCol,
+      );
+
       const edit = {
         range: new Range(startLine, startCol, endLine, endCol),
-        text: `<${tagName} ${attributeCode}>${text}</${tagName}>`,
+        text,
       };
       helperModel.applyEdits([edit]);
     });
-    const code = html_beautify(helperModel.getValue());
+    const code = helperModel.getValue();
     codeViewInstanceModel.setValue(code);
   }
 

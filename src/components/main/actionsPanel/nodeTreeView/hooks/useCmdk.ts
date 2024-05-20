@@ -4,8 +4,7 @@ import { isAddNodeAction, isRenameNodeAction } from "@_node/helpers";
 import { useAppState } from "@_redux/useAppState";
 import { AddNodeActionPrefix, RenameNodeActionPrefix } from "@_constants/main";
 import useRnbw from "@_services/useRnbw";
-import useTurnInto from "@_actions/useTurnInto.actions";
-import useFormatCode from "@_actions/useFormatCode.action";
+import { useTurnInto, useFormatCode } from "@_actions/index";
 
 export const useCmdk = () => {
   const { activePanel, currentCommand } = useAppState();
