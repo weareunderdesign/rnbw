@@ -10,6 +10,8 @@ export type TNode = {
   children: TNodeUid[];
 
   data: TNodeData;
+
+  uniqueNodePath?: string;
 };
 
 export type TNodeUid = string;

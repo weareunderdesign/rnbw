@@ -18,8 +18,13 @@ import { useDispatch } from "react-redux";
 import { verifyFileHandlerPermission } from "./main";
 import { setClipboardData } from "@_redux/main/processor";
 import {
+  _createIDBDirectory,
+  _path,
+  _writeIDBFile,
   confirmAlert,
+  moveIDBSingleDirectoryOrFile,
   moveLocalSingleDirectoryOrFile,
+  removeSingleIDBDirectoryOrFile,
   removeSingleLocalDirectoryOrFile,
 } from "@_node/index";
 
@@ -39,6 +44,7 @@ export default function useFiles() {
     fExpandedItemsObj,
     invalidFileNodes,
     clipboardData,
+    project,
   } = useAppState();
   const { getParentHandler, getUniqueIndexedName, updatedFileTreeAfterAdding } =
     useFileHelpers();
@@ -71,9 +77,17 @@ export default function useFiles() {
 
       try {
         //getFileHandle throws an error if the file does not exist
-        await parentHandler.getFileHandle(uniqueIndexedName, {
-          create: true,
-        });
+        if (project.context === "local") {
+          await parentHandler.getFileHandle(uniqueIndexedName, {
+            create: true,
+          });
+        } else {
+          const parentNodeData = fileTree[fFocusedItem].data;
+          await _writeIDBFile(
+            _path.join(parentNodeData.path, uniqueIndexedName),
+            "",
+          );
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -106,13 +120,20 @@ export default function useFiles() {
 
       try {
         //getDirectoryHandle throws an error if the folder does not exist
-        await parentHandler.getDirectoryHandle(uniqueIndexedName, {
-          create: true,
-        });
+        if (project.context === "local") {
+          await parentHandler.getDirectoryHandle(uniqueIndexedName, {
+            create: true,
+          });
+        } else {
+          const parentNodeData = fileTree[fFocusedItem].data;
+          _createIDBDirectory(
+            _path.join(parentNodeData.path, uniqueIndexedName),
+          );
+        }
       } catch (err) {
         console.error(err);
       } finally {
-        triggerCurrentProjectReload();
+        await reloadCurrentProject();
       }
       return uniqueIndexedName;
     },
@@ -261,13 +282,23 @@ export default function useFiles() {
       await Promise.all(
         /* we are using map instead of forEach because we want to to get the array of all the promises */
         uidsToPaste.map(async (uid) => {
-          await moveLocalSingleDirectoryOrFile({
-            fileTree,
-            fileHandlers,
-            uid,
-            targetUid: _targetUid,
-            isCopy,
-          });
+          if (project.context === "local") {
+            await moveLocalSingleDirectoryOrFile({
+              fileTree,
+              fileHandlers,
+              uid,
+              targetUid: _targetUid,
+              isCopy,
+            });
+          } else {
+            await moveIDBSingleDirectoryOrFile({
+              fileTree,
+              uid,
+              targetUid: _targetUid,
+              isCopy,
+              newName: fileTree[uid].data.name,
+            });
+          }
         }),
       );
     } catch (err) {
@@ -287,7 +318,7 @@ export default function useFiles() {
   };
 
   //Delete
-  const remove = (params: Iremove = {}) => {
+  const remove = async (params: Iremove = {}) => {
     const { uids } = params;
     const selectedItems = getObjKeys(fSelectedItemsObj);
     const selectedUids = selectedItems.filter((uid) => !invalidFileNodes[uid]);
@@ -299,21 +330,28 @@ export default function useFiles() {
       return;
     }
 
-    dispatch({ type: "REMOVE_FILES", payload: _uids });
+    await dispatch({ type: "REMOVE_FILES", payload: _uids });
     try {
-      Promise.all(
+      await Promise.all(
         _uids.map(async (uid) => {
-          return removeSingleLocalDirectoryOrFile({
-            fileTree,
-            fileHandlers,
-            uid,
-          });
+          if (project.context === "local") {
+            return removeSingleLocalDirectoryOrFile({
+              fileTree,
+              fileHandlers,
+              uid,
+            });
+          } else {
+            return removeSingleIDBDirectoryOrFile({
+              uid,
+              fileTree,
+            });
+          }
         }),
       );
+      await reloadCurrentProject();
     } catch (err) {
       console.error(err);
-    } finally {
-      triggerCurrentProjectReload();
+      await reloadCurrentProject();
     }
   };
 

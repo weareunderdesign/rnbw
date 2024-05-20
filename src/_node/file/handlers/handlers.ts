@@ -63,6 +63,7 @@ const parseHtml = (content: string): THtmlParserResponse => {
           endOffset: 0,
         },
       },
+      uniqueNodePath: RootNodeUid,
     };
     const seedNodes: THtmlNode[] = [nodeTree[RootNodeUid]];
     let _uid = 0;
@@ -86,11 +87,33 @@ const parseHtml = (content: string): THtmlParserResponse => {
         : true;
     };
 
+    const getUniqueNodePath = ({
+      parentUid,
+      uid,
+      node,
+      nodeTree,
+      index,
+    }: {
+      uid: TNodeUid;
+      parentUid: TNodeUid;
+      node: THtmlDomNode;
+      nodeTree: THtmlNodeTreeData;
+      index: number;
+    }) => {
+      console.log({ parentUid, uid, node, nodeTree });
+      const parent = nodeTree[parentUid];
+      const parentPath = parent.uniqueNodePath;
+      if (parentPath) {
+        return `${parentPath}.${node.nodeName}[${index}]`;
+      }
+      return `${node.nodeName}[${index}]`;
+    };
     const proceedWithNode = (
       uid: TNodeUid,
       parentUid: TNodeUid,
       node: THtmlDomNode,
       nodeTree: THtmlNodeTreeData,
+      index: number,
     ) => {
       const {
         startLine = 0,
@@ -105,6 +128,7 @@ const parseHtml = (content: string): THtmlParserResponse => {
 
       nodeTree[parentUid].children.push(uid);
       nodeTree[parentUid].isEntity = false;
+      const _isValidNode = isValidNode(node);
 
       nodeTree[uid] = {
         uid,
@@ -114,10 +138,18 @@ const parseHtml = (content: string): THtmlParserResponse => {
 
         isEntity: true,
         children: [],
-
+        uniqueNodePath: _isValidNode
+          ? getUniqueNodePath({
+              parentUid,
+              uid,
+              node,
+              nodeTree,
+              index,
+            })
+          : "",
         data: {
           childNodes: node.childNodes,
-          valid: isValidNode(node),
+          valid: _isValidNode,
 
           nodeName: node.nodeName,
           tagName: node.tagName || "",
@@ -145,7 +177,7 @@ const parseHtml = (content: string): THtmlParserResponse => {
       const node = seedNodes.shift() as THtmlNode;
       if (!node.data.childNodes) continue;
 
-      node.data.childNodes.map((child: THtmlDomNode) => {
+      node.data.childNodes.map((child: THtmlDomNode, index: number) => {
         const uid = String(++_uid);
 
         if (child.nodeName === "title") {
@@ -153,7 +185,7 @@ const parseHtml = (content: string): THtmlParserResponse => {
             child?.childNodes?.[0]?.value ?? RainbowAppName;
         }
 
-        proceedWithNode(uid, node.uid, child, nodeTree);
+        proceedWithNode(uid, node.uid, child, nodeTree, index);
         seedNodes.push(nodeTree[uid]);
       });
     }
