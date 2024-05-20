@@ -171,6 +171,10 @@ const parseHtml = (content: string): THtmlParserResponse => {
       };
       if (!node.attrs) node.attrs = [];
       node.attrs.push({ name: StageNodeIdAttr, value: uid });
+      node.attrs.push({
+        name: "rnbw-node-path",
+        value: nodeTree[uid].uniqueNodePath,
+      });
     };
 
     while (seedNodes.length) {
