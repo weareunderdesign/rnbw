@@ -48,8 +48,7 @@ export default function useFiles() {
   } = useAppState();
   const { getParentHandler, getUniqueIndexedName, updatedFileTreeAfterAdding } =
     useFileHelpers();
-  const { triggerCurrentProjectReload, monacoEditorRef } =
-    useContext(MainContext);
+  const { monacoEditorRef } = useContext(MainContext);
   const { reloadCurrentProject } = useHandlers();
 
   //Create
@@ -304,7 +303,7 @@ export default function useFiles() {
     } catch (err) {
       console.error(err);
     }
-    triggerCurrentProjectReload();
+    await reloadCurrentProject();
   };
   const move = async (params: Imove) => {
     const { targetUid, uids } = params;
