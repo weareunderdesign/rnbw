@@ -27,9 +27,10 @@ import {
   IupdateSettings,
 } from "@_types/elements.types";
 import { html_beautify } from "js-beautify";
-import { Range, editor } from "monaco-editor";
+import { Range } from "monaco-editor";
 import { useCallback, useContext, useMemo } from "react";
 import { useDispatch } from "react-redux";
+import { useElementHelper } from "./useElementsHelper";
 
 export default function useElements() {
   const {
@@ -45,84 +46,17 @@ export default function useElements() {
   } = useAppState();
   const { monacoEditorRef } = useContext(MainContext);
   const dispatch = useDispatch();
+  const {
+    getEditorModelWithCurrentCode,
+    checkAllResourcesAvailable,
+    copyAndCutNode,
+  } = useElementHelper();
 
   const codeViewInstanceModel = monacoEditorRef.current?.getModel();
   const selectedItems = useMemo(
     () => getObjKeys(nSelectedItemsObj),
     [nSelectedItemsObj],
   );
-
-  /*The role of helperModel is to perform all the edit operations in it 
-  without affecting the actual codeViewInstanceModel 
-  and then apply the changes to the codeViewInstanceModel all at once.*/
-
-  function getEditorModelWithCurrentCode() {
-    const helperModel = editor.createModel("", "html");
-    codeViewInstanceModel &&
-      helperModel.setValue(codeViewInstanceModel.getValue());
-    return helperModel;
-  }
-
-  function checkAllResourcesAvailable() {
-    if (selectedItems.length === 0) return false;
-    if (!codeViewInstanceModel) {
-      LogAllow &&
-        console.error(
-          `Monaco Editor ${!codeViewInstanceModel ? "" : "Model"} is undefined`,
-        );
-      return false;
-    }
-    return true;
-  }
-
-  async function copyAndCutNode({
-    selectedUids,
-    pasteToClipboard = true,
-    sortDsc = false,
-  }: {
-    selectedUids?: string[];
-    pasteToClipboard?: boolean;
-    sortDsc?: boolean;
-  } = {}) {
-    const selected = selectedUids || selectedItems;
-    const helperModel = getEditorModelWithCurrentCode();
-
-    /* We are sorting nodes from the max to the min because this way the nodes of max index are deleted first and they do not affect the nodes with index lower to them in terms of the source code location*/
-    const sortedUids = sortDsc
-      ? sortUidsByMaxEndIndex(selected, validNodeTree)
-      : sortUidsByMinStartIndex(selected, validNodeTree);
-    let copiedCode = "";
-
-    sortedUids.forEach((uid) => {
-      const node = validNodeTree[uid];
-      if (node) {
-        const { startLine, startCol, endLine, endCol } =
-          node.data.sourceCodeLocation;
-        const text =
-          codeViewInstanceModel &&
-          codeViewInstanceModel.getValueInRange(
-            new Range(startLine, startCol, endLine, endCol),
-          );
-        copiedCode += text;
-
-        // remove the copied code from the original code
-        const edit = {
-          range: new Range(startLine, startCol, endLine, endCol),
-          text: "",
-        };
-        helperModel.applyEdits([edit]);
-      }
-    });
-    copiedCode = html_beautify(copiedCode);
-    pasteToClipboard &&
-      (await window.navigator.clipboard.writeText(copiedCode));
-    const updatedCode = helperModel.getValue();
-    return {
-      sortedUids,
-      copiedCode,
-      updatedCode,
-    };
-  }
 
   //Create
   const add = (params: Iadd) => {

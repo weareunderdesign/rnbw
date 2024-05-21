@@ -7,11 +7,10 @@ const helperModel = editor.createModel("", "html");
 
 import { sortUidsByMaxEndIndex } from "@_components/main/actionsPanel/nodeTreeView/helpers";
 import { useAppState } from "@_redux/useAppState";
-import { useElementHelper } from "@_services/useElementHelper";
+import { PrettyCode } from "@_services/useElementsHelper";
 
 export default function useFormatCode() {
   const { validNodeTree } = useAppState();
-  const { PrettyCode } = useElementHelper();
 
   const rnbw = useRnbw();
   async function formatCode() {
