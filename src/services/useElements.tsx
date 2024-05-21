@@ -13,6 +13,7 @@ import {
   NodeTree_Event_RedoActionType,
   NodeTree_Event_UndoActionType,
   setCopiedNodeDisplayName,
+  setNeedToSelectNodePaths,
   setSelectedNodeUids,
 } from "@_redux/main/nodeTree";
 import { setDidRedo, setDidUndo } from "@_redux/main/processor";
@@ -31,6 +32,7 @@ import { Range } from "monaco-editor";
 import { useCallback, useContext, useMemo } from "react";
 import { useDispatch } from "react-redux";
 import { useElementHelper } from "./useElementsHelper";
+import { toast } from "react-toastify";
 
 export default function useElements() {
   const {
@@ -59,7 +61,7 @@ export default function useElements() {
   );
 
   //Create
-  const add = (params: Iadd) => {
+  const add = async (params: Iadd) => {
     const { tagName, skipUpdate } = params;
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
 
@@ -84,24 +86,38 @@ export default function useElements() {
           ? openingTag
           : `${openingTag}${tagContent}${closingTag}`;
 
-    const sortedUids = sortUidsByMaxEndIndex(selectedItems, validNodeTree);
-    sortedUids.forEach((uid) => {
-      const node = validNodeTree[uid];
-      if (node) {
-        const { endCol, endLine } = node.data.sourceCodeLocation;
+    const sortedUids = sortUidsByMinStartIndex(selectedItems, validNodeTree);
+    if (sortedUids.length === 0) {
+      toast.error("Please select a node to add the new element");
+      return;
+    }
+    const uid = sortedUids[0];
+    const node = validNodeTree[uid];
+    const parentUid = node?.parentUid;
+    const parent = validNodeTree[parentUid!];
+    if (node) {
+      const { endCol, endLine } = node.data.sourceCodeLocation;
 
-        codeViewText = html_beautify(codeViewText);
-        const edit = {
-          range: new Range(endLine, endCol, endLine, endCol),
-          text: codeViewText,
-        };
+      codeViewText = html_beautify(codeViewText);
+      const edit = {
+        range: new Range(endLine, endCol, endLine, endCol),
+        text: codeViewText,
+      };
 
-        helperModel.applyEdits([edit]);
-      }
-    });
+      helperModel.applyEdits([edit]);
+    }
+    const selectedChildIndex = node?.uniqueNodePath?.split("_").pop();
+    if (!selectedChildIndex) return;
+
+    const newNodeIndex = parseInt(selectedChildIndex) + 1;
+    const uniqueNodePathToFocus = `${parent.uniqueNodePath ?? ""}_${tagName}_${newNodeIndex}`;
     const code = helperModel.getValue();
-    !skipUpdate && codeViewInstanceModel.setValue(code);
-    return code;
+    if (!skipUpdate) {
+      await dispatch(setNeedToSelectNodePaths([uniqueNodePathToFocus]));
+      codeViewInstanceModel.setValue(code);
+    }
+    // ROOT_html1_body2_div1_div3_div1_div1_p;
+    return { code };
   };
 
   const duplicate = (params: Iduplicate = {}) => {

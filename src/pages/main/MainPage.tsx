@@ -13,6 +13,7 @@ import Processor from "./processor";
 import ResizablePanels from "./ResizablePanels";
 import { debounce } from "./helper";
 import { CommandDialog } from "./cmdkPage/CommandDialog";
+import { TValidNodeUid } from "@_node/index";
 
 export default function MainPage() {
   // redux
@@ -40,6 +41,10 @@ export default function MainPage() {
   const prevFocusedElement = React.useRef<HTMLElement | null>(
     window.document.activeElement as HTMLElement | null,
   );
+  const maxNodeUidRef = React.useRef<TValidNodeUid>(0);
+  const setMaxNodeUidRef = (maxNodeUid: TValidNodeUid) => {
+    maxNodeUidRef.current = maxNodeUid;
+  };
 
   const INTERVAL_TIMER = 2000;
   // web-tab close event handler
@@ -129,8 +134,10 @@ export default function MainPage() {
     <>
       <MainContext.Provider
         value={{
-          monacoEditorRef,
+          maxNodeUidRef,
+          setMaxNodeUidRef,
 
+          monacoEditorRef,
           setMonacoEditorRef,
           iframeRefRef,
           setIframeRefRef,

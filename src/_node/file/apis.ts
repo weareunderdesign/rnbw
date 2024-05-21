@@ -24,6 +24,7 @@ import {
   TIDBProjectLoaderBaseResponse,
   TLocalProjectLoaderBaseResponse,
   TNodeUid,
+  TValidNodeUid,
 } from "../";
 import { getInitialFileUidToOpen, sortFilesByASC } from "./helpers";
 import {
@@ -487,6 +488,7 @@ export const downloadIDBProject = async (
 export const parseFile = (
   ext: string,
   content: string,
+  callback?: (validUid: TValidNodeUid) => void,
 ): TFileParserResponse => {
   const defaultResponse: TFileParserResponse = {
     contentInApp: "",
@@ -494,5 +496,5 @@ export const parseFile = (
     htmlDom: null,
   };
   if (!content || !fileHandlers[ext]) return defaultResponse;
-  return fileHandlers[ext](content);
+  return fileHandlers[ext](content, callback);
 };

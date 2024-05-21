@@ -15,6 +15,7 @@ export type TNode = {
 };
 
 export type TNodeUid = string;
+export type TValidNodeUid = number | "ROOT" | null;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type TNodeData = TBasicNodeData & { [propName: string]: any };

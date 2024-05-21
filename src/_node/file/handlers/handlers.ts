@@ -3,7 +3,7 @@ import * as parse5 from "parse5";
 import { RainbowAppName } from "@_constants/global";
 import { RootNodeUid } from "@_constants/main";
 
-import { TFileParserResponse, TNodeUid } from "../../";
+import { TFileParserResponse, TNodeUid, TValidNodeUid } from "../../";
 import {
   THtmlDomNode,
   THtmlNode,
@@ -11,10 +11,18 @@ import {
   THtmlNodeTreeData,
   THtmlParserResponse,
 } from "../../node/type/html";
-import { PARSING_ERROR_MESSAGES, StageNodeIdAttr } from "./constants";
+import {
+  DataSequencedUid,
+  StageNodeIdAttr,
+  PARSING_ERROR_MESSAGES,
+  ValidStageNodeUid,
+} from "./constants";
 import { toast } from "react-toastify";
 
-const parseHtml = (content: string): THtmlParserResponse => {
+export const parseHtml = (
+  content: string,
+  callback?: (validNodeUid: TValidNodeUid) => void,
+): THtmlParserResponse => {
   const htmlDom = parse5.parse(content, {
     scriptingEnabled: true,
     sourceCodeLocationInfo: true,
@@ -36,6 +44,7 @@ const parseHtml = (content: string): THtmlParserResponse => {
   (() => {
     nodeTree[RootNodeUid] = {
       uid: RootNodeUid,
+      validUid: RootNodeUid,
       parentUid: null,
 
       displayName: RootNodeUid,
@@ -67,13 +76,14 @@ const parseHtml = (content: string): THtmlParserResponse => {
     };
     const seedNodes: THtmlNode[] = [nodeTree[RootNodeUid]];
     let _uid = 0;
+    let _validUid = 0;
 
     const getHtmlNodeAttribs = (
       uid: TNodeUid,
       attrs: { name: string; value: string }[],
     ): THtmlNodeAttribs => {
       const attribs: THtmlNodeAttribs = {
-        [StageNodeIdAttr]: uid,
+        [DataSequencedUid]: uid,
       };
       attrs.map((attr) => {
         attribs[attr.name] = attr.value;
@@ -89,32 +99,37 @@ const parseHtml = (content: string): THtmlParserResponse => {
 
     const getUniqueNodePath = ({
       parentUid,
-      uid,
       node,
       nodeTree,
       index,
     }: {
-      uid: TNodeUid;
       parentUid: TNodeUid;
       node: THtmlDomNode;
       nodeTree: THtmlNodeTreeData;
       index: number;
     }) => {
-      console.log({ parentUid, uid, node, nodeTree });
       const parent = nodeTree[parentUid];
       const parentPath = parent.uniqueNodePath;
       if (parentPath) {
-        return `${parentPath}.${node.nodeName}[${index}]`;
+        return `${parentPath}_${node.nodeName}${index}`;
       }
-      return `${node.nodeName}[${index}]`;
+      return `${node.nodeName}${index}`;
     };
-    const proceedWithNode = (
-      uid: TNodeUid,
-      parentUid: TNodeUid,
-      node: THtmlDomNode,
-      nodeTree: THtmlNodeTreeData,
-      index: number,
-    ) => {
+    const proceedWithNode = ({
+      uid,
+      validUid,
+      parentUid,
+      node,
+      nodeTree,
+      index,
+    }: {
+      uid: TNodeUid;
+      validUid: TValidNodeUid;
+      parentUid: TNodeUid;
+      node: THtmlDomNode;
+      nodeTree: THtmlNodeTreeData;
+      index: number;
+    }) => {
       const {
         startLine = 0,
         startCol = 0,
@@ -129,24 +144,20 @@ const parseHtml = (content: string): THtmlParserResponse => {
       nodeTree[parentUid].children.push(uid);
       nodeTree[parentUid].isEntity = false;
       const _isValidNode = isValidNode(node);
+      const uniqueNodePath = _isValidNode
+        ? getUniqueNodePath({ parentUid, node, nodeTree, index })
+        : "";
 
       nodeTree[uid] = {
         uid,
+        validUid: _isValidNode ? validUid : null,
         parentUid: parentUid,
 
         displayName: node.nodeName,
 
         isEntity: true,
         children: [],
-        uniqueNodePath: _isValidNode
-          ? getUniqueNodePath({
-              parentUid,
-              uid,
-              node,
-              nodeTree,
-              index,
-            })
-          : "",
+        uniqueNodePath,
         data: {
           childNodes: node.childNodes,
           valid: _isValidNode,
@@ -171,8 +182,11 @@ const parseHtml = (content: string): THtmlParserResponse => {
       };
       if (!node.attrs) node.attrs = [];
       node.attrs.push({ name: StageNodeIdAttr, value: uid });
+      _isValidNode &&
+        validUid &&
+        node.attrs.push({ name: ValidStageNodeUid, value: `${validUid}` });
       node.attrs.push({
-        name: "rnbw-node-path",
+        name: DataSequencedUid,
         value: nodeTree[uid].uniqueNodePath,
       });
     };
@@ -184,12 +198,22 @@ const parseHtml = (content: string): THtmlParserResponse => {
       node.data.childNodes.map((child: THtmlDomNode, index: number) => {
         const uid = String(++_uid);
 
+        const validUid = isValidNode(child) ? ++_validUid : null;
+        validUid && callback && callback(validUid);
+
         if (child.nodeName === "title") {
           window.document.title =
             child?.childNodes?.[0]?.value ?? RainbowAppName;
         }
 
-        proceedWithNode(uid, node.uid, child, nodeTree, index);
+        proceedWithNode({
+          validUid,
+          uid,
+          parentUid: node.uid,
+          node: child,
+          nodeTree,
+          index,
+        });
         seedNodes.push(nodeTree[uid]);
       });
     }
@@ -211,7 +235,10 @@ const parseHtml = (content: string): THtmlParserResponse => {
 };
 
 export const fileHandlers: {
-  [ext: string]: (content: string) => TFileParserResponse;
+  [ext: string]: (
+    content: string,
+    callback?: (validNodeUid: TValidNodeUid) => void,
+  ) => TFileParserResponse;
 } = {
   html: parseHtml,
 };
