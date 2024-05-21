@@ -18,6 +18,7 @@ import {
   _removeIDBDirectoryOrFile,
   _writeIDBFile,
 } from "./nohostApis";
+import { toast } from "react-toastify";
 
 // true: success, false: fail
 const createLocalSingleDirectoryOrFile = async ({
@@ -47,6 +48,7 @@ const createLocalSingleDirectoryOrFile = async ({
     }
     return true;
   } catch (err) {
+    toast.error("Error while creating a local directory or file.");
     return false;
   }
 };
@@ -73,6 +75,7 @@ const createIDBSingleDirectoryOrFile = async ({
     }
     return true;
   } catch (err) {
+    toast.error("Error while creating an idb directory or file.");
     return false;
   }
 };
@@ -109,6 +112,7 @@ export const removeSingleLocalDirectoryOrFile = async ({
     await parentHandler.removeEntry(entryName, { recursive: true });
     return true;
   } catch (err) {
+    toast.error("Error while removing a local directory or file.");
     return false;
   }
 };
@@ -135,6 +139,7 @@ export const removeSingleIDBDirectoryOrFile = async ({
     await _removeIDBDirectoryOrFile(_path.join(parentNodeData.path, entryName));
     return true;
   } catch (err) {
+    toast.error("Error while removing an idb directory or file.");
     return false;
   }
 };
@@ -182,6 +187,7 @@ const _moveLocalDirectory = async (
     !isCopy &&
       (await parentHandler.removeEntry(source.name, { recursive: true }));
   } catch (err) {
+    toast.error("Error while moving a local directory.");
     throw "Error while moving a local directory.";
   }
 };
@@ -205,6 +211,7 @@ const _moveLocalFile = async (
     !isCopy &&
       (await parentHandler.removeEntry(handler.name, { recursive: true }));
   } catch (err) {
+    toast.error("Error while moving a local file.");
     throw "Error while moving a local file.";
   }
 };
@@ -284,6 +291,7 @@ export const moveLocalSingleDirectoryOrFile = async ({
           isCopy,
         );
       } catch (err) {
+        toast.error("Error while moving a local directory.");
         console.log(err);
       }
     } else {
@@ -297,6 +305,7 @@ export const moveLocalSingleDirectoryOrFile = async ({
     }
     return true;
   } catch (err) {
+    toast.error("Error while moving a local directory or file.");
     console.error(err);
     return false;
   }
@@ -339,6 +348,7 @@ const _moveIDBDirectory = async (
 
     !isCopy && (await _removeIDBDirectoryOrFile(nodeData.path));
   } catch (err) {
+    toast.error("Error while moving an idb directory.");
     throw "Error while moving an idb directory.";
   }
 };
@@ -356,6 +366,7 @@ const _moveIDBFile = async (
 
     !isCopy && (await _removeIDBDirectoryOrFile(nodeData.path));
   } catch (err) {
+    toast.error("Error while moving an idb file.");
     throw "Error while moving an idb file.";
   }
 };
@@ -388,6 +399,7 @@ export const moveIDBSingleDirectoryOrFile = async ({
     }
     return true;
   } catch (err) {
+    toast.error("Error while moving an idb directory or file.");
     return false;
   }
 };
@@ -413,6 +425,7 @@ const generateNewNameForLocalDirectoryOrFile = async ({
         });
       }
     } catch (err) {
+      toast.error("Error while generating a new name for a local directory.");
       exists = false;
     }
 
@@ -447,6 +460,7 @@ const generateNewNameForIDBDirectoryOrFile = async ({
         _path.join(targetNodeData.path, newName),
       );
     } catch (err) {
+      toast.error("Error while generating a new name for an idb directory.");
       exists = false;
     }
 

@@ -34,6 +34,7 @@ import { getObjKeys } from "@_pages/main/helper";
 import { useFileHelpers } from "./useFileHelpers";
 import { useHandlers } from "@_pages/main/hooks";
 import { FileChangeAlertMessage } from "@_constants/main";
+import { toast } from "react-toastify";
 export default function useFiles() {
   const dispatch = useDispatch();
   const {
@@ -88,6 +89,7 @@ export default function useFiles() {
           );
         }
       } catch (err) {
+        toast.error("An error occurred while creating the file");
         console.error(err);
       } finally {
         await reloadCurrentProject();
@@ -130,6 +132,7 @@ export default function useFiles() {
           );
         }
       } catch (err) {
+        toast.error("An error occurred while creating the folder");
         console.error(err);
       } finally {
         await reloadCurrentProject();
@@ -300,6 +303,7 @@ export default function useFiles() {
         }),
       );
     } catch (err) {
+      toast.error("An error occurred while pasting the file");
       console.error(err);
     }
     await reloadCurrentProject();
@@ -311,6 +315,7 @@ export default function useFiles() {
       await cutFiles({ uids });
       paste({ targetUid, deleteSource: true });
     } catch (err) {
+      toast.error("An error occurred while moving the file");
       console.error(err);
     }
   };
@@ -348,6 +353,7 @@ export default function useFiles() {
       );
       await reloadCurrentProject();
     } catch (err) {
+      toast.error("An error occurred while deleting the file");
       console.error(err);
       await reloadCurrentProject();
     }

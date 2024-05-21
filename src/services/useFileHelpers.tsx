@@ -4,6 +4,7 @@ import { TNode, TNodeTreeData } from "@_node/index";
 import { expandFileTreeNodes, setFileTree } from "@_redux/main/fileTree";
 import { useAppState } from "@_redux/useAppState";
 import { useDispatch } from "react-redux";
+import { toast } from "react-toastify";
 
 export const getUniqueIndexedName = async ({
   parentHandler,
@@ -40,6 +41,8 @@ export const getUniqueIndexedName = async ({
       //@ts-expect-error - types are not updated
       if (err.name === "NotFoundError") {
         uniqueName = indexedName;
+      } else {
+        toast.error("An error occurred while creating the file");
       }
     }
   }

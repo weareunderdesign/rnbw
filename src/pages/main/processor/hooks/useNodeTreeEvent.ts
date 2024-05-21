@@ -155,6 +155,7 @@ export const useNodeTreeEvent = () => {
           dispatch(setIframeSrc(`rnbw${previewPath}`));
         }
       } catch (err) {
+        toast.error("An error occurred while updating the file content");
         LogAllow && console.error(err);
       }
     })();

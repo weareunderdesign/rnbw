@@ -32,6 +32,7 @@ import {
 } from "./helpers";
 import { Dispatch } from "react";
 import { AnyAction } from "@reduxjs/toolkit";
+import { toast } from "react-toastify";
 
 // helperModel added to update the code in the codeViewInstanceModel
 // once when the action is executed, this improves the History Management
@@ -125,6 +126,8 @@ const add = ({
 
     cb && cb();
   } catch (err) {
+    //
+    toast.error("Error adding node");
     LogAllow && console.log(err);
     fb && fb();
   }
@@ -172,6 +175,7 @@ function remove({
 
     cb && cb();
   } catch (err) {
+    toast.error("Error removing node");
     fb && fb();
     LogAllow && console.log(err);
   }
@@ -251,6 +255,7 @@ const cut = async ({
 
     cb && cb();
   } catch (err) {
+    toast.error("Error cutting node");
     LogAllow && console.log(err);
     fb && fb();
   }
@@ -298,6 +303,7 @@ const copy = async ({
 
     cb && cb();
   } catch (err) {
+    toast.error("Error copying node");
     LogAllow && console.error("Error writing to clipboard:", err);
     fb && fb();
   }
@@ -371,6 +377,7 @@ const paste = async ({
 
     cb && cb();
   } catch (err) {
+    toast.error("Error pasting node");
     LogAllow && console.error("Error reading from clipboard:", err);
     fb && fb();
   }
