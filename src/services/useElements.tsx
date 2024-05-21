@@ -113,9 +113,10 @@ export default function useElements() {
         helperModel.applyEdits([edit]);
       }
     });
+    copiedCode = html_beautify(copiedCode);
     pasteToClipboard &&
       (await window.navigator.clipboard.writeText(copiedCode));
-    const updatedCode = html_beautify(helperModel.getValue());
+    const updatedCode = helperModel.getValue();
     return {
       sortedUids,
       copiedCode,
@@ -142,7 +143,7 @@ export default function useElements() {
 
     const tagContent = HTMLElement?.Content || "";
 
-    const codeViewText =
+    let codeViewText =
       tagName === commentTag
         ? tagContent
         : HTMLElement?.Contain === "None"
@@ -155,14 +156,16 @@ export default function useElements() {
       if (node) {
         const { endCol, endLine } = node.data.sourceCodeLocation;
 
+        codeViewText = html_beautify(codeViewText);
         const edit = {
           range: new Range(endLine, endCol, endLine, endCol),
           text: codeViewText,
         };
+
         helperModel.applyEdits([edit]);
       }
     });
-    const code = html_beautify(helperModel.getValue());
+    const code = helperModel.getValue();
     !skipUpdate && codeViewInstanceModel.setValue(code);
     return code;
   };
@@ -179,9 +182,11 @@ export default function useElements() {
       if (node) {
         const { startCol, startLine, endCol, endLine } =
           node.data.sourceCodeLocation;
-        const text = codeViewInstanceModel.getValueInRange(
+        let text = codeViewInstanceModel.getValueInRange(
           new Range(startLine, startCol, endLine, endCol),
         );
+
+        text = html_beautify(text);
         const edit = {
           range: new Range(endLine, endCol, endLine, endCol),
           text,
@@ -189,7 +194,7 @@ export default function useElements() {
         helperModel.applyEdits([edit]);
       }
     });
-    const code = html_beautify(helperModel.getValue());
+    const code = helperModel.getValue();
     !skipUpdate && codeViewInstanceModel.setValue(code);
     return code;
   };
@@ -224,6 +229,7 @@ export default function useElements() {
         copiedCode += text;
       }
     });
+
     if (!skipUpdate) {
       await window.navigator.clipboard.writeText(copiedCode);
 
@@ -267,7 +273,7 @@ export default function useElements() {
         selectedItems.map((uid) => `Node-<${validNodeTree[uid].displayName}>`),
       ),
     );
-    const code = html_beautify(helperModel.getValue());
+    const code = helperModel.getValue();
     codeViewInstanceModel.setValue(code);
   };
 
@@ -323,14 +329,14 @@ export default function useElements() {
         startTag.endCol,
       );
     }
-
+    code = html_beautify(code);
     const edit = {
       range: editRange,
       text: code,
     };
     helperModel.applyEdits([edit]);
 
-    code = html_beautify(helperModel.getValue());
+    code = helperModel.getValue();
     !skipUpdate && codeViewInstanceModel.setValue(code);
 
     return code;
@@ -383,11 +389,25 @@ d -> 300 - 400
 
     const helperModel = getEditorModelWithCurrentCode();
     helperModel.setValue(codeViewInstanceModel.getValue());
-    const { sortedUids, copiedCode } = await copyAndCutNode();
+
+    const copiedCode = await copy();
+
+    const sortedUids = sortUidsByMinStartIndex(selectedItems, validNodeTree);
+
+    if (sortedUids.length === 0) return;
     const { startLine, startCol } =
       validNodeTree[sortedUids[0]].data.sourceCodeLocation;
 
-    const code = `<div>${copiedCode}</div>`;
+    const updatedCode = await remove({
+      content: helperModel.getValue(),
+      skipUpdate: false,
+    });
+    if (!updatedCode) return;
+    helperModel.setValue(updatedCode);
+
+    let code = `<div>${copiedCode}</div>`;
+    code = html_beautify(code);
+
     const edit = {
       range: new Range(startLine, startCol, startLine, startCol),
       text: code,
@@ -406,8 +426,10 @@ d -> 300 - 400
     const sortedUids = sortUidsByMaxEndIndex(selectedItems, validNodeTree);
     sortedUids.map((uid) => {
       const node = validNodeTree[uid];
-      const children = node.children;
-      if (children.length === 0) return;
+
+      const children = node?.children;
+
+      if (!children) return;
 
       const { startLine, startCol, endLine, endCol } =
         node.data.sourceCodeLocation;
@@ -653,7 +675,7 @@ d -> 300 - 400
       }
     });
 
-    const code = html_beautify(helperModel.getValue());
+    const code = helperModel.getValue();
 
     !skipUpdate && codeViewInstanceModel.setValue(code);
     return code;
