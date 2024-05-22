@@ -12,24 +12,28 @@ import {
   IsetCurrentFileContent,
   Iundo,
   Imove,
+  IrenameFiles,
 } from "@_types/files.types";
 import { useDispatch } from "react-redux";
 import { verifyFileHandlerPermission } from "./main";
 import { setClipboardData } from "@_redux/main/processor";
 import {
-  TFileNodeTreeData,
-  TNode,
-  TNodeTreeData,
+  _createIDBDirectory,
   _path,
-  moveLocalSingleDirectoryOrFile,
+  _writeIDBFile,
+  confirmAlert,
+  moveIDBSingleDirectoryOrFile,
+  removeSingleIDBDirectoryOrFile,
   removeSingleLocalDirectoryOrFile,
 } from "@_node/index";
-import { RootNodeUid, TmpFileNodeUidWhenAddNew } from "@_constants/main";
-import { expandFileTreeNodes, setFileTree } from "@_redux/main/fileTree";
+
 import { useCallback, useContext } from "react";
 import { MainContext } from "@_redux/main";
 import { getObjKeys } from "@_pages/main/helper";
-
+import { useFileHelpers } from "./useFileHelpers";
+import { useHandlers } from "@_pages/main/hooks";
+import { FileChangeAlertMessage } from "@_constants/main";
+import { toast } from "react-toastify";
 export default function useFiles() {
   const dispatch = useDispatch();
   const {
@@ -40,90 +44,59 @@ export default function useFiles() {
     fExpandedItemsObj,
     invalidFileNodes,
     clipboardData,
+    project,
   } = useAppState();
-  const { triggerCurrentProjectReload, monacoEditorRef } =
-    useContext(MainContext);
+  const {
+    getParentHandler,
+    getUniqueIndexedName,
+    updatedFileTreeAfterAdding,
+    moveLocalSingleDirectoryOrFile,
+  } = useFileHelpers();
 
-  //utilities
-  const getParentHandler = (uid: string): FileSystemDirectoryHandle | null => {
-    if (!uid) return fileHandlers[RootNodeUid] as FileSystemDirectoryHandle;
-    const parentUid = fileTree[uid].parentUid;
-    if (!parentUid) return null;
-    const parentNode = fileTree[parentUid];
-    if (!parentNode) return null;
-    const parentHandler = fileHandlers[parentUid] as FileSystemDirectoryHandle;
-    return parentHandler;
-  };
-
-  const updatedFileTreeAfterAdding = ({
-    isFolder,
-    ext,
-  }: {
-    isFolder: boolean;
-    ext: string;
-  }) => {
-    // performs a deep clone of the file tree
-    const _fileTree = structuredClone(fileTree) as TNodeTreeData;
-
-    // find the immediate directory of the focused item if it is a file
-    let immediateDir = _fileTree[fFocusedItem];
-    if (!immediateDir) return;
-    if (immediateDir.isEntity) {
-      immediateDir = _fileTree[immediateDir.parentUid!];
-    }
-
-    //if the directory is not a RootNode and not already expanded, expand it
-    if (
-      immediateDir.uid !== RootNodeUid &&
-      !fExpandedItemsObj[immediateDir.uid]
-    ) {
-      dispatch(expandFileTreeNodes([immediateDir.uid]));
-    }
-
-    // create tmp node for new file/directory
-    const tmpNode: TNode = {
-      uid: _path.join(immediateDir.uid, TmpFileNodeUidWhenAddNew),
-      parentUid: immediateDir.uid,
-      displayName: "Untitled",
-      isEntity: !isFolder,
-      children: [],
-      data: {
-        valid: false,
-        ext,
-      },
-    };
-
-    // adds the tmp node to the file tree at the beginning of focused item parent's children
-    immediateDir.children.unshift(tmpNode.uid);
-
-    // Assign the tmp node to the file tree
-    _fileTree[tmpNode.uid] = tmpNode;
-
-    // update the file tree
-    dispatch(setFileTree(_fileTree as TFileNodeTreeData));
-  };
+  const { monacoEditorRef } = useContext(MainContext);
+  const { reloadCurrentProject } = useHandlers();
 
   //Create
   const createFile = useCallback(
     async (
       params: IcreateFile = {
-        name: "untitled",
+        entityName: "untitled",
         extension: "html",
       },
     ) => {
-      const { name = "untitled", extension = "html" } = params;
+      //We run this function recursively to create a file with a unique name
+      const { entityName = "untitled", extension = "html" } = params;
 
+      //we check if the parent directory has permission to create a file
       const parentHandler = getParentHandler(fFocusedItem);
       if (!parentHandler) return false;
       if (!(await verifyFileHandlerPermission(parentHandler))) return false;
-      const nameWithExtension = `${name}.${extension}`;
+
+      //We generate a unique indexed name for the file
+      const uniqueIndexedName = await getUniqueIndexedName({
+        parentHandler,
+        entityName,
+        extension,
+      });
+
       try {
-        await parentHandler.getFileHandle(nameWithExtension, { create: true });
-        return true;
+        //getFileHandle throws an error if the file does not exist
+        if (project.context === "local") {
+          await parentHandler.getFileHandle(uniqueIndexedName, {
+            create: true,
+          });
+        } else {
+          const parentNodeData = fileTree[fFocusedItem].data;
+          await _writeIDBFile(
+            _path.join(parentNodeData.path, uniqueIndexedName),
+            "",
+          );
+        }
       } catch (err) {
-        return false;
+        toast.error("An error occurred while creating the file");
+        console.error(err);
       } finally {
-        triggerCurrentProjectReload();
+        await reloadCurrentProject();
       }
     },
     [
@@ -134,20 +107,50 @@ export default function useFiles() {
       fExpandedItemsObj,
     ],
   );
-  const createFolder = async (params: IcreateFolder = {}) => {
-    const { name = "untitled" } = params;
-    const parentHandler = getParentHandler(fFocusedItem);
-    if (!parentHandler) return false;
-    if (!(await verifyFileHandlerPermission(parentHandler))) return false;
-    try {
-      await parentHandler.getDirectoryHandle(name, { create: true });
-      return true;
-    } catch (err) {
-      return false;
-    } finally {
-      triggerCurrentProjectReload();
-    }
-  };
+  const createFolder = useCallback(
+    async (params: IcreateFolder = {}): Promise<string | null> => {
+      //We run this function recursively to create a file with a unique name
+      const { entityName = "untitled" } = params;
+
+      //we check if the parent directory has permission to create a directory
+      const parentHandler = getParentHandler(fFocusedItem);
+      if (!parentHandler) return null;
+      if (!(await verifyFileHandlerPermission(parentHandler))) return null;
+
+      //We generate a unique indexed name for the file
+      const uniqueIndexedName = await getUniqueIndexedName({
+        parentHandler,
+        entityName,
+      });
+
+      try {
+        //getDirectoryHandle throws an error if the folder does not exist
+        if (project.context === "local") {
+          await parentHandler.getDirectoryHandle(uniqueIndexedName, {
+            create: true,
+          });
+        } else {
+          const parentNodeData = fileTree[fFocusedItem].data;
+          _createIDBDirectory(
+            _path.join(parentNodeData.path, uniqueIndexedName),
+          );
+        }
+      } catch (err) {
+        toast.error("An error occurred while creating the folder");
+        console.error(err);
+      } finally {
+        await reloadCurrentProject();
+      }
+      return uniqueIndexedName;
+    },
+    [
+      fFocusedItem,
+      fileTree,
+      fileHandlers,
+      fSelectedItemsObj,
+      fExpandedItemsObj,
+    ],
+  );
 
   //Read
   const getRootTree = () => {
@@ -180,14 +183,14 @@ export default function useFiles() {
       }),
     );
   };
-  const cutFiles = (params: IcutFiles = {}) => {
+  const cutFiles = async (params: IcutFiles = {}) => {
     const { uids } = params;
     const selectedItems = getObjKeys(fSelectedItemsObj);
     const selectedUids = selectedItems.filter((uid) => !invalidFileNodes[uid]);
     const _uids = uids || selectedUids;
     if (_uids.length === 0) return;
 
-    dispatch(
+    await dispatch(
       setClipboardData({
         panel: "file",
         type: "cut",
@@ -209,7 +212,32 @@ export default function useFiles() {
       payload: { uid, content },
     });
   };
-  const rename = () => {};
+  const rename = useCallback(
+    async (params: IrenameFiles) => {
+      const { uid, newName, extension } = params;
+      // rename a file/directory
+      const file = fileTree[uid];
+
+      if (!file) return;
+      const fileData = file.data;
+      if (fileData.changed && !confirmAlert(FileChangeAlertMessage)) return;
+
+      const parentNode = fileTree[file.parentUid!];
+      if (!parentNode) return;
+      const name = `${newName}${extension ? `.${extension}` : ""}`;
+
+      await moveLocalSingleDirectoryOrFile({
+        fileTree,
+        fileHandlers,
+        uid,
+        targetUid: parentNode.uid,
+        isCopy: false,
+        newName: name,
+      });
+      await reloadCurrentProject();
+    },
+    [fileTree],
+  );
   const undo = (params: Iundo) => {
     const { steps = 1 } = params;
     if (steps < 1) return;
@@ -220,51 +248,82 @@ export default function useFiles() {
     if (steps < 1) return;
     dispatch({ type: "REDO", payload: steps });
   };
-  const paste = async (params: IpasteFiles = {}) => {
-    const { targetUid, deleteSource } = params;
 
-    const isCopy = deleteSource || clipboardData?.type === "copy";
-    if (!clipboardData || clipboardData.panel !== "file") return;
-    const copiedUids = clipboardData.uids.filter(
-      (uid) => !invalidFileNodes[uid],
-    );
-    if (copiedUids.length === 0) return;
-    const targetNode = fileTree[fFocusedItem];
-    if (!targetNode) return;
+  const paste = async (params: IpasteFiles = {}) => {
+    const { uids, targetUid, deleteSource } = params;
+
+    //deleteSource is true if the files are cut
+    const isCopy = !deleteSource && clipboardData?.type === "copy";
+
+    //checking if the paste operation is on files and something is copied
+    if (!uids && (!clipboardData || clipboardData.panel !== "file")) return;
+    const copiedUids = clipboardData
+      ? clipboardData.uids.filter((uid) => !invalidFileNodes[uid])
+      : [];
+
+    const uidsToPaste = uids || copiedUids;
+
+    if (uidsToPaste.length === 0) return;
+
+    /*if the targetUid is not provided, 
+    we paste the files in the focused directory */
 
     const _targetUid = targetUid || fFocusedItem;
+    const targetNode = fileTree[_targetUid];
+
+    if (!targetNode) return;
+
+    //preventing pasting into itself
+    if (!targetNode.isEntity) {
+      if (uidsToPaste.some((uid) => targetNode.uid.includes(uid))) {
+        alert("You cannot paste a file in itself");
+        return;
+      }
+    }
+
     try {
       await Promise.all(
         /* we are using map instead of forEach because we want to to get the array of all the promises */
-        copiedUids.map(async (uid) => {
-          await moveLocalSingleDirectoryOrFile({
-            fileTree,
-            fileHandlers,
-            uid,
-            targetUid: _targetUid,
-            isCopy,
-          });
+        uidsToPaste.map(async (uid) => {
+          if (project.context === "local") {
+            await moveLocalSingleDirectoryOrFile({
+              fileTree,
+              fileHandlers,
+              uid,
+              targetUid: _targetUid,
+              isCopy,
+            });
+          } else {
+            await moveIDBSingleDirectoryOrFile({
+              fileTree,
+              uid,
+              targetUid: _targetUid,
+              isCopy,
+              newName: fileTree[uid].data.name,
+            });
+          }
         }),
       );
     } catch (err) {
+      toast.error("An error occurred while pasting the file");
       console.error(err);
-    } finally {
-      triggerCurrentProjectReload();
     }
+    await reloadCurrentProject();
   };
-  const move = (params: Imove) => {
+  const move = async (params: Imove) => {
     const { targetUid, uids } = params;
     dispatch({ type: "MOVE_FILES", payload: { uids, targetUid } });
     try {
-      cutFiles({ uids });
+      await cutFiles({ uids });
       paste({ targetUid, deleteSource: true });
     } catch (err) {
+      toast.error("An error occurred while moving the file");
       console.error(err);
     }
   };
 
   //Delete
-  const remove = (params: Iremove = {}) => {
+  const remove = async (params: Iremove = {}) => {
     const { uids } = params;
     const selectedItems = getObjKeys(fSelectedItemsObj);
     const selectedUids = selectedItems.filter((uid) => !invalidFileNodes[uid]);
@@ -276,21 +335,29 @@ export default function useFiles() {
       return;
     }
 
-    dispatch({ type: "REMOVE_FILES", payload: _uids });
+    await dispatch({ type: "REMOVE_FILES", payload: _uids });
     try {
-      Promise.all(
+      await Promise.all(
         _uids.map(async (uid) => {
-          return removeSingleLocalDirectoryOrFile({
-            fileTree,
-            fileHandlers,
-            uid,
-          });
+          if (project.context === "local") {
+            return removeSingleLocalDirectoryOrFile({
+              fileTree,
+              fileHandlers,
+              uid,
+            });
+          } else {
+            return removeSingleIDBDirectoryOrFile({
+              uid,
+              fileTree,
+            });
+          }
         }),
       );
+      await reloadCurrentProject();
     } catch (err) {
+      toast.error("An error occurred while deleting the file");
       console.error(err);
-    } finally {
-      triggerCurrentProjectReload();
+      await reloadCurrentProject();
     }
   };
 

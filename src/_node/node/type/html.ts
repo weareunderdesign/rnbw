@@ -8,10 +8,12 @@ import {
   TNodeSourceCodeLocation,
   TNodeTreeData,
   TNodeUid,
+  TValidNodeUid,
 } from "../../";
 
 export type THtmlNode = TNode & {
   data: THtmlNodeData;
+  validUid: TValidNodeUid;
 };
 
 export type THtmlNodeData = TNodeData & {

@@ -1,10 +1,10 @@
 interface IcreateFile {
-  name: string;
+  entityName: string;
   extension: string;
 }
 
 interface IcreateFolder {
-  name?: string;
+  entityName?: string;
 }
 
 interface IgetFolderTree {
@@ -13,6 +13,12 @@ interface IgetFolderTree {
 
 interface IsetCurrentFile {
   uid: string;
+}
+
+interface IrenameFiles {
+  uid: string;
+  newName: string;
+  extension?: string;
 }
 
 interface IsetCurrentFileContent {
@@ -39,6 +45,7 @@ interface Iremove {
 }
 
 interface IpasteFiles {
+  uids?: string[];
   targetUid?: string;
   deleteSource?: boolean;
 }
@@ -51,6 +58,7 @@ export {
   IcreateFile,
   IcreateFolder,
   IgetFolderTree,
+  IrenameFiles,
   IsetCurrentFile,
   IsetCurrentFileContent,
   Iredo,

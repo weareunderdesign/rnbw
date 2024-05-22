@@ -13,6 +13,7 @@ import {
   NodeTree_Event_RedoActionType,
   NodeTree_Event_UndoActionType,
   setCopiedNodeDisplayName,
+  setNeedToSelectNodePaths,
   setSelectedNodeUids,
 } from "@_redux/main/nodeTree";
 import { setDidRedo, setDidUndo } from "@_redux/main/processor";
@@ -27,9 +28,11 @@ import {
   IupdateSettings,
 } from "@_types/elements.types";
 import { html_beautify } from "js-beautify";
-import { Range, editor } from "monaco-editor";
+import { Range } from "monaco-editor";
 import { useCallback, useContext, useMemo } from "react";
 import { useDispatch } from "react-redux";
+import { useElementHelper } from "./useElementsHelper";
+import { toast } from "react-toastify";
 
 export default function useElements() {
   const {
@@ -45,6 +48,11 @@ export default function useElements() {
   } = useAppState();
   const { monacoEditorRef } = useContext(MainContext);
   const dispatch = useDispatch();
+  const {
+    getEditorModelWithCurrentCode,
+    checkAllResourcesAvailable,
+    copyAndCutNode,
+  } = useElementHelper();
 
   const codeViewInstanceModel = monacoEditorRef.current?.getModel();
   const selectedItems = useMemo(
@@ -52,77 +60,13 @@ export default function useElements() {
     [nSelectedItemsObj],
   );
 
-  /*The role of helperModel is to perform all the edit operations in it 
-  without affecting the actual codeViewInstanceModel 
-  and then apply the changes to the codeViewInstanceModel all at once.*/
-
-  const helperModel = editor.createModel("", "html");
-  codeViewInstanceModel &&
-    helperModel.setValue(codeViewInstanceModel.getValue());
-
-  function checkAllResourcesAvailable() {
-    if (selectedItems.length === 0) return false;
-    if (!codeViewInstanceModel) {
-      LogAllow &&
-        console.error(
-          `Monaco Editor ${!codeViewInstanceModel ? "" : "Model"} is undefined`,
-        );
-      return false;
-    }
-    return true;
-  }
-
-  async function copyAndCutNode({
-    selectedUids,
-    pasteToClipboard = true,
-    sortDsc = false,
-  }: {
-    selectedUids?: string[];
-    pasteToClipboard?: boolean;
-    sortDsc?: boolean;
-  } = {}) {
-    const selected = selectedUids || selectedItems;
-
-    /* We are sorting nodes from the max to the min because this way the nodes of max index are deleted first and they do not affect the nodes with index lower to them in terms of the source code location*/
-    const sortedUids = sortDsc
-      ? sortUidsByMaxEndIndex(selected, validNodeTree)
-      : sortUidsByMinStartIndex(selected, validNodeTree);
-    let copiedCode = "";
-
-    sortedUids.forEach((uid) => {
-      const node = validNodeTree[uid];
-      if (node) {
-        const { startLine, startCol, endLine, endCol } =
-          node.data.sourceCodeLocation;
-        const text =
-          codeViewInstanceModel &&
-          codeViewInstanceModel.getValueInRange(
-            new Range(startLine, startCol, endLine, endCol),
-          );
-        copiedCode += text;
-
-        // remove the copied code from the original code
-        const edit = {
-          range: new Range(startLine, startCol, endLine, endCol),
-          text: "",
-        };
-        helperModel.applyEdits([edit]);
-      }
-    });
-    pasteToClipboard &&
-      (await window.navigator.clipboard.writeText(copiedCode));
-    const updatedCode = html_beautify(helperModel.getValue());
-    return {
-      sortedUids,
-      copiedCode,
-      updatedCode,
-    };
-  }
-
   //Create
-  const add = (params: Iadd) => {
+  const add = async (params: Iadd) => {
     const { tagName, skipUpdate } = params;
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
+
+    const helperModel = getEditorModelWithCurrentCode();
+
     const commentTag = "!--...--";
     const HTMLElement =
       htmlReferenceData.elements[tagName === commentTag ? "comment" : tagName];
@@ -135,44 +79,64 @@ export default function useElements() {
 
     const tagContent = HTMLElement?.Content || "";
 
-    const codeViewText =
+    let codeViewText =
       tagName === commentTag
         ? tagContent
         : HTMLElement?.Contain === "None"
           ? openingTag
           : `${openingTag}${tagContent}${closingTag}`;
 
-    const sortedUids = sortUidsByMaxEndIndex(selectedItems, validNodeTree);
-    sortedUids.forEach((uid) => {
-      const node = validNodeTree[uid];
-      if (node) {
-        const { endCol, endLine } = node.data.sourceCodeLocation;
+    const sortedUids = sortUidsByMinStartIndex(selectedItems, validNodeTree);
+    if (sortedUids.length === 0) {
+      toast.error("Please select a node to add the new element");
+      return;
+    }
+    const uid = sortedUids[0];
+    const node = validNodeTree[uid];
+    const parentUid = node?.parentUid;
+    const parent = validNodeTree[parentUid!];
+    if (node) {
+      const { endCol, endLine } = node.data.sourceCodeLocation;
 
-        const edit = {
-          range: new Range(endLine, endCol, endLine, endCol),
-          text: codeViewText,
-        };
-        helperModel.applyEdits([edit]);
-      }
-    });
-    const code = html_beautify(helperModel.getValue());
-    !skipUpdate && codeViewInstanceModel.setValue(code);
-    return code;
+      codeViewText = html_beautify(codeViewText);
+      const edit = {
+        range: new Range(endLine, endCol, endLine, endCol),
+        text: codeViewText,
+      };
+
+      helperModel.applyEdits([edit]);
+    }
+    const selectedChildIndex = node?.uniqueNodePath?.split("_").pop();
+    if (!selectedChildIndex) return;
+
+    const newNodeIndex = parseInt(selectedChildIndex) + 1;
+    const uniqueNodePathToFocus = `${parent.uniqueNodePath ?? ""}_${tagName}_${newNodeIndex}`;
+    const code = helperModel.getValue();
+    if (!skipUpdate) {
+      await dispatch(setNeedToSelectNodePaths([uniqueNodePathToFocus]));
+      codeViewInstanceModel.setValue(code);
+    }
+    // ROOT_html1_body2_div1_div3_div1_div1_p;
+    return { code };
   };
 
   const duplicate = (params: Iduplicate = {}) => {
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
     const { skipUpdate } = params;
-    helperModel.setValue(codeViewInstanceModel.getValue());
+
+    const helperModel = getEditorModelWithCurrentCode();
+
     const sortedUids = sortUidsByMaxEndIndex(selectedItems, validNodeTree);
     sortedUids.forEach((uid) => {
       const node = validNodeTree[uid];
       if (node) {
         const { startCol, startLine, endCol, endLine } =
           node.data.sourceCodeLocation;
-        const text = codeViewInstanceModel.getValueInRange(
+        let text = codeViewInstanceModel.getValueInRange(
           new Range(startLine, startCol, endLine, endCol),
         );
+
+        text = html_beautify(text);
         const edit = {
           range: new Range(endLine, endCol, endLine, endCol),
           text,
@@ -180,7 +144,7 @@ export default function useElements() {
         helperModel.applyEdits([edit]);
       }
     });
-    const code = html_beautify(helperModel.getValue());
+    const code = helperModel.getValue();
     !skipUpdate && codeViewInstanceModel.setValue(code);
     return code;
   };
@@ -215,6 +179,7 @@ export default function useElements() {
         copiedCode += text;
       }
     });
+
     if (!skipUpdate) {
       await window.navigator.clipboard.writeText(copiedCode);
 
@@ -245,6 +210,8 @@ export default function useElements() {
   //Update
   const cut = async () => {
     if (!checkAllResourcesAvailable || !codeViewInstanceModel) return;
+
+    const helperModel = getEditorModelWithCurrentCode();
     helperModel.setValue(codeViewInstanceModel.getValue());
 
     await copyAndCutNode({
@@ -256,7 +223,7 @@ export default function useElements() {
         selectedItems.map((uid) => `Node-<${validNodeTree[uid].displayName}>`),
       ),
     );
-    const code = html_beautify(helperModel.getValue());
+    const code = helperModel.getValue();
     codeViewInstanceModel.setValue(code);
   };
 
@@ -287,6 +254,8 @@ export default function useElements() {
     }
 
     const initialCode = content || codeViewInstanceModel.getValue();
+
+    const helperModel = getEditorModelWithCurrentCode();
     helperModel.setValue(initialCode);
 
     let code = pasteContent || (await window.navigator.clipboard.readText());
@@ -310,14 +279,14 @@ export default function useElements() {
         startTag.endCol,
       );
     }
-
+    code = html_beautify(code);
     const edit = {
       range: editRange,
       text: code,
     };
     helperModel.applyEdits([edit]);
 
-    code = html_beautify(helperModel.getValue());
+    code = helperModel.getValue();
     !skipUpdate && codeViewInstanceModel.setValue(code);
 
     return code;
@@ -367,12 +336,28 @@ d -> 300 - 400
 */
   const group = async () => {
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
+
+    const helperModel = getEditorModelWithCurrentCode();
     helperModel.setValue(codeViewInstanceModel.getValue());
-    const { sortedUids, copiedCode } = await copyAndCutNode();
+
+    const copiedCode = await copy();
+
+    const sortedUids = sortUidsByMinStartIndex(selectedItems, validNodeTree);
+
+    if (sortedUids.length === 0) return;
     const { startLine, startCol } =
       validNodeTree[sortedUids[0]].data.sourceCodeLocation;
 
-    const code = `<div>${copiedCode}</div>`;
+    const updatedCode = await remove({
+      content: helperModel.getValue(),
+      skipUpdate: false,
+    });
+    if (!updatedCode) return;
+    helperModel.setValue(updatedCode);
+
+    let code = `<div>${copiedCode}</div>`;
+    code = html_beautify(code);
+
     const edit = {
       range: new Range(startLine, startCol, startLine, startCol),
       text: code,
@@ -384,13 +369,17 @@ d -> 300 - 400
 
   const ungroup = () => {
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
+
+    const helperModel = getEditorModelWithCurrentCode();
     helperModel.setValue(codeViewInstanceModel.getValue());
 
     const sortedUids = sortUidsByMaxEndIndex(selectedItems, validNodeTree);
     sortedUids.map((uid) => {
       const node = validNodeTree[uid];
-      const children = node.children;
-      if (children.length === 0) return;
+
+      const children = node?.children;
+
+      if (!children) return;
 
       const { startLine, startCol, endLine, endCol } =
         node.data.sourceCodeLocation;
@@ -428,7 +417,7 @@ d -> 300 - 400
     isBetween is true even if we drop on the first child of the parent node
     */
     const { targetUid, isBetween, position, selectedUids } = params;
-    helperModel.setValue(codeViewInstanceModel.getValue());
+    const helperModel = getEditorModelWithCurrentCode();
 
     const targetNode = validNodeTree[targetUid];
 
@@ -483,7 +472,7 @@ d -> 300 - 400
   const updateEditableElement = useCallback(
     (params: eventListenersStatesRefType) => {
       const { iframeRefRef, contentEditableUidRef, nodeTreeRef } = params;
-
+      const helperModel = getEditorModelWithCurrentCode();
       const iframeRef = iframeRefRef.current;
       const nodeTree = nodeTreeRef.current;
       const codeViewInstanceModel = monacoEditorRef.current?.getModel();
@@ -536,6 +525,8 @@ d -> 300 - 400
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
 
     const { settings, skipUpdate } = params;
+
+    const helperModel = getEditorModelWithCurrentCode();
     helperModel.setValue(codeViewInstanceModel.getValue());
 
     const focusedNode = validNodeTree[nFocusedItem];
@@ -616,6 +607,8 @@ d -> 300 - 400
     }
 
     const contentToEdit = content || codeViewInstanceModel.getValue();
+
+    const helperModel = getEditorModelWithCurrentCode();
     helperModel.setValue(contentToEdit);
 
     const sortedUids = sortUidsByMaxEndIndex(removalUids, validNodeTree);
@@ -632,7 +625,7 @@ d -> 300 - 400
       }
     });
 
-    const code = html_beautify(helperModel.getValue());
+    const code = helperModel.getValue();
 
     !skipUpdate && codeViewInstanceModel.setValue(code);
     return code;

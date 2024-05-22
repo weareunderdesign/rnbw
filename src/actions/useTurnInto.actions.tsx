@@ -1,8 +1,9 @@
 import useRnbw from "@_services/useRnbw";
 import { Range, editor } from "monaco-editor";
-import { useElementHelper } from "@_services/useElementHelper";
+
 import { sortUidsByMaxEndIndex } from "@_components/main/actionsPanel/nodeTreeView/helpers";
 import { useAppState } from "@_redux/useAppState";
+import { PrettyCode } from "@_services/useElementsHelper";
 
 // helperModel added to update the code in the codeViewInstanceModel
 // once when the action is executed, this improves the History Management
@@ -12,7 +13,6 @@ export default function useTurnInto() {
   const rnbw = useRnbw();
   const { validNodeTree } = useAppState();
 
-  const { PrettyCode } = useElementHelper();
   const selectedElements = rnbw.elements.getSelectedElements();
   const sortedUids = sortUidsByMaxEndIndex(selectedElements, validNodeTree);
 

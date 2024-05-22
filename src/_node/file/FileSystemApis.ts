@@ -18,6 +18,7 @@ import {
   _removeIDBDirectoryOrFile,
   _writeIDBFile,
 } from "./nohostApis";
+import { toast } from "react-toastify";
 
 // true: success, false: fail
 const createLocalSingleDirectoryOrFile = async ({
@@ -47,6 +48,7 @@ const createLocalSingleDirectoryOrFile = async ({
     }
     return true;
   } catch (err) {
+    toast.error("Error while creating a local directory or file.");
     return false;
   }
 };
@@ -73,6 +75,7 @@ const createIDBSingleDirectoryOrFile = async ({
     }
     return true;
   } catch (err) {
+    toast.error("Error while creating an idb directory or file.");
     return false;
   }
 };
@@ -109,10 +112,11 @@ export const removeSingleLocalDirectoryOrFile = async ({
     await parentHandler.removeEntry(entryName, { recursive: true });
     return true;
   } catch (err) {
+    toast.error("Error while removing a local directory or file.");
     return false;
   }
 };
-const removeSingleIDBDirectoryOrFile = async ({
+export const removeSingleIDBDirectoryOrFile = async ({
   uid,
   fileTree,
 }: {
@@ -135,6 +139,7 @@ const removeSingleIDBDirectoryOrFile = async ({
     await _removeIDBDirectoryOrFile(_path.join(parentNodeData.path, entryName));
     return true;
   } catch (err) {
+    toast.error("Error while removing an idb directory or file.");
     return false;
   }
 };
@@ -151,6 +156,7 @@ const _moveLocalDirectory = async (
       destination,
     },
   ];
+
   try {
     while (dirQueue.length) {
       const { source, destination } = dirQueue.shift() as {
@@ -178,11 +184,17 @@ const _moveLocalDirectory = async (
         }
       }
     }
-
-    !isCopy &&
-      (await parentHandler.removeEntry(source.name, { recursive: true }));
+    if (!isCopy) {
+      try {
+        parentHandler.removeEntry(source.name, { recursive: true });
+      } catch (err) {
+        toast.error("Error while moving a local directory.");
+        console.error(err);
+      }
+    }
   } catch (err) {
-    throw "Error while moving a local directory.";
+    toast.error("Error while moving a local directory.");
+    console.error(err);
   }
 };
 const _moveLocalFile = async (
@@ -205,6 +217,7 @@ const _moveLocalFile = async (
     !isCopy &&
       (await parentHandler.removeEntry(handler.name, { recursive: true }));
   } catch (err) {
+    toast.error("Error while moving a local file.");
     throw "Error while moving a local file.";
   }
 };
@@ -223,6 +236,10 @@ export const moveLocalSingleDirectoryOrFile = async ({
   fileHandlers: TFileHandlerCollection;
   isCopy?: boolean;
 }): Promise<boolean> => {
+  /* We check if the source node, target node,
+  and the parent node of the source node exist.
+  */
+
   const node = fileTree[uid];
   if (!node) return false;
 
@@ -232,44 +249,75 @@ export const moveLocalSingleDirectoryOrFile = async ({
   const targetNode = fileTree[targetUid];
   if (!targetNode) return false;
 
+  /*
+  We verify the permissions of the source node,
+  the parent node of the source node, and the target node.
+  */
   const handler = fileHandlers[uid];
-  const parentHandler = fileHandlers[
-    parentNode.uid
-  ] as FileSystemDirectoryHandle;
+  const parentUid = parentNode.uid;
+  const parentHandler = fileHandlers[parentUid] as FileSystemDirectoryHandle;
   const targetHandler = getTargetHandler({ targetUid, fileTree, fileHandlers });
-  if (
-    !(await verifyFileHandlerPermission(handler)) ||
-    !(await verifyFileHandlerPermission(parentHandler)) ||
-    !(await verifyFileHandlerPermission(targetHandler))
-  )
-    return false;
-
-  const nodeData = node.data;
   try {
-    const entityName =
-      newName || `${nodeData.name}${nodeData.ext ? `.${nodeData.ext}` : ""}`;
+    if (
+      !(await verifyFileHandlerPermission(handler)) ||
+      !(await verifyFileHandlerPermission(parentHandler)) ||
+      !(await verifyFileHandlerPermission(targetHandler))
+    )
+      return false;
+
+    const nodeData = node.data;
+
+    let uniqueEntityName = newName || nodeData.name;
+    if (isCopy) {
+      uniqueEntityName = await generateNewNameForLocalDirectoryOrFile({
+        nodeData,
+        targetHandler,
+      });
+    } else {
+      //ignore paste for cut in the same location
+      if (targetNode.isEntity) {
+        if (targetNode.parentUid === parentNode.uid) {
+          return false;
+        }
+      }
+    }
 
     if (nodeData.kind === "directory") {
-      const newHandler = await targetHandler.getDirectoryHandle(entityName, {
-        create: true,
-      });
-      await _moveLocalDirectory(
-        handler as FileSystemDirectoryHandle,
-        newHandler,
-        parentHandler,
-        isCopy,
-      );
+      try {
+        const newHandler = await targetHandler.getDirectoryHandle(
+          uniqueEntityName,
+          {
+            create: true,
+          },
+        );
+        await _moveLocalDirectory(
+          handler as FileSystemDirectoryHandle,
+          newHandler,
+          parentHandler,
+          isCopy,
+        );
+      } catch (err) {
+        toast.error("Error while moving a local directory.");
+        console.log(err);
+      }
     } else {
-      await _moveLocalFile(
-        handler as FileSystemFileHandle,
-        parentHandler,
-        targetHandler,
-        entityName,
-        isCopy,
-      );
+      try {
+        await _moveLocalFile(
+          handler as FileSystemFileHandle,
+          parentHandler,
+          targetHandler,
+          uniqueEntityName,
+          isCopy,
+        );
+      } catch (err) {
+        toast.error("Error while moving a local file.");
+        console.log(err);
+      }
     }
     return true;
   } catch (err) {
+    toast.error("Error while moving a local directory or file.");
+    console.error(err);
     return false;
   }
 };
@@ -311,6 +359,7 @@ const _moveIDBDirectory = async (
 
     !isCopy && (await _removeIDBDirectoryOrFile(nodeData.path));
   } catch (err) {
+    toast.error("Error while moving an idb directory.");
     throw "Error while moving an idb directory.";
   }
 };
@@ -328,10 +377,11 @@ const _moveIDBFile = async (
 
     !isCopy && (await _removeIDBDirectoryOrFile(nodeData.path));
   } catch (err) {
+    toast.error("Error while moving an idb file.");
     throw "Error while moving an idb file.";
   }
 };
-const moveIDBSingleDirectoryOrFile = async ({
+export const moveIDBSingleDirectoryOrFile = async ({
   uid,
   targetUid,
   newName,
@@ -360,6 +410,7 @@ const moveIDBSingleDirectoryOrFile = async ({
     }
     return true;
   } catch (err) {
+    toast.error("Error while moving an idb directory or file.");
     return false;
   }
 };
@@ -385,6 +436,7 @@ const generateNewNameForLocalDirectoryOrFile = async ({
         });
       }
     } catch (err) {
+      toast.error("Error while generating a new name for a local directory.");
       exists = false;
     }
 
@@ -419,6 +471,7 @@ const generateNewNameForIDBDirectoryOrFile = async ({
         _path.join(targetNodeData.path, newName),
       );
     } catch (err) {
+      toast.error("Error while generating a new name for an idb directory.");
       exists = false;
     }
 

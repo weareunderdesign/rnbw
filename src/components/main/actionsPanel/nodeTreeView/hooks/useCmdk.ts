@@ -14,7 +14,7 @@ export const useCmdk = () => {
   const turnInto = useTurnInto();
 
   useEffect(() => {
-    if (!currentCommand || !rnbw) return;
+    if (!currentCommand || !rnbw.elements) return;
 
     if (isAddNodeAction(currentCommand.action)) {
       // onAddNode(currentCommand.action);
@@ -23,11 +23,12 @@ export const useCmdk = () => {
         AddNodeActionPrefix.length + 2,
         actionName.length - 1,
       );
-      rnbw.elements &&
-        rnbw.elements.add({
-          tagName,
-          attributes: "",
-        });
+
+      rnbw.elements.add({
+        tagName,
+        attributes: "",
+      });
+
       return;
     }
 

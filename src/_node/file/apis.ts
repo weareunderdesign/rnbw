@@ -24,10 +24,12 @@ import {
   TIDBProjectLoaderBaseResponse,
   TLocalProjectLoaderBaseResponse,
   TNodeUid,
+  TValidNodeUid,
 } from "../";
 import { getInitialFileUidToOpen, sortFilesByASC } from "./helpers";
 import {
   _createIDBDirectory,
+  _fs,
   _getIDBDirectoryOrFileStat,
   _path,
   _readIDBDirectory,
@@ -49,6 +51,7 @@ export const initIDBProject = (projectPath: string): Promise<void> => {
           .catch((err) => reject(err));
       })
       .catch((err) => {
+        toast.error("Error while removing IDB project");
         LogAllow && console.error("error while removing IDB project", err);
       });
   });
@@ -67,6 +70,7 @@ export const createIDBProject = async (projectPath: string): Promise<void> => {
     // If all operations are successful, resolve the promise
     return Promise.resolve();
   } catch (err) {
+    toast.error("Error while creating IDB project");
     // If an error occurs, log it and reject the promise
     LogAllow && console.error("error while creating IDB project", err);
     return Promise.reject(err);
@@ -201,6 +205,7 @@ export const loadIDBProject = async (
       deletedUids: Object.keys(deletedUidsObj),
     };
   } catch (err) {
+    toast.error("Error while loading IDB project");
     LogAllow && console.error("error in loadIDBProject API", err);
     throw err;
   }
@@ -358,6 +363,7 @@ export const loadLocalProject = async (
       deletedUids: Object.keys(deletedUidsObj),
     };
   } catch (err) {
+    toast.error("Error while loading local project");
     LogAllow && console.log("error in loadLocalProject API", err);
     throw err;
   }
@@ -372,8 +378,13 @@ export const buildNohostIDB = async (
     await Promise.all(
       deletedPaths.map(async (path) => {
         try {
-          await _removeIDBDirectoryOrFile(path);
+          _fs.exists(path, async function (exists: boolean) {
+            if (exists) {
+              await _removeIDBDirectoryOrFile(path);
+            }
+          });
         } catch (err) {
+          toast.error("Error while removing IDB project");
           console.error("Error while removing IDB project", err);
         }
       }),
@@ -387,6 +398,7 @@ export const buildNohostIDB = async (
           try {
             await _createIDBDirectory(path);
           } catch (err) {
+            toast.error("Error while creating IDB directory");
             console.error("Error while creating IDB directory", err);
           }
         }
@@ -399,6 +411,7 @@ export const buildNohostIDB = async (
           try {
             await _writeIDBFile(path, content as Uint8Array);
           } catch (err) {
+            toast.error("Error while writing IDB file");
             console.error("Error while writing IDB file", err);
           }
         }
@@ -407,6 +420,7 @@ export const buildNohostIDB = async (
 
     return; // Resolve the promise
   } catch (err) {
+    toast.error("Error while building IDB project");
     console.error("Error in buildNohostIDB API", err);
     throw err; // Reject the promise
   }
@@ -470,6 +484,7 @@ export const downloadIDBProject = async (
     link.click();
     URL.revokeObjectURL(url);
   } catch (err) {
+    toast.error("Error while downloading IDB project");
     console.error("Error in downloadIDBProject API", err);
     throw err;
   }
@@ -478,6 +493,7 @@ export const downloadIDBProject = async (
 export const parseFile = (
   ext: string,
   content: string,
+  callback?: (validUid: TValidNodeUid) => void,
 ): TFileParserResponse => {
   const defaultResponse: TFileParserResponse = {
     contentInApp: "",
@@ -485,5 +501,5 @@ export const parseFile = (
     htmlDom: null,
   };
   if (!content || !fileHandlers[ext]) return defaultResponse;
-  return fileHandlers[ext](content);
+  return fileHandlers[ext](content, callback);
 };

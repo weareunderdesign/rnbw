@@ -76,7 +76,7 @@ export default function WorkspaceTreeView() {
   const { focusedItemRef, fileTreeViewData } = useSync();
   const { cb_focusNode, cb_selectNode, cb_expandNode, cb_collapseNode } =
     useNodeViewState({ invalidFileNodes });
-  const { cb_moveNode, cb_readNode } = useNodeActionsHandler();
+  const { cb_readNode } = useNodeActionsHandler();
   const { onSaveCurrentFile } = useSaveCommand();
 
   useCmdk();
@@ -441,26 +441,38 @@ export default function WorkspaceTreeView() {
             // update the invalid file nodes
             dispatch(removeInvalidFileNodes([node.uid]));
           },
-          onRenameItem: (item, name) => {
+          onRenameItem: (item, entityName) => {
             // cb_renameNode(item, name);
             const node = item.data as TNode;
             const nodeData = node.data as TFileNodeData;
 
             if (nodeData.valid) {
               //rename the file
+              rnbw.files.rename({
+                uid: node.uid,
+                newName: entityName,
+                extension: nodeData.ext,
+              });
+
+              // add to event history
+              // const _fileAction: TFileAction = {
+              //   action: "rename",
+              //   payload: { orgUid: node.uid, newUid },
+              // };
+              // dispatch(setFileAction(_fileAction));
             } else {
               // create a new file/directory
               const parentNode = fileTree[node.parentUid!];
               if (!parentNode) return;
 
-              const newUid = _path.join(parentNode.uid, name);
+              const newUid = _path.join(parentNode.uid, entityName);
               const isFolder = !node.isEntity;
               if (isFolder) {
-                rnbw.files.createFolder({ name });
+                rnbw.files.createFolder({ entityName });
               } else {
                 const ext = nodeData.ext;
                 rnbw.files.createFile({
-                  name: name,
+                  entityName,
                   extension: ext,
                 });
 
@@ -505,7 +517,10 @@ export default function WorkspaceTreeView() {
               );
             if (uids.length === 0) return;
 
-            cb_moveNode(uids, targetUid);
+            rnbw.files.move({
+              uids,
+              targetUid,
+            });
           },
         }}
       />
