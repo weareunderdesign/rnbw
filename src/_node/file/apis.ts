@@ -29,6 +29,7 @@ import {
 import { getInitialFileUidToOpen, sortFilesByASC } from "./helpers";
 import {
   _createIDBDirectory,
+  _fs,
   _getIDBDirectoryOrFileStat,
   _path,
   _readIDBDirectory,
@@ -377,7 +378,11 @@ export const buildNohostIDB = async (
     await Promise.all(
       deletedPaths.map(async (path) => {
         try {
-          await _removeIDBDirectoryOrFile(path);
+          _fs.exists(path, async function (exists: boolean) {
+            if (exists) {
+              await _removeIDBDirectoryOrFile(path);
+            }
+          });
         } catch (err) {
           toast.error("Error while removing IDB project");
           console.error("Error while removing IDB project", err);

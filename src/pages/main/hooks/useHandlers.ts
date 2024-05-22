@@ -257,10 +257,12 @@ export const useHandlers = () => {
         // update file tree view state
         await dispatch(updateFileTreeViewState({ deletedUids: deletedUids }));
         // build nohost idb
-        buildNohostIDB(
-          handlerArr,
-          deletedUids.map((uid) => fileTree[uid].data.path),
-        );
+
+        const deletedUidsPath = deletedUids
+          .map((uid) => fileTree[uid].data.path)
+          .filter((path) => path);
+
+        buildNohostIDB(handlerArr, deletedUidsPath);
       } else {
         try {
           const {

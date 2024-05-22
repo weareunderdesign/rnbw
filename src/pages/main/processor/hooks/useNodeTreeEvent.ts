@@ -107,11 +107,13 @@ export const useNodeTreeEvent = () => {
     async function updateFileContent() {
       const file = structuredClone(fileTree[currentFileUid]);
       const fileData = file.data;
+      const ext = fileData.ext;
 
-      const { contentInApp, nodeTree } = await parseHtml(
-        currentFileContent,
-        setMaxNodeUidRef,
-      );
+      if (!currentFileContent) return;
+      const { contentInApp, nodeTree } =
+        ext === "html"
+          ? await parseHtml(currentFileContent, setMaxNodeUidRef)
+          : { contentInApp: "", nodeTree: {} };
 
       fileData.content = currentFileContent;
 
