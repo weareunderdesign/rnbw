@@ -156,6 +156,7 @@ const _moveLocalDirectory = async (
       destination,
     },
   ];
+
   try {
     while (dirQueue.length) {
       const { source, destination } = dirQueue.shift() as {
@@ -183,12 +184,17 @@ const _moveLocalDirectory = async (
         }
       }
     }
-
-    !isCopy &&
-      (await parentHandler.removeEntry(source.name, { recursive: true }));
+    if (!isCopy) {
+      try {
+        parentHandler.removeEntry(source.name, { recursive: true });
+      } catch (err) {
+        toast.error("Error while moving a local directory.");
+        console.error(err);
+      }
+    }
   } catch (err) {
     toast.error("Error while moving a local directory.");
-    throw "Error while moving a local directory.";
+    console.error(err);
   }
 };
 const _moveLocalFile = async (
@@ -251,16 +257,16 @@ export const moveLocalSingleDirectoryOrFile = async ({
   const parentUid = parentNode.uid;
   const parentHandler = fileHandlers[parentUid] as FileSystemDirectoryHandle;
   const targetHandler = getTargetHandler({ targetUid, fileTree, fileHandlers });
-  if (
-    !(await verifyFileHandlerPermission(handler)) ||
-    !(await verifyFileHandlerPermission(parentHandler)) ||
-    !(await verifyFileHandlerPermission(targetHandler))
-  )
-    return false;
-
-  const nodeData = node.data;
-
   try {
+    if (
+      !(await verifyFileHandlerPermission(handler)) ||
+      !(await verifyFileHandlerPermission(parentHandler)) ||
+      !(await verifyFileHandlerPermission(targetHandler))
+    )
+      return false;
+
+    const nodeData = node.data;
+
     let uniqueEntityName = newName || nodeData.name;
     if (isCopy) {
       uniqueEntityName = await generateNewNameForLocalDirectoryOrFile({
@@ -295,13 +301,18 @@ export const moveLocalSingleDirectoryOrFile = async ({
         console.log(err);
       }
     } else {
-      await _moveLocalFile(
-        handler as FileSystemFileHandle,
-        parentHandler,
-        targetHandler,
-        uniqueEntityName,
-        isCopy,
-      );
+      try {
+        await _moveLocalFile(
+          handler as FileSystemFileHandle,
+          parentHandler,
+          targetHandler,
+          uniqueEntityName,
+          isCopy,
+        );
+      } catch (err) {
+        toast.error("Error while moving a local file.");
+        console.log(err);
+      }
     }
     return true;
   } catch (err) {

@@ -23,7 +23,6 @@ import {
   _writeIDBFile,
   confirmAlert,
   moveIDBSingleDirectoryOrFile,
-  moveLocalSingleDirectoryOrFile,
   removeSingleIDBDirectoryOrFile,
   removeSingleLocalDirectoryOrFile,
 } from "@_node/index";
@@ -47,8 +46,13 @@ export default function useFiles() {
     clipboardData,
     project,
   } = useAppState();
-  const { getParentHandler, getUniqueIndexedName, updatedFileTreeAfterAdding } =
-    useFileHelpers();
+  const {
+    getParentHandler,
+    getUniqueIndexedName,
+    updatedFileTreeAfterAdding,
+    moveLocalSingleDirectoryOrFile,
+  } = useFileHelpers();
+
   const { monacoEditorRef } = useContext(MainContext);
   const { reloadCurrentProject } = useHandlers();
 
