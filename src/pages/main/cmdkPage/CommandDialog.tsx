@@ -14,14 +14,9 @@ import {
 import { useAppState } from "@_redux/useAppState";
 import { TCmdkContext, TCmdkKeyMap, TCmdkReference } from "@_types/main";
 import { getCommandKey } from "../../../services/global";
-import {
-  useCmdk,
-  useCmdkModal,
-  useCmdkReferenceData,
-  useHandlers,
-} from "../hooks";
+import { useCmdkModal, useCmdkReferenceData, useHandlers } from "../hooks";
 import { CommandItem } from "./CommandItem";
-import { TCmdkPage } from "./types";
+import { CommandDialogProps, TCmdkPage } from "./types";
 import {
   SINGLE_CMDK_PAGE,
   DEEP_CMDK_PAGE,
@@ -30,7 +25,7 @@ import {
 } from "./constants";
 import { SVGIcon } from "@_components/common";
 
-export const CommandDialog = () => {
+export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
   // redux
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -44,17 +39,12 @@ export const CommandDialog = () => {
     currentCmdkPage,
     cmdkSearchContent,
     htmlReferenceData,
-    cmdkReferenceData,
     recentProject,
   } = useAppState();
 
   // hooks
   const cmdkReference = useCmdkReferenceData({ htmlReferenceData });
   const { importProject } = useHandlers();
-  const { onClear, onJumpstart } = useCmdk({
-    cmdkReferenceData,
-    importProject,
-  });
   const { validMenuItemCount, hoveredMenuItemDescription } = useCmdkModal();
   const isRecent = useCallback(
     (groupName: string) => {
