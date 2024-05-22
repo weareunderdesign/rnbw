@@ -220,9 +220,7 @@ export default function useFiles() {
 
       const parentNode = fileTree[file.parentUid!];
       if (!parentNode) return;
-      const name = extension
-        ? newName
-        : `${newName}${extension ? `.${extension}` : ""}`;
+      const name = `${newName}${extension ? `.${extension}` : ""}`;
 
       await moveLocalSingleDirectoryOrFile({
         fileTree,
