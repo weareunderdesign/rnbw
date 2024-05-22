@@ -84,6 +84,10 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     if (cmdkOpen) return;
     dispatch(setCmdkPages(["Jumpstart"]));
   }, [cmdkOpen]);
+  const onSearch = useCallback(() => {
+    if (cmdkOpen) return;
+    dispatch(setCmdkPages(["Search"]));
+  }, [cmdkOpen]);
   const onNew = useCallback(async () => {
     if (!confirmFileChanges(fileTree)) return;
 
@@ -334,6 +338,9 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     switch (currentCommand.action) {
       case "Jumpstart":
         onJumpstart();
+        break;
+      case "Search":
+        onSearch();
         break;
       case "New":
         onNew();

@@ -178,7 +178,7 @@ export const CommandDialog = () => {
       onOpenChange={(open: boolean) => dispatch(setCmdkOpen(open))}
       onKeyDown={onKeyDown}
       filter={(value: string, search: string) => {
-        return value.includes(search) !== false ? 1 : 0;
+        return value.includes(search?.toLowerCase()) !== false ? 1 : 0;
       }}
       loop={true}
       label={currentCmdkPage}

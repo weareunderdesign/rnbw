@@ -25,6 +25,7 @@ import {
   elementsCmdk,
   fileCmdk,
   getKeyObjectsFromCommand,
+  filterFiles,
 } from "../helper";
 import { useDispatch } from "react-redux";
 import { setCmdkReferenceData } from "@_redux/main/cmdk";
@@ -261,11 +262,56 @@ export const useCmdkReferenceData = ({
     return data;
   }, [validNodeTree, nFocusedItem, htmlReferenceData]);
 
+  const cmdkReferenceSearch = useMemo<TCmdkGroupData>(() => {
+    const data: TCmdkGroupData = {
+      Files: [],
+      Elements: [],
+      Recent: [],
+    };
+
+    // Filter files based on search content
+    if (cmdkSearchContent) {
+      const filteredFiles = filterFiles(fileTree, cmdkSearchContent);
+      filteredFiles.forEach((file) => {
+        data["Files"].push({
+          Featured: false,
+          Name: file,
+          Icon: "", // Can add appropriate icon here
+          Description: "",
+          "Keyboard Shortcut": [
+            {
+              cmd: false,
+              shift: false,
+              alt: false,
+              key: "",
+              click: false,
+            },
+          ],
+          Group: "Files",
+          Context: "file",
+        });
+      });
+    }
+
+    // Recent
+    delete data["Recent"];
+
+    return data;
+  }, [
+    fileTree,
+    fFocusedItem,
+    nodeTree,
+    nFocusedItem,
+    htmlReferenceData,
+    cmdkSearchContent,
+  ]);
+
   return {
     Jumpstart: cmdkReferenceJumpstart,
     Actions: cmdkReferenceActions,
     Recent: cmdkReferenceRecentProject,
     Add: cmdkReferenceAdd,
     "Turn into": cmdkReferenceRename,
+    Search: cmdkReferenceSearch,
   };
 };

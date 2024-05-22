@@ -37,6 +37,7 @@ import { AnyFunction } from "./types";
 import { toast } from "react-toastify";
 import { NavigateFunction } from "react-router-dom";
 import { TFilesReference } from "@rnbws/rfrncs.design";
+import { FileNode } from "./types";
 
 export const addDefaultCmdkActions = (
   cmdkReferenceData: TCmdkReferenceData,
@@ -69,6 +70,23 @@ export const addDefaultCmdkActions = (
         shift: false,
         alt: false,
         key: "KeyJ",
+        click: false,
+      },
+    ],
+    Group: "default",
+    Context: "all",
+  };
+  // Search
+  cmdkReferenceData["Search"] = {
+    Name: "Search",
+    Icon: "",
+    Description: "",
+    "Keyboard Shortcut": [
+      {
+        cmd: false,
+        shift: false,
+        alt: false,
+        key: "KeyS",
         click: false,
       },
     ],
@@ -459,4 +477,41 @@ export function debounce<F extends AnyFunction>(
 
 export const getObjKeys = <T>(obj: { [key: string]: T }): string[] => {
   return Object.keys(obj);
+};
+
+export const convertToFileNodes = (data: TFileNodeTreeData): FileNode[] => {
+  const result: FileNode[] = [];
+  for (const key in data) {
+    const node = data[key];
+    if (node.data.kind === "file") {
+      result.push({
+        type: "file",
+        name: node.data.name,
+      });
+    }
+  }
+  return result;
+};
+export const filterFiles = (
+  fileTree: TFileNodeTreeData,
+  query: string,
+): string[] => {
+  const results: string[] = [];
+  const fileNodes = convertToFileNodes(fileTree);
+
+  function searchTree(node: FileNode, path: string = "") {
+    if (
+      node.type === "file" &&
+      node.name.toLowerCase().includes(query.toLowerCase())
+    ) {
+      results.push(`${path}/${node.name}`);
+    } else if (node.type === "directory" && node.children) {
+      node.children.forEach((child) =>
+        searchTree(child, `${path}/${node.name}`),
+      );
+    }
+  }
+
+  fileNodes.forEach((root) => searchTree(root));
+  return results;
 };
