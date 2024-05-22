@@ -12,3 +12,7 @@ export type KeyboardShortcutProps = {
   index: number;
   shortcuts: TCmdkKeyMap[];
 };
+export type CommandDialogProps = {
+  onClear: () => Promise<void>;
+  onJumpstart: () => void;
+};

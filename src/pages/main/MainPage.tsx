@@ -31,7 +31,7 @@ export default function MainPage() {
     reloadCurrentProject,
     triggerCurrentProjectReload,
   } = useHandlers();
-  const { onNew, onUndo, onRedo } = useCmdk({
+  const { onNew, onUndo, onRedo, onClear, onJumpstart } = useCmdk({
     cmdkReferenceData,
     importProject,
   });
@@ -166,7 +166,7 @@ export default function MainPage() {
           <Notification />
         </div>
 
-        <CommandDialog />
+        <CommandDialog onClear={onClear} onJumpstart={onJumpstart} />
       </MainContext.Provider>
     </>
   );
