@@ -76,8 +76,12 @@ const generateNewNameForLocalDirectoryOrFile = async ({
         });
       }
     } catch (err) {
-      toast.error("Error while generating a new name for a local directory.");
-      exists = false;
+      //@ts-expect-error - types are not updated
+      if (err.name === "NotFoundError") {
+        exists = false;
+      } else {
+        toast.error("Error while generating a new name for a local directory.");
+      }
     }
 
     if (exists) {
