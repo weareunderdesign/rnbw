@@ -364,7 +364,11 @@ export const loadLocalProject = async (
     };
   } catch (err) {
     toast.error("Error while loading local project");
-    LogAllow && console.log("error in loadLocalProject API", err);
+    LogAllow &&
+      console.log(
+        `error in ${isReload ? "reloadLocalProject" : "loadLocalProject"} API`,
+        err,
+      );
     throw err;
   }
 };
