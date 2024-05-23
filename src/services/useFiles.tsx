@@ -18,10 +18,12 @@ import { useDispatch } from "react-redux";
 import { verifyFileHandlerPermission } from "./main";
 import { setClipboardData } from "@_redux/main/processor";
 import {
+  FileSystemApis,
   _createIDBDirectory,
   _path,
   _writeIDBFile,
   confirmAlert,
+  getTargetHandler,
   moveIDBSingleDirectoryOrFile,
   removeSingleIDBDirectoryOrFile,
   removeSingleLocalDirectoryOrFile,
@@ -34,6 +36,14 @@ import { useFileHelpers } from "./useFileHelpers";
 import { useHandlers } from "@_pages/main/hooks";
 import { FileChangeAlertMessage } from "@_constants/main";
 import { toast } from "react-toastify";
+import {
+  FileTree_Event_RedoActionType,
+  FileTree_Event_UndoActionType,
+  TFileAction,
+  setFileAction,
+  setLastFileAction,
+} from "@_redux/main/fileTree";
+import { LogAllow } from "@_constants/global";
 export default function useFiles() {
   const dispatch = useDispatch();
   const {
@@ -45,6 +55,11 @@ export default function useFiles() {
     invalidFileNodes,
     clipboardData,
     project,
+    fileAction,
+    fileEventPastLength,
+    fileEventFutureLength,
+    didUndo,
+    didRedo,
   } = useAppState();
   const {
     getParentHandler,
@@ -92,6 +107,11 @@ export default function useFiles() {
             "",
           );
         }
+        const _fileAction: TFileAction = {
+          action: "create",
+          payload: { uids: [uniqueIndexedName] },
+        };
+        !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
       } catch (err) {
         toast.error("An error occurred while creating the file");
         console.error(err);
@@ -100,6 +120,8 @@ export default function useFiles() {
       }
     },
     [
+      didUndo,
+      didRedo,
       fFocusedItem,
       fileTree,
       fileHandlers,
@@ -135,6 +157,11 @@ export default function useFiles() {
             _path.join(parentNodeData.path, uniqueIndexedName),
           );
         }
+        const _fileAction: TFileAction = {
+          action: "create",
+          payload: { uids: [uniqueIndexedName] },
+        };
+        !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
       } catch (err) {
         toast.error("An error occurred while creating the folder");
         console.error(err);
@@ -144,6 +171,8 @@ export default function useFiles() {
       return uniqueIndexedName;
     },
     [
+      didUndo,
+      didRedo,
       fFocusedItem,
       fileTree,
       fileHandlers,
@@ -225,6 +254,12 @@ export default function useFiles() {
       const parentNode = fileTree[file.parentUid!];
       if (!parentNode) return;
       const name = `${newName}${extension ? `.${extension}` : ""}`;
+      const _fileAction: TFileAction = {
+        action: "rename",
+        payload: { orgUid: uid, newUid: name },
+      };
+
+      !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
 
       await moveLocalSingleDirectoryOrFile({
         fileTree,
@@ -236,17 +271,35 @@ export default function useFiles() {
       });
       await reloadCurrentProject();
     },
-    [fileTree],
+    [fileTree, didUndo, didRedo],
   );
   const undo = (params: Iundo) => {
+    console.log(fileEventPastLength, "undo fileEventPastLength");
+
     const { steps = 1 } = params;
     if (steps < 1) return;
-    dispatch({ type: "UNDO", payload: steps });
+
+    if (fileEventPastLength === 0) {
+      LogAllow && console.log("Undo - FileTree - it is the origin state");
+      return;
+    }
+
+    // if (steps < 1 || fileEventPastLength < steps) return;
+
+    dispatch(setLastFileAction({ ...fileAction }));
+    dispatch({ type: FileTree_Event_UndoActionType });
   };
   const redo = (params: Iredo) => {
     const { steps = 1 } = params;
     if (steps < 1) return;
-    dispatch({ type: "REDO", payload: steps });
+
+    // if (steps < 1 || fileEventFutureLength < steps) return;
+
+    if (fileEventFutureLength === 0) {
+      LogAllow && console.log("Redo - FileTree - it is the latest state");
+      return;
+    }
+    dispatch({ type: FileTree_Event_RedoActionType });
   };
 
   const paste = async (params: IpasteFiles = {}) => {
@@ -281,6 +334,22 @@ export default function useFiles() {
       }
     }
 
+    const newNames: string[] = await Promise.all(
+      uidsToPaste.map(
+        async (uid) =>
+          await FileSystemApis[project.context].generateNewName({
+            nodeData: fileTree[uid].data,
+            // for `local` project
+            targetHandler: getTargetHandler({
+              targetUid: _targetUid,
+              fileTree,
+              fileHandlers,
+            }),
+            // for `idb` project
+            targetNodeData: targetNode.data,
+          }),
+      ),
+    );
     try {
       await Promise.all(
         /* we are using map instead of forEach because we want to to get the array of all the promises */
@@ -304,6 +373,22 @@ export default function useFiles() {
           }
         }),
       );
+
+      const _fileAction: TFileAction = {
+        action: "move",
+        payload: {
+          uids: uidsToPaste.map((uid, index) => ({
+            orgUid: uid,
+            newUid: _path.join(
+              targetNode.isEntity ? targetNode.parentUid : targetNode.uid,
+              newNames[index],
+            ),
+          })),
+          isCopy,
+        },
+      };
+
+      !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
     } catch (err) {
       toast.error("An error occurred while pasting the file");
       console.error(err);
@@ -312,7 +397,6 @@ export default function useFiles() {
   };
   const move = async (params: Imove) => {
     const { targetUid, uids } = params;
-    dispatch({ type: "MOVE_FILES", payload: { uids, targetUid } });
     try {
       await cutFiles({ uids });
       paste({ targetUid, deleteSource: true });
@@ -335,7 +419,6 @@ export default function useFiles() {
       return;
     }
 
-    await dispatch({ type: "REMOVE_FILES", payload: _uids });
     try {
       await Promise.all(
         _uids.map(async (uid) => {
@@ -353,6 +436,16 @@ export default function useFiles() {
           }
         }),
       );
+      const _fileAction: TFileAction = {
+        action: "remove",
+        payload: { uids: _uids },
+      };
+
+      if (!didUndo && !didRedo) {
+        console.log("set _fileAction in remove API");
+
+        dispatch(setFileAction(_fileAction));
+      }
     } catch (err) {
       toast.error("An error occurred while deleting the file");
       console.error(err);

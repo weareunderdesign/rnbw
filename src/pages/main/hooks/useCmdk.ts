@@ -14,13 +14,7 @@ import {
 } from "@_node/index";
 import { setTheme } from "@_redux/global";
 import { setCmdkPages, setCurrentCommand } from "@_redux/main/cmdk";
-import {
-  FileTree_Event_RedoActionType,
-  FileTree_Event_UndoActionType,
-  setDoingFileAction,
-  setLastFileAction,
-  TProjectContext,
-} from "@_redux/main/fileTree";
+import { setDoingFileAction, TProjectContext } from "@_redux/main/fileTree";
 
 import {
   setActivePanel,
@@ -55,10 +49,8 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     project,
     fileTree,
     doingFileAction,
-    fileAction,
-    fileEventPastLength,
     fileEventFutureLength,
-    nodeEventPastLength,
+    fileEventPast,
     nodeEventFutureLength,
     iframeLoading,
     activePanel,
@@ -74,7 +66,9 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
   } = useAppState();
 
   const rnbw = useRnbw();
-
+  useEffect(() => {
+    console.log(fileEventPast, "fileEventPast");
+  }, [fileEventPast]);
   // handlers
   const onClear = useCallback(async () => {
     window.localStorage.clear();
@@ -133,24 +127,16 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
   const onUndo = useCallback(() => {
     if (!!runningAction || doingFileAction || iframeLoading) return;
     if (activePanel === "file" && showActionsPanel && showFilePanel) {
-      if (fileEventPastLength === 0) {
-        LogAllow && console.log("Undo - FileTree - it is the origin state");
-        return;
-      }
-      dispatch(setLastFileAction({ ...fileAction }));
-      dispatch({ type: FileTree_Event_UndoActionType });
+      rnbw.files.undo({ steps: 1 });
     } else {
       rnbw.elements.undo();
     }
-
     dispatch(setDidUndo(true));
   }, [
     runningAction,
     doingFileAction,
     iframeLoading,
     activePanel,
-    fileEventPastLength,
-    nodeEventPastLength,
     showActionsPanel,
     showFilePanel,
   ]);
@@ -158,11 +144,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     if (!!runningAction || doingFileAction || iframeLoading) return;
 
     if (activePanel === "file" && showActionsPanel && showFilePanel) {
-      if (fileEventFutureLength === 0) {
-        LogAllow && console.log("Redo - FileTree - it is the latest state");
-        return;
-      }
-      dispatch({ type: FileTree_Event_RedoActionType });
+      rnbw.files.redo({ steps: 1 });
     } else {
       rnbw.elements.redo();
     }

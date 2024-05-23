@@ -17,10 +17,8 @@ import { _path } from "@_node/file/nohostApis";
 import { TNode, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";
 import {
-  TFileAction,
   addInvalidFileNodes,
   removeInvalidFileNodes,
-  setFileAction,
   setFileTree,
   setHoveredFileUid,
 } from "@_redux/main/fileTree";
@@ -453,19 +451,11 @@ export default function WorkspaceTreeView() {
                 newName: entityName,
                 extension: nodeData.ext,
               });
-
-              // add to event history
-              // const _fileAction: TFileAction = {
-              //   action: "rename",
-              //   payload: { orgUid: node.uid, newUid },
-              // };
-              // dispatch(setFileAction(_fileAction));
             } else {
               // create a new file/directory
               const parentNode = fileTree[node.parentUid!];
               if (!parentNode) return;
 
-              const newUid = _path.join(parentNode.uid, entityName);
               const isFolder = !node.isEntity;
               if (isFolder) {
                 rnbw.files.createFolder({ entityName });
@@ -475,14 +465,6 @@ export default function WorkspaceTreeView() {
                   entityName,
                   extension: ext,
                 });
-
-                // add the event to the history
-                // add to event history
-                const _fileAction: TFileAction = {
-                  action: "create",
-                  payload: { uids: [newUid] },
-                };
-                dispatch(setFileAction(_fileAction));
               }
             }
           },
