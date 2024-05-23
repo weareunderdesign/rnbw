@@ -63,7 +63,7 @@ const generateNewNameForLocalDirectoryOrFile = async ({
   targetHandler: FileSystemDirectoryHandle;
 }): Promise<string> => {
   const { name, ext, kind } = nodeData;
-  let newName = kind === "directory" ? name : `${name}.${ext}`;
+  let newName = kind === "directory" ? name : `${name}${ext ? `.${ext}` : ""}`;
   let exists = true;
   let index = -1;
   while (exists) {
@@ -92,8 +92,8 @@ const generateNewNameForLocalDirectoryOrFile = async ({
             ? `${name} copy`
             : `${name} copy (${index})`
           : index === 0
-            ? `${name} copy.${ext}`
-            : `${name} copy (${index}).${ext}`;
+            ? `${name} copy${ext ? `.${ext}` : ""}`
+            : `${name} copy (${index})${ext ? `.${ext}` : ""}`;
     }
   }
   return newName;
