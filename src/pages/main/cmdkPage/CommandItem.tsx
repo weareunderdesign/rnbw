@@ -13,7 +13,7 @@ export const CommandItem = ({ command, index, onSelect }: CommandItemProps) => {
     () => ({
       Theme: theme,
       Autosave: autoSave,
-      "Word Wrap": wordWrap,
+      "Code Wrap": wordWrap,
     }),
     [theme, autoSave, wordWrap],
   );

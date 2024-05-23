@@ -15,7 +15,9 @@ export const KeyboardShortcut = ({
         <span className="text-m">{osType === "Mac" ? "⌘" : "Ctrl"}</span>
       )}
       {keyMap.shift && <span className="text-m">⇧</span>}
-      {keyMap.alt && <span className="text-m">Alt</span>}
+      {keyMap.alt && (
+        <span className="text-m">{osType === "Mac" ? "⌥" : "Alt"}</span>
+      )}
       {keyMap.key !== "" && (
         <span className="text-m">
           {keyMap.key[0].toUpperCase() +
