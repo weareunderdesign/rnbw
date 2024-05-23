@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Command } from "cmdk";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -23,9 +23,21 @@ import {
   COMMANDS_TO_KEEP_MODAL_OPEN,
   PLACEHOLDERS,
 } from "./constants";
-import { SVGIcon } from "@_components/common";
+import { SVGIcon, SVGIconIV } from "@_components/common";
 
 export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
+  const [isNewHovered, setIsNewHovered] = useState(true);
+  const [isOpenHovered, setIsOpenHovered] = useState(false);
+  const [isGuideHovered, setIsGuideHovered] = useState(false);
+  const [isSupportHovered, setIsSupportHovered] = useState(false);
+  const [isCommunityHovered, setIsCommunityHovered] = useState(false);
+  const [isThemeHovered, setIsThemeHovered] = useState(false);
+  const [isAutosaveHovered, setIsAutosaveHovered] = useState(false);
+  const [isFormatCodeHovered, setIsFormatCodeHovered] = useState(false);
+  const [menuDescription, setMenuDescription] = useState("Start a new project");
+  const [menuTitle, setMenuTitle] = useState("New");
+  const [isRecentHovered, setIsRecentHovered] = useState(false);
+
   // redux
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -243,6 +255,110 @@ export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
                             command={command}
                             index={index}
                             onSelect={onCommandSelect}
+                            onMouseEnter={() => {
+                              setMenuDescription(command.Description || "");
+                              setMenuTitle(command.Name || "");
+                              if (command.Name === "New") {
+                                setIsNewHovered(true);
+                                setIsOpenHovered(false);
+                                setIsGuideHovered(false);
+                                setIsSupportHovered(false);
+                                setIsCommunityHovered(false);
+                                setIsThemeHovered(false);
+                                setIsAutosaveHovered(false);
+                                setIsFormatCodeHovered(false);
+                                setIsRecentHovered(false);
+                              }
+                              else if (command.Name === "Open") {
+                                setIsNewHovered(false);
+                                setIsOpenHovered(true);
+                                setIsGuideHovered(false);
+                                setIsSupportHovered(false);
+                                setIsCommunityHovered(false);
+                                setIsThemeHovered(false);
+                                setIsAutosaveHovered(false);
+                                setIsFormatCodeHovered(false);
+                                setIsRecentHovered(false);
+                              }
+                              else if (command.Name === "Guide") {
+                                setIsNewHovered(false);
+                                setIsOpenHovered(false);
+                                setIsGuideHovered(true);
+                                setIsSupportHovered(false);
+                                setIsCommunityHovered(false);
+                                setIsThemeHovered(false);
+                                setIsAutosaveHovered(false);
+                                setIsFormatCodeHovered(false);
+                                setIsRecentHovered(false);
+                              }
+                              else if (command.Name === "Support") {
+                                setIsNewHovered(false);
+                                setIsOpenHovered(false);
+                                setIsGuideHovered(false);
+                                setIsSupportHovered(true);
+                                setIsCommunityHovered(false);
+                                setIsThemeHovered(false);
+                                setIsAutosaveHovered(false);
+                                setIsFormatCodeHovered(false);
+                                setIsRecentHovered(false);
+                              }
+                              else if (command.Name === "Community") {
+                                setIsNewHovered(false);
+                                setIsOpenHovered(false);
+                                setIsGuideHovered(false);
+                                setIsSupportHovered(false);
+                                setIsCommunityHovered(true);
+                                setIsThemeHovered(false);
+                                setIsAutosaveHovered(false);
+                                setIsFormatCodeHovered(false);
+                                setIsRecentHovered(false);
+                              }
+                              else if (command.Name === "Theme") {
+                                setIsNewHovered(false);
+                                setIsOpenHovered(false);
+                                setIsGuideHovered(false);
+                                setIsSupportHovered(false);
+                                setIsCommunityHovered(false);
+                                setIsThemeHovered(true);
+                                setIsAutosaveHovered(false);
+                                setIsFormatCodeHovered(false);
+                                setIsRecentHovered(false);
+                              }
+                              else if (command.Name === "Autosave") {
+                                setIsNewHovered(false);
+                                setIsOpenHovered(false);
+                                setIsGuideHovered(false);
+                                setIsSupportHovered(false);
+                                setIsCommunityHovered(false);
+                                setIsThemeHovered(false);
+                                setIsAutosaveHovered(true);
+                                setIsFormatCodeHovered(false);
+                                setIsRecentHovered(false);
+                              }
+                              else if (command.Name === "Code Wrap") {
+                                setIsNewHovered(false);
+                                setIsOpenHovered(false);
+                                setIsGuideHovered(false);
+                                setIsSupportHovered(false);
+                                setIsCommunityHovered(false);
+                                setIsThemeHovered(false);
+                                setIsAutosaveHovered(false);
+                                setIsFormatCodeHovered(true);
+                                setIsRecentHovered(false);
+                              }
+                              else if (groupName === "Recent") {
+                                setIsRecentHovered(true);
+                                setIsNewHovered(false);
+                                setIsOpenHovered(false);
+                                setIsGuideHovered(false);
+                                setIsSupportHovered(false);
+                                setIsCommunityHovered(false);
+                                setIsThemeHovered(false);
+                                setIsAutosaveHovered(false);
+                                setIsFormatCodeHovered(false);
+                              }
+
+                            }}
                           />
                         ),
                     )}
@@ -250,6 +366,53 @@ export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
                 );
               })}
             </Command.List>
+          </div>
+        </div>
+
+        <div className="padding-m align-center border-left" style={{ width: "200%" }}>
+          <div id="label1" className={isNewHovered ? "column justify-center align-center" : "hidden"}>
+            <SVGIconIV src="/images/jumpstart/new.svg" style={{ height: "160px", width: "160px" }}>1</SVGIconIV>
+            <div className="text-l padding-s">{menuTitle}</div>
+            <div className="text-m">{menuDescription}</div>
+          </div>
+          <div id="label2" className={isOpenHovered ? "column justify-center align-center" : "hidden"}>
+            <SVGIconIV src="/images/jumpstart/open.svg" style={{ height: "160px", width: "160px" }}>1</SVGIconIV>
+            <div className="text-l padding-s">{menuTitle}</div>
+            <div className="text-m">{menuDescription}</div>
+          </div>
+          <div id="label3" className={isGuideHovered ? "column justify-center align-center" : "hidden"}>
+            <SVGIconIV src="/images/jumpstart/guide.svg" style={{ height: "160px", width: "160px" }}>1</SVGIconIV>
+            <div className="text-l padding-s">{menuTitle}</div>
+            <div className="text-m">{menuDescription}</div>
+          </div>
+          <div id="label4" className={isSupportHovered ? "column justify-center align-center" : "hidden"}>
+            <SVGIconIV src="/images/jumpstart/support.svg" style={{ height: "160px", width: "160px" }}>1</SVGIconIV>
+            <div className="text-l padding-s">{menuTitle}</div>
+            <div className="text-m">{menuDescription}</div>
+          </div>
+          <div id="label5" className={isCommunityHovered ? "column justify-center align-center" : "hidden"}>
+            <SVGIconIV src="/images/jumpstart/community.svg" style={{ height: "160px", width: "160px" }}>1</SVGIconIV>
+            <div className="text-l padding-s">{menuTitle}</div>
+            <div className="text-m">{menuDescription}</div>
+          </div>
+          <div id="label6" className={isThemeHovered ? "column justify-center align-center" : "hidden"}>
+            <SVGIconIV src="/images/jumpstart/theme.svg" style={{ height: "160px", width: "160px" }}>1</SVGIconIV>
+            <div className="text-l padding-s">{menuTitle}</div>
+            <div className="text-m">{menuDescription}</div>
+          </div>
+          <div id="label7" className={isAutosaveHovered ? "column justify-center align-center" : "hidden"}>
+            <SVGIconIV src="/images/jumpstart/autosave.svg" style={{ height: "160px", width: "160px" }}>1</SVGIconIV>
+            <div className="text-l padding-s">{menuTitle}</div>
+            <div className="text-m">{menuDescription}</div>
+          </div>
+          <div id="label8" className={isFormatCodeHovered ? "column justify-center align-center" : "hidden"}>
+            <SVGIconIV src="/images/jumpstart/formatcode.svg" style={{ height: "160px", width: "160px" }}>1</SVGIconIV>
+            <div className="text-l padding-s">{menuTitle}</div>
+            <div className="text-m">{menuDescription}</div>
+          </div>
+          <div id="label9" className={isRecentHovered ? "column justify-center align-center" : "hidden"}>
+            <SVGIconIV src="/images/jumpstart/open.svg" style={{ height: "160px", width: "160px" }}>1</SVGIconIV>
+            <div className="text-l padding-s">{menuTitle}</div>
           </div>
         </div>
 

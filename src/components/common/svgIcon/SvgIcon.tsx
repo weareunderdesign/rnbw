@@ -26,3 +26,11 @@ export const SVGIconIII = (props: SvgIconProps) => {
   }, []);
   return <SVGIcon {...props}></SVGIcon>;
 };
+
+export const SVGIconIV = ({ src, ...rest }: { src: string } & SvgIconProps) => {
+  const SVGIcon = useMemo<keyof JSX.IntrinsicElements>(() => {
+    return "svg-icon" as keyof JSX.IntrinsicElements;
+  }, []);
+
+  return <SVGIcon src={src} {...rest} />;
+};
