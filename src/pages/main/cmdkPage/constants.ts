@@ -12,7 +12,7 @@ export const COMMANDS_TO_KEEP_MODAL_OPEN = [
   "Turn into",
   "Theme",
   "Autosave",
-  "Word Wrap",
+  "Code Wrap",
 ];
 
 // pages that can't be opened by other cmdk from within itself
