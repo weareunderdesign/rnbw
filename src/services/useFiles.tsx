@@ -353,10 +353,10 @@ export default function useFiles() {
           }
         }),
       );
-      await reloadCurrentProject();
     } catch (err) {
       toast.error("An error occurred while deleting the file");
       console.error(err);
+    } finally {
       await reloadCurrentProject();
     }
   };
