@@ -250,7 +250,11 @@ export const useHandlers = () => {
           await dispatch(setRenderableFileUid(currentFileUid));
           await dispatch(
             setCurrentFileContent(
-              _fileTree[currentFileUid].data.content || getIndexHtmlContent(),
+              _fileTree[currentFileUid].data.content
+                ? _fileTree[currentFileUid].data.content
+                : _fileTree[currentFileUid].data.ext === "html"
+                  ? getIndexHtmlContent()
+                  : "",
             ),
           );
         }
