@@ -4,6 +4,7 @@ export type CommandItemProps = {
   command: TCmdkReference;
   index: number;
   onSelect: (command: TCmdkReference) => Promise<void>;
+  onMouseEnter?: () => void;
 };
 export type TCmdkPage = "Jumpstart" | "Actions" | "Add" | "Turn into";
 
