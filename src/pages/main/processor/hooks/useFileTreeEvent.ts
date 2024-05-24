@@ -112,6 +112,7 @@ export const useFileTreeEvent = () => {
     async ({ uids }: { uids: TNodeUid[] }) => {
       dispatch(setDoingFileAction(true));
       dispatch(addInvalidFileNodes([...uids]));
+      console.log(">>>>>>>>>>> remove");
 
       rnbw.files.remove({ uids });
 

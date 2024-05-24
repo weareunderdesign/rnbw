@@ -93,6 +93,7 @@ export default function useFiles() {
         entityName,
         extension,
       });
+      const parentUid = fileTree[fFocusedItem].parentUid;
 
       try {
         //getFileHandle throws an error if the file does not exist
@@ -109,7 +110,7 @@ export default function useFiles() {
         }
         const _fileAction: TFileAction = {
           action: "create",
-          payload: { uids: [uniqueIndexedName] },
+          payload: { uids: [_path.join(parentUid, uniqueIndexedName)] },
         };
         !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
       } catch (err) {
@@ -144,6 +145,7 @@ export default function useFiles() {
         parentHandler,
         entityName,
       });
+      const parentUid = fileTree[fFocusedItem].parentUid;
 
       try {
         //getDirectoryHandle throws an error if the folder does not exist
@@ -159,7 +161,9 @@ export default function useFiles() {
         }
         const _fileAction: TFileAction = {
           action: "create",
-          payload: { uids: [uniqueIndexedName] },
+          payload: {
+            uids: [_path.join(parentUid, uniqueIndexedName)],
+          },
         };
         !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
       } catch (err) {
@@ -445,8 +449,6 @@ export default function useFiles() {
       };
 
       if (!didUndo && !didRedo) {
-        console.log("set _fileAction in remove API");
-
         dispatch(setFileAction(_fileAction));
       }
     } catch (err) {
