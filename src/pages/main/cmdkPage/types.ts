@@ -1,5 +1,4 @@
 import { TCmdkKeyMap, TCmdkReference } from "@_types/main";
-import React, { useState } from "react";
 
 export type CommandItemProps = {
   command: TCmdkReference;

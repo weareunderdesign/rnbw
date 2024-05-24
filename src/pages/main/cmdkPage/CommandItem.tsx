@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo } from "react";
 import { Command } from "cmdk";
 import { useAppState } from "@_redux/useAppState";
 import { TCmdkKeyMap } from "@_types/main";
@@ -6,8 +6,12 @@ import { SVGIcon } from "@_components/common";
 import { CommandItemProps } from "./types";
 import { KeyboardShortcut } from "./KeyboardShortcut";
 
-export const CommandItem = ({ command, index, onSelect, onMouseEnter }: CommandItemProps) => {
-
+export const CommandItem = ({
+  command,
+  index,
+  onSelect,
+  onMouseEnter,
+}: CommandItemProps) => {
   const { theme, autoSave, wordWrap, currentCmdkPage } = useAppState();
 
   const settingsProps = useMemo(
@@ -35,7 +39,6 @@ export const CommandItem = ({ command, index, onSelect, onMouseEnter }: CommandI
       onSelect={() => onSelect(command)}
       onMouseEnter={onMouseEnter}
     >
-
       <div className="justify-stretch padding-s align-center">
         <div className="gap-s align-center">
           <div className="padding-xs">
