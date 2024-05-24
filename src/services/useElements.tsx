@@ -490,7 +490,7 @@ d -> 300 - 400
 
         helperModel.setValue(pastedCode);
       } else {
-        const updatedCode = remove({
+        const updatedCode = await remove({
           uids: [uid],
           skipUpdate: true,
         });
@@ -587,7 +587,16 @@ d -> 300 - 400
     };
     helperModel.applyEdits([edit]);
     const code = html_beautify(helperModel.getValue());
-    !skipUpdate && codeViewInstanceModel.setValue(code);
+    if (!skipUpdate) {
+      await findNodeToSelectAfterAction({
+        nodeUids: [nFocusedItem],
+        action: {
+          type: "replace",
+        },
+      });
+      codeViewInstanceModel.setValue(code);
+    }
+
     return settings;
   };
 
@@ -627,7 +636,7 @@ d -> 300 - 400
   };
 
   //Delete
-  const remove = (params: Iremove = {}) => {
+  const remove = async (params: Iremove = {}) => {
     const { uids, skipUpdate, content } = params;
     const removalUids = uids || selectedItems;
 
@@ -663,7 +672,15 @@ d -> 300 - 400
 
     const code = helperModel.getValue();
 
-    !skipUpdate && codeViewInstanceModel.setValue(code);
+    if (!skipUpdate) {
+      await findNodeToSelectAfterAction({
+        nodeUids: [removalUids[0]],
+        action: {
+          type: "remove",
+        },
+      });
+      codeViewInstanceModel.setValue(code);
+    }
     return code;
   };
   return {
