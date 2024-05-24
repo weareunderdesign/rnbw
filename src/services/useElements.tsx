@@ -33,6 +33,7 @@ import { useCallback, useContext, useMemo } from "react";
 import { useDispatch } from "react-redux";
 import { useElementHelper } from "./useElementsHelper";
 import { toast } from "react-toastify";
+import * as parse5 from "parse5";
 
 export default function useElements() {
   const {
@@ -52,6 +53,7 @@ export default function useElements() {
     getEditorModelWithCurrentCode,
     checkAllResourcesAvailable,
     copyAndCutNode,
+    findNodeToSelectAfterAction,
   } = useElementHelper();
 
   const codeViewInstanceModel = monacoEditorRef.current?.getModel();
@@ -93,8 +95,7 @@ export default function useElements() {
     }
     const uid = sortedUids[0];
     const node = validNodeTree[uid];
-    const parentUid = node?.parentUid;
-    const parent = validNodeTree[parentUid!];
+    let code = "";
     if (node) {
       const { endCol, endLine } = node.data.sourceCodeLocation;
 
@@ -105,22 +106,25 @@ export default function useElements() {
       };
 
       helperModel.applyEdits([edit]);
-    }
-    const selectedChildIndex = node?.uniqueNodePath?.split("_").pop();
-    if (!selectedChildIndex) return;
+      code = helperModel.getValue();
 
-    const newNodeIndex = parseInt(selectedChildIndex) + 1;
-    const uniqueNodePathToFocus = `${parent.uniqueNodePath ?? ""}_${tagName}_${newNodeIndex}`;
-    const code = helperModel.getValue();
-    if (!skipUpdate) {
-      await dispatch(setNeedToSelectNodePaths([uniqueNodePathToFocus]));
-      codeViewInstanceModel.setValue(code);
+      if (!skipUpdate) {
+        findNodeToSelectAfterAction({
+          nodeUids: [uid],
+          action: {
+            type: "add",
+            tagNames: [tagName],
+          },
+        });
+
+        codeViewInstanceModel.setValue(code);
+      }
     }
-    // ROOT_html1_body2_div1_div3_div1_div1_p;
+
     return { code };
   };
 
-  const duplicate = (params: Iduplicate = {}) => {
+  const duplicate = async (params: Iduplicate = {}) => {
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
     const { skipUpdate } = params;
 
@@ -145,7 +149,16 @@ export default function useElements() {
       }
     });
     const code = helperModel.getValue();
-    !skipUpdate && codeViewInstanceModel.setValue(code);
+    if (!skipUpdate) {
+      await findNodeToSelectAfterAction({
+        nodeUids: selectedNodeUids,
+        action: {
+          type: "add",
+        },
+      });
+      codeViewInstanceModel.setValue(code);
+    }
+
     return code;
   };
 
@@ -258,7 +271,8 @@ export default function useElements() {
     const helperModel = getEditorModelWithCurrentCode();
     helperModel.setValue(initialCode);
 
-    let code = pasteContent || (await window.navigator.clipboard.readText());
+    let copiedCode =
+      pasteContent || (await window.navigator.clipboard.readText());
 
     const { startLine, startCol, endLine, endCol } =
       focusedNode.data.sourceCodeLocation;
@@ -279,7 +293,8 @@ export default function useElements() {
         startTag.endCol,
       );
     }
-    code = html_beautify(code);
+    copiedCode = html_beautify(copiedCode);
+    let code = copiedCode;
     const edit = {
       range: editRange,
       text: code,
@@ -287,7 +302,21 @@ export default function useElements() {
     helperModel.applyEdits([edit]);
 
     code = helperModel.getValue();
-    !skipUpdate && codeViewInstanceModel.setValue(code);
+    if (!skipUpdate) {
+      const stringToHtml = parse5.parseFragment(copiedCode);
+
+      const tagNames = stringToHtml.childNodes.map((node) =>
+        node.nodeName.toLowerCase(),
+      );
+      await findNodeToSelectAfterAction({
+        nodeUids: [focusedNode.uid],
+        action: {
+          type: "add",
+          tagNames,
+        },
+      });
+      codeViewInstanceModel.setValue(code);
+    }
 
     return code;
   };
@@ -363,6 +392,18 @@ d -> 300 - 400
       text: code,
     };
 
+    const nodePath = validNodeTree[sortedUids[0]].uniqueNodePath;
+    if (nodePath) {
+      const nodePathSplits = nodePath.split(".");
+      const parentPath = nodePathSplits
+        .slice(0, nodePathSplits.length - 1)
+        .join(".");
+      const childPath = nodePathSplits[nodePathSplits.length - 1];
+      const childIndex = parseInt(childPath.split("_")[1]);
+      const uniqueNodePaths = [`${parentPath}.div_${childIndex}`];
+
+      await dispatch(setNeedToSelectNodePaths(uniqueNodePaths));
+    }
     helperModel.applyEdits([edit]);
     codeViewInstanceModel.setValue(html_beautify(helperModel.getValue()));
   };

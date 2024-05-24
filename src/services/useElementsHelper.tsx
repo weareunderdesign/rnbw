@@ -33,6 +33,7 @@ import { useDispatch } from "react-redux";
 import {
   focusNodeTreeNode,
   selectNodeTreeNodes,
+  setNeedToSelectNodePaths,
   setSelectedNodeUids,
 } from "@_redux/main/nodeTree";
 
@@ -250,7 +251,7 @@ export const useElementHelper = () => {
         const parent = nodeTree[parentUid];
         const parentPath = parent.uniqueNodePath;
         if (parentPath) {
-          return `${parentPath}_${node.nodeName}_${index}`;
+          return `${parentPath}.${node.nodeName}_${index}`;
         }
         return `${node.nodeName}_${index}`;
       };
@@ -386,10 +387,60 @@ export const useElementHelper = () => {
     };
   };
 
+  const findNodeToSelectAfterAction = async ({
+    nodeUids,
+    action,
+  }: {
+    nodeUids: string[];
+    action: {
+      type: "add" | "delete";
+      tagNames?: string[];
+    };
+  }) => {
+    const uniqueNodePaths: string[] = [];
+    if (nodeUids.length === 0) return [];
+
+    const sortedUids = nodeUids;
+
+    for (let i = 0; i < sortedUids.length; i++) {
+      const nodeUid = sortedUids[i];
+      if (!nodeUid) return;
+      const node = validNodeTree[nodeUid];
+      if (!node) return;
+      const parentUid = node.parentUid;
+      if (!parentUid) return;
+      const parent = validNodeTree[parentUid];
+      if (!parent) return;
+
+      const selectedChildIndex = node?.uniqueNodePath?.split("_").pop();
+      if (!selectedChildIndex) return;
+
+      const allTags = action?.tagNames ?? [node.data.tagName];
+
+      allTags.forEach((tagName, index) => {
+        const tag = tagName ?? node.data.tagName;
+        const newNodeIndex = parseInt(selectedChildIndex) + 1 + index;
+
+        if (tagName === "#text") {
+          return;
+        }
+        // The uniqueNodePath is used to focus on the newly added node
+        const uniqueNodePathToFocus = `${parent.uniqueNodePath ?? ""}.${tag}_${newNodeIndex}`;
+
+        uniqueNodePaths.push(uniqueNodePathToFocus);
+      });
+    }
+
+    await dispatch(setNeedToSelectNodePaths(uniqueNodePaths));
+
+    return uniqueNodePaths;
+  };
+
   return {
     getEditorModelWithCurrentCode,
     checkAllResourcesAvailable,
     copyAndCutNode,
     parseHtml,
+    findNodeToSelectAfterAction,
   };
 };
