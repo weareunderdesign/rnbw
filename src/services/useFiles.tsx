@@ -256,7 +256,10 @@ export default function useFiles() {
       const name = `${newName}${extension ? `.${extension}` : ""}`;
       const _fileAction: TFileAction = {
         action: "rename",
-        payload: { orgUid: uid, newUid: name },
+        payload: {
+          orgUid: uid,
+          newUid: _path.join(parentNode.uid, name),
+        },
       };
 
       !didUndo && !didRedo && dispatch(setFileAction(_fileAction));

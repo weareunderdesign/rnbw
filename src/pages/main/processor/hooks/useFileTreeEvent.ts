@@ -53,6 +53,8 @@ export const useFileTreeEvent = () => {
       } else if (action === "remove") {
         _remove({ ...payload });
       } else if (action === "rename") {
+        console.log("rename>>>>>>>>>>>>>>>>>>>> ", payload);
+
         _rename({ ...payload });
       } else if (action === "move") {
         if (payload.isCopy) {
@@ -132,10 +134,9 @@ export const useFileTreeEvent = () => {
       const newName = getFullnameFromUid(newUid);
       dispatch(setDoingFileAction(true));
       dispatch(addInvalidFileNodes([node.uid]));
-      await rnbw.files.rename({
+      rnbw.files.rename({
         uid: node.uid,
         newName,
-        extension: nodeData.ext,
       });
 
       dispatch(removeInvalidFileNodes([node.uid]));

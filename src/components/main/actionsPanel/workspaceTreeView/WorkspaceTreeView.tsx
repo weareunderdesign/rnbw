@@ -451,6 +451,11 @@ export default function WorkspaceTreeView() {
                 newName: entityName,
                 extension: nodeData.ext,
               });
+              const uid = item.index as TNodeUid;
+              if (invalidFileNodes[uid]) {
+                dispatch(removeInvalidFileNodes([uid]));
+                return;
+              }
             } else {
               // create a new file/directory
               const parentNode = fileTree[node.parentUid!];
