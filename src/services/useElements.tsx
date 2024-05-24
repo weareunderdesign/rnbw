@@ -13,7 +13,6 @@ import {
   NodeTree_Event_RedoActionType,
   NodeTree_Event_UndoActionType,
   setCopiedNodeDisplayName,
-  setNeedToSelectNodePaths,
   setSelectedNodeUids,
 } from "@_redux/main/nodeTree";
 import { setDidRedo, setDidUndo } from "@_redux/main/processor";
@@ -392,18 +391,14 @@ d -> 300 - 400
       text: code,
     };
 
-    const nodePath = validNodeTree[sortedUids[0]].uniqueNodePath;
-    if (nodePath) {
-      const nodePathSplits = nodePath.split(".");
-      const parentPath = nodePathSplits
-        .slice(0, nodePathSplits.length - 1)
-        .join(".");
-      const childPath = nodePathSplits[nodePathSplits.length - 1];
-      const childIndex = parseInt(childPath.split("_")[1]);
-      const uniqueNodePaths = [`${parentPath}.div_${childIndex}`];
+    findNodeToSelectAfterAction({
+      nodeUids: [sortedUids[0]],
+      action: {
+        type: "replace",
+        tagNames: ["div"],
+      },
+    });
 
-      await dispatch(setNeedToSelectNodePaths(uniqueNodePaths));
-    }
     helperModel.applyEdits([edit]);
     codeViewInstanceModel.setValue(html_beautify(helperModel.getValue()));
   };
