@@ -385,7 +385,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
       case "Autosave":
         onToggleAutoSave();
         break;
-      case "Word Wrap":
+      case "Code Wrap":
         onToggleWordWrap();
         break;
       default:
