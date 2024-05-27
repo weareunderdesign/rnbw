@@ -1,4 +1,4 @@
-import { TNodeUid } from "@_node/index";
+import { TNode, TNodeUid } from "@_node/index";
 
 interface Iadd {
   tagName: string;
@@ -21,7 +21,7 @@ interface Icopy {
   skipUpdate?: boolean;
 }
 interface Ipaste {
-  targetUid?: TNodeUid;
+  targetNode?: TNode;
   content?: string;
   pasteContent?: string;
   pastePosition?: "before" | "after" | "inside";

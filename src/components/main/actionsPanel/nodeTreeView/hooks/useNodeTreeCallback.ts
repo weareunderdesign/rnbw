@@ -36,12 +36,11 @@ export const useNodeTreeCallback = (
       targetItem?: TreeItemIndex;
     },
   ) => {
-    //TODO: Implement position
-    // const isBetween = target.targetType === "between-items";
+    const isBetween = target.targetType === "between-items";
     const targetUid = (
       target.targetType === "item" ? target.targetItem : target.parentItem
     ) as TNodeUid;
-    // const position = isBetween ? target.childIndex : 0;
+    const position = isBetween ? target.childIndex : 0;
 
     const validUids = getValidNodeUids(
       validNodeTree,
@@ -54,9 +53,11 @@ export const useNodeTreeCallback = (
 
     if (target.parentItem === "ROOT") return;
 
-    rnbw.files.move({
-      uids: validUids,
-      targetUid: targetUid as TNodeUid,
+    rnbw.elements.move({
+      selectedUids: validUids,
+      targetUid,
+      isBetween,
+      position,
     });
 
     isDragging.current = false;

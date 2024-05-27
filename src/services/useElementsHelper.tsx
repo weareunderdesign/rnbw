@@ -33,6 +33,7 @@ import { useDispatch } from "react-redux";
 import {
   focusNodeTreeNode,
   selectNodeTreeNodes,
+  setNeedToSelectNodePaths,
   setSelectedNodeUids,
 } from "@_redux/main/nodeTree";
 
@@ -250,7 +251,7 @@ export const useElementHelper = () => {
         const parent = nodeTree[parentUid];
         const parentPath = parent.uniqueNodePath;
         if (parentPath) {
-          return `${parentPath}_${node.nodeName}_${index}`;
+          return `${parentPath}.${node.nodeName}_${index}`;
         }
         return `${node.nodeName}_${index}`;
       };
@@ -372,8 +373,6 @@ export const useElementHelper = () => {
     });
 
     const contentInApp = parse5.serialize(htmlDom);
-    // ROOT_html1_body2_div1_div3_div1_div1_p4;
-    // ROOT_html1_body2_div1_div3_div1_div1_h13_p;
 
     await dispatch(setSelectedNodeUids(selectedNodeUids));
     await dispatch(focusNodeTreeNode(selectedNodeUids[0]));
@@ -383,7 +382,115 @@ export const useElementHelper = () => {
       contentInApp,
       nodeTree,
       htmlDom,
+      selectedNodeUids,
     };
+  };
+
+  const findNodeToSelectAfterAction = async ({
+    nodeUids,
+    action,
+  }: {
+    nodeUids: string[];
+    action: {
+      type: "add" | "remove" | "replace";
+      tagNames?: string[];
+    };
+  }) => {
+    const uniqueNodePaths: string[] = [];
+    if (nodeUids.length === 0) return [];
+
+    const sortedUids = nodeUids;
+
+    for (let i = 0; i < sortedUids.length; i++) {
+      const nodeUid = sortedUids[i];
+      if (!nodeUid) return;
+      const node = validNodeTree[nodeUid];
+      if (!node) return;
+      const parentUid = node.parentUid;
+      if (!parentUid) return;
+      const parent = validNodeTree[parentUid];
+      if (!parent) return;
+
+      const selectedChildIndex = node?.uniqueNodePath?.split("_").pop();
+      if (!selectedChildIndex) return;
+
+      const allTags = action?.tagNames ?? [node.data.tagName];
+
+      let offset = 0;
+      let tempPath = node.uniqueNodePath;
+
+      /*TODO: handle selection when #text node 
+      is encountered as it is converted to span and the attributes are not added to it*/
+
+      //Find the next node to select after the remove action
+      if (action.type === "remove") {
+        const childrens = parent.children;
+        const totalChildren = childrens.length;
+        /* if there are more nodes in the parent other than the one being removed,
+          then there are 2 possibilities:
+          1. The last child is the one being removed, then the prev child should be selected
+          2. The child being removed is not the last child, then the next child should be selected
+          */
+
+        /* if there is only one child in the parent, then the next parent should be selected */
+        const validNodeTreeKeys = Object.keys(validNodeTree);
+
+        if (childrens.length > 1) {
+          // last child unique node path
+          const lastChildUid = childrens?.[totalChildren - 1];
+          const currentChildIndexInValidNodeTree =
+            validNodeTreeKeys.indexOf(nodeUid);
+          const prevChildUid =
+            validNodeTreeKeys[currentChildIndexInValidNodeTree - 1];
+          const prevChild = validNodeTree?.[prevChildUid];
+
+          const nextChildUid =
+            validNodeTreeKeys[currentChildIndexInValidNodeTree + 1];
+          const nextChild = validNodeTree?.[nextChildUid];
+          if (lastChildUid === nodeUid) {
+            tempPath = prevChild?.uniqueNodePath;
+          } else {
+            tempPath = `${parent.uniqueNodePath}.${nextChild?.data.tagName}_${parseInt(
+              selectedChildIndex,
+            )}`;
+          }
+        } else {
+          const indexOfCurrentParentUid = validNodeTreeKeys.indexOf(parentUid);
+          const nextParentUid = validNodeTreeKeys[indexOfCurrentParentUid + 1];
+
+          if (nextParentUid) {
+            const nextParent = validNodeTree[nextParentUid];
+            if (nextParent) {
+              tempPath = nextParent.uniqueNodePath;
+            }
+          }
+        }
+
+        if (tempPath) {
+          dispatch(setNeedToSelectNodePaths([tempPath]));
+        }
+
+        return;
+      } else {
+        tempPath = parent.uniqueNodePath;
+      }
+      if (action.type !== "replace") {
+        offset = 1;
+      }
+      allTags.forEach((tagName, index) => {
+        const tag = tagName ?? node.data.tagName;
+        const newNodeIndex = parseInt(selectedChildIndex) + offset + index;
+
+        if (tagName === "#text") {
+          return;
+        }
+        // The uniqueNodePath is used to focus on the newly added node
+        const uniqueNodePathToFocus = `${tempPath ?? ""}.${tag}_${newNodeIndex}`;
+        uniqueNodePaths.push(uniqueNodePathToFocus);
+      });
+    }
+    await dispatch(setNeedToSelectNodePaths(uniqueNodePaths));
+    return uniqueNodePaths;
   };
 
   return {
@@ -391,5 +498,6 @@ export const useElementHelper = () => {
     checkAllResourcesAvailable,
     copyAndCutNode,
     parseHtml,
+    findNodeToSelectAfterAction,
   };
 };

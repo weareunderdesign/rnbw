@@ -13,7 +13,6 @@ import {
   NodeTree_Event_RedoActionType,
   NodeTree_Event_UndoActionType,
   setCopiedNodeDisplayName,
-  setNeedToSelectNodePaths,
   setSelectedNodeUids,
 } from "@_redux/main/nodeTree";
 import { setDidRedo, setDidUndo } from "@_redux/main/processor";
@@ -33,6 +32,7 @@ import { useCallback, useContext, useMemo } from "react";
 import { useDispatch } from "react-redux";
 import { useElementHelper } from "./useElementsHelper";
 import { toast } from "react-toastify";
+import * as parse5 from "parse5";
 
 export default function useElements() {
   const {
@@ -52,6 +52,8 @@ export default function useElements() {
     getEditorModelWithCurrentCode,
     checkAllResourcesAvailable,
     copyAndCutNode,
+    findNodeToSelectAfterAction,
+    parseHtml,
   } = useElementHelper();
 
   const codeViewInstanceModel = monacoEditorRef.current?.getModel();
@@ -93,8 +95,7 @@ export default function useElements() {
     }
     const uid = sortedUids[0];
     const node = validNodeTree[uid];
-    const parentUid = node?.parentUid;
-    const parent = validNodeTree[parentUid!];
+    let code = "";
     if (node) {
       const { endCol, endLine } = node.data.sourceCodeLocation;
 
@@ -105,22 +106,25 @@ export default function useElements() {
       };
 
       helperModel.applyEdits([edit]);
-    }
-    const selectedChildIndex = node?.uniqueNodePath?.split("_").pop();
-    if (!selectedChildIndex) return;
+      code = helperModel.getValue();
 
-    const newNodeIndex = parseInt(selectedChildIndex) + 1;
-    const uniqueNodePathToFocus = `${parent.uniqueNodePath ?? ""}_${tagName}_${newNodeIndex}`;
-    const code = helperModel.getValue();
-    if (!skipUpdate) {
-      await dispatch(setNeedToSelectNodePaths([uniqueNodePathToFocus]));
-      codeViewInstanceModel.setValue(code);
+      if (!skipUpdate) {
+        findNodeToSelectAfterAction({
+          nodeUids: [uid],
+          action: {
+            type: "add",
+            tagNames: [tagName],
+          },
+        });
+
+        codeViewInstanceModel.setValue(code);
+      }
     }
-    // ROOT_html1_body2_div1_div3_div1_div1_p;
+
     return { code };
   };
 
-  const duplicate = (params: Iduplicate = {}) => {
+  const duplicate = async (params: Iduplicate = {}) => {
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
     const { skipUpdate } = params;
 
@@ -145,7 +149,16 @@ export default function useElements() {
       }
     });
     const code = helperModel.getValue();
-    !skipUpdate && codeViewInstanceModel.setValue(code);
+    if (!skipUpdate) {
+      await findNodeToSelectAfterAction({
+        nodeUids: selectedNodeUids,
+        action: {
+          type: "add",
+        },
+      });
+      codeViewInstanceModel.setValue(code);
+    }
+
     return code;
   };
 
@@ -232,16 +245,14 @@ export default function useElements() {
       content,
       skipUpdate,
       pastePosition = "after",
-      targetUid,
+      targetNode,
       pasteContent,
     } = params;
 
     if (!codeViewInstanceModel) return;
 
     /* if targetUid is not provided, then the focused node will be the target node */
-    const focusedNode = targetUid
-      ? validNodeTree[targetUid]
-      : validNodeTree[nFocusedItem];
+    const focusedNode = targetNode ? targetNode : validNodeTree[nFocusedItem];
 
     if (
       !focusedNode ||
@@ -258,7 +269,8 @@ export default function useElements() {
     const helperModel = getEditorModelWithCurrentCode();
     helperModel.setValue(initialCode);
 
-    let code = pasteContent || (await window.navigator.clipboard.readText());
+    let copiedCode =
+      pasteContent || (await window.navigator.clipboard.readText());
 
     const { startLine, startCol, endLine, endCol } =
       focusedNode.data.sourceCodeLocation;
@@ -279,7 +291,8 @@ export default function useElements() {
         startTag.endCol,
       );
     }
-    code = html_beautify(code);
+    copiedCode = html_beautify(copiedCode);
+    let code = copiedCode;
     const edit = {
       range: editRange,
       text: code,
@@ -287,53 +300,27 @@ export default function useElements() {
     helperModel.applyEdits([edit]);
 
     code = helperModel.getValue();
-    !skipUpdate && codeViewInstanceModel.setValue(code);
+    if (!skipUpdate) {
+      const stringToHtml = parse5.parseFragment(copiedCode);
+
+      const tagNames = stringToHtml.childNodes.map((node) =>
+        node.nodeName.toLowerCase(),
+      );
+      await findNodeToSelectAfterAction({
+        nodeUids: [focusedNode.uid],
+        action: {
+          type: "add",
+          tagNames,
+        },
+      });
+      codeViewInstanceModel.setValue(code);
+    }
 
     return code;
   };
 
   const plainPaste = () => {};
-  /*
 
-Scenario 1:
-
-a-> 1 - 100
-b-> 100 -200
-c-> 200 - 300
-d-> 300 - 400
-
-
-b is deleted, so now new ranges should be changed (which is not updated as we want move operation to be performed as one step)
-
-a-> 1 - 100
-c-> 100 - 200
-d-> 200 - 300
-
-if we paste b below c with old ranges, then b will be pasted from line 200 (if range is not updated) which is wrong
-b should be pasted from line 200 as per the new ranges
-
-Scenario 2:
-
-a-> 1 - 100
-b-> 100 -200
-c-> 200 - 300
-d-> 300 - 400
-
-now we just copy b. The location of nodes will remain same
-
-We now paste b below c. The new ranges now should be:
-a -> 1 - 100
-b -> 100 - 200
-c -> 200 - 300
-b -> 300 - 400
-d -> 400 - 500
-
-Now we delete b. The new ranges should be:
-a -> 1 - 100
-c -> 100 - 200
-b -> 200 - 300
-d -> 300 - 400
-*/
   const group = async () => {
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
 
@@ -362,6 +349,14 @@ d -> 300 - 400
       range: new Range(startLine, startCol, startLine, startCol),
       text: code,
     };
+
+    findNodeToSelectAfterAction({
+      nodeUids: [sortedUids[0]],
+      action: {
+        type: "replace",
+        tagNames: ["div"],
+      },
+    });
 
     helperModel.applyEdits([edit]);
     codeViewInstanceModel.setValue(html_beautify(helperModel.getValue()));
@@ -417,8 +412,6 @@ d -> 300 - 400
     isBetween is true even if we drop on the first child of the parent node
     */
     const { targetUid, isBetween, position, selectedUids } = params;
-    const helperModel = getEditorModelWithCurrentCode();
-
     const targetNode = validNodeTree[targetUid];
 
     // When the position is 0 we need to add inside the target node
@@ -429,9 +422,14 @@ d -> 300 - 400
           ? targetNode.children[position - 1]
           : targetNode.uid;
 
-    const { copiedCode } = await copyAndCutNode({
-      selectedUids,
-      pasteToClipboard: false,
+    const copiedCode = await copy({
+      uids: selectedUids,
+      skipUpdate: true,
+    });
+
+    const updatedCode = await remove({
+      uids: selectedUids,
+      skipUpdate: true,
     });
 
     const sortedUids = sortUidsByMaxEndIndex(
@@ -439,34 +437,33 @@ d -> 300 - 400
       validNodeTree,
     );
 
+    if (sortedUids.length === 0) return;
+    //check if targetNode is a part of the selected nodes
+    const isTargetNodeInSelectedNodes = selectedUids.includes(targetNode.uid);
+    if (isTargetNodeInSelectedNodes) {
+      toast.error("Cannot move a node inside itself");
+    }
     const pastePosition = focusedItem === targetNode.uid ? "inside" : "after";
-    let isFirst = true; // isFirst is used to when drop focusedItem to itself
+    if (!updatedCode || !copiedCode) return;
 
-    sortedUids.forEach(async (uid) => {
-      if (uid === focusedItem && isFirst) {
-        isFirst = false;
-        const pastedCode = (await paste({
-          pasteContent: copiedCode,
-          content: helperModel.getValue(),
-          targetUid: focusedItem,
-          pastePosition,
-        })) as string;
-
-        helperModel.setValue(pastedCode);
-      } else {
-        const updatedCode = remove({
-          uids: [uid],
-          skipUpdate: true,
-        });
-
-        updatedCode && helperModel.setValue(updatedCode);
+    const focusedNodePath = validNodeTree[focusedItem].uniqueNodePath;
+    //get the updated source code location of the target node
+    const { nodeTree: newNodeTree } = await parseHtml(updatedCode);
+    //find the new focused node using the unique node path
+    let newFocusedNode;
+    for (const [, node] of Object.entries(newNodeTree)) {
+      if (node.uniqueNodePath === focusedNodePath) {
+        newFocusedNode = node;
+        break; // Exit the loop once you find the matching node
       }
+    }
+    if (!newFocusedNode) return;
+    await paste({
+      content: updatedCode,
+      pasteContent: copiedCode,
+      pastePosition,
+      targetNode: newFocusedNode,
     });
-
-    const prettyCode = html_beautify(helperModel.getValue(), {
-      preserve_newlines: false,
-    });
-    codeViewInstanceModel.setValue(prettyCode);
   };
 
   const updateEditableElement = useCallback(
@@ -551,7 +548,16 @@ d -> 300 - 400
     };
     helperModel.applyEdits([edit]);
     const code = html_beautify(helperModel.getValue());
-    !skipUpdate && codeViewInstanceModel.setValue(code);
+    if (!skipUpdate) {
+      await findNodeToSelectAfterAction({
+        nodeUids: [nFocusedItem],
+        action: {
+          type: "replace",
+        },
+      });
+      codeViewInstanceModel.setValue(code);
+    }
+
     return settings;
   };
 
@@ -591,7 +597,7 @@ d -> 300 - 400
   };
 
   //Delete
-  const remove = (params: Iremove = {}) => {
+  const remove = async (params: Iremove = {}) => {
     const { uids, skipUpdate, content } = params;
     const removalUids = uids || selectedItems;
 
@@ -612,6 +618,7 @@ d -> 300 - 400
     helperModel.setValue(contentToEdit);
 
     const sortedUids = sortUidsByMaxEndIndex(removalUids, validNodeTree);
+
     sortedUids.forEach((uid) => {
       const node = validNodeTree[uid];
       if (node) {
@@ -627,7 +634,15 @@ d -> 300 - 400
 
     const code = helperModel.getValue();
 
-    !skipUpdate && codeViewInstanceModel.setValue(code);
+    if (!skipUpdate) {
+      await findNodeToSelectAfterAction({
+        nodeUids: [removalUids[0]],
+        action: {
+          type: "remove",
+        },
+      });
+      codeViewInstanceModel.setValue(code);
+    }
     return code;
   };
   return {
