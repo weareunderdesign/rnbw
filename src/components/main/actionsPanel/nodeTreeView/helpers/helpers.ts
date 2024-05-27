@@ -28,10 +28,10 @@ export const sortUidsByMaxEndIndex = (
       return 0;
     }
 
-    const { endLine: endLine1 } = selectedNode1.data.sourceCodeLocation;
-    const { endLine: endLine2 } = selectedNode2.data.sourceCodeLocation;
+    const { endOffset: endOffset1 } = selectedNode1.data.sourceCodeLocation;
+    const { endOffset: endOffset2 } = selectedNode2.data.sourceCodeLocation;
 
-    return endLine2 - endLine1; // Sort in descending order
+    return endOffset2 - endOffset1; // Sort in descending order
   });
 };
 export const sortUidsByMinStartIndex = (
@@ -57,7 +57,7 @@ export const sortUidsByMinStartIndex = (
     const { startOffset: start1 } = selectedNode1.data.sourceCodeLocation;
     const { startOffset: start2 } = selectedNode2.data.sourceCodeLocation;
 
-    return start1 - start2; // Sort in descending order
+    return start1 - start2; // Sort in ascending order
   });
 };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
