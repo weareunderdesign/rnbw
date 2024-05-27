@@ -53,6 +53,7 @@ export default function useElements() {
     checkAllResourcesAvailable,
     copyAndCutNode,
     findNodeToSelectAfterAction,
+    parseHtml,
   } = useElementHelper();
 
   const codeViewInstanceModel = monacoEditorRef.current?.getModel();
@@ -244,16 +245,14 @@ export default function useElements() {
       content,
       skipUpdate,
       pastePosition = "after",
-      targetUid,
+      targetNode,
       pasteContent,
     } = params;
 
     if (!codeViewInstanceModel) return;
 
     /* if targetUid is not provided, then the focused node will be the target node */
-    const focusedNode = targetUid
-      ? validNodeTree[targetUid]
-      : validNodeTree[nFocusedItem];
+    const focusedNode = targetNode ? targetNode : validNodeTree[nFocusedItem];
 
     if (
       !focusedNode ||
@@ -453,8 +452,6 @@ d -> 300 - 400
     isBetween is true even if we drop on the first child of the parent node
     */
     const { targetUid, isBetween, position, selectedUids } = params;
-    const helperModel = getEditorModelWithCurrentCode();
-
     const targetNode = validNodeTree[targetUid];
 
     // When the position is 0 we need to add inside the target node
@@ -465,9 +462,14 @@ d -> 300 - 400
           ? targetNode.children[position - 1]
           : targetNode.uid;
 
-    const { copiedCode } = await copyAndCutNode({
-      selectedUids,
-      pasteToClipboard: false,
+    const copiedCode = await copy({
+      uids: selectedUids,
+      skipUpdate: true,
+    });
+
+    const updatedCode = await remove({
+      uids: selectedUids,
+      skipUpdate: true,
     });
 
     const sortedUids = sortUidsByMaxEndIndex(
@@ -475,34 +477,33 @@ d -> 300 - 400
       validNodeTree,
     );
 
+    if (sortedUids.length === 0) return;
+    //check if targetNode is a part of the selected nodes
+    const isTargetNodeInSelectedNodes = selectedUids.includes(targetNode.uid);
+    if (isTargetNodeInSelectedNodes) {
+      toast.error("Cannot move a node inside itself");
+    }
     const pastePosition = focusedItem === targetNode.uid ? "inside" : "after";
-    let isFirst = true; // isFirst is used to when drop focusedItem to itself
+    if (!updatedCode || !copiedCode) return;
 
-    sortedUids.forEach(async (uid) => {
-      if (uid === focusedItem && isFirst) {
-        isFirst = false;
-        const pastedCode = (await paste({
-          pasteContent: copiedCode,
-          content: helperModel.getValue(),
-          targetUid: focusedItem,
-          pastePosition,
-        })) as string;
-
-        helperModel.setValue(pastedCode);
-      } else {
-        const updatedCode = await remove({
-          uids: [uid],
-          skipUpdate: true,
-        });
-
-        updatedCode && helperModel.setValue(updatedCode);
+    const focusedNodePath = validNodeTree[focusedItem].uniqueNodePath;
+    //get the updated source code location of the target node
+    const { nodeTree: newNodeTree } = await parseHtml(updatedCode);
+    //find the new focused node using the unique node path
+    let newFocusedNode;
+    for (const [, node] of Object.entries(newNodeTree)) {
+      if (node.uniqueNodePath === focusedNodePath) {
+        newFocusedNode = node;
+        break; // Exit the loop once you find the matching node
       }
+    }
+    if (!newFocusedNode) return;
+    await paste({
+      content: updatedCode,
+      pasteContent: copiedCode,
+      pastePosition,
+      targetNode: newFocusedNode,
     });
-
-    const prettyCode = html_beautify(helperModel.getValue(), {
-      preserve_newlines: false,
-    });
-    codeViewInstanceModel.setValue(prettyCode);
   };
 
   const updateEditableElement = useCallback(
@@ -657,6 +658,7 @@ d -> 300 - 400
     helperModel.setValue(contentToEdit);
 
     const sortedUids = sortUidsByMaxEndIndex(removalUids, validNodeTree);
+
     sortedUids.forEach((uid) => {
       const node = validNodeTree[uid];
       if (node) {
