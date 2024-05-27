@@ -105,6 +105,9 @@ export const useFileTreeEvent = () => {
     }
   }, [lastFileAction]);
 
+  /*  the following functions have didRedo and didUndo in dependencies
+      to undo and redo not writing in file history  */
+
   const _remove = useCallback(
     async ({ uids }: { uids: TNodeUid[] }) => {
       dispatch(setDoingFileAction(true));

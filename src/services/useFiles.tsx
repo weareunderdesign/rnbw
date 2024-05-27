@@ -260,13 +260,6 @@ export default function useFiles() {
       const parentNode = fileTree[file.parentUid!];
       if (!parentNode) return;
       const name = `${newName}${extension ? `.${extension}` : ""}`;
-      const _fileAction: TFileAction = {
-        action: "rename",
-        payload: {
-          orgUid: uid,
-          newUid: _path.join(parentNode.uid, name),
-        },
-      };
       try {
         await moveLocalSingleDirectoryOrFile({
           fileTree,
@@ -276,6 +269,14 @@ export default function useFiles() {
           isCopy: false,
           newName: name,
         });
+
+        const _fileAction: TFileAction = {
+          action: "rename",
+          payload: {
+            orgUid: uid,
+            newUid: _path.join(parentNode.uid, name),
+          },
+        };
 
         !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
       } catch (err) {
@@ -288,8 +289,6 @@ export default function useFiles() {
     [fileTree, didUndo, didRedo],
   );
   const undo = useCallback(async () => {
-    console.log(fileEventPastLength, "undo fileEventPastLength");
-
     if (fileEventPastLength === 0) {
       LogAllow && console.log("Undo - FileTree - it is the origin state");
       return;
@@ -460,10 +459,7 @@ export default function useFiles() {
         action: "remove",
         payload: { uids: _uids },
       };
-
-      if (!didUndo && !didRedo) {
-        dispatch(setFileAction(_fileAction));
-      }
+      !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
     } catch (err) {
       toast.error("An error occurred while deleting the file");
       console.error(err);

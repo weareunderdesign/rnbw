@@ -226,10 +226,8 @@ export default function WorkspaceTreeView() {
               async (e: React.MouseEvent) => {
                 e.stopPropagation();
                 try {
-                  const promises = [];
-
                   if (fileTree[currentFileUid]?.data?.changed && autoSave) {
-                    promises.push(onSaveCurrentFile());
+                    onSaveCurrentFile();
                   }
                   // Skip click-event from an inline rename input
                   const targetId = e.target && (e.target as HTMLElement).id;
@@ -242,25 +240,21 @@ export default function WorkspaceTreeView() {
                     focusedItemRef.current = props.item.index as TNodeUid;
                   }
                   if (e.shiftKey) {
-                    promises.push(props.context.selectUpTo());
+                    props.context.selectUpTo();
                   } else if (e.ctrlKey) {
-                    promises.push(
-                      props.context.isSelected
-                        ? props.context.unselectItem()
-                        : props.context.addToSelectedItems(),
-                    );
+                    props.context.isSelected
+                      ? props.context.unselectItem()
+                      : props.context.addToSelectedItems();
                   } else {
-                    promises.push(props.context.selectItem());
+                    props.context.selectItem();
                     if (props.item.isFolder) {
-                      promises.push(props.context.toggleExpandedState());
+                      props.context.toggleExpandedState();
                     } else {
-                      promises.push(props.context.primaryAction());
+                      props.context.primaryAction();
                     }
                   }
 
-                  promises.push(dispatch(setActivePanel("file")));
-                  // Wait for all promises to resolve
-                  await Promise.all(promises);
+                  dispatch(setActivePanel("file"));
 
                   openFile(props.item.index as TNodeUid);
                 } catch (error) {

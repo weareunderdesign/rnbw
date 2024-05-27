@@ -300,8 +300,6 @@ export const useHandlers = () => {
       }
     } catch (err) {
       console.log(err);
-    } finally {
-      console.log(">>>>>>>>>>>> currentProjectReload");
     }
   }, [project, currentProjectFileHandle, osType, fileTree, currentFileUid]);
 
