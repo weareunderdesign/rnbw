@@ -220,6 +220,7 @@ export const IFrame = () => {
 
             if (!filterArr || !filterArr.length) {
               element.setAttribute("rnbw-text-element", "true");
+
               continue;
             }
 

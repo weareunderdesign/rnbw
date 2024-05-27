@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Command } from "cmdk";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -23,9 +23,25 @@ import {
   COMMANDS_TO_KEEP_MODAL_OPEN,
   PLACEHOLDERS,
 } from "./constants";
-import { SVGIcon } from "@_components/common";
+import { SVGIcon, SVGIconIV } from "@_components/common";
 
+const iconMappping = {
+  New: "/images/jumpstart/new.svg",
+  Open: "/images/jumpstart/open.svg",
+  Guide: "/images/jumpstart/guide.svg",
+  Support: "/images/jumpstart/support.svg",
+  Community: "/images/jumpstart/community.svg",
+  Theme: "/images/jumpstart/theme.svg",
+  Autosave: "/images/jumpstart/autosave.svg",
+  "Code Wrap": "/images/jumpstart/formatcode.svg",
+  Recent: "/images/jumpstart/open.svg",
+};
 export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
+  const [currentFocusedMenuItem, setCurrentFocusedMenuItem] = useState({
+    name: "New",
+    description: "Start a new project",
+  });
+
   // redux
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -164,7 +180,7 @@ export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
   return (
     <Command.Dialog
       open={cmdkOpen}
-      className="background-primary radius-s shadow border"
+      className="border shadow background-primary radius-s"
       onOpenChange={(open: boolean) => dispatch(setCmdkOpen(open))}
       onKeyDown={onKeyDown}
       filter={(value: string, search: string) => {
@@ -243,6 +259,16 @@ export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
                             command={command}
                             index={index}
                             onSelect={onCommandSelect}
+                            onMouseEnter={() => {
+                              let itemName = command.Name || "";
+                              if (groupName === "Recent") {
+                                itemName = "Recent";
+                              }
+                              setCurrentFocusedMenuItem({
+                                name: itemName,
+                                description: command.Description || "",
+                              });
+                            }}
                           />
                         ),
                     )}
@@ -253,6 +279,32 @@ export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
           </div>
         </div>
 
+        <div
+          className="padding-m align-center border-left"
+          style={{ width: "200%" }}
+        >
+          {Object.keys(iconMappping).map((key, index) => (
+            <div
+              id={`label${index + 1}`}
+              className={
+                currentFocusedMenuItem.name === key
+                  ? "column justify-center align-center"
+                  : "hidden"
+              }
+              key={index}
+            >
+              <SVGIconIV
+                src={`${iconMappping?.[key as keyof typeof iconMappping]}`}
+                style={{ height: "160px", width: "160px" }}
+              />
+
+              <div className="text-l padding-s">
+                {currentFocusedMenuItem.name}
+              </div>
+              <div className="text-m">{currentFocusedMenuItem.description}</div>
+            </div>
+          ))}
+        </div>
         {/* description - right panel */}
         {(currentCmdkPage === "Add" || currentCmdkPage === "Jumpstart") &&
           false && (

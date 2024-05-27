@@ -31,9 +31,12 @@ export const SettingsView = ({
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>, attribute: string) => {
       if (e.key !== "Enter") return;
-      changeAttribute({
-        attrName: attribute,
-        attrValue: attributes[attribute],
+      const existingAttributesObj = rnbw.elements.getElementSettings();
+      rnbw.elements.updateSettings({
+        settings: {
+          ...existingAttributesObj,
+          [`${attribute}`]: attributes[attribute],
+        },
       });
     },
     [attributes, changeAttribute],

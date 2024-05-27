@@ -68,7 +68,6 @@ export const useNodeTreeEvent = () => {
     validNodeTree,
     needToSelectCode,
     nExpandedItemsObj,
-    nFocusedItem,
     syncConfigs,
     nodeEventPast,
     didUndo,
@@ -113,10 +112,10 @@ export const useNodeTreeEvent = () => {
         dispatch(removeRunningAction());
         return;
       }
-      const { contentInApp, nodeTree } =
+      const { contentInApp, nodeTree, selectedNodeUids } =
         ext === "html"
           ? await parseHtml(currentFileContent, setMaxNodeUidRef)
-          : { contentInApp: "", nodeTree: {} };
+          : { contentInApp: "", nodeTree: {}, selectedNodeUids: [] };
 
       fileData.content = currentFileContent;
 
@@ -265,6 +264,7 @@ export const useNodeTreeEvent = () => {
           }
         }
       }
+
       dispatch(setCodeErrors(isCodeErrorsExist.current));
       if (isCodeErrorsExist.current) {
         dispatch(removeRunningAction());
@@ -272,7 +272,7 @@ export const useNodeTreeEvent = () => {
       }
 
       // sync node-tree
-      dispatch(setNodeTree(nodeTree));
+      await dispatch(setNodeTree(nodeTree));
       const _validNodeTree = getValidNodeTree(nodeTree);
 
       const uid = getNodeUidToBeSelectedAtFirst(_validNodeTree);
@@ -280,6 +280,7 @@ export const useNodeTreeEvent = () => {
         LogAllow && console.log("it's a new project");
         dispatch(setInitialFileUidToOpen(""));
         dispatch(setSelectedNodeUids([uid]));
+
         dispatch(
           setExpandedNodeTreeNodes(
             getNeedToExpandNodeUids(_validNodeTree, [uid]),
@@ -313,7 +314,7 @@ export const useNodeTreeEvent = () => {
           ),
         );
       } else {
-        markSelectedElements(iframeRefRef.current, [nFocusedItem], nodeTree);
+        markSelectedElements(iframeRefRef.current, selectedNodeUids, nodeTree);
         const validExpandedItems = getObjKeys(nExpandedItemsObj).filter(
           (uid) =>
             _validNodeTree[uid] && _validNodeTree[uid].isEntity === false,
@@ -330,6 +331,7 @@ export const useNodeTreeEvent = () => {
 
         if (!isSelectedNodeUidsChanged.current) {
           // this change is from 'node actions' or 'typing in code-view'
+
           const _selectedNodeUids: TNodeUid[] = [];
 
           if (needToSelectCode) {

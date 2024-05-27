@@ -1,5 +1,5 @@
-import { SVGIcon, SVGIconI, SVGIconII, SVGIconIII } from "./SvgIcon";
+import { SVGIcon, SVGIconI, SVGIconII, SVGIconIII, SVGIconIV } from "./SvgIcon";
 
-export { SVGIcon, SVGIconI, SVGIconII, SVGIconIII };
+export { SVGIcon, SVGIconI, SVGIconII, SVGIconIII, SVGIconIV };
 
 export * from "./types";

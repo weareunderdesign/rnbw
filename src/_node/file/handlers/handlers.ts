@@ -231,6 +231,7 @@ export const parseHtml = (
     contentInApp,
     nodeTree,
     htmlDom,
+    selectedNodeUids: [],
   };
 };
 
