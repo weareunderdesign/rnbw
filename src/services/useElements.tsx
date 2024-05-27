@@ -320,47 +320,7 @@ export default function useElements() {
   };
 
   const plainPaste = () => {};
-  /*
 
-Scenario 1:
-
-a-> 1 - 100
-b-> 100 -200
-c-> 200 - 300
-d-> 300 - 400
-
-
-b is deleted, so now new ranges should be changed (which is not updated as we want move operation to be performed as one step)
-
-a-> 1 - 100
-c-> 100 - 200
-d-> 200 - 300
-
-if we paste b below c with old ranges, then b will be pasted from line 200 (if range is not updated) which is wrong
-b should be pasted from line 200 as per the new ranges
-
-Scenario 2:
-
-a-> 1 - 100
-b-> 100 -200
-c-> 200 - 300
-d-> 300 - 400
-
-now we just copy b. The location of nodes will remain same
-
-We now paste b below c. The new ranges now should be:
-a -> 1 - 100
-b -> 100 - 200
-c -> 200 - 300
-b -> 300 - 400
-d -> 400 - 500
-
-Now we delete b. The new ranges should be:
-a -> 1 - 100
-c -> 100 - 200
-b -> 200 - 300
-d -> 300 - 400
-*/
   const group = async () => {
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
 
