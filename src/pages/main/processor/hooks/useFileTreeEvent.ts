@@ -34,7 +34,6 @@ export const useFileTreeEvent = () => {
     fileHandlers,
   } = useAppState();
   const rnbw = useRnbw();
-  // const { reloadCurrentProject } = useHandlers();
 
   const clearFutureHistoryTriggerRef = useRef(false);
   const lastFileActionRef = useRef<TFileAction>({ action: null });
@@ -53,8 +52,6 @@ export const useFileTreeEvent = () => {
       } else if (action === "remove") {
         _remove({ ...payload });
       } else if (action === "rename") {
-        console.log("rename>>>>>>>>>>>>>>>>>>>> ", payload);
-
         _rename({ ...payload });
       } else if (action === "move") {
         if (payload.isCopy) {
@@ -102,7 +99,7 @@ export const useFileTreeEvent = () => {
             orgUid: newUid,
             newUid: orgUid,
           }));
-          _move({ uids, isCopy: payload.isCopy });
+          _move({ uids });
         }
       }
     }
@@ -112,7 +109,6 @@ export const useFileTreeEvent = () => {
     async ({ uids }: { uids: TNodeUid[] }) => {
       dispatch(setDoingFileAction(true));
       dispatch(addInvalidFileNodes([...uids]));
-      console.log(">>>>>>>>>>> remove");
 
       rnbw.files.remove({ uids });
 
@@ -147,24 +143,18 @@ export const useFileTreeEvent = () => {
   );
 
   const _move = useCallback(
-    async ({
-      uids,
-    }: {
-      uids: { orgUid: TNodeUid; newUid: TNodeUid }[];
-      isCopy: boolean;
-    }) => {
+    ({ uids }: { uids: { orgUid: TNodeUid; newUid: TNodeUid }[] }) => {
       const orgUids = uids.map(({ orgUid }) => orgUid);
-
       const targetUids = uids.map(({ newUid }) => getParentUidFromUid(newUid));
 
       dispatch(setDoingFileAction(true));
       dispatch(addInvalidFileNodes([...orgUids]));
 
-      await rnbw.files.move({ uids: orgUids, targetUid: targetUids[0] });
+      rnbw.files.move({ uids: orgUids, targetUid: targetUids[0] });
 
       dispatch(removeInvalidFileNodes([...orgUids]));
       dispatch(setDoingFileAction(false));
     },
-    [project, fileTree, fileHandlers],
+    [project, fileTree, fileHandlers, didRedo, didUndo],
   );
 };

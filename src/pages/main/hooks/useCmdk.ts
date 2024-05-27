@@ -19,8 +19,6 @@ import { setDoingFileAction, TProjectContext } from "@_redux/main/fileTree";
 import {
   setActivePanel,
   setAutoSave,
-  setDidRedo,
-  setDidUndo,
   setShowActionsPanel,
   setShowCodeView,
   setWordWrap,
@@ -49,9 +47,6 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     project,
     fileTree,
     doingFileAction,
-    fileEventFutureLength,
-    fileEventPast,
-    nodeEventFutureLength,
     iframeLoading,
     activePanel,
     showActionsPanel,
@@ -66,9 +61,6 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
   } = useAppState();
 
   const rnbw = useRnbw();
-  useEffect(() => {
-    console.log(fileEventPast, "fileEventPast");
-  }, [fileEventPast]);
   // handlers
   const onClear = useCallback(async () => {
     window.localStorage.clear();
@@ -124,42 +116,23 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
       LogAllow && console.log("failed to download project");
     }
   }, [project]);
-  const onUndo = useCallback(() => {
+  const onUndo = () => {
     if (!!runningAction || doingFileAction || iframeLoading) return;
     if (activePanel === "file" && showActionsPanel && showFilePanel) {
-      rnbw.files.undo({ steps: 1 });
+      rnbw.files.undo();
     } else {
       rnbw.elements.undo();
     }
-    dispatch(setDidUndo(true));
-  }, [
-    runningAction,
-    doingFileAction,
-    iframeLoading,
-    activePanel,
-    showActionsPanel,
-    showFilePanel,
-  ]);
-  const onRedo = useCallback(() => {
+  };
+  const onRedo = () => {
     if (!!runningAction || doingFileAction || iframeLoading) return;
 
     if (activePanel === "file" && showActionsPanel && showFilePanel) {
-      rnbw.files.redo({ steps: 1 });
+      rnbw.files.redo();
     } else {
       rnbw.elements.redo();
     }
-
-    dispatch(setDidRedo(true));
-  }, [
-    runningAction,
-    doingFileAction,
-    iframeLoading,
-    activePanel,
-    fileEventFutureLength,
-    nodeEventFutureLength,
-    showActionsPanel,
-    showFilePanel,
-  ]);
+  };
   const onToggleCodeView = useCallback(() => {
     dispatch(setShowCodeView(!showCodeView));
   }, [showCodeView]);
