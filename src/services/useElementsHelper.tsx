@@ -471,6 +471,8 @@ export const useElementHelper = () => {
         }
 
         return;
+      } else {
+        tempPath = parent.uniqueNodePath;
       }
       if (action.type !== "replace") {
         offset = 1;
@@ -487,7 +489,6 @@ export const useElementHelper = () => {
         uniqueNodePaths.push(uniqueNodePathToFocus);
       });
     }
-
     await dispatch(setNeedToSelectNodePaths(uniqueNodePaths));
     return uniqueNodePaths;
   };
