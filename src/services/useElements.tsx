@@ -444,7 +444,7 @@ export default function useElements() {
       }
       helperModel.applyEdits([removeGroupedCodeEdit, addUngroupedCodeEdit]);
     }
-    const code = await PrettyCode(helperModel.getValue());
+    const code = helperModel.getValue();
     if (!skipUpdate) {
       codeViewInstanceModel.setValue(code);
       dispatch(setNeedToSelectNodePaths(allNodePathsToSelect));

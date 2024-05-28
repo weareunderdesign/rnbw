@@ -220,9 +220,11 @@ const useEditor = () => {
   const handleOnChange = useCallback(
     (value: string | undefined) => {
       if (value === undefined) return;
-      if (!AppstateRef.current.isContentProgrammaticallyChanged) {
-        !AppstateRef.current.isCodeTyping && dispatch(setIsCodeTyping(true));
-      }
+
+      !isCodeTyping && dispatch(setIsCodeTyping(true));
+      // if (!AppstateRef.current.isContentProgrammaticallyChanged) {
+      //   !AppstateRef.current.isCodeTyping && dispatch(setIsCodeTyping(true));
+      // }
       if (isCodeEditingView.current) {
         longDebouncedOnChange(value);
         isCodeEditingView.current = false;
