@@ -33,10 +33,11 @@ import {
 import { Range } from "monaco-editor";
 import { useCallback, useContext, useMemo } from "react";
 import { useDispatch } from "react-redux";
-import { PrettyCode, useElementHelper } from "./useElementsHelper";
+import { PrettyCode, isValidNode, useElementHelper } from "./useElementsHelper";
 import { toast } from "react-toastify";
 import * as parse5 from "parse5";
 import { setIsContentProgrammaticallyChanged } from "@_redux/main/reference";
+import { getValidNodeTree } from "@_pages/main/processor/helpers";
 
 export default function useElements() {
   const {
@@ -309,9 +310,14 @@ export default function useElements() {
     if (!skipUpdate) {
       const stringToHtml = parse5.parseFragment(copiedCode);
 
-      const tagNames = stringToHtml.childNodes.map((node) =>
-        node.nodeName.toLowerCase(),
-      );
+      const tagNames = stringToHtml.childNodes
+        .filter((node) => {
+          //@ts-expect-error - node.nodeName is not a string
+          if (isValidNode(node)) {
+            return true;
+          }
+        })
+        .map((node) => node.nodeName.toLowerCase());
       await findNodeToSelectAfterAction({
         nodeUids: [focusedNode.uid],
         action: {
@@ -418,9 +424,14 @@ export default function useElements() {
 
       const stringToHtml = parse5.parseFragment(preetyCopiedCode);
 
-      const tagNames = stringToHtml.childNodes.map((node) =>
-        node.nodeName.toLowerCase(),
-      );
+      const tagNames = stringToHtml.childNodes
+        .filter((node) => {
+          //@ts-expect-error - node.nodeName is not a string
+          if (isValidNode(node)) {
+            return true;
+          }
+        })
+        .map((node) => node.nodeName.toLowerCase());
       const nodesPathToSelect = await findNodeToSelectAfterAction({
         nodeUids: [uid],
         action: {
@@ -481,17 +492,39 @@ export default function useElements() {
     const pastePosition = focusedItem === targetNode.uid ? "inside" : "after";
     if (!updatedCode || !copiedCode) return;
 
+    const focusedNode = validNodeTree[focusedItem];
+    const focusedNodeParentUid = focusedNode.parentUid;
+    if (!focusedNodeParentUid) return;
+    const focusedNodeSiblings = validNodeTree[focusedNodeParentUid].children;
+    const sortedFocusedNodeChildren = sortUidsByMinStartIndex(
+      focusedNodeSiblings,
+      validNodeTree,
+    );
+
+    //filter out the children who are not in the selected nodes
+    const childrensNotInSelectedNodes = sortedFocusedNodeChildren.filter(
+      (uid) => !selectedUids.includes(uid),
+    );
+    //find the index of the focused node in this childrensNotInSelectedNodes
+    const focusedNodeIndex = childrensNotInSelectedNodes.indexOf(focusedItem);
+
+    //update the focused node path to the new path
     const focusedNodePath = validNodeTree[focusedItem].uniqueNodePath;
+    const newFocusedNodePath = `${focusedNodePath?.split("_").slice(0, -1).join("_")}_${focusedNodeIndex + 1}`;
+
     //get the updated source code location of the target node
     const { nodeTree: newNodeTree } = await parseHtml(updatedCode);
+    const newValidNodeTree = getValidNodeTree(newNodeTree);
     //find the new focused node using the unique node path
+
     let newFocusedNode;
-    for (const [, node] of Object.entries(newNodeTree)) {
-      if (node.uniqueNodePath === focusedNodePath) {
+    for (const [, node] of Object.entries(newValidNodeTree)) {
+      if (node.uniqueNodePath === newFocusedNodePath) {
         newFocusedNode = node;
         break; // Exit the loop once you find the matching node
       }
     }
+
     if (!newFocusedNode) return;
     await paste({
       content: updatedCode,

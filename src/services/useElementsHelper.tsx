@@ -76,6 +76,12 @@ export async function PrettyCode(code: string, startCol: number = 0) {
     return code;
   }
 }
+export const isValidNode = (node: THtmlDomNode) => {
+  return node.nodeName == "#documentType" || node.nodeName == "#text"
+    ? !!node?.value?.replace(/[\n\s]/g, "").length
+    : true;
+};
+
 export const useElementHelper = () => {
   const { nSelectedItemsObj, validNodeTree, needToSelectNodePaths } =
     useAppState();
@@ -231,12 +237,6 @@ export const useElementHelper = () => {
         return attribs;
       };
 
-      const isValidNode = (node: THtmlDomNode) => {
-        return node.nodeName == "#documentType" || node.nodeName == "#text"
-          ? !!node?.value?.replace(/[\n\s]/g, "").length
-          : true;
-      };
-
       const getUniqueNodePath = ({
         parentUid,
         node,
@@ -342,10 +342,15 @@ export const useElementHelper = () => {
         const node = seedNodes.shift() as THtmlNode;
         if (!node.data.childNodes) continue;
 
-        node.data.childNodes.map((child: THtmlDomNode, index: number) => {
+        let index = 0;
+        node.data.childNodes.map((child: THtmlDomNode) => {
           const uid = String(++_uid);
 
-          const validUid = isValidNode(child) ? ++_validUid : null;
+          let validUid = null;
+          if (isValidNode(child)) {
+            validUid = ++_validUid;
+            index++;
+          }
           validUid && callback && callback(validUid);
 
           if (child.nodeName === "title") {
@@ -483,9 +488,6 @@ export const useElementHelper = () => {
         const tag = tagName ?? node.data.tagName;
         const newNodeIndex = parseInt(selectedChildIndex) + offset + index;
 
-        if (tagName === "#text") {
-          return;
-        }
         // The uniqueNodePath is used to focus on the newly added node
         const uniqueNodePathToFocus = `${tempPath ?? ""}.${tag}_${newNodeIndex}`;
         uniqueNodePaths.push(uniqueNodePathToFocus);
@@ -493,6 +495,7 @@ export const useElementHelper = () => {
     }
     if (uniqueNodePaths.length === 0 || skipUpdate) return;
     await dispatch(setNeedToSelectNodePaths(uniqueNodePaths));
+
     return uniqueNodePaths;
   };
 
