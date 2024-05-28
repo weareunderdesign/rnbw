@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 
 import { set } from "idb-keyval";
 import { useDispatch } from "react-redux";
@@ -191,19 +191,6 @@ export const useHandlers = () => {
     [osType, saveRecentProject, rest],
   );
 
-  // current project - reload trigger
-  const [reloadCurrentProjectTrigger, setReloadCurrentProjectTrigger] =
-    useState(false);
-
-  const triggerCurrentProjectReload = useCallback(() => {
-    console.log("triggerCurrentProjectReload");
-    setReloadCurrentProjectTrigger((prev) => !prev);
-  }, []);
-
-  useEffect(() => {
-    reloadCurrentProject();
-  }, [reloadCurrentProjectTrigger]);
-
   const reloadCurrentProject = useCallback(async () => {
     try {
       if (project.context === "local") {
@@ -311,6 +298,5 @@ export const useHandlers = () => {
     importProject,
     closeNavigator,
     reloadCurrentProject,
-    triggerCurrentProjectReload,
   };
 };

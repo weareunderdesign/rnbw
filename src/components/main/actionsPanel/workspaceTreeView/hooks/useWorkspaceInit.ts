@@ -7,7 +7,7 @@ import useRnbw from "@_services/useRnbw";
 export const useWorkspaceInit = () => {
   const { project, fileTree, initialFileUidToOpen, fileHandlers } =
     useAppState();
-  const { triggerCurrentProjectReload } = useContext(MainContext);
+  const { reloadCurrentProject } = useContext(MainContext);
   const rnbw = useRnbw();
 
   const createDefaultFile = useCallback(async () => {
@@ -21,7 +21,7 @@ export const useWorkspaceInit = () => {
         if (rootFileHandlerExists) {
           //create a default file index.html in the root directory
           rnbw.files.createFile({ entityName: "index", extension: "html" });
-          triggerCurrentProjectReload();
+          reloadCurrentProject();
         }
       }
     }

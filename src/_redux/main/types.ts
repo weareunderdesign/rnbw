@@ -40,7 +40,6 @@ export type TMainContext = {
     fromURL?: boolean,
   ) => void;
   reloadCurrentProject: (action?: TFileAction) => void;
-  triggerCurrentProjectReload: () => void;
 
   onUndo: () => void;
   onRedo: () => void;

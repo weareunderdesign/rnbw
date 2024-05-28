@@ -10,11 +10,7 @@ import {
 import { editor, KeyCode, KeyMod, Selection } from "monaco-editor";
 import { useDispatch } from "react-redux";
 
-import {
-  CodeViewSyncDelay,
-  CodeViewSyncDelay_Long,
-  DefaultTabSize,
-} from "@_constants/main";
+import { CodeViewSyncDelay_Long, DefaultTabSize } from "@_constants/main";
 import { MainContext } from "@_redux/main";
 import { setCodeViewTabSize } from "@_redux/main/codeView";
 import {
@@ -26,10 +22,7 @@ import { useAppState } from "@_redux/useAppState";
 import { getCodeViewTheme, getLanguageFromExtension } from "../helpers";
 import { TCodeSelection } from "../types";
 import { useSaveCommand } from "@_pages/main/processor/hooks";
-import {
-  setIsCodeTyping,
-  setIsContentProgrammaticallyChanged,
-} from "@_redux/main/reference";
+import { setIsCodeTyping } from "@_redux/main/reference";
 import { debounce } from "@_pages/main/helper";
 
 const useEditor = () => {
@@ -59,32 +52,8 @@ const useEditor = () => {
     isContentProgrammaticallyChanged,
   });
 
-  useEffect(() => {
-    AppstateRef.current = {
-      theme: _theme,
-      autoSave,
-      isCodeTyping,
-      wordWrap,
-      isContentProgrammaticallyChanged,
-    };
-  }, [
-    _theme,
-    autoSave,
-    isCodeTyping,
-    wordWrap,
-    isContentProgrammaticallyChanged,
-  ]);
-
-  // set default tab-size
-  useEffect(() => {
-    dispatch(setCodeViewTabSize(DefaultTabSize));
-  }, []);
-
   // theme
   const [theme, setTheme] = useState<"vs-dark" | "light">();
-  useEffect(() => {
-    setTheme(getCodeViewTheme(_theme));
-  }, [_theme]);
 
   // language
   const [language, setLanguage] = useState("html");
@@ -119,11 +88,6 @@ const useEditor = () => {
   );
   const codeSelectionRef = useRef<TCodeSelection | null>(null);
   const isCodeEditingView = useRef(false);
-
-  useEffect(() => {
-    codeSelectionRef.current = codeSelection;
-    isCodeEditingView.current = true;
-  }, [codeSelection]);
 
   const setCodeSelection = useCallback(() => {
     const monacoEditor = monacoEditorRef.current;
@@ -176,41 +140,33 @@ const useEditor = () => {
   const onChange = useCallback(
     (value: string) => {
       dispatch(setCurrentFileContent(value));
-      const selectedRange: Selection | null =
-        monacoEditorRef.current?.getSelection() || null;
-      if (AppstateRef.current.isContentProgrammaticallyChanged) {
-        return;
+
+      if (!AppstateRef.current.isContentProgrammaticallyChanged) {
+        const selectedRange: Selection | null =
+          monacoEditorRef.current?.getSelection() || null;
+        dispatch(
+          setNeedToSelectCode(
+            selectedRange
+              ? {
+                  startLineNumber: selectedRange.startLineNumber,
+                  startColumn: selectedRange.startColumn,
+                  endLineNumber: selectedRange.endLineNumber,
+                  endColumn: selectedRange.endColumn,
+                }
+              : null,
+          ),
+        );
       }
 
-      dispatch(
-        setNeedToSelectCode(
-          selectedRange
-            ? {
-                startLineNumber: selectedRange.startLineNumber,
-                startColumn: selectedRange.startColumn,
-                endLineNumber: selectedRange.endLineNumber,
-                endColumn: selectedRange.endColumn,
-              }
-            : null,
-        ),
-      );
       autoSave && debouncedAutoSave();
-      dispatch(setIsCodeTyping(false));
+      AppstateRef.current.isCodeTyping && dispatch(setIsCodeTyping(false));
     },
-    [debouncedAutoSave, autoSave],
+    [autoSave, debouncedAutoSave],
   );
 
   const handleKeyDown = () => {
     isCodeEditingView.current = true;
   };
-
-  const debouncedOnChange = useCallback(
-    debounce((value) => {
-      onChange(value);
-      dispatch(setIsContentProgrammaticallyChanged(false));
-    }, CodeViewSyncDelay),
-    [onChange],
-  );
 
   const longDebouncedOnChange = useCallback(
     debounce(onChange, CodeViewSyncDelay_Long),
@@ -221,18 +177,14 @@ const useEditor = () => {
     (value: string | undefined) => {
       if (value === undefined) return;
 
-      !isCodeTyping && dispatch(setIsCodeTyping(true));
-      // if (!AppstateRef.current.isContentProgrammaticallyChanged) {
-      //   !AppstateRef.current.isCodeTyping && dispatch(setIsCodeTyping(true));
-      // }
-      if (isCodeEditingView.current) {
-        longDebouncedOnChange(value);
-        isCodeEditingView.current = false;
-      } else {
+      if (AppstateRef.current.isContentProgrammaticallyChanged) {
         onChange(value);
+      } else {
+        !AppstateRef.current.isCodeTyping && dispatch(setIsCodeTyping(true));
+        longDebouncedOnChange(value);
       }
     },
-    [debouncedOnChange, longDebouncedOnChange],
+    [longDebouncedOnChange, onChange],
   );
 
   // undo/redo
@@ -240,6 +192,36 @@ const useEditor = () => {
     action: "none" | "undo" | "redo";
     toggle: boolean;
   }>({ action: "none", toggle: false });
+
+  useEffect(() => {
+    AppstateRef.current = {
+      theme: _theme,
+      autoSave,
+      isCodeTyping,
+      wordWrap,
+      isContentProgrammaticallyChanged,
+    };
+  }, [
+    _theme,
+    autoSave,
+    isCodeTyping,
+    wordWrap,
+    isContentProgrammaticallyChanged,
+  ]);
+
+  // set default tab-size
+  useEffect(() => {
+    dispatch(setCodeViewTabSize(DefaultTabSize));
+  }, []);
+
+  useEffect(() => {
+    setTheme(getCodeViewTheme(_theme));
+  }, [_theme]);
+
+  useEffect(() => {
+    codeSelectionRef.current = codeSelection;
+    isCodeEditingView.current = true;
+  }, [codeSelection]);
 
   useEffect(() => {
     if (undoRedoToggle.action === "undo") {
