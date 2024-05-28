@@ -74,6 +74,7 @@ export const useNodeTreeEvent = () => {
     didRedo,
     activePanel,
   } = useAppState();
+
   const { parseHtml } = useElementHelper();
   const { iframeRefRef, setMaxNodeUidRef } = useContext(MainContext);
 
@@ -117,10 +118,13 @@ export const useNodeTreeEvent = () => {
         dispatch(removeRunningAction());
         return;
       }
-      const { contentInApp, nodeTree, selectedNodeUids } =
-        ext === "html"
-          ? await parseHtml(currentFileContent, setMaxNodeUidRef)
-          : { contentInApp: "", nodeTree: {}, selectedNodeUids: [] };
+      const {
+        contentInApp,
+        nodeTree,
+        selectedNodeUids: selectedNodeUidsAfterActions,
+      } = ext === "html"
+        ? await parseHtml(currentFileContent, setMaxNodeUidRef)
+        : { contentInApp: "", nodeTree: {}, selectedNodeUids: [] };
 
       fileData.content = currentFileContent;
 
