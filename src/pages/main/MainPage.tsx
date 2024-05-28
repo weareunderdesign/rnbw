@@ -25,12 +25,7 @@ export default function MainPage() {
     useReferneces();
 
   // hooks
-  const {
-    importProject,
-    closeNavigator,
-    reloadCurrentProject,
-    triggerCurrentProjectReload,
-  } = useHandlers();
+  const { importProject, closeNavigator, reloadCurrentProject } = useHandlers();
   const { onNew, onUndo, onRedo, onClear, onJumpstart } = useCmdk({
     cmdkReferenceData,
     importProject,
@@ -57,8 +52,8 @@ export default function MainPage() {
 
   // reload project after local file changes
   const debouncedCurrentProjectReload = useCallback(() => {
-    debounce(triggerCurrentProjectReload, CodeViewSyncDelay)();
-  }, [triggerCurrentProjectReload, fileTree, currentFileUid, autoSave]);
+    debounce(reloadCurrentProject, CodeViewSyncDelay)();
+  }, [fileTree, currentFileUid, autoSave]);
 
   const handleVisibilityChange = useCallback(() => {
     if (document.visibilityState === "visible") {
@@ -144,7 +139,6 @@ export default function MainPage() {
 
           importProject,
           reloadCurrentProject,
-          triggerCurrentProjectReload,
 
           onUndo,
           onRedo,

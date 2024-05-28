@@ -60,7 +60,7 @@ export const useNodeActionsHandler = () => {
     fileHandlers,
     invalidFileNodes,
   } = useAppState();
-  const { triggerCurrentProjectReload } = useContext(MainContext);
+  const { reloadCurrentProject } = useContext(MainContext);
   const selectedItems = useMemo(
     () => getObjKeys(fSelectedItemsObj),
     [fSelectedItemsObj],
@@ -147,7 +147,6 @@ export const useNodeActionsHandler = () => {
     dispatch(setDoingFileAction(false));
 
     // reload the current project
-    triggerCurrentProjectReload();
   }, [selectedItems, invalidFileNodes, project, fileTree, fileHandlers]);
 
   // Cut & Copy & Paste & Duplicate
@@ -242,7 +241,7 @@ export const useNodeActionsHandler = () => {
     dispatch(setDoingFileAction(false));
 
     // reload the current project
-    triggerCurrentProjectReload();
+    reloadCurrentProject();
   }, [clipboardData, fileTree, focusedItem, project, fileHandlers]);
   const onDuplicate = useCallback(async () => {
     const uids = selectedItems.filter((uid) => !invalidFileNodes[uid]);
@@ -311,7 +310,7 @@ export const useNodeActionsHandler = () => {
     dispatch(setDoingFileAction(false));
 
     // reload the current project
-    triggerCurrentProjectReload();
+    reloadCurrentProject();
   }, [selectedItems, invalidFileNodes, project, fileTree, fileHandlers]);
 
   // cb
@@ -420,7 +419,7 @@ export const useNodeActionsHandler = () => {
       }
 
       // reload the current project
-      triggerCurrentProjectReload();
+      reloadCurrentProject();
     },
     [project, fileTree, fileHandlers],
   );
@@ -531,7 +530,7 @@ export const useNodeActionsHandler = () => {
       dispatch(setDoingFileAction(false));
 
       // reload the current project
-      triggerCurrentProjectReload();
+      reloadCurrentProject();
     },
     [project, fileTree, fileHandlers],
   );

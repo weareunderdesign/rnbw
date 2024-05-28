@@ -350,7 +350,7 @@ export default function useElements() {
 
     const updatedCode = await remove({
       content: helperModel.getValue(),
-      skipUpdate: false,
+      skipUpdate: true,
     });
     if (!updatedCode) return;
     helperModel.setValue(updatedCode);
