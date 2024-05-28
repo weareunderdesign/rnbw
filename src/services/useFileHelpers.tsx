@@ -301,6 +301,7 @@ export const useFileHelpers = () => {
 
       let uniqueEntityName =
         newName || `${nodeData.name}${nodeData.ext ? `.${nodeData.ext}` : ""}`;
+      if (uid === `${targetUid}/${uniqueEntityName}`) return false;
       if (isCopy) {
         uniqueEntityName = await generateNewNameForLocalDirectoryOrFile({
           nodeData,

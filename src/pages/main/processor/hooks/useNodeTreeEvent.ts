@@ -113,14 +113,14 @@ export const useNodeTreeEvent = () => {
       const fileData = file.data;
       const ext = fileData.ext;
 
-      if (!currentFileContent) return;
-      const {
-        contentInApp,
-        nodeTree,
-        selectedNodeUids: selectedNodeUidsAfterActions,
-      } = ext === "html"
-        ? await parseHtml(currentFileContent, setMaxNodeUidRef)
-        : { contentInApp: "", nodeTree: {}, selectedNodeUids: [] };
+      if (!currentFileContent) {
+        dispatch(removeRunningAction());
+        return;
+      }
+      const { contentInApp, nodeTree, selectedNodeUids } =
+        ext === "html"
+          ? await parseHtml(currentFileContent, setMaxNodeUidRef)
+          : { contentInApp: "", nodeTree: {}, selectedNodeUids: [] };
 
       fileData.content = currentFileContent;
 
@@ -174,7 +174,10 @@ export const useNodeTreeEvent = () => {
           ) as HTMLIFrameElement;
           if (iframe) {
             const iframeDoc = iframe.contentDocument;
-            if (!iframeDoc) return;
+            if (!iframeDoc) {
+              dispatch(removeRunningAction());
+              return;
+            }
             const iframeHtml = iframeDoc.getElementsByTagName("html")[0];
             const updatedHtml = contentInApp;
             if (!iframeHtml || !updatedHtml) {
