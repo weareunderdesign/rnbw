@@ -27,6 +27,16 @@ interface Ipaste {
   pastePosition?: "before" | "after" | "inside";
   skipUpdate?: boolean;
 }
+
+interface Iungroup {
+  uids?: TNodeUid[];
+  skipUpdate?: boolean;
+}
+
+interface Igroup {
+  uids?: TNodeUid[];
+  skipUpdate?: boolean;
+}
 interface Iremove {
   uids?: TNodeUid[];
   skipUpdate?: boolean;
@@ -40,4 +50,14 @@ interface Imove {
   skipUpdate?: boolean;
 }
 
-export { Iadd, Iduplicate, IupdateSettings, Icopy, Ipaste, Iremove, Imove };
+export {
+  Iadd,
+  Iduplicate,
+  IupdateSettings,
+  Icopy,
+  Ipaste,
+  Igroup,
+  Iungroup,
+  Iremove,
+  Imove,
+};

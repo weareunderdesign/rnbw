@@ -74,16 +74,22 @@ export const useNodeTreeEvent = () => {
     didRedo,
     activePanel,
   } = useAppState();
+
   const { parseHtml } = useElementHelper();
   const { iframeRefRef, setMaxNodeUidRef } = useContext(MainContext);
 
   const isSelectedNodeUidsChanged = useRef(false);
   const isCurrentFileContentChanged = useRef(false);
   const isCodeErrorsExist = useRef(false);
+  const existingSelectedNodeUids = useRef<TNodeUid[]>([]);
 
   useEffect(() => {
     isSelectedNodeUidsChanged.current = false;
     isCurrentFileContentChanged.current = false;
+
+    if (selectedNodeUids.length > 0) {
+      existingSelectedNodeUids.current = selectedNodeUids;
+    }
   }, [selectedNodeUids, currentFileContent]);
 
   useEffect(() => {
@@ -112,10 +118,13 @@ export const useNodeTreeEvent = () => {
         dispatch(removeRunningAction());
         return;
       }
-      const { contentInApp, nodeTree, selectedNodeUids } =
-        ext === "html"
-          ? await parseHtml(currentFileContent, setMaxNodeUidRef)
-          : { contentInApp: "", nodeTree: {}, selectedNodeUids: [] };
+      const {
+        contentInApp,
+        nodeTree,
+        selectedNodeUids: selectedNodeUidsAfterActions,
+      } = ext === "html"
+        ? await parseHtml(currentFileContent, setMaxNodeUidRef)
+        : { contentInApp: "", nodeTree: {}, selectedNodeUids: [] };
 
       fileData.content = currentFileContent;
 
@@ -314,7 +323,15 @@ export const useNodeTreeEvent = () => {
           ),
         );
       } else {
-        markSelectedElements(iframeRefRef.current, selectedNodeUids, nodeTree);
+        const nodesToBeMarkedAsSelected =
+          selectedNodeUidsAfterActions.length > 0
+            ? selectedNodeUidsAfterActions
+            : existingSelectedNodeUids.current;
+        markSelectedElements(
+          iframeRefRef.current,
+          nodesToBeMarkedAsSelected,
+          nodeTree,
+        );
         const validExpandedItems = getObjKeys(nExpandedItemsObj).filter(
           (uid) =>
             _validNodeTree[uid] && _validNodeTree[uid].isEntity === false,
@@ -353,6 +370,7 @@ export const useNodeTreeEvent = () => {
           // remark selected elements on stage-view
           // it is removed through dom-diff
           // this part is for when the selectedNodeUids is not changed cuz of the same code-format
+
           markSelectedElements(
             iframeRefRef.current,
             _selectedNodeUids,
