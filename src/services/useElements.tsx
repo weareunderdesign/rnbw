@@ -26,13 +26,14 @@ import {
   Iremove,
   IupdateSettings,
 } from "@_types/elements.types";
-import { html_beautify } from "js-beautify";
+
 import { Range } from "monaco-editor";
 import { useCallback, useContext, useMemo } from "react";
 import { useDispatch } from "react-redux";
-import { useElementHelper } from "./useElementsHelper";
+import { PrettyCode, useElementHelper } from "./useElementsHelper";
 import { toast } from "react-toastify";
 import * as parse5 from "parse5";
+import { setIsContentProgrammaticallyChanged } from "@_redux/main/reference";
 
 export default function useElements() {
   const {
@@ -98,11 +99,11 @@ export default function useElements() {
     let code = "";
     if (node) {
       const { endCol, endLine } = node.data.sourceCodeLocation;
-
-      codeViewText = html_beautify(codeViewText);
+      const text = `${codeViewText}`;
+      codeViewText = await PrettyCode(codeViewText);
       const edit = {
         range: new Range(endLine, endCol, endLine, endCol),
-        text: codeViewText,
+        text,
       };
 
       helperModel.applyEdits([edit]);
@@ -116,7 +117,7 @@ export default function useElements() {
             tagNames: [tagName],
           },
         });
-
+        await dispatch(setIsContentProgrammaticallyChanged(true));
         codeViewInstanceModel.setValue(code);
       }
     }
@@ -131,7 +132,8 @@ export default function useElements() {
     const helperModel = getEditorModelWithCurrentCode();
 
     const sortedUids = sortUidsByMaxEndIndex(selectedItems, validNodeTree);
-    sortedUids.forEach((uid) => {
+    for (let i = 0; i < sortedUids.length; i++) {
+      const uid = sortedUids[i];
       const node = validNodeTree[uid];
       if (node) {
         const { startCol, startLine, endCol, endLine } =
@@ -140,14 +142,14 @@ export default function useElements() {
           new Range(startLine, startCol, endLine, endCol),
         );
 
-        text = html_beautify(text);
+        text = await PrettyCode(text);
         const edit = {
           range: new Range(endLine, endCol, endLine, endCol),
           text,
         };
         helperModel.applyEdits([edit]);
       }
-    });
+    }
     const code = helperModel.getValue();
     if (!skipUpdate) {
       await findNodeToSelectAfterAction({
@@ -156,6 +158,7 @@ export default function useElements() {
           type: "add",
         },
       });
+      await dispatch(setIsContentProgrammaticallyChanged(true));
       codeViewInstanceModel.setValue(code);
     }
 
@@ -291,7 +294,7 @@ export default function useElements() {
         startTag.endCol,
       );
     }
-    copiedCode = html_beautify(copiedCode);
+    copiedCode = await PrettyCode(copiedCode);
     let code = copiedCode;
     const edit = {
       range: editRange,
@@ -343,7 +346,7 @@ export default function useElements() {
     helperModel.setValue(updatedCode);
 
     let code = `<div>${copiedCode}</div>`;
-    code = html_beautify(code);
+    code = await PrettyCode(code);
 
     const edit = {
       range: new Range(startLine, startCol, startLine, startCol),
@@ -359,10 +362,11 @@ export default function useElements() {
     });
 
     helperModel.applyEdits([edit]);
-    codeViewInstanceModel.setValue(html_beautify(helperModel.getValue()));
+    const prettyCode = await PrettyCode(helperModel.getValue());
+    codeViewInstanceModel.setValue(prettyCode);
   };
 
-  const ungroup = () => {
+  const ungroup = async () => {
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
 
     const helperModel = getEditorModelWithCurrentCode();
@@ -401,7 +405,7 @@ export default function useElements() {
       };
       helperModel.applyEdits([removeGroupedCodeEdit, addUngroupedCodeEdit]);
     });
-    const code = html_beautify(helperModel.getValue());
+    const code = await PrettyCode(helperModel.getValue());
     codeViewInstanceModel.setValue(code);
   };
 
@@ -467,7 +471,7 @@ export default function useElements() {
   };
 
   const updateEditableElement = useCallback(
-    (params: eventListenersStatesRefType) => {
+    async (params: eventListenersStatesRefType) => {
       const { iframeRefRef, contentEditableUidRef, nodeTreeRef } = params;
       const helperModel = getEditorModelWithCurrentCode();
       const iframeRef = iframeRefRef.current;
@@ -512,8 +516,10 @@ export default function useElements() {
         };
         helperModel.applyEdits([edit]);
       }
-      const code = html_beautify(helperModel.getValue());
+      const code = await PrettyCode(helperModel.getValue());
+      await dispatch(setIsContentProgrammaticallyChanged(true));
       codeViewInstanceModel.setValue(code);
+      dispatch(setSelectedNodeUids([nFocusedItem]));
     },
     [codeViewInstanceModel],
   );
@@ -547,7 +553,7 @@ export default function useElements() {
       text: updatedTag,
     };
     helperModel.applyEdits([edit]);
-    const code = html_beautify(helperModel.getValue());
+    const code = await PrettyCode(helperModel.getValue());
     if (!skipUpdate) {
       await findNodeToSelectAfterAction({
         nodeUids: [nFocusedItem],
@@ -555,6 +561,7 @@ export default function useElements() {
           type: "replace",
         },
       });
+      await dispatch(setIsContentProgrammaticallyChanged(true));
       codeViewInstanceModel.setValue(code);
     }
 
@@ -577,7 +584,7 @@ export default function useElements() {
     } else {
       dispatch({ type: NodeTree_Event_UndoActionType });
     }
-
+    dispatch(setIsContentProgrammaticallyChanged(true));
     dispatch(setDidUndo(true));
   };
 
@@ -590,6 +597,7 @@ export default function useElements() {
     dispatch({ type: NodeTree_Event_RedoActionType });
 
     dispatch(setDidRedo(true));
+    dispatch(setIsContentProgrammaticallyChanged(true));
   };
 
   const setSelectedElements = (uids: string[]) => {
@@ -641,6 +649,7 @@ export default function useElements() {
           type: "remove",
         },
       });
+      await dispatch(setIsContentProgrammaticallyChanged(true));
       codeViewInstanceModel.setValue(code);
     }
     return code;

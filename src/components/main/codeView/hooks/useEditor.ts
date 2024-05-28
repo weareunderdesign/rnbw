@@ -20,7 +20,6 @@ import { setCodeViewTabSize } from "@_redux/main/codeView";
 import {
   setCurrentFileContent,
   setNeedToSelectCode,
-  focusNodeTreeNode,
 } from "@_redux/main/nodeTree";
 import { useAppState } from "@_redux/useAppState";
 
@@ -39,8 +38,8 @@ const useEditor = () => {
     theme: _theme,
     autoSave,
     isCodeTyping,
-    nFocusedItem,
     wordWrap,
+    isContentProgrammaticallyChanged,
   } = useAppState();
   const {
     monacoEditorRef,
@@ -49,6 +48,32 @@ const useEditor = () => {
     onUndo,
     onRedo,
   } = useContext(MainContext);
+
+  /* we need to keep the state of the app in a ref
+  because onChange closure is not updated when the state changes */
+  const AppstateRef = useRef({
+    theme: _theme,
+    autoSave,
+    isCodeTyping,
+    wordWrap,
+    isContentProgrammaticallyChanged,
+  });
+
+  useEffect(() => {
+    AppstateRef.current = {
+      theme: _theme,
+      autoSave,
+      isCodeTyping,
+      wordWrap,
+      isContentProgrammaticallyChanged,
+    };
+  }, [
+    _theme,
+    autoSave,
+    isCodeTyping,
+    wordWrap,
+    isContentProgrammaticallyChanged,
+  ]);
 
   // set default tab-size
   useEffect(() => {
@@ -153,6 +178,10 @@ const useEditor = () => {
       dispatch(setCurrentFileContent(value));
       const selectedRange: Selection | null =
         monacoEditorRef.current?.getSelection() || null;
+      if (AppstateRef.current.isContentProgrammaticallyChanged) {
+        return;
+      }
+
       dispatch(
         setNeedToSelectCode(
           selectedRange
@@ -191,8 +220,9 @@ const useEditor = () => {
   const handleOnChange = useCallback(
     (value: string | undefined) => {
       if (value === undefined) return;
-      !isCodeTyping && dispatch(setIsCodeTyping(true));
-      nFocusedItem !== "" && dispatch(focusNodeTreeNode(""));
+      if (!AppstateRef.current.isContentProgrammaticallyChanged) {
+        !AppstateRef.current.isCodeTyping && dispatch(setIsCodeTyping(true));
+      }
       if (isCodeEditingView.current) {
         longDebouncedOnChange(value);
         isCodeEditingView.current = false;
