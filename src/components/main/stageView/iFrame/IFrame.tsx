@@ -226,11 +226,12 @@ export const IFrame = () => {
 
             span.appendChild(text);
             span.setAttribute("rnbw-text-element", "true");
-            span.setAttribute(
-              "data-rnbw-stage-node-id",
-              `${filterArr?.length ? filterArr[0] : i}`,
-            );
+            const stageUid = filterArr?.length ? filterArr[0] : i;
 
+            span.setAttribute("data-rnbw-stage-node-id", `${stageUid}`);
+            if (selectedItemsRef.current.includes(`${stageUid}`)) {
+              span.setAttribute("rnbwdev-rnbw-element-select", "true");
+            }
             node.parentNode?.replaceChild(span, node);
           } else if (node.nodeType === Node.ELEMENT_NODE) {
             wrapTextNodes(node as HTMLElement);
@@ -240,7 +241,7 @@ export const IFrame = () => {
 
       wrapTextNodes(iframeDocument.body);
     }
-  }, [iframeRefState, document, validNodeTree]);
+  }, [iframeRefState, document, validNodeTree, selectedItemsRef.current]);
 
   useEffect(() => {
     eventListenersStatesRef.current = {
