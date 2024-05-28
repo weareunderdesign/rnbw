@@ -580,7 +580,7 @@ export default function useElements() {
         };
         helperModel.applyEdits([edit]);
       }
-      const code = await PrettyCode(helperModel.getValue());
+      const code = helperModel.getValue();
       await dispatch(setIsContentProgrammaticallyChanged(true));
       codeViewInstanceModel.setValue(code);
       dispatch(setSelectedNodeUids([nFocusedItem]));
@@ -605,7 +605,7 @@ export default function useElements() {
       "",
     );
     const updatedTag = `<${focusedNode.displayName}${attributesString}>`;
-
+    const prettyUpdatedTag = await PrettyCode(updatedTag);
     const { startTag } = focusedNode.data.sourceCodeLocation;
     const edit = {
       range: new Range(
@@ -614,10 +614,10 @@ export default function useElements() {
         startTag.endLine,
         startTag.endCol,
       ),
-      text: updatedTag,
+      text: prettyUpdatedTag,
     };
     helperModel.applyEdits([edit]);
-    const code = await PrettyCode(helperModel.getValue());
+    const code = helperModel.getValue();
     if (!skipUpdate) {
       await findNodeToSelectAfterAction({
         nodeUids: [nFocusedItem],
