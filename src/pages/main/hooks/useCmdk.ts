@@ -14,19 +14,11 @@ import {
 } from "@_node/index";
 import { setTheme } from "@_redux/global";
 import { setCmdkPages, setCurrentCommand } from "@_redux/main/cmdk";
-import {
-  FileTree_Event_RedoActionType,
-  FileTree_Event_UndoActionType,
-  setDoingFileAction,
-  setLastFileAction,
-  TProjectContext,
-} from "@_redux/main/fileTree";
+import { setDoingFileAction, TProjectContext } from "@_redux/main/fileTree";
 
 import {
   setActivePanel,
   setAutoSave,
-  setDidRedo,
-  setDidUndo,
   setShowActionsPanel,
   setShowCodeView,
   setWordWrap,
@@ -55,11 +47,6 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     project,
     fileTree,
     doingFileAction,
-    fileAction,
-    fileEventPastLength,
-    fileEventFutureLength,
-    nodeEventPastLength,
-    nodeEventFutureLength,
     iframeLoading,
     activePanel,
     showActionsPanel,
@@ -74,7 +61,6 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
   } = useAppState();
 
   const rnbw = useRnbw();
-
   // handlers
   const onClear = useCallback(async () => {
     window.localStorage.clear();
@@ -130,54 +116,23 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
       LogAllow && console.log("failed to download project");
     }
   }, [project]);
-  const onUndo = useCallback(() => {
+  const onUndo = () => {
     if (!!runningAction || doingFileAction || iframeLoading) return;
     if (activePanel === "file" && showActionsPanel && showFilePanel) {
-      if (fileEventPastLength === 0) {
-        LogAllow && console.log("Undo - FileTree - it is the origin state");
-        return;
-      }
-      dispatch(setLastFileAction({ ...fileAction }));
-      dispatch({ type: FileTree_Event_UndoActionType });
+      rnbw.files.undo();
     } else {
       rnbw.elements.undo();
     }
-
-    dispatch(setDidUndo(true));
-  }, [
-    runningAction,
-    doingFileAction,
-    iframeLoading,
-    activePanel,
-    fileEventPastLength,
-    nodeEventPastLength,
-    showActionsPanel,
-    showFilePanel,
-  ]);
-  const onRedo = useCallback(() => {
+  };
+  const onRedo = () => {
     if (!!runningAction || doingFileAction || iframeLoading) return;
 
     if (activePanel === "file" && showActionsPanel && showFilePanel) {
-      if (fileEventFutureLength === 0) {
-        LogAllow && console.log("Redo - FileTree - it is the latest state");
-        return;
-      }
-      dispatch({ type: FileTree_Event_RedoActionType });
+      rnbw.files.redo();
     } else {
       rnbw.elements.redo();
     }
-
-    dispatch(setDidRedo(true));
-  }, [
-    runningAction,
-    doingFileAction,
-    iframeLoading,
-    activePanel,
-    fileEventFutureLength,
-    nodeEventFutureLength,
-    showActionsPanel,
-    showFilePanel,
-  ]);
+  };
   const onToggleCodeView = useCallback(() => {
     dispatch(setShowCodeView(!showCodeView));
   }, [showCodeView]);

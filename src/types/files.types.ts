@@ -25,13 +25,6 @@ interface IsetCurrentFileContent {
   content: string;
 }
 
-interface Iredo {
-  steps: number;
-}
-interface Iundo {
-  steps: number;
-}
-
 interface IcopyFiles {
   uids?: string[];
 }
@@ -61,8 +54,6 @@ export {
   IrenameFiles,
   IsetCurrentFile,
   IsetCurrentFileContent,
-  Iredo,
-  Iundo,
   Iremove,
   IcopyFiles,
   IcutFiles,
