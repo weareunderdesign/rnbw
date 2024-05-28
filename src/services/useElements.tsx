@@ -13,6 +13,7 @@ import {
   NodeTree_Event_RedoActionType,
   NodeTree_Event_UndoActionType,
   setCopiedNodeDisplayName,
+  setNeedToSelectNodePaths,
   setSelectedNodeUids,
 } from "@_redux/main/nodeTree";
 import { setDidRedo, setDidUndo } from "@_redux/main/processor";
@@ -21,9 +22,11 @@ import {
   Iadd,
   Icopy,
   Iduplicate,
+  Igroup,
   Imove,
   Ipaste,
   Iremove,
+  Iungroup,
   IupdateSettings,
 } from "@_types/elements.types";
 
@@ -324,8 +327,9 @@ export default function useElements() {
 
   const plainPaste = () => {};
 
-  const group = async () => {
+  const group = async (params: Igroup = {}) => {
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
+    const { skipUpdate } = params;
 
     const helperModel = getEditorModelWithCurrentCode();
     helperModel.setValue(codeViewInstanceModel.getValue());
@@ -362,18 +366,24 @@ export default function useElements() {
     });
 
     helperModel.applyEdits([edit]);
-    const prettyCode = await PrettyCode(helperModel.getValue());
-    codeViewInstanceModel.setValue(prettyCode);
+    const finalCode = helperModel.getValue();
+    if (!skipUpdate) {
+      codeViewInstanceModel.setValue(finalCode);
+    }
+    return finalCode;
   };
 
-  const ungroup = async () => {
+  const ungroup = async (params: Iungroup = {}) => {
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
 
+    const { skipUpdate } = params;
     const helperModel = getEditorModelWithCurrentCode();
     helperModel.setValue(codeViewInstanceModel.getValue());
 
     const sortedUids = sortUidsByMaxEndIndex(selectedItems, validNodeTree);
-    sortedUids.map((uid) => {
+    const allNodePathsToSelect: string[] = [];
+    for (let i = 0; i < sortedUids.length; i++) {
+      const uid = sortedUids[i];
       const node = validNodeTree[uid];
 
       const children = node?.children;
@@ -399,14 +409,35 @@ export default function useElements() {
         range: new Range(startLine, startCol, endLine, endCol),
         text: "",
       };
+
+      const preetyCopiedCode = await PrettyCode(copiedCode);
       const addUngroupedCodeEdit = {
         range: new Range(startLine, startCol, startLine, startCol),
-        text: copiedCode,
+        text: preetyCopiedCode,
       };
+
+      const stringToHtml = parse5.parseFragment(preetyCopiedCode);
+
+      const tagNames = stringToHtml.childNodes.map((node) =>
+        node.nodeName.toLowerCase(),
+      );
+      const nodesPathToSelect = await findNodeToSelectAfterAction({
+        nodeUids: [uid],
+        action: {
+          type: "replace",
+          tagNames,
+        },
+      });
+      if (nodesPathToSelect) {
+        allNodePathsToSelect.push(...nodesPathToSelect);
+      }
       helperModel.applyEdits([removeGroupedCodeEdit, addUngroupedCodeEdit]);
-    });
+    }
     const code = await PrettyCode(helperModel.getValue());
-    codeViewInstanceModel.setValue(code);
+    if (!skipUpdate) {
+      codeViewInstanceModel.setValue(code);
+      dispatch(setNeedToSelectNodePaths(allNodePathsToSelect));
+    }
   };
 
   const move = async (params: Imove) => {

@@ -389,12 +389,14 @@ export const useElementHelper = () => {
   const findNodeToSelectAfterAction = async ({
     nodeUids,
     action,
+    skipUpdate,
   }: {
     nodeUids: string[];
     action: {
       type: "add" | "remove" | "replace";
       tagNames?: string[];
     };
+    skipUpdate?: boolean;
   }) => {
     const uniqueNodePaths: string[] = [];
     if (nodeUids.length === 0) return [];
@@ -489,6 +491,7 @@ export const useElementHelper = () => {
         uniqueNodePaths.push(uniqueNodePathToFocus);
       });
     }
+    if (uniqueNodePaths.length === 0 || skipUpdate) return;
     await dispatch(setNeedToSelectNodePaths(uniqueNodePaths));
     return uniqueNodePaths;
   };
