@@ -1,8 +1,3 @@
-import {
-  sortUidsByMaxEndIndex,
-  sortUidsByMinStartIndex,
-} from "@_components/main/actionsPanel/nodeTreeView/helpers";
-import { eventListenersStatesRefType } from "@_components/main/stageView/iFrame/IFrame";
 import { LogAllow } from "@_constants/global";
 import { RootNodeUid } from "@_constants/main";
 import { StageNodeIdAttr } from "@_node/file";
@@ -27,6 +22,7 @@ import {
   Ipaste,
   Iremove,
   Iungroup,
+  IupdateEditableElement,
   IupdateSettings,
 } from "@_types/elements.types";
 
@@ -37,7 +33,6 @@ import { PrettyCode, isValidNode, useElementHelper } from "./useElementsHelper";
 import { toast } from "react-toastify";
 import * as parse5 from "parse5";
 import { setIsContentProgrammaticallyChanged } from "@_redux/main/reference";
-import { getValidNodeTree } from "@_pages/main/processor/helpers";
 
 export default function useElements() {
   const {
@@ -58,7 +53,8 @@ export default function useElements() {
     checkAllResourcesAvailable,
     copyAndCutNode,
     findNodeToSelectAfterAction,
-    parseHtml,
+    sortUidsAsc,
+    sortUidsDsc,
   } = useElementHelper();
 
   const codeViewInstanceModel = monacoEditorRef.current?.getModel();
@@ -93,7 +89,7 @@ export default function useElements() {
           ? openingTag
           : `${openingTag}${tagContent}${closingTag}`;
 
-    const sortedUids = sortUidsByMinStartIndex(selectedItems, validNodeTree);
+    const sortedUids = sortUidsAsc(selectedItems);
     if (sortedUids.length === 0) {
       toast.error("Please select a node to add the new element");
       return;
@@ -135,7 +131,7 @@ export default function useElements() {
 
     const helperModel = getEditorModelWithCurrentCode();
 
-    const sortedUids = sortUidsByMaxEndIndex(selectedItems, validNodeTree);
+    const sortedUids = sortUidsDsc(selectedItems);
     for (let i = 0; i < sortedUids.length; i++) {
       const uid = sortedUids[i];
       const node = validNodeTree[uid];
@@ -183,7 +179,7 @@ export default function useElements() {
 
     const selectedUids = uids || selectedItems;
     if (selectedUids.length === 0 || !codeViewInstanceModel) return;
-    const sortedUids = sortUidsByMinStartIndex(selectedUids, validNodeTree);
+    const sortedUids = sortUidsAsc(selectedUids);
     let copiedCode = "";
 
     sortedUids.forEach((uid) => {
@@ -217,6 +213,7 @@ export default function useElements() {
   const getElementSettings = (uid?: string) => {
     const focusedNode = validNodeTree[uid!] || validNodeTree[nFocusedItem];
     const { startTag } = focusedNode.data.sourceCodeLocation;
+    if (!startTag) return {};
     const attributesKey = startTag.attrs ? Object.keys(startTag.attrs) : [];
     const existingAttributesObj: { [key: string]: string } = {};
     if (focusedNode.data.attribs) {
@@ -347,7 +344,7 @@ export default function useElements() {
 
     const copiedCode = await copy();
 
-    const sortedUids = sortUidsByMinStartIndex(selectedItems, validNodeTree);
+    const sortedUids = sortUidsAsc(selectedItems);
 
     if (sortedUids.length === 0) return;
     const { startLine, startCol } =
@@ -391,7 +388,7 @@ export default function useElements() {
     const helperModel = getEditorModelWithCurrentCode();
     helperModel.setValue(codeViewInstanceModel.getValue());
 
-    const sortedUids = sortUidsByMaxEndIndex(selectedItems, validNodeTree);
+    const sortedUids = sortUidsAsc(selectedItems);
     const allNodePathsToSelect: string[] = [];
     for (let i = 0; i < sortedUids.length; i++) {
       const uid = sortedUids[i];
@@ -465,6 +462,8 @@ export default function useElements() {
     const { targetUid, isBetween, position, selectedUids } = params;
     const targetNode = validNodeTree[targetUid];
 
+    const helperModel = getEditorModelWithCurrentCode();
+
     // When the position is 0 we need to add inside the target node
     const focusedItem =
       isBetween && position === 0
@@ -478,76 +477,53 @@ export default function useElements() {
       skipUpdate: true,
     });
 
-    const updatedCode = await remove({
-      uids: selectedUids,
-      skipUpdate: true,
-    });
+    const sortedUids = Array.from([...selectedUids, focusedItem])
+      .filter((uid) => validNodeTree[uid].data.sourceCodeLocation)
+      .sort((a, b) => {
+        return parseInt(b) - parseInt(a);
+      });
 
-    const sortedUids = sortUidsByMaxEndIndex(
-      [...selectedUids, focusedItem],
-      validNodeTree,
-    );
+    for (let i = 0; i < sortedUids.length; i++) {
+      const uid = sortedUids[i];
+      const node = validNodeTree[uid];
+      if (node) {
+        const { startLine, startCol, endLine, endCol } =
+          node.data.sourceCodeLocation;
+        const range = new Range(startLine, startCol, endLine, endCol);
+        if (copiedCode && uid === focusedItem) {
+          const pastePosition =
+            focusedItem === targetNode.uid ? "inside" : "after";
 
-    if (sortedUids.length === 0) return;
-    //check if targetNode is a part of the selected nodes
-    const isTargetNodeInSelectedNodes = selectedUids.includes(targetNode.uid);
-    if (isTargetNodeInSelectedNodes) {
-      toast.error("Cannot move a node inside itself");
-    }
-    const pastePosition = focusedItem === targetNode.uid ? "inside" : "after";
-    if (!updatedCode || !copiedCode) return;
-
-    const focusedNode = validNodeTree[focusedItem];
-    const focusedNodeParentUid = focusedNode.parentUid;
-    if (!focusedNodeParentUid) return;
-    const focusedNodeSiblings = validNodeTree[focusedNodeParentUid].children;
-    const sortedFocusedNodeChildren = sortUidsByMinStartIndex(
-      focusedNodeSiblings,
-      validNodeTree,
-    );
-
-    //filter out the children who are not in the selected nodes
-    const childrensNotInSelectedNodes = sortedFocusedNodeChildren.filter(
-      (uid) => !selectedUids.includes(uid),
-    );
-    //find the index of the focused node in this childrensNotInSelectedNodes
-    const focusedNodeIndex = childrensNotInSelectedNodes.indexOf(focusedItem);
-
-    //update the focused node path to the new path
-    const focusedNodePath = validNodeTree[focusedItem].uniqueNodePath;
-    const newFocusedNodePath = `${focusedNodePath?.split("_").slice(0, -1).join("_")}_${focusedNodeIndex + 1}`;
-
-    //get the updated source code location of the target node
-    const { nodeTree: newNodeTree } = await parseHtml(updatedCode);
-    const newValidNodeTree = getValidNodeTree(newNodeTree);
-    //find the new focused node using the unique node path
-
-    let newFocusedNode;
-    for (const [, node] of Object.entries(newValidNodeTree)) {
-      if (node.uniqueNodePath === newFocusedNodePath) {
-        newFocusedNode = node;
-        break; // Exit the loop once you find the matching node
+          const updatedCode = await paste({
+            content: helperModel.getValue(),
+            pasteContent: copiedCode,
+            pastePosition,
+            targetNode: validNodeTree[focusedItem],
+            skipUpdate: true,
+          });
+          updatedCode && helperModel.setValue(updatedCode);
+        } else {
+          const edit = {
+            range,
+            text: "",
+          };
+          helperModel.applyEdits([edit]);
+        }
       }
     }
 
-    if (!newFocusedNode) return;
-    await paste({
-      content: updatedCode,
-      pasteContent: copiedCode,
-      pastePosition,
-      targetNode: newFocusedNode,
-    });
+    codeViewInstanceModel.setValue(helperModel.getValue());
   };
 
   const updateEditableElement = useCallback(
-    async (params: eventListenersStatesRefType) => {
-      const { iframeRefRef, contentEditableUidRef, nodeTreeRef } = params;
+    async (params: IupdateEditableElement) => {
+      const { eventListenerRef, contentEditableUid } = params;
       const helperModel = getEditorModelWithCurrentCode();
-      const iframeRef = iframeRefRef.current;
-      const nodeTree = nodeTreeRef.current;
+      const iframeRef = eventListenerRef.current.iframeRefRef.current;
+      const nodeTree = eventListenerRef.current.nodeTreeRef.current;
       const codeViewInstanceModel = monacoEditorRef.current?.getModel();
       if (!codeViewInstanceModel || !iframeRef) return;
-      const contentEditableUid = contentEditableUidRef.current;
+
       const contentEditableElement =
         iframeRef.contentWindow?.document.querySelector(
           `[${StageNodeIdAttr}="${contentEditableUid}"]`,
@@ -564,7 +540,7 @@ export default function useElements() {
         );
 
       helperModel.setValue(codeViewInstanceModel.getValue());
-      const focusedNode = nodeTree[nFocusedItem];
+      const focusedNode = nodeTree[contentEditableUid];
       const { startTag, endTag, startLine, endLine, startCol, endCol } =
         focusedNode.data.sourceCodeLocation;
       if (startTag && endTag) {
@@ -588,7 +564,8 @@ export default function useElements() {
       const code = helperModel.getValue();
       await dispatch(setIsContentProgrammaticallyChanged(true));
       codeViewInstanceModel.setValue(code);
-      dispatch(setSelectedNodeUids([nFocusedItem]));
+      const uniqueNodePath = focusedNode.uniqueNodePath;
+      uniqueNodePath && dispatch(setNeedToSelectNodePaths([uniqueNodePath]));
     },
     [codeViewInstanceModel],
   );
@@ -707,7 +684,7 @@ export default function useElements() {
     const helperModel = getEditorModelWithCurrentCode();
     helperModel.setValue(contentToEdit);
 
-    const sortedUids = sortUidsByMaxEndIndex(removalUids, validNodeTree);
+    const sortedUids = sortUidsDsc(removalUids);
 
     sortedUids.forEach((uid) => {
       const node = validNodeTree[uid];

@@ -1,3 +1,4 @@
+import { eventListenersStatesRefType } from "@_components/main/stageView/iFrame/IFrame";
 import { TNode, TNodeUid } from "@_node/index";
 
 interface Iadd {
@@ -15,7 +16,10 @@ interface IupdateSettings {
   };
   skipUpdate?: boolean;
 }
-
+interface IupdateEditableElement {
+  contentEditableUid: TNodeUid;
+  eventListenerRef: React.MutableRefObject<eventListenersStatesRefType>;
+}
 interface Icopy {
   uids?: TNodeUid[];
   skipUpdate?: boolean;
@@ -54,6 +58,7 @@ export {
   Iadd,
   Iduplicate,
   IupdateSettings,
+  IupdateEditableElement,
   Icopy,
   Ipaste,
   Igroup,

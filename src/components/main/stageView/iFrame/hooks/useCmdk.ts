@@ -8,18 +8,15 @@ import { setCurrentCommand } from "@_redux/main/cmdk";
 import { getCommandKey } from "@_services/global";
 import { TCmdkKeyMap } from "@_types/main";
 
-import {
-  editHtmlContent,
-  getBodyChild,
-  getValidElementWithUid,
-} from "../helpers";
+import { getBodyChild, getValidElementWithUid } from "../helpers";
 import { setShowActionsPanel, setShowCodeView } from "@_redux/main/processor";
 import { eventListenersStatesRefType } from "../IFrame";
 import { setHoveredNodeUid } from "@_redux/main/nodeTree";
+import useRnbw from "@_services/useRnbw";
 
 export const useCmdk = () => {
   const dispatch = useDispatch();
-
+  const rnbw = useRnbw();
   const { monacoEditorRef } = useContext(MainContext);
   const zoomLevelRef = useRef(1);
 
@@ -99,7 +96,7 @@ export const useCmdk = () => {
     [],
   );
   const onKeyDown = useCallback(
-    (
+    async (
       e: KeyboardEvent,
       eventListenerRef: React.MutableRefObject<eventListenersStatesRefType>,
     ) => {
@@ -109,7 +106,6 @@ export const useCmdk = () => {
         cmdkReferenceData,
         iframeRefRef,
         contentEditableUidRef,
-        nodeTreeRef,
         hoveredTargetRef,
         hoveredNodeUid,
       } = eventListenerRef.current;
@@ -189,18 +185,12 @@ export const useCmdk = () => {
               LogAllow &&
               console.log("action to be run by cmdk: ", action);
 
-            editHtmlContent({
-              dispatch,
-              iframeRef: iframeRefRef.current,
-              nodeTree: nodeTreeRef.current,
+            await rnbw.elements.updateEditableElement({
+              eventListenerRef,
               contentEditableUid,
-              codeViewInstanceModel,
-              formatCode: false,
-              cb:
-                action === "Save"
-                  ? () => dispatch(setCurrentCommand({ action: "SaveForce" }))
-                  : undefined,
             });
+            action === "Save" &&
+              dispatch(setCurrentCommand({ action: "SaveForce" }));
           }
         }
       } else {
