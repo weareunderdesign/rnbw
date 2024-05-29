@@ -297,8 +297,11 @@ export default function useElements() {
     */
     if (content) {
       initialCode = content;
-      codeToCopy = await window.navigator.clipboard.readText();
+      codeToCopy = pasteContent || "";
     } else if (panel === "node" && actionType === "cut" && uids) {
+      //clear the clipboard data
+
+      dispatch(setClipboardData(null));
       const { updatedCode, copiedCode } = await copyAndCutNode({
         selectedUids: uids,
         sortDsc: true,
@@ -313,12 +316,8 @@ export default function useElements() {
       }
     }
 
-    initialCode = content || codeViewInstanceModel.getValue();
-
     const helperModel = getEditorModelWithCurrentCode();
     helperModel.setValue(initialCode);
-
-    codeToCopy = await window.navigator.clipboard.readText();
 
     const { startLine, startCol, endLine, endCol } =
       focusedNode.data.sourceCodeLocation;
