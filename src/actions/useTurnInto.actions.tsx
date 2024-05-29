@@ -44,7 +44,7 @@ export default function useTurnInto() {
       );
       const newCode = `<${tagName} ${attributeCode}>${innerCode}</${tagName}>`;
 
-      const formattedCode = await PrettyCode(newCode, startCol);
+      const formattedCode = await PrettyCode({ code: newCode, startCol });
 
       const edit = {
         range: new Range(startLine, startCol, endLine, endCol),

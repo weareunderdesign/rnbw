@@ -37,7 +37,15 @@ import {
   setSelectedNodeUids,
 } from "@_redux/main/nodeTree";
 
-export async function PrettyCode(code: string, startCol: number = 0) {
+export async function PrettyCode({
+  code,
+  startCol = 0,
+  throwError = false,
+}: {
+  code: string;
+  startCol?: number;
+  throwError?: boolean;
+}) {
   try {
     let prettyCode = await prettier.format(code, {
       parser: "html",
@@ -71,7 +79,11 @@ export async function PrettyCode(code: string, startCol: number = 0) {
     //@ts-expect-error - toast.error expects a string
     const msg = e?.message as string;
     if (msg) {
-      toast.error(`Failed to format the code: ${msg.split(".")[0]}`);
+      if (throwError) {
+        throw e;
+      } else {
+        toast.error(`Failed to format the code: ${msg.split(".")[0]}`);
+      }
     }
     return code;
   }

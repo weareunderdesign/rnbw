@@ -16,7 +16,11 @@ import {
   setNeedToSelectNodePaths,
   setSelectedNodeUids,
 } from "@_redux/main/nodeTree";
-import { setDidRedo, setDidUndo } from "@_redux/main/processor";
+import {
+  setClipboardData,
+  setDidRedo,
+  setDidUndo,
+} from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 import {
   Iadd,
@@ -50,6 +54,7 @@ export default function useElements() {
     nodeEventPast,
     selectedNodeUids,
     nodeEventFutureLength,
+    clipboardData,
   } = useAppState();
   const { monacoEditorRef } = useContext(MainContext);
   const dispatch = useDispatch();
@@ -104,7 +109,7 @@ export default function useElements() {
     if (node) {
       const { endCol, endLine } = node.data.sourceCodeLocation;
       const text = `${codeViewText}`;
-      codeViewText = await PrettyCode(codeViewText);
+      codeViewText = await PrettyCode({ code: codeViewText });
       const edit = {
         range: new Range(endLine, endCol, endLine, endCol),
         text,
@@ -146,7 +151,7 @@ export default function useElements() {
           new Range(startLine, startCol, endLine, endCol),
         );
 
-        text = await PrettyCode(text);
+        text = await PrettyCode({ code: text });
         const edit = {
           range: new Range(endLine, endCol, endLine, endCol),
           text,
@@ -234,17 +239,19 @@ export default function useElements() {
     const helperModel = getEditorModelWithCurrentCode();
     helperModel.setValue(codeViewInstanceModel.getValue());
 
-    await copyAndCutNode({
-      sortDsc: true,
-    });
+    dispatch(
+      setClipboardData({
+        panel: "node",
+        type: "cut",
+        uids: selectedItems,
+      }),
+    );
 
     dispatch(
       setCopiedNodeDisplayName(
         selectedItems.map((uid) => `Node-<${validNodeTree[uid].displayName}>`),
       ),
     );
-    const code = helperModel.getValue();
-    codeViewInstanceModel.setValue(code);
   };
 
   const paste = async (params: Ipaste = {}) => {
@@ -271,13 +278,46 @@ export default function useElements() {
       return;
     }
 
-    const initialCode = content || codeViewInstanceModel.getValue();
+    /* To check if the clipboard data is available */
+    const actionType = clipboardData?.type;
+    const uids = clipboardData?.uids;
+    const panel = clipboardData?.panel;
+
+    /*initializing the code to be pasted */
+    let initialCode = "";
+    let codeToCopy = "";
+
+    /* 1. If the content is provided, the the paste action is done on the provided content.
+
+      2. If not then we check if the clipboard data is available and then we paste the copied code
+      into the updated code after the cut action is done
+
+      3. If none of the above conditions are met, 
+      then we simply paste the copied code into the current code.
+    */
+    if (content) {
+      initialCode = content;
+      codeToCopy = pasteContent || "";
+    } else if (panel === "node" && actionType === "cut" && uids) {
+      //clear the clipboard data
+
+      dispatch(setClipboardData(null));
+      const { updatedCode, copiedCode } = await copyAndCutNode({
+        selectedUids: uids,
+        sortDsc: true,
+      });
+
+      initialCode = updatedCode;
+      codeToCopy = copiedCode;
+    } else {
+      initialCode = codeViewInstanceModel.getValue();
+      if (!pasteContent) {
+        codeToCopy = await window.navigator.clipboard.readText();
+      }
+    }
 
     const helperModel = getEditorModelWithCurrentCode();
     helperModel.setValue(initialCode);
-
-    let copiedCode =
-      pasteContent || (await window.navigator.clipboard.readText());
 
     const { startLine, startCol, endLine, endCol } =
       focusedNode.data.sourceCodeLocation;
@@ -298,8 +338,8 @@ export default function useElements() {
         startTag.endCol,
       );
     }
-    copiedCode = await PrettyCode(copiedCode);
-    let code = copiedCode;
+    codeToCopy = await PrettyCode({ code: codeToCopy });
+    let code = codeToCopy;
     const edit = {
       range: editRange,
       text: code,
@@ -308,7 +348,7 @@ export default function useElements() {
 
     code = helperModel.getValue();
     if (!skipUpdate) {
-      const stringToHtml = parse5.parseFragment(copiedCode);
+      const stringToHtml = parse5.parseFragment(codeToCopy);
 
       const tagNames = stringToHtml.childNodes
         .filter((node) => {
@@ -356,7 +396,7 @@ export default function useElements() {
     helperModel.setValue(updatedCode);
 
     let code = `<div>${copiedCode}</div>`;
-    code = await PrettyCode(code);
+    code = await PrettyCode({ code });
 
     const edit = {
       range: new Range(startLine, startCol, startLine, startCol),
@@ -416,7 +456,7 @@ export default function useElements() {
         text: "",
       };
 
-      const preetyCopiedCode = await PrettyCode(copiedCode);
+      const preetyCopiedCode = await PrettyCode({ code: copiedCode });
       const addUngroupedCodeEdit = {
         range: new Range(startLine, startCol, startLine, startCol),
         text: preetyCopiedCode,
@@ -592,29 +632,43 @@ export default function useElements() {
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
 
     const { settings, skipUpdate } = params;
-
+    const oldSettings = getElementSettings();
     const helperModel = getEditorModelWithCurrentCode();
     helperModel.setValue(codeViewInstanceModel.getValue());
 
     const focusedNode = validNodeTree[nFocusedItem];
     const attributesString = Object.entries(settings).reduce(
       (acc, [key, value]) => {
-        //TODO: test for invalid characters
-        return `${acc} ${key}="${value}"`;
+        const attributes = `${acc} ${key}="${value}"`;
+        return attributes;
       },
       "",
     );
     const updatedTag = `<${focusedNode.displayName}${attributesString}>`;
-    const prettyUpdatedTag = await PrettyCode(updatedTag);
+    /* Don't prettify the code with prettyCode function 
+    for updating the attributes as it automatically adds the closing tag */
+
+    /* validating the attributes using PrettyCode function */
+    let isInvalid = false;
+    await PrettyCode({ code: updatedTag, throwError: true }).catch((e) => {
+      LogAllow && console.error("Error in pretty code", e);
+      if (e.stack.includes("SyntaxError")) {
+        isInvalid = true;
+        toast.error("Invalid settings value");
+      }
+    });
+    if (isInvalid) return { isSuccess: false, settings: oldSettings };
+
     const { startTag } = focusedNode.data.sourceCodeLocation;
+    const range = new Range(
+      startTag.startLine,
+      startTag.startCol,
+      startTag.endLine,
+      startTag.endCol,
+    );
     const edit = {
-      range: new Range(
-        startTag.startLine,
-        startTag.startCol,
-        startTag.endLine,
-        startTag.endCol,
-      ),
-      text: prettyUpdatedTag,
+      range,
+      text: updatedTag,
     };
     helperModel.applyEdits([edit]);
     const code = helperModel.getValue();
@@ -629,7 +683,7 @@ export default function useElements() {
       codeViewInstanceModel.setValue(code);
     }
 
-    return settings;
+    return { isSuccess: true, settings, code };
   };
 
   const undo = () => {

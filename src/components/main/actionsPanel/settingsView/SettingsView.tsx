@@ -29,15 +29,17 @@ export const SettingsView = ({
     [],
   );
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>, attribute: string) => {
+    async (e: React.KeyboardEvent<HTMLInputElement>, attribute: string) => {
       if (e.key !== "Enter") return;
       const existingAttributesObj = rnbw.elements.getElementSettings();
-      rnbw.elements.updateSettings({
+      const result = await rnbw.elements.updateSettings({
         settings: {
           ...existingAttributesObj,
           [`${attribute}`]: attributes[attribute],
         },
       });
+      if (result?.settings && !result?.isSuccess)
+        setAttributes(result.settings);
     },
     [attributes, changeAttribute],
   );
@@ -51,7 +53,7 @@ export const SettingsView = ({
           [`${attribute}`]: "",
         },
       });
-      updatedAttribsObj && setAttributes(updatedAttribsObj);
+      updatedAttribsObj?.settings && setAttributes(updatedAttribsObj.settings);
     },
     [rnbw.elements, setAttributes],
   );
