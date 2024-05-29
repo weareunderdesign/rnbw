@@ -232,8 +232,6 @@ export const useMouseEvents = () => {
       if (targetUid) return;
       if (!ele.getAttribute("rnbw-text-element")) return;
 
-      dispatch(setSelectedNodeUids([uid]));
-
       const { startLine, endLine } = nodeData.sourceCodeLocation;
       if (startLine && endLine && contentEditableUidRef.current !== uid) {
         isEditingRef.current = true;
