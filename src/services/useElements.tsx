@@ -2,7 +2,6 @@ import {
   sortUidsByMaxEndIndex,
   sortUidsByMinStartIndex,
 } from "@_components/main/actionsPanel/nodeTreeView/helpers";
-import { eventListenersStatesRefType } from "@_components/main/stageView/iFrame/IFrame";
 import { LogAllow } from "@_constants/global";
 import { RootNodeUid } from "@_constants/main";
 import { StageNodeIdAttr } from "@_node/file";
@@ -27,6 +26,7 @@ import {
   Ipaste,
   Iremove,
   Iungroup,
+  IupdateEditableElement,
   IupdateSettings,
 } from "@_types/elements.types";
 
@@ -540,14 +540,14 @@ export default function useElements() {
   };
 
   const updateEditableElement = useCallback(
-    async (params: eventListenersStatesRefType) => {
-      const { iframeRefRef, contentEditableUidRef, nodeTreeRef } = params;
+    async (params: IupdateEditableElement) => {
+      const { eventListenerRef, contentEditableUid } = params;
       const helperModel = getEditorModelWithCurrentCode();
-      const iframeRef = iframeRefRef.current;
-      const nodeTree = nodeTreeRef.current;
+      const iframeRef = eventListenerRef.current.iframeRefRef.current;
+      const nodeTree = eventListenerRef.current.nodeTreeRef.current;
       const codeViewInstanceModel = monacoEditorRef.current?.getModel();
       if (!codeViewInstanceModel || !iframeRef) return;
-      const contentEditableUid = contentEditableUidRef.current;
+
       const contentEditableElement =
         iframeRef.contentWindow?.document.querySelector(
           `[${StageNodeIdAttr}="${contentEditableUid}"]`,
@@ -564,7 +564,7 @@ export default function useElements() {
         );
 
       helperModel.setValue(codeViewInstanceModel.getValue());
-      const focusedNode = nodeTree[nFocusedItem];
+      const focusedNode = nodeTree[contentEditableUid];
       const { startTag, endTag, startLine, endLine, startCol, endCol } =
         focusedNode.data.sourceCodeLocation;
       if (startTag && endTag) {
@@ -588,7 +588,8 @@ export default function useElements() {
       const code = helperModel.getValue();
       await dispatch(setIsContentProgrammaticallyChanged(true));
       codeViewInstanceModel.setValue(code);
-      dispatch(setSelectedNodeUids([nFocusedItem]));
+      const uniqueNodePath = focusedNode.uniqueNodePath;
+      uniqueNodePath && dispatch(setNeedToSelectNodePaths([uniqueNodePath]));
     },
     [codeViewInstanceModel],
   );

@@ -13,7 +13,6 @@ import { setActivePanel } from "@_redux/main/processor";
 
 import {
   areArraysEqual,
-  editHtmlContent,
   getBodyChild,
   getValidElementWithUid,
   isChild,
@@ -30,11 +29,13 @@ import { getCommandKey } from "@_services/global";
 import { eventListenersStatesRefType } from "../IFrame";
 import { TNodeUid } from "@_node/index";
 import { useNavigate } from "react-router-dom";
+import useRnbw from "@_services/useRnbw";
 
 export const useMouseEvents = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { monacoEditorRef } = useContext(MainContext);
+  const rnbw = useRnbw();
 
   const mostRecentClickedNodeUidRef = useRef<TNodeUid>(""); //This is used because dbl clikc event was not able to receive the uid of the node that was clicked
 
@@ -152,14 +153,9 @@ export const useMouseEvents = () => {
             );
           return;
         }
-
-        editHtmlContent({
-          dispatch,
-          iframeRef: iframeRefRef.current,
-          nodeTree: nodeTreeRef.current,
+        rnbw.elements.updateEditableElement({
+          eventListenerRef,
           contentEditableUid,
-          codeViewInstanceModel,
-          formatCode: false,
         });
       }
     },
