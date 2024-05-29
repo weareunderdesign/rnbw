@@ -402,6 +402,11 @@ export const moveIDBSingleDirectoryOrFile = async ({
 
   const nodeData = node.data;
   const targetNodeData = targetNode.data;
+
+  const uniqueEntityName =
+    newName || `${nodeData.name}${nodeData.ext ? `.${nodeData.ext}` : ""}`;
+
+  if (uid === `${targetUid}/${uniqueEntityName}`) return false;
   try {
     if (nodeData.kind === "directory") {
       await _moveIDBDirectory(nodeData, targetNodeData, newName, isCopy);
@@ -458,7 +463,7 @@ const generateNewNameForLocalDirectoryOrFile = async ({
   }
   return newName;
 };
-const generateNewNameForIDBDirectoryOrFile = async ({
+export const generateNewNameForIDBDirectoryOrFile = async ({
   nodeData,
   targetNodeData,
 }: {
@@ -466,17 +471,21 @@ const generateNewNameForIDBDirectoryOrFile = async ({
   targetNodeData: TFileNodeData;
 }): Promise<string> => {
   const { name, ext, kind } = nodeData;
-  let newName = kind === "directory" ? name : `${name}.${ext}`;
+  let newName = kind === "directory" ? name : `${name}${ext ? `.${ext}` : ""}`;
   let exists = true;
   let index = -1;
   while (exists) {
     try {
       await _getIDBDirectoryOrFileStat(
-        _path.join(targetNodeData.path, newName),
+        _path.join(targetNodeData.path as string, newName as string) as string,
       );
     } catch (err) {
-      toast.error("Error while generating a new name for an idb directory.");
-      exists = false;
+      //@ts-expect-error - types are not updated
+      if (err.name === "ENOENT") {
+        exists = false;
+      } else {
+        toast.error("Error while generating a new name for a IDB directory.");
+      }
     }
 
     if (exists) {
@@ -487,8 +496,8 @@ const generateNewNameForIDBDirectoryOrFile = async ({
             ? `${name} copy`
             : `${name} copy (${index})`
           : index === 0
-            ? `${name} copy.${ext}`
-            : `${name} copy (${index}).${ext}`;
+            ? `${name} copy${ext ? `.${ext}` : ""}`
+            : `${name} copy (${index})${ext ? `.${ext}` : ""}`;
     }
   }
   return newName;

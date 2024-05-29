@@ -21,10 +21,12 @@ import {
 } from "@_redux/main/processor";
 import {
   FileSystemApis,
+  TFileNodeData,
   _createIDBDirectory,
   _path,
   _writeIDBFile,
   confirmAlert,
+  generateNewNameForIDBDirectoryOrFile,
   getTargetHandler,
   moveIDBSingleDirectoryOrFile,
   removeSingleIDBDirectoryOrFile,
@@ -85,17 +87,39 @@ export default function useFiles() {
       const { entityName = "untitled", extension = "html" } = params;
 
       //we check if the parent directory has permission to create a file
-      const parentHandler = getParentHandler(fFocusedItem);
-      if (!parentHandler) return false;
-      if (!(await verifyFileHandlerPermission(parentHandler))) return false;
+      const parentHandler = getParentHandler(
+        fFocusedItem,
+      ) as FileSystemDirectoryHandle;
+
+      if (
+        project.context === "local" &&
+        !parentHandler &&
+        !(await verifyFileHandlerPermission(parentHandler))
+      )
+        return false;
+
+      const parentUid = fileTree[fFocusedItem].parentUid;
+      if (!parentUid) return null;
+
+      const nodeData: TFileNodeData = {
+        ...fileTree[fFocusedItem].data,
+        name: entityName,
+        ext: extension,
+        kind: "file",
+      };
 
       //We generate a unique indexed name for the file
-      const uniqueIndexedName = await getUniqueIndexedName({
-        parentHandler,
-        entityName,
-        extension,
-      });
-      const parentUid = fileTree[fFocusedItem].parentUid;
+      const uniqueIndexedName =
+        project.context === "idb"
+          ? await generateNewNameForIDBDirectoryOrFile({
+              nodeData,
+              targetNodeData: fileTree[parentUid].data,
+            })
+          : await getUniqueIndexedName({
+              parentHandler,
+              entityName,
+              extension,
+            });
 
       try {
         //getFileHandle throws an error if the file does not exist
@@ -104,9 +128,9 @@ export default function useFiles() {
             create: true,
           });
         } else {
-          const parentNodeData = fileTree[fFocusedItem].data;
+          const parentNodePath = fileTree[parentUid].data.path;
           await _writeIDBFile(
-            _path.join(parentNodeData.path, uniqueIndexedName),
+            _path.join(parentNodePath, uniqueIndexedName),
             "",
           );
         }
@@ -130,6 +154,7 @@ export default function useFiles() {
       fileHandlers,
       fSelectedItemsObj,
       fExpandedItemsObj,
+      project,
     ],
   );
   const createFolder = useCallback(
@@ -138,16 +163,37 @@ export default function useFiles() {
       const { entityName = "untitled" } = params;
 
       //we check if the parent directory has permission to create a directory
-      const parentHandler = getParentHandler(fFocusedItem);
-      if (!parentHandler) return null;
-      if (!(await verifyFileHandlerPermission(parentHandler))) return null;
+      const parentHandler = getParentHandler(
+        fFocusedItem,
+      ) as FileSystemDirectoryHandle;
 
-      //We generate a unique indexed name for the file
-      const uniqueIndexedName = await getUniqueIndexedName({
-        parentHandler,
-        entityName,
-      });
+      if (
+        project.context === "local" &&
+        !parentHandler &&
+        !(await verifyFileHandlerPermission(parentHandler))
+      )
+        return null;
+
       const parentUid = fileTree[fFocusedItem].parentUid;
+      if (!parentUid) return null;
+
+      const nodeData: TFileNodeData = {
+        ...fileTree[fFocusedItem].data,
+        name: entityName,
+        ext: "",
+        kind: "directory",
+      };
+      //We generate a unique indexed name for the file
+      const uniqueIndexedName =
+        project.context === "idb"
+          ? await generateNewNameForIDBDirectoryOrFile({
+              nodeData,
+              targetNodeData: fileTree[parentUid].data,
+            })
+          : await getUniqueIndexedName({
+              parentHandler,
+              entityName,
+            });
 
       try {
         //getDirectoryHandle throws an error if the folder does not exist
@@ -156,10 +202,8 @@ export default function useFiles() {
             create: true,
           });
         } else {
-          const parentNodeData = fileTree[fFocusedItem].data;
-          _createIDBDirectory(
-            _path.join(parentNodeData.path, uniqueIndexedName),
-          );
+          const parentNodePath = fileTree[parentUid].data.path;
+          _createIDBDirectory(_path.join(parentNodePath, uniqueIndexedName));
         }
         const _fileAction: TFileAction = {
           action: "create",
@@ -184,6 +228,7 @@ export default function useFiles() {
       fileHandlers,
       fSelectedItemsObj,
       fExpandedItemsObj,
+      project,
     ],
   );
 
@@ -261,14 +306,24 @@ export default function useFiles() {
       if (!parentNode) return;
       const name = `${newName}${extension ? `.${extension}` : ""}`;
       try {
-        await moveLocalSingleDirectoryOrFile({
-          fileTree,
-          fileHandlers,
-          uid,
-          targetUid: parentNode.uid,
-          isCopy: false,
-          newName: name,
-        });
+        if (project.context === "local") {
+          await moveLocalSingleDirectoryOrFile({
+            fileTree,
+            fileHandlers,
+            uid,
+            targetUid: parentNode.uid,
+            isCopy: false,
+            newName: name,
+          });
+        } else {
+          await moveIDBSingleDirectoryOrFile({
+            fileTree,
+            uid,
+            targetUid: parentNode.uid,
+            isCopy: false,
+            newName: name,
+          });
+        }
 
         const _fileAction: TFileAction = {
           action: "rename",
@@ -286,7 +341,7 @@ export default function useFiles() {
         await reloadCurrentProject();
       }
     },
-    [fileTree, didUndo, didRedo],
+    [fileTree, didUndo, didRedo, project, fileHandlers],
   );
   const undo = useCallback(async () => {
     if (fileEventPastLength === 0) {
@@ -353,14 +408,17 @@ export default function useFiles() {
                 fileHandlers,
               }),
               // for `idb` project
-              targetNodeData: targetNode?.data,
+              targetNodeData:
+                targetNode.data.kind === "directory"
+                  ? targetNode.data
+                  : fileTree[targetNode.parentUid!].data,
             }),
         ),
       );
       try {
         await Promise.all(
           /* we are using map instead of forEach because we want to to get the array of all the promises */
-          uidsToPaste.map(async (uid) => {
+          uidsToPaste.map(async (uid, index) => {
             if (project.context === "local") {
               await moveLocalSingleDirectoryOrFile({
                 fileTree,
@@ -373,9 +431,12 @@ export default function useFiles() {
               await moveIDBSingleDirectoryOrFile({
                 fileTree,
                 uid,
-                targetUid: _targetUid,
+                targetUid:
+                  targetNode.data.kind === "directory"
+                    ? _targetUid
+                    : targetNode.parentUid!,
                 isCopy,
-                newName: fileTree[uid].data.name,
+                newName: newNames[index],
               });
             }
           }),
