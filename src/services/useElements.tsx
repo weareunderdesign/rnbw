@@ -605,7 +605,10 @@ export default function useElements() {
       "",
     );
     const updatedTag = `<${focusedNode.displayName}${attributesString}>`;
-    /* Don't prettify the code with prettyCode function because it will add the closing tag, which is not needed */
+    /* Don't prettify the code with prettyCode function 
+    for updating the attributes as it automatically adds the closing tag */
+
+    /* validating the attributes using PrettyCode function */
     let isInvalid = false;
     await PrettyCode({ code: updatedTag, throwError: true }).catch((e) => {
       LogAllow && console.error("Error in pretty code", e);
@@ -640,7 +643,7 @@ export default function useElements() {
       codeViewInstanceModel.setValue(code);
     }
 
-    return { isSuccess: true, settings };
+    return { isSuccess: true, settings, code };
   };
 
   const undo = () => {
