@@ -34,7 +34,7 @@ import {
   focusNodeTreeNode,
   selectNodeTreeNodes,
   setNeedToSelectNodePaths,
-  setSelectedNodeUids,
+  setNeedToSelectNodeUids,
 } from "@_redux/main/nodeTree";
 
 export async function PrettyCode({
@@ -95,8 +95,13 @@ export const isValidNode = (node: THtmlDomNode) => {
 };
 
 export const useElementHelper = () => {
-  const { nSelectedItemsObj, validNodeTree, needToSelectNodePaths } =
-    useAppState();
+  const {
+    nSelectedItemsObj,
+    validNodeTree,
+    needToSelectNodePaths,
+    didRedo,
+    didUndo,
+  } = useAppState();
   const { monacoEditorRef } = useContext(MainContext);
   const dispatch = useDispatch();
   const selectedItems = useMemo(
@@ -391,7 +396,8 @@ export const useElementHelper = () => {
 
     const contentInApp = parse5.serialize(htmlDom);
 
-    await dispatch(setSelectedNodeUids(selectedNodeUids));
+    !(didRedo || didUndo) &&
+      (await dispatch(setNeedToSelectNodeUids(selectedNodeUids)));
     await dispatch(focusNodeTreeNode(selectedNodeUids[0]));
     await dispatch(selectNodeTreeNodes(selectedNodeUids));
 
