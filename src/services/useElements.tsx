@@ -16,7 +16,11 @@ import {
   setNeedToSelectNodePaths,
   setSelectedNodeUids,
 } from "@_redux/main/nodeTree";
-import { setDidRedo, setDidUndo } from "@_redux/main/processor";
+import {
+  setClipboardData,
+  setDidRedo,
+  setDidUndo,
+} from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 import {
   Iadd,
@@ -50,6 +54,7 @@ export default function useElements() {
     nodeEventPast,
     selectedNodeUids,
     nodeEventFutureLength,
+    clipboardData,
   } = useAppState();
   const { monacoEditorRef } = useContext(MainContext);
   const dispatch = useDispatch();
@@ -234,17 +239,19 @@ export default function useElements() {
     const helperModel = getEditorModelWithCurrentCode();
     helperModel.setValue(codeViewInstanceModel.getValue());
 
-    await copyAndCutNode({
-      sortDsc: true,
-    });
+    dispatch(
+      setClipboardData({
+        panel: "node",
+        type: "cut",
+        uids: selectedItems,
+      }),
+    );
 
     dispatch(
       setCopiedNodeDisplayName(
         selectedItems.map((uid) => `Node-<${validNodeTree[uid].displayName}>`),
       ),
     );
-    const code = helperModel.getValue();
-    codeViewInstanceModel.setValue(code);
   };
 
   const paste = async (params: Ipaste = {}) => {
@@ -271,13 +278,47 @@ export default function useElements() {
       return;
     }
 
-    const initialCode = content || codeViewInstanceModel.getValue();
+    /* To check if the clipboard data is available */
+    const actionType = clipboardData?.type;
+    const uids = clipboardData?.uids;
+    const panel = clipboardData?.panel;
+
+    /*initializing the code to be pasted */
+    let initialCode = "";
+    let codeToCopy = "";
+
+    /* 1. If the content is provided, the the paste action is done on the provided content.
+
+      2. If not then we check if the clipboard data is available and then we paste the copied code
+      into the updated code after the cut action is done
+
+      3. If none of the above conditions are met, 
+      then we simply paste the copied code into the current code.
+    */
+    if (content) {
+      initialCode = content;
+      codeToCopy = await window.navigator.clipboard.readText();
+    } else if (panel === "node" && actionType === "cut" && uids) {
+      const { updatedCode, copiedCode } = await copyAndCutNode({
+        selectedUids: uids,
+        sortDsc: true,
+      });
+
+      initialCode = updatedCode;
+      codeToCopy = copiedCode;
+    } else {
+      initialCode = codeViewInstanceModel.getValue();
+      if (!pasteContent) {
+        codeToCopy = await window.navigator.clipboard.readText();
+      }
+    }
+
+    initialCode = content || codeViewInstanceModel.getValue();
 
     const helperModel = getEditorModelWithCurrentCode();
     helperModel.setValue(initialCode);
 
-    let copiedCode =
-      pasteContent || (await window.navigator.clipboard.readText());
+    codeToCopy = await window.navigator.clipboard.readText();
 
     const { startLine, startCol, endLine, endCol } =
       focusedNode.data.sourceCodeLocation;
@@ -298,8 +339,8 @@ export default function useElements() {
         startTag.endCol,
       );
     }
-    copiedCode = await PrettyCode({ code: copiedCode });
-    let code = copiedCode;
+    codeToCopy = await PrettyCode({ code: codeToCopy });
+    let code = codeToCopy;
     const edit = {
       range: editRange,
       text: code,
@@ -308,7 +349,7 @@ export default function useElements() {
 
     code = helperModel.getValue();
     if (!skipUpdate) {
-      const stringToHtml = parse5.parseFragment(copiedCode);
+      const stringToHtml = parse5.parseFragment(codeToCopy);
 
       const tagNames = stringToHtml.childNodes
         .filter((node) => {
