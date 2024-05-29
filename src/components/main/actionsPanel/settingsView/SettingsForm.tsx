@@ -36,7 +36,7 @@ export const SettingsForm = ({
         [`${attribute}`]: value,
       },
     });
-    updatedAttribsObj && setAttributes(updatedAttribsObj);
+    updatedAttribsObj?.settings && setAttributes(updatedAttribsObj?.settings);
     setShowForm(false);
   };
 

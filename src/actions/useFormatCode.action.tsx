@@ -30,11 +30,8 @@ export default function useFormatCode() {
         const { startLine, startCol, endLine, endCol } =
           node.data.sourceCodeLocation;
         const range = new Range(startLine, startCol, endLine, endCol);
-
-        const text = await PrettyCode(
-          codeViewInstanceModel.getValueInRange(range),
-          startCol,
-        );
+        const code = codeViewInstanceModel.getValueInRange(range);
+        const text = await PrettyCode({ code, startCol });
 
         return { range, text };
       }),

@@ -104,7 +104,7 @@ export default function useElements() {
     if (node) {
       const { endCol, endLine } = node.data.sourceCodeLocation;
       const text = `${codeViewText}`;
-      codeViewText = await PrettyCode(codeViewText);
+      codeViewText = await PrettyCode({ code: codeViewText });
       const edit = {
         range: new Range(endLine, endCol, endLine, endCol),
         text,
@@ -146,7 +146,7 @@ export default function useElements() {
           new Range(startLine, startCol, endLine, endCol),
         );
 
-        text = await PrettyCode(text);
+        text = await PrettyCode({ code: text });
         const edit = {
           range: new Range(endLine, endCol, endLine, endCol),
           text,
@@ -298,7 +298,7 @@ export default function useElements() {
         startTag.endCol,
       );
     }
-    copiedCode = await PrettyCode(copiedCode);
+    copiedCode = await PrettyCode({ code: copiedCode });
     let code = copiedCode;
     const edit = {
       range: editRange,
@@ -356,7 +356,7 @@ export default function useElements() {
     helperModel.setValue(updatedCode);
 
     let code = `<div>${copiedCode}</div>`;
-    code = await PrettyCode(code);
+    code = await PrettyCode({ code });
 
     const edit = {
       range: new Range(startLine, startCol, startLine, startCol),
@@ -416,7 +416,7 @@ export default function useElements() {
         text: "",
       };
 
-      const preetyCopiedCode = await PrettyCode(copiedCode);
+      const preetyCopiedCode = await PrettyCode({ code: copiedCode });
       const addUngroupedCodeEdit = {
         range: new Range(startLine, startCol, startLine, startCol),
         text: preetyCopiedCode,
@@ -592,20 +592,29 @@ export default function useElements() {
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
 
     const { settings, skipUpdate } = params;
-
+    const oldSettings = getElementSettings();
     const helperModel = getEditorModelWithCurrentCode();
     helperModel.setValue(codeViewInstanceModel.getValue());
 
     const focusedNode = validNodeTree[nFocusedItem];
     const attributesString = Object.entries(settings).reduce(
       (acc, [key, value]) => {
-        //TODO: test for invalid characters
-        return `${acc} ${key}="${value}"`;
+        const attributes = `${acc} ${key}="${value}"`;
+        return attributes;
       },
       "",
     );
     const updatedTag = `<${focusedNode.displayName}${attributesString}>`;
     /* Don't prettify the code with prettyCode function because it will add the closing tag, which is not needed */
+    let isInvalid = false;
+    await PrettyCode({ code: updatedTag, throwError: true }).catch((e) => {
+      LogAllow && console.error("Error in pretty code", e);
+      if (e.stack.includes("SyntaxError")) {
+        isInvalid = true;
+        toast.error("Invalid settings value");
+      }
+    });
+    if (isInvalid) return { isSuccess: false, settings: oldSettings };
 
     const { startTag } = focusedNode.data.sourceCodeLocation;
     const range = new Range(
@@ -631,7 +640,7 @@ export default function useElements() {
       codeViewInstanceModel.setValue(code);
     }
 
-    return settings;
+    return { isSuccess: true, settings };
   };
 
   const undo = () => {
