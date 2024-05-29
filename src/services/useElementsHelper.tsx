@@ -8,10 +8,6 @@ import { MainContext } from "@_redux/main";
 import { getObjKeys } from "@_pages/main/helper";
 import { LogAllow, RainbowAppName } from "@_constants/global";
 
-import {
-  sortUidsByMaxEndIndex,
-  sortUidsByMinStartIndex,
-} from "@_components/main/actionsPanel/nodeTreeView/helpers";
 import { toast } from "react-toastify";
 import {
   THtmlDomNode,
@@ -131,6 +127,22 @@ export const useElementHelper = () => {
     return true;
   }
 
+  const sortUidsDsc = (uids: string[]) => {
+    return Array.from(uids)
+      .filter((uid) => validNodeTree[uid].data.sourceCodeLocation)
+      .sort((a, b) => {
+        return parseInt(b) - parseInt(a);
+      });
+  };
+
+  const sortUidsAsc = (uids: string[]) => {
+    return Array.from(uids)
+      .filter((uid) => validNodeTree[uid].data.sourceCodeLocation)
+      .sort((a, b) => {
+        return parseInt(a) - parseInt(b);
+      });
+  };
+
   async function copyAndCutNode({
     selectedUids,
     pasteToClipboard = true,
@@ -144,10 +156,11 @@ export const useElementHelper = () => {
     const selected = selectedUids || selectedItems;
     const helperModel = getEditorModelWithCurrentCode();
 
-    /* We are sorting nodes from the max to the min because this way the nodes of max index are deleted first and they do not affect the nodes with index lower to them in terms of the source code location*/
-    const sortedUids = sortDsc
-      ? sortUidsByMaxEndIndex(selected, validNodeTree)
-      : sortUidsByMinStartIndex(selected, validNodeTree);
+    /* We are sorting nodes from the max to the min because this way the nodes of max index 
+    are deleted first and they do not affect the nodes with index 
+    lower to them in terms of the source code location*/
+
+    const sortedUids = sortDsc ? sortUidsDsc(selected) : sortUidsAsc(selected);
     let copiedCode = "";
 
     sortedUids.forEach((uid) => {
@@ -523,5 +536,7 @@ export const useElementHelper = () => {
     copyAndCutNode,
     parseHtml,
     findNodeToSelectAfterAction,
+    sortUidsDsc,
+    sortUidsAsc,
   };
 };
