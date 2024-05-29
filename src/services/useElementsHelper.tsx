@@ -7,7 +7,7 @@ import { useContext, useMemo } from "react";
 import { MainContext } from "@_redux/main";
 import { getObjKeys } from "@_pages/main/helper";
 import { LogAllow, RainbowAppName } from "@_constants/global";
-import { html_beautify } from "js-beautify";
+
 import {
   sortUidsByMaxEndIndex,
   sortUidsByMinStartIndex,
@@ -165,7 +165,7 @@ export const useElementHelper = () => {
         helperModel.applyEdits([edit]);
       }
     });
-    copiedCode = html_beautify(copiedCode);
+    copiedCode = await PrettyCode({ code: copiedCode });
     pasteToClipboard &&
       (await window.navigator.clipboard.writeText(copiedCode));
     const updatedCode = helperModel.getValue();
