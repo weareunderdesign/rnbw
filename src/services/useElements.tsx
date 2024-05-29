@@ -679,7 +679,6 @@ export default function useElements() {
     }
 
     dispatch({ type: NodeTree_Event_RedoActionType });
-
     dispatch(setDidRedo(true));
     dispatch(setIsContentProgrammaticallyChanged(true));
   };
