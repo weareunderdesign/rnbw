@@ -605,16 +605,18 @@ export default function useElements() {
       "",
     );
     const updatedTag = `<${focusedNode.displayName}${attributesString}>`;
-    const prettyUpdatedTag = await PrettyCode(updatedTag);
+    /* Don't prettify the code with prettyCode function because it will add the closing tag, which is not needed */
+
     const { startTag } = focusedNode.data.sourceCodeLocation;
+    const range = new Range(
+      startTag.startLine,
+      startTag.startCol,
+      startTag.endLine,
+      startTag.endCol,
+    );
     const edit = {
-      range: new Range(
-        startTag.startLine,
-        startTag.startCol,
-        startTag.endLine,
-        startTag.endCol,
-      ),
-      text: prettyUpdatedTag,
+      range,
+      text: updatedTag,
     };
     helperModel.applyEdits([edit]);
     const code = helperModel.getValue();
