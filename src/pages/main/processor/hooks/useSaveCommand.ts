@@ -1,10 +1,10 @@
-import { useCallback, useContext, useEffect } from "react";
+import { useCallback, useEffect } from "react";
 
 import { useDispatch } from "react-redux";
 
 import { AutoSaveDelay, RootNodeUid } from "@_constants/main";
 import { TFileNodeTreeData } from "@_node/file";
-import { MainContext } from "@_redux/main";
+
 import { setFileTree } from "@_redux/main/fileTree";
 import { useAppState } from "@_redux/useAppState";
 
@@ -18,7 +18,6 @@ export const useSaveCommand = () => {
   const dispatch = useDispatch();
   const { project, fileTree, currentFileUid, currentCommand, fileHandlers } =
     useAppState();
-  const { monacoEditorRef } = useContext(MainContext);
 
   useEffect(() => {
     if (!currentCommand) return;
@@ -44,16 +43,6 @@ export const useSaveCommand = () => {
     dispatch(addRunningAction());
     if (fileData?.changed) {
       try {
-        const codeViewInstance = monacoEditorRef.current;
-        const codeViewInstanceModel = codeViewInstance?.getModel();
-        if (codeViewInstanceModel) {
-          const code = codeViewInstanceModel.getValue();
-
-          //get the current cursor position
-          const cursorPosition = codeViewInstance?.getPosition();
-          codeViewInstanceModel.setValue(code);
-          codeViewInstance?.setPosition(cursorPosition!);
-        }
         await saveFileContent(project, fileHandlers, currentFileUid, fileData);
       } catch (err) {
         toast.error("An error occurred while saving the file");
