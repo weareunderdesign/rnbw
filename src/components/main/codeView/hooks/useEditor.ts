@@ -24,6 +24,7 @@ import { TCodeSelection } from "../types";
 import { useSaveCommand } from "@_pages/main/processor/hooks";
 import { setIsCodeTyping } from "@_redux/main/reference";
 import { debounce } from "@_pages/main/helper";
+import { setFileTreeNodes } from "@_redux/main/fileTree";
 
 const useEditor = () => {
   const dispatch = useDispatch();
@@ -33,6 +34,8 @@ const useEditor = () => {
     isCodeTyping,
     wordWrap,
     isContentProgrammaticallyChanged,
+    currentFileUid,
+    fileTree,
   } = useAppState();
   const {
     monacoEditorRef,
@@ -50,6 +53,8 @@ const useEditor = () => {
     isCodeTyping,
     wordWrap,
     isContentProgrammaticallyChanged,
+    currentFileUid,
+    fileTree,
   });
 
   // theme
@@ -138,8 +143,17 @@ const useEditor = () => {
 
   // handleOnChange
   const onChange = useCallback(
-    (value: string) => {
-      dispatch(setCurrentFileContent(value));
+    (value: string, changedFileUid: string) => {
+      if (changedFileUid === AppstateRef.current.currentFileUid) {
+        dispatch(setCurrentFileContent(value));
+      } else {
+        const file = structuredClone(
+          AppstateRef.current.fileTree[changedFileUid],
+        );
+        const fileData = file.data;
+        fileData.content = value;
+        dispatch(setFileTreeNodes([file]));
+      }
 
       if (!AppstateRef.current.isContentProgrammaticallyChanged) {
         const selectedRange: Selection | null =
@@ -174,14 +188,14 @@ const useEditor = () => {
   );
 
   const handleOnChange = useCallback(
-    (value: string | undefined) => {
+    (value: string | undefined, changedFileUid: string) => {
       if (value === undefined) return;
 
       if (AppstateRef.current.isContentProgrammaticallyChanged) {
-        onChange(value);
+        onChange(value, changedFileUid);
       } else {
         !AppstateRef.current.isCodeTyping && dispatch(setIsCodeTyping(true));
-        longDebouncedOnChange(value);
+        longDebouncedOnChange(value, changedFileUid);
       }
     },
     [longDebouncedOnChange, onChange],
@@ -200,6 +214,8 @@ const useEditor = () => {
       isCodeTyping,
       wordWrap,
       isContentProgrammaticallyChanged,
+      currentFileUid,
+      fileTree,
     };
   }, [
     _theme,
@@ -207,6 +223,8 @@ const useEditor = () => {
     isCodeTyping,
     wordWrap,
     isContentProgrammaticallyChanged,
+    currentFileUid,
+    fileTree,
   ]);
 
   // set default tab-size
