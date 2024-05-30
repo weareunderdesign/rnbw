@@ -219,6 +219,13 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
         return;
       }
       if (e.key === "Escape") {
+        if (activePanel === "file") {
+          if (
+            e.target instanceof HTMLElement &&
+            e.target.id === "FileTreeView-RenameInput"
+          )
+            return;
+        }
         !cmdkOpen && (showActionsPanel || showCodeView) && closeAllPanel();
         !cmdkOpen && !showActionsPanel && !showCodeView && openAllPanel();
         return;
