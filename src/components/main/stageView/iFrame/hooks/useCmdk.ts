@@ -80,10 +80,17 @@ export const useCmdk = () => {
       event: KeyboardEvent,
       eventListenerRef: React.MutableRefObject<eventListenersStatesRefType>,
     ) => {
-      const { isEditingRef, showActionsPanel, showCodeView } =
+      const { isEditingRef, showActionsPanel, showCodeView, activePanel } =
         eventListenerRef.current;
       if (isEditingRef.current) return;
       if (event.code === "Escape") {
+        if (activePanel === "file") {
+          if (
+            event.target instanceof HTMLElement &&
+            event.target.id === "FileTreeView-RenameInput"
+          )
+            return;
+        }
         if (!showActionsPanel && !showCodeView) {
           dispatch(setShowActionsPanel(true));
           dispatch(setShowCodeView(true));
