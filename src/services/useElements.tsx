@@ -529,9 +529,10 @@ export default function useElements() {
     let updatedTargetNodePath = targetPath;
 
     let pathSubtractor = 1;
+    let prevCommonPath = "";
     movedNodePaths.forEach((path) => {
       const movedPathArr = path.split(".");
-      const targetPathArr = targetPath.split(".");
+      const targetPathArr = updatedTargetNodePath.split(".");
       const movedPathLength = movedPathArr.length;
       const targetPathLength = targetPathArr.length;
       const minPathLength = Math.min(movedPathLength, targetPathLength);
@@ -550,10 +551,19 @@ export default function useElements() {
             divergentTargetNode.split("_")[1],
           );
           if (divergentMovedNodeIndex < divergentTargetNodeIndex) {
+            let remainingPath = "";
+            if (i + 1 < targetPathLength) {
+              remainingPath = `.${targetPathArr.slice(i + 1).join(".")}`;
+            }
+            if (prevCommonPath !== commonPath) {
+              pathSubtractor = 1;
+            } else {
+              prevCommonPath = commonPath;
+              pathSubtractor++;
+            }
             divergentTargetNodeIndex -= pathSubtractor;
-            pathSubtractor++;
 
-            const updatedDivergetNode = `${divergentTargetNode.split("_")[0]}_${divergentTargetNodeIndex}`;
+            const updatedDivergetNode = `${divergentTargetNode.split("_")[0]}_${divergentTargetNodeIndex}${remainingPath}`;
             updatedTargetNodePath = `${commonPath}${updatedDivergetNode}`;
           }
 
