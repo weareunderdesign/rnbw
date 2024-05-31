@@ -242,9 +242,13 @@ export const useNodeTreeEvent = () => {
                 },
                 onBeforeNodeDiscarded: function (node: Node) {
                   const elementNode = node as Element;
-                  const ifPreserveNode = elementNode.getAttribute
-                    ? elementNode.getAttribute(PreserveRnbwNode)
-                    : false;
+                  let ifPreserveNode = false;
+                  if (elementNode.getAttribute) {
+                    const preserveAttr =
+                      elementNode.getAttribute(PreserveRnbwNode);
+                    const RnbwId = elementNode.getAttribute(StageNodeIdAttr);
+                    ifPreserveNode = !!preserveAttr || !RnbwId;
+                  }
                   if (ifPreserveNode) {
                     return false;
                   }

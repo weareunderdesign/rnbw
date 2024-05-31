@@ -10,7 +10,7 @@ export const Notification = () => {
 
   return (
     <ToastContainer
-      position="bottom-right"
+      position="bottom-center"
       autoClose={3000}
       hideProgressBar={false}
       newestOnTop={false}
