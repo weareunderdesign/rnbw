@@ -21,7 +21,6 @@ import {
   PARSING_ERROR_MESSAGES,
   StageNodeIdAttr,
   TNode,
-  TNodeTreeData,
   TNodeUid,
   TValidNodeUid,
   ValidStageNodeUid,
@@ -34,7 +33,7 @@ import {
   setNeedToSelectNodePaths,
   setNeedToSelectNodeUids,
 } from "@_redux/main/nodeTree";
-import { TCmdkGroupData, THtmlReferenceData } from "@_types/main";
+import { TCmdkGroupData } from "@_types/main";
 
 export async function PrettyCode({
   code,
@@ -555,13 +554,9 @@ export const useElementHelper = () => {
   };
 
   const isAllElementPastingAllowed = ({
-    htmlReferenceData,
-    validNodeTree,
     uid,
     isMove,
   }: {
-    htmlReferenceData: THtmlReferenceData;
-    validNodeTree: TNodeTreeData;
     uid: TNodeUid;
     isMove?: boolean;
   }) => {
@@ -581,14 +576,22 @@ export const useElementHelper = () => {
   const isPastingAllowed = ({
     selectedItems,
     nodeToAdd,
+    checkFirstParents = false,
     isMove = false,
   }: {
     selectedItems: TNodeUid[];
     nodeToAdd: string[];
+    checkFirstParents?: boolean;
     isMove?: boolean;
   }) => {
     const selectedUids = [...selectedItems];
     const selectedNodes = selectedItems.map((uid) => validNodeTree[uid]);
+
+    if (nodeToAdd.length === 0)
+      return {
+        isAllowed: true,
+        selectedUids,
+      };
 
     const checkAddingAllowed = (uid: string) => {
       const data: TCmdkGroupData = {
@@ -609,23 +612,17 @@ export const useElementHelper = () => {
       return nodeToAdd.every((node: string) => {
         if (node.split("-").length > 2) {
           return isAllElementPastingAllowed({
-            htmlReferenceData,
-            validNodeTree,
             uid,
             isMove,
           });
         } else {
           if (node === "#text") {
             const textNodeAllowed = isAllElementPastingAllowed({
-              htmlReferenceData,
-              validNodeTree,
               uid,
               isMove,
             });
-
             textNodeAllowed && addTextNodeToElements(data);
           }
-
           return Object.values(data["Elements"]).some(
             (obj) => obj["Context"] === `Node-<${node}>`,
           );
@@ -643,6 +640,7 @@ export const useElementHelper = () => {
 
       if (
         !addingAllowed &&
+        !checkFirstParents &&
         selectedNode?.parentUid &&
         selectedNode?.parentUid !== RootNodeUid
       ) {

@@ -1,9 +1,8 @@
 import useRnbw from "@_services/useRnbw";
 import { Range, editor } from "monaco-editor";
 
-import { sortUidsByMaxEndIndex } from "@_components/main/actionsPanel/nodeTreeView/helpers";
-import { useAppState } from "@_redux/useAppState";
-import { PrettyCode } from "@_services/useElementsHelper";
+import { PrettyCode, useElementHelper } from "@_services/useElementsHelper";
+import { toast } from "react-toastify";
 
 // helperModel added to update the code in the codeViewInstanceModel
 // once when the action is executed, this improves the History Management
@@ -11,15 +10,27 @@ const helperModel = editor.createModel("", "html");
 
 export default function useTurnInto() {
   const rnbw = useRnbw();
-  const { validNodeTree } = useAppState();
+  const { isPastingAllowed, sortUidsDsc } = useElementHelper();
 
   const selectedElements = rnbw.elements.getSelectedElements();
-  const sortedUids = sortUidsByMaxEndIndex(selectedElements, validNodeTree);
 
   async function turnInto(tagName: string) {
+    const sortedUids = sortUidsDsc(selectedElements);
+
     const codeViewInstanceModel = rnbw.files.getEditorRef().current?.getModel();
     if (!codeViewInstanceModel) return;
     helperModel.setValue(codeViewInstanceModel.getValue());
+
+    // Checking if a parent component can have a tag as a child
+    const { isAllowed } = isPastingAllowed({
+      selectedItems: sortedUids,
+      nodeToAdd: [tagName],
+      checkFirstParents: true,
+    });
+    if (!isAllowed) {
+      toast(`Turn into ${tagName} not allowed`, { type: "error" });
+      return;
+    }
 
     for (const uid of sortedUids) {
       const node = rnbw.elements.getElement(uid);
@@ -33,14 +44,16 @@ export default function useTurnInto() {
 
       const { startTag, endTag, startLine, startCol, endLine, endCol } =
         node.data.sourceCodeLocation;
-      if (!startTag || !endTag) return;
+      if ((!startTag || !endTag) && node.displayName !== "#text") return;
       const innerCode = codeViewInstanceModel.getValueInRange(
-        new Range(
-          startTag.endLine,
-          startTag.endCol,
-          endTag.startLine,
-          endTag.startCol,
-        ),
+        node.displayName === "#text"
+          ? new Range(startLine, startCol, endLine, endCol)
+          : new Range(
+              startTag.endLine,
+              startTag.endCol,
+              endTag.startLine,
+              endTag.startCol,
+            ),
       );
       const newCode = `<${tagName} ${attributeCode}>${innerCode}</${tagName}>`;
 
