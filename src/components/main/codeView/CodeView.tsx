@@ -258,7 +258,7 @@ export default function CodeView() {
             language={language}
             defaultValue={""}
             value={currentFileContent}
-            onChange={handleOnChange}
+            onChange={(value) => handleOnChange(value, currentFileUid)}
             loading={""}
             options={
               editorConfigs as monaco.editor.IStandaloneEditorConstructionOptions
