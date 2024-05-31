@@ -153,7 +153,7 @@ export default function useElements() {
           new Range(startLine, startCol, endLine, endCol),
         );
 
-        text = await PrettyCode({ code: text });
+        text = await PrettyCode({ code: text, startCol });
         const edit = {
           range: new Range(endLine, endCol, endLine, endCol),
           text,
@@ -323,7 +323,10 @@ export default function useElements() {
         startTag.endCol,
       );
     }
-    copiedCode = await PrettyCode({ code: copiedCode });
+    copiedCode = await PrettyCode({
+      code: copiedCode,
+      startCol: editRange.startColumn,
+    });
     let code = copiedCode;
     const edit = {
       range: editRange,
@@ -451,7 +454,7 @@ export default function useElements() {
         text: "",
       };
 
-      const prettyCopiedCode = await PrettyCode({ code: copiedCode });
+      const prettyCopiedCode = await PrettyCode({ code: copiedCode, startCol });
       const addUngroupedCodeEdit = {
         range: new Range(startLine, startCol, startLine, startCol),
         text: prettyCopiedCode,
