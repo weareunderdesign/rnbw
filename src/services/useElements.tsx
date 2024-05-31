@@ -483,6 +483,7 @@ export default function useElements() {
         return parseInt(b) - parseInt(a);
       });
 
+    let focusedNodeIndexInSortedUids = 0;
     for (let i = 0; i < sortedUids.length; i++) {
       const uid = sortedUids[i];
       const node = validNodeTree[uid];
@@ -502,6 +503,8 @@ export default function useElements() {
             skipUpdate: true,
           });
           updatedCode && helperModel.setValue(updatedCode);
+
+          focusedNodeIndexInSortedUids = i;
         } else {
           const edit = {
             range,
@@ -513,6 +516,87 @@ export default function useElements() {
     }
 
     codeViewInstanceModel.setValue(helperModel.getValue());
+    const targetPath = validNodeTree[focusedItem].uniqueNodePath;
+    let movedNodePaths = sortedUids
+      .slice(focusedNodeIndexInSortedUids + 1)
+      .map((uid) => validNodeTree[uid].uniqueNodePath) as string[];
+
+    //make sure the movedNodePaths are unique and not undefined
+    movedNodePaths = Array.from(new Set(movedNodePaths)).filter(
+      (path) => typeof path === "string",
+    );
+    if (!targetPath) return;
+    let updatedTargetNodePath = targetPath;
+
+    let pathSubtractor = 1;
+    let prevCommonPath = "";
+    movedNodePaths.forEach((path) => {
+      const movedPathArr = path.split(".");
+      const targetPathArr = updatedTargetNodePath.split(".");
+      const movedPathLength = movedPathArr.length;
+      const targetPathLength = targetPathArr.length;
+      const minPathLength = Math.min(movedPathLength, targetPathLength);
+      let commonPath = "";
+      for (let i = 0; i < minPathLength; i++) {
+        if (movedPathArr[i] === targetPathArr[i]) {
+          commonPath += `${movedPathArr[i]}.`;
+        } else {
+          const divergentMovedNode = movedPathArr[i];
+          const divergentTargetNode = targetPathArr[i];
+
+          const divergentMovedNodeIndex = parseInt(
+            divergentMovedNode.split("_")[1],
+          );
+          let divergentTargetNodeIndex = parseInt(
+            divergentTargetNode.split("_")[1],
+          );
+          if (divergentMovedNodeIndex < divergentTargetNodeIndex) {
+            let remainingPath = "";
+            if (i + 1 < targetPathLength) {
+              remainingPath = `.${targetPathArr.slice(i + 1).join(".")}`;
+            }
+            if (prevCommonPath !== commonPath) {
+              pathSubtractor = 1;
+            } else {
+              prevCommonPath = commonPath;
+              pathSubtractor++;
+            }
+            divergentTargetNodeIndex -= pathSubtractor;
+
+            const updatedDivergetNode = `${divergentTargetNode.split("_")[0]}_${divergentTargetNodeIndex}${remainingPath}`;
+            updatedTargetNodePath = `${commonPath}${updatedDivergetNode}`;
+          }
+
+          break;
+        }
+      }
+    });
+
+    //get selecteduids nodes name
+    const movedNodeNames = selectedUids.map(
+      (uid) => validNodeTree[uid].displayName,
+    );
+
+    //get index of the updatedTargetNodePath
+    const updatedTargetNodePathArr = updatedTargetNodePath.split("_");
+    const updatedTargetNodeIndex = parseInt(
+      updatedTargetNodePathArr[updatedTargetNodePathArr.length - 1],
+    );
+
+    const targetNodePathArr = updatedTargetNodePath.split(".");
+    const targetNodeParentPath = targetNodePathArr.slice(0, -1).join(".");
+
+    const indexOffset = position === 0 ? 0 : updatedTargetNodeIndex;
+    const finalTargetPath =
+      position === 0 || pathSubtractor > 1
+        ? updatedTargetNodePath
+        : targetNodeParentPath;
+    const nodePathsToFocus = movedNodeNames.map((name, index) => {
+      const targetNodeIndex = indexOffset + index + 1;
+      return `${finalTargetPath}.${name}_${targetNodeIndex}`;
+    });
+
+    dispatch(setNeedToSelectNodePaths(nodePathsToFocus));
   };
 
   const updateEditableElement = useCallback(
