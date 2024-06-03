@@ -45,6 +45,7 @@ export default function useElements() {
     nodeEventPast,
     selectedNodeUids,
     nodeEventFutureLength,
+    copiedNodeDisplayName,
   } = useAppState();
   const { monacoEditorRef } = useContext(MainContext);
   const dispatch = useDispatch();
@@ -55,6 +56,7 @@ export default function useElements() {
     findNodeToSelectAfterAction,
     sortUidsAsc,
     sortUidsDsc,
+    isPastingAllowed,
   } = useElementHelper();
 
   const codeViewInstanceModel = monacoEditorRef.current?.getModel();
@@ -67,6 +69,15 @@ export default function useElements() {
   const add = async (params: Iadd) => {
     const { tagName, skipUpdate } = params;
     if (!checkAllResourcesAvailable() || !codeViewInstanceModel) return;
+
+    const { isAllowed, selectedUids } = isPastingAllowed({
+      selectedItems,
+      nodeToAdd: [tagName],
+    });
+    if (!isAllowed) {
+      toast("Adding not allowed", { type: "error" });
+      return;
+    }
 
     const helperModel = getEditorModelWithCurrentCode();
 
@@ -89,7 +100,7 @@ export default function useElements() {
           ? openingTag
           : `${openingTag}${tagContent}${closingTag}`;
 
-    const sortedUids = sortUidsAsc(selectedItems);
+    const sortedUids = sortUidsAsc(selectedUids);
     if (sortedUids.length === 0) {
       toast.error("Please select a node to add the new element");
       return;
@@ -142,7 +153,7 @@ export default function useElements() {
           new Range(startLine, startCol, endLine, endCol),
         );
 
-        text = await PrettyCode({ code: text });
+        text = await PrettyCode({ code: text, startCol });
         const edit = {
           range: new Range(endLine, endCol, endLine, endCol),
           text,
@@ -201,9 +212,7 @@ export default function useElements() {
 
       dispatch(
         setCopiedNodeDisplayName(
-          selectedItems.map(
-            (uid) => `Node-<${validNodeTree[uid].displayName}>`,
-          ),
+          selectedItems.map((uid) => validNodeTree[uid].displayName),
         ),
       );
     }
@@ -237,7 +246,7 @@ export default function useElements() {
 
     dispatch(
       setCopiedNodeDisplayName(
-        selectedItems.map((uid) => `Node-<${validNodeTree[uid].displayName}>`),
+        selectedItems.map((uid) => validNodeTree[uid].displayName),
       ),
     );
 
@@ -272,6 +281,20 @@ export default function useElements() {
         console.error("Focused node or source code location is undefined");
       return;
     }
+    if (!checkAllResourcesAvailable || !codeViewInstanceModel) return;
+
+    const { isAllowed, selectedUids } = isPastingAllowed({
+      selectedItems: [focusedNode.uid],
+      nodeToAdd: copiedNodeDisplayName,
+      checkFirstParents: !!pasteContent,
+      isMove: !!pasteContent,
+    });
+    dispatch(setCopiedNodeDisplayName([]));
+    const targetUid = selectedUids[0];
+    if (!isAllowed && !pasteContent) {
+      toast("Pasting not allowed", { type: "error" });
+      return;
+    }
 
     const initialCode = content || codeViewInstanceModel.getValue();
 
@@ -282,7 +305,7 @@ export default function useElements() {
       pasteContent || (await window.navigator.clipboard.readText());
 
     const { startLine, startCol, endLine, endCol } =
-      focusedNode.data.sourceCodeLocation;
+      validNodeTree[targetUid].data.sourceCodeLocation;
 
     /* can be used to paste the copied code before the focused node */
     let editRange;
@@ -291,7 +314,7 @@ export default function useElements() {
     } else if (pastePosition === "after") {
       editRange = new Range(endLine, endCol, endLine, endCol);
     } else {
-      const { startTag } = focusedNode.data.sourceCodeLocation;
+      const { startTag } = validNodeTree[targetUid].data.sourceCodeLocation;
 
       editRange = new Range(
         startTag.endLine,
@@ -300,7 +323,10 @@ export default function useElements() {
         startTag.endCol,
       );
     }
-    copiedCode = await PrettyCode({ code: copiedCode });
+    copiedCode = await PrettyCode({
+      code: copiedCode,
+      startCol: editRange.startColumn,
+    });
     let code = copiedCode;
     const edit = {
       range: editRange,
@@ -321,7 +347,7 @@ export default function useElements() {
         })
         .map((node) => node.nodeName.toLowerCase());
       await findNodeToSelectAfterAction({
-        nodeUids: [focusedNode.uid],
+        nodeUids: [targetUid],
         action: {
           type: "add",
           tagNames,
@@ -341,12 +367,21 @@ export default function useElements() {
 
     const helperModel = getEditorModelWithCurrentCode();
     helperModel.setValue(codeViewInstanceModel.getValue());
+    const sortedUids = sortUidsAsc(selectedItems);
+    if (sortedUids.length === 0) return;
+
+    const { isAllowed } = isPastingAllowed({
+      selectedItems: [sortedUids[0]],
+      nodeToAdd: ["div"],
+      checkFirstParents: true,
+    });
+    if (!isAllowed) {
+      toast("Grouping not allowed", { type: "error" });
+      return;
+    }
 
     const copiedCode = await copy();
 
-    const sortedUids = sortUidsAsc(selectedItems);
-
-    if (sortedUids.length === 0) return;
     const { startLine, startCol } =
       validNodeTree[sortedUids[0]].data.sourceCodeLocation;
 
@@ -358,7 +393,7 @@ export default function useElements() {
     helperModel.setValue(updatedCode);
 
     let code = `<div>${copiedCode}</div>`;
-    code = await PrettyCode({ code });
+    code = await PrettyCode({ code, startCol });
 
     const edit = {
       range: new Range(startLine, startCol, startLine, startCol),
@@ -389,6 +424,7 @@ export default function useElements() {
     helperModel.setValue(codeViewInstanceModel.getValue());
 
     const sortedUids = sortUidsAsc(selectedItems);
+
     const allNodePathsToSelect: string[] = [];
     for (let i = 0; i < sortedUids.length; i++) {
       const uid = sortedUids[i];
@@ -418,13 +454,13 @@ export default function useElements() {
         text: "",
       };
 
-      const preetyCopiedCode = await PrettyCode({ code: copiedCode });
+      const prettyCopiedCode = await PrettyCode({ code: copiedCode, startCol });
       const addUngroupedCodeEdit = {
         range: new Range(startLine, startCol, startLine, startCol),
-        text: preetyCopiedCode,
+        text: prettyCopiedCode,
       };
 
-      const stringToHtml = parse5.parseFragment(preetyCopiedCode);
+      const stringToHtml = parse5.parseFragment(prettyCopiedCode);
 
       const tagNames = stringToHtml.childNodes
         .filter((node) => {
@@ -459,7 +495,20 @@ export default function useElements() {
     isBetween is false when we drop on a parent node and is true when we drop inside a parent node which has children
     isBetween is true even if we drop on the first child of the parent node
     */
+
     const { targetUid, isBetween, position, selectedUids } = params;
+
+    const { isAllowed } = isPastingAllowed({
+      selectedItems: [targetUid],
+      nodeToAdd: selectedUids.map((uid) => validNodeTree[uid]?.displayName),
+      isMove: true,
+      checkFirstParents: true,
+    });
+    if (!isAllowed) {
+      toast("Pasting not allowed", { type: "error" });
+      return;
+    }
+
     const targetNode = validNodeTree[targetUid];
 
     const helperModel = getEditorModelWithCurrentCode();

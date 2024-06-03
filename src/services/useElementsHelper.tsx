@@ -5,7 +5,7 @@ import { Range, editor } from "monaco-editor";
 import { useAppState } from "@_redux/useAppState";
 import { useContext, useMemo } from "react";
 import { MainContext } from "@_redux/main";
-import { getObjKeys } from "@_pages/main/helper";
+import { elementsCmdk, getObjKeys } from "@_pages/main/helper";
 import { LogAllow, RainbowAppName } from "@_constants/global";
 
 import { toast } from "react-toastify";
@@ -20,6 +20,7 @@ import {
   DataSequencedUid,
   PARSING_ERROR_MESSAGES,
   StageNodeIdAttr,
+  TNode,
   TNodeUid,
   TValidNodeUid,
   ValidStageNodeUid,
@@ -32,6 +33,7 @@ import {
   setNeedToSelectNodePaths,
   setNeedToSelectNodeUids,
 } from "@_redux/main/nodeTree";
+import { TCmdkGroupData } from "@_types/main";
 
 export async function PrettyCode({
   code,
@@ -97,6 +99,7 @@ export const useElementHelper = () => {
     needToSelectNodePaths,
     didRedo,
     didUndo,
+    htmlReferenceData,
   } = useAppState();
   const { monacoEditorRef } = useContext(MainContext);
   const dispatch = useDispatch();
@@ -530,6 +533,130 @@ export const useElementHelper = () => {
     return uniqueNodePaths;
   };
 
+  const addTextNodeToElements = (data: TCmdkGroupData) => {
+    data["Elements"].push({
+      Featured: false,
+      Name: "text",
+      Icon: "comment",
+      Description: "text element",
+      "Keyboard Shortcut": [
+        {
+          cmd: false,
+          shift: false,
+          alt: false,
+          key: "",
+          click: false,
+        },
+      ],
+      Group: "",
+      Context: `Node-<#text>`,
+    });
+  };
+
+  const isAllElementPastingAllowed = ({
+    uid,
+    isMove,
+  }: {
+    uid: TNodeUid;
+    isMove?: boolean;
+  }) => {
+    const targetNode = validNodeTree[uid];
+    const parentTarget = targetNode.parentUid;
+    if (!parentTarget) return;
+
+    return (
+      htmlReferenceData?.elements[
+        isMove
+          ? validNodeTree[uid]?.displayName
+          : validNodeTree[parentTarget]?.displayName
+      ]?.Contain === "All"
+    );
+  };
+
+  const isPastingAllowed = ({
+    selectedItems,
+    nodeToAdd,
+    checkFirstParents = false,
+    isMove = false,
+  }: {
+    selectedItems: TNodeUid[];
+    nodeToAdd: string[];
+    checkFirstParents?: boolean;
+    isMove?: boolean;
+  }) => {
+    const selectedUids = [...selectedItems];
+    const selectedNodes = selectedItems.map((uid) => validNodeTree[uid]);
+
+    if (nodeToAdd.length === 0)
+      return {
+        isAllowed: true,
+        selectedUids,
+      };
+
+    const checkAddingAllowed = (uid: string) => {
+      const data: TCmdkGroupData = {
+        Files: [],
+        Elements: [],
+        Recent: [],
+      };
+
+      elementsCmdk({
+        validNodeTree,
+        nFocusedItem: uid,
+        htmlReferenceData,
+        data,
+        groupName: "Add",
+        isMove,
+      });
+
+      return nodeToAdd.every((node: string) => {
+        if (node.split("-").length > 2) {
+          return isAllElementPastingAllowed({
+            uid,
+            isMove,
+          });
+        } else {
+          if (node === "#text") {
+            const textNodeAllowed = isAllElementPastingAllowed({
+              uid,
+              isMove,
+            });
+            textNodeAllowed && addTextNodeToElements(data);
+          }
+          return Object.values(data["Elements"]).some(
+            (obj) => obj["Context"] === `Node-<${node}>`,
+          );
+        }
+      });
+    };
+    let skipPosition;
+
+    const allowedArray = selectedNodes.map((selectedNode: TNode, i: number) => {
+      let addingAllowed =
+        (selectedNode.displayName == "body" &&
+          selectedNode.children.length == 0) ||
+        checkAddingAllowed(selectedNode.uid);
+      skipPosition = !addingAllowed;
+
+      if (
+        !addingAllowed &&
+        !checkFirstParents &&
+        selectedNode?.parentUid &&
+        selectedNode?.parentUid !== RootNodeUid
+      ) {
+        selectedUids[i] = selectedNode.parentUid;
+        addingAllowed = checkAddingAllowed(selectedNode.parentUid);
+      }
+      return addingAllowed;
+    });
+
+    return {
+      isAllowed: !allowedArray.includes(false),
+      selectedUids,
+      skipPosition,
+    };
+  };
+
   return {
     getEditorModelWithCurrentCode,
     checkAllResourcesAvailable,
@@ -538,5 +665,6 @@ export const useElementHelper = () => {
     findNodeToSelectAfterAction,
     sortUidsDsc,
     sortUidsAsc,
+    isPastingAllowed,
   };
 };
