@@ -433,10 +433,23 @@ export default function useElements() {
       const children = node?.children;
 
       if (!children) return;
+      let copiedCode = "";
+      if (children.length === 0) {
+        const { startTag, endTag } = node.data.sourceCodeLocation;
+        copiedCode = codeViewInstanceModel.getValueInRange(
+          new Range(
+            startTag.endLine,
+            startTag.endCol,
+            endTag.startLine,
+            endTag.startCol,
+          ),
+        );
+        if (!copiedCode) return;
+      }
 
       const { startLine, startCol, endLine, endCol } =
         node.data.sourceCodeLocation;
-      let copiedCode = "";
+
       children.forEach((uid) => {
         const node = validNodeTree[uid];
         if (node) {
