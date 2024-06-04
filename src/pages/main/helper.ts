@@ -37,6 +37,7 @@ import { AnyFunction } from "./types";
 import { toast } from "react-toastify";
 import { NavigateFunction } from "react-router-dom";
 import { TFilesReference } from "@rnbws/rfrncs.design";
+import { FileNode } from "@_redux/main";
 
 export const addDefaultCmdkActions = (
   cmdkReferenceData: TCmdkReferenceData,
@@ -100,6 +101,23 @@ export const addDefaultCmdkActions = (
     "Keyboard Shortcut": [
       {
         cmd: true,
+        shift: false,
+        alt: false,
+        key: "KeyS",
+        click: false,
+      },
+    ],
+    Group: "default",
+    Context: "all",
+  };
+  // Search
+  cmdkReferenceData["Search"] = {
+    Name: "Search",
+    Icon: "",
+    Description: "",
+    "Keyboard Shortcut": [
+      {
+        cmd: false,
         shift: false,
         alt: false,
         key: "KeyS",
@@ -337,6 +355,43 @@ export const isWebComponentDblClicked = ({
   if (nodeData && htmlReferenceData.elements[nodeData.nodeName] === undefined)
     found = true;
   return found;
+};
+export const convertToFileNodes = (data: TFileNodeTreeData): FileNode[] => {
+  const result: FileNode[] = [];
+  for (const key in data) {
+    const node = data[key];
+    if (node.data.kind === "file") {
+      result.push({
+        type: "file",
+        name: node.data.name,
+        path: node.data.path,
+      });
+    }
+  }
+  return result;
+};
+export const filterFiles = (
+  fileTree: TFileNodeTreeData,
+  query: string,
+): string[] => {
+  const results: string[] = [];
+  const fileNodes = convertToFileNodes(fileTree);
+
+  function searchTree(node: FileNode, path: string = "") {
+    if (
+      node.type === "file" &&
+      node.path.toLowerCase().includes(query.toLowerCase())
+    ) {
+      results.push(node.path);
+    } else if (node.type === "directory" && node.children) {
+      node.children.forEach((child) =>
+        searchTree(child, `${path}/${node.name}`),
+      );
+    }
+  }
+
+  fileNodes.forEach((root) => searchTree(root));
+  return results;
 };
 
 export const onWebComponentDblClick = ({

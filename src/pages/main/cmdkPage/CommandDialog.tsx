@@ -24,6 +24,7 @@ import {
   PLACEHOLDERS,
 } from "./constants";
 import { SVGIcon, SVGIconIV } from "@_components/common";
+import { filterFiles } from "../helper";
 
 const iconMappping = {
   New: "/images/jumpstart/new.svg",
@@ -35,6 +36,7 @@ const iconMappping = {
   Autosave: "/images/jumpstart/autosave.svg",
   "Code Wrap": "/images/jumpstart/formatcode.svg",
   Recent: "/images/jumpstart/open.svg",
+  file: "/images/jumpstart/page.svg",
 };
 export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
   const [currentFocusedMenuItem, setCurrentFocusedMenuItem] = useState({
@@ -126,6 +128,9 @@ export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
             action: `${RenameActionPrefix}-${command.Context}`,
           }),
         );
+      } else if (command.Group === "Files") {
+        const filePath = command?.Path;
+        if (filePath) navigate(filePath);
       } else if (isRecent(command.Group)) {
         const index = Number(command.Context);
         const projectContext = recentProject[index].context;
@@ -177,6 +182,40 @@ export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
     dispatch(setCmdkPages(["Actions"]));
     dispatch(setCmdkSearchContent(""));
   };
+  const getFilteredFiles = useCallback(() => {
+    const searchFilesArr = filterFiles(fileTree, cmdkSearchContent);
+    const filteredFiles = searchFilesArr.map((file) => {
+      const pathArrWithoutRootDir = file
+        .split("/")
+        .filter((item) => item !== "");
+
+      const pathWithoutRootDir = "/" + pathArrWithoutRootDir.slice(1).join("/");
+
+      return {
+        Featured: false,
+        Name: pathWithoutRootDir,
+        Path: file,
+        Icon: "", // Can add appropriate icon here
+        Description: "",
+        "Keyboard Shortcut": [
+          {
+            cmd: false,
+            shift: false,
+            alt: false,
+            key: "",
+            click: false,
+          },
+        ],
+        Group: "Files",
+        Context: "file",
+      };
+    });
+
+    return filteredFiles;
+  }, [fileTree, cmdkSearchContent]);
+
+  const filteredFiles = getFilteredFiles();
+
   return (
     <Command.Dialog
       open={cmdkOpen}
@@ -184,7 +223,7 @@ export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
       onOpenChange={(open: boolean) => dispatch(setCmdkOpen(open))}
       onKeyDown={onKeyDown}
       filter={(value: string, search: string) => {
-        return value.includes(search) !== false ? 1 : 0;
+        return value.includes(search?.toLowerCase()) !== false ? 1 : 0;
       }}
       loop={true}
       label={currentCmdkPage}
@@ -275,6 +314,35 @@ export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
                   </Command.Group>
                 );
               })}
+              {currentCmdkPage === "Jumpstart" &&
+                filteredFiles?.map((file, index) => {
+                  return (
+                    <CommandItem
+                      key={`${file}-${index}`}
+                      command={{
+                        Featured: false,
+                        Name: file.Name,
+                        Path: file.Path,
+                        Icon: file.Icon, // Can add appropriate icon here
+                        Description: "",
+                        "Keyboard Shortcut": file["Keyboard Shortcut"],
+                        Group: file.Group,
+                        Context: file.Context,
+                      }}
+                      index={index}
+                      onSelect={async () => {
+                        navigate(file.Path);
+                        dispatch(setCmdkOpen(false));
+                      }}
+                      onMouseEnter={() => {
+                        setCurrentFocusedMenuItem({
+                          name: "file",
+                          description: file.Description || "",
+                        });
+                      }}
+                    />
+                  );
+                })}
             </Command.List>
           </div>
         </div>

@@ -202,6 +202,10 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     dispatch(setShowActionsPanel(true));
     dispatch(setShowCodeView(true));
   }, []);
+  const onSearch = useCallback(() => {
+    if (cmdkOpen) return;
+    dispatch(setCmdkPages(["Search"]));
+  }, [cmdkOpen]);
 
   const KeyDownEventListener = useCallback(
     (e: KeyboardEvent) => {
@@ -296,6 +300,9 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     switch (currentCommand.action) {
       case "Jumpstart":
         onJumpstart();
+        break;
+      case "Search":
+        onSearch();
         break;
       case "New":
         onNew();
