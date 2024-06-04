@@ -59,8 +59,13 @@ export const IFrame = () => {
     hoveredTargetRef,
   });
 
-  const { onKeyDown, onKeyUp, handlePanelsToggle, handleZoomKeyDown } =
-    useCmdk();
+  const {
+    onKeyDown,
+    onKeyUp,
+    handlePanelsToggle,
+    handleZoomKeyDown,
+    handleWheel,
+  } = useCmdk();
   const {
     onMouseEnter,
     onMouseMove,
@@ -108,6 +113,14 @@ export const IFrame = () => {
         e.preventDefault();
         onKeyUp(e, eventListenersStatesRef);
       });
+
+      window.addEventListener(
+        "wheel",
+        (e: WheelEvent) => handleWheel(e, eventListenersStatesRef),
+        {
+          passive: false,
+        },
+      );
     },
     [
       onKeyDown,
@@ -276,9 +289,10 @@ export const IFrame = () => {
             id={"iframeId"}
             src={iframeSrc}
             style={{
-              background: "white",
               width: "100%",
               height: "100%",
+              resize: "both",
+              overflow: "auto",
             }}
           />
         )}

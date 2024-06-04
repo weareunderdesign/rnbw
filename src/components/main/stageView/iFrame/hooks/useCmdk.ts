@@ -25,9 +25,9 @@ export const useCmdk = () => {
       zoomLevelRef.current = level;
       if (!iframeRefState) return;
       iframeRefState.style.transform = `scale(${level})`;
-      iframeRefState.style.transformOrigin = `top ${
-        level > 1 ? "left" : "center"
-      }`;
+      // iframeRefState.style.transformOrigin = `top ${
+      //   level > 1 ? "left" : "center"
+      // }`;
     },
     [],
   );
@@ -73,6 +73,24 @@ export const useCmdk = () => {
       }
     },
     [setZoom, zoomLevelRef.current],
+  );
+  const handleWheel = useCallback(
+    (
+      event: WheelEvent,
+      eventListenerRef: React.MutableRefObject<eventListenersStatesRefType>,
+    ) => {
+      event.preventDefault();
+      let _zoomLevel = zoomLevelRef.current;
+
+      if (event.deltaY < 0) {
+        _zoomLevel = Math.min(_zoomLevel + 0.02, 4); // Zoom in
+      } else {
+        _zoomLevel = Math.max(_zoomLevel - 0.02, 0.25); // Zoom out
+      }
+
+      setZoom(_zoomLevel, eventListenerRef.current.iframeRefState);
+    },
+    [setZoom],
   );
 
   const handlePanelsToggle = useCallback(
@@ -244,5 +262,11 @@ export const useCmdk = () => {
     },
     [],
   );
-  return { onKeyDown, onKeyUp, handleZoomKeyDown, handlePanelsToggle };
+  return {
+    onKeyDown,
+    onKeyUp,
+    handleZoomKeyDown,
+    handlePanelsToggle,
+    handleWheel,
+  };
 };
