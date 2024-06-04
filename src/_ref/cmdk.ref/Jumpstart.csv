@@ -1,6 +1,6 @@
 ﻿Name,Icon,Description,Keyboard Shortcut,Group
-New,plus,Start a new project,n,Projects
-Open,folder,Open a folder,o,Projects
+New,plus,Start a new project,n,Project
+Open,folder,Open a folder,o,Project
 Guide,help,Learn something,g,Help
 Support,person,Get some help,,Help
 Community,people,Talk with people,,Help
