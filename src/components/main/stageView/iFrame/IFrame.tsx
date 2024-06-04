@@ -64,7 +64,7 @@ export const IFrame = () => {
     onKeyUp,
     handlePanelsToggle,
     handleZoomKeyDown,
-    handleWheel,
+    // handleWheel,
   } = useCmdk();
   const {
     onMouseEnter,
@@ -114,13 +114,13 @@ export const IFrame = () => {
         onKeyUp(e, eventListenersStatesRef);
       });
 
-      window.addEventListener(
-        "wheel",
-        (e: WheelEvent) => handleWheel(e, eventListenersStatesRef),
-        {
-          passive: false,
-        },
-      );
+      // window.addEventListener(
+      //   "wheel",
+      //   (e: WheelEvent) => handleWheel(e, eventListenersStatesRef),
+      //   {
+      //     passive: false,
+      //   },
+      // );
     },
     [
       onKeyDown,
