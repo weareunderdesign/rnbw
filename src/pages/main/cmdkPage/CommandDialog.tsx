@@ -126,6 +126,9 @@ export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
             action: `${RenameActionPrefix}-${command.Context}`,
           }),
         );
+      } else if (command.Group === "Files") {
+        const filePath = command?.Path;
+        if (filePath) navigate(filePath);
       } else if (isRecent(command.Group)) {
         const index = Number(command.Context);
         const projectContext = recentProject[index].context;

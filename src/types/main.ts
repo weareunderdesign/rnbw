@@ -28,6 +28,7 @@ export type TCmdkReferenceData = {
 export type TCmdkReference = {
   Featured?: boolean;
   Name: string;
+  Path?: string;
   Icon: string;
   Description: string;
   "Keyboard Shortcut": string | TCmdkKeyMap | string[] | TCmdkKeyMap[];
