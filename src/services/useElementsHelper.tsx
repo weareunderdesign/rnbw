@@ -610,7 +610,7 @@ export const useElementHelper = () => {
       });
 
       return nodeToAdd.every((node: string) => {
-        if (node.split("-").length > 2) {
+        if (node.split("-").length > 1) {
           return isAllElementPastingAllowed({
             uid,
             isMove,
