@@ -113,14 +113,6 @@ export const IFrame = () => {
         e.preventDefault();
         onKeyUp(e, eventListenersStatesRef);
       });
-
-      // window.addEventListener(
-      //   "wheel",
-      //   (e: WheelEvent) => handleWheel(e, eventListenersStatesRef),
-      //   {
-      //     passive: false,
-      //   },
-      // );
     },
     [
       onKeyDown,
@@ -291,8 +283,8 @@ export const IFrame = () => {
             style={{
               width: "100%",
               height: "100%",
-              resize: "both",
-              overflow: "auto",
+              // resize: "both",
+              // overflow: "auto",
             }}
           />
         )}
