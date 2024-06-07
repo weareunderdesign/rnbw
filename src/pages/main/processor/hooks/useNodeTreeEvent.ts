@@ -403,6 +403,7 @@ export const useNodeTreeEvent = () => {
         validNodeTree,
         selectedNodeUids,
       );
+      if (activePanel === "node") return;
       dispatch(expandNodeTreeNodes(needToExpandItems));
     }
   }, [selectedNodeUids]);
