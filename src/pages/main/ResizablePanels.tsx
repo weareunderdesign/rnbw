@@ -20,7 +20,7 @@ export default function ResizablePanels({
 }: ResizablePanelsProps) {
   const { showActionsPanel, showCodeView } = useAppState();
 
-  const [sizes, setSizes] = useState([actionsPanelWidth, 50, codeViewWidth]);
+  const [sizes, setSizes] = useState([actionsPanelWidth, codeViewWidth, 50]);
 
   const actionPanelRef = useRef<ImperativePanelHandle>(null);
   const codeViewRef = useRef<ImperativePanelHandle>(null);
@@ -59,21 +59,20 @@ export default function ResizablePanels({
         </Panel>
 
         <PanelResizeHandle className="panel-resize" />
-
-        <Panel defaultSize={sizes[1]} minSize={30} order={2}>
-          {stageView}
+        <Panel
+          ref={codeViewRef}
+          defaultSize={sizes[1]}
+          minSize={showCodeView ? 5 : 0}
+          maxSize={50}
+          order={2}
+        >
+          {codeView}
         </Panel>
 
         <PanelResizeHandle className="panel-resize" />
 
-        <Panel
-          ref={codeViewRef}
-          defaultSize={sizes[2]}
-          minSize={showCodeView ? 5 : 0}
-          maxSize={50}
-          order={3}
-        >
-          {codeView}
+        <Panel defaultSize={sizes[2]} minSize={30} order={3}>
+          {stageView}
         </Panel>
       </PanelGroup>
     </>
