@@ -57,7 +57,7 @@ body,
 #root #FileTreeView ul > li {
   line-height: 100%;
   padding: 0px;
-  min-width: max-content;
+  overflow: hidden;
 }
 
 /* cmdk modal */
