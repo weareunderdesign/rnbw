@@ -315,6 +315,7 @@ export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
                 );
               })}
               {currentCmdkPage === "Jumpstart" &&
+                cmdkSearchContent.length > 0 &&
                 filteredFiles?.map((file, index) => {
                   return (
                     <CommandItem
