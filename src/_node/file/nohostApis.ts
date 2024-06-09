@@ -73,7 +73,11 @@ export const _removeIDBDirectoryOrFile = async (
       } else {
         // Path exists, attempt to remove it
         _sh.rm(path, { recursive: true }, (rmErr: Error) => {
-          rmErr ? reject(rmErr) : resolve();
+          rmErr
+            ? rmErr.name === "ENOENT"
+              ? resolve()
+              : reject(rmErr)
+            : resolve();
         });
       }
     });

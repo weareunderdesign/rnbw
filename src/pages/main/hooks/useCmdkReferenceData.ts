@@ -25,6 +25,7 @@ import {
   elementsCmdk,
   fileCmdk,
   getKeyObjectsFromCommand,
+  filterFiles,
 } from "../helper";
 import { useDispatch } from "react-redux";
 import { setCmdkReferenceData } from "@_redux/main/cmdk";
@@ -77,7 +78,7 @@ export const useCmdkReferenceData = ({
           }
 
           if (
-            groupName === "Projects" &&
+            groupName === "Project" &&
             _cmdkRefJumpstartData["Recent"] === undefined
           ) {
             _cmdkRefJumpstartData["Recent"] = [];
@@ -261,11 +262,63 @@ export const useCmdkReferenceData = ({
     return data;
   }, [validNodeTree, nFocusedItem, htmlReferenceData]);
 
+  const cmdkReferenceSearch = useMemo<TCmdkGroupData>(() => {
+    const data: TCmdkGroupData = {
+      Files: [],
+      Elements: [],
+      Recent: [],
+    };
+
+    // Filter files based on search content
+    if (cmdkSearchContent) {
+      const filteredFiles = filterFiles(fileTree, cmdkSearchContent);
+      filteredFiles.forEach((file) => {
+        const pathArrWithoutRootDir = file
+          .split("/")
+          .filter((item) => item !== "");
+
+        const pathWithoutRootDir =
+          "/" + pathArrWithoutRootDir.slice(1).join("/");
+
+        data["Files"].push({
+          Featured: false,
+          Name: pathWithoutRootDir,
+          Path: file,
+          Icon: "", // Can add appropriate icon here
+          Description: "",
+          "Keyboard Shortcut": [
+            {
+              cmd: false,
+              shift: false,
+              alt: false,
+              key: "",
+              click: false,
+            },
+          ],
+          Group: "Files",
+          Context: "file",
+        });
+      });
+    }
+
+    // Recent
+    delete data["Recent"];
+
+    return data;
+  }, [
+    fileTree,
+    fFocusedItem,
+    nodeTree,
+    nFocusedItem,
+    htmlReferenceData,
+    cmdkSearchContent,
+  ]);
   return {
-    cmdkReferenceJumpstart,
-    cmdkReferenceActions,
-    cmdkReferenceRecentProject,
-    cmdkReferenceAdd,
-    cmdkReferenceRename,
+    Jumpstart: cmdkReferenceJumpstart,
+    Actions: cmdkReferenceActions,
+    Recent: cmdkReferenceRecentProject,
+    Add: cmdkReferenceAdd,
+    "Turn into": cmdkReferenceRename,
+    Search: cmdkReferenceSearch,
   };
 };

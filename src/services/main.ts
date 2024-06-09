@@ -1,3 +1,5 @@
+import { toast } from "react-toastify";
+
 export const addClass = (classList: string, classToAdd: string): string => {
   const validClassList = classList
     .split(" ")
@@ -35,6 +37,8 @@ export const verifyFileHandlerPermission = async (
     // The user didn't grant permission, so return false.
     return false;
   } catch (err) {
+    // An error occurred, so return false.
+    toast.error("An error occurred while verifying file handler permission");
     return false;
   }
 };

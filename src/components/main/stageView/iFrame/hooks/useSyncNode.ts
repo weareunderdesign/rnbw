@@ -59,17 +59,18 @@ export const useSyncNode = (iframeRef: HTMLIFrameElement | null) => {
     () => getObjKeys(selectedItemsObj),
     [selectedItemsObj],
   );
-  const selectedItemsRef = useRef<TNodeUid[]>(selectedItems);
+  const previousSelectedItemsRef = useRef<TNodeUid[]>(selectedItems);
+
   useEffect(() => {
     // check if it's a new state
-    if (selectedItemsRef.current.length === selectedItems.length) {
+    if (previousSelectedItemsRef.current.length === selectedItems.length) {
       let same = true;
       for (
-        let index = 0, len = selectedItemsRef.current.length;
+        let index = 0, len = previousSelectedItemsRef.current.length;
         index < len;
         ++index
       ) {
-        if (selectedItemsRef.current[index] !== selectedItems[index]) {
+        if (previousSelectedItemsRef.current[index] !== selectedItems[index]) {
           same = false;
           break;
         }
@@ -77,10 +78,22 @@ export const useSyncNode = (iframeRef: HTMLIFrameElement | null) => {
       if (same) return;
     }
 
-    unmarkSelectedElements(iframeRef, selectedItemsRef.current, nodeTree);
-    markSelectedElements(iframeRef, selectedItems, nodeTree);
-    selectedItemsRef.current = [...selectedItems];
+    unmarkSelectedElements(
+      iframeRef,
+      previousSelectedItemsRef.current,
+      nodeTree,
+    );
+    if (selectedItems.length > 0) {
+      markSelectedElements(iframeRef, selectedItems, nodeTree);
+
+      previousSelectedItemsRef.current = [...selectedItems];
+    }
   }, [selectedItems]);
 
-  return { nodeTreeRef, hoveredItemRef, focusedItemRef, selectedItemsRef };
+  return {
+    nodeTreeRef,
+    hoveredItemRef,
+    focusedItemRef,
+    selectedItemsRef: previousSelectedItemsRef,
+  };
 };

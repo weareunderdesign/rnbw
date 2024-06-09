@@ -40,7 +40,7 @@ export default function TreeView(props: TreeViewProps) {
         {...props.callbacks}
         {...props.props}
         items={data}
-        getItemTitle={(item) => item.data.displayName}
+        getItemTitle={(item) => item?.data?.displayName}
         viewState={viewState}
         keyboardBindings={{
           primaryAction: ["Space"],

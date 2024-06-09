@@ -1,30 +1,24 @@
-import { useCallback, useEffect } from "react";
+import { useEffect } from "react";
 
 import { AddFileActionPrefix } from "@_constants/main";
 import { isAddFileAction } from "@_node/helpers";
 import { useAppState } from "@_redux/useAppState";
 
 import { useNodeActionsHandler } from "./useNodeActionsHandler";
+import useRnbw from "@_services/useRnbw";
 
 export const useCmdk = () => {
   const { activePanel, currentCommand } = useAppState();
+  const rnbw = useRnbw();
 
-  const { onAdd, onRemove, onCut, onCopy, onPaste, onDuplicate } =
-    useNodeActionsHandler();
-
-  const onAddNode = useCallback(
-    (actionName: string) => {
-      const type = actionName.slice(AddFileActionPrefix.length + 1);
-      onAdd(type === "folder" ? true : false, type);
-    },
-    [onAdd],
-  );
+  const { onAdd } = useNodeActionsHandler();
 
   useEffect(() => {
     if (!currentCommand) return;
 
     if (isAddFileAction(currentCommand.action)) {
-      onAddNode(currentCommand.action);
+      const type = currentCommand.action.slice(AddFileActionPrefix.length + 1);
+      onAdd(type === "folder" ? true : false, type);
       return;
     }
 
@@ -32,19 +26,20 @@ export const useCmdk = () => {
 
     switch (currentCommand.action) {
       case "Delete":
-        onRemove();
+        rnbw.files.remove();
         break;
       case "Cut":
-        onCut();
+        rnbw.files.cutFiles();
         break;
       case "Copy":
-        onCopy();
+        rnbw.files.copyFiles();
         break;
       case "Paste":
-        onPaste();
+        rnbw.files.paste();
         break;
       case "Duplicate":
-        onDuplicate();
+        rnbw.files.copyFiles();
+        rnbw.files.paste();
         break;
       default:
         break;

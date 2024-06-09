@@ -17,12 +17,28 @@ export default function StageView() {
     return (
       <>
         <div
-          id="StageView"
-          className={showCodeView ? "" : "view"}
-          onClick={onClick}
-          style={{ height: "100%" }}
+          style={{
+            height: "100%",
+            width: "100%",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
         >
-          <IFrame />
+          <div
+            id="StageView"
+            className={showCodeView ? "" : "view"}
+            onClick={onClick}
+            style={{
+              height: "100%",
+              width: "100%",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <IFrame />
+          </div>
         </div>
       </>
     );

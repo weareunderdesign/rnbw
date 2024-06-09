@@ -10,9 +10,12 @@ export type TNode = {
   children: TNodeUid[];
 
   data: TNodeData;
+
+  uniqueNodePath?: string;
 };
 
 export type TNodeUid = string;
+export type TValidNodeUid = number | "ROOT" | null;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type TNodeData = TBasicNodeData & { [propName: string]: any };

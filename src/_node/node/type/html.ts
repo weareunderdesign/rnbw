@@ -8,10 +8,12 @@ import {
   TNodeSourceCodeLocation,
   TNodeTreeData,
   TNodeUid,
+  TValidNodeUid,
 } from "../../";
 
 export type THtmlNode = TNode & {
   data: THtmlNodeData;
+  validUid: TValidNodeUid;
 };
 
 export type THtmlNodeData = TNodeData & {
@@ -43,4 +45,5 @@ export type THtmlParserResponse = {
   contentInApp: string;
   nodeTree: TNodeTreeData;
   htmlDom: Document;
+  selectedNodeUids: TNodeUid[];
 };

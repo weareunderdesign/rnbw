@@ -14,31 +14,21 @@ import {
 } from "@_node/index";
 import { setTheme } from "@_redux/global";
 import { setCmdkPages, setCurrentCommand } from "@_redux/main/cmdk";
-import {
-  FileTree_Event_RedoActionType,
-  FileTree_Event_UndoActionType,
-  setDoingFileAction,
-  setLastFileAction,
-  TProjectContext,
-} from "@_redux/main/fileTree";
-import {
-  NodeTree_Event_RedoActionType,
-  NodeTree_Event_UndoActionType,
-} from "@_redux/main/nodeTree";
+import { setDoingFileAction, TProjectContext } from "@_redux/main/fileTree";
+
 import {
   setActivePanel,
   setAutoSave,
-  setDidRedo,
-  setDidUndo,
-  setFormatCode,
   setShowActionsPanel,
   setShowCodeView,
+  setWordWrap,
 } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 import { getCommandKey } from "@_services/global";
 import { TCmdkKeyMap, TCmdkReferenceData } from "@_types/main";
 
 import { setSystemTheme } from "../helper";
+import useRnbw from "@_services/useRnbw";
 
 interface IUseCmdk {
   cmdkReferenceData: TCmdkReferenceData;
@@ -57,20 +47,12 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     project,
     fileTree,
     doingFileAction,
-    fileAction,
-    fileEventPastLength,
-    fileEventFutureLength,
-    nodeEventPast,
-    nodeEventPastLength,
-    nodeEventFutureLength,
-    currentFileContent,
-    selectedNodeUids,
     iframeLoading,
     activePanel,
     showActionsPanel,
     showCodeView,
     autoSave,
-    formatCode,
+    wordWrap,
     cmdkOpen,
     cmdkPages,
     currentCommand,
@@ -78,6 +60,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     showFilePanel,
   } = useAppState();
 
+  const rnbw = useRnbw();
   // handlers
   const onClear = useCallback(async () => {
     window.localStorage.clear();
@@ -133,72 +116,23 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
       LogAllow && console.log("failed to download project");
     }
   }, [project]);
-  const onUndo = useCallback(() => {
+  const onUndo = () => {
     if (!!runningAction || doingFileAction || iframeLoading) return;
     if (activePanel === "file" && showActionsPanel && showFilePanel) {
-      if (fileEventPastLength === 0) {
-        LogAllow && console.log("Undo - FileTree - it is the origin state");
-        return;
-      }
-      dispatch(setLastFileAction({ ...fileAction }));
-      dispatch({ type: FileTree_Event_UndoActionType });
+      rnbw.files.undo();
     } else {
-      if (nodeEventPastLength <= 1) {
-        LogAllow && console.log("Undo - NodeTree - it is the origin state");
-        return;
-      }
-      if (
-        currentFileContent !==
-          nodeEventPast[nodeEventPastLength - 1].currentFileContent &&
-        selectedNodeUids ===
-          nodeEventPast[nodeEventPastLength - 1].selectedNodeUids
-      ) {
-        dispatch({ type: NodeTree_Event_UndoActionType });
-        dispatch({ type: NodeTree_Event_UndoActionType });
-      } else {
-        dispatch({ type: NodeTree_Event_UndoActionType });
-      }
+      rnbw.elements.undo();
     }
-
-    dispatch(setDidUndo(true));
-  }, [
-    runningAction,
-    doingFileAction,
-    iframeLoading,
-    activePanel,
-    fileEventPastLength,
-    nodeEventPastLength,
-    showActionsPanel,
-    showFilePanel,
-  ]);
-  const onRedo = useCallback(() => {
+  };
+  const onRedo = () => {
     if (!!runningAction || doingFileAction || iframeLoading) return;
 
     if (activePanel === "file" && showActionsPanel && showFilePanel) {
-      if (fileEventFutureLength === 0) {
-        LogAllow && console.log("Redo - FileTree - it is the latest state");
-        return;
-      }
-      dispatch({ type: FileTree_Event_RedoActionType });
+      rnbw.files.redo();
     } else {
-      if (nodeEventFutureLength === 0) {
-        LogAllow && console.log("Redo - NodeTree - it is the latest state");
-        return;
-      }
-      dispatch({ type: NodeTree_Event_RedoActionType });
+      rnbw.elements.redo();
     }
-
-    dispatch(setDidRedo(true));
-  }, [
-    runningAction,
-    doingFileAction,
-    iframeLoading,
-    activePanel,
-    fileEventFutureLength,
-    nodeEventFutureLength,
-    showActionsPanel,
-    showFilePanel,
-  ]);
+  };
   const onToggleCodeView = useCallback(() => {
     dispatch(setShowCodeView(!showCodeView));
   }, [showCodeView]);
@@ -244,9 +178,9 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     dispatch(setAutoSave(!autoSave));
   }, [autoSave]);
 
-  const onToggleFormatCode = useCallback(() => {
-    dispatch(setFormatCode(!formatCode));
-  }, [formatCode]);
+  const onToggleWordWrap = useCallback(() => {
+    dispatch(setWordWrap(!wordWrap));
+  }, [wordWrap]);
 
   const closeAllPanel = useCallback(() => {
     dispatch(setShowActionsPanel(false));
@@ -268,6 +202,10 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     dispatch(setShowActionsPanel(true));
     dispatch(setShowCodeView(true));
   }, []);
+  const onSearch = useCallback(() => {
+    if (cmdkOpen) return;
+    dispatch(setCmdkPages(["Search"]));
+  }, [cmdkOpen]);
 
   const KeyDownEventListener = useCallback(
     (e: KeyboardEvent) => {
@@ -285,6 +223,13 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
         return;
       }
       if (e.key === "Escape") {
+        if (activePanel === "file") {
+          if (
+            e.target instanceof HTMLElement &&
+            e.target.id === "FileTreeView-RenameInput"
+          )
+            return;
+        }
         !cmdkOpen && (showActionsPanel || showCodeView) && closeAllPanel();
         !cmdkOpen && !showActionsPanel && !showCodeView && openAllPanel();
         return;
@@ -356,6 +301,9 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
       case "Jumpstart":
         onJumpstart();
         break;
+      case "Search":
+        onSearch();
+        break;
       case "New":
         onNew();
         dispatch(setShowActionsPanel(true));
@@ -406,11 +354,9 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
       case "Autosave":
         onToggleAutoSave();
         break;
-
-      case "Format Code":
-        onToggleFormatCode();
+      case "Code Wrap":
+        onToggleWordWrap();
         break;
-
       default:
         return;
     }

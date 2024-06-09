@@ -24,7 +24,7 @@ const create = async ({
   name: string;
   kind: "file" | "directory";
   fb?: (...params: unknown[]) => void;
-  cb?: (allDone?:boolean,...params: unknown[]) => void;
+  cb?: (allDone?: boolean, ...params: unknown[]) => void;
 }) => {
   try {
     const done = await FileSystemApis[
@@ -55,7 +55,7 @@ const remove = async ({
   fileHandlers: TFileHandlerCollection;
   uids: TNodeUid[];
   fb?: (...params: unknown[]) => void;
-  cb?: (allDone?:boolean,...params: unknown[]) => void;
+  cb?: (allDone?: boolean, ...params: unknown[]) => void;
 }) => {
   try {
     let allDone = true;
@@ -94,7 +94,7 @@ const rename = async ({
   parentUid: TNodeUid;
   newName: string;
   fb?: (...params: unknown[]) => void;
-  cb?: (allDone?:boolean,...params: unknown[]) => void;
+  cb?: (allDone?: boolean, ...params: unknown[]) => void;
 }) => {
   try {
     const done = await FileSystemApis[projectContext].moveSingleDirectoryOrFile(
@@ -162,7 +162,7 @@ const move = async ({
   newNames: string[];
   isCopy: boolean;
   fb?: (...params: unknown[]) => void;
-  cb?: (allDone?:boolean,...params: unknown[]) => void;
+  cb?: (allDone?: boolean, ...params: unknown[]) => void;
 }) => {
   try {
     let allDone = true;

@@ -59,8 +59,13 @@ export const IFrame = () => {
     hoveredTargetRef,
   });
 
-  const { onKeyDown, onKeyUp, handlePanelsToggle, handleZoomKeyDown } =
-    useCmdk();
+  const {
+    onKeyDown,
+    onKeyUp,
+    handlePanelsToggle,
+    handleZoomKeyDown,
+    // handleWheel,
+  } = useCmdk();
   const {
     onMouseEnter,
     onMouseMove,
@@ -108,6 +113,14 @@ export const IFrame = () => {
         e.preventDefault();
         onKeyUp(e, eventListenersStatesRef);
       });
+
+      // window.addEventListener(
+      //   "wheel",
+      //   (e: WheelEvent) => handleWheel(e, eventListenersStatesRef),
+      //   {
+      //     passive: false,
+      //   },
+      // );
     },
     [
       onKeyDown,
@@ -220,16 +233,18 @@ export const IFrame = () => {
 
             if (!filterArr || !filterArr.length) {
               element.setAttribute("rnbw-text-element", "true");
+
               continue;
             }
 
             span.appendChild(text);
             span.setAttribute("rnbw-text-element", "true");
-            span.setAttribute(
-              "data-rnbw-stage-node-id",
-              `${filterArr?.length ? filterArr[0] : i}`,
-            );
+            const stageUid = filterArr?.length ? filterArr[0] : i;
 
+            span.setAttribute("data-rnbw-stage-node-id", `${stageUid}`);
+            if (selectedItemsRef.current.includes(`${stageUid}`)) {
+              span.setAttribute("rnbwdev-rnbw-element-select", "true");
+            }
             node.parentNode?.replaceChild(span, node);
           } else if (node.nodeType === Node.ELEMENT_NODE) {
             wrapTextNodes(node as HTMLElement);
@@ -239,7 +254,7 @@ export const IFrame = () => {
 
       wrapTextNodes(iframeDocument.body);
     }
-  }, [iframeRefState, document, validNodeTree]);
+  }, [iframeRefState, document, validNodeTree, selectedItemsRef.current]);
 
   useEffect(() => {
     eventListenersStatesRef.current = {
@@ -274,9 +289,10 @@ export const IFrame = () => {
             id={"iframeId"}
             src={iframeSrc}
             style={{
-              background: "white",
               width: "100%",
               height: "100%",
+              resize: "both",
+              overflow: "auto",
             }}
           />
         )}

@@ -8,18 +8,15 @@ import { setCurrentCommand } from "@_redux/main/cmdk";
 import { getCommandKey } from "@_services/global";
 import { TCmdkKeyMap } from "@_types/main";
 
-import {
-  editHtmlContent,
-  getBodyChild,
-  getValidElementWithUid,
-} from "../helpers";
+import { getBodyChild, getValidElementWithUid } from "../helpers";
 import { setShowActionsPanel, setShowCodeView } from "@_redux/main/processor";
 import { eventListenersStatesRefType } from "../IFrame";
 import { setHoveredNodeUid } from "@_redux/main/nodeTree";
+import useRnbw from "@_services/useRnbw";
 
 export const useCmdk = () => {
   const dispatch = useDispatch();
-
+  const rnbw = useRnbw();
   const { monacoEditorRef } = useContext(MainContext);
   const zoomLevelRef = useRef(1);
 
@@ -28,9 +25,9 @@ export const useCmdk = () => {
       zoomLevelRef.current = level;
       if (!iframeRefState) return;
       iframeRefState.style.transform = `scale(${level})`;
-      iframeRefState.style.transformOrigin = `top ${
-        level > 1 ? "left" : "center"
-      }`;
+      // iframeRefState.style.transformOrigin = `top ${
+      //   level > 1 ? "left" : "center"
+      // }`;
     },
     [],
   );
@@ -77,16 +74,41 @@ export const useCmdk = () => {
     },
     [setZoom, zoomLevelRef.current],
   );
+  const handleWheel = useCallback(
+    (
+      event: WheelEvent,
+      eventListenerRef: React.MutableRefObject<eventListenersStatesRefType>,
+    ) => {
+      event.preventDefault();
+      let _zoomLevel = zoomLevelRef.current;
+
+      if (event.deltaY < 0) {
+        _zoomLevel = Math.min(_zoomLevel + 0.02, 4); // Zoom in
+      } else {
+        _zoomLevel = Math.max(_zoomLevel - 0.02, 0.25); // Zoom out
+      }
+
+      setZoom(_zoomLevel, eventListenerRef.current.iframeRefState);
+    },
+    [setZoom],
+  );
 
   const handlePanelsToggle = useCallback(
     (
       event: KeyboardEvent,
       eventListenerRef: React.MutableRefObject<eventListenersStatesRefType>,
     ) => {
-      const { isEditingRef, showActionsPanel, showCodeView } =
+      const { isEditingRef, showActionsPanel, showCodeView, activePanel } =
         eventListenerRef.current;
       if (isEditingRef.current) return;
       if (event.code === "Escape") {
+        if (activePanel === "file") {
+          if (
+            event.target instanceof HTMLElement &&
+            event.target.id === "FileTreeView-RenameInput"
+          )
+            return;
+        }
         if (!showActionsPanel && !showCodeView) {
           dispatch(setShowActionsPanel(true));
           dispatch(setShowCodeView(true));
@@ -99,7 +121,7 @@ export const useCmdk = () => {
     [],
   );
   const onKeyDown = useCallback(
-    (
+    async (
       e: KeyboardEvent,
       eventListenerRef: React.MutableRefObject<eventListenersStatesRefType>,
     ) => {
@@ -109,8 +131,6 @@ export const useCmdk = () => {
         cmdkReferenceData,
         iframeRefRef,
         contentEditableUidRef,
-        nodeTreeRef,
-        formatCode,
         hoveredTargetRef,
         hoveredNodeUid,
       } = eventListenerRef.current;
@@ -190,18 +210,12 @@ export const useCmdk = () => {
               LogAllow &&
               console.log("action to be run by cmdk: ", action);
 
-            editHtmlContent({
-              dispatch,
-              iframeRef: iframeRefRef.current,
-              nodeTree: nodeTreeRef.current,
+            await rnbw.elements.updateEditableElement({
+              eventListenerRef,
               contentEditableUid,
-              codeViewInstanceModel,
-              formatCode,
-              cb:
-                action === "Save"
-                  ? () => dispatch(setCurrentCommand({ action: "SaveForce" }))
-                  : undefined,
             });
+            action === "Save" &&
+              dispatch(setCurrentCommand({ action: "SaveForce" }));
           }
         }
       } else {
@@ -248,5 +262,11 @@ export const useCmdk = () => {
     },
     [],
   );
-  return { onKeyDown, onKeyUp, handleZoomKeyDown, handlePanelsToggle };
+  return {
+    onKeyDown,
+    onKeyUp,
+    handleZoomKeyDown,
+    handlePanelsToggle,
+    handleWheel,
+  };
 };

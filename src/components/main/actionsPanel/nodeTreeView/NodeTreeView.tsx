@@ -23,7 +23,11 @@ import {
   scrollToElement,
 } from "@_pages/main/helper";
 
-import { setHoveredNodeUid } from "@_redux/main/nodeTree";
+import {
+  collapseNodeTreeNodes,
+  expandNodeTreeNodes,
+  setHoveredNodeUid,
+} from "@_redux/main/nodeTree";
 import {
   setActivePanel,
   setNavigatorDropdownType,
@@ -226,13 +230,26 @@ const NodeTreeView = () => {
 
                 !props.context.isFocused && props.context.focusItem();
 
-                e.shiftKey
-                  ? props.context.selectUpTo()
-                  : getCommandKey(e, osType)
-                    ? props.context.isSelected
-                      ? props.context.unselectItem()
-                      : props.context.addToSelectedItems()
-                    : props.context.selectItem();
+                if (e.shiftKey) {
+                  props.context.selectUpTo();
+                } else if (getCommandKey(e, osType)) {
+                  if (props.context.isSelected) {
+                    props.context.unselectItem();
+                  } else {
+                    props.context.addToSelectedItems();
+                  }
+                } else {
+                  props.context.selectItem();
+                  if (props.context.isExpanded) {
+                    dispatch(
+                      collapseNodeTreeNodes([props.item.index as TNodeUid]),
+                    );
+                  } else {
+                    dispatch(
+                      expandNodeTreeNodes([props.item.index as TNodeUid]),
+                    );
+                  }
+                }
 
                 activePanel !== "node" && dispatch(setActivePanel("node"));
 

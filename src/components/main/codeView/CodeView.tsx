@@ -17,7 +17,7 @@ import { setActivePanel, setShowCodeView } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 import { Editor, loader } from "@monaco-editor/react";
 
-import { useCmdk, useEditor } from "./hooks";
+import { useEditor } from "./hooks";
 import { getNodeUidByCodeSelection } from "./helpers";
 import { setEditingNodeUidInCodeView } from "@_redux/main/codeView";
 import { getFileExtension } from "../actionsPanel/navigatorPanel/helpers";
@@ -57,7 +57,6 @@ export default function CodeView() {
 
     codeSelection,
   } = useEditor();
-  useCmdk();
 
   monacoEditorRef.current?.onKeyDown(handleKeyDown);
 
@@ -119,7 +118,7 @@ export default function CodeView() {
   }, [validNodeTree, nFocusedItem, activePanel]);
 
   useEffect(() => {
-    if (isCodeTyping) return;
+    if (isCodeTyping || activePanel === "code") return;
     const monacoEditor = monacoEditorRef.current;
     if (!monacoEditor) return;
 
@@ -259,7 +258,7 @@ export default function CodeView() {
             language={language}
             defaultValue={""}
             value={currentFileContent}
-            onChange={handleOnChange}
+            onChange={(value) => handleOnChange(value, currentFileUid)}
             loading={""}
             options={
               editorConfigs as monaco.editor.IStandaloneEditorConstructionOptions

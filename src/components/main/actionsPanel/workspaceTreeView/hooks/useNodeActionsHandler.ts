@@ -60,7 +60,7 @@ export const useNodeActionsHandler = () => {
     fileHandlers,
     invalidFileNodes,
   } = useAppState();
-  const { triggerCurrentProjectReload } = useContext(MainContext);
+  const { reloadCurrentProject } = useContext(MainContext);
   const selectedItems = useMemo(
     () => getObjKeys(fSelectedItemsObj),
     [fSelectedItemsObj],
@@ -69,29 +69,29 @@ export const useNodeActionsHandler = () => {
   // Add & Remove
   const onAdd = useCallback(
     async (isDirectory: boolean, ext: string) => {
+      // performs a deep clone of the file tree
       const _fileTree = structuredClone(fileTree) as TNodeTreeData;
 
-      // validate `focusedItem`
-      let node = _fileTree[focusedItem];
-      if (!node) return;
-      if (node.isEntity) {
-        node = _fileTree[node.parentUid!];
+      // find the immediate directory of the focused item if it is a file
+      let immediateDir = _fileTree[focusedItem];
+      if (!immediateDir) return;
+      if (immediateDir.isEntity) {
+        immediateDir = _fileTree[immediateDir.parentUid!];
       }
 
-      // expand the path to `focusedItem`
-      node.uid !== RootNodeUid &&
-        !expandedItemsObj[node.uid] &&
-        dispatch(expandFileTreeNodes([node.uid]));
+      //if the directory is not a RootNode and not already expanded, expand it
+      if (
+        immediateDir.uid !== RootNodeUid &&
+        !expandedItemsObj[immediateDir.uid]
+      ) {
+        dispatch(expandFileTreeNodes([immediateDir.uid]));
+      }
 
-      // add tmp node
+      // create tmp node for new file/directory
       const tmpNode: TNode = {
-        uid: _path.join(node.uid, TmpFileNodeUidWhenAddNew),
-        parentUid: node.uid,
-        displayName: isDirectory
-          ? "Untitled"
-          : ext === "html"
-            ? "Untitled"
-            : "Untitled",
+        uid: _path.join(immediateDir.uid, TmpFileNodeUidWhenAddNew),
+        parentUid: immediateDir.uid,
+        displayName: "Untitled",
         isEntity: !isDirectory,
         children: [],
         data: {
@@ -99,8 +99,14 @@ export const useNodeActionsHandler = () => {
           ext,
         },
       };
-      node.children.unshift(tmpNode.uid);
+
+      // adds the tmp node to the file tree at the beginning of focused item parent's children
+      immediateDir.children.unshift(tmpNode.uid);
+
+      // Assign the tmp node to the file tree
       _fileTree[tmpNode.uid] = tmpNode;
+
+      // update the file tree
       dispatch(setFileTree(_fileTree as TFileNodeTreeData));
     },
     [fileTree, focusedItem, expandedItemsObj],
@@ -141,7 +147,6 @@ export const useNodeActionsHandler = () => {
     dispatch(setDoingFileAction(false));
 
     // reload the current project
-    triggerCurrentProjectReload();
   }, [selectedItems, invalidFileNodes, project, fileTree, fileHandlers]);
 
   // Cut & Copy & Paste & Duplicate
@@ -236,7 +241,7 @@ export const useNodeActionsHandler = () => {
     dispatch(setDoingFileAction(false));
 
     // reload the current project
-    triggerCurrentProjectReload();
+    reloadCurrentProject();
   }, [clipboardData, fileTree, focusedItem, project, fileHandlers]);
   const onDuplicate = useCallback(async () => {
     const uids = selectedItems.filter((uid) => !invalidFileNodes[uid]);
@@ -305,7 +310,7 @@ export const useNodeActionsHandler = () => {
     dispatch(setDoingFileAction(false));
 
     // reload the current project
-    triggerCurrentProjectReload();
+    reloadCurrentProject();
   }, [selectedItems, invalidFileNodes, project, fileTree, fileHandlers]);
 
   // cb
@@ -414,7 +419,7 @@ export const useNodeActionsHandler = () => {
       }
 
       // reload the current project
-      triggerCurrentProjectReload();
+      reloadCurrentProject();
     },
     [project, fileTree, fileHandlers],
   );
@@ -525,7 +530,7 @@ export const useNodeActionsHandler = () => {
       dispatch(setDoingFileAction(false));
 
       // reload the current project
-      triggerCurrentProjectReload();
+      reloadCurrentProject();
     },
     [project, fileTree, fileHandlers],
   );
