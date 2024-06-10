@@ -24,7 +24,6 @@ import {
   PLACEHOLDERS,
 } from "./constants";
 import { SVGIcon, SVGIconIV } from "@_components/common";
-import { filterFiles } from "../helper";
 
 const iconMappping = {
   New: "/images/jumpstart/new.svg",
@@ -182,39 +181,6 @@ export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
     dispatch(setCmdkPages(["Actions"]));
     dispatch(setCmdkSearchContent(""));
   };
-  const getFilteredFiles = useCallback(() => {
-    const searchFilesArr = filterFiles(fileTree, cmdkSearchContent);
-    const filteredFiles = searchFilesArr.map((file) => {
-      const pathArrWithoutRootDir = file
-        .split("/")
-        .filter((item) => item !== "");
-
-      const pathWithoutRootDir = "/" + pathArrWithoutRootDir.slice(1).join("/");
-
-      return {
-        Featured: false,
-        Name: pathWithoutRootDir,
-        Path: file,
-        Icon: "page", // Can add appropriate icon here
-        Description: "",
-        "Keyboard Shortcut": [
-          {
-            cmd: false,
-            shift: false,
-            alt: false,
-            key: "",
-            click: false,
-          },
-        ],
-        Group: "Files",
-        Context: "file",
-      };
-    });
-
-    return filteredFiles;
-  }, [fileTree, cmdkSearchContent]);
-
-  const filteredFiles = getFilteredFiles();
 
   return (
     <Command.Dialog
@@ -314,36 +280,6 @@ export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
                   </Command.Group>
                 );
               })}
-              {currentCmdkPage === "Jumpstart" &&
-                cmdkSearchContent.length > 0 &&
-                filteredFiles?.map((file, index) => {
-                  return (
-                    <CommandItem
-                      key={`${file}-${index}`}
-                      command={{
-                        Featured: false,
-                        Name: file.Name,
-                        Path: file.Path,
-                        Icon: file.Icon, // Can add appropriate icon here
-                        Description: "",
-                        "Keyboard Shortcut": file["Keyboard Shortcut"],
-                        Group: file.Group,
-                        Context: file.Context,
-                      }}
-                      index={index}
-                      onSelect={async () => {
-                        navigate(file.Path);
-                        dispatch(setCmdkOpen(false));
-                      }}
-                      onMouseEnter={() => {
-                        setCurrentFocusedMenuItem({
-                          name: "file",
-                          description: file.Description || "",
-                        });
-                      }}
-                    />
-                  );
-                })}
             </Command.List>
           </div>
         </div>
