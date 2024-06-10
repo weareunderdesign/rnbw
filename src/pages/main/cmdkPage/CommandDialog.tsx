@@ -35,7 +35,7 @@ const iconMappping = {
   Autosave: "/images/jumpstart/autosave.svg",
   "Code Wrap": "/images/jumpstart/formatcode.svg",
   Recent: "/images/jumpstart/open.svg",
-  file: "/images/jumpstart/page.svg",
+  files: "/images/jumpstart/page.svg",
 };
 export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
   const [currentFocusedMenuItem, setCurrentFocusedMenuItem] = useState({
@@ -268,6 +268,8 @@ export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
                               let itemName = command.Name || "";
                               if (groupName === "Recent") {
                                 itemName = "Recent";
+                              } else if (groupName === "Files") {
+                                itemName = "files";
                               }
                               setCurrentFocusedMenuItem({
                                 name: itemName,
