@@ -1,60 +1,35 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { FC, ReactNode, useEffect, useState } from "react";
+import React, { FC, ReactNode, useEffect, useRef, useState } from "react";
 
 interface Props {
   children: ReactNode;
-  panSpeedRatio?: number;
-  zoomFactor?: {
-    max: number;
-    min: number;
-  };
-  test?: boolean;
 }
 
-const tetsModeStyles = {
-  wrapper: {
-    background: "rgba(0,0,0,0.1)",
-  },
-  container: {
-    border: "3px solid #0044ff",
-  },
-};
+const zoomFactor = { max: 5, min: 0.1 };
 
 const PanAndPinch: FC<Props> = (props) => {
   const [spacePressed, setSpacePressed] = useState(false);
   const [mouseKeyIsDown, setMouseKeyIsDown] = useState(false);
   const [transform, setTransform] = useState({ scale: 1, x: 0, y: 0 });
+  const scrollableRef = useRef<HTMLDivElement>(null);
 
   const returnZoomMinOrMax = () => {
     const correctionIndex = 0.05;
-    if (props.zoomFactor === undefined) return;
-    if (transform.scale < props.zoomFactor.min) {
+    if (transform.scale < zoomFactor.min) {
       setTransform({
         ...transform,
-        scale: props.zoomFactor.min + correctionIndex,
+        scale: zoomFactor.min + correctionIndex,
       });
     }
-    if (transform.scale > props.zoomFactor.max) {
+    if (transform.scale > zoomFactor.max) {
       setTransform({
         ...transform,
-        scale: props.zoomFactor.max - correctionIndex,
+        scale: zoomFactor.max - correctionIndex,
       });
     }
   };
 
-  // HANDLE ON MOUSE WHEEL (FOR TRACKPADS)
   const handleOnWheel = (e: any) => {
-    // DETECT PAN
-
-    if (e.deltaX !== 0 || e.deltaY !== 0) {
-      setTransform((prevState) => ({
-        ...transform,
-        x: prevState.x - e.deltaX / props.panSpeedRatio!,
-        y: prevState.y - e.deltaY / props.panSpeedRatio!,
-      }));
-    }
-
-    // DETECT PINCH
     if (e.ctrlKey || e.metaKey) {
       setTransform((prevState) => ({
         ...transform,
@@ -64,35 +39,26 @@ const PanAndPinch: FC<Props> = (props) => {
     }
   };
 
-  // ON MOUSE MOVE
   const handleOnMouseMove = (e: any) => {
-    if (spacePressed && mouseKeyIsDown) {
-      if (e.movementX !== 0 || e.movementY > 0) {
-        setTransform((prevState) => ({
-          ...transform,
-          x: prevState.x + e.movementX / props.panSpeedRatio!,
-          y: prevState.y + e.movementY / props.panSpeedRatio!,
-        }));
-      }
+    if (spacePressed && mouseKeyIsDown && scrollableRef.current) {
+      const deltaX = e.movementX;
+      const deltaY = e.movementY;
+      scrollableRef.current.scrollLeft -= deltaX;
+      scrollableRef.current.scrollTop -= deltaY;
     }
   };
 
-  // ON SPACE PRESSED
   const handleOnKeyDown = (e: any) => {
-    // IF SPACE PRESSED
-    if (e.keyCode === 32) {
+    if (e.code === "Space") {
       setSpacePressed(true);
     }
 
-    // PLUS/MINUS KEYS
-    const zoomIndex = 0.5;
-    if (props.zoomFactor === undefined) return;
+    const zoomIndex = 0.25;
 
-    // IF MINUS PRESSED
     if (
-      e.keyCode === 189 &&
-      transform.scale > props.zoomFactor.min &&
-      transform.scale < props.zoomFactor.max
+      e.key === "-" &&
+      transform.scale > zoomFactor.min &&
+      transform.scale < zoomFactor.max
     ) {
       setTransform((prevState) => ({
         ...transform,
@@ -100,11 +66,10 @@ const PanAndPinch: FC<Props> = (props) => {
       }));
     }
 
-    // IF PLUS PRESSED
     if (
-      e.keyCode === 187 &&
-      transform.scale > props.zoomFactor.min &&
-      transform.scale < props.zoomFactor.max
+      e.key === "+" &&
+      transform.scale > zoomFactor.min &&
+      transform.scale < zoomFactor.max
     ) {
       setTransform((prevState) => ({
         ...transform,
@@ -112,13 +77,16 @@ const PanAndPinch: FC<Props> = (props) => {
       }));
     }
 
-    // IF ZERO PRESSED
-    if (e.keyCode === 48) {
+    if (e.key === "0" || e.key === "Escape") {
       setTransform({
         x: 0,
         y: 0,
         scale: 1,
       });
+    }
+
+    if (e.key >= "1" && e.key <= "9") {
+      setTransform({ ...transform, scale: Number(`0.${e.key}`) });
     }
   };
 
@@ -127,72 +95,87 @@ const PanAndPinch: FC<Props> = (props) => {
     returnZoomMinOrMax();
   };
 
-  // ON MOUSE PRESSED
   const handleOnKeyMouseDown = (e: any) => {
+    e.isTrusted && e.preventDefault();
     if (e.which === 1) {
       setMouseKeyIsDown(true);
     }
   };
 
   const handleOnKeyMouseUp = (e: any) => {
+    e.isTrusted && e.preventDefault();
     if (e.which === 1) {
       setMouseKeyIsDown(false);
     }
   };
-  // USE EFFECT
+
+  const handleMessageFromIFrame = (e: any) => {
+    switch (e.data.type) {
+      case "wheel":
+        handleOnWheel(e.data);
+        break;
+      case "keydown":
+        handleOnKeyDown(e.data);
+        break;
+      case "mouseup":
+        e.preventDefault();
+        handleOnKeyMouseUp(e.data);
+        break;
+      case "mousedown":
+        e.preventDefault();
+        handleOnKeyMouseDown(e.data);
+        break;
+      case "mousemove":
+        handleOnMouseMove(e.data);
+        break;
+    }
+  };
+
   useEffect(() => {
     document.addEventListener("mousedown", handleOnKeyMouseDown, false);
     document.addEventListener("mouseup", handleOnKeyMouseUp, false);
-    window.addEventListener("wheel", (e: WheelEvent) => e.preventDefault(), {
-      passive: false,
-    });
+    window.addEventListener("message", handleMessageFromIFrame);
+
+    // preventing browser zoom, but we can't scroll nodeTree
+    // window.addEventListener("wheel", (e: WheelEvent) => e.preventDefault(), {
+    //   passive: false,
+    // });
 
     return () => {
       document.removeEventListener("mousedown", handleOnKeyMouseDown, false);
       document.removeEventListener("mouseup", handleOnKeyMouseUp, false);
+      window.removeEventListener("message", handleMessageFromIFrame);
     };
   });
 
   return (
     <div
       style={{
-        ...(props.test ? tetsModeStyles.wrapper : {}),
         overflow: "scroll",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
         width: "100%",
         height: "100%",
-        // width: "1000px",
-        // height: "1000px",
+        scrollbarColor: "auto",
       }}
+      ref={scrollableRef}
       onWheel={handleOnWheel}
       onMouseMove={handleOnMouseMove}
       onKeyDown={handleOnKeyDown}
       onKeyUp={handleOnKeyUp}
       tabIndex={0}
     >
-      <div
-        style={{
-          ...(props.test ? tetsModeStyles.container : {}),
-          width: "fit-content",
-          height: "fit-content",
-          transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
-        }}
-      >
-        {props.children}
+      <div style={{ width: "2000px", height: "2000px" }}>
+        <div
+          style={{
+            width: "50vw",
+            height: "100vh",
+            transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
+          }}
+        >
+          {props.children}
+        </div>
       </div>
     </div>
   );
 };
-
-PanAndPinch.defaultProps = {
-  panSpeedRatio: 1.4,
-  test: false,
-  zoomFactor: {
-    max: 3,
-    min: 0.3,
-  },
-} as Partial<Props>;
 
 export default PanAndPinch;

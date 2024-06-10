@@ -59,13 +59,7 @@ export const IFrame = () => {
     hoveredTargetRef,
   });
 
-  const {
-    onKeyDown,
-    onKeyUp,
-    handlePanelsToggle,
-    handleZoomKeyDown,
-    // handleWheel,
-  } = useCmdk();
+  const { onKeyDown, onKeyUp, handlePanelsToggle } = useCmdk();
   const {
     onMouseEnter,
     onMouseMove,
@@ -83,9 +77,12 @@ export const IFrame = () => {
       htmlNode.addEventListener("keydown", (e: KeyboardEvent) => {
         //handlePanelsToggle should be called before onKeyDown as on onKeyDown the contentEditiable editing is set to false and the panels are toggled. But we don't need to toggle the panels if the user is editing the contentEditable
         handlePanelsToggle(e, eventListenersStatesRef);
-
         onKeyDown(e, eventListenersStatesRef);
-        handleZoomKeyDown(e, eventListenersStatesRef);
+        e.preventDefault();
+        window.parent.postMessage(
+          { type: "keydown", key: e.key, code: e.code },
+          "*",
+        );
       });
 
       htmlNode.addEventListener("mouseenter", () => {
@@ -93,6 +90,10 @@ export const IFrame = () => {
       });
       htmlNode.addEventListener("mousemove", (e: MouseEvent) => {
         onMouseMove(e, eventListenersStatesRef);
+        window.parent.postMessage(
+          { type: "mousemove", movementX: e.movementX, movementY: e.movementY },
+          "*",
+        );
       });
       htmlNode.addEventListener("mouseleave", () => {
         onMouseLeave();
@@ -112,6 +113,27 @@ export const IFrame = () => {
       htmlNode.addEventListener("keyup", (e: KeyboardEvent) => {
         e.preventDefault();
         onKeyUp(e, eventListenersStatesRef);
+      });
+      htmlNode.addEventListener("wheel", (event: WheelEvent) => {
+        window.parent.postMessage(
+          {
+            type: "wheel",
+            deltaX: event.deltaX,
+            deltaY: event.deltaY,
+            ctrlKey: event.ctrlKey,
+            metaKey: event.metaKey,
+          },
+          "*",
+        );
+      });
+      htmlNode.addEventListener("mousedown", (event) => {
+        window.parent.postMessage(
+          { type: "mousedown", which: event.which },
+          "*",
+        );
+      });
+      htmlNode.addEventListener("mouseup", (event) => {
+        window.parent.postMessage({ type: "mouseup", which: event.which }, "*");
       });
     },
     [

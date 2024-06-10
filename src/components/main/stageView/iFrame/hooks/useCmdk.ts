@@ -1,4 +1,4 @@
-import { useCallback, useContext, useRef } from "react";
+import { useCallback, useContext } from "react";
 
 import { useDispatch } from "react-redux";
 
@@ -18,80 +18,6 @@ export const useCmdk = () => {
   const dispatch = useDispatch();
   const rnbw = useRnbw();
   const { monacoEditorRef } = useContext(MainContext);
-  const zoomLevelRef = useRef(1);
-
-  const setZoom = useCallback(
-    (level: number, iframeRefState: HTMLIFrameElement | null) => {
-      zoomLevelRef.current = level;
-      if (!iframeRefState) return;
-      iframeRefState.style.transform = `scale(${level})`;
-      // iframeRefState.style.transformOrigin = `top ${
-      //   level > 1 ? "left" : "center"
-      // }`;
-    },
-    [],
-  );
-
-  const handleZoomKeyDown = useCallback(
-    (
-      event: KeyboardEvent,
-      eventListenerRef: React.MutableRefObject<eventListenersStatesRefType>,
-    ) => {
-      const { activePanel, iframeRefState, isEditingRef, isCodeTyping } =
-        eventListenerRef.current;
-      if (
-        activePanel === "code" ||
-        activePanel === "settings" ||
-        isCodeTyping ||
-        isEditingRef.current
-      )
-        return;
-
-      const key = event.key;
-      let _zoomLevel = zoomLevelRef.current;
-
-      switch (key) {
-        case "0":
-        case "Escape":
-          setZoom(1, iframeRefState);
-          break;
-        case "+":
-          _zoomLevel = _zoomLevel + 0.25;
-          setZoom(_zoomLevel, iframeRefState);
-          break;
-        case "-":
-          if (_zoomLevel > 0.25) {
-            _zoomLevel = _zoomLevel - 0.25;
-          }
-          setZoom(_zoomLevel, iframeRefState);
-          break;
-        default:
-          if (key >= "1" && key <= "9") {
-            setZoom(Number(`0.${key}`), iframeRefState);
-          }
-          break;
-      }
-    },
-    [setZoom, zoomLevelRef.current],
-  );
-  const handleWheel = useCallback(
-    (
-      event: WheelEvent,
-      eventListenerRef: React.MutableRefObject<eventListenersStatesRefType>,
-    ) => {
-      event.preventDefault();
-      let _zoomLevel = zoomLevelRef.current;
-
-      if (event.deltaY < 0) {
-        _zoomLevel = Math.min(_zoomLevel + 0.02, 4); // Zoom in
-      } else {
-        _zoomLevel = Math.max(_zoomLevel - 0.02, 0.25); // Zoom out
-      }
-
-      setZoom(_zoomLevel, eventListenerRef.current.iframeRefState);
-    },
-    [setZoom],
-  );
 
   const handlePanelsToggle = useCallback(
     (
@@ -265,8 +191,6 @@ export const useCmdk = () => {
   return {
     onKeyDown,
     onKeyUp,
-    handleZoomKeyDown,
     handlePanelsToggle,
-    handleWheel,
   };
 };
