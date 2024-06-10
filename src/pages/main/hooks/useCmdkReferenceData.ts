@@ -284,7 +284,7 @@ export const useCmdkReferenceData = ({
           Featured: false,
           Name: pathWithoutRootDir,
           Path: file,
-          Icon: "", // Can add appropriate icon here
+          Icon: "page", // Can add appropriate icon here
           Description: "",
           "Keyboard Shortcut": [
             {

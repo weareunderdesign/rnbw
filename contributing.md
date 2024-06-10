@@ -25,13 +25,13 @@ the contributors’ community can be found on [github discussions](), where you 
     ```
     
 4. visit `http://localhost:8080/`
-5. create a branch locally, based on the dev branch.
-7. follow the [project board](https://github.com/orgs/rnbwdev/projects/4/views/1) and take the first to-do that makes sense to you. go top-down.
+5. create a branch locally, based on the `dev` branch.
+7. follow the [project board](https://github.com/orgs/rnbwdev/projects/2) and take the first to-do that makes sense to you. go top-down.
     1. focus on the terms and specs for each task.
     2. make sure you fully understand it before you begin.
-8. code! please keep the best practices and code style and follow any formatting and testing guidelines specific to this repo.
-9. commit changes to your branch. (don’t rush to push the latest code to your branch. that’s a waste of time.)
-10. keep your branch always in sync with the dev branch.
+8. code. please keep the best practices and code style and follow any formatting and testing guidelines specific to this repo.
+9. commit changes to your branch.
+10. keep your branch always in sync with the `dev` branch.
 
 ### pull requests
 when reviewing a new PR, we prioritize testing the working functionality and then reviewing the code rather than the other way around.
@@ -46,13 +46,29 @@ in general, prs should:
 
 that's it! 🎉
 
-## bundling
+## bundle
 
-…
+To create `rnbw` bundle file, run the following command:
 
-## releasing
+```
+npm run build
+```
 
-…
+You’ll find the generated file at `/dist/client.bundle.js`
+## release
+
+to release `rnbw`, follow these simple steps:
+1. Push Changes in `dev` branch.
+2. GitHub Actions will automatically trigger the workflow to release `rnbw`.
+
+### github action workflow overview
+
+the workflow file [`deploy.yml`](https://github.com/rnbwdev/rnbw/blob/main/.github/workflows/deploy.yml) runs ***Build*** and ***Deploy*** jobs.
+
+1. ***Build***: This job is responsible for preparing the project for deployment. It checks out the repository, detects the package manager, sets up Node.js, installs dependencies, builds the project, and uploads the built project.
+2. ***Deploy***:  This job handles the deployment to GitHub Pages.
+
+
 
 ## code of conduct
 
