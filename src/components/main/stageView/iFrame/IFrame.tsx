@@ -303,10 +303,9 @@ export const IFrame = () => {
             id={"iframeId"}
             src={iframeSrc}
             style={{
+              background: "white",
               width: "100%",
               height: "100%",
-              // resize: "both",
-              // overflow: "auto",
             }}
           />
         )}
