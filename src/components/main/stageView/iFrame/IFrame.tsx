@@ -78,11 +78,11 @@ export const IFrame = () => {
         //handlePanelsToggle should be called before onKeyDown as on onKeyDown the contentEditiable editing is set to false and the panels are toggled. But we don't need to toggle the panels if the user is editing the contentEditable
         handlePanelsToggle(e, eventListenersStatesRef);
         onKeyDown(e, eventListenersStatesRef);
-        e.preventDefault();
         window.parent.postMessage(
           { type: "keydown", key: e.key, code: e.code },
           "*",
         );
+        e.preventDefault();
       });
 
       htmlNode.addEventListener("mouseenter", () => {

@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect, FC, useCallback } from "react";
 import { Direction, ResizeProps } from "./type";
 import "./index.css";
 
-export const Resize: FC<ResizeProps> = ({ children, scale }) => {
+export const Resize: FC<ResizeProps> = ({ children, scale, canvas }) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const [direction, setDirection] = useState<Direction | "">("");
   const [mouseDown, setMouseDown] = useState(false);
@@ -25,17 +25,26 @@ export const Resize: FC<ResizeProps> = ({ children, scale }) => {
       } = panel;
 
       const resizeTop = () => {
-        panel.style.height = `${height - scaleMovement(movementY)}px`;
+        const newHeight = height - scaleMovement(movementY);
+        if (newHeight < 100) return;
+        panel.style.height = `${newHeight}px`;
         panel.style.top = `${y + scaleMovement(movementY)}px`;
       };
+
       const resizeRight = () => {
-        panel.style.width = `${width + scaleMovement(movementX)}px`;
+        const newWidth = width + scaleMovement(movementX);
+        if (newWidth < 100) return;
+        panel.style.width = `${newWidth}px`;
       };
       const resizeBottom = () => {
-        panel.style.height = `${height + scaleMovement(movementY)}px`;
+        const newHeight = height + scaleMovement(movementY);
+        if (newHeight < 100) return;
+        panel.style.height = `${newHeight}px`;
       };
       const resizeLeft = () => {
-        panel.style.width = `${width - scaleMovement(movementX)}px`;
+        const newWidth = width - scaleMovement(movementX);
+        if (newWidth < 100) return;
+        panel.style.width = `${newWidth}px`;
         panel.style.left = `${x + scaleMovement(movementX)}px`;
       };
 
@@ -124,13 +133,14 @@ export const Resize: FC<ResizeProps> = ({ children, scale }) => {
   return (
     <div className="panel" ref={panelRef}>
       <div className="panel__container">
-        {Object.values(Direction).map((direction) => (
-          <div
-            key={direction}
-            className={`resizer ${direction}`}
-            onMouseDown={handleMouseDown(direction)}
-          />
-        ))}
+        {canvas &&
+          Object.values(Direction).map((direction) => (
+            <div
+              key={direction}
+              className={`resizer ${direction}`}
+              onMouseDown={handleMouseDown(direction)}
+            />
+          ))}
         {children}
       </div>
     </div>

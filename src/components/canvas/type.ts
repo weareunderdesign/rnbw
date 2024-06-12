@@ -11,4 +11,8 @@ export enum Direction {
   Left = "left",
 }
 
-export type ResizeProps = { children: ReactNode; scale: number };
+export type ResizeProps = {
+  children: ReactNode;
+  scale: number;
+  canvas: boolean;
+};

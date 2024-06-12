@@ -6,37 +6,34 @@ interface Props {
   children: ReactNode;
 }
 
-const zoomFactor = { max: 5, min: 0.1 };
+const zoomFactor = { max: 10, min: 0.1 };
+const zoomIndex = 0.25;
 
 const PanAndPinch: FC<Props> = ({ children }) => {
   const [spacePressed, setSpacePressed] = useState(false);
   const [mouseKeyIsDown, setMouseKeyIsDown] = useState(false);
   const [transform, setTransform] = useState({ scale: 1, x: 0, y: 0 });
   const scrollableRef = useRef<HTMLDivElement>(null);
+  const [canvas, setCanvas] = useState(false);
 
-  const returnZoomMinOrMax = () => {
-    const correctionIndex = 0.05;
-    if (transform.scale < zoomFactor.min) {
-      setTransform({
-        ...transform,
-        scale: zoomFactor.min + correctionIndex,
-      });
+  useEffect(() => {
+    if (transform.scale != 1) {
+      setCanvas(true);
     }
-    if (transform.scale > zoomFactor.max) {
-      setTransform({
-        ...transform,
-        scale: zoomFactor.max - correctionIndex,
-      });
-    }
+  }, [transform.scale]);
+
+  const updateScale = (newScale: number) => {
+    setTransform((prevState) => ({
+      ...prevState,
+      scale: newScale,
+    }));
   };
 
   const handleOnWheel = (e: any) => {
     if (e.ctrlKey || e.metaKey) {
-      setTransform((prevState) => ({
-        ...transform,
-        scale: prevState.scale - e.deltaY / 100,
-      }));
-      returnZoomMinOrMax();
+      const newScale = transform.scale - e.deltaY / 100;
+      if (newScale > zoomFactor.min && newScale < zoomFactor.max)
+        updateScale(newScale);
     }
   };
 
@@ -50,61 +47,51 @@ const PanAndPinch: FC<Props> = ({ children }) => {
   };
 
   const handleOnKeyDown = (e: any) => {
-    if (e.code === "Space") {
+    const { code, key, isTrusted } = e;
+    if (code === "Space") {
+      if (isTrusted) e.preventDefault();
       setSpacePressed(true);
     }
 
-    const zoomIndex = 0.25;
+    switch (key) {
+      case "-":
+      case "+":
+        {
+          const scaleChange = key === "-" ? -zoomIndex : zoomIndex;
+          const newScale = transform.scale + scaleChange;
+          if (newScale > zoomFactor.min && newScale < zoomFactor.max) {
+            updateScale(newScale);
+          }
+        }
+        break;
 
-    if (
-      e.key === "-" &&
-      transform.scale > zoomFactor.min &&
-      transform.scale < zoomFactor.max
-    ) {
-      setTransform((prevState) => ({
-        ...transform,
-        scale: prevState.scale - zoomIndex,
-      }));
-    }
+      case "0":
+      case "Escape":
+        setTransform({ x: 0, y: 0, scale: 1 });
+        setCanvas(false);
+        break;
 
-    if (
-      e.key === "+" &&
-      transform.scale > zoomFactor.min &&
-      transform.scale < zoomFactor.max
-    ) {
-      setTransform((prevState) => ({
-        ...transform,
-        scale: prevState.scale + zoomIndex,
-      }));
-    }
-
-    if (e.key === "0" || e.key === "Escape") {
-      setTransform({
-        x: 0,
-        y: 0,
-        scale: 1,
-      });
-    }
-
-    if (e.key >= "1" && e.key <= "9") {
-      setTransform({ ...transform, scale: Number(`0.${e.key}`) });
+      default: {
+        const numberKey = Number(key);
+        if (numberKey >= 1 && numberKey <= 9) {
+          updateScale(Number(`0.${key}`));
+        }
+        break;
+      }
     }
   };
 
   const handleOnKeyUp = () => {
     setSpacePressed(false);
-    returnZoomMinOrMax();
   };
 
   const handleOnKeyMouseDown = (e: any) => {
-    e.isTrusted && e.preventDefault();
     if (e.which === 1) {
       setMouseKeyIsDown(true);
     }
   };
 
   const handleOnKeyMouseUp = (e: any) => {
-    e.isTrusted && e.preventDefault();
     if (e.which === 1) {
       setMouseKeyIsDown(false);
     }
@@ -113,17 +100,16 @@ const PanAndPinch: FC<Props> = ({ children }) => {
   const handleMessageFromIFrame = (e: any) => {
     switch (e.data.type) {
       case "wheel":
+        e.preventDefault();
         handleOnWheel(e.data);
         break;
       case "keydown":
         handleOnKeyDown(e.data);
         break;
       case "mouseup":
-        e.preventDefault();
         handleOnKeyMouseUp(e.data);
         break;
       case "mousedown":
-        e.preventDefault();
         handleOnKeyMouseDown(e.data);
         break;
       case "mousemove":
@@ -135,21 +121,27 @@ const PanAndPinch: FC<Props> = ({ children }) => {
   };
 
   useEffect(() => {
-    document.addEventListener("mousedown", handleOnKeyMouseDown, false);
-    document.addEventListener("mouseup", handleOnKeyMouseUp, false);
-    window.addEventListener("message", handleMessageFromIFrame);
-
-    // preventing browser zoom, but we can't scroll nodeTree
-    // window.addEventListener("wheel", (e: WheelEvent) => e.preventDefault(), {
-    //   passive: false,
-    // });
+    scrollableRef.current?.addEventListener(
+      "mousedown",
+      handleOnKeyMouseDown,
+      false,
+    );
+    scrollableRef.current?.addEventListener(
+      "mouseup",
+      handleOnKeyMouseUp,
+      false,
+    );
+    window.addEventListener("message", handleMessageFromIFrame, false);
 
     return () => {
-      document.removeEventListener("mousedown", handleOnKeyMouseDown, false);
-      document.removeEventListener("mouseup", handleOnKeyMouseUp, false);
+      scrollableRef.current?.removeEventListener(
+        "mousedown",
+        handleOnKeyMouseDown,
+      );
+      scrollableRef.current?.removeEventListener("mouseup", handleOnKeyMouseUp);
       window.removeEventListener("message", handleMessageFromIFrame);
     };
-  });
+  }, [transform.scale]);
 
   return (
     <div
@@ -157,7 +149,7 @@ const PanAndPinch: FC<Props> = ({ children }) => {
         overflow: "scroll",
         width: "100%",
         height: "100%",
-        scrollbarColor: "auto",
+        scrollbarColor: canvas ? "auto" : "unset",
       }}
       ref={scrollableRef}
       onWheel={handleOnWheel}
@@ -166,7 +158,7 @@ const PanAndPinch: FC<Props> = ({ children }) => {
       onKeyUp={handleOnKeyUp}
       tabIndex={0}
     >
-      <div style={{ width: "2000px", height: "2000px" }}>
+      <div style={{ width: canvas ? "2000px" : "100%", height: "2000px" }}>
         <div
           style={{
             width: "50vw",
@@ -174,7 +166,9 @@ const PanAndPinch: FC<Props> = ({ children }) => {
             transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
           }}
         >
-          <Resize scale={transform.scale}>{children}</Resize>
+          <Resize canvas={canvas} scale={transform.scale}>
+            {children}
+          </Resize>
         </div>
       </div>
     </div>
