@@ -19,6 +19,7 @@ interface IupdateSettings {
 interface IupdateEditableElement {
   contentEditableUid: TNodeUid;
   eventListenerRef: React.MutableRefObject<eventListenersStatesRefType>;
+  eventSource: "esc" | "click";
 }
 interface Icopy {
   uids?: TNodeUid[];

@@ -113,14 +113,6 @@ export const IFrame = () => {
         e.preventDefault();
         onKeyUp(e, eventListenersStatesRef);
       });
-
-      // window.addEventListener(
-      //   "wheel",
-      //   (e: WheelEvent) => handleWheel(e, eventListenersStatesRef),
-      //   {
-      //     passive: false,
-      //   },
-      // );
     },
     [
       onKeyDown,

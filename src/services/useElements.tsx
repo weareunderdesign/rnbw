@@ -699,7 +699,7 @@ export default function useElements() {
 
   const updateEditableElement = useCallback(
     async (params: IupdateEditableElement) => {
-      const { eventListenerRef, contentEditableUid } = params;
+      const { eventListenerRef, contentEditableUid, eventSource } = params;
       const helperModel = getEditorModelWithCurrentCode();
       const iframeRef = eventListenerRef.current.iframeRefRef.current;
       const nodeTree = eventListenerRef.current.nodeTreeRef.current;
@@ -746,8 +746,10 @@ export default function useElements() {
       const code = helperModel.getValue();
       await dispatch(setIsContentProgrammaticallyChanged(true));
       codeViewInstanceModel.setValue(code);
-      const uniqueNodePath = focusedNode.uniqueNodePath;
-      uniqueNodePath && dispatch(setNeedToSelectNodePaths([uniqueNodePath]));
+      if (eventSource === "esc") {
+        const uniqueNodePath = focusedNode.uniqueNodePath;
+        uniqueNodePath && dispatch(setNeedToSelectNodePaths([uniqueNodePath]));
+      }
     },
     [codeViewInstanceModel],
   );
