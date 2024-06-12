@@ -6,7 +6,6 @@ import IFrame from "./iFrame";
 import { setActivePanel } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 import PanAndPinch from "@_components/canvas/PanAndPinch";
-// import { Rnd } from "react-rnd";
 
 export default function StageView() {
   const { showCodeView, activePanel } = useAppState();
@@ -17,20 +16,18 @@ export default function StageView() {
   }, [activePanel]);
   return useMemo(() => {
     return (
-      <>
-        <PanAndPinch>
-          <div
-            id="StageView"
-            className={showCodeView ? "" : "view"}
-            onClick={onClick}
-            style={{
-              height: "100%",
-            }}
-          >
-            <IFrame />
-          </div>
-        </PanAndPinch>
-      </>
+      <PanAndPinch>
+        <div
+          id="StageView"
+          className={showCodeView ? "" : "view"}
+          onClick={onClick}
+          style={{
+            height: "100%",
+          }}
+        >
+          <IFrame />
+        </div>
+      </PanAndPinch>
     );
   }, []);
 }

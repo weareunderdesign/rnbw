@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { FC, ReactNode, useEffect, useRef, useState } from "react";
+import { Resize } from "./Resize";
 
 interface Props {
   children: ReactNode;
@@ -7,7 +8,7 @@ interface Props {
 
 const zoomFactor = { max: 5, min: 0.1 };
 
-const PanAndPinch: FC<Props> = (props) => {
+const PanAndPinch: FC<Props> = ({ children }) => {
   const [spacePressed, setSpacePressed] = useState(false);
   const [mouseKeyIsDown, setMouseKeyIsDown] = useState(false);
   const [transform, setTransform] = useState({ scale: 1, x: 0, y: 0 });
@@ -128,6 +129,8 @@ const PanAndPinch: FC<Props> = (props) => {
       case "mousemove":
         handleOnMouseMove(e.data);
         break;
+      default:
+        break;
     }
   };
 
@@ -171,7 +174,7 @@ const PanAndPinch: FC<Props> = (props) => {
             transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
           }}
         >
-          {props.children}
+          <Resize scale={transform.scale}>{children}</Resize>
         </div>
       </div>
     </div>

@@ -42,7 +42,6 @@
     "react-dom": "^18.2.0",
     "react-redux": "^7.2.9",
     "react-resizable-panels": "^2.0.3",
-    "react-rnd": "^10.4.11",
     "react-router-dom": "^6.9.0",
     "react-toastify": "^10.0.4",
     "react-top-loading-bar": "^2.3.1",

@@ -6,7 +6,7 @@
 }
 body,
 #CodeView *:hover,
-#StageView *:hover {
+#iframeId *:hover {
   cursor: default !important;
 }
 .target {
