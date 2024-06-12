@@ -30,6 +30,8 @@ const PanAndPinch: FC<Props> = ({ children }) => {
   };
 
   const handleOnWheel = (e: any) => {
+    e.isTrusted && e.preventDefault();
+
     if (e.ctrlKey || e.metaKey) {
       const newScale = transform.scale - e.deltaY / 100;
       if (newScale > zoomFactor.min && newScale < zoomFactor.max)
@@ -121,24 +123,26 @@ const PanAndPinch: FC<Props> = ({ children }) => {
   };
 
   useEffect(() => {
-    scrollableRef.current?.addEventListener(
-      "mousedown",
-      handleOnKeyMouseDown,
-      false,
-    );
-    scrollableRef.current?.addEventListener(
-      "mouseup",
-      handleOnKeyMouseUp,
-      false,
+    const scrollContainer = scrollableRef.current;
+    if (!scrollContainer) return;
+
+    scrollContainer.addEventListener("mousedown", handleOnKeyMouseDown, false);
+    scrollContainer.addEventListener("mouseup", handleOnKeyMouseUp, false);
+    scrollContainer.addEventListener(
+      "wheel",
+      (e) => {
+        if (e.ctrlKey) {
+          e.preventDefault(); // Prevent default zoom behavior
+        }
+        handleOnWheel(e);
+      },
+      { passive: false },
     );
     window.addEventListener("message", handleMessageFromIFrame, false);
 
     return () => {
-      scrollableRef.current?.removeEventListener(
-        "mousedown",
-        handleOnKeyMouseDown,
-      );
-      scrollableRef.current?.removeEventListener("mouseup", handleOnKeyMouseUp);
+      scrollContainer.removeEventListener("mousedown", handleOnKeyMouseDown);
+      scrollContainer.removeEventListener("mouseup", handleOnKeyMouseUp);
       window.removeEventListener("message", handleMessageFromIFrame);
     };
   }, [transform.scale]);
@@ -152,7 +156,6 @@ const PanAndPinch: FC<Props> = ({ children }) => {
         scrollbarColor: canvas ? "auto" : "unset",
       }}
       ref={scrollableRef}
-      onWheel={handleOnWheel}
       onMouseMove={handleOnMouseMove}
       onKeyDown={handleOnKeyDown}
       onKeyUp={handleOnKeyUp}

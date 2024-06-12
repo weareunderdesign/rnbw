@@ -78,6 +78,7 @@ export const IFrame = () => {
         //handlePanelsToggle should be called before onKeyDown as on onKeyDown the contentEditiable editing is set to false and the panels are toggled. But we don't need to toggle the panels if the user is editing the contentEditable
         handlePanelsToggle(e, eventListenersStatesRef);
         onKeyDown(e, eventListenersStatesRef);
+        // to ensure that the events between the iframe and the document are executed sequentially and smoothly, we use the postMessage function
         window.parent.postMessage(
           { type: "keydown", key: e.key, code: e.code },
           "*",
@@ -114,18 +115,25 @@ export const IFrame = () => {
         e.preventDefault();
         onKeyUp(e, eventListenersStatesRef);
       });
-      htmlNode.addEventListener("wheel", (event: WheelEvent) => {
-        window.parent.postMessage(
-          {
-            type: "wheel",
-            deltaX: event.deltaX,
-            deltaY: event.deltaY,
-            ctrlKey: event.ctrlKey,
-            metaKey: event.metaKey,
-          },
-          "*",
-        );
-      });
+      htmlNode.addEventListener(
+        "wheel",
+        (event: WheelEvent) => {
+          if (event.ctrlKey) {
+            event.preventDefault(); // Prevent default zoom behavior
+          }
+          window.parent.postMessage(
+            {
+              type: "wheel",
+              deltaX: event.deltaX,
+              deltaY: event.deltaY,
+              ctrlKey: event.ctrlKey,
+              metaKey: event.metaKey,
+            },
+            "*",
+          );
+        },
+        { passive: false },
+      );
       htmlNode.addEventListener("mousedown", (event) => {
         window.parent.postMessage(
           { type: "mousedown", which: event.which },
