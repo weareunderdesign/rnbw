@@ -44,10 +44,20 @@ body,
   list-style-type: none;
 }
 
+#root #NodeTreeView {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+#root #NodeTreeView::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
 #root #NodeTreeView ul > li,
 #root #FileTreeView ul > li {
   line-height: 100%;
   padding: 0px;
+  overflow: hidden;
 }
 
 /* cmdk modal */

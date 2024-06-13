@@ -578,6 +578,7 @@ export default function useElements() {
     }
 
     codeViewInstanceModel.setValue(helperModel.getValue());
+
     const targetPath = validNodeTree[focusedItem].uniqueNodePath;
     let movedNodePaths = sortedUids
       .slice(focusedNodeIndexInSortedUids + 1)
@@ -588,32 +589,60 @@ export default function useElements() {
       (path) => typeof path === "string",
     );
     if (!targetPath) return;
+
+    //we initialize the updatedTargetNodePath with the targetPath
     let updatedTargetNodePath = targetPath;
 
     let pathSubtractor = 1;
     let prevCommonPath = "";
+    /*Example:
+     Target Node Path: ROOT.html_1.body_2.div_1.div_1.div_9.div_2.div_1
+     Moved Node Path: ROOT.html_1.body_2.div_1.div_1.h2_4
+     */
     movedNodePaths.forEach((path) => {
       const movedPathArr = path.split(".");
+      //[ROOT,html_1,body_2,div_1,div_1, div_9, div_2, div_1]
       const targetPathArr = updatedTargetNodePath.split(".");
+      //[ROOT,html_1,body_2,div_1,div_1,h2_4]
       const movedPathLength = movedPathArr.length;
       const targetPathLength = targetPathArr.length;
+
+      /* We find minimum path length so that 
+      we only find the common path*/
+
       const minPathLength = Math.min(movedPathLength, targetPathLength);
       let commonPath = "";
+      //ROOT.html_1.body_2.div_1.div_1
+
+      /*we are trying to find the common path between the moved node 
+      and the target node to find the divergent node */
       for (let i = 0; i < minPathLength; i++) {
+        /* till the paths are the same 
+        we keep adding the path to the common path */
         if (movedPathArr[i] === targetPathArr[i]) {
           commonPath += `${movedPathArr[i]}.`;
         } else {
+          /* Divergent nodes are the nodes where 
+          both target and moved nodes are siblings */
           const divergentMovedNode = movedPathArr[i];
           const divergentTargetNode = targetPathArr[i];
 
+          /* We need to check if the diverged moved node is 
+          before the diverged target node*/
           const divergentMovedNodeIndex = parseInt(
             divergentMovedNode.split("_")[1],
           );
           let divergentTargetNodeIndex = parseInt(
             divergentTargetNode.split("_")[1],
           );
+
+          /* If the diverged moved node is before the diverged target node
+          we need to subtract the pathSubtractor from the diverged target node index */
           if (divergentMovedNodeIndex < divergentTargetNodeIndex) {
             let remainingPath = "";
+            //.div_2.div_1
+
+            /*When the diverged target node is not the last node*/
             if (i + 1 < targetPathLength) {
               remainingPath = `.${targetPathArr.slice(i + 1).join(".")}`;
             }
@@ -623,10 +652,17 @@ export default function useElements() {
               prevCommonPath = commonPath;
               pathSubtractor++;
             }
+
+            /* We update the diverged target node index by 
+            subtracting the pathSubtractor which is always 1 
+            if we are moving only 1 node */
             divergentTargetNodeIndex -= pathSubtractor;
 
-            const updatedDivergetNode = `${divergentTargetNode.split("_")[0]}_${divergentTargetNodeIndex}${remainingPath}`;
-            updatedTargetNodePath = `${commonPath}${updatedDivergetNode}`;
+            /* construct the uncommon path with updated divergent target node index */
+            const updatedDivergentNode = `${divergentTargetNode.split("_")[0]}_${divergentTargetNodeIndex}${remainingPath}`;
+
+            /* update the target node path with the updated divergent node */
+            updatedTargetNodePath = `${commonPath}${updatedDivergentNode}`;
           }
 
           break;
@@ -663,7 +699,7 @@ export default function useElements() {
 
   const updateEditableElement = useCallback(
     async (params: IupdateEditableElement) => {
-      const { eventListenerRef, contentEditableUid } = params;
+      const { eventListenerRef, contentEditableUid, eventSource } = params;
       const helperModel = getEditorModelWithCurrentCode();
       const iframeRef = eventListenerRef.current.iframeRefRef.current;
       const nodeTree = eventListenerRef.current.nodeTreeRef.current;
@@ -710,8 +746,10 @@ export default function useElements() {
       const code = helperModel.getValue();
       await dispatch(setIsContentProgrammaticallyChanged(true));
       codeViewInstanceModel.setValue(code);
-      const uniqueNodePath = focusedNode.uniqueNodePath;
-      uniqueNodePath && dispatch(setNeedToSelectNodePaths([uniqueNodePath]));
+      if (eventSource === "esc") {
+        const uniqueNodePath = focusedNode.uniqueNodePath;
+        uniqueNodePath && dispatch(setNeedToSelectNodePaths([uniqueNodePath]));
+      }
     },
     [codeViewInstanceModel],
   );

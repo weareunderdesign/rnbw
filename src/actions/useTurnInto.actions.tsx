@@ -10,7 +10,8 @@ const helperModel = editor.createModel("", "html");
 
 export default function useTurnInto() {
   const rnbw = useRnbw();
-  const { isPastingAllowed, sortUidsDsc } = useElementHelper();
+  const { isPastingAllowed, sortUidsDsc, findNodeToSelectAfterAction } =
+    useElementHelper();
 
   const selectedElements = rnbw.elements.getSelectedElements();
 
@@ -67,6 +68,14 @@ export default function useTurnInto() {
     }
     const code = helperModel.getValue();
     codeViewInstanceModel.setValue(code);
+
+    await findNodeToSelectAfterAction({
+      nodeUids: sortedUids,
+      action: {
+        type: "replace",
+        tagNames: [tagName],
+      },
+    });
   }
 
   const config = {

@@ -3,7 +3,7 @@ import { useDispatch } from "react-redux";
 
 import { setActivePanel } from "@_redux/main/processor";
 import { SVGIconI, SVGIconII, SVGIconIII } from "@_components/common";
-import { useAttributeHandler } from "./hooks/useAttributeHandler";
+
 import { Attribute, SettingsViewProps } from "../settingsPanel/types";
 import { useAppState } from "@_redux/useAppState";
 import useRnbw from "@_services/useRnbw";
@@ -16,7 +16,7 @@ export const SettingsView = ({
 
   const dispatch = useDispatch();
   const { activePanel } = useAppState();
-  const { changeAttribute } = useAttributeHandler();
+
   const rnbw = useRnbw();
 
   const handleChange = useCallback(
@@ -41,7 +41,7 @@ export const SettingsView = ({
       if (result?.settings && !result?.isSuccess)
         setAttributes(result.settings);
     },
-    [attributes, changeAttribute],
+    [attributes],
   );
 
   const cleanUpValue = useCallback(
@@ -133,9 +133,11 @@ export const SettingsView = ({
               style={{ textAlign: "end" }}
               value={(attributes[attribute] || "") as string}
               onBlur={() =>
-                changeAttribute({
-                  attrName: attribute,
-                  attrValue: attributes[attribute],
+                rnbw.elements.updateSettings({
+                  settings: {
+                    ...rnbw.elements.getElementSettings(),
+                    [attribute]: attributes[attribute],
+                  },
                 })
               }
               onChange={(e) => handleChange(e, attribute)}

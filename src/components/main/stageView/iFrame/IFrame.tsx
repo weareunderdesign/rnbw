@@ -19,6 +19,7 @@ import { useAppState } from "@_redux/useAppState";
 import { jss, styles } from "./constants";
 import { markSelectedElements } from "./helpers";
 import { useCmdk, useMouseEvents, useSyncNode } from "./hooks";
+import { setActivePanel } from "@_redux/main/processor";
 
 type AppStateReturnType = ReturnType<typeof useAppState>;
 export interface eventListenersStatesRefType extends AppStateReturnType {
@@ -195,6 +196,7 @@ export const IFrame = () => {
       });
       if (isIframeLoaded()) {
         dispatch(setIframeLoading(false));
+        dispatch(setActivePanel("stage"));
       }
     }
 
