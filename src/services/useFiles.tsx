@@ -98,11 +98,13 @@ export default function useFiles() {
       )
         return false;
 
-      const parentUid = fileTree[fFocusedItem].parentUid;
+      const focusedFileNode = fFocusedItem || "ROOT";
+      const parentUid = fileTree[focusedFileNode]?.parentUid || "ROOT";
+
       if (!parentUid) return null;
 
       const nodeData: TFileNodeData = {
-        ...fileTree[fFocusedItem].data,
+        ...fileTree[focusedFileNode]?.data,
         name: entityName,
         ext: extension,
         kind: "file",
@@ -174,7 +176,7 @@ export default function useFiles() {
       )
         return null;
 
-      const parentUid = fileTree[fFocusedItem].parentUid;
+      const parentUid = fileTree?.[fFocusedItem]?.parentUid;
       if (!parentUid) return null;
 
       const nodeData: TFileNodeData = {
@@ -188,7 +190,7 @@ export default function useFiles() {
         project.context === "idb"
           ? await generateNewNameForIDBDirectoryOrFile({
               nodeData,
-              targetNodeData: fileTree[parentUid].data,
+              targetNodeData: fileTree?.[parentUid]?.data,
             })
           : await getUniqueIndexedName({
               parentHandler,
