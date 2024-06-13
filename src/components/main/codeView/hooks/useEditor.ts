@@ -85,6 +85,11 @@ const useEditor = () => {
       formatOnPaste: true,
       formatOnType: true,
       tabCompletion: "on",
+      suggestOnTriggerCharacters: true,
+      acceptSuggestionOnEnter: "on",
+      inlineSuggest: { enabled: true },
+      quickSuggestions: true,
+      snippetSuggestions: "inline",
     }),
     [wordWrap],
   );
@@ -107,42 +112,24 @@ const useEditor = () => {
     (editor: editor.IStandaloneCodeEditor) => {
       setMonacoEditorRef(editor);
 
-      //override monaco-editor undo/redo
+      // override monaco-editor undo/redo
       editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyZ, () => {
-        const isHTML = fileTree[currentFileUid].data.ext === "html";
-        if (isHTML && AppstateRef.current.activePanel !== "code") {
-          setUndoRedoToggle((prev) => ({
-            action: "undo",
-            toggle: !prev.toggle,
-          }));
-        } else {
-          // default undo
-          editor.trigger("default", "undo", null);
-        }
+        setUndoRedoToggle((prev) => ({
+          action: "undo",
+          toggle: !prev.toggle,
+        }));
       });
       editor.addCommand(KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyZ, () => {
-        const isHTML = fileTree[currentFileUid].data.ext === "html";
-        if (isHTML && AppstateRef.current.activePanel !== "code") {
-          setUndoRedoToggle((prev) => ({
-            action: "redo",
-            toggle: !prev.toggle,
-          }));
-        } else {
-          // default redo
-          editor.trigger("default", "redo", null);
-        }
+        setUndoRedoToggle((prev) => ({
+          action: "redo",
+          toggle: !prev.toggle,
+        }));
       });
       editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyY, () => {
-        const isHTML = fileTree[currentFileUid].data.ext === "html";
-        if (isHTML && AppstateRef.current.activePanel !== "code") {
-          setUndoRedoToggle((prev) => ({
-            action: "redo",
-            toggle: !prev.toggle,
-          }));
-        } else {
-          // default redo
-          editor.trigger("default", "redo", null);
-        }
+        setUndoRedoToggle((prev) => ({
+          action: "redo",
+          toggle: !prev.toggle,
+        }));
       });
 
       editor.onDidChangeCursorPosition((event) => {

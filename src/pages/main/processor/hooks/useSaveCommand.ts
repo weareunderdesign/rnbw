@@ -22,6 +22,8 @@ export const useSaveCommand = () => {
   const { iframeRefRef } = useContext(MainContext);
 
   const refreshStageCSS = () => {
+    const fileType = fileTree[currentFileUid]?.data?.ext;
+    if (fileType !== "css") return;
     const iframe = iframeRefRef.current;
     const links = iframe?.contentDocument?.getElementsByTagName("link");
     if (!links) return;
