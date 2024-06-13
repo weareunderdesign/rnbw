@@ -36,6 +36,7 @@ const useEditor = () => {
     isContentProgrammaticallyChanged,
     currentFileUid,
     fileTree,
+    activePanel,
   } = useAppState();
   const {
     monacoEditorRef,
@@ -55,6 +56,7 @@ const useEditor = () => {
     isContentProgrammaticallyChanged,
     currentFileUid,
     fileTree,
+    activePanel,
   });
 
   // theme
@@ -106,24 +108,42 @@ const useEditor = () => {
       setMonacoEditorRef(editor);
 
       //override monaco-editor undo/redo
-      editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyZ, () =>
-        setUndoRedoToggle((prev) => ({
-          action: "undo",
-          toggle: !prev.toggle,
-        })),
-      );
-      editor.addCommand(KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyZ, () =>
-        setUndoRedoToggle((prev) => ({
-          action: "redo",
-          toggle: !prev.toggle,
-        })),
-      );
-      editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyY, () =>
-        setUndoRedoToggle((prev) => ({
-          action: "redo",
-          toggle: !prev.toggle,
-        })),
-      );
+      editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyZ, () => {
+        const isHTML = fileTree[currentFileUid].data.ext === "html";
+        if (isHTML && AppstateRef.current.activePanel !== "code") {
+          setUndoRedoToggle((prev) => ({
+            action: "undo",
+            toggle: !prev.toggle,
+          }));
+        } else {
+          // default undo
+          editor.trigger("default", "undo", null);
+        }
+      });
+      editor.addCommand(KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyZ, () => {
+        const isHTML = fileTree[currentFileUid].data.ext === "html";
+        if (isHTML && AppstateRef.current.activePanel !== "code") {
+          setUndoRedoToggle((prev) => ({
+            action: "redo",
+            toggle: !prev.toggle,
+          }));
+        } else {
+          // default redo
+          editor.trigger("default", "redo", null);
+        }
+      });
+      editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyY, () => {
+        const isHTML = fileTree[currentFileUid].data.ext === "html";
+        if (isHTML && AppstateRef.current.activePanel !== "code") {
+          setUndoRedoToggle((prev) => ({
+            action: "redo",
+            toggle: !prev.toggle,
+          }));
+        } else {
+          // default redo
+          editor.trigger("default", "redo", null);
+        }
+      });
 
       editor.onDidChangeCursorPosition((event) => {
         const selection = editor.getSelection();
@@ -216,6 +236,7 @@ const useEditor = () => {
       isContentProgrammaticallyChanged,
       currentFileUid,
       fileTree,
+      activePanel,
     };
   }, [
     _theme,
@@ -225,6 +246,7 @@ const useEditor = () => {
     isContentProgrammaticallyChanged,
     currentFileUid,
     fileTree,
+    activePanel,
   ]);
 
   // set default tab-size
