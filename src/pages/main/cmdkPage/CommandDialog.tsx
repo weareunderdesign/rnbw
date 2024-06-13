@@ -62,7 +62,7 @@ export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
   // hooks
   const cmdkReference = useCmdkReferenceData({ htmlReferenceData });
   const { importProject } = useHandlers();
-  const { validMenuItemCount, hoveredMenuItemDescription } = useCmdkModal();
+  const { validMenuItemCount } = useCmdkModal();
   const isRecent = useCallback(
     (groupName: string) => {
       return currentCmdkPage === "Jumpstart" && groupName === "Recent";
@@ -287,7 +287,7 @@ export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
         </div>
 
         {/* right panel */}
-        {currentCmdkPage !== "Search" && (
+        {currentCmdkPage === "Jumpstart" && (
           <>
             <div
               className="padding-m align-center border-left"
@@ -317,17 +317,6 @@ export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
                 </div>
               ))}
             </div>
-
-            {(currentCmdkPage === "Add" || currentCmdkPage === "Jumpstart") &&
-              false && (
-                <div
-                  className={`box align-center border-left padding-l text-l ${hoveredMenuItemDescription ? "" : "opacity-m"}`}
-                >
-                  {hoveredMenuItemDescription
-                    ? hoveredMenuItemDescription
-                    : "Description"}
-                </div>
-              )}
           </>
         )}
       </div>
