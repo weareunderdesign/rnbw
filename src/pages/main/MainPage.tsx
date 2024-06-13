@@ -85,9 +85,15 @@ export default function MainPage() {
       clearInterval(intervalRef.current);
     }
   }, []);
-
+  const handleOnWheel = (event: WheelEvent) => {
+    if (event.ctrlKey) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  };
   const addEventListeners = useCallback(() => {
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener("wheel", handleOnWheel, { passive: false });
     window.addEventListener("blur", handleBlurChange);
     window.addEventListener("focus", handleFocusChange);
     const contentWindow = iframeRefRef.current?.contentWindow;
@@ -104,6 +110,7 @@ export default function MainPage() {
 
   const removeEventListeners = useCallback(() => {
     document.removeEventListener("visibilitychange", handleVisibilityChange);
+    document.removeEventListener("wheel", handleOnWheel);
     window.removeEventListener("blur", handleBlurChange);
     window.removeEventListener("focus", handleFocusChange);
     const contentWindow = iframeRefRef.current?.contentWindow;

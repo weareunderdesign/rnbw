@@ -28,7 +28,7 @@ const PanAndPinch: FC<Props> = ({ children }) => {
     }));
   };
 
-  const handleOnWheel = (e: WheelEvent) => {
+  const onWheel = (e: WheelEvent) => {
     if (e.ctrlKey || e.metaKey) {
       const newScale = transform.scale - e.deltaY / 100;
       if (newScale > zoomFactor.min && newScale < zoomFactor.max)
@@ -99,9 +99,13 @@ const PanAndPinch: FC<Props> = ({ children }) => {
   };
 
   const handleMessageFromIFrame = (e: MessageEvent) => {
+    if (e.data.ctrlKey) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     switch (e.data.type) {
       case "wheel":
-        handleOnWheel(e.data);
+        onWheel(e.data);
         break;
       case "keydown":
         handleOnKeyDown(e.data);
@@ -119,6 +123,12 @@ const PanAndPinch: FC<Props> = ({ children }) => {
         break;
     }
   };
+  const handleOnWheel = (e: WheelEvent) => {
+    if (e.ctrlKey) {
+      e.preventDefault(); // Prevent default zoom behavior
+    }
+    onWheel(e);
+  };
 
   useEffect(() => {
     const scrollContainer = scrollableRef.current;
@@ -126,21 +136,15 @@ const PanAndPinch: FC<Props> = ({ children }) => {
 
     scrollContainer.addEventListener("mousedown", handleOnKeyMouseDown, false);
     scrollContainer.addEventListener("mouseup", handleOnKeyMouseUp, false);
-    scrollContainer.addEventListener(
-      "wheel",
-      (e) => {
-        if (e.ctrlKey) {
-          e.preventDefault(); // Prevent default zoom behavior
-        }
-        handleOnWheel(e);
-      },
-      { passive: false },
-    );
+    scrollContainer.addEventListener("wheel", handleOnWheel, {
+      passive: false,
+    });
     window.addEventListener("message", handleMessageFromIFrame, false);
 
     return () => {
       scrollContainer.removeEventListener("mousedown", handleOnKeyMouseDown);
       scrollContainer.removeEventListener("mouseup", handleOnKeyMouseUp);
+      scrollContainer.removeEventListener("wheel", handleOnWheel);
       window.removeEventListener("message", handleMessageFromIFrame);
     };
   }, [transform.scale]);
@@ -151,7 +155,7 @@ const PanAndPinch: FC<Props> = ({ children }) => {
         overflow: "scroll",
         width: "100%",
         height: "100%",
-        scrollbarColor: canvas ? "auto" : "unset",
+        scrollbarColor: canvas ? "auto transparent" : "unset",
       }}
       ref={scrollableRef}
       onMouseMove={handleOnMouseMove}
@@ -160,6 +164,7 @@ const PanAndPinch: FC<Props> = ({ children }) => {
       tabIndex={0}
     >
       <div
+        className="bg-secondary"
         style={{
           width: canvas ? `2000px` : "100%",
           height: canvas ? "2000px" : "100%",
