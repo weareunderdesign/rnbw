@@ -106,6 +106,16 @@ export const Resize: FC<ResizeProps> = ({ children, scale, canvas }) => {
     [],
   );
 
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (!canvas && panel) {
+      panel.style.height = "100%";
+      panel.style.width = "100%";
+      panel.style.top = "0px";
+      panel.style.left = "0";
+    }
+  }, [canvas]);
+
   const handleMessageFromIFrame = useCallback(
     (e: MessageEvent) => {
       switch (e.data.type) {

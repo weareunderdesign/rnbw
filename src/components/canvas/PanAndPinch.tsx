@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { FC, ReactNode, useEffect, useRef, useState } from "react";
 import { Resize } from "./Resize";
 
@@ -29,9 +28,7 @@ const PanAndPinch: FC<Props> = ({ children }) => {
     }));
   };
 
-  const handleOnWheel = (e: any) => {
-    e.isTrusted && e.preventDefault();
-
+  const handleOnWheel = (e: WheelEvent) => {
     if (e.ctrlKey || e.metaKey) {
       const newScale = transform.scale - e.deltaY / 100;
       if (newScale > zoomFactor.min && newScale < zoomFactor.max)
@@ -39,7 +36,9 @@ const PanAndPinch: FC<Props> = ({ children }) => {
     }
   };
 
-  const handleOnMouseMove = (e: any) => {
+  const handleOnMouseMove = (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+  ) => {
     if (spacePressed && mouseKeyIsDown && scrollableRef.current) {
       const deltaX = e.movementX;
       const deltaY = e.movementY;
@@ -48,7 +47,7 @@ const PanAndPinch: FC<Props> = ({ children }) => {
     }
   };
 
-  const handleOnKeyDown = (e: any) => {
+  const handleOnKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const { code, key, isTrusted } = e;
     if (code === "Space") {
       if (isTrusted) e.preventDefault();
@@ -87,22 +86,21 @@ const PanAndPinch: FC<Props> = ({ children }) => {
     setSpacePressed(false);
   };
 
-  const handleOnKeyMouseDown = (e: any) => {
+  const handleOnKeyMouseDown = (e: MouseEvent) => {
     if (e.which === 1) {
       setMouseKeyIsDown(true);
     }
   };
 
-  const handleOnKeyMouseUp = (e: any) => {
+  const handleOnKeyMouseUp = (e: MouseEvent) => {
     if (e.which === 1) {
       setMouseKeyIsDown(false);
     }
   };
 
-  const handleMessageFromIFrame = (e: any) => {
+  const handleMessageFromIFrame = (e: MessageEvent) => {
     switch (e.data.type) {
       case "wheel":
-        e.preventDefault();
         handleOnWheel(e.data);
         break;
       case "keydown":
@@ -161,10 +159,15 @@ const PanAndPinch: FC<Props> = ({ children }) => {
       onKeyUp={handleOnKeyUp}
       tabIndex={0}
     >
-      <div style={{ width: canvas ? "2000px" : "100%", height: "2000px" }}>
+      <div
+        style={{
+          width: canvas ? `2000px` : "100%",
+          height: canvas ? "2000px" : "100%",
+        }}
+      >
         <div
           style={{
-            width: "50vw",
+            width: canvas ? "50vw" : "100%",
             height: "100vh",
             transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
           }}
