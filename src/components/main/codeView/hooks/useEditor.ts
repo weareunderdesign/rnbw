@@ -36,6 +36,7 @@ const useEditor = () => {
     isContentProgrammaticallyChanged,
     currentFileUid,
     fileTree,
+    activePanel,
   } = useAppState();
   const {
     monacoEditorRef,
@@ -55,6 +56,7 @@ const useEditor = () => {
     isContentProgrammaticallyChanged,
     currentFileUid,
     fileTree,
+    activePanel,
   });
 
   // theme
@@ -83,6 +85,11 @@ const useEditor = () => {
       formatOnPaste: true,
       formatOnType: true,
       tabCompletion: "on",
+      suggestOnTriggerCharacters: true,
+      acceptSuggestionOnEnter: "on",
+      inlineSuggest: { enabled: true },
+      quickSuggestions: true,
+      snippetSuggestions: "inline",
     }),
     [wordWrap],
   );
@@ -105,25 +112,25 @@ const useEditor = () => {
     (editor: editor.IStandaloneCodeEditor) => {
       setMonacoEditorRef(editor);
 
-      //override monaco-editor undo/redo
-      editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyZ, () =>
+      // override monaco-editor undo/redo
+      editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyZ, () => {
         setUndoRedoToggle((prev) => ({
           action: "undo",
           toggle: !prev.toggle,
-        })),
-      );
-      editor.addCommand(KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyZ, () =>
+        }));
+      });
+      editor.addCommand(KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyZ, () => {
         setUndoRedoToggle((prev) => ({
           action: "redo",
           toggle: !prev.toggle,
-        })),
-      );
-      editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyY, () =>
+        }));
+      });
+      editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyY, () => {
         setUndoRedoToggle((prev) => ({
           action: "redo",
           toggle: !prev.toggle,
-        })),
-      );
+        }));
+      });
 
       editor.onDidChangeCursorPosition((event) => {
         const selection = editor.getSelection();
@@ -216,6 +223,7 @@ const useEditor = () => {
       isContentProgrammaticallyChanged,
       currentFileUid,
       fileTree,
+      activePanel,
     };
   }, [
     _theme,
@@ -225,6 +233,7 @@ const useEditor = () => {
     isContentProgrammaticallyChanged,
     currentFileUid,
     fileTree,
+    activePanel,
   ]);
 
   // set default tab-size

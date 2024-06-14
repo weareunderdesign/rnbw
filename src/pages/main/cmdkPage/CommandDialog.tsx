@@ -62,7 +62,7 @@ export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
   // hooks
   const cmdkReference = useCmdkReferenceData({ htmlReferenceData });
   const { importProject } = useHandlers();
-  const { validMenuItemCount, hoveredMenuItemDescription } = useCmdkModal();
+  const { validMenuItemCount } = useCmdkModal();
   const isRecent = useCallback(
     (groupName: string) => {
       return currentCmdkPage === "Jumpstart" && groupName === "Recent";
@@ -286,43 +286,39 @@ export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
           </div>
         </div>
 
-        <div
-          className="padding-m align-center border-left"
-          style={{ width: "200%" }}
-        >
-          {Object.keys(iconMappping).map((key, index) => (
+        {/* right panel */}
+        {currentCmdkPage === "Jumpstart" && (
+          <>
             <div
-              id={`label${index + 1}`}
-              className={
-                currentFocusedMenuItem.name === key
-                  ? "column justify-center align-center"
-                  : "hidden"
-              }
-              key={index}
+              className="padding-m align-center border-left"
+              style={{ width: "200%" }}
             >
-              <SVGIconIV
-                src={`${iconMappping?.[key as keyof typeof iconMappping]}`}
-                style={{ height: "160px", width: "160px" }}
-              />
+              {Object.keys(iconMappping).map((key, index) => (
+                <div
+                  id={`label${index + 1}`}
+                  className={
+                    currentFocusedMenuItem.name === key
+                      ? "column justify-center align-center"
+                      : "hidden"
+                  }
+                  key={index}
+                >
+                  <SVGIconIV
+                    src={`${iconMappping?.[key as keyof typeof iconMappping]}`}
+                    style={{ height: "160px", width: "160px" }}
+                  />
 
-              <div className="text-l padding-s">
-                {currentFocusedMenuItem.name}
-              </div>
-              <div className="text-m">{currentFocusedMenuItem.description}</div>
+                  <div className="text-l padding-s">
+                    {currentFocusedMenuItem.name}
+                  </div>
+                  <div className="text-m">
+                    {currentFocusedMenuItem.description}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-        {/* description - right panel */}
-        {(currentCmdkPage === "Add" || currentCmdkPage === "Jumpstart") &&
-          false && (
-            <div
-              className={`box align-center border-left padding-l text-l ${hoveredMenuItemDescription ? "" : "opacity-m"}`}
-            >
-              {hoveredMenuItemDescription
-                ? hoveredMenuItemDescription
-                : "Description"}
-            </div>
-          )}
+          </>
+        )}
       </div>
     </Command.Dialog>
   );

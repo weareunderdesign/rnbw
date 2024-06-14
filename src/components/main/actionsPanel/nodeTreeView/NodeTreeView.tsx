@@ -240,15 +240,6 @@ const NodeTreeView = () => {
                   }
                 } else {
                   props.context.selectItem();
-                  if (props.context.isExpanded) {
-                    dispatch(
-                      collapseNodeTreeNodes([props.item.index as TNodeUid]),
-                    );
-                  } else {
-                    dispatch(
-                      expandNodeTreeNodes([props.item.index as TNodeUid]),
-                    );
-                  }
                 }
 
                 activePanel !== "node" && dispatch(setActivePanel("node"));
@@ -329,6 +320,11 @@ const NodeTreeView = () => {
           renderItemArrow: ({ item, context }) => {
             const onClick = useCallback(() => {
               context.toggleExpandedState();
+              if (context.isExpanded) {
+                dispatch(collapseNodeTreeNodes([item.index as TNodeUid]));
+              } else {
+                dispatch(expandNodeTreeNodes([item.index as TNodeUid]));
+              }
             }, [context]);
 
             return (

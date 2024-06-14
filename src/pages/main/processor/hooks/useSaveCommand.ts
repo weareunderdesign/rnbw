@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useContext, useEffect } from "react";
 
 import { useDispatch } from "react-redux";
 
@@ -13,12 +13,30 @@ import { setCurrentCommand } from "@_redux/main/cmdk";
 import { addRunningAction, removeRunningAction } from "@_redux/main/processor";
 import { debounce } from "@_pages/main/helper";
 import { toast } from "react-toastify";
+import { MainContext } from "@_redux/main";
 
 export const useSaveCommand = () => {
   const dispatch = useDispatch();
   const { project, fileTree, currentFileUid, currentCommand, fileHandlers } =
     useAppState();
+  const { iframeRefRef } = useContext(MainContext);
 
+  const refreshStageCSS = () => {
+    const fileType = fileTree[currentFileUid]?.data?.ext;
+    if (fileType !== "css") return;
+    const iframe = iframeRefRef.current;
+    const links = iframe?.contentDocument?.getElementsByTagName("link");
+    if (!links) return;
+    for (let i = 0; i < links.length; i++) {
+      if (links[i].getAttribute("rel") == "stylesheet") {
+        const href = links[i]?.getAttribute("href")?.split("?")[0];
+
+        const newHref = href + "?version=" + new Date().getMilliseconds();
+
+        links[i].setAttribute("href", newHref);
+      }
+    }
+  };
   useEffect(() => {
     if (!currentCommand) return;
 
@@ -56,6 +74,7 @@ export const useSaveCommand = () => {
     }
     dispatch(removeRunningAction());
     dispatch(setFileTree(_ffTree as TFileNodeTreeData));
+    refreshStageCSS();
   }, [project, fileTree, fileHandlers, currentFileUid]);
 
   const onSaveProject = useCallback(async () => {}, []);

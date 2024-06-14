@@ -106,7 +106,7 @@ export const useFileHelpers = () => {
 
   const getParentHandler = (uid: string): FileSystemDirectoryHandle | null => {
     if (!uid) return fileHandlers[RootNodeUid] as FileSystemDirectoryHandle;
-    const parentUid = fileTree[uid].parentUid;
+    const parentUid = fileTree[uid]?.parentUid || "ROOT";
     if (!parentUid) return null;
     const parentNode = fileTree[parentUid];
     if (!parentNode) return null;

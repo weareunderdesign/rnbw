@@ -213,6 +213,7 @@ export const useCmdk = () => {
             await rnbw.elements.updateEditableElement({
               eventListenerRef,
               contentEditableUid,
+              eventSource: "esc",
             });
             action === "Save" &&
               dispatch(setCurrentCommand({ action: "SaveForce" }));

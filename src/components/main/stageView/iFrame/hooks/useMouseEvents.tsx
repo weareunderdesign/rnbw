@@ -156,6 +156,7 @@ export const useMouseEvents = () => {
         rnbw.elements.updateEditableElement({
           eventListenerRef,
           contentEditableUid,
+          eventSource: "click",
         });
       }
     },

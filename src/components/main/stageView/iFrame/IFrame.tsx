@@ -19,6 +19,7 @@ import { useAppState } from "@_redux/useAppState";
 import { jss, styles } from "./constants";
 import { markSelectedElements } from "./helpers";
 import { useCmdk, useMouseEvents, useSyncNode } from "./hooks";
+import { setActivePanel } from "@_redux/main/processor";
 
 type AppStateReturnType = ReturnType<typeof useAppState>;
 export interface eventListenersStatesRefType extends AppStateReturnType {
@@ -113,14 +114,6 @@ export const IFrame = () => {
         e.preventDefault();
         onKeyUp(e, eventListenersStatesRef);
       });
-
-      // window.addEventListener(
-      //   "wheel",
-      //   (e: WheelEvent) => handleWheel(e, eventListenersStatesRef),
-      //   {
-      //     passive: false,
-      //   },
-      // );
     },
     [
       onKeyDown,
@@ -173,6 +166,7 @@ export const IFrame = () => {
       });
       if (isIframeLoaded()) {
         dispatch(setIframeLoading(false));
+        dispatch(setActivePanel("stage"));
       }
     }
 

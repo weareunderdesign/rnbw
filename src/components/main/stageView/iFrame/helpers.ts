@@ -1,13 +1,4 @@
-import { editor } from "monaco-editor";
-
-import {
-  NodeActions,
-  StageNodeIdAttr,
-  TNodeTreeData,
-  TNodeUid,
-} from "@_node/index";
-import { AnyAction, Dispatch } from "@reduxjs/toolkit";
-import { setIsContentProgrammaticallyChanged } from "@_redux/main/reference";
+import { StageNodeIdAttr, TNodeTreeData, TNodeUid } from "@_node/index";
 
 export const getValidElementWithUid = (
   ele: HTMLElement,
@@ -110,52 +101,6 @@ export const unmarkHoverdElement = (
     ? (selectedElement = selectedElement?.firstElementChild)
     : null;
   selectedElement?.removeAttribute("rnbwdev-rnbw-element-hover");
-};
-
-export const editHtmlContent = ({
-  dispatch,
-  iframeRef,
-  nodeTree,
-  contentEditableUid,
-  codeViewInstanceModel,
-  formatCode,
-  cb,
-}: {
-  dispatch: Dispatch<AnyAction>;
-  iframeRef: HTMLIFrameElement;
-  nodeTree: TNodeTreeData;
-  contentEditableUid: TNodeUid;
-  codeViewInstanceModel: editor.ITextModel;
-  formatCode: boolean;
-  cb?: () => void;
-}) => {
-  const contentEditableElement =
-    iframeRef.contentWindow?.document.querySelector(
-      `[${StageNodeIdAttr}="${contentEditableUid}"]`,
-    ) as HTMLElement;
-
-  if (contentEditableElement) {
-    contentEditableElement.setAttribute("contenteditable", "false");
-    //the first \n is replaced by "" as the first line break that is by default added by the contenteditable
-    const content = contentEditableElement.innerHTML
-      .replace(/\n/, "")
-      .replace(
-        /data-rnbw-stage-node-id="\d+"|rnbwdev-rnbw-element-(select|hover)=""/g,
-        "",
-      );
-
-    dispatch(setIsContentProgrammaticallyChanged(true));
-    NodeActions.edit({
-      dispatch,
-      nodeTree,
-      targetUid: contentEditableUid,
-      content: content ? content : "",
-      codeViewInstanceModel,
-      formatCode,
-      fb: () => setIsContentProgrammaticallyChanged(false),
-      cb,
-    });
-  }
 };
 
 export const selectAllText = (
