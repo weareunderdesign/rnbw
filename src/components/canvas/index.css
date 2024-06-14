@@ -1,0 +1,85 @@
+.panel {
+  position: absolute;
+  border: 1px solid #000;
+  width: 100%;
+  height: 100%;
+}
+
+.panel__container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.resizer {
+  position: absolute;
+  background: transparent;
+}
+
+.top-left {
+  cursor: nwse-resize;
+  height: 10px;
+  width: 10px;
+  left: 0;
+  top: 0;
+  z-index: 1;
+}
+
+.top {
+  cursor: ns-resize;
+  height: 4px;
+  width: 100%;
+  left: 0;
+  top: 0;
+}
+
+.top-right {
+  cursor: nesw-resize;
+  height: 10px;
+  width: 10px;
+  right: 0;
+  top: 0;
+  z-index: 1;
+}
+
+.right {
+  cursor: ew-resize;
+  width: 4px;
+  height: 100%;
+  right: 0;
+  top: 0;
+}
+
+.bottom-left {
+  cursor: nesw-resize;
+  width: 10px;
+  height: 10px;
+  left: 0;
+  bottom: 0;
+  z-index: 1;
+}
+
+.bottom {
+  cursor: ns-resize;
+  width: 100%;
+  height: 4px;
+  bottom: 0;
+  left: 0;
+}
+
+.bottom-right {
+  cursor: nwse-resize;
+  width: 10px;
+  height: 10px;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+}
+
+.left {
+  cursor: ew-resize;
+  width: 4px;
+  height: 100%;
+  left: 0;
+  top: 0;
+}

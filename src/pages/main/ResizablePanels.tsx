@@ -4,6 +4,7 @@ import {
   PanelGroup,
   PanelResizeHandle,
   ImperativePanelHandle,
+  ImperativePanelGroupHandle,
 } from "react-resizable-panels";
 import { useAppState } from "@_redux/useAppState";
 import { ResizablePanelsProps } from "./types";
@@ -20,21 +21,38 @@ export default function ResizablePanels({
 }: ResizablePanelsProps) {
   const { showActionsPanel, showCodeView } = useAppState();
 
-  const [sizes, setSizes] = useState([actionsPanelWidth, 50, codeViewWidth]);
+  const [sizes, setSizes] = useState([actionsPanelWidth, codeViewWidth, 0]);
 
   const actionPanelRef = useRef<ImperativePanelHandle>(null);
   const codeViewRef = useRef<ImperativePanelHandle>(null);
+  const panelGroupRef = useRef<ImperativePanelGroupHandle>(null);
 
   useEffect(() => {
     showActionsPanel
-      ? actionPanelRef.current?.resize(actionsPanelWidth)
-      : actionPanelRef.current?.resize(0);
+      ? showCodeView
+        ? panelGroupRef.current?.setLayout([
+            actionsPanelWidth,
+            sizes[1],
+            100 - actionsPanelWidth - sizes[1],
+          ])
+        : actionPanelRef.current?.resize(actionsPanelWidth)
+      : showCodeView
+        ? panelGroupRef.current?.setLayout([0, sizes[1], 100 - sizes[1]])
+        : panelGroupRef.current?.setLayout([0, 0, 100]);
   }, [showActionsPanel]);
 
   useEffect(() => {
     showCodeView
-      ? codeViewRef.current?.resize(codeViewWidth)
-      : codeViewRef.current?.resize(0);
+      ? showActionsPanel
+        ? panelGroupRef.current?.setLayout([
+            sizes[0],
+            codeViewWidth,
+            100 - codeViewWidth - sizes[0],
+          ])
+        : codeViewRef.current?.resize(codeViewWidth)
+      : showActionsPanel
+        ? codeViewRef.current?.resize(0)
+        : panelGroupRef.current?.setLayout([0, 0, 100]);
   }, [showCodeView]);
 
   return (
@@ -47,33 +65,30 @@ export default function ResizablePanels({
         style={{ height: "100vh" }}
         onLayout={setSizes}
         direction="horizontal"
+        ref={panelGroupRef}
       >
         <Panel
           ref={actionPanelRef}
           defaultSize={sizes[0]}
-          minSize={showActionsPanel ? 5 : 0}
+          minSize={showActionsPanel ? 10 : 0}
           maxSize={50}
           order={1}
         >
           {showActionsPanel && actionPanel}
         </Panel>
-
         <PanelResizeHandle className="panel-resize" />
-
-        <Panel defaultSize={sizes[1]} minSize={30} order={2}>
-          {stageView}
-        </Panel>
-
-        <PanelResizeHandle className="panel-resize" />
-
         <Panel
           ref={codeViewRef}
-          defaultSize={sizes[2]}
-          minSize={showCodeView ? 5 : 0}
+          defaultSize={sizes[1]}
+          minSize={showCodeView ? 20 : 0}
           maxSize={50}
-          order={3}
+          order={2}
         >
           {codeView}
+        </Panel>
+        <PanelResizeHandle className="panel-resize" />
+        <Panel defaultSize={sizes[2]} minSize={30} order={3}>
+          {stageView}
         </Panel>
       </PanelGroup>
     </>
