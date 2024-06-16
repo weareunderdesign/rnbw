@@ -84,7 +84,6 @@ export const IFrame = () => {
           { type: "keydown", key: e.key, code: e.code },
           "*",
         );
-        e.preventDefault();
       });
 
       htmlNode.addEventListener("mouseenter", () => {
