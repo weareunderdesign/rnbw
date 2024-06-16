@@ -85,7 +85,12 @@ export default function ResizablePanels({
         >
           {codeView}
         </Panel>
-        <PanelResizeHandle className="panel-resize panel-resize-stage" />
+        <PanelResizeHandle
+          className={`panel-resize ${showCodeView ? "panel-resize-stage" : ""}`}
+          style={{
+            zIndex: 999,
+          }}
+        />
         <Panel defaultSize={sizes[2]} minSize={30} order={3}>
           {stageView}
         </Panel>
