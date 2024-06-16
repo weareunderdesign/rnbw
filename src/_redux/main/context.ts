@@ -7,6 +7,9 @@ export const MainContext: Context<TMainContext> = createContext<TMainContext>({
   setMaxNodeUidRef: () => {},
   monacoEditorRef: { current: null },
   setMonacoEditorRef: () => {},
+
+  contentEditableUidRef: { current: "" },
+  setContentEditableUidRef: () => {},
   iframeRefRef: { current: null },
   setIframeRefRef: () => {},
 

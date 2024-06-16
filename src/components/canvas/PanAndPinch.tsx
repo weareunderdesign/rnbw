@@ -1,5 +1,13 @@
-import React, { FC, ReactNode, useEffect, useRef, useState } from "react";
+import React, {
+  FC,
+  ReactNode,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Resize } from "./Resize";
+import { MainContext } from "@_redux/main";
 
 interface Props {
   children: ReactNode;
@@ -14,6 +22,8 @@ const PanAndPinch: FC<Props> = ({ children }) => {
   const [transform, setTransform] = useState({ scale: 1, x: 0, y: 0 });
   const scrollableRef = useRef<HTMLDivElement>(null);
   const [canvas, setCanvas] = useState(false);
+
+  const { contentEditableUidRef } = useContext(MainContext);
 
   useEffect(() => {
     if (transform.scale != 1) {
@@ -49,6 +59,7 @@ const PanAndPinch: FC<Props> = ({ children }) => {
 
   const handleOnKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const { code, key, isTrusted } = e;
+    if (contentEditableUidRef.current) return;
     if (code === "Space") {
       if (isTrusted) e.preventDefault();
       setSpacePressed(true);

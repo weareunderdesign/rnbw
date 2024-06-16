@@ -13,7 +13,7 @@ import Processor from "./processor";
 import ResizablePanels from "./ResizablePanels";
 import { debounce } from "./helper";
 import { CommandDialog } from "./cmdkPage/CommandDialog";
-import { TValidNodeUid } from "@_node/index";
+import { TNodeUid, TValidNodeUid } from "@_node/index";
 
 export default function MainPage() {
   // redux
@@ -39,6 +39,11 @@ export default function MainPage() {
   const maxNodeUidRef = React.useRef<TValidNodeUid>(0);
   const setMaxNodeUidRef = (maxNodeUid: TValidNodeUid) => {
     maxNodeUidRef.current = maxNodeUid;
+  };
+
+  const contentEditableUidRef = React.useRef<TNodeUid>("");
+  const setContentEditableUidRef = (uid: TNodeUid) => {
+    contentEditableUidRef.current = uid;
   };
 
   const INTERVAL_TIMER = 2000;
@@ -141,6 +146,10 @@ export default function MainPage() {
 
           monacoEditorRef,
           setMonacoEditorRef,
+
+          contentEditableUidRef,
+          setContentEditableUidRef,
+
           iframeRefRef,
           setIframeRefRef,
 

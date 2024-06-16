@@ -37,13 +37,14 @@ export const IFrame = () => {
   const [iframeRefState, setIframeRefState] =
     useState<HTMLIFrameElement | null>(null);
   const [document, setDocument] = useState<Document | string | undefined>("");
-  const contentEditableUidRef = useRef<TNodeUid>("");
+
   const isEditingRef = useRef(false);
   const dispatch = useDispatch();
   const appState: AppStateReturnType = useAppState();
   const { nodeTree, project, validNodeTree, iframeSrc, renderableFileUid } =
     appState;
-  const { iframeRefRef, setIframeRefRef } = useContext(MainContext);
+  const { iframeRefRef, setIframeRefRef, contentEditableUidRef } =
+    useContext(MainContext);
   // hooks
   const { nodeTreeRef, hoveredItemRef, selectedItemsRef } =
     useSyncNode(iframeRefState);
