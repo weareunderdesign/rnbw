@@ -73,6 +73,9 @@ export default function ResizablePanels({
           minSize={showActionsPanel ? 10 : 0}
           maxSize={50}
           order={1}
+          style={{
+            minWidth: showActionsPanel ? "240px" : "0",
+          }}
         >
           {showActionsPanel && actionPanel}
         </Panel>
