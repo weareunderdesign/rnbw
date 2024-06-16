@@ -10,7 +10,7 @@ import { useAppState } from "@_redux/useAppState";
 import { ResizablePanelsProps } from "./types";
 
 const actionsPanelWidth = 10;
-const codeViewWidth = 50;
+const codeViewWidth = 30;
 
 export default function ResizablePanels({
   actionPanel,
@@ -61,7 +61,6 @@ export default function ResizablePanels({
 
       <PanelGroup
         style={{ height: "100vh" }}
-        onLayout={setSizes}
         direction="horizontal"
         ref={panelGroupRef}
       >
@@ -73,6 +72,9 @@ export default function ResizablePanels({
           style={{
             minWidth: showActionsPanel ? "240px" : 0,
           }}
+          onResize={(size) => {
+            setSizes([size, sizes[1], sizes[2]]);
+          }}
         >
           {showActionsPanel && actionPanel}
         </Panel>
@@ -80,18 +82,28 @@ export default function ResizablePanels({
         <Panel
           ref={codeViewRef}
           defaultSize={sizes[1]}
-          minSize={showCodeView ? 20 : 0}
+          minSize={showCodeView ? 10 : 0}
           order={2}
+          style={{
+            minWidth: showCodeView ? "480px" : 0,
+          }}
+          onResize={(size) => {
+            setSizes([sizes[0], size, sizes[2]]);
+          }}
         >
           {codeView}
         </Panel>
         <PanelResizeHandle
           className={`panel-resize ${showCodeView ? "panel-resize-stage" : ""}`}
-          style={{
-            zIndex: 999,
-          }}
         />
-        <Panel defaultSize={sizes[2]} minSize={30} order={3}>
+        <Panel
+          defaultSize={sizes[2]}
+          minSize={30}
+          order={3}
+          onResize={(size) => {
+            setSizes([sizes[0], sizes[1], size]);
+          }}
+        >
           {stageView}
         </Panel>
       </PanelGroup>

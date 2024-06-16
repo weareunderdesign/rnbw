@@ -172,7 +172,7 @@ body,
 }
 
 .panel-resize-stage {
-  width: 1px;
+  width: 3px;
 }
 .panel-resize-vertical {
   height: 1px;
