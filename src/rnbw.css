@@ -170,6 +170,10 @@ body,
 .panel-resize {
   width: 0;
 }
+
+.panel-resize-stage {
+  width: 2px;
+}
 .panel-resize-vertical {
   height: 1px;
 }
