@@ -85,7 +85,7 @@ export default function ResizablePanels({
           minSize={showCodeView ? 10 : 0}
           order={2}
           style={{
-            minWidth: showCodeView ? "480px" : 0,
+            minWidth: showCodeView ? "256px" : 0,
           }}
           onResize={(size) => {
             setSizes([sizes[0], size, sizes[2]]);
