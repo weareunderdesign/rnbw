@@ -33,6 +33,8 @@ const iconMappping = {
   Community: "/images/jumpstart/community.svg",
   Theme: "/images/jumpstart/theme.svg",
   Autosave: "/images/jumpstart/autosave.svg",
+  Download: "/images/jumpstart/download.svg",
+  Save: "/images/jumpstart/save.svg",
   "Code Wrap": "/images/jumpstart/formatcode.svg",
   Recent: "/images/jumpstart/open.svg",
   files: "/images/jumpstart/page.svg",
