@@ -109,11 +109,27 @@ export default function useElements() {
     const node = validNodeTree[uid];
     let code = "";
     if (node) {
-      const { endCol, endLine } = node.data.sourceCodeLocation;
+      if (node.displayName === "html" || node.displayName === "head") {
+        toast.error("Adding not allowed");
+        return;
+      }
+
+      let rangeEndColumn = node.data.sourceCodeLocation.endCol;
+      let rangeEndLine = node.data.sourceCodeLocation.endLine;
+      if (node.displayName === "body") {
+        rangeEndColumn = node.data.sourceCodeLocation.startTag.endCol;
+        rangeEndLine = node.data.sourceCodeLocation.startTag.endLine;
+      }
+
       const text = `${codeViewText}`;
       codeViewText = await PrettyCode({ code: codeViewText });
       const edit = {
-        range: new Range(endLine, endCol, endLine, endCol),
+        range: new Range(
+          rangeEndLine,
+          rangeEndColumn,
+          rangeEndLine,
+          rangeEndColumn,
+        ),
         text,
       };
 
