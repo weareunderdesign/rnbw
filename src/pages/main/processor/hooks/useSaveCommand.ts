@@ -30,6 +30,9 @@ export const useSaveCommand = () => {
     for (let i = 0; i < links.length; i++) {
       if (links[i].getAttribute("rel") == "stylesheet") {
         const href = links[i]?.getAttribute("href")?.split("?")[0];
+        //if href contains online link, don't refresh
+        if (!href) return;
+        if (href.includes("http")) return;
 
         const newHref = href + "?version=" + new Date().getMilliseconds();
 
@@ -37,6 +40,7 @@ export const useSaveCommand = () => {
       }
     }
   };
+
   useEffect(() => {
     if (!currentCommand) return;
 
