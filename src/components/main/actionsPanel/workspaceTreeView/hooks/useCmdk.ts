@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { AddFileActionPrefix } from "@_constants/main";
 import { isAddFileAction } from "@_node/helpers";
@@ -11,8 +11,13 @@ export const useCmdk = () => {
   const { activePanel, currentCommand } = useAppState();
   const rnbw = useRnbw();
 
+  const activePanelRef = useRef(activePanel);
+
   const { onAdd } = useNodeActionsHandler();
 
+  useEffect(() => {
+    activePanelRef.current = activePanel;
+  }, [activePanel]);
   useEffect(() => {
     if (!currentCommand) return;
 
@@ -22,7 +27,7 @@ export const useCmdk = () => {
       return;
     }
 
-    if (activePanel !== "file") return;
+    if (activePanelRef.current !== "file") return;
 
     switch (currentCommand.action) {
       case "Delete":
