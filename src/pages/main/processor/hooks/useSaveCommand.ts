@@ -66,6 +66,9 @@ export const useSaveCommand = () => {
     if (fileData?.changed) {
       try {
         await saveFileContent(project, fileHandlers, currentFileUid, fileData);
+        if (fileData?.ext === "css") {
+          refreshStageCSS();
+        }
       } catch (err) {
         toast.error("An error occurred while saving the file");
         console.error(err);
@@ -78,7 +81,6 @@ export const useSaveCommand = () => {
     }
     dispatch(removeRunningAction());
     dispatch(setFileTree(_ffTree as TFileNodeTreeData));
-    refreshStageCSS();
   }, [project, fileTree, fileHandlers, currentFileUid]);
 
   const onSaveProject = useCallback(async () => {}, []);

@@ -79,6 +79,14 @@ export default function MainPage() {
         document.visibilityState === "visible" &&
         !fileTree[currentFileUid]?.data?.changed
       ) {
+        if (
+          !window.document.activeElement?.isEqualNode(
+            prevFocusedElement.current,
+          )
+        ) {
+          intervalRef.current && clearInterval(intervalRef.current);
+          return;
+        }
         debouncedCurrentProjectReload();
       }
     }, INTERVAL_TIMER);
