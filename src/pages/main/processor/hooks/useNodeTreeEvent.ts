@@ -209,14 +209,63 @@ export const useNodeTreeEvent = () => {
                   needsReload = true;
                 } else {
                   for (let i = 0; i < oldElementsArray.length; i++) {
-                    if (!oldElementsArray[i].isEqualNode(newElements[i])) {
+                    const oldEl = oldElementsArray[i] as
+                      | HTMLScriptElement
+                      | HTMLLinkElement;
+                    const newEl = newElements[i] as
+                      | HTMLScriptElement
+                      | HTMLLinkElement;
+
+                    // Compare attributes except 'src' for scripts and 'href' for links
+                    const oldAttrs = Array.from(oldEl.attributes).filter(
+                      (attr) =>
+                        attr.name !== "rnbwdev-rnbw-element-select" &&
+                        attr.name !== "rnbwdev-rnbw-element-hover",
+                    );
+                    const newAttrs = Array.from(newEl.attributes).filter(
+                      (attr) =>
+                        attr.name !== "rnbwdev-rnbw-element-select" &&
+                        attr.name !== "rnbwdev-rnbw-element-hover",
+                    );
+
+                    if (oldAttrs.length !== newAttrs.length) {
+                      needsReload = true;
+                      break;
+                    }
+
+                    const isDifferent = oldAttrs.some((attr) => {
+                      if (attr.name === "src" || attr.name === "href") {
+                        // Compare only the path part of the URL, ignoring query parameters
+                        // const oldUrl = new URL(
+                        //   attr.value,
+                        //   window.location.origin,
+                        // );
+                        // const newUrl = new URL(
+                        //   newEl.getAttribute(attr.name) || "",
+                        //   window.location.origin,
+                        // );
+                        // return oldUrl.pathname !== newUrl.pathname;
+                        return false;
+                      }
+                      return attr.value !== newEl.getAttribute(attr.name);
+                    });
+
+                    if (isDifferent) {
+                      needsReload = true;
+                      break;
+                    }
+
+                    // For scripts, also compare the inline content
+                    if (
+                      tagName === "script" &&
+                      oldEl.innerHTML !== newEl.innerHTML
+                    ) {
                       needsReload = true;
                       break;
                     }
                   }
                 }
               });
-
               if (needsReload) {
                 // If we need to reload, update the iframe src
                 const iframeSrc = iframe.src.split("?")[0] + "?t=" + Date.now();
@@ -233,13 +282,25 @@ export const useNodeTreeEvent = () => {
                     }
                     return null;
                   },
-                  onBeforeElUpdated: function (fromEl) {
+                  onBeforeElUpdated: function (fromEl, toEl) {
                     // Skip updating script and link elements
                     if (
                       fromEl.nodeName === "SCRIPT" ||
                       fromEl.nodeName === "LINK"
                     ) {
                       return false;
+                    }
+
+                    if (toEl.nodeName.includes("-")) return false;
+                    if (toEl.nodeName === "HTML") {
+                      //copy the attributes
+                      for (let i = 0; i < fromEl.attributes.length; i++) {
+                        toEl.setAttribute(
+                          fromEl.attributes[i].name,
+                          fromEl.attributes[i].value,
+                        );
+                      }
+                      if (fromEl.isEqualNode(toEl)) return false;
                     }
                     return true;
                   },
@@ -256,6 +317,17 @@ export const useNodeTreeEvent = () => {
                       return false;
                     }
                     return true;
+                  },
+                  onElUpdated: function (el) {
+                    if (el.nodeName === "HTML") {
+                      //copy the attributes
+                      for (let i = 0; i < el.attributes.length; i++) {
+                        iframeHtml.setAttribute(
+                          el.attributes[i].name,
+                          el.attributes[i].value,
+                        );
+                      }
+                    }
                   },
                 });
                 isCodeErrorsExist.current = false;
