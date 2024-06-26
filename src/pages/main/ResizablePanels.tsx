@@ -4,14 +4,13 @@ import {
   PanelGroup,
   PanelResizeHandle,
   ImperativePanelHandle,
+  ImperativePanelGroupHandle,
 } from "react-resizable-panels";
 import { useAppState } from "@_redux/useAppState";
 import { ResizablePanelsProps } from "./types";
 
-const actionsPanelPx = 240;
-const containerWidth = document.documentElement.clientWidth;
-const actionsPanelWidth = (actionsPanelPx / containerWidth) * 100;
-const codeViewWidth = 50 - actionsPanelWidth;
+const actionsPanelWidth = 10;
+const codeViewWidth = 30;
 
 export default function ResizablePanels({
   actionPanel,
@@ -20,21 +19,38 @@ export default function ResizablePanels({
 }: ResizablePanelsProps) {
   const { showActionsPanel, showCodeView } = useAppState();
 
-  const [sizes, setSizes] = useState([actionsPanelWidth, 50, codeViewWidth]);
+  const [sizes, setSizes] = useState([actionsPanelWidth, codeViewWidth, 0]);
 
   const actionPanelRef = useRef<ImperativePanelHandle>(null);
   const codeViewRef = useRef<ImperativePanelHandle>(null);
+  const panelGroupRef = useRef<ImperativePanelGroupHandle>(null);
 
   useEffect(() => {
     showActionsPanel
-      ? actionPanelRef.current?.resize(actionsPanelWidth)
-      : actionPanelRef.current?.resize(0);
+      ? showCodeView
+        ? panelGroupRef.current?.setLayout([
+            actionsPanelWidth,
+            sizes[1],
+            100 - actionsPanelWidth - sizes[1],
+          ])
+        : actionPanelRef.current?.resize(actionsPanelWidth)
+      : showCodeView
+        ? panelGroupRef.current?.setLayout([0, sizes[1], 100 - sizes[1]])
+        : panelGroupRef.current?.setLayout([0, 0, 100]);
   }, [showActionsPanel]);
 
   useEffect(() => {
     showCodeView
-      ? codeViewRef.current?.resize(codeViewWidth)
-      : codeViewRef.current?.resize(0);
+      ? showActionsPanel
+        ? panelGroupRef.current?.setLayout([
+            sizes[0],
+            codeViewWidth,
+            100 - codeViewWidth - sizes[0],
+          ])
+        : codeViewRef.current?.resize(codeViewWidth)
+      : showActionsPanel
+        ? codeViewRef.current?.resize(0)
+        : panelGroupRef.current?.setLayout([0, 0, 100]);
   }, [showCodeView]);
 
   return (
@@ -45,35 +61,50 @@ export default function ResizablePanels({
 
       <PanelGroup
         style={{ height: "100vh" }}
-        onLayout={setSizes}
         direction="horizontal"
+        ref={panelGroupRef}
       >
         <Panel
           ref={actionPanelRef}
           defaultSize={sizes[0]}
-          minSize={showActionsPanel ? 5 : 0}
-          maxSize={50}
+          minSize={showActionsPanel ? 10 : 0}
           order={1}
+          style={{
+            minWidth: showActionsPanel ? "240px" : 0,
+          }}
+          onResize={(size) => {
+            setSizes([size, sizes[1], sizes[2]]);
+          }}
         >
           {showActionsPanel && actionPanel}
         </Panel>
-
         <PanelResizeHandle className="panel-resize" />
-
-        <Panel defaultSize={sizes[1]} minSize={30} order={2}>
-          {stageView}
-        </Panel>
-
-        <PanelResizeHandle className="panel-resize" />
-
         <Panel
           ref={codeViewRef}
-          defaultSize={sizes[2]}
-          minSize={showCodeView ? 5 : 0}
-          maxSize={50}
-          order={3}
+          defaultSize={sizes[1]}
+          minSize={showCodeView ? 10 : 0}
+          order={2}
+          style={{
+            minWidth: showCodeView ? "256px" : 0,
+          }}
+          onResize={(size) => {
+            setSizes([sizes[0], size, sizes[2]]);
+          }}
         >
           {codeView}
+        </Panel>
+        <PanelResizeHandle
+          className={`panel-resize ${showCodeView ? "panel-resize-stage" : ""}`}
+        />
+        <Panel
+          defaultSize={sizes[2]}
+          minSize={30}
+          order={3}
+          onResize={(size) => {
+            setSizes([sizes[0], sizes[1], size]);
+          }}
+        >
+          {stageView}
         </Panel>
       </PanelGroup>
     </>

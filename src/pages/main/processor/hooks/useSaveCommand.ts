@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect } from "react";
+import { useCallback, useContext, useEffect, useRef } from "react";
 
 import { useDispatch } from "react-redux";
 
@@ -19,7 +19,9 @@ export const useSaveCommand = () => {
   const dispatch = useDispatch();
   const { project, fileTree, currentFileUid, currentCommand, fileHandlers } =
     useAppState();
+
   const { iframeRefRef } = useContext(MainContext);
+  const isSaving = useRef(false);
 
   const refreshStageCSS = () => {
     const fileType = fileTree[currentFileUid]?.data?.ext;
@@ -30,6 +32,9 @@ export const useSaveCommand = () => {
     for (let i = 0; i < links.length; i++) {
       if (links[i].getAttribute("rel") == "stylesheet") {
         const href = links[i]?.getAttribute("href")?.split("?")[0];
+        //if href contains online link, don't refresh
+        if (!href) return;
+        if (href.includes("http")) return;
 
         const newHref = href + "?version=" + new Date().getMilliseconds();
 
@@ -37,12 +42,14 @@ export const useSaveCommand = () => {
       }
     }
   };
+
   useEffect(() => {
     if (!currentCommand) return;
 
-    switch (currentCommand?.action) {
+    const action = currentCommand.action;
+    switch (action) {
       case "Save":
-        onSaveCurrentFile();
+        if (!isSaving.current) onSaveCurrentFile();
         break;
       case "SaveAll":
         onSaveProject();
@@ -61,10 +68,23 @@ export const useSaveCommand = () => {
     dispatch(addRunningAction());
     if (fileData?.changed) {
       try {
+        isSaving.current = true;
         await saveFileContent(project, fileHandlers, currentFileUid, fileData);
+        if (fileData?.ext === "css") {
+          refreshStageCSS();
+        } else if (fileData?.ext === "js") {
+          //replace iframe src
+          // If we need to reload, update the iframe src
+          const iframe = iframeRefRef.current;
+          if (!iframe) return;
+          const iframeSrc = iframe.src.split("?")[0] + "?t=" + Date.now();
+          iframe.src = iframeSrc;
+        }
       } catch (err) {
         toast.error("An error occurred while saving the file");
         console.error(err);
+      } finally {
+        isSaving.current = false;
       }
 
       while (file) {
@@ -74,7 +94,6 @@ export const useSaveCommand = () => {
     }
     dispatch(removeRunningAction());
     dispatch(setFileTree(_ffTree as TFileNodeTreeData));
-    refreshStageCSS();
   }, [project, fileTree, fileHandlers, currentFileUid]);
 
   const onSaveProject = useCallback(async () => {}, []);

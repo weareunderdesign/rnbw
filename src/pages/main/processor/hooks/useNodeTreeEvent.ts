@@ -68,7 +68,6 @@ export const useNodeTreeEvent = () => {
     validNodeTree,
     needToSelectCode,
     nExpandedItemsObj,
-    syncConfigs,
     nodeEventPast,
     didUndo,
     didRedo,
@@ -188,86 +187,155 @@ export const useNodeTreeEvent = () => {
               dispatch(removeRunningAction());
               return;
             }
+
             try {
-              morphdom(iframeHtml, updatedHtml, {
-                getNodeKey: (node: Node) => {
-                  // Use data-rnbw-stage-node-id attribute as the key instead id
-                  if (node instanceof HTMLElement && node?.hasAttribute("id")) {
-                    return node?.getAttribute(StageNodeIdAttr);
-                  }
-                  return null;
-                },
-                onBeforeElUpdated: function (fromEl, toEl) {
-                  //check if the node is script or style
-                  if (
-                    fromEl.nodeName === "SCRIPT" ||
-                    fromEl.nodeName === "LINK" ||
-                    fromEl.nodeName === "STYLE"
-                  ) {
-                    return false;
-                  }
-                  const fromElRnbwId = fromEl.getAttribute(StageNodeIdAttr);
+              const parser = new DOMParser();
+              const newDoc = parser.parseFromString(
+                updatedHtml as string,
+                "text/html",
+              );
 
-                  if (toEl.nodeName.includes("-")) return false;
-                  if (
-                    syncConfigs?.matchIds &&
-                    !!fromElRnbwId &&
-                    syncConfigs.matchIds.includes(fromElRnbwId)
-                  ) {
-                    return true;
-                  } else if (fromEl.isEqualNode(toEl)) {
-                    return false;
-                  } else if (toEl.nodeName === "HTML") {
-                    //copy the attributes
-                    for (let i = 0; i < fromEl.attributes.length; i++) {
-                      toEl.setAttribute(
-                        fromEl.attributes[i].name,
-                        fromEl.attributes[i].value,
-                      );
-                    }
-                    if (fromEl.isEqualNode(toEl)) return false;
-                  }
-                  return true;
-                },
-                onElUpdated: function (el) {
-                  if (el.nodeName === "HTML") {
-                    //copy the attributes
-                    for (let i = 0; i < el.attributes.length; i++) {
-                      iframeHtml.setAttribute(
-                        el.attributes[i].name,
-                        el.attributes[i].value,
-                      );
-                    }
-                  }
-                },
-                onBeforeNodeDiscarded: function (node: Node) {
-                  const elementNode = node as Element;
-                  let ifPreserveNode = false;
-                  if (elementNode.getAttribute) {
-                    const preserveAttr =
-                      elementNode.getAttribute(PreserveRnbwNode);
-                    const RnbwId = elementNode.getAttribute(StageNodeIdAttr);
-                    ifPreserveNode = !!preserveAttr || !RnbwId;
-                  }
-                  if (ifPreserveNode) {
-                    return false;
-                  }
-                  // script and style should not be discarded
-                  if (
-                    elementNode.nodeName === "SCRIPT" ||
-                    elementNode.nodeName === "LINK" ||
-                    elementNode.nodeName === "STYLE"
-                  ) {
-                    return false;
-                  }
+              let needsReload = false;
 
-                  return true;
-                },
+              // Compare scripts and links
+              ["script", "link"].forEach((tagName) => {
+                const oldElements = iframeHtml.getElementsByTagName(tagName);
+                const oldElementsArray = Array.from(oldElements).filter(
+                  (el) => !el.hasAttribute(PreserveRnbwNode),
+                );
+
+                const newElements = newDoc.getElementsByTagName(tagName);
+                if (oldElementsArray.length !== newElements.length) {
+                  needsReload = true;
+                } else {
+                  for (let i = 0; i < oldElementsArray.length; i++) {
+                    const oldEl = oldElementsArray[i] as
+                      | HTMLScriptElement
+                      | HTMLLinkElement;
+                    const newEl = newElements[i] as
+                      | HTMLScriptElement
+                      | HTMLLinkElement;
+
+                    // Compare attributes except 'src' for scripts and 'href' for links
+                    const oldAttrs = Array.from(oldEl.attributes).filter(
+                      (attr) =>
+                        attr.name !== "rnbwdev-rnbw-element-select" &&
+                        attr.name !== "rnbwdev-rnbw-element-hover",
+                    );
+                    const newAttrs = Array.from(newEl.attributes).filter(
+                      (attr) =>
+                        attr.name !== "rnbwdev-rnbw-element-select" &&
+                        attr.name !== "rnbwdev-rnbw-element-hover",
+                    );
+
+                    if (oldAttrs.length !== newAttrs.length) {
+                      needsReload = true;
+                      break;
+                    }
+
+                    const isDifferent = oldAttrs.some((attr) => {
+                      if (attr.name === "src" || attr.name === "href") {
+                        // Compare only the path part of the URL, ignoring query parameters
+                        // const oldUrl = new URL(
+                        //   attr.value,
+                        //   window.location.origin,
+                        // );
+                        // const newUrl = new URL(
+                        //   newEl.getAttribute(attr.name) || "",
+                        //   window.location.origin,
+                        // );
+                        // return oldUrl.pathname !== newUrl.pathname;
+                        return false;
+                      }
+                      return attr.value !== newEl.getAttribute(attr.name);
+                    });
+
+                    if (isDifferent) {
+                      needsReload = true;
+                      break;
+                    }
+
+                    // For scripts, also compare the inline content
+                    if (
+                      tagName === "script" &&
+                      oldEl.innerHTML !== newEl.innerHTML
+                    ) {
+                      needsReload = true;
+                      break;
+                    }
+                  }
+                }
               });
+              if (needsReload) {
+                // If we need to reload, update the iframe src
+                const iframeSrc = iframe.src.split("?")[0] + "?t=" + Date.now();
+                iframe.src = iframeSrc;
+              } else {
+                // If no reload is needed, use morphdom for other updates
+                morphdom(iframeHtml, newDoc.documentElement, {
+                  getNodeKey: (node: Node) => {
+                    if (
+                      node instanceof HTMLElement &&
+                      node?.hasAttribute("id")
+                    ) {
+                      return node?.getAttribute(StageNodeIdAttr);
+                    }
+                    return null;
+                  },
+                  onBeforeElUpdated: function (fromEl, toEl) {
+                    // Skip updating script and link elements
+                    if (
+                      fromEl.nodeName === "SCRIPT" ||
+                      fromEl.nodeName === "LINK"
+                    ) {
+                      return false;
+                    }
+
+                    if (toEl.nodeName.includes("-")) return false;
+                    if (toEl.nodeName === "HTML") {
+                      //copy the attributes
+                      for (let i = 0; i < fromEl.attributes.length; i++) {
+                        toEl.setAttribute(
+                          fromEl.attributes[i].name,
+                          fromEl.attributes[i].value,
+                        );
+                      }
+                      if (fromEl.isEqualNode(toEl)) return false;
+                    }
+                    return true;
+                  },
+                  onBeforeNodeDiscarded: function (node: Node) {
+                    const elementNode = node as Element;
+                    let ifPreserveNode = false;
+                    if (elementNode.getAttribute) {
+                      const preserveAttr =
+                        elementNode.getAttribute(PreserveRnbwNode);
+                      const RnbwId = elementNode.getAttribute(StageNodeIdAttr);
+                      ifPreserveNode = !!preserveAttr || !RnbwId;
+                    }
+                    if (ifPreserveNode) {
+                      return false;
+                    }
+                    return true;
+                  },
+                  onElUpdated: function (el) {
+                    if (el.nodeName === "HTML") {
+                      //copy the attributes
+                      for (let i = 0; i < el.attributes.length; i++) {
+                        iframeHtml.setAttribute(
+                          el.attributes[i].name,
+                          el.attributes[i].value,
+                        );
+                      }
+                    }
+                  },
+                });
+                isCodeErrorsExist.current = false;
+              }
+
               isCodeErrorsExist.current = false;
             } catch (err) {
-              isCodeErrorsExist.current = true;
-
+              isCodeErrorsExist.current = false;
               toast("Some changes in the code are incorrect", {
                 type: "error",
                 toastId: "Some changes in the code are incorrect",

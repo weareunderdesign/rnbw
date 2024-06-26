@@ -13,7 +13,7 @@ import Processor from "./processor";
 import ResizablePanels from "./ResizablePanels";
 import { debounce } from "./helper";
 import { CommandDialog } from "./cmdkPage/CommandDialog";
-import { TValidNodeUid } from "@_node/index";
+import { TNodeUid, TValidNodeUid } from "@_node/index";
 
 export default function MainPage() {
   // redux
@@ -39,6 +39,11 @@ export default function MainPage() {
   const maxNodeUidRef = React.useRef<TValidNodeUid>(0);
   const setMaxNodeUidRef = (maxNodeUid: TValidNodeUid) => {
     maxNodeUidRef.current = maxNodeUid;
+  };
+
+  const contentEditableUidRef = React.useRef<TNodeUid>("");
+  const setContentEditableUidRef = (uid: TNodeUid) => {
+    contentEditableUidRef.current = uid;
   };
 
   const INTERVAL_TIMER = 2000;
@@ -74,6 +79,14 @@ export default function MainPage() {
         document.visibilityState === "visible" &&
         !fileTree[currentFileUid]?.data?.changed
       ) {
+        if (
+          !window.document.activeElement?.isEqualNode(
+            prevFocusedElement.current,
+          )
+        ) {
+          intervalRef.current && clearInterval(intervalRef.current);
+          return;
+        }
         debouncedCurrentProjectReload();
       }
     }, INTERVAL_TIMER);
@@ -85,9 +98,15 @@ export default function MainPage() {
       clearInterval(intervalRef.current);
     }
   }, []);
-
+  const handleOnWheel = (event: WheelEvent) => {
+    if (event.ctrlKey) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  };
   const addEventListeners = useCallback(() => {
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener("wheel", handleOnWheel, { passive: false });
     window.addEventListener("blur", handleBlurChange);
     window.addEventListener("focus", handleFocusChange);
     const contentWindow = iframeRefRef.current?.contentWindow;
@@ -104,6 +123,7 @@ export default function MainPage() {
 
   const removeEventListeners = useCallback(() => {
     document.removeEventListener("visibilitychange", handleVisibilityChange);
+    document.removeEventListener("wheel", handleOnWheel);
     window.removeEventListener("blur", handleBlurChange);
     window.removeEventListener("focus", handleFocusChange);
     const contentWindow = iframeRefRef.current?.contentWindow;
@@ -134,6 +154,10 @@ export default function MainPage() {
 
           monacoEditorRef,
           setMonacoEditorRef,
+
+          contentEditableUidRef,
+          setContentEditableUidRef,
+
           iframeRefRef,
           setIframeRefRef,
 

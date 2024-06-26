@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { isAddNodeAction, isRenameNodeAction } from "@_node/helpers";
 import { useAppState } from "@_redux/useAppState";
@@ -9,10 +9,14 @@ import { useTurnInto, useFormatCode } from "@_actions/index";
 export const useCmdk = () => {
   const { activePanel, currentCommand } = useAppState();
 
+  const activePanelRef = useRef(activePanel);
   const rnbw = useRnbw();
   const formatCode = useFormatCode();
   const turnInto = useTurnInto();
 
+  useEffect(() => {
+    activePanelRef.current = activePanel;
+  }, [activePanel]);
   useEffect(() => {
     if (!currentCommand || !rnbw.elements) return;
 
@@ -42,7 +46,8 @@ export const useCmdk = () => {
       return;
     }
 
-    if (activePanel !== "node" && activePanel !== "stage") return;
+    if (activePanelRef.current !== "node" && activePanelRef.current !== "stage")
+      return;
 
     switch (currentCommand.action) {
       case "Cut":

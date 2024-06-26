@@ -31,6 +31,10 @@ export type TMainContext = {
   setMonacoEditorRef: (
     editorInstance: editor.IStandaloneCodeEditor | null,
   ) => void;
+
+  contentEditableUidRef: MutableRefObject<TNodeUid>;
+  setContentEditableUidRef: (uid: TNodeUid) => void;
+
   iframeRefRef: MutableRefObject<HTMLIFrameElement | null>;
   setIframeRefRef: (iframeRef: HTMLIFrameElement | null) => void;
 

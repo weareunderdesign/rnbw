@@ -6,7 +6,7 @@
 }
 body,
 #CodeView *:hover,
-#StageView *:hover {
+#iframeId *:hover {
   cursor: default !important;
 }
 .target {
@@ -84,6 +84,7 @@ body,
 
 [cmdk-root] {
   width: 50vw;
+  max-width: 800px;
 }
 
 [cmdk-input] {
@@ -167,7 +168,11 @@ body,
 /* panels style */
 
 .panel-resize {
-  width: 1px;
+  width: 0;
+}
+
+.panel-resize-stage {
+  width: 3px;
 }
 .panel-resize-vertical {
   height: 1px;
@@ -175,6 +180,7 @@ body,
 
 #CodeView {
   transition: 0.3s all;
+  border-left: 0;
 }
 
 #ActionsPanel {
@@ -252,4 +258,7 @@ body,
 
 .attribute-input:focus {
   box-shadow: 0 1px 0 0 var(--color-tertiary-background);
+}
+.bg-secondary {
+  background-color: var(--color-secondary-background);
 }
