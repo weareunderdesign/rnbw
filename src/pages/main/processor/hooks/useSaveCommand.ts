@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect } from "react";
+import { useCallback, useContext, useEffect, useRef } from "react";
 
 import { useDispatch } from "react-redux";
 
@@ -19,7 +19,9 @@ export const useSaveCommand = () => {
   const dispatch = useDispatch();
   const { project, fileTree, currentFileUid, currentCommand, fileHandlers } =
     useAppState();
+
   const { iframeRefRef } = useContext(MainContext);
+  const isSaving = useRef(false);
 
   const refreshStageCSS = () => {
     const fileType = fileTree[currentFileUid]?.data?.ext;
@@ -44,9 +46,10 @@ export const useSaveCommand = () => {
   useEffect(() => {
     if (!currentCommand) return;
 
-    switch (currentCommand?.action) {
+    const action = currentCommand.action;
+    switch (action) {
       case "Save":
-        onSaveCurrentFile();
+        if (!isSaving.current) onSaveCurrentFile();
         break;
       case "SaveAll":
         onSaveProject();
@@ -65,13 +68,19 @@ export const useSaveCommand = () => {
     dispatch(addRunningAction());
     if (fileData?.changed) {
       try {
+        isSaving.current = true;
         await saveFileContent(project, fileHandlers, currentFileUid, fileData);
         if (fileData?.ext === "css") {
           refreshStageCSS();
+        } else if (fileData?.ext === "js") {
+          //check if the iframe has imported the current file
+          iframeRefRef.current?.contentWindow?.location.reload();
         }
       } catch (err) {
         toast.error("An error occurred while saving the file");
         console.error(err);
+      } finally {
+        isSaving.current = false;
       }
 
       while (file) {
