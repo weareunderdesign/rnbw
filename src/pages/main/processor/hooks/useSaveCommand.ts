@@ -73,8 +73,12 @@ export const useSaveCommand = () => {
         if (fileData?.ext === "css") {
           refreshStageCSS();
         } else if (fileData?.ext === "js") {
-          //check if the iframe has imported the current file
-          iframeRefRef.current?.contentWindow?.location.reload();
+          //replace iframe src
+          // If we need to reload, update the iframe src
+          const iframe = iframeRefRef.current;
+          if (!iframe) return;
+          const iframeSrc = iframe.src.split("?")[0] + "?t=" + Date.now();
+          iframe.src = iframeSrc;
         }
       } catch (err) {
         toast.error("An error occurred while saving the file");
