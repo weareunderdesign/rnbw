@@ -56,7 +56,7 @@ export default function ActionsPanel() {
             <WorkspaceTreeView />
           </Panel>
           {showFilePanel && (
-            <PanelResizeHandle className="panel-resize-vertical" />
+            <PanelResizeHandle  style={{ width: 0 }} />
           )}
           <Panel defaultSize={sizes[1]} minSize={10} maxSize={100} order={1}>
             {isCurrentFileHtml && <NodeTreeView />}
@@ -67,3 +67,5 @@ export default function ActionsPanel() {
     );
   }, [sizes, showFilePanel, selectedNodeUids, isCurrentFileHtml]);
 }
+
+

@@ -1,4 +1,4 @@
-import React, { FC, useRef } from "react";
+import React, { FC, useRef, useState } from "react";
 
 import { SVGIcon } from "@_components/common";
 import { TProject } from "@_redux/main/fileTree";
@@ -18,6 +18,7 @@ export const AdditionalPanel: FC<AdditionalPanelProps> = ({
     useAppState();
 
   const navigatorDropDownRef = useRef<HTMLDivElement | null>(null);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const { onCloseDropDown, onOpenProject } = useNavigatorPanelHandlers();
 
@@ -54,18 +55,44 @@ export const AdditionalPanel: FC<AdditionalPanelProps> = ({
           }}
         >
           {workspace.projects.map((_project, index) => {
+            const isHovered = index === hoveredIndex;
+            const isProjectSelected = isSelected(_project, project);
+            const iconBackgroundColor = isHovered || isProjectSelected
+              ? "var(--color-primary-background)"
+              : "var(--color-secondary-background)";
+            const iconColor = isHovered || isProjectSelected
+              ? "var(--color-primary-foreground)"
+              : "var(--color-secondary-foreground)";
+            const textOpacity = isHovered || isProjectSelected ? 1 : 0.5;
+
             return _project.context == "idb" ? (
               <></>
             ) : (
               <div
                 key={index}
-                className={`navigator-project-item justify-stretch padding-s ${isSelected(_project, project)}`}
+                className={`justify-stretch padding-s ${isProjectSelected ? "selected" : ""}`}
                 onClick={(e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
                   onClick(e, _project);
                 }}
+                style={{
+                  cursor: "pointer",
+                  backgroundColor: isProjectSelected
+                    ? "var(--color-secondary-background)"
+                    : "transparent",
+                  color: isProjectSelected
+                    ? "var(--color-secondary-foreground)"
+                    : "inherit",
+                }}
+                onMouseOver={() => setHoveredIndex(index)}
+                onMouseOut={() => setHoveredIndex(null)}
               >
                 <div className="gap-s align-center">
-                  <div className="navigator-project-item-icon">
+                  <div
+                    style={{
+                      backgroundColor: iconBackgroundColor,
+                      color: iconColor,
+                    }}
+                  >
                     {_project.favicon ? (
                       <img
                         className="icon-s"
@@ -78,7 +105,11 @@ export const AdditionalPanel: FC<AdditionalPanelProps> = ({
                       </SVGIcon>
                     )}
                   </div>
-                  <span className="navigator-project-item-name text-s">
+                  <span
+                    style={{
+                      opacity: textOpacity,
+                    }}
+                  >
                     {_project.name}
                   </span>
                 </div>

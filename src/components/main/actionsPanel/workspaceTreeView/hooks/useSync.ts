@@ -15,19 +15,24 @@ export const useSync = () => {
     if (hoveredItemRef.current === hoveredFileUid) return;
 
     const curHoveredElement = document.querySelector(
-      `#FileTreeView-${generateQuerySelector(hoveredItemRef.current)}`,
-    );
-    curHoveredElement?.setAttribute(
-      "class",
-      removeClass(curHoveredElement.getAttribute("class") || "", "outline"),
-    );
+      `#FileTreeView-${generateQuerySelector(hoveredItemRef.current)}`
+    ) as HTMLElement | null;
+
+    if (curHoveredElement) {
+      curHoveredElement.style.removeProperty('outline-width');
+      curHoveredElement.style.removeProperty('outline-style');
+      curHoveredElement.style.removeProperty('outline-offset');
+    }
+
     const newHoveredElement = document.querySelector(
-      `#FileTreeView-${generateQuerySelector(hoveredFileUid)}`,
-    );
-    newHoveredElement?.setAttribute(
-      "class",
-      addClass(newHoveredElement.getAttribute("class") || "", "outline"),
-    );
+      `#FileTreeView-${generateQuerySelector(hoveredFileUid)}`
+    ) as HTMLElement | null;
+
+    if (newHoveredElement) {
+      newHoveredElement.style.outlineWidth = '1px';
+      newHoveredElement.style.outlineStyle = 'solid';
+      newHoveredElement.style.outlineOffset = '-1px';
+    }
 
     hoveredItemRef.current = hoveredFileUid;
   }, [hoveredFileUid]);

@@ -14,6 +14,12 @@ export const TreeItem = (props: TreeItemProps) => {
     invalidFileNodes,
   } = props;
 
+  const outlineStyles = {
+    outlineWidth: '1px',
+    outlineStyle: 'solid',
+    outlineOffset: '-1px',
+  };
+
   return (
     <li
       className={`${context.isSelected && "background-secondary"}`}
@@ -21,16 +27,18 @@ export const TreeItem = (props: TreeItemProps) => {
       id={id}
     >
       <div
-        className={`justify-stretch padding-xs outline-default ${
-          props.context.isSelected && "background-tertiary outline-none"
-        } ${
-          !props.context.isSelected && props.context.isFocused && "outline"
-        } ${props.context.isDraggingOver && "outline"}
-        
-        ${invalidFileNodes?.[item?.data?.uid] && "opacity-m"}`}
+        className={`justify-stretch padding-xs ${
+          props.context.isSelected && "background-tertiary"
+        } ${invalidFileNodes?.[item?.data?.uid] && "opacity-m"}`}
         style={{
           flexWrap: "nowrap",
           paddingLeft: `${depth * 18}px`,
+          outlineColor: 'var(--color-tertiary-background)',
+          ...(props.context.isSelected
+            ? { outline: 'none' }
+            : (!props.context.isSelected && props.context.isFocused) || props.context.isDraggingOver
+            ? outlineStyles
+            : {}),
         }}
         {...context.itemContainerWithoutChildrenProps}
         {...context.interactiveElementProps}
@@ -38,7 +46,6 @@ export const TreeItem = (props: TreeItemProps) => {
       >
         <div className="gap-s padding-xs" style={{ width: "100%" }}>
           {arrow}
-
           {nodeIcon}
         </div>
       </div>

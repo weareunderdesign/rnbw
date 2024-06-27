@@ -91,22 +91,27 @@ const NodeTreeView = () => {
   const hoveredItemRef = useRef<TNodeUid>(hoveredNodeUid);
   useEffect(() => {
     if (hoveredItemRef.current === hoveredNodeUid) return;
-
+  
     const curHoveredElement = document.querySelector(
-      `#NodeTreeView-${hoveredItemRef.current}`,
-    );
-    curHoveredElement?.setAttribute(
-      "class",
-      removeClass(curHoveredElement.getAttribute("class") || "", "outline"),
-    );
+      `#NodeTreeView-${hoveredItemRef.current}`
+    ) as HTMLElement | null;
+  
+    if (curHoveredElement) {
+      curHoveredElement.style.removeProperty('outline-width');
+      curHoveredElement.style.removeProperty('outline-style');
+      curHoveredElement.style.removeProperty('outline-offset');
+    }
+  
     const newHoveredElement = document.querySelector(
-      `#NodeTreeView-${hoveredNodeUid}`,
-    );
-    newHoveredElement?.setAttribute(
-      "class",
-      addClass(newHoveredElement.getAttribute("class") || "", "outline"),
-    );
-
+      `#NodeTreeView-${hoveredNodeUid}`
+    ) as HTMLElement | null;
+  
+    if (newHoveredElement) {
+      newHoveredElement.style.outlineWidth = '1px';
+      newHoveredElement.style.outlineStyle = 'solid';
+      newHoveredElement.style.outlineOffset = '-1px';
+    }
+  
     hoveredItemRef.current = hoveredNodeUid;
   }, [hoveredNodeUid]);
 
@@ -195,9 +200,20 @@ const NodeTreeView = () => {
         overflow: "auto",
         paddingBottom: "16px",
         maxHeight: "calc(100vh - 42px)",
+        msOverflowStyle: "none", 
+        scrollbarWidth: "none",
       }}
       onClick={onPanelClick}
     >
+      <style>
+      {`
+        #root #NodeTreeView ul > li {
+          line-height: 100%;
+          padding: 0px;
+          overflow: hidden;
+        }
+      `}
+    </style>
       <TreeView
         width={"100%"}
         height={"auto"}

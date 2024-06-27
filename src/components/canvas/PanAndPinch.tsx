@@ -175,10 +175,10 @@ const PanAndPinch: FC<Props> = ({ children }) => {
       tabIndex={0}
     >
       <div
-        className="bg-secondary"
         style={{
           width: canvas ? `2000px` : "100%",
           height: canvas ? "2000px" : "100%",
+          backgroundColor: 'var(--color-secondary-background)',
         }}
       >
         <div

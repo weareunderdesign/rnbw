@@ -39,6 +39,7 @@ const iconMappping = {
   Recent: "/images/jumpstart/open.svg",
   files: "/images/jumpstart/page.svg",
 };
+
 export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
   const [currentFocusedMenuItem, setCurrentFocusedMenuItem] = useState({
     name: "New",
@@ -184,6 +185,14 @@ export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
     dispatch(setCmdkSearchContent(""));
   };
 
+  const actionButtonStyle: React.CSSProperties = {
+    padding: '4px',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    cursor: 'pointer',
+  };
+
   return (
     <Command.Dialog
       open={cmdkOpen}
@@ -202,7 +211,7 @@ export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
             `}
       >
         {isPageOpenedFromActions && (
-          <div className="padding-s action-button" onClick={onBackIconClick}>
+          <div style={actionButtonStyle} onClick={onBackIconClick}>
             <SVGIcon {...{ class: "icon-xs" }}>raincons/arrow-left</SVGIcon>
           </div>
         )}
