@@ -45,7 +45,6 @@ export const SettingsForm = ({
   };
 
   const buttonStyle: React.CSSProperties = {
-    padding: '4px',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
@@ -53,8 +52,8 @@ export const SettingsForm = ({
   };
 
   const formStyle: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateRows: '20px 50px 1fr',
+    display: 'flex',
+    flexDirection: "row",
     alignItems: 'center',
     gap: '12px',
   };
@@ -70,7 +69,7 @@ export const SettingsForm = ({
   };
 
   return (
-    <form style={formStyle}>
+    <form className="padding-s" style={formStyle}>
       <div style={buttonStyle} onClick={() => setShowForm(false)}>
         <SVGIconI {...{ class: "icon-xs" }}>raincons/cross</SVGIconI>
       </div>
@@ -80,7 +79,7 @@ export const SettingsForm = ({
           ...inputStyle,
           maxWidth: "50px",
           boxShadow: isAttributeHovered
-            ? '0 2px 0 0 var(--color-tertiary-background)'
+            ? '0 1px 0 0 var(--color-tertiary-background)'
             : isAttributeFocused
             ? '0 1px 0 0 var(--color-tertiary-background)'
             : 'none',
@@ -88,6 +87,7 @@ export const SettingsForm = ({
         ref={attributeRef}
         placeholder="Attribute"
         type="text"
+        className="text-s"
         onKeyDown={handleKeyDown}
         onMouseEnter={() => setIsAttributeHovered(true)}
         onMouseLeave={() => setIsAttributeHovered(false)}
@@ -97,11 +97,12 @@ export const SettingsForm = ({
 
       <input
         ref={valueRef}
+        className="text-s"
         style={{
           ...inputStyle,
           textAlign: "end",
           boxShadow: isValueHovered
-            ? '0 2px 0 0 var(--color-tertiary-background)'
+            ? '0 1px 0 0 var(--color-tertiary-background)'
             : isValueFocused
             ? '0 1px 0 0 var(--color-tertiary-background)'
             : 'none',

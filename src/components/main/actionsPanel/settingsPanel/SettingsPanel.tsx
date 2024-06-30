@@ -47,17 +47,16 @@ export default function SettingsPanel() {
     const panelStyle: React.CSSProperties = {
       display: "flex",
       flexDirection: "column",
-      gap: "12px",
+      width: "100%",
       borderBottom: "1px solid var(--color-border)",
-      padding: "16px",
     };
 
     const buttonStyle: React.CSSProperties = {
       visibility: isHover ? "visible" : "hidden",
-      padding: "4px",
       display: "flex",
+      width: "12px",
       justifyContent: "center",
-      alignItems: "center",
+      alignItems: "end",
       cursor: "pointer",
     };
 
@@ -69,8 +68,9 @@ export default function SettingsPanel() {
         onMouseLeave={handleMouseLeave}
         style={panelStyle}
       >
-        <PanelHeader>
-          <div style={{ fontSize: "14px" }}>Settings</div>
+        <PanelHeader className="padding-s">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+          <div className="text-s">Settings</div>
           <div
             style={buttonStyle}
             onClick={() => {
@@ -78,6 +78,7 @@ export default function SettingsPanel() {
             }}
           >
             <SVGIconI className="icon-xs">raincons/plus</SVGIconI>
+          </div>
           </div>
         </PanelHeader>
 

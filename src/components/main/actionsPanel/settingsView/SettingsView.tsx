@@ -13,6 +13,8 @@ export const SettingsView = ({
   setAttributes,
 }: SettingsViewProps) => {
   const [hoveredAttr, setHoveredAttr] = useState<string | null>(null);
+  const [hoveredInput, setHoveredInput] = useState<string | null>(null);
+  const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
   const dispatch = useDispatch();
   const { activePanel } = useAppState();
@@ -28,6 +30,7 @@ export const SettingsView = ({
     },
     [],
   );
+
   const handleKeyDown = useCallback(
     async (e: React.KeyboardEvent<HTMLInputElement>, attribute: string) => {
       if (e.key !== "Enter") return;
@@ -68,8 +71,25 @@ export const SettingsView = ({
   const handleMouseEnter = (attribute: string) => {
     setHoveredAttr(attribute);
   };
+
   const handleMouseLeave = () => {
     setHoveredAttr(null);
+  };
+
+  const handleInputMouseEnter = (attribute: string) => {
+    setHoveredInput(attribute);
+  };
+
+  const handleInputMouseLeave = () => {
+    setHoveredInput(null);
+  };
+
+  const handleInputFocus = (attribute: string) => {
+    setFocusedInput(attribute);
+  };
+
+  const handleInputBlur = () => {
+    setFocusedInput(null);
   };
 
   const iconButtonStyle: React.CSSProperties = {
@@ -77,20 +97,32 @@ export const SettingsView = ({
     justifyContent: 'center',
     alignItems: 'center',
     cursor: 'pointer',
-    padding: '4px',
   };
 
   const settingsItemStyle: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateRows: '20px 50px 1fr',
+    display: 'flex',
+    flexDirection: "row",
     alignItems: 'center',
-    padding: 0,
-    gap: '12px', // Добавлено для соответствия классу gap-m
+    gap: '12px',
   };
+
+  const inputStyle = (attribute: string): React.CSSProperties => ({
+    textAlign: "end",
+    width: "100%",
+    border: 'none',
+    background: 'transparent',
+    outline: 'none',
+    boxShadow: hoveredInput === attribute
+      ? '0 1px 0 0 white'
+      : focusedInput === attribute
+      ? '0 1px 0 0 white'
+      : 'none',
+  });
 
   return (
     <div
-      id="SettingsView"
+      id="SettingsView" 
+      className="padding-s"
       onClick={() =>
         activePanel !== "settings" && dispatch(setActivePanel("settings"))
       }
@@ -100,7 +132,6 @@ export const SettingsView = ({
           display: "flex",
           flexDirection: "column",
           gap: "12px",
-          padding: "0px",
           listStyleType: "none",
         }}
       >
@@ -141,27 +172,26 @@ export const SettingsView = ({
               </div>
             )}
 
-            <span style={{ fontSize: '14px' }}>{attribute}</span>
+            <span className="text-s">{attribute}</span>
             <input
               type="text"
-              style={{ 
-                fontSize: '14px',
-                textAlign: "end",
-                border: 'none',
-                background: 'transparent',
-                outline: 'none',
-              }}
+              className="text-s"
+              style={inputStyle(attribute)}
               value={(attributes[attribute] || "") as string}
-              onBlur={() =>
+              onBlur={(e) => {
+                handleInputBlur();
                 rnbw.elements.updateSettings({
                   settings: {
                     ...rnbw.elements.getElementSettings(),
                     [attribute]: attributes[attribute],
                   },
-                })
-              }
+                });
+              }}
               onChange={(e) => handleChange(e, attribute)}
               onKeyDown={(e) => handleKeyDown(e, attribute)}
+              onMouseEnter={() => handleInputMouseEnter(attribute)}
+              onMouseLeave={handleInputMouseLeave}
+              onFocus={() => handleInputFocus(attribute)}
             />
           </li>
         ))}
