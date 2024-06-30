@@ -6,6 +6,8 @@ export const Resize: FC<ResizeProps> = ({ children, scale, canvas }) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const [direction, setDirection] = useState<Direction | "">("");
   const [mouseDown, setMouseDown] = useState(false);
+  const [initialSize, setInitialSize] = useState({ width: 0, height: 0 });
+  const [currentSize, setCurrentSize] = useState({ width: 0, height: 0 });
 
   const scaleMovement = useCallback(
     (movement: number) => movement / scale,
@@ -28,24 +30,32 @@ export const Resize: FC<ResizeProps> = ({ children, scale, canvas }) => {
         const newHeight = height - scaleMovement(movementY);
         if (newHeight < 100) return;
         panel.style.height = `${newHeight}px`;
-        panel.style.top = `${y + scaleMovement(movementY)}px`;
+        panel.style.top = `${(initialSize.height - newHeight) / 2}px`;
+        setCurrentSize(prev => ({ ...prev, height: newHeight }));
       };
 
       const resizeRight = () => {
         const newWidth = width + scaleMovement(movementX);
         if (newWidth < 100) return;
         panel.style.width = `${newWidth}px`;
+        panel.style.left = `${(initialSize.width - newWidth) / 2}px`;
+        setCurrentSize(prev => ({ ...prev, width: newWidth }));
       };
+
       const resizeBottom = () => {
         const newHeight = height + scaleMovement(movementY);
         if (newHeight < 100) return;
         panel.style.height = `${newHeight}px`;
+        panel.style.top = `${(initialSize.height - newHeight) / 2}px`;
+        setCurrentSize(prev => ({ ...prev, height: newHeight }));
       };
+
       const resizeLeft = () => {
         const newWidth = width - scaleMovement(movementX);
         if (newWidth < 100) return;
         panel.style.width = `${newWidth}px`;
-        panel.style.left = `${x + scaleMovement(movementX)}px`;
+        panel.style.left = `${(initialSize.width - newWidth) / 2}px`;
+        setCurrentSize(prev => ({ ...prev, width: newWidth }));
       };
 
       const resizeOperations = {
@@ -74,7 +84,7 @@ export const Resize: FC<ResizeProps> = ({ children, scale, canvas }) => {
       const resizeOperation = resizeOperations[direction];
       if (resizeOperation) resizeOperation();
     },
-    [scale, scaleMovement],
+    [scale, scaleMovement, initialSize],
   );
 
   const handleMouseMove = useCallback(
@@ -114,6 +124,14 @@ export const Resize: FC<ResizeProps> = ({ children, scale, canvas }) => {
       panel.style.top = "0px";
       panel.style.left = "0";
     }
+    if (panel) {
+      const newSize = {
+        width: panel.offsetWidth,
+        height: panel.offsetHeight,
+      };
+      setInitialSize(newSize);
+      setCurrentSize(newSize);
+    }
   }, [canvas]);
 
   const handleMessageFromIFrame = useCallback(
@@ -152,6 +170,22 @@ export const Resize: FC<ResizeProps> = ({ children, scale, canvas }) => {
             />
           ))}
         {children}
+        {canvas && (
+          <div
+            style={{
+              position: 'absolute',
+              right: '10px',
+              bottom: '10px',
+              background: 'rgba(0,0,0,0.5)',
+              color: 'white',
+              padding: '5px',
+              borderRadius: '3px',
+              fontSize: '12px',
+            }}
+          >
+            {`${Math.round(currentSize.width)} x ${Math.round(currentSize.height)}`}
+          </div>
+        )}
       </div>
     </div>
   );

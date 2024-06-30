@@ -248,8 +248,18 @@ export default function CodeView() {
             height: "100%",
             zIndex: 999,
             overflow: "hidden",
+            ...(codeErrors
+              ? {
+                outlineWidth: "1px",
+                outlineStyle: "solid",
+                outlineOffset: "-1px",
+                outlineColor: "var(--color-negative)",
+              }
+              : {}),
+            transition: "0.3s all",
+            borderLeft: 0,
           }}
-          className={`border-left background-primary ${codeErrors && "outline border outline-negative"}`}
+          className={`border-left background-primary ${codeErrors && "border"}`}
           onClick={onPanelClick}
         >
           <Editor

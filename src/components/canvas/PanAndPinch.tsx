@@ -22,6 +22,7 @@ const PanAndPinch: FC<Props> = ({ children }) => {
   const [transform, setTransform] = useState({ scale: 1, x: 0, y: 0 });
   const scrollableRef = useRef<HTMLDivElement>(null);
   const [canvas, setCanvas] = useState(false);
+  const [contentSize, setContentSize] = useState({ width: 0, height: 0 });
 
   const { contentEditableUidRef } = useContext(MainContext);
 
@@ -29,13 +30,28 @@ const PanAndPinch: FC<Props> = ({ children }) => {
     if (transform.scale != 1) {
       setCanvas(true);
     }
+    updateContentSize();
   }, [transform.scale]);
 
+  const updateContentSize = () => {
+    if (scrollableRef.current) {
+      const { clientWidth, clientHeight } = scrollableRef.current;
+      setContentSize({
+        width: clientWidth * transform.scale,
+        height: clientHeight * transform.scale,
+      });
+    }
+  };
+
   const updateScale = (newScale: number) => {
-    setTransform((prevState) => ({
-      ...prevState,
-      scale: newScale,
-    }));
+    setTransform(prevTransform => {
+      const scaleFactor = newScale / prevTransform.scale;
+      return {
+        scale: newScale,
+        x: prevTransform.x * scaleFactor,
+        y: prevTransform.y * scaleFactor,
+      };
+    });
   };
 
   const onWheel = (e: WheelEvent) => {
@@ -50,10 +66,13 @@ const PanAndPinch: FC<Props> = ({ children }) => {
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
   ) => {
     if (spacePressed && mouseKeyIsDown && scrollableRef.current) {
-      const deltaX = e.movementX;
-      const deltaY = e.movementY;
-      scrollableRef.current.scrollLeft -= deltaX;
-      scrollableRef.current.scrollTop -= deltaY;
+      const deltaX = e.movementX / transform.scale;
+      const deltaY = e.movementY / transform.scale;
+      setTransform(prevTransform => ({
+        ...prevTransform,
+        x: prevTransform.x - deltaX,
+        y: prevTransform.y - deltaY,
+      }));
     }
   };
 
@@ -134,6 +153,7 @@ const PanAndPinch: FC<Props> = ({ children }) => {
         break;
     }
   };
+
   const handleOnWheel = (e: WheelEvent) => {
     if (e.ctrlKey) {
       e.preventDefault(); // Prevent default zoom behavior
@@ -163,10 +183,12 @@ const PanAndPinch: FC<Props> = ({ children }) => {
   return (
     <div
       style={{
-        overflow: "scroll",
+        overflow: contentSize.width > window.innerWidth || contentSize.height > window.innerHeight ? 'auto' : 'hidden',
         width: "100%",
         height: "100%",
-        scrollbarColor: canvas ? "auto transparent" : "unset",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
       }}
       ref={scrollableRef}
       onMouseMove={handleOnMouseMove}
@@ -177,8 +199,11 @@ const PanAndPinch: FC<Props> = ({ children }) => {
       <div
         className="bg-secondary"
         style={{
-          width: canvas ? `2000px` : "100%",
-          height: canvas ? "2000px" : "100%",
+          width: Math.max(contentSize.width, window.innerWidth),
+          height: Math.max(contentSize.height, window.innerHeight),
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
         }}
       >
         <div
@@ -186,6 +211,8 @@ const PanAndPinch: FC<Props> = ({ children }) => {
             width: canvas ? "50vw" : "100%",
             height: "100vh",
             transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
+            transformOrigin: "center center",
+            overflow: "visible",
           }}
         >
           <Resize canvas={canvas} scale={transform.scale}>
@@ -198,3 +225,10 @@ const PanAndPinch: FC<Props> = ({ children }) => {
 };
 
 export default PanAndPinch;
+
+
+
+
+
+
+

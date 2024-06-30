@@ -34,31 +34,50 @@ export default function SettingsPanel() {
   const onPanelClick = useCallback(() => {
     activePanel !== "settings" && dispatch(setActivePanel("settings"));
   }, [activePanel]);
+
   const handleMouseEnter = () => {
     setIsHovered(true);
   };
+
   const handleMouseLeave = () => {
     setIsHovered(false);
   };
 
   return useMemo(() => {
+    const panelStyle: React.CSSProperties = {
+      display: "flex",
+      flexDirection: "column",
+      gap: "12px",
+      borderBottom: "1px solid var(--color-border)",
+      padding: "16px",
+    };
+
+    const buttonStyle: React.CSSProperties = {
+      visibility: isHover ? "visible" : "hidden",
+      padding: "4px",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      cursor: "pointer",
+    };
+
     return (
       <div
         id="SettingsPanel"
         onClick={onPanelClick}
-        className="border-bottom padding-m"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        style={panelStyle}
       >
         <PanelHeader>
-          <div className="text-s">Settings</div>
+          <div style={{ fontSize: "14px" }}>Settings</div>
           <div
-            className={`action-button ${!isHover && "action-button-hidden"}`}
+            style={buttonStyle}
             onClick={() => {
               setShowForm(true);
             }}
           >
-            <SVGIconI {...{ class: "icon-xs" }}>raincons/plus</SVGIconI>
+            <SVGIconI className="icon-xs">raincons/plus</SVGIconI>
           </div>
         </PanelHeader>
 

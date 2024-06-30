@@ -72,6 +72,22 @@ export const SettingsView = ({
     setHoveredAttr(null);
   };
 
+  const iconButtonStyle: React.CSSProperties = {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    cursor: 'pointer',
+    padding: '4px',
+  };
+
+  const settingsItemStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateRows: '20px 50px 1fr',
+    alignItems: 'center',
+    padding: 0,
+    gap: '12px', // Добавлено для соответствия классу gap-m
+  };
+
   return (
     <div
       id="SettingsView"
@@ -84,20 +100,19 @@ export const SettingsView = ({
           display: "flex",
           flexDirection: "column",
           gap: "12px",
+          padding: "0px",
+          listStyleType: "none",
         }}
       >
         {Object.keys(attributes).map((attribute) => (
           <li
             key={attribute}
-            className="gap-m settings-item"
-            style={{
-              padding: 0,
-            }}
+            style={settingsItemStyle}
             onMouseEnter={() => handleMouseEnter(attribute)}
             onMouseLeave={handleMouseLeave}
           >
             {attributes[attribute] ? (
-              <div className="icon-button">
+              <div style={iconButtonStyle}>
                 <SVGIconIII
                   {...{
                     class: "icon-xs",
@@ -108,7 +123,7 @@ export const SettingsView = ({
                 </SVGIconIII>
               </div>
             ) : hoveredAttr === attribute ? (
-              <div className="action-button">
+              <div style={iconButtonStyle}>
                 <SVGIconI
                   {...{
                     class: "icon-xs",
@@ -119,18 +134,23 @@ export const SettingsView = ({
                 </SVGIconI>
               </div>
             ) : (
-              <div className="icon-button">
+              <div style={iconButtonStyle}>
                 <SVGIconII {...{ class: "icon-xs" }}>
                   raincons/checkbox-blank
                 </SVGIconII>
               </div>
             )}
 
-            <span className="text-s">{attribute}</span>
+            <span style={{ fontSize: '14px' }}>{attribute}</span>
             <input
               type="text"
-              className="text-s attribute-input"
-              style={{ textAlign: "end" }}
+              style={{ 
+                fontSize: '14px',
+                textAlign: "end",
+                border: 'none',
+                background: 'transparent',
+                outline: 'none',
+              }}
               value={(attributes[attribute] || "") as string}
               onBlur={() =>
                 rnbw.elements.updateSettings({

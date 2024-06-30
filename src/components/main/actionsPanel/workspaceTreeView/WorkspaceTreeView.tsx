@@ -186,6 +186,16 @@ export default function WorkspaceTreeView() {
       }}
       onClick={onPanelClick}
     >
+      <style>
+        {`
+          #FileTreeView ul > li {
+            line-height: 100%;
+            padding: 0px;
+            overflow: hidden;
+          }
+        `}
+      </style>
+
       <TreeView
         width={"100%"}
         height={"auto"}
@@ -319,6 +329,7 @@ export default function WorkspaceTreeView() {
                     {props.title}
                   </>
                 }
+                
               />
             );
           },
