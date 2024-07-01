@@ -1,6 +1,5 @@
 import React, { useRef, useState, useEffect, FC, useCallback } from "react";
 import { Direction, ResizeProps } from "./type";
-import "./index.css";
 
 const SizeDisplay: FC<{ width: number; height: number; scale: number }> = ({ width, height, scale }) => {
   return (
