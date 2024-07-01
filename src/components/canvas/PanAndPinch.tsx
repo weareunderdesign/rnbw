@@ -197,7 +197,7 @@ const PanAndPinch: FC<Props> = ({ children }) => {
       tabIndex={0}
     >
       <div
-        className="background-tertiary"
+        className="background-secondary"
         style={{
           width: Math.max(contentSize.width, window.innerWidth),
           height: Math.max(contentSize.height, window.innerHeight),
