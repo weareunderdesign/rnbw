@@ -1,5 +1,3 @@
-/* should stay here or be in rene.css*/
-
 body,
 #CodeView *:hover,
 #iframeId *:hover {
@@ -16,8 +14,6 @@ body,
   padding: 0px;
   list-style-type: none;
 }
-
-/* not sure (cannot find them in rnbw) */
 
 [cmdk-overlay] {
   position: fixed;
@@ -66,96 +62,4 @@ body,
   background-color: var(--color-secondary-background);
   color: var(--color-secondary-foreground);
   border-radius: 4px;
-}
-
-.panel {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-}
-
-.panel__container {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-
-.resizer {
-  position: absolute;
-  background: transparent;
-}
-
-.top-left {
-  cursor: nwse-resize;
-  height: 25px;
-  width: 25px;
-  left: 0;
-  top: 0;
-  z-index: 1;
-}
-
-.top {
-  cursor: ns-resize;
-  height: 25px;
-  width: 100%;
-  left: 0;
-  top: 0;
-}
-
-.top-right {
-  cursor: nesw-resize;
-  height: 25px;
-  width: 25px;
-  right: 0;
-  top: 0;
-  z-index: 1;
-}
-
-.right {
-  cursor: ew-resize;
-  width: 25px;
-  height: 100%;
-  right: 0;
-  top: 0;
-}
-
-.bottom-left {
-  cursor: nesw-resize;
-  width: 25px;
-  height: 25px;
-  left: 0;
-  bottom: 0;
-  z-index: 1;
-}
-
-.bottom {
-  cursor: ns-resize;
-  width: 100%;
-  height: 25px;
-  bottom: 0;
-  left: 0;
-}
-
-.bottom-right {
-  cursor: nwse-resize;
-  width: 25px;
-  height: 25px;
-  right: 0;
-  bottom: 0;
-  z-index: 1;
-}
-
-.left {
-  cursor: ew-resize;
-  width: 25px;
-  height: 100%;
-  left: 0;
-  top: 0;
-}
-
-.no-select {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
 }

@@ -415,17 +415,111 @@ const Resize: FC<ResizeProps> = ({ children, scale, canvas }) => {
     };
   }, [handleMessageFromIFrame]);
 
+  const panelStyle: React.CSSProperties = {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+  };
+
+  const panelContainerStyle: React.CSSProperties = {
+    position: 'relative',
+    width: '100%',
+    height: '100%',
+  };
+
+  const resizerBaseStyle: React.CSSProperties = {
+    position: 'absolute',
+    background: 'transparent',
+  };
+
+  const resizerStyles: { [key in Direction]: React.CSSProperties } = {
+    [Direction.TopLeft]: {
+      ...resizerBaseStyle,
+      cursor: 'nwse-resize',
+      height: '25px',
+      width: '25px',
+      left: 0,
+      top: 0,
+      zIndex: 1,
+    },
+    [Direction.Top]: {
+      ...resizerBaseStyle,
+      cursor: 'ns-resize',
+      height: '25px',
+      width: '100%',
+      left: 0,
+      top: 0,
+    },
+    [Direction.TopRight]: {
+      ...resizerBaseStyle,
+      cursor: 'nesw-resize',
+      height: '25px',
+      width: '25px',
+      right: 0,
+      top: 0,
+      zIndex: 1,
+    },
+    [Direction.Right]: {
+      ...resizerBaseStyle,
+      cursor: 'ew-resize',
+      width: '25px',
+      height: '100%',
+      right: 0,
+      top: 0,
+    },
+    [Direction.BottomLeft]: {
+      ...resizerBaseStyle,
+      cursor: 'nesw-resize',
+      width: '25px',
+      height: '25px',
+      left: 0,
+      bottom: 0,
+      zIndex: 1,
+    },
+    [Direction.Bottom]: {
+      ...resizerBaseStyle,
+      cursor: 'ns-resize',
+      width: '100%',
+      height: '25px',
+      bottom: 0,
+      left: 0,
+    },
+    [Direction.BottomRight]: {
+      ...resizerBaseStyle,
+      cursor: 'nwse-resize',
+      width: '25px',
+      height: '25px',
+      right: 0,
+      bottom: 0,
+      zIndex: 1,
+    },
+    [Direction.Left]: {
+      ...resizerBaseStyle,
+      cursor: 'ew-resize',
+      width: '25px',
+      height: '100%',
+      left: 0,
+      top: 0,
+    },
+  };
+
   return (
     <div 
-      className={`panel ${isResizing ? 'no-select' : ''}`} 
+      style={{
+        ...panelStyle,
+        userSelect: isResizing ? 'none' : 'text',
+        WebkitUserSelect: isResizing ? 'none' : 'text',
+        MozUserSelect: isResizing ? 'none' : 'text',
+        msUserSelect: isResizing ? 'none' : 'text',
+      } as React.CSSProperties}
       ref={panelRef}
     >
-      <div className="panel__container" style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <div style={panelContainerStyle}>
         {canvas &&
           Object.values(Direction).map((direction) => (
             <div
               key={direction}
-              className={`resizer ${direction}`}
+              style={resizerStyles[direction]}
               onMouseDown={handleMouseDown(direction)}
             />
           ))}
