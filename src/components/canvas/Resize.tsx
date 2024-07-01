@@ -2,12 +2,34 @@ import React, { useRef, useState, useEffect, FC, useCallback } from "react";
 import { Direction, ResizeProps } from "./type";
 import "./index.css";
 
+const SizeDisplay: FC<{ width: number; height: number; scale: number }> = ({ width, height, scale }) => {
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        right: '10px',
+        bottom: '10px',
+        background: 'rgba(0,0,0,0.5)',
+        color: 'white',
+        padding: '5px',
+        borderRadius: '3px',
+        fontSize: '12px',
+        transform: `scale(${1 / scale})`,
+        transformOrigin: 'bottom right',
+      }}
+    >
+      {`${Math.round(width)} x ${Math.round(height)}`}
+    </div>
+  );
+};
+
 export const Resize: FC<ResizeProps> = ({ children, scale, canvas }) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const [direction, setDirection] = useState<Direction | "">("");
   const [mouseDown, setMouseDown] = useState(false);
   const [initialSize, setInitialSize] = useState({ width: 0, height: 0 });
   const [currentSize, setCurrentSize] = useState({ width: 0, height: 0 });
+  const [isResizing, setIsResizing] = useState(false);
 
   const scaleMovement = useCallback(
     (movement: number) => movement / scale,
@@ -96,7 +118,10 @@ export const Resize: FC<ResizeProps> = ({ children, scale, canvas }) => {
     [mouseDown, direction, handleResize],
   );
 
-  const handleMouseUp = useCallback(() => setMouseDown(false), []);
+  const handleMouseUp = useCallback(() => {
+    setMouseDown(false);
+    setIsResizing(false);
+  }, []);
 
   useEffect(() => {
     window.addEventListener("mousemove", handleMouseMove);
@@ -112,6 +137,7 @@ export const Resize: FC<ResizeProps> = ({ children, scale, canvas }) => {
     (direction: Direction) => () => {
       setDirection(direction);
       setMouseDown(true);
+      setIsResizing(true);
     },
     [],
   );
@@ -159,8 +185,11 @@ export const Resize: FC<ResizeProps> = ({ children, scale, canvas }) => {
   }, [handleMessageFromIFrame]);
 
   return (
-    <div className="panel" ref={panelRef}>
-      <div className="panel__container">
+    <div 
+      className={`panel ${isResizing ? 'no-select' : ''}`} 
+      ref={panelRef}
+    >
+      <div className="panel__container" style={{ position: 'relative', width: '100%', height: '100%' }}>
         {canvas &&
           Object.values(Direction).map((direction) => (
             <div
@@ -171,20 +200,11 @@ export const Resize: FC<ResizeProps> = ({ children, scale, canvas }) => {
           ))}
         {children}
         {canvas && (
-          <div
-            style={{
-              position: 'absolute',
-              right: '10px',
-              bottom: '10px',
-              background: 'rgba(0,0,0,0.5)',
-              color: 'white',
-              padding: '5px',
-              borderRadius: '3px',
-              fontSize: '12px',
-            }}
-          >
-            {`${Math.round(currentSize.width)} x ${Math.round(currentSize.height)}`}
-          </div>
+          <SizeDisplay 
+            width={currentSize.width} 
+            height={currentSize.height} 
+            scale={scale} 
+          />
         )}
       </div>
     </div>
