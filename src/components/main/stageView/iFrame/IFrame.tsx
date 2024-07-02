@@ -9,7 +9,7 @@ import React, {
 
 import { useDispatch } from "react-redux";
 
-import { LogAllow } from "@_constants/global";
+import { LogAllow } from "@_components/indexConstants";
 import { PreserveRnbwNode } from "@_node/file/handlers/constants";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
 import { MainContext } from "@_redux/main";

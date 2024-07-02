@@ -12,7 +12,7 @@ import { useDispatch } from "react-redux";
 
 import { TreeView } from "@_components/common";
 import { TreeViewData } from "@_components/common/treeView/types";
-import { DargItemImage, RootNodeUid } from "@_constants/main";
+import { DargItemImage, RootNodeUid } from "@_components/indexConstants";
 import { THtmlNodeData } from "@_node/index";
 import { TNode, TNodeUid } from "@_node/types";
 import {

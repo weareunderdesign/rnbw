@@ -10,7 +10,7 @@ import {
 import { editor, KeyCode, KeyMod, Selection } from "monaco-editor";
 import { useDispatch } from "react-redux";
 
-import { CodeViewSyncDelay_Long, DefaultTabSize } from "@_constants/main";
+import { CodeViewSyncDelay_Long, DefaultTabSize } from "@_components/indexConstants";
 import { MainContext } from "@_redux/main";
 import { setCodeViewTabSize } from "@_redux/main/codeView";
 import {

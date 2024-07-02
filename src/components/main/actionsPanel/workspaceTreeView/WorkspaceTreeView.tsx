@@ -5,7 +5,7 @@ import { DraggingPositionItem } from "react-complex-tree";
 import { useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { RootNodeUid } from "@_constants/main";
+import { RootNodeUid } from "@_components/indexConstants";
 import { TreeView } from "@_components/common";
 import {
   getNormalizedPath,

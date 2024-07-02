@@ -4,12 +4,12 @@ import { set } from "idb-keyval";
 import { useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { LogAllow } from "@_constants/global";
+import { LogAllow } from "@_components/indexConstants";
 import {
   DefaultProjectPath,
   RecentProjectCount,
   RootNodeUid,
-} from "@_constants/main";
+} from "@_components/indexConstants";
 import {
   buildNohostIDB,
   createURLPath,

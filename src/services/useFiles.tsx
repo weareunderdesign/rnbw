@@ -38,7 +38,7 @@ import { MainContext } from "@_redux/main";
 import { getObjKeys } from "@_components/main/helper";
 import { useFileHelpers } from "./useFileHelpers";
 import { useHandlers } from "@_components/main/hooks";
-import { FileChangeAlertMessage } from "@_constants/main";
+import { FileChangeAlertMessage } from "@_components/indexConstants";
 import { toast } from "react-toastify";
 import {
   FileTree_Event_RedoActionType,
@@ -47,7 +47,7 @@ import {
   setFileAction,
   setLastFileAction,
 } from "@_redux/main/fileTree";
-import { LogAllow } from "@_constants/global";
+import { LogAllow } from "@_components/indexConstants";
 export default function useFiles() {
   const dispatch = useDispatch();
   const {

@@ -9,7 +9,7 @@ import React, {
 import * as monaco from "monaco-editor";
 import { useDispatch } from "react-redux";
 
-import { RootNodeUid } from "@_constants/main";
+import { RootNodeUid } from "@_components/indexConstants";
 import { TFileNodeData, TNodeUid } from "@_node/index";
 import { MainContext } from "@_redux/main";
 import { setSelectedNodeUids } from "@_redux/main/nodeTree";

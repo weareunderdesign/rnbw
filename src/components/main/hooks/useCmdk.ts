@@ -5,8 +5,8 @@ import { del } from "idb-keyval";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
-import { LogAllow } from "@_constants/global";
-import { DefaultProjectPath } from "@_constants/main";
+import { LogAllow } from "@_components/indexConstants";
+import { DefaultProjectPath } from "@_components/indexConstants";
 import {
   confirmFileChanges,
   downloadIDBProject,

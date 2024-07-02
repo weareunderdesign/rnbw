@@ -3,7 +3,7 @@ import { getSystemTheme } from "@_services/global";
 import { TCodeSelection } from "./types";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
 import { getSubNodeUidsByBfs } from "@_node/helpers";
-import { RootNodeUid } from "@_constants/main";
+import { RootNodeUid } from "@_components/indexConstants";
 
 export const getLanguageFromExtension = (extension: string) => {
   const extensionMap: { [key: string]: string } = {

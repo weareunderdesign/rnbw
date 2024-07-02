@@ -1,4 +1,4 @@
-import { LogAllow } from "@_constants/global";
+import { LogAllow } from "@_components/indexConstants";
 import { TProjectContext } from "@_redux/main/fileTree";
 
 import { TFileHandlerCollection, TFileNodeTreeData, TNodeUid } from "../";

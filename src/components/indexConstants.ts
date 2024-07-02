@@ -46,3 +46,6 @@ export const DargItemImage = new Image();
 DargItemImage.src =
   "data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=";
 // ----------------------
+
+export const RainbowAppName = "rnbw";
+export const LogAllow = true;

@@ -1,7 +1,7 @@
 import * as parse5 from "parse5";
 
-import { RainbowAppName } from "@_constants/global";
-import { RootNodeUid } from "@_constants/main";
+import { RainbowAppName } from "@_components/indexConstants";
+import { RootNodeUid } from "@_components/indexConstants";
 
 import { TFileParserResponse, TNodeUid, TValidNodeUid } from "../../";
 import {

@@ -6,7 +6,7 @@ import { useAppState } from "@_redux/useAppState";
 import { useContext, useMemo } from "react";
 import { MainContext } from "@_redux/main";
 import { elementsCmdk, getObjKeys } from "@_components/main/helper";
-import { LogAllow, RainbowAppName } from "@_constants/global";
+import { LogAllow, RainbowAppName } from "@_components/indexConstants";
 
 import { toast } from "react-toastify";
 import {
@@ -25,7 +25,7 @@ import {
   TValidNodeUid,
   ValidStageNodeUid,
 } from "@_node/index";
-import { RootNodeUid } from "@_constants/main";
+import { RootNodeUid } from "@_components/indexConstants";
 import { useDispatch } from "react-redux";
 import {
   focusNodeTreeNode,

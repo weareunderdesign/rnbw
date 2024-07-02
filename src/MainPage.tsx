@@ -2,7 +2,7 @@ import React, { useCallback, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { Loader, Notification } from "@_components/common";
 import { ActionsPanel, CodeView, StageView } from "@_components/main";
-import { CodeViewSyncDelay } from "@_constants/main";
+import { CodeViewSyncDelay } from "@_components/indexConstants";
 import { isUnsavedProject } from "@_node/file";
 import { MainContext } from "@_redux/main";
 import { setCurrentCommand } from "@_redux/main/cmdk";

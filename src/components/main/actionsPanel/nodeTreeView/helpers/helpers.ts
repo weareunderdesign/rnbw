@@ -1,10 +1,10 @@
 import { editor } from "monaco-editor";
 import { DraggingPosition } from "react-complex-tree";
 
-import { LogAllow } from "@_constants/global";
+import { LogAllow } from "@_components/indexConstants";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
-import { RootNodeUid } from "@_constants/main";
+import { RootNodeUid } from "@_components/indexConstants";
 import { elementsCmdk } from "@_components/main/helper";
 import { TCmdkGroupData, THtmlReferenceData } from "@_types/main";
 

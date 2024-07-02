@@ -1,4 +1,4 @@
-import { FileChangeAlertMessage, RootNodeUid } from "@_constants/main";
+import { FileChangeAlertMessage, RootNodeUid } from "@_components/indexConstants";
 import {
   htmlElementsReferences,
   THtmlElementsReference,

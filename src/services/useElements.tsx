@@ -1,5 +1,5 @@
-import { LogAllow } from "@_constants/global";
-import { RootNodeUid } from "@_constants/main";
+import { LogAllow } from "@_components/indexConstants";
+import { RootNodeUid } from "@_components/indexConstants";
 import { StageNodeIdAttr } from "@_node/file";
 
 import { getObjKeys } from "@_components/main/helper";

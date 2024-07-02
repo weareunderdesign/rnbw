@@ -1,4 +1,4 @@
-import { RootNodeUid, TmpFileNodeUidWhenAddNew } from "@_constants/main";
+import { RootNodeUid, TmpFileNodeUidWhenAddNew } from "@_components/indexConstants";
 import {
   TFileHandlerCollection,
   TFileNodeData,

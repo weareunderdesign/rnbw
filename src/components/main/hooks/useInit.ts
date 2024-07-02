@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 import { useDispatch } from "react-redux";
 
-import { LogAllow } from "@_constants/global";
+import { LogAllow } from "@_components/indexConstants";
 import { setOsType, setTheme } from "@_redux/global";
 import { setDoingFileAction, TProjectContext } from "@_redux/main/fileTree";
 import { isChromeOrEdge } from "@_services/global";

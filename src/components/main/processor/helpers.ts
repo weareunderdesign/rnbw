@@ -4,7 +4,7 @@ import {
   NodePathSplitter,
   RootNodeUid,
   StagePreviewPathPrefix,
-} from "@_constants/main";
+} from "@_components/indexConstants";
 import {
   TFileHandlerCollection,
   TFileNode,
