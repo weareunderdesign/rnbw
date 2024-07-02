@@ -33,8 +33,8 @@ import {
   useSync,
   useWorkspaceInit,
 } from "./hooks";
-import { useSaveCommand } from "@_pages/main/processor/hooks";
-import { debounce, getObjKeys } from "@_pages/main/helper";
+import { useSaveCommand } from "@_components/main/processor/hooks";
+import { debounce, getObjKeys } from "@_components/main/helper";
 import {
   Container,
   ItemArrow,

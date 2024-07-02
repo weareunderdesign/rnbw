@@ -22,7 +22,7 @@ import {
 } from "@_node/file";
 import { getValidNodeUids } from "@_node/helpers";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
-import { getObjKeys } from "@_pages/main/helper";
+import { getObjKeys } from "@_components/main/helper";
 import { MainContext } from "@_redux/main";
 import {
   addInvalidFileNodes,

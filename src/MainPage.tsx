@@ -8,11 +8,11 @@ import { MainContext } from "@_redux/main";
 import { setCurrentCommand } from "@_redux/main/cmdk";
 import { useAppState } from "@_redux/useAppState";
 
-import { useCmdk, useHandlers, useInit, useReferneces } from "./hooks";
-import Processor from "./processor";
-import ResizablePanels from "./ResizablePanels";
-import { debounce } from "./helper";
-import { CommandDialog } from "./cmdkPage/CommandDialog";
+import { useCmdk, useHandlers, useInit, useReferneces } from "@_components/main/hooks";
+import Processor from "@_components/main/processor";
+import ResizablePanels from "@_components/main/ResizablePanels";
+import { debounce } from "@_components/main/helper";
+import { CommandDialog } from "@_components/main/cmdkPage/CommandDialog";
 import { TNodeUid, TValidNodeUid } from "@_node/index";
 
 export default function MainPage() {

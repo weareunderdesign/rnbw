@@ -23,7 +23,7 @@ import {
   debounce,
   isWebComponentDblClicked,
   onWebComponentDblClick,
-} from "@_pages/main/helper";
+} from "@_components/main/helper";
 
 import { getCommandKey } from "@_services/global";
 import { eventListenersStatesRefType } from "../IFrame";

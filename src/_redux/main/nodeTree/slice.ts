@@ -4,7 +4,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { TUpdateTreeViewStatePayload } from "../types";
 import { TNodeTreeReducerState } from "./types";
 import { TCodeSelection } from "@_components/main/codeView";
-import { getValidNodeTree } from "@_pages/main/processor/helpers";
+import { getValidNodeTree } from "@_components/main/processor/helpers";
 
 const nodeTreeReducerInitialState: TNodeTreeReducerState = {
   nodeTree: {},

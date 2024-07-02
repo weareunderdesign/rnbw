@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { ShortDelay } from "@_constants/main";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
-import { debounce, getObjKeys, scrollToElement } from "@_pages/main/helper";
+import { debounce, getObjKeys, scrollToElement } from "@_components/main/helper";
 import { useAppState } from "@_redux/useAppState";
 
 import {

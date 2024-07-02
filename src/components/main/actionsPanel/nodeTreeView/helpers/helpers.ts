@@ -5,7 +5,7 @@ import { LogAllow } from "@_constants/global";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
 import { RootNodeUid } from "@_constants/main";
-import { elementsCmdk } from "@_pages/main/helper";
+import { elementsCmdk } from "@_components/main/helper";
 import { TCmdkGroupData, THtmlReferenceData } from "@_types/main";
 
 export const sortUidsByMaxEndIndex = (

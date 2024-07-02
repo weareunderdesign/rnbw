@@ -48,7 +48,7 @@ import {
   setLoadingTrue,
 } from "@_redux/main/processor";
 import { toast } from "react-toastify";
-import { getObjKeys } from "@_pages/main/helper";
+import { getObjKeys } from "@_components/main/helper";
 import { getFileExtension } from "@_components/main/actionsPanel/navigatorPanel/helpers";
 import { useElementHelper } from "@_services/useElementsHelper";
 

@@ -35,9 +35,9 @@ import {
 
 import { useCallback, useContext } from "react";
 import { MainContext } from "@_redux/main";
-import { getObjKeys } from "@_pages/main/helper";
+import { getObjKeys } from "@_components/main/helper";
 import { useFileHelpers } from "./useFileHelpers";
-import { useHandlers } from "@_pages/main/hooks";
+import { useHandlers } from "@_components/main/hooks";
 import { FileChangeAlertMessage } from "@_constants/main";
 import { toast } from "react-toastify";
 import {

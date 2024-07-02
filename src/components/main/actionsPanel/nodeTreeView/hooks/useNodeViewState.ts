@@ -11,7 +11,7 @@ import {
 } from "@_redux/main/nodeTree";
 import { addRunningAction, removeRunningAction } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
-import { getObjKeys } from "@_pages/main/helper";
+import { getObjKeys } from "@_components/main/helper";
 
 export function useNodeViewState() {
   const dispatch = useDispatch();

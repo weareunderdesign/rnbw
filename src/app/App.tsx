@@ -4,7 +4,7 @@ import { HashRouter as Router, Route, Routes } from "react-router-dom";
 import { Workbox } from "workbox-window";
 
 import { LogAllow } from "@_constants/global";
-import MainPage from "@_pages/main";
+import MainPage from "../MainPage";
 
 export default function App() {
   // setup nohost-serviceworker

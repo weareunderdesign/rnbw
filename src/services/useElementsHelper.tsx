@@ -5,7 +5,7 @@ import { Range, editor } from "monaco-editor";
 import { useAppState } from "@_redux/useAppState";
 import { useContext, useMemo } from "react";
 import { MainContext } from "@_redux/main";
-import { elementsCmdk, getObjKeys } from "@_pages/main/helper";
+import { elementsCmdk, getObjKeys } from "@_components/main/helper";
 import { LogAllow, RainbowAppName } from "@_constants/global";
 
 import { toast } from "react-toastify";

@@ -1,4 +1,4 @@
-import { getObjKeys } from "@_pages/main/helper";
+import { getObjKeys } from "@_components/main/helper";
 import { useCallback } from "react";
 
 import { useDispatch } from "react-redux";

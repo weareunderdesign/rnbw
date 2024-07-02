@@ -2,7 +2,7 @@ import { LogAllow } from "@_constants/global";
 import { RootNodeUid } from "@_constants/main";
 import { StageNodeIdAttr } from "@_node/file";
 
-import { getObjKeys } from "@_pages/main/helper";
+import { getObjKeys } from "@_components/main/helper";
 import { MainContext } from "@_redux/main";
 import {
   NodeTree_Event_RedoActionType,
