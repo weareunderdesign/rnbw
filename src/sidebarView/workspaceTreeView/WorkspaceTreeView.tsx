@@ -24,7 +24,7 @@ import {
 } from "@_redux/main/fileTree";
 import { setActivePanel } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
-import { generateQuerySelector } from "@_services/index";
+import { generateQuerySelector } from "../../index";
 
 import {
   useCmdk,

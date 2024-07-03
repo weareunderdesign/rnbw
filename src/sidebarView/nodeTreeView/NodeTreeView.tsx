@@ -33,8 +33,8 @@ import {
   setNavigatorDropdownType,
 } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
-import { getCommandKey } from "@_services/index";
-import { addClass, removeClass } from "@_services/index";
+import { getCommandKey } from "../../index";
+import { addClass, removeClass } from "../../index";
 
 import { useCmdk } from "./hooks/useCmdk";
 import { useNodeTreeCallback } from "./hooks/useNodeTreeCallback";

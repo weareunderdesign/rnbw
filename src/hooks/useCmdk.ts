@@ -24,7 +24,7 @@ import {
   setWordWrap,
 } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
-import { getCommandKey } from "@_services/index";
+import { getCommandKey } from "../index";
 import { TCmdkKeyMap, TCmdkReferenceData } from "@_types/main";
 
 import { setSystemTheme } from "../helper";

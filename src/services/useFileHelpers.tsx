@@ -11,7 +11,7 @@ import { expandFileTreeNodes, setFileTree } from "@_redux/main/fileTree";
 import { useAppState } from "@_redux/useAppState";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
-import { verifyFileHandlerPermission } from "./index";
+import { verifyFileHandlerPermission } from "../index";
 
 export const getUniqueIndexedName = async ({
   parentHandler,
