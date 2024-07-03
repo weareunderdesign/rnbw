@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { SVGIconI } from "@src/common";
+import { SVGIconI } from "@src/components";
 import { setActivePanel, setShowActionsPanel } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 

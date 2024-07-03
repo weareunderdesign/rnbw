@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 
 import { SettingsFormProps } from "../settingsPanel/types";
-import { SVGIconI } from "@src/common";
+import { SVGIconI } from "@src/components";
 import useRnbw from "@_services/useRnbw";
 
 export const SettingsForm = ({

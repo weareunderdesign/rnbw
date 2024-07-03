@@ -1,5 +1,5 @@
 import React, { FC } from "react";
-import { SVGIconI } from "@src/common";
+import { SVGIconI } from "@src/components";
 import { TreeItem } from "react-complex-tree";
 import { TFilesReference } from "@rnbws/rfrncs.design";
 

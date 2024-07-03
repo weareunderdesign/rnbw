@@ -23,7 +23,7 @@ import {
   COMMANDS_TO_KEEP_MODAL_OPEN,
   PLACEHOLDERS,
 } from "./constants";
-import { SVGIcon, SVGIconIV } from "@src/common";
+import { SVGIcon, SVGIconIV } from "@src/components";
 
 const iconMappping = {
   New: "/images/jumpstart/new.svg",

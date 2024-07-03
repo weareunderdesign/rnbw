@@ -1,6 +1,6 @@
 import React, { FC, useRef, useState } from "react";
 
-import { SVGIcon } from "@src/common";
+import { SVGIcon } from "@src/components";
 import { TProject } from "@_redux/main/fileTree";
 import { useAppState } from "@_redux/useAppState";
 

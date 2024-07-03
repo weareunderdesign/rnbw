@@ -10,8 +10,8 @@ import React, {
 
 import { useDispatch } from "react-redux";
 
-import { TreeView } from "@src/common";
-import { TreeViewData } from "@src/common/treeView/types";
+import { TreeView } from "@src/components";
+import { TreeViewData } from "@src/components/treeView/types";
 import { DargItemImage, RootNodeUid } from "@src/indexTSX";
 import { THtmlNodeData } from "@_api/index";
 import { TNode, TNodeUid } from "@_api/types";
@@ -46,7 +46,7 @@ import {
   ItemTitle,
   Container,
   TreeItem,
-} from "@src/common/treeComponents";
+} from "@src/components/treeComponents";
 import { useNavigate } from "react-router-dom";
 import { THtmlElementsReference } from "@rnbws/rfrncs.design";
 

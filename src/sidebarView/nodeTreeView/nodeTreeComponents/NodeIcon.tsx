@@ -1,6 +1,6 @@
 import React from "react";
 
-import { SVGIconI } from "@src/common";
+import { SVGIconI } from "@src/components";
 import { THtmlElementsReference } from "@rnbws/rfrncs.design";
 
 const spanStyles: React.CSSProperties = {

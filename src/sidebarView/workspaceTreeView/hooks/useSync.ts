@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { TreeViewData } from "@src/common/treeView/types";
+import { TreeViewData } from "@src/components/treeView/types";
 import { RootNodeUid, ShortDelay } from "@src/indexTSX";
 import { TNode, TNodeUid } from "@_api/types";
 import { debounce, scrollToElement } from "@src/helper";

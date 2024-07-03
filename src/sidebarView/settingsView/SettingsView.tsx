@@ -2,7 +2,7 @@ import React, { useCallback, useState } from "react";
 import { useDispatch } from "react-redux";
 
 import { setActivePanel } from "@_redux/main/processor";
-import { SVGIconI, SVGIconII, SVGIconIII } from "@src/common";
+import { SVGIconI, SVGIconII, SVGIconIII } from "@src/components";
 
 import { Attribute, SettingsViewProps } from "../settingsPanel/types";
 import { useAppState } from "@_redux/useAppState";

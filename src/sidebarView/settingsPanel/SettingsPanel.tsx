@@ -4,11 +4,11 @@ import { useDispatch } from "react-redux";
 import { StageNodeIdAttr, DataSequencedUid } from "@_api/file";
 import { useAppState } from "@_redux/useAppState";
 import { setActivePanel } from "@_redux/main/processor";
-import { SVGIconI } from "@src/common";
+import { SVGIconI } from "@src/components";
 
 import { SettingsView } from "../settingsView/SettingsView";
 import { SettingsForm } from "../settingsView/SettingsForm";
-import { PanelHeader } from "@src/common/panelHeader";
+import { PanelHeader } from "@src/components/panelHeader";
 
 const excludedAttributes: string[] = [StageNodeIdAttr, DataSequencedUid];
 

@@ -1,6 +1,6 @@
 import React from "react";
 
-import { SVGIconI, SVGIconII } from "@src/common";
+import { SVGIconI, SVGIconII } from "@src/components";
 import { ItemArrowProps } from "./types";
 
 export const ItemArrow = React.memo(

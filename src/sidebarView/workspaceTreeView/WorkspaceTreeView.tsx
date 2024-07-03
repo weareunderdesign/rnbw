@@ -6,7 +6,7 @@ import { useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { RootNodeUid } from "@src/indexTSX";
-import { TreeView } from "@src/common";
+import { TreeView } from "@src/components";
 import {
   getNormalizedPath,
   createURLPath,
@@ -40,7 +40,7 @@ import {
   ItemArrow,
   ItemTitle,
   TreeItem,
-} from "@src/common/treeComponents";
+} from "@src/components/treeComponents";
 import { NodeIcon } from "./workspaceComponents/NodeIcon";
 import { TFilesReference } from "@rnbws/rfrncs.design";
 import useRnbw from "@_services/useRnbw";

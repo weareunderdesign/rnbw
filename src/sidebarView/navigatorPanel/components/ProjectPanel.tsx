@@ -1,6 +1,6 @@
 import React, { FC } from "react";
 
-import { SVGIconI } from "@src/common";
+import { SVGIconI } from "@src/components";
 import { useAppState } from "@_redux/useAppState";
 
 import { useNavigatorPanelHandlers } from "../hooks";

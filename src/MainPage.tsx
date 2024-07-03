@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { Loader, Notification } from "@src/common";
+import { Loader, Notification } from "@src/components";
 import { ActionsPanel, CodeView, StageView } from ".";
 import { CodeViewSyncDelay } from "@src/indexTSX";
 import { isUnsavedProject } from "@_api/file";
