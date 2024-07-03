@@ -19,7 +19,7 @@ import { useAppState } from "@_redux/useAppState";
 
 import { useCmdk, useHandlers, useInit, useReferneces } from "@src/hooks";
 import Processor from "@src/processor";
-import ResizablePanels from "@src/ResizablePanels";
+import ResizablePanels from "@_components/ResizablePanels";
 import { debounce } from "@src/helper";
 import { CommandDialog } from "@src/commandMenu/CommandDialog";
 import { TNodeUid, TValidNodeUid } from "@_api/index";
