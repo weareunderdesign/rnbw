@@ -20,7 +20,7 @@ import { Editor, loader } from "@monaco-editor/react";
 import { useEditor } from "./hooks";
 import { getNodeUidByCodeSelection } from "./helpers";
 import { setEditingNodeUidInCodeView } from "@_redux/main/codeView";
-import { getFileExtension } from "../actionsPanel/navigatorPanel/helpers";
+import { getFileExtension } from "../sidebarView/navigatorPanel/helpers";
 
 loader.config({ monaco });
 

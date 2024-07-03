@@ -49,7 +49,7 @@ import {
 } from "@_redux/main/processor";
 import { toast } from "react-toastify";
 import { getObjKeys } from "@src/helper";
-import { getFileExtension } from "@src/actionsPanel/navigatorPanel/helpers";
+import { getFileExtension } from "@src/sidebarView/navigatorPanel/helpers";
 import { useElementHelper } from "@_services/useElementsHelper";
 
 export const useNodeTreeEvent = () => {

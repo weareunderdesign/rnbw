@@ -1,5 +1,5 @@
 import MainPage from "./MainPage";
-import ActionsPanel from "./actionsPanel";
+import ActionsPanel from "./sidebarView";
 import CodeView from "./codeView";
 import StageView from "./stageView";
 import App from "./indexTSX";
