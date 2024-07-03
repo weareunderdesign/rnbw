@@ -1,23 +1,32 @@
 import * as parse5 from "parse5";
-
 import { RainbowAppName } from "@src/indexTSX";
 import { RootNodeUid } from "@src/indexTSX";
-
-import { TFileParserResponse, TNodeUid, TValidNodeUid } from "../../";
+import { TFileParserResponse, TNodeUid, TValidNodeUid } from "..";
 import {
   THtmlDomNode,
   THtmlNode,
   THtmlNodeAttribs,
   THtmlNodeTreeData,
   THtmlParserResponse,
-} from "../../node/type/html";
-import {
-  DataSequencedUid,
-  StageNodeIdAttr,
-  PARSING_ERROR_MESSAGES,
-  ValidStageNodeUid,
-} from "./constants";
+} from "../node/type/html";
 import { toast } from "react-toastify";
+
+export const StageNodeIdAttr = "data-rnbw-stage-node-id";
+export const PreserveRnbwNode = "data-rnbw-preserve-node";
+export const DataSequencedUid = "data-sequenced-uid";
+export const ValidStageNodeUid = "data-rnbw-stage-valid-uid";
+
+export const PARSING_ERROR_MESSAGES: Record<string, string> = {
+  "unexpected-solidus-in-tag": "Unexpected symbol in tag",
+  "missing-end-tag-name": "Missing end tag name",
+  "end-tag-with-trailing-solidus": "end-tag-with-trailing-solidus",
+  "missing-attribute-value": "Missing attribute value",
+  "duplicate-attribute": "Duplicate attribute",
+  "invalid-character-sequence-after-doctype-name":
+    "Invalid character sequence after doctype name",
+  "missing-doctype": "Missing doctype",
+  "abrupt-closing-of-empty-comment": "Abrupt closing of empty comment",
+};
 
 export const parseHtml = (
   content: string,
