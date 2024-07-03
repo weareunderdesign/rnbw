@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { get } from "idb-keyval";
 
-import { LogAllow } from "@src/indexConstants";
+import { LogAllow } from "@src/indexTSX";
 import { useAppState } from "@_redux/useAppState";
 
 //@ts-expect-error csv files

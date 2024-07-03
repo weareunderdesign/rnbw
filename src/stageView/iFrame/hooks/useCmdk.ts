@@ -2,7 +2,7 @@ import { useCallback, useContext } from "react";
 
 import { useDispatch } from "react-redux";
 
-import { LogAllow } from "@src/indexConstants";
+import { LogAllow } from "@src/indexTSX";
 import { MainContext } from "@_redux/main";
 import { setCurrentCommand } from "@_redux/main/cmdk";
 import { getCommandKey } from "@_services/global";

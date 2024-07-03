@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { TreeViewData } from "@src/common/treeView/types";
-import { RootNodeUid, ShortDelay } from "@src/indexConstants";
+import { RootNodeUid, ShortDelay } from "@src/indexTSX";
 import { TNode, TNodeUid } from "@_node/types";
 import { debounce, scrollToElement } from "@src/helper";
 import { useAppState } from "@_redux/useAppState";

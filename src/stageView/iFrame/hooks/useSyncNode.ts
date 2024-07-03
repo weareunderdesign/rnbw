@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 
-import { ShortDelay } from "@src/indexConstants";
+import { ShortDelay } from "@src/indexTSX";
 import { StageNodeIdAttr } from "@_node/file/handlers/constants";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
 import { debounce, getObjKeys, scrollToElement } from "@src/helper";

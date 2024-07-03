@@ -5,7 +5,7 @@ import { useDispatch } from "react-redux";
 
 import { getNodeUidByCodeSelection } from "@src/codeView";
 import { markSelectedElements } from "@src/stageView/iFrame/helpers";
-import { LogAllow } from "@src/indexConstants";
+import { LogAllow } from "@src/indexTSX";
 import { _writeIDBFile, PreserveRnbwNode, StageNodeIdAttr } from "@_node/file";
 
 import { TNodeUid } from "@_node/types";

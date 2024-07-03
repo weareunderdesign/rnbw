@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 
 import { isAddNodeAction, isRenameNodeAction } from "@_node/helpers";
 import { useAppState } from "@_redux/useAppState";
-import { AddNodeActionPrefix, RenameNodeActionPrefix } from "@src/indexConstants";
+import { AddNodeActionPrefix, RenameNodeActionPrefix } from "@src/indexTSX";
 import useRnbw from "@_services/useRnbw";
 import { useTurnInto, useFormatCode } from "@_actions/index";
 

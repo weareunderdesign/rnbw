@@ -1,6 +1,6 @@
 import { Dispatch } from "react";
 
-import { RootNodeUid } from "@src/indexConstants";
+import { RootNodeUid } from "@src/indexTSX";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
 import {
   clearFileTreeViewState,

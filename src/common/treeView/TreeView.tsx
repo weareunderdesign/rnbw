@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 
 import { ControlledTreeEnvironment, Tree } from "react-complex-tree";
 
-import { RootNodeUid } from "@src/indexConstants";
+import { RootNodeUid } from "@src/indexTSX";
 
 import { TreeViewProps } from "./types";
 

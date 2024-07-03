@@ -4,7 +4,7 @@ import {
   RenameFileActionPrefix,
   RenameNodeActionPrefix,
   RootNodeUid,
-} from "@src/indexConstants";
+} from "@src/indexTSX";
 import { THtmlReferenceData } from "@_types/main";
 
 import {

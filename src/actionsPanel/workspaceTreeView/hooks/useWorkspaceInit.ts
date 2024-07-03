@@ -1,5 +1,5 @@
 import { useCallback, useContext, useEffect } from "react";
-import { RootNodeUid } from "@src/indexConstants";
+import { RootNodeUid } from "@src/indexTSX";
 import { MainContext } from "@_redux/main";
 import { useAppState } from "@_redux/useAppState";
 import useRnbw from "@_services/useRnbw";

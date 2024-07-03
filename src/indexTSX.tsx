@@ -1,6 +1,17 @@
+import "./rnbw.css";
+import "@rnbws/renecss/dist/rene.min.css";
+import "@rnbws/svg-icon.js";
+
+import React from "react";
+import * as ReactDOMClient from "react-dom/client";
+import { Provider } from "react-redux";
+import configureStore from "@_redux/_root";
+import App from "./app";
+import persistStore from "redux-persist/es/persistStore";
+import { PersistGate } from "redux-persist/integration/react";
+
 export const RootNodeUid = "ROOT";
 export const DefaultProjectPath = "/untitled";
-
 export const StagePreviewPathPrefix = "rnbw-stage-preview-";
 export const CodeViewSyncDelay = 100;
 export const CodeViewSyncDelay_Long = 1 * 1000;
@@ -18,6 +29,7 @@ export const ParsableFileTypes: {
   xml: true,
   svg: true,
 };
+
 export const RenderableFileTypes: {
   [fileType: string]: true;
 } = {
@@ -43,9 +55,24 @@ export const NodePathSplitter: string = "?";
 export const FileChangeAlertMessage = `Your changes will be lost if you don't save them. Are you sure you want to continue without saving?`;
 
 export const DargItemImage = new Image();
-DargItemImage.src =
-  "data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=";
-// ----------------------
+DargItemImage.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=";
 
 export const RainbowAppName = "rnbw";
 export const LogAllow = true;
+
+// configure store
+const initialState = {};
+const store = configureStore(initialState);
+const persistor = persistStore(store);
+
+// render #root
+const root = ReactDOMClient.createRoot(
+  document.getElementById("root") as HTMLElement,
+);
+root.render(
+  <Provider store={store}>
+    <PersistGate loading={null} persistor={persistor}>
+      <App />
+    </PersistGate>
+  </Provider>,
+);

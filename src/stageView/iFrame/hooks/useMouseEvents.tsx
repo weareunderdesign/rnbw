@@ -1,8 +1,8 @@
 import { useCallback, useContext, useRef } from "react";
 import { useDispatch } from "react-redux";
 
-import { LogAllow } from "@src/indexConstants";
-import { ShortDelay } from "@src/indexConstants";
+import { LogAllow } from "@src/indexTSX";
+import { ShortDelay } from "@src/indexTSX";
 import { StageNodeIdAttr } from "@_node/file";
 import { getValidNodeUids } from "@_node/helpers";
 import { THtmlNodeData } from "@_node/node";
