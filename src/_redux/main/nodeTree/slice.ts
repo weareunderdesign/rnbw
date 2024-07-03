@@ -3,8 +3,8 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import { TUpdateTreeViewStatePayload } from "../types";
 import { TNodeTreeReducerState } from "./types";
-import { TCodeSelection } from "@src/main/codeView";
-import { getValidNodeTree } from "@src/main/processor/helpers";
+import { TCodeSelection } from "@src/codeView";
+import { getValidNodeTree } from "@src/processor/helpers";
 
 const nodeTreeReducerInitialState: TNodeTreeReducerState = {
   nodeTree: {},

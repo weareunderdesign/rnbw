@@ -1,7 +1,7 @@
 import { TNodeTreeData, TNodeUid } from "@_node/types";
 
 import { TTreeViewState } from "../types";
-import { TCodeSelection } from "@src/main/codeView";
+import { TCodeSelection } from "@src/codeView";
 
 export type TNodeTreeReducerState = {
   nodeTree: TNodeTreeData;

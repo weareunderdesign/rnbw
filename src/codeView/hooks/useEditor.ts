@@ -21,9 +21,9 @@ import { useAppState } from "@_redux/useAppState";
 
 import { getCodeViewTheme, getLanguageFromExtension } from "../helpers";
 import { TCodeSelection } from "../types";
-import { useSaveCommand } from "@src/main/processor/hooks";
+import { useSaveCommand } from "@src/processor/hooks";
 import { setIsCodeTyping } from "@_redux/main/reference";
-import { debounce } from "@src/main/helper";
+import { debounce } from "@src/helper";
 import { setFileTreeNodes } from "@_redux/main/fileTree";
 
 const useEditor = () => {

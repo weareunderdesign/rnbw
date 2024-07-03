@@ -21,7 +21,7 @@ import {
   isWebComponentDblClicked,
   onWebComponentDblClick,
   scrollToElement,
-} from "@src/main/helper";
+} from "@src/helper";
 
 import {
   collapseNodeTreeNodes,

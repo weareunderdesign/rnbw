@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { TreeViewData } from "@src/common/treeView/types";
 import { RootNodeUid, ShortDelay } from "@src/indexConstants";
 import { TNode, TNodeUid } from "@_node/types";
-import { debounce, scrollToElement } from "@src/main/helper";
+import { debounce, scrollToElement } from "@src/helper";
 import { useAppState } from "@_redux/useAppState";
 import { addClass, generateQuerySelector, removeClass } from "@_services/main";
 

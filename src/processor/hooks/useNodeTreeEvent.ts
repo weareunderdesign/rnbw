@@ -3,8 +3,8 @@ import { useContext, useEffect, useRef } from "react";
 import morphdom from "morphdom";
 import { useDispatch } from "react-redux";
 
-import { getNodeUidByCodeSelection } from "@src/main/codeView";
-import { markSelectedElements } from "@src/main/stageView/iFrame/helpers";
+import { getNodeUidByCodeSelection } from "@src/codeView";
+import { markSelectedElements } from "@src/stageView/iFrame/helpers";
 import { LogAllow } from "@src/indexConstants";
 import { _writeIDBFile, PreserveRnbwNode, StageNodeIdAttr } from "@_node/file";
 
@@ -48,8 +48,8 @@ import {
   setLoadingTrue,
 } from "@_redux/main/processor";
 import { toast } from "react-toastify";
-import { getObjKeys } from "@src/main/helper";
-import { getFileExtension } from "@src/main/actionsPanel/navigatorPanel/helpers";
+import { getObjKeys } from "@src/helper";
+import { getFileExtension } from "@src/actionsPanel/navigatorPanel/helpers";
 import { useElementHelper } from "@_services/useElementsHelper";
 
 export const useNodeTreeEvent = () => {
