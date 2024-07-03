@@ -25,7 +25,7 @@ import {
   onWebComponentDblClick,
 } from "@src/helper";
 
-import { getCommandKey } from "@_services/global";
+import { getCommandKey } from "@_services/index";
 import { eventListenersStatesRefType } from "../IFrame";
 import { TNodeUid } from "@_node/index";
 import { useNavigate } from "react-router-dom";

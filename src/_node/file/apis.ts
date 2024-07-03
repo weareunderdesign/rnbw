@@ -10,7 +10,7 @@ import {
 } from "@src/indexTSX";
 import { TOsType } from "@_redux/global";
 import { SystemDirectories } from "../../cmdkPage/SystemDirectories";
-import { verifyFileHandlerPermission } from "@_services/main";
+import { verifyFileHandlerPermission } from "@_services/index";
 
 import {
   fileHandlers,

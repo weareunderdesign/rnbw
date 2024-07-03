@@ -4,7 +4,7 @@ import { RootNodeUid, ShortDelay } from "@src/indexTSX";
 import { TNode, TNodeUid } from "@_node/types";
 import { debounce, scrollToElement } from "@src/helper";
 import { useAppState } from "@_redux/useAppState";
-import { addClass, generateQuerySelector, removeClass } from "@_services/main";
+import { addClass, generateQuerySelector, removeClass } from "@_services/index";
 
 export const useSync = () => {
   const { fileTree, fFocusedItem: focusedItem, hoveredFileUid } = useAppState();

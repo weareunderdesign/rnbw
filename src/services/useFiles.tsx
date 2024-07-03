@@ -13,7 +13,7 @@ import {
   IrenameFiles,
 } from "@_types/files.types";
 import { useDispatch } from "react-redux";
-import { verifyFileHandlerPermission } from "./main";
+import { verifyFileHandlerPermission } from "./index";
 import {
   setClipboardData,
   setDidRedo,

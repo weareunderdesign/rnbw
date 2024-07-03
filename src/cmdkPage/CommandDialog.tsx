@@ -13,7 +13,7 @@ import {
 } from "@_redux/main/cmdk";
 import { useAppState } from "@_redux/useAppState";
 import { TCmdkContext, TCmdkKeyMap, TCmdkReference } from "@_types/main";
-import { getCommandKey } from "../services/global";
+import { getCommandKey } from "../services/index";
 import { useCmdkModal, useCmdkReferenceData, useHandlers } from "../hooks";
 import { CommandItem } from "./CommandItem";
 import { CommandDialogProps, TCmdkPage } from "./types";

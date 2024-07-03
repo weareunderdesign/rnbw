@@ -5,7 +5,7 @@ import { useDispatch } from "react-redux";
 import { LogAllow } from "@src/indexTSX";
 import { MainContext } from "@_redux/main";
 import { setCurrentCommand } from "@_redux/main/cmdk";
-import { getCommandKey } from "@_services/global";
+import { getCommandKey } from "@_services/index";
 import { TCmdkKeyMap } from "@_types/main";
 
 import { getBodyChild, getValidElementWithUid } from "../helpers";

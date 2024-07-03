@@ -1,6 +1,6 @@
 import { FileSystemFileHandle } from "file-system-access";
 
-import { verifyFileHandlerPermission } from "@_services/main";
+import { verifyFileHandlerPermission } from "@_services/index";
 
 import {
   TFileHandlerCollection,

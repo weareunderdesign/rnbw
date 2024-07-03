@@ -1,5 +1,5 @@
 import { TTheme } from "@_redux/global";
-import { getSystemTheme } from "@_services/global";
+import { getSystemTheme } from "@_services/index";
 import { TCodeSelection } from "./types";
 import { TNodeTreeData, TNodeUid } from "@_node/types";
 import { getSubNodeUidsByBfs } from "@_node/helpers";
