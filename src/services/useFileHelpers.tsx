@@ -5,8 +5,8 @@ import {
   TFileNodeTreeData,
   _path,
   getTargetHandler,
-} from "@_node/file";
-import { TNode, TNodeTreeData, TNodeUid } from "@_node/index";
+} from "@_api/file";
+import { TNode, TNodeTreeData, TNodeUid } from "@_api/index";
 import { expandFileTreeNodes, setFileTree } from "@_redux/main/fileTree";
 import { useAppState } from "@_redux/useAppState";
 import { useDispatch } from "react-redux";

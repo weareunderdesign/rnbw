@@ -1,6 +1,6 @@
 import { LogAllow } from "@src/indexTSX";
 import { RootNodeUid } from "@src/indexTSX";
-import { StageNodeIdAttr } from "@_node/file";
+import { StageNodeIdAttr } from "@_api/file";
 
 import { getObjKeys } from "@src/helper";
 import { MainContext } from "@_redux/main";

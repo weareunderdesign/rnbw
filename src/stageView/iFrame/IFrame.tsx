@@ -10,8 +10,8 @@ import React, {
 import { useDispatch } from "react-redux";
 
 import { LogAllow } from "@src/indexTSX";
-import { PreserveRnbwNode } from "@_node/file/handlers";
-import { TNodeTreeData, TNodeUid } from "@_node/types";
+import { PreserveRnbwNode } from "@_api/file/handlers";
+import { TNodeTreeData, TNodeUid } from "@_api/types";
 import { MainContext } from "@_redux/main";
 import { setIframeLoading } from "@_redux/main/stageView";
 import { useAppState } from "@_redux/useAppState";

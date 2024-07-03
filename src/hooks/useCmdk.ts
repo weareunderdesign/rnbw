@@ -11,7 +11,7 @@ import {
   confirmFileChanges,
   downloadIDBProject,
   initIDBProject,
-} from "@_node/index";
+} from "@_api/index";
 import { setTheme } from "@_redux/global";
 import { setCmdkPages, setCurrentCommand } from "@_redux/main/cmdk";
 import { setDoingFileAction, TProjectContext } from "@_redux/main/fileTree";

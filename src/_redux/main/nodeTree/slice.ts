@@ -1,4 +1,4 @@
-import { TNodeTreeData, TNodeUid } from "@_node/types";
+import { TNodeTreeData, TNodeUid } from "@_api/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import { TUpdateTreeViewStatePayload } from "../types";

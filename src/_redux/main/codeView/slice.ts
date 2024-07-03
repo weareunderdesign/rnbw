@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import { TCodeViewReducerState } from "./types";
-import { TNodeUid } from "@_node/types";
+import { TNodeUid } from "@_api/types";
 
 const codeViewReducerInitialState: TCodeViewReducerState = {
   editingNodeUid: null,

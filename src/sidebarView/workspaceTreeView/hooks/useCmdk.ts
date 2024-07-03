@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
 import { AddFileActionPrefix } from "@src/indexTSX";
-import { isAddFileAction } from "@_node/helpers";
+import { isAddFileAction } from "@_api/helpers";
 import { useAppState } from "@_redux/useAppState";
 
 import { useNodeActionsHandler } from "./useNodeActionsHandler";

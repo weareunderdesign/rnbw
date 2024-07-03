@@ -3,7 +3,7 @@ import { useDispatch } from "react-redux";
 import { Loader, Notification } from "@src/common";
 import { ActionsPanel, CodeView, StageView } from ".";
 import { CodeViewSyncDelay } from "@src/indexTSX";
-import { isUnsavedProject } from "@_node/file";
+import { isUnsavedProject } from "@_api/file";
 import { MainContext } from "@_redux/main";
 import { setCurrentCommand } from "@_redux/main/cmdk";
 import { useAppState } from "@_redux/useAppState";
@@ -12,8 +12,8 @@ import { useCmdk, useHandlers, useInit, useReferneces } from "@src/hooks";
 import Processor from "@src/processor";
 import ResizablePanels from "@src/ResizablePanels";
 import { debounce } from "@src/helper";
-import { CommandDialog } from "@src/cmdkPage/CommandDialog";
-import { TNodeUid, TValidNodeUid } from "@_node/index";
+import { CommandDialog } from "@src/commandMenu/CommandDialog";
+import { TNodeUid, TValidNodeUid } from "@_api/index";
 
 export default function MainPage() {
   // redux

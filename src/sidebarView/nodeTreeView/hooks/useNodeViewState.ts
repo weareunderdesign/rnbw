@@ -2,8 +2,8 @@ import { useCallback } from "react";
 
 import { useDispatch } from "react-redux";
 
-import { getValidNodeUids } from "@_node/helpers";
-import { TNodeUid } from "@_node/types";
+import { getValidNodeUids } from "@_api/helpers";
+import { TNodeUid } from "@_api/types";
 import {
   collapseNodeTreeNodes,
   expandNodeTreeNodes,

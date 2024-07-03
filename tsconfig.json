@@ -18,7 +18,7 @@
     "baseUrl": ".",
     "paths": {
       "@src/*": ["src/*"],
-      "@_node/*": ["src/_node/*"],
+      "@_api/*": ["src/api/*"],
       "@_redux/*": ["src/_redux/*"],
       "@_ref/*": ["src/_ref/*"],
       "@_app/*": ["src/app/*"],

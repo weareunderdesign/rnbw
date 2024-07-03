@@ -1,6 +1,6 @@
-import { TFileNode } from "@_node/file";
-import { THtmlNodeData } from "@_node/node";
-import { TNode, TNodeTreeData } from "@_node/types";
+import { TFileNode } from "@_api/file";
+import { THtmlNodeData } from "@_api/node";
+import { TNode, TNodeTreeData } from "@_api/types";
 import { TProject, TWorkspace } from "@_redux/main/fileTree";
 
 export const isHomeIcon = (node: TNode) =>

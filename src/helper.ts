@@ -1,7 +1,7 @@
 import { Dispatch } from "react";
 
 import { RootNodeUid } from "@src/indexTSX";
-import { TNodeTreeData, TNodeUid } from "@_node/types";
+import { TNodeTreeData, TNodeUid } from "@_api/types";
 import {
   clearFileTreeViewState,
   expandFileTreeNodes,
@@ -27,8 +27,8 @@ import {
   THtmlReferenceData,
 } from "@_types/main";
 import { AnyAction } from "@reduxjs/toolkit";
-import { THtmlNodeData } from "@_node/node";
-import { TFileNodeData, TFileNodeTreeData, createURLPath } from "@_node/index";
+import { THtmlNodeData } from "@_api/node";
+import { TFileNodeData, TFileNodeTreeData, createURLPath } from "@_api/index";
 import {
   setActivePanel,
   setNavigatorDropdownType,

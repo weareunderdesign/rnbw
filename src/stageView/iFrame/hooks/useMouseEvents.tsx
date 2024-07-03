@@ -3,9 +3,9 @@ import { useDispatch } from "react-redux";
 
 import { LogAllow } from "@src/indexTSX";
 import { ShortDelay } from "@src/indexTSX";
-import { StageNodeIdAttr } from "@_node/file";
-import { getValidNodeUids } from "@_node/helpers";
-import { THtmlNodeData } from "@_node/node";
+import { StageNodeIdAttr } from "@_api/file";
+import { getValidNodeUids } from "@_api/helpers";
+import { THtmlNodeData } from "@_api/node";
 import { MainContext } from "@_redux/main";
 import { setHoveredNodeUid } from "@_redux/main/nodeTree";
 import { setSelectedNodeUids } from "@_redux/main/nodeTree/event";
@@ -27,7 +27,7 @@ import {
 
 import { getCommandKey } from "../../../index";
 import { eventListenersStatesRefType } from "../IFrame";
-import { TNodeUid } from "@_node/index";
+import { TNodeUid } from "@_api/index";
 import { useNavigate } from "react-router-dom";
 import useRnbw from "@_services/useRnbw";
 

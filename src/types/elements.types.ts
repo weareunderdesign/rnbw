@@ -1,5 +1,5 @@
 import { eventListenersStatesRefType } from "@src/stageView/iFrame/IFrame";
-import { TNode, TNodeUid } from "@_node/index";
+import { TNode, TNodeUid } from "@_api/index";
 
 interface Iadd {
   tagName: string;

@@ -10,11 +10,11 @@ import {
   TFileNode,
   TFileNodeData,
   TFileNodeTreeData,
-} from "@_node/file";
-import { _writeIDBFile } from "@_node/file/nohostApis";
-import { getNodeChildIndex, getSubNodeUidsByBfs } from "@_node/helpers";
-import { THtmlNodeData } from "@_node/node";
-import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
+} from "@_api/file";
+import { _writeIDBFile } from "@_api/file/nohostApis";
+import { getNodeChildIndex, getSubNodeUidsByBfs } from "@_api/helpers";
+import { THtmlNodeData } from "@_api/node";
+import { TNode, TNodeTreeData, TNodeUid } from "@_api/types";
 import { setFileTreeNodes, TProject } from "@_redux/main/fileTree";
 import { AnyAction } from "@reduxjs/toolkit";
 

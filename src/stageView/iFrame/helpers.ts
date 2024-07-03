@@ -1,4 +1,4 @@
-import { StageNodeIdAttr, TNodeTreeData, TNodeUid } from "@_node/index";
+import { StageNodeIdAttr, TNodeTreeData, TNodeUid } from "@_api/index";
 
 export const getValidElementWithUid = (
   ele: HTMLElement,

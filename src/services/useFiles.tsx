@@ -31,7 +31,7 @@ import {
   moveIDBSingleDirectoryOrFile,
   removeSingleIDBDirectoryOrFile,
   removeSingleLocalDirectoryOrFile,
-} from "@_node/index";
+} from "@_api/index";
 
 import { useCallback, useContext } from "react";
 import { MainContext } from "@_redux/main";

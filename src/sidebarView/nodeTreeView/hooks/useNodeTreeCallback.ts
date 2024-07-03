@@ -1,7 +1,7 @@
 import { DraggingPosition, TreeItem, TreeItemIndex } from "react-complex-tree";
 
-import { getValidNodeUids } from "@_node/helpers";
-import { TNodeUid } from "@_node/types";
+import { getValidNodeUids } from "@_api/helpers";
+import { TNodeUid } from "@_api/types";
 import { useAppState } from "@_redux/useAppState";
 
 import { useNodeViewState } from "./useNodeViewState";

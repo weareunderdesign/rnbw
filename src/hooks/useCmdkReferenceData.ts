@@ -6,9 +6,9 @@ import { LogAllow } from "@src/indexTSX";
 import { useAppState } from "@_redux/useAppState";
 
 //@ts-expect-error csv files
-import cmdkRefActions from "../cmdkPage/Actions.csv";
+import cmdkRefActions from "../commandMenu/Actions.csv";
 //@ts-expect-error csv files
-import cmdkRefJumpstart from "../cmdkPage/Jumpstart.csv";
+import cmdkRefJumpstart from "../commandMenu/Jumpstart.csv";
 import { filesReferences } from "@rnbws/rfrncs.design";
 import {
   TCmdkContext,

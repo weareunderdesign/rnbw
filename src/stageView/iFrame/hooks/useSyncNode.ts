@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import { ShortDelay } from "@src/indexTSX";
-import { StageNodeIdAttr } from "@_node/file/handlers";
-import { TNodeTreeData, TNodeUid } from "@_node/types";
+import { StageNodeIdAttr } from "@_api/file/handlers";
+import { TNodeTreeData, TNodeUid } from "@_api/types";
 import { debounce, getObjKeys, scrollToElement } from "@src/helper";
 import { useAppState } from "@_redux/useAppState";
 

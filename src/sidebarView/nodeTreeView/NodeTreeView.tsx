@@ -13,8 +13,8 @@ import { useDispatch } from "react-redux";
 import { TreeView } from "@src/common";
 import { TreeViewData } from "@src/common/treeView/types";
 import { DargItemImage, RootNodeUid } from "@src/indexTSX";
-import { THtmlNodeData } from "@_node/index";
-import { TNode, TNodeUid } from "@_node/types";
+import { THtmlNodeData } from "@_api/index";
+import { TNode, TNodeUid } from "@_api/types";
 import {
   debounce,
   getObjKeys,

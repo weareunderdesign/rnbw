@@ -1,4 +1,4 @@
-import { TNodeTreeData, TNodeUid } from "@_node/types";
+import { TNodeTreeData, TNodeUid } from "@_api/types";
 
 import { TTreeViewState } from "../types";
 import { TCodeSelection } from "@src/codeView";

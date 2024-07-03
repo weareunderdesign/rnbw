@@ -10,7 +10,7 @@ import {
   RootNodeUid,
   TmpFileNodeUidWhenAddNew,
 } from "@src/indexTSX";
-import { FileActions } from "@_node/apis";
+import { FileActions } from "@_api/apis";
 import {
   _path,
   confirmAlert,
@@ -19,9 +19,9 @@ import {
   isUnsavedProject,
   TFileNodeData,
   TFileNodeTreeData,
-} from "@_node/file";
-import { getValidNodeUids } from "@_node/helpers";
-import { TNode, TNodeTreeData, TNodeUid } from "@_node/types";
+} from "@_api/file";
+import { getValidNodeUids } from "@_api/helpers";
+import { TNode, TNodeTreeData, TNodeUid } from "@_api/types";
 import { getObjKeys } from "@src/helper";
 import { MainContext } from "@_redux/main";
 import {

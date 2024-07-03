@@ -15,7 +15,7 @@ import {
   THtmlNodeAttribs,
   THtmlNodeTreeData,
   THtmlParserResponse,
-} from "@_node/node";
+} from "@_api/node";
 import {
   DataSequencedUid,
   PARSING_ERROR_MESSAGES,
@@ -24,7 +24,7 @@ import {
   TNodeUid,
   TValidNodeUid,
   ValidStageNodeUid,
-} from "@_node/index";
+} from "@_api/index";
 import { RootNodeUid } from "@src/indexTSX";
 import { useDispatch } from "react-redux";
 import {

@@ -1,4 +1,4 @@
-import { TNodeUid } from "@_node/index";
+import { TNodeUid } from "@_api/index";
 
 export type TProcessorReducerState = {
   navigatorDropdownType: TNavigatorDropdownType;

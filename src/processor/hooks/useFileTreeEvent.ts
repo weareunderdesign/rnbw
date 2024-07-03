@@ -7,8 +7,8 @@ import {
   confirmAlert,
   getFullnameFromUid,
   getParentUidFromUid,
-} from "@_node/index";
-import { TNodeUid } from "@_node/types";
+} from "@_api/index";
+import { TNodeUid } from "@_api/types";
 import {
   addInvalidFileNodes,
   FileTree_Event_RedoActionType,

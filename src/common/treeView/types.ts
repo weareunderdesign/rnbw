@@ -5,7 +5,7 @@ import {
   TreeRenderProps,
 } from "react-complex-tree";
 
-import { TNodeUid } from "@_node/types";
+import { TNodeUid } from "@_api/types";
 
 export type TreeViewProps = {
   width: string;

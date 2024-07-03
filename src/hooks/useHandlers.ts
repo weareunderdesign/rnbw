@@ -16,7 +16,7 @@ import {
   getIndexHtmlContent,
   loadIDBProject,
   loadLocalProject,
-} from "@_node/file";
+} from "@_api/file";
 import {
   focusFileTreeNode,
   setDoingFileAction,

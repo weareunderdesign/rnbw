@@ -12,9 +12,9 @@ import {
   createURLPath,
   TFileNodeData,
   confirmFileChanges,
-} from "@_node/file";
-import { _path } from "@_node/file/nohostApis";
-import { TNode, TNodeUid } from "@_node/types";
+} from "@_api/file";
+import { _path } from "@_api/file/nohostApis";
+import { TNode, TNodeUid } from "@_api/types";
 import { MainContext } from "@_redux/main";
 import {
   addInvalidFileNodes,

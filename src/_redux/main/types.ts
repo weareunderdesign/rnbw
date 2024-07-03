@@ -1,7 +1,7 @@
 import { MutableRefObject } from "react";
 import { editor } from "monaco-editor";
 
-import { TNodeUid, TValidNodeUid } from "@_node/types";
+import { TNodeUid, TValidNodeUid } from "@_api/types";
 
 import { TFileAction, TProjectContext } from "./fileTree";
 

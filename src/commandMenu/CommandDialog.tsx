@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { LogAllow } from "@src/indexTSX";
 import { AddActionPrefix, RenameActionPrefix } from "@src/indexTSX";
-import { confirmFileChanges, TFileNodeData } from "@_node/file";
+import { confirmFileChanges, TFileNodeData } from "@_api/file";
 import {
   setCmdkOpen,
   setCmdkPages,
