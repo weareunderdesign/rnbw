@@ -9,7 +9,7 @@ import {
   StagePreviewPathPrefix,
 } from "@src/indexTSX";
 import { TOsType } from "@_redux/global";
-import { SystemDirectories } from "@_ref/SystemDirectories";
+import { SystemDirectories } from "../../cmdkPage/SystemDirectories";
 import { verifyFileHandlerPermission } from "@_services/main";
 
 import {
