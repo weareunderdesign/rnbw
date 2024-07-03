@@ -1,6 +1,6 @@
 import { TOsType, TTheme } from "@_redux/global";
 import { toast } from "react-toastify";
-import MainPage from "./MainPage";
+import MainPage from "./indexTSX"; 
 import ActionsPanel from "./sidebarView";
 import CodeView from "./codeView";
 import StageView from "./stageView";
