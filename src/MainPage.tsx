@@ -1,18 +1,18 @@
 import React, { useCallback, useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { Loader, Notification } from "@_components/common";
-import { ActionsPanel, CodeView, StageView } from "@_components/main";
-import { CodeViewSyncDelay } from "@_components/indexConstants";
+import { Loader, Notification } from "@src/common";
+import { ActionsPanel, CodeView, StageView } from "@src/main";
+import { CodeViewSyncDelay } from "@src/indexConstants";
 import { isUnsavedProject } from "@_node/file";
 import { MainContext } from "@_redux/main";
 import { setCurrentCommand } from "@_redux/main/cmdk";
 import { useAppState } from "@_redux/useAppState";
 
-import { useCmdk, useHandlers, useInit, useReferneces } from "@_components/main/hooks";
-import Processor from "@_components/main/processor";
-import ResizablePanels from "@_components/main/ResizablePanels";
-import { debounce } from "@_components/main/helper";
-import { CommandDialog } from "@_components/main/cmdkPage/CommandDialog";
+import { useCmdk, useHandlers, useInit, useReferneces } from "@src/main/hooks";
+import Processor from "@src/main/processor";
+import ResizablePanels from "@src/main/ResizablePanels";
+import { debounce } from "@src/main/helper";
+import { CommandDialog } from "@src/main/cmdkPage/CommandDialog";
 import { TNodeUid, TValidNodeUid } from "@_node/index";
 
 export default function MainPage() {

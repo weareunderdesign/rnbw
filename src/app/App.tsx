@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { HashRouter as Router, Route, Routes } from "react-router-dom";
 import { Workbox } from "workbox-window";
 
-import { LogAllow } from "@_components/indexConstants";
+import { LogAllow } from "@src/indexConstants";
 import MainPage from "../MainPage";
 
 export default function App() {

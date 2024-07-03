@@ -2,12 +2,12 @@ import { Buffer } from "buffer";
 import { FileSystemFileHandle } from "file-system-access";
 import JSZip from "jszip";
 
-import { LogAllow } from "@_components/indexConstants";
+import { LogAllow } from "@src/indexConstants";
 import {
   ParsableFileTypes,
   RootNodeUid,
   StagePreviewPathPrefix,
-} from "@_components/indexConstants";
+} from "@src/indexConstants";
 import { TOsType } from "@_redux/global";
 import { SystemDirectories } from "@_ref/SystemDirectories";
 import { verifyFileHandlerPermission } from "@_services/main";

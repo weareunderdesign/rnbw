@@ -5,8 +5,8 @@ import { Range, editor } from "monaco-editor";
 import { useAppState } from "@_redux/useAppState";
 import { useContext, useMemo } from "react";
 import { MainContext } from "@_redux/main";
-import { elementsCmdk, getObjKeys } from "@_components/main/helper";
-import { LogAllow, RainbowAppName } from "@_components/indexConstants";
+import { elementsCmdk, getObjKeys } from "@src/main/helper";
+import { LogAllow, RainbowAppName } from "@src/indexConstants";
 
 import { toast } from "react-toastify";
 import {
@@ -25,7 +25,7 @@ import {
   TValidNodeUid,
   ValidStageNodeUid,
 } from "@_node/index";
-import { RootNodeUid } from "@_components/indexConstants";
+import { RootNodeUid } from "@src/indexConstants";
 import { useDispatch } from "react-redux";
 import {
   focusNodeTreeNode,

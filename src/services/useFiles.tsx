@@ -35,10 +35,10 @@ import {
 
 import { useCallback, useContext } from "react";
 import { MainContext } from "@_redux/main";
-import { getObjKeys } from "@_components/main/helper";
+import { getObjKeys } from "@src/main/helper";
 import { useFileHelpers } from "./useFileHelpers";
-import { useHandlers } from "@_components/main/hooks";
-import { FileChangeAlertMessage } from "@_components/indexConstants";
+import { useHandlers } from "@src/main/hooks";
+import { FileChangeAlertMessage } from "@src/indexConstants";
 import { toast } from "react-toastify";
 import {
   FileTree_Event_RedoActionType,
@@ -47,7 +47,7 @@ import {
   setFileAction,
   setLastFileAction,
 } from "@_redux/main/fileTree";
-import { LogAllow } from "@_components/indexConstants";
+import { LogAllow } from "@src/indexConstants";
 export default function useFiles() {
   const dispatch = useDispatch();
   const {
