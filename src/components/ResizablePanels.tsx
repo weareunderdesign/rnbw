@@ -7,7 +7,7 @@ import {
   ImperativePanelGroupHandle,
 } from "react-resizable-panels";
 import { useAppState } from "@_redux/useAppState";
-import { ResizablePanelsProps } from "../types";
+import { ResizablePanelsProps } from "../typesrnbw";
 
 const actionsPanelWidth = 10;
 const codeViewWidth = 30;

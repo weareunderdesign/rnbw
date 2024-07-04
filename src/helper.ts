@@ -33,7 +33,7 @@ import {
   setActivePanel,
   setNavigatorDropdownType,
 } from "@_redux/main/processor";
-import { AnyFunction } from "./types";
+import { AnyFunction } from "./typesrnbw";
 import { toast } from "react-toastify";
 import { NavigateFunction } from "react-router-dom";
 import { TFilesReference } from "@rnbws/rfrncs.design";
