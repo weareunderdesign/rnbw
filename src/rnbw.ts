@@ -1,10 +1,20 @@
+import { ReactNode } from "react";
 import { TOsType, TTheme } from "@_redux/global";
 import { toast } from "react-toastify";
-import MainPage from "./rnbwTSX"; 
+import MainPage from "./rnbwTSX";
 import ActionsPanel from "./sidebarView";
 import CodeView from "./codeView";
 import StageView from "./stageView";
 import App from "./rnbwTSX";
+
+export type ResizablePanelsProps = {
+  actionPanel: ReactNode;
+  stageView: ReactNode;
+  codeView: ReactNode;
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AnyFunction = (...args: any[]) => any;
 
 export const isChromeOrEdge = (): boolean => {
   const userAgent = navigator.userAgent;
@@ -82,5 +92,4 @@ export const verifyFileHandlerPermission = async (
 };
 
 export default App;
-export * from "./types";
 export { MainPage, ActionsPanel, CodeView, StageView };
