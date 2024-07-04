@@ -1,5 +1,5 @@
 import Loader from "./loader/index";
-import TreeView from "./treeView";
+import TreeView from "../sidebarView/treeView";
 import Notification from "./notification";
 
 export { Loader, TreeView, Notification };

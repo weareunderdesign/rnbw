@@ -11,7 +11,7 @@ import React, {
 import { useDispatch } from "react-redux";
 
 import { TreeView } from "@src/components";
-import { TreeViewData } from "@src/components/treeView/types";
+import { TreeViewData } from "@src/sidebarView/treeView/types";
 import { DargItemImage, RootNodeUid } from "@src/rnbwTSX";
 import { THtmlNodeData } from "@_api/index";
 import { TNode, TNodeUid } from "@_api/types";
@@ -46,7 +46,7 @@ import {
   ItemTitle,
   Container,
   TreeItem,
-} from "@src/components/treeComponents";
+} from "@src/sidebarView/treeComponents";
 import { useNavigate } from "react-router-dom";
 import { THtmlElementsReference } from "@rnbws/rfrncs.design";
 

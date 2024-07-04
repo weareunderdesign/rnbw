@@ -40,7 +40,7 @@ import {
   ItemArrow,
   ItemTitle,
   TreeItem,
-} from "@src/components/treeComponents";
+} from "@src/sidebarView/treeComponents";
 import { NodeIcon } from "./workspaceComponents/NodeIcon";
 import { TFilesReference } from "@rnbws/rfrncs.design";
 import useRnbw from "@_services/useRnbw";
