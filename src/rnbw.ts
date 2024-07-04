@@ -4,12 +4,12 @@ import { toast } from "react-toastify";
 import MainPage from "./rnbwTSX";
 import ActionsPanel from "./sidebarView";
 import CodeView from "./codeView";
-import StageView from "./stageView";
+import DesignView from "./designView";
 import App from "./rnbwTSX";
 
 export type ResizablePanelsProps = {
   sidebarView: ReactNode;
-  stageView: ReactNode;
+  designView: ReactNode;
   codeView: ReactNode;
 };
 
@@ -92,4 +92,4 @@ export const verifyFileHandlerPermission = async (
 };
 
 export default App;
-export { MainPage, ActionsPanel, CodeView, StageView };
+export { MainPage, ActionsPanel, CodeView, DesignView };

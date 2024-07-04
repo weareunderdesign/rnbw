@@ -13,7 +13,7 @@ import { LogAllow } from "@src/rnbwTSX";
 import { PreserveRnbwNode } from "@_api/file/handlers";
 import { TNodeTreeData, TNodeUid } from "@_api/types";
 import { MainContext } from "@_redux/main";
-import { setIframeLoading } from "@_redux/main/stageView";
+import { setIframeLoading } from "@_redux/main/designView";
 import { useAppState } from "@_redux/useAppState";
 
 import { jss, styles } from "./constants";

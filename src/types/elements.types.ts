@@ -1,4 +1,4 @@
-import { eventListenersStatesRefType } from "@src/stageView/iFrame/IFrame";
+import { eventListenersStatesRefType } from "@src/designView/iFrame/IFrame";
 import { TNode, TNodeUid } from "@_api/index";
 
 interface Iadd {

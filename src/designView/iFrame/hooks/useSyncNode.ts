@@ -26,7 +26,7 @@ export const useSyncNode = (iframeRef: HTMLIFrameElement | null) => {
     nodeTreeRef.current = structuredClone(nodeTree);
   }, [nodeTree]);
 
-  // hoveredNodeUid -> stageView
+  // hoveredNodeUid -> designView
   const hoveredItemRef = useRef<TNodeUid>(hoveredNodeUid);
   useEffect(() => {
     if (hoveredItemRef.current === hoveredNodeUid) return;
@@ -54,7 +54,7 @@ export const useSyncNode = (iframeRef: HTMLIFrameElement | null) => {
     focusedItemRef.current = focusedItem;
   }, [focusedItem]);
 
-  // selectedItems -> stageView
+  // selectedItems -> designView
   const selectedItems = useMemo(
     () => getObjKeys(selectedItemsObj),
     [selectedItemsObj],

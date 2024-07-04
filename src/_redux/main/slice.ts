@@ -8,11 +8,11 @@ import { NodeTreeReducer } from "./nodeTree";
 import { NodeEventReducer } from "./nodeTree/event";
 import { ProcessorReduer } from "./processor";
 import { ReferenceReducer } from "./reference";
-import { StageViewReducer } from "./stageView";
 import { ProjectReducer } from "./project";
 
 import { persistReducer } from "redux-persist";
 import createWebStorage from "redux-persist/es/storage/createWebStorage";
+import { DesignViewReducer } from "./designView";
 
 export function createPersistStore() {
   const isServer = typeof window === "undefined";
@@ -57,5 +57,5 @@ export const MainReducer = combineReducers({
 
   codeView: CodeViewReducer,
 
-  stageView: StageViewReducer,
+  designView: DesignViewReducer,
 });

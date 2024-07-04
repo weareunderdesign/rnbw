@@ -46,7 +46,7 @@ export const useAppState = () => {
         present: { currentFileContent, selectedNodeUids, currentFileUid },
         future: nodeEventFuture,
       },
-      stageView: { iframeSrc, iframeLoading, linkToOpen, syncConfigs },
+      designView: { iframeSrc, iframeLoading, linkToOpen, syncConfigs },
       codeView: {
         editingNodeUid: editingNodeUidInCodeView,
         codeViewTabSize,

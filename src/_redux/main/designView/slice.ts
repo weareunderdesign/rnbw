@@ -1,16 +1,16 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { StageViewSyncConfigs, TStageViewReducerState } from "./types";
+import { DesignViewSyncConfigs, TDesignViewReducerState } from "./types";
 
-const stageViewReducerInitialState: TStageViewReducerState = {
+const DesignViewReducerInitialState: TDesignViewReducerState = {
   iframeSrc: null,
   iframeLoading: false,
   linkToOpen: null,
   syncConfigs: {},
 };
-const stageViewSlice = createSlice({
-  name: "stageView",
-  initialState: stageViewReducerInitialState,
+const DesignViewSlice = createSlice({
+  name: "DesignView",
+  initialState: DesignViewReducerInitialState,
   reducers: {
     setIframeSrc(state, actions: PayloadAction<string | null>) {
       const iframeSrc = actions.payload;
@@ -24,12 +24,12 @@ const stageViewSlice = createSlice({
       const linkToOpen = actions.payload;
       state.linkToOpen = linkToOpen;
     },
-    setSyncConfigs(state, action: PayloadAction<StageViewSyncConfigs>) {
+    setSyncConfigs(state, action: PayloadAction<DesignViewSyncConfigs>) {
       const syncConfigs = action.payload;
       state.syncConfigs = syncConfigs;
     },
   },
 });
 export const { setIframeSrc, setIframeLoading, setLinkToOpen, setSyncConfigs } =
-  stageViewSlice.actions;
-export const StageViewReducer = stageViewSlice.reducer;
+  DesignViewSlice.actions;
+export const DesignViewReducer = DesignViewSlice.reducer;

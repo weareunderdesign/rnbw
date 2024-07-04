@@ -4,7 +4,7 @@ import morphdom from "morphdom";
 import { useDispatch } from "react-redux";
 
 import { getNodeUidByCodeSelection } from "@src/codeView";
-import { markSelectedElements } from "@src/stageView/iFrame/helpers";
+import { markSelectedElements } from "@src/designView/iFrame/helpers";
 import { LogAllow } from "@src/rnbwTSX";
 import { _writeIDBFile, PreserveRnbwNode, StageNodeIdAttr } from "@_api/file";
 
@@ -31,7 +31,7 @@ import {
   setNodeTree,
   setSelectedNodeUids,
 } from "@_redux/main/nodeTree";
-import { setIframeSrc } from "@_redux/main/stageView";
+import { setIframeSrc } from "@_redux/main/designView";
 import { useAppState } from "@_redux/useAppState";
 
 import {

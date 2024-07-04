@@ -18,7 +18,7 @@ import {
   NodeTree_Event_JumpToPastActionType,
   setCurrentFileUid,
 } from "@_redux/main/nodeTree/event";
-import { setIframeSrc } from "@_redux/main/stageView";
+import { setIframeSrc } from "@_redux/main/designView";
 import {
   TCmdkGroupData,
   TCmdkKeyMap,

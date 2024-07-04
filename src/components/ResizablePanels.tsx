@@ -14,7 +14,7 @@ const codeViewWidth = 30;
 
 export default function ResizablePanels({
   sidebarView,
-  stageView,
+  designView,
   codeView,
 }: ResizablePanelsProps) {
   const { showActionsPanel, showCodeView } = useAppState();
@@ -121,7 +121,7 @@ export default function ResizablePanels({
             setSizes([sizes[0], sizes[1], size]);
           }}
         >
-          {stageView}
+          {designView}
         </Panel>
       </PanelGroup>
     </>

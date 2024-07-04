@@ -1,11 +1,11 @@
-export type TStageViewReducerState = {
+export type TDesignViewReducerState = {
   iframeSrc: string | null;
   iframeLoading: boolean;
   linkToOpen: string | null;
-  syncConfigs: StageViewSyncConfigs;
+  syncConfigs: DesignViewSyncConfigs;
 };
 
-export type StageViewSyncConfigs = {
+export type DesignViewSyncConfigs = {
   matchIds?: string[] | null;
   skipFromChildren?: boolean;
 };
