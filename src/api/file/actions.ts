@@ -1,4 +1,4 @@
-import { LogAllow } from "@src/indexTSX";
+import { LogAllow } from "@src/rnbwTSX";
 import { TProjectContext } from "@_redux/main/fileTree";
 
 import { TFileHandlerCollection, TFileNodeTreeData, TNodeUid } from "../";

@@ -1,5 +1,5 @@
-import { LogAllow } from "@src/indexTSX";
-import { RootNodeUid } from "@src/indexTSX";
+import { LogAllow } from "@src/rnbwTSX";
+import { RootNodeUid } from "@src/rnbwTSX";
 import { StageNodeIdAttr } from "@_api/file";
 
 import { getObjKeys } from "@src/helper";

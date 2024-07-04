@@ -1,9 +1,9 @@
 import { TTheme } from "@_redux/global";
-import { getSystemTheme } from "../index";
+import { getSystemTheme } from "../rnbw";
 import { TCodeSelection } from "./types";
 import { TNodeTreeData, TNodeUid } from "@_api/types";
 import { getSubNodeUidsByBfs } from "@_api/helpers";
-import { RootNodeUid } from "@src/indexTSX";
+import { RootNodeUid } from "@src/rnbwTSX";
 
 export const getLanguageFromExtension = (extension: string) => {
   const extensionMap: { [key: string]: string } = {

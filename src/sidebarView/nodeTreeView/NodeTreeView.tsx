@@ -12,7 +12,7 @@ import { useDispatch } from "react-redux";
 
 import { TreeView } from "@src/components";
 import { TreeViewData } from "@src/components/treeView/types";
-import { DargItemImage, RootNodeUid } from "@src/indexTSX";
+import { DargItemImage, RootNodeUid } from "@src/rnbwTSX";
 import { THtmlNodeData } from "@_api/index";
 import { TNode, TNodeUid } from "@_api/types";
 import {
@@ -33,8 +33,8 @@ import {
   setNavigatorDropdownType,
 } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
-import { getCommandKey } from "../../index";
-import { addClass, removeClass } from "../../index";
+import { getCommandKey } from "../../rnbw";
+import { addClass, removeClass } from "../../rnbw";
 
 import { useCmdk } from "./hooks/useCmdk";
 import { useNodeTreeCallback } from "./hooks/useNodeTreeCallback";

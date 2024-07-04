@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 
 import { useDispatch } from "react-redux";
 
-import { RootNodeUid } from "@src/indexTSX";
+import { RootNodeUid } from "@src/rnbwTSX";
 import { setWorkspace } from "@_redux/main/fileTree";
 import { useAppState } from "@_redux/useAppState";
 

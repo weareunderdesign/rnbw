@@ -2,8 +2,8 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Command } from "cmdk";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { LogAllow } from "@src/indexTSX";
-import { AddActionPrefix, RenameActionPrefix } from "@src/indexTSX";
+import { LogAllow } from "@src/rnbwTSX";
+import { AddActionPrefix, RenameActionPrefix } from "@src/rnbwTSX";
 import { confirmFileChanges, TFileNodeData } from "@_api/file";
 import {
   setCmdkOpen,
@@ -13,7 +13,7 @@ import {
 } from "@_redux/main/cmdk";
 import { useAppState } from "@_redux/useAppState";
 import { TCmdkContext, TCmdkKeyMap, TCmdkReference } from "@_types/main";
-import { getCommandKey } from "../index";
+import { getCommandKey } from "../rnbw";
 import { useCmdkModal, useCmdkReferenceData, useHandlers } from "../hooks";
 import { CommandItem } from "./CommandItem";
 import { CommandDialogProps, TCmdkPage } from "./types";

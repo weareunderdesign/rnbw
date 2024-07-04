@@ -2,10 +2,10 @@ import { useEffect } from "react";
 
 import { useDispatch } from "react-redux";
 
-import { LogAllow } from "@src/indexTSX";
+import { LogAllow } from "@src/rnbwTSX";
 import { setOsType, setTheme } from "@_redux/global";
 import { setDoingFileAction, TProjectContext } from "@_redux/main/fileTree";
-import { isChromeOrEdge } from "../index";
+import { isChromeOrEdge } from "../rnbw";
 
 import { setSystemTheme } from "../helper";
 

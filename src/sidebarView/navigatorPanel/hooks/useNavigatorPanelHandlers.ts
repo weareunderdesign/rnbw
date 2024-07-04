@@ -3,7 +3,7 @@ import { useCallback, useContext } from "react";
 import { get } from "idb-keyval";
 import { useDispatch } from "react-redux";
 
-import { LogAllow } from "@src/indexTSX";
+import { LogAllow } from "@src/rnbwTSX";
 import { isUnsavedProject } from "@_api/file/helpers";
 import { MainContext } from "@_redux/main";
 import { TProject } from "@_redux/main/fileTree";

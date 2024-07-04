@@ -1,10 +1,10 @@
 import { TOsType, TTheme } from "@_redux/global";
 import { toast } from "react-toastify";
-import MainPage from "./indexTSX"; 
+import MainPage from "./rnbwTSX"; 
 import ActionsPanel from "./sidebarView";
 import CodeView from "./codeView";
 import StageView from "./stageView";
-import App from "./indexTSX";
+import App from "./rnbwTSX";
 
 export const isChromeOrEdge = (): boolean => {
   const userAgent = navigator.userAgent;

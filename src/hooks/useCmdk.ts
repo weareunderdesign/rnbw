@@ -5,8 +5,8 @@ import { del } from "idb-keyval";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
-import { LogAllow } from "@src/indexTSX";
-import { DefaultProjectPath } from "@src/indexTSX";
+import { LogAllow } from "@src/rnbwTSX";
+import { DefaultProjectPath } from "@src/rnbwTSX";
 import {
   confirmFileChanges,
   downloadIDBProject,
@@ -24,7 +24,7 @@ import {
   setWordWrap,
 } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
-import { getCommandKey } from "../index";
+import { getCommandKey } from "../rnbw";
 import { TCmdkKeyMap, TCmdkReferenceData } from "@_types/main";
 
 import { setSystemTheme } from "../helper";

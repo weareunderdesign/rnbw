@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import { AddFileActionPrefix } from "@src/indexTSX";
+import { AddFileActionPrefix } from "@src/rnbwTSX";
 import { isAddFileAction } from "@_api/helpers";
 import { useAppState } from "@_redux/useAppState";
 

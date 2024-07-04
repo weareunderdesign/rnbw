@@ -2,10 +2,10 @@ import { useCallback, useContext } from "react";
 
 import { useDispatch } from "react-redux";
 
-import { LogAllow } from "@src/indexTSX";
+import { LogAllow } from "@src/rnbwTSX";
 import { MainContext } from "@_redux/main";
 import { setCurrentCommand } from "@_redux/main/cmdk";
-import { getCommandKey } from "../../../index";
+import { getCommandKey } from "../../../rnbw";
 import { TCmdkKeyMap } from "@_types/main";
 
 import { getBodyChild, getValidElementWithUid } from "../helpers";

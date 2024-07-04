@@ -5,7 +5,7 @@ import { DraggingPositionItem } from "react-complex-tree";
 import { useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { RootNodeUid } from "@src/indexTSX";
+import { RootNodeUid } from "@src/rnbwTSX";
 import { TreeView } from "@src/components";
 import {
   getNormalizedPath,
@@ -24,7 +24,7 @@ import {
 } from "@_redux/main/fileTree";
 import { setActivePanel } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
-import { generateQuerySelector } from "../../index";
+import { generateQuerySelector } from "../../rnbw";
 
 import {
   useCmdk,

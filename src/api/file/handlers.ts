@@ -1,6 +1,6 @@
 import * as parse5 from "parse5";
-import { RainbowAppName } from "@src/indexTSX";
-import { RootNodeUid } from "@src/indexTSX";
+import { RainbowAppName } from "@src/rnbwTSX";
+import { RootNodeUid } from "@src/rnbwTSX";
 import { TFileParserResponse, TNodeUid, TValidNodeUid } from "..";
 import {
   THtmlDomNode,

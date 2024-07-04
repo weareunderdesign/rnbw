@@ -2,15 +2,15 @@ import { Buffer } from "buffer";
 import { FileSystemFileHandle } from "file-system-access";
 import JSZip from "jszip";
 
-import { LogAllow } from "@src/indexTSX";
+import { LogAllow } from "@src/rnbwTSX";
 import {
   ParsableFileTypes,
   RootNodeUid,
   StagePreviewPathPrefix,
-} from "@src/indexTSX";
+} from "@src/rnbwTSX";
 import { TOsType } from "@_redux/global";
 import { SystemDirectories } from "../../commandMenu/SystemDirectories";
-import { verifyFileHandlerPermission } from "../../index";
+import { verifyFileHandlerPermission } from "../../rnbw";
 
 import {
   fileHandlers,

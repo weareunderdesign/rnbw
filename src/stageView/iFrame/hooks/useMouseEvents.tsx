@@ -1,8 +1,8 @@
 import { useCallback, useContext, useRef } from "react";
 import { useDispatch } from "react-redux";
 
-import { LogAllow } from "@src/indexTSX";
-import { ShortDelay } from "@src/indexTSX";
+import { LogAllow } from "@src/rnbwTSX";
+import { ShortDelay } from "@src/rnbwTSX";
 import { StageNodeIdAttr } from "@_api/file";
 import { getValidNodeUids } from "@_api/helpers";
 import { THtmlNodeData } from "@_api/node";
@@ -25,7 +25,7 @@ import {
   onWebComponentDblClick,
 } from "@src/helper";
 
-import { getCommandKey } from "../../../index";
+import { getCommandKey } from "../../../rnbw";
 import { eventListenersStatesRefType } from "../IFrame";
 import { TNodeUid } from "@_api/index";
 import { useNavigate } from "react-router-dom";

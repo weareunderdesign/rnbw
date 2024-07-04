@@ -2,7 +2,7 @@ import { useCallback, useContext, useEffect, useRef } from "react";
 
 import { useDispatch } from "react-redux";
 
-import { AutoSaveDelay, RootNodeUid } from "@src/indexTSX";
+import { AutoSaveDelay, RootNodeUid } from "@src/rnbwTSX";
 import { TFileNodeTreeData } from "@_api/file";
 
 import { setFileTree } from "@_redux/main/fileTree";

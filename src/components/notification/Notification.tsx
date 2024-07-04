@@ -3,7 +3,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import { useAppState } from "@_redux/useAppState";
-import { getSystemTheme } from "../../index";
+import { getSystemTheme } from "../../rnbw";
 
 export const Notification = () => {
   const { theme } = useAppState();

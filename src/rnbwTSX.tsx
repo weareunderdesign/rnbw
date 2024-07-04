@@ -11,7 +11,7 @@ import { PersistGate } from "redux-persist/integration/react";
 
 import configureStore from "@_redux/_root";
 import { Loader, Notification } from "@src/components";
-import { ActionsPanel, CodeView, StageView } from ".";
+import { ActionsPanel, CodeView, StageView } from "./rnbw";
 import { isUnsavedProject } from "@_api/file";
 import { MainContext } from "@_redux/main";
 import { setCurrentCommand } from "@_redux/main/cmdk";
