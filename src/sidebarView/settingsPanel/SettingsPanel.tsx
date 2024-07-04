@@ -8,7 +8,7 @@ import { SVGIconI } from "@src/components";
 
 import { SettingsView } from "../settingsView/SettingsView";
 import { SettingsForm } from "../settingsView/SettingsForm";
-import { PanelHeader } from "@src/components/panelHeader";
+import { PanelHeader } from "@src/sidebarView/panelHeader";
 
 const excludedAttributes: string[] = [StageNodeIdAttr, DataSequencedUid];
 

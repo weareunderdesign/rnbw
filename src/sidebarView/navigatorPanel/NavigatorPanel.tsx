@@ -19,7 +19,7 @@ import {
 } from "./constants";
 import { useFavicon, useNavigatorPanelHandlers } from "./hooks";
 import { PanelButton } from "./components/PanelButton";
-import { PanelHeader } from "@src/components/panelHeader";
+import { PanelHeader } from "@src/sidebarView/panelHeader";
 
 export default function NavigatorPanel() {
   const {
