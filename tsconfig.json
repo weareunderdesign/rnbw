@@ -27,7 +27,6 @@
       "@_hooks/*": ["src/hooks/*"],
       "@_pages/*": ["src/pages/*"],
       "@_services/*": ["src/services/*"],
-      "@_types/*": ["src/types/*"],
       "@_actions/*": ["src/actions/*"]
     }
   },
