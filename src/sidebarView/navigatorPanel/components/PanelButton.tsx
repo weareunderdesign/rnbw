@@ -11,8 +11,8 @@ export const PanelButton = () => {
   const [isButtonHover, setIsButtonHover] = useState(false);
 
   useEffect(() => {
-    const actionPanel = document.getElementById("ActionsPanel");
-    if (!actionPanel) return;
+    const sidebarView = document.getElementById("ActionsPanel");
+    if (!sidebarView) return;
 
     const handleMouseEnter = () => {
       setIsHovered(true);
@@ -21,12 +21,12 @@ export const PanelButton = () => {
       setIsHovered(false);
     };
 
-    actionPanel.addEventListener("mouseenter", handleMouseEnter);
-    actionPanel.addEventListener("mouseleave", handleMouseLeave);
+    sidebarView.addEventListener("mouseenter", handleMouseEnter);
+    sidebarView.addEventListener("mouseleave", handleMouseLeave);
 
     return () => {
-      actionPanel.removeEventListener("mouseenter", handleMouseEnter);
-      actionPanel.removeEventListener("mouseleave", handleMouseLeave);
+      sidebarView.removeEventListener("mouseenter", handleMouseEnter);
+      sidebarView.removeEventListener("mouseleave", handleMouseLeave);
     };
   }, []);
 

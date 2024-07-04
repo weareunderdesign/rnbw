@@ -8,7 +8,7 @@ import StageView from "./stageView";
 import App from "./rnbwTSX";
 
 export type ResizablePanelsProps = {
-  actionPanel: ReactNode;
+  sidebarView: ReactNode;
   stageView: ReactNode;
   codeView: ReactNode;
 };

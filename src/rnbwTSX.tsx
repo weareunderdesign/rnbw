@@ -222,7 +222,7 @@ function MainPage() {
         >
           <Loader />
           <ResizablePanels
-            actionPanel={<ActionsPanel />}
+            sidebarView={<ActionsPanel />}
             codeView={<CodeView />}
             stageView={<StageView />}
           />

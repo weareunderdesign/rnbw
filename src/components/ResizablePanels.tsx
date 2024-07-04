@@ -13,7 +13,7 @@ const actionsPanelWidth = 10;
 const codeViewWidth = 30;
 
 export default function ResizablePanels({
-  actionPanel,
+  sidebarView,
   stageView,
   codeView,
 }: ResizablePanelsProps) {
@@ -74,7 +74,7 @@ export default function ResizablePanels({
           onMouseLeave={() => setIsHovered(false)}
         >
           <div style={actionsPanelStyle}>
-            {actionPanel}
+            {sidebarView}
           </div>
         </div>
       )}
@@ -95,7 +95,7 @@ export default function ResizablePanels({
             setSizes([size, sizes[1], sizes[2]]);
           }}
         >
-          {showActionsPanel && actionPanel}
+          {showActionsPanel && sidebarView}
         </Panel>
         <PanelResizeHandle style={{ width: 0 }} />
         <Panel

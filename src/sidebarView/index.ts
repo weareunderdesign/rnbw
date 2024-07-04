@@ -1,9 +1,9 @@
-import ActionPanel from "./ActionsPanel";
+import SidebarView from "./sidebarView";
 import NavigatorPanel from "./navigatorPanel";
 import NodeTreeView from "./nodeTreeView";
 import SettingsPanel from "./settingsPanel";
 import WorkspaceTreeView from "./workspaceTreeView";
 
-export default ActionPanel;
+export default SidebarView;
 
 export { NavigatorPanel, NodeTreeView, SettingsPanel, WorkspaceTreeView };
