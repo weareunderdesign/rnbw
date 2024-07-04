@@ -7,15 +7,6 @@ import CodeView from "./codeView";
 import StageView from "./stageView";
 import App from "./rnbwTSX";
 
-export type ResizablePanelsProps = {
-  actionPanel: ReactNode;
-  stageView: ReactNode;
-  codeView: ReactNode;
-};
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AnyFunction = (...args: any[]) => any;
-
 export const isChromeOrEdge = (): boolean => {
   const userAgent = navigator.userAgent;
   if (userAgent.indexOf("Chrome") > -1) {

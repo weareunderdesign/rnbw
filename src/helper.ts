@@ -25,7 +25,7 @@ import {
   TCmdkReference,
   TCmdkReferenceData,
   THtmlReferenceData,
-} from "./types/main";
+} from "@_types/main";
 import { AnyAction } from "@reduxjs/toolkit";
 import { THtmlNodeData } from "@_api/node";
 import { TFileNodeData, TFileNodeTreeData, createURLPath } from "@_api/index";
@@ -33,7 +33,7 @@ import {
   setActivePanel,
   setNavigatorDropdownType,
 } from "@_redux/main/processor";
-import { AnyFunction } from "./rnbw";
+import { AnyFunction } from "./types";
 import { toast } from "react-toastify";
 import { NavigateFunction } from "react-router-dom";
 import { TFilesReference } from "@rnbws/rfrncs.design";
