@@ -268,8 +268,9 @@ export const useNodeTreeEvent = () => {
               });
               if (needsReload) {
                 // If we need to reload, update the iframe src
-                const iframeSrc = iframe.src.split("?")[0] + "?t=" + Date.now();
-                iframe.src = iframeSrc;
+                /*const iframeSrc = iframe.src.split("?")[0] + "?t=" + Date.now();
+                iframe.src = iframeSrc;*/
+                // TODO: on refresh button click
               } else {
                 // If no reload is needed, use morphdom for other updates
                 morphdom(iframeHtml, newDoc.documentElement, {
