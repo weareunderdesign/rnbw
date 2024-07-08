@@ -34,7 +34,6 @@ import {
 } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 import { getCommandKey } from "../../rnbw";
-import { addClass, removeClass } from "../../rnbw";
 
 import { useCmdk } from "./hooks/useCmdk";
 import { useNodeTreeCallback } from "./hooks/useNodeTreeCallback";
@@ -91,27 +90,27 @@ const NodeTreeView = () => {
   const hoveredItemRef = useRef<TNodeUid>(hoveredNodeUid);
   useEffect(() => {
     if (hoveredItemRef.current === hoveredNodeUid) return;
-  
+
     const curHoveredElement = document.querySelector(
-      `#NodeTreeView-${hoveredItemRef.current}`
+      `#NodeTreeView-${hoveredItemRef.current}`,
     ) as HTMLElement | null;
-  
+
     if (curHoveredElement) {
-      curHoveredElement.style.removeProperty('outline-width');
-      curHoveredElement.style.removeProperty('outline-style');
-      curHoveredElement.style.removeProperty('outline-offset');
+      curHoveredElement.style.removeProperty("outline-width");
+      curHoveredElement.style.removeProperty("outline-style");
+      curHoveredElement.style.removeProperty("outline-offset");
     }
-  
+
     const newHoveredElement = document.querySelector(
-      `#NodeTreeView-${hoveredNodeUid}`
+      `#NodeTreeView-${hoveredNodeUid}`,
     ) as HTMLElement | null;
-  
+
     if (newHoveredElement) {
-      newHoveredElement.style.outlineWidth = '1px';
-      newHoveredElement.style.outlineStyle = 'solid';
-      newHoveredElement.style.outlineOffset = '-1px';
+      newHoveredElement.style.outlineWidth = "1px";
+      newHoveredElement.style.outlineStyle = "solid";
+      newHoveredElement.style.outlineOffset = "-1px";
     }
-  
+
     hoveredItemRef.current = hoveredNodeUid;
   }, [hoveredNodeUid]);
 
@@ -200,20 +199,20 @@ const NodeTreeView = () => {
         overflow: "auto",
         paddingBottom: "16px",
         maxHeight: "calc(100vh - 42px)",
-        msOverflowStyle: "none", 
+        msOverflowStyle: "none",
         scrollbarWidth: "none",
       }}
       onClick={onPanelClick}
     >
       <style>
-      {`
+        {`
         #root #NodeTreeView ul > li {
           line-height: 100%;
           padding: 0px;
           overflow: hidden;
         }
       `}
-    </style>
+      </style>
       <TreeView
         width={"100%"}
         height={"auto"}

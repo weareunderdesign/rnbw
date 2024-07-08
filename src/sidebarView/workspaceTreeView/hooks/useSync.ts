@@ -4,7 +4,7 @@ import { RootNodeUid, ShortDelay } from "@src/rnbwTSX";
 import { TNode, TNodeUid } from "@_api/types";
 import { debounce, scrollToElement } from "@src/helper";
 import { useAppState } from "@_redux/useAppState";
-import { addClass, generateQuerySelector, removeClass } from "../../../rnbw";
+import { generateQuerySelector } from "../../../rnbw";
 
 export const useSync = () => {
   const { fileTree, fFocusedItem: focusedItem, hoveredFileUid } = useAppState();
@@ -15,23 +15,23 @@ export const useSync = () => {
     if (hoveredItemRef.current === hoveredFileUid) return;
 
     const curHoveredElement = document.querySelector(
-      `#FileTreeView-${generateQuerySelector(hoveredItemRef.current)}`
+      `#FileTreeView-${generateQuerySelector(hoveredItemRef.current)}`,
     ) as HTMLElement | null;
 
     if (curHoveredElement) {
-      curHoveredElement.style.removeProperty('outline-width');
-      curHoveredElement.style.removeProperty('outline-style');
-      curHoveredElement.style.removeProperty('outline-offset');
+      curHoveredElement.style.removeProperty("outline-width");
+      curHoveredElement.style.removeProperty("outline-style");
+      curHoveredElement.style.removeProperty("outline-offset");
     }
 
     const newHoveredElement = document.querySelector(
-      `#FileTreeView-${generateQuerySelector(hoveredFileUid)}`
+      `#FileTreeView-${generateQuerySelector(hoveredFileUid)}`,
     ) as HTMLElement | null;
 
     if (newHoveredElement) {
-      newHoveredElement.style.outlineWidth = '1px';
-      newHoveredElement.style.outlineStyle = 'solid';
-      newHoveredElement.style.outlineOffset = '-1px';
+      newHoveredElement.style.outlineWidth = "1px";
+      newHoveredElement.style.outlineStyle = "solid";
+      newHoveredElement.style.outlineOffset = "-1px";
     }
 
     hoveredItemRef.current = hoveredFileUid;

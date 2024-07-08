@@ -93,35 +93,36 @@ export const SettingsView = ({
   };
 
   const iconButtonStyle: React.CSSProperties = {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    cursor: 'pointer',
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    cursor: "pointer",
   };
 
   const settingsItemStyle: React.CSSProperties = {
-    display: 'flex',
+    display: "flex",
     flexDirection: "row",
-    alignItems: 'center',
-    gap: '12px',
+    alignItems: "center",
+    gap: "12px",
   };
 
   const inputStyle = (attribute: string): React.CSSProperties => ({
     textAlign: "end",
     width: "100%",
-    border: 'none',
-    background: 'transparent',
-    outline: 'none',
-    boxShadow: hoveredInput === attribute
-      ? '0 1px 0 0 white'
-      : focusedInput === attribute
-      ? '0 1px 0 0 white'
-      : 'none',
+    border: "none",
+    background: "transparent",
+    outline: "none",
+    boxShadow:
+      hoveredInput === attribute
+        ? "0 1px 0 0 white"
+        : focusedInput === attribute
+          ? "0 1px 0 0 white"
+          : "none",
   });
 
   return (
     <div
-      id="SettingsView" 
+      id="SettingsView"
       className="padding-s"
       onClick={() =>
         activePanel !== "settings" && dispatch(setActivePanel("settings"))
@@ -178,7 +179,7 @@ export const SettingsView = ({
               className="text-s"
               style={inputStyle(attribute)}
               value={(attributes[attribute] || "") as string}
-              onBlur={(e) => {
+              onBlur={() => {
                 handleInputBlur();
                 rnbw.elements.updateSettings({
                   settings: {

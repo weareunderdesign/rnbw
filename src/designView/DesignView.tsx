@@ -1,4 +1,13 @@
-import React, { useCallback, useMemo, FC, ReactNode, useContext, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useMemo,
+  FC,
+  ReactNode,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useDispatch } from "react-redux";
 import { MainContext } from "@_redux/main";
 import { setActivePanel } from "@_redux/main/processor";
@@ -25,20 +34,24 @@ interface ResizeProps {
 const zoomFactor = { max: 10, min: 0.1 };
 const zoomIndex = 0.25;
 
-const SizeDisplay: FC<{ width: number; height: number; scale: number }> = ({ width, height, scale }) => {
+const SizeDisplay: FC<{ width: number; height: number; scale: number }> = ({
+  width,
+  height,
+  scale,
+}) => {
   return (
     <div
       style={{
-        position: 'absolute',
-        right: '10px',
-        bottom: '10px',
-        background: 'rgba(0,0,0,0.5)',
-        color: 'white',
-        padding: '5px',
-        borderRadius: '3px',
-        fontSize: '12px',
+        position: "absolute",
+        right: "10px",
+        bottom: "10px",
+        background: "rgba(0,0,0,0.5)",
+        color: "white",
+        padding: "5px",
+        borderRadius: "3px",
+        fontSize: "12px",
         transform: `scale(${1 / scale})`,
-        transformOrigin: 'bottom right',
+        transformOrigin: "bottom right",
       }}
     >
       {`${Math.round(width)} x ${Math.round(height)}`}
@@ -74,7 +87,7 @@ const PanAndPinch: FC<{ children: ReactNode }> = ({ children }) => {
   };
 
   const updateScale = (newScale: number) => {
-    setTransform(prevTransform => {
+    setTransform((prevTransform) => {
       const scaleFactor = newScale / prevTransform.scale;
       return {
         scale: newScale,
@@ -98,7 +111,7 @@ const PanAndPinch: FC<{ children: ReactNode }> = ({ children }) => {
     if (spacePressed && mouseKeyIsDown && scrollableRef.current) {
       const deltaX = e.movementX / transform.scale;
       const deltaY = e.movementY / transform.scale;
-      setTransform(prevTransform => ({
+      setTransform((prevTransform) => ({
         ...prevTransform,
         x: prevTransform.x - deltaX,
         y: prevTransform.y - deltaY,
@@ -213,7 +226,11 @@ const PanAndPinch: FC<{ children: ReactNode }> = ({ children }) => {
   return (
     <div
       style={{
-        overflow: contentSize.width > window.innerWidth || contentSize.height > window.innerHeight ? 'auto' : 'hidden',
+        overflow:
+          contentSize.width > window.innerWidth ||
+          contentSize.height > window.innerHeight
+            ? "auto"
+            : "hidden",
         width: "100%",
         height: "100%",
         display: "flex",
@@ -275,8 +292,8 @@ const Resize: FC<ResizeProps> = ({ children, scale, canvas }) => {
       const {
         offsetWidth: width,
         offsetHeight: height,
-        offsetLeft: x,
-        offsetTop: y,
+        // offsetLeft: x,
+        // offsetTop: y,
       } = panel;
 
       const resizeTop = () => {
@@ -284,7 +301,7 @@ const Resize: FC<ResizeProps> = ({ children, scale, canvas }) => {
         if (newHeight < 100) return;
         panel.style.height = `${newHeight}px`;
         panel.style.top = `${(initialSize.height - newHeight) / 2}px`;
-        setCurrentSize(prev => ({ ...prev, height: newHeight }));
+        setCurrentSize((prev) => ({ ...prev, height: newHeight }));
       };
 
       const resizeRight = () => {
@@ -292,7 +309,7 @@ const Resize: FC<ResizeProps> = ({ children, scale, canvas }) => {
         if (newWidth < 100) return;
         panel.style.width = `${newWidth}px`;
         panel.style.left = `${(initialSize.width - newWidth) / 2}px`;
-        setCurrentSize(prev => ({ ...prev, width: newWidth }));
+        setCurrentSize((prev) => ({ ...prev, width: newWidth }));
       };
 
       const resizeBottom = () => {
@@ -300,7 +317,7 @@ const Resize: FC<ResizeProps> = ({ children, scale, canvas }) => {
         if (newHeight < 100) return;
         panel.style.height = `${newHeight}px`;
         panel.style.top = `${(initialSize.height - newHeight) / 2}px`;
-        setCurrentSize(prev => ({ ...prev, height: newHeight }));
+        setCurrentSize((prev) => ({ ...prev, height: newHeight }));
       };
 
       const resizeLeft = () => {
@@ -308,7 +325,7 @@ const Resize: FC<ResizeProps> = ({ children, scale, canvas }) => {
         if (newWidth < 100) return;
         panel.style.width = `${newWidth}px`;
         panel.style.left = `${(initialSize.width - newWidth) / 2}px`;
-        setCurrentSize(prev => ({ ...prev, width: newWidth }));
+        setCurrentSize((prev) => ({ ...prev, width: newWidth }));
       };
 
       const resizeOperations = {
@@ -416,102 +433,104 @@ const Resize: FC<ResizeProps> = ({ children, scale, canvas }) => {
   }, [handleMessageFromIFrame]);
 
   const panelStyle: React.CSSProperties = {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
+    position: "absolute",
+    width: "100%",
+    height: "100%",
   };
 
   const panelContainerStyle: React.CSSProperties = {
-    position: 'relative',
-    width: '100%',
-    height: '100%',
+    position: "relative",
+    width: "100%",
+    height: "100%",
   };
 
   const resizerBaseStyle: React.CSSProperties = {
-    position: 'absolute',
-    background: 'transparent',
+    position: "absolute",
+    background: "transparent",
   };
 
   const resizerStyles: { [key in Direction]: React.CSSProperties } = {
     [Direction.TopLeft]: {
       ...resizerBaseStyle,
-      cursor: 'nwse-resize',
-      height: '25px',
-      width: '25px',
+      cursor: "nwse-resize",
+      height: "25px",
+      width: "25px",
       left: 0,
       top: 0,
       zIndex: 1,
     },
     [Direction.Top]: {
       ...resizerBaseStyle,
-      cursor: 'ns-resize',
-      height: '25px',
-      width: '100%',
+      cursor: "ns-resize",
+      height: "25px",
+      width: "100%",
       left: 0,
       top: 0,
     },
     [Direction.TopRight]: {
       ...resizerBaseStyle,
-      cursor: 'nesw-resize',
-      height: '25px',
-      width: '25px',
+      cursor: "nesw-resize",
+      height: "25px",
+      width: "25px",
       right: 0,
       top: 0,
       zIndex: 1,
     },
     [Direction.Right]: {
       ...resizerBaseStyle,
-      cursor: 'ew-resize',
-      width: '25px',
-      height: '100%',
+      cursor: "ew-resize",
+      width: "25px",
+      height: "100%",
       right: 0,
       top: 0,
     },
     [Direction.BottomLeft]: {
       ...resizerBaseStyle,
-      cursor: 'nesw-resize',
-      width: '25px',
-      height: '25px',
+      cursor: "nesw-resize",
+      width: "25px",
+      height: "25px",
       left: 0,
       bottom: 0,
       zIndex: 1,
     },
     [Direction.Bottom]: {
       ...resizerBaseStyle,
-      cursor: 'ns-resize',
-      width: '100%',
-      height: '25px',
+      cursor: "ns-resize",
+      width: "100%",
+      height: "25px",
       bottom: 0,
       left: 0,
     },
     [Direction.BottomRight]: {
       ...resizerBaseStyle,
-      cursor: 'nwse-resize',
-      width: '25px',
-      height: '25px',
+      cursor: "nwse-resize",
+      width: "25px",
+      height: "25px",
       right: 0,
       bottom: 0,
       zIndex: 1,
     },
     [Direction.Left]: {
       ...resizerBaseStyle,
-      cursor: 'ew-resize',
-      width: '25px',
-      height: '100%',
+      cursor: "ew-resize",
+      width: "25px",
+      height: "100%",
       left: 0,
       top: 0,
     },
   };
 
   return (
-    <div 
-      style={{
-        ...panelStyle,
-        userSelect: isResizing ? 'none' : 'text',
-        WebkitUserSelect: isResizing ? 'none' : 'text',
-        MozUserSelect: isResizing ? 'none' : 'text',
-        msUserSelect: isResizing ? 'none' : 'text',
-      } as React.CSSProperties}
+    <div
+      style={
+        {
+          ...panelStyle,
+          userSelect: isResizing ? "none" : "text",
+          WebkitUserSelect: isResizing ? "none" : "text",
+          MozUserSelect: isResizing ? "none" : "text",
+          msUserSelect: isResizing ? "none" : "text",
+        } as React.CSSProperties
+      }
       ref={panelRef}
     >
       <div style={panelContainerStyle}>
@@ -525,10 +544,10 @@ const Resize: FC<ResizeProps> = ({ children, scale, canvas }) => {
           ))}
         {children}
         {canvas && (
-          <SizeDisplay 
-            width={currentSize.width} 
-            height={currentSize.height} 
-            scale={scale} 
+          <SizeDisplay
+            width={currentSize.width}
+            height={currentSize.height}
+            scale={scale}
           />
         )}
       </div>
