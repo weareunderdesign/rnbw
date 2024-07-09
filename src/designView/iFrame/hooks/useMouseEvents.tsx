@@ -17,6 +17,7 @@ import {
   getValidElementWithUid,
   isChild,
   isSameParents,
+  markSelectedElements,
   selectAllText,
 } from "../helpers";
 import {
@@ -130,7 +131,20 @@ export const useMouseEvents = () => {
         }
 
         // check if it's a new state
+
         const same = areArraysEqual(selectedItemsRef.current, targetUids);
+        if (same) {
+          //check if the node is marked as selected: [rnbwdev-rnbw-element-select]
+          const ele = e.target as HTMLElement;
+          const selected = ele.getAttribute("rnbwdev-rnbw-element-select");
+          if (!selected) {
+            markSelectedElements(
+              iframeRefRef.current,
+              targetUids,
+              nodeTreeRef.current,
+            );
+          }
+        }
         !same && dispatch(setSelectedNodeUids(targetUids));
       })();
 
