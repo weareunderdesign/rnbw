@@ -836,8 +836,8 @@ export default function useElements() {
     if (
       currentFileContent !==
         nodeEventPast[nodeEventPastLength - 1].currentFileContent &&
-      selectedNodeUids ===
-        nodeEventPast[nodeEventPastLength - 1].selectedNodeUids
+      selectedNodeUids.join("") ===
+        nodeEventPast[nodeEventPastLength - 1].selectedNodeUids.join("")
     ) {
       dispatch({ type: NodeTree_Event_UndoActionType });
       dispatch({ type: NodeTree_Event_UndoActionType });
