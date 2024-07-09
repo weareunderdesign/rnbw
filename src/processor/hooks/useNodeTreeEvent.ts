@@ -396,15 +396,12 @@ export const useNodeTreeEvent = () => {
           ),
         );
       } else {
-        const nodesToBeMarkedAsSelected =
-          selectedNodeUidsAfterActions.length > 0
-            ? selectedNodeUidsAfterActions
-            : existingSelectedNodeUids.current;
-        markSelectedElements(
-          iframeRefRef.current,
-          nodesToBeMarkedAsSelected,
-          nodeTree,
-        );
+        if (selectedNodeUidsAfterActions.length > 0)
+          markSelectedElements(
+            iframeRefRef.current,
+            selectedNodeUidsAfterActions,
+            nodeTree,
+          );
         const validExpandedItems = getObjKeys(nExpandedItemsObj).filter(
           (uid) =>
             _validNodeTree[uid] && _validNodeTree[uid].isEntity === false,
