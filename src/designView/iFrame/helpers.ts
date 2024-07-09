@@ -20,6 +20,13 @@ export const markSelectedElements = (
   uids: TNodeUid[],
   nodeTree: TNodeTreeData,
 ) => {
+  //find all the elements which are already selected and make them unselected
+  const selectedElements = iframeRef?.contentWindow?.document.querySelectorAll(
+    `[rnbwdev-rnbw-element-select]`,
+  );
+  selectedElements?.forEach((ele) => {
+    ele.removeAttribute("rnbwdev-rnbw-element-select");
+  });
   uids.map((uid) => {
     // if it's a web component, should select its first child element
     let selectedElement = iframeRef?.contentWindow?.document?.querySelector(
