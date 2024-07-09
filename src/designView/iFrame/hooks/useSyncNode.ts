@@ -62,21 +62,7 @@ export const useSyncNode = (iframeRef: HTMLIFrameElement | null) => {
   const previousSelectedItemsRef = useRef<TNodeUid[]>(selectedItems);
 
   useEffect(() => {
-    // check if it's a new state
-    if (previousSelectedItemsRef.current.length === selectedItems.length) {
-      let same = true;
-      for (
-        let index = 0, len = previousSelectedItemsRef.current.length;
-        index < len;
-        ++index
-      ) {
-        if (previousSelectedItemsRef.current[index] !== selectedItems[index]) {
-          same = false;
-          break;
-        }
-      }
-      if (same) return;
-    }
+    // // check if it's a new state
 
     unmarkSelectedElements(
       iframeRef,
@@ -84,9 +70,12 @@ export const useSyncNode = (iframeRef: HTMLIFrameElement | null) => {
       nodeTree,
     );
     if (selectedItems.length > 0) {
-      markSelectedElements(iframeRef, selectedItems, nodeTree);
+      //Takes time for the iframe to render the elements so we need to wait a bit
+      setTimeout(() => {
+        markSelectedElements(iframeRef, selectedItems, nodeTree);
 
-      previousSelectedItemsRef.current = [...selectedItems];
+        previousSelectedItemsRef.current = [...selectedItems];
+      }, 50);
     }
   }, [selectedItems]);
 
