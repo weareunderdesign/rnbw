@@ -414,8 +414,13 @@ export const useElementHelper = () => {
 
     !(didRedo || didUndo) &&
       (await dispatch(setNeedToSelectNodeUids(selectedNodeUids)));
-    await dispatch(focusNodeTreeNode(selectedNodeUids[0]));
-    await dispatch(selectNodeTreeNodes(selectedNodeUids));
+    if (selectedNodeUids.length > 0) {
+      await dispatch(focusNodeTreeNode(selectedNodeUids[0]));
+      await dispatch(selectNodeTreeNodes(selectedNodeUids));
+    } else {
+      await dispatch(focusNodeTreeNode(selectedItems[0]));
+      await dispatch(selectNodeTreeNodes(selectedItems));
+    }
 
     return {
       contentInApp,
