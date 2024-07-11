@@ -1,10 +1,10 @@
-import { TNodeTreeData, TNodeUid } from "@_node/types";
+import { TNodeTreeData, TNodeUid } from "@_api/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import { TUpdateTreeViewStatePayload } from "../types";
 import { TNodeTreeReducerState } from "./types";
-import { TCodeSelection } from "@_components/main/codeView";
-import { getValidNodeTree } from "@_pages/main/processor/helpers";
+import { TCodeSelection } from "@src/codeView";
+import { getValidNodeTree } from "@src/processor/helpers";
 
 const nodeTreeReducerInitialState: TNodeTreeReducerState = {
   nodeTree: {},

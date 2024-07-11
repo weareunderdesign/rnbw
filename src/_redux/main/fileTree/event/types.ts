@@ -1,4 +1,4 @@
-import { TNodeUid } from "@_node/types";
+import { TNodeUid } from "@_api/types";
 
 export type TFileEventReducerState = {
   fileAction: TFileAction;

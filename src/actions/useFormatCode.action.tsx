@@ -5,7 +5,7 @@ import { Range, editor } from "monaco-editor";
 // once when the action is executed, this improves the History Management
 const helperModel = editor.createModel("", "html");
 
-import { sortUidsByMaxEndIndex } from "@_components/main/actionsPanel/nodeTreeView/helpers";
+import { sortUidsByMaxEndIndex } from "@src/sidebarView/nodeTreeView/helpers";
 import { useAppState } from "@_redux/useAppState";
 import { PrettyCode } from "@_services/useElementsHelper";
 

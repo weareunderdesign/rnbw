@@ -1,8 +1,8 @@
-import { LogAllow } from "@_constants/global";
-import { RootNodeUid } from "@_constants/main";
-import { StageNodeIdAttr } from "@_node/file";
+import { LogAllow } from "@src/rnbwTSX";
+import { RootNodeUid } from "@src/rnbwTSX";
+import { StageNodeIdAttr } from "@_api/file";
 
-import { getObjKeys } from "@_pages/main/helper";
+import { getObjKeys } from "@src/helper";
 import { MainContext } from "@_redux/main";
 import {
   NodeTree_Event_RedoActionType,
@@ -836,8 +836,8 @@ export default function useElements() {
     if (
       currentFileContent !==
         nodeEventPast[nodeEventPastLength - 1].currentFileContent &&
-      selectedNodeUids ===
-        nodeEventPast[nodeEventPastLength - 1].selectedNodeUids
+      selectedNodeUids.join("") ===
+        nodeEventPast[nodeEventPastLength - 1].selectedNodeUids.join("")
     ) {
       dispatch({ type: NodeTree_Event_UndoActionType });
       dispatch({ type: NodeTree_Event_UndoActionType });

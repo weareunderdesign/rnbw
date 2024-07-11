@@ -1,42 +1,13 @@
-/* outline */
-.outline {
-  outline-width: 1px;
-  outline-style: solid;
-  outline-offset: -1px;
-}
 body,
 #CodeView *:hover,
 #iframeId *:hover {
   cursor: default !important;
 }
-.target {
-  cursor: move;
+
+#root #NodeTreeView::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
-.outline-none {
-  outline: none;
-}
-.outline-default {
-  outline-color: var(--color-tertiary-background);
-}
-
-.outline-primary {
-  outline-color: var(--color-primary);
-}
-.outline-positive {
-  outline-color: var(--color-positive);
-}
-.outline-negative {
-  outline-color: var(--color-negative);
-}
-.outline-solid {
-  outline-style: solid;
-}
-.outline-dotted {
-  outline-style: dotted;
-}
-
-/* react-complex-tree ul-li */
 #root #NodeTreeView ul,
 #root #FileTreeView ul,
 #root #SettingsView ul {
@@ -44,23 +15,6 @@ body,
   list-style-type: none;
 }
 
-#root #NodeTreeView {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
-}
-
-#root #NodeTreeView::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
-}
-
-#root #NodeTreeView ul > li,
-#root #FileTreeView ul > li {
-  line-height: 100%;
-  padding: 0px;
-  overflow: hidden;
-}
-
-/* cmdk modal */
 [cmdk-overlay] {
   position: fixed;
   inset: 0;
@@ -75,7 +29,6 @@ body,
   max-height: 100vh;
 }
 
-/* rene.css -> .hidden-on-mobile */
 @media (max-width: 768px) {
   [cmdk-dialog] {
     display: none;
@@ -106,159 +59,7 @@ body,
 }
 
 [cmdk-item][aria-selected="true"] {
-  /* rene.css -> .background-secondary */
   background-color: var(--color-secondary-background);
   color: var(--color-secondary-foreground);
-
-  /* rene.css -> .radius-s */
   border-radius: 4px;
-}
-
-/* code view highlight */
-.focusedNodeCode {
-  background: var(--color-tertiary-background);
-}
-
-/* navigator panel dropdown */
-.navigator-project-item {
-  cursor: pointer;
-}
-
-.navigator-project-item.selected,
-.navigator-project-item:hover {
-  /* rene.css -> .background-secondary */
-  background-color: var(--color-secondary-background);
-  color: var(--color-secondary-foreground);
-}
-
-.navigator-project-item-icon {
-  /* rene.css -> .background-secondary */
-  background-color: var(--color-secondary-background);
-  color: var(--color-secondary-foreground);
-}
-
-.navigator-project-item-name {
-  /* rene.css -> .opacity-m */
-  opacity: 0.5;
-}
-
-.navigator-project-item.selected .navigator-project-item-icon,
-.navigator-project-item:hover .navigator-project-item-icon {
-  /* rene.css -> .background-primary */
-  background-color: var(--color-primary-background);
-  color: var(--color-primary-foreground);
-}
-
-.navigator-project-item.selected .navigator-project-item-name,
-.navigator-project-item:hover .navigator-project-item-name {
-  opacity: 1;
-}
-.monaco-editor {
-  width: 100% !important;
-  height: 100% !important;
-}
-.overflow-guard {
-  width: 100% !important;
-  height: 100% !important;
-}
-.monaco-scrollable-element.editor-scrollable {
-  height: 100% !important;
-  width: calc(100% - 64px) !important;
-}
-/* panels style */
-
-.panel-resize {
-  width: 0;
-}
-
-.panel-resize-stage {
-  width: 3px;
-}
-.panel-resize-vertical {
-  height: 1px;
-}
-
-#CodeView {
-  transition: 0.3s all;
-  border-left: 0;
-}
-
-#ActionsPanel {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  position: relative;
-  z-index: 999;
-  transition: 0.3s all;
-}
-
-#SettingsPanel {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.action-panel-wrapper {
-  width: 2px;
-  height: 100%;
-  position: absolute;
-  z-index: 10;
-}
-
-.action-panel-wrapper > #ActionsPanel {
-  width: 240px;
-  transform: translateX(-300px);
-}
-
-.action-panel-wrapper:hover > #ActionsPanel {
-  transform: translateX(0px);
-}
-
-.action-button {
-  visibility: visible;
-  padding: 4px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.action-button:hover {
-  background-color: var(--color-secondary-background);
-  border-radius: 4px;
-}
-.action-button-hidden {
-  visibility: hidden;
-}
-.icon-button {
-  visibility: visible;
-  padding: 4px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.settings-item {
-  display: grid;
-  grid-template-rows: 20px 50px 1fr;
-  align-items: center;
-}
-
-.attribute-input {
-  word-wrap: break-word;
-  background: transparent;
-  outline: none;
-  border: none;
-  width: 100%;
-  display: inline-block;
-  padding: 0;
-}
-
-.attribute-input:hover {
-  box-shadow: 0 2px 0 0 var(--color-tertiary-background);
-}
-
-.attribute-input:focus {
-  box-shadow: 0 1px 0 0 var(--color-tertiary-background);
-}
-.bg-secondary {
-  background-color: var(--color-secondary-background);
 }

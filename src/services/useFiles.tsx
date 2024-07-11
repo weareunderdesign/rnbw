@@ -13,7 +13,7 @@ import {
   IrenameFiles,
 } from "@_types/files.types";
 import { useDispatch } from "react-redux";
-import { verifyFileHandlerPermission } from "./main";
+import { verifyFileHandlerPermission } from "../rnbw";
 import {
   setClipboardData,
   setDidRedo,
@@ -31,14 +31,14 @@ import {
   moveIDBSingleDirectoryOrFile,
   removeSingleIDBDirectoryOrFile,
   removeSingleLocalDirectoryOrFile,
-} from "@_node/index";
+} from "@_api/index";
 
 import { useCallback, useContext } from "react";
 import { MainContext } from "@_redux/main";
-import { getObjKeys } from "@_pages/main/helper";
+import { getObjKeys } from "@src/helper";
 import { useFileHelpers } from "./useFileHelpers";
-import { useHandlers } from "@_pages/main/hooks";
-import { FileChangeAlertMessage } from "@_constants/main";
+import { useHandlers } from "@src/hooks";
+import { FileChangeAlertMessage } from "@src/rnbwTSX";
 import { toast } from "react-toastify";
 import {
   FileTree_Event_RedoActionType,
@@ -47,7 +47,7 @@ import {
   setFileAction,
   setLastFileAction,
 } from "@_redux/main/fileTree";
-import { LogAllow } from "@_constants/global";
+import { LogAllow } from "@src/rnbwTSX";
 export default function useFiles() {
   const dispatch = useDispatch();
   const {

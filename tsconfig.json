@@ -17,7 +17,8 @@
     "moduleResolution": "Node",
     "baseUrl": ".",
     "paths": {
-      "@_node/*": ["src/_node/*"],
+      "@src/*": ["src/*"],
+      "@_api/*": ["src/api/*"],
       "@_redux/*": ["src/_redux/*"],
       "@_ref/*": ["src/_ref/*"],
       "@_app/*": ["src/app/*"],

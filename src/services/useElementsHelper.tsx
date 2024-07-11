@@ -5,8 +5,8 @@ import { Range, editor } from "monaco-editor";
 import { useAppState } from "@_redux/useAppState";
 import { useContext, useMemo } from "react";
 import { MainContext } from "@_redux/main";
-import { elementsCmdk, getObjKeys } from "@_pages/main/helper";
-import { LogAllow, RainbowAppName } from "@_constants/global";
+import { elementsCmdk, getObjKeys } from "@src/helper";
+import { LogAllow, RainbowAppName } from "@src/rnbwTSX";
 
 import { toast } from "react-toastify";
 import {
@@ -15,7 +15,7 @@ import {
   THtmlNodeAttribs,
   THtmlNodeTreeData,
   THtmlParserResponse,
-} from "@_node/node";
+} from "@_api/node";
 import {
   DataSequencedUid,
   PARSING_ERROR_MESSAGES,
@@ -24,8 +24,8 @@ import {
   TNodeUid,
   TValidNodeUid,
   ValidStageNodeUid,
-} from "@_node/index";
-import { RootNodeUid } from "@_constants/main";
+} from "@_api/index";
+import { RootNodeUid } from "@src/rnbwTSX";
 import { useDispatch } from "react-redux";
 import {
   focusNodeTreeNode,
@@ -414,8 +414,13 @@ export const useElementHelper = () => {
 
     !(didRedo || didUndo) &&
       (await dispatch(setNeedToSelectNodeUids(selectedNodeUids)));
-    await dispatch(focusNodeTreeNode(selectedNodeUids[0]));
-    await dispatch(selectNodeTreeNodes(selectedNodeUids));
+    if (selectedNodeUids.length > 0) {
+      await dispatch(focusNodeTreeNode(selectedNodeUids[0]));
+      await dispatch(selectNodeTreeNodes(selectedNodeUids));
+    } else {
+      await dispatch(focusNodeTreeNode(selectedItems[0]));
+      await dispatch(selectNodeTreeNodes(selectedItems));
+    }
 
     return {
       contentInApp,

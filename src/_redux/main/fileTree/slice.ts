@@ -1,5 +1,5 @@
-import { TFileNode, TFileNodeTreeData } from "@_node/index";
-import { TNodeUid } from "@_node/types";
+import { TFileNode, TFileNodeTreeData } from "@_api/index";
+import { TNodeUid } from "@_api/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import { TUpdateTreeViewStatePayload } from "../types";

@@ -1,5 +1,5 @@
-import { TFileNodeTreeData } from "@_node/index";
-import { TNodeUid } from "@_node/types";
+import { TFileNodeTreeData } from "@_api/index";
+import { TNodeUid } from "@_api/types";
 
 import { TTreeViewState } from "../types";
 import { TFileAction } from "./event";
