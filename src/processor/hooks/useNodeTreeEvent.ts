@@ -271,68 +271,56 @@ export const useNodeTreeEvent = () => {
                 /*const iframeSrc = iframe.src.split("?")[0] + "?t=" + Date.now();
                 iframe.src = iframeSrc;*/
                 // TODO: on refresh button click
-              } else {
-                // If no reload is needed, use morphdom for other updates
-                morphdom(iframeHtml, newDoc.documentElement, {
-                  getNodeKey: (node: Node) => {
-                    if (
-                      node instanceof HTMLElement &&
-                      node?.hasAttribute("id")
-                    ) {
-                      return node?.getAttribute(StageNodeIdAttr);
-                    }
-                    return null;
-                  },
-                  onBeforeElUpdated: function (fromEl, toEl) {
-                    // Skip updating script and link elements
-                    if (
-                      fromEl.nodeName === "SCRIPT" ||
-                      fromEl.nodeName === "LINK"
-                    ) {
-                      return false;
-                    }
-
-                    if (toEl.nodeName.includes("-")) return false;
-                    if (toEl.nodeName === "HTML") {
-                      //copy the attributes
-                      for (let i = 0; i < fromEl.attributes.length; i++) {
-                        toEl.setAttribute(
-                          fromEl.attributes[i].name,
-                          fromEl.attributes[i].value,
-                        );
-                      }
-                      if (fromEl.isEqualNode(toEl)) return false;
-                    }
-                    return true;
-                  },
-                  onBeforeNodeDiscarded: function (node: Node) {
-                    const elementNode = node as Element;
-                    let ifPreserveNode = false;
-                    if (elementNode.getAttribute) {
-                      const preserveAttr =
-                        elementNode.getAttribute(PreserveRnbwNode);
-                      const RnbwId = elementNode.getAttribute(StageNodeIdAttr);
-                      ifPreserveNode = !!preserveAttr || !RnbwId;
-                    }
-                    if (ifPreserveNode) {
-                      return false;
-                    }
-                    return true;
-                  },
-                  onElUpdated: function (el) {
-                    if (el.nodeName === "HTML") {
-                      //copy the attributes
-                      for (let i = 0; i < el.attributes.length; i++) {
-                        iframeHtml.setAttribute(
-                          el.attributes[i].name,
-                          el.attributes[i].value,
-                        );
-                      }
-                    }
-                  },
-                });
-                isCodeErrorsExist.current = false;
               }
+              morphdom(iframeHtml, newDoc.documentElement, {
+                onBeforeElUpdated: function (fromEl, toEl) {
+                  // Skip updating script and link elements
+                  if (
+                    fromEl.nodeName === "SCRIPT" ||
+                    fromEl.nodeName === "LINK"
+                  ) {
+                    return false;
+                  }
+
+                  if (toEl.nodeName.includes("-")) return false;
+                  if (toEl.nodeName === "HTML") {
+                    //copy the attributes
+                    for (let i = 0; i < fromEl.attributes.length; i++) {
+                      toEl.setAttribute(
+                        fromEl.attributes[i].name,
+                        fromEl.attributes[i].value,
+                      );
+                    }
+                    if (fromEl.isEqualNode(toEl)) return false;
+                  }
+                  return true;
+                },
+                onBeforeNodeDiscarded: function (node: Node) {
+                  const elementNode = node as Element;
+                  let ifPreserveNode = false;
+                  if (elementNode.getAttribute) {
+                    const preserveAttr =
+                      elementNode.getAttribute(PreserveRnbwNode);
+                    const RnbwId = elementNode.getAttribute(StageNodeIdAttr);
+                    ifPreserveNode = !!preserveAttr || !RnbwId;
+                  }
+                  if (ifPreserveNode) {
+                    return false;
+                  }
+                  return true;
+                },
+                onElUpdated: function (el) {
+                  if (el.nodeName === "HTML") {
+                    //copy the attributes
+                    for (let i = 0; i < el.attributes.length; i++) {
+                      iframeHtml.setAttribute(
+                        el.attributes[i].name,
+                        el.attributes[i].value,
+                      );
+                    }
+                  }
+                },
+              });
 
               isCodeErrorsExist.current = false;
             } catch (err) {
