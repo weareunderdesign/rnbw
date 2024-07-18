@@ -1,6 +1,6 @@
 import undoable from "redux-undo";
 
-import { TNodeUid } from "@_api/types";
+import { TNodePositionInfo, TNodeUid } from "@_api/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import {
@@ -15,6 +15,7 @@ import { TNodeEventReducerState } from "./types";
 const nodeEventReducerInitialState: TNodeEventReducerState = {
   currentFileContent: "",
   selectedNodeUids: [],
+  nodeUidPositions: new Map(),
   currentFileUid: "",
 };
 const nodeEventSlice = createSlice({
@@ -29,6 +30,13 @@ const nodeEventSlice = createSlice({
       const selectedNodeUids = action.payload;
       state.selectedNodeUids = [...selectedNodeUids];
     },
+    setNodeUidPositions(
+      state,
+      action: PayloadAction<Map<TNodeUid, TNodePositionInfo>>,
+    ) {
+      const nodeUidPositions = action.payload;
+      state.nodeUidPositions = nodeUidPositions;
+    },
     setNeedToSelectNodeUids(state, action: PayloadAction<TNodeUid[]>) {
       const needToSelectNodeUids = action.payload;
       state.selectedNodeUids = needToSelectNodeUids;
@@ -42,6 +50,7 @@ const nodeEventSlice = createSlice({
 export const {
   setCurrentFileContent,
   setSelectedNodeUids,
+  setNodeUidPositions,
   setNeedToSelectNodeUids,
   setCurrentFileUid,
 } = nodeEventSlice.actions;
