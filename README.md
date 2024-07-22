@@ -4,7 +4,7 @@ welcome to rnbw!
 
 ## get started
 
-to learn rnbw, go to https://rnbw.company/guide.
+to learn rnbw, go to https://rnbw.design/guide.
 
 ## run it locally:
 1. npm install
