@@ -123,7 +123,6 @@ export const useNodeTreeEvent = () => {
         contentInApp,
         nodeTree,
         selectedNodeUids: selectedNodeUidsAfterActions,
-        nodeUidPositions,
       } = ext === "html"
         ? await parseHtml(
             currentFileContent,
@@ -134,7 +133,6 @@ export const useNodeTreeEvent = () => {
             contentInApp: "",
             nodeTree: {},
             selectedNodeUids: [],
-            nodeUidPositions: null,
           };
 
       fileData.content = currentFileContent;
@@ -179,11 +177,6 @@ export const useNodeTreeEvent = () => {
       // ---
       // code-view is already synced
       // ---
-
-      // sync uid positions
-      if (nodeUidPositions) {
-        dispatch(setNodeUidPositions(nodeUidPositions));
-      }
 
       // sync stage-view
       if (prevFileUid === currentFileUid) {

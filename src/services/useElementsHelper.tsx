@@ -35,6 +35,7 @@ import {
   selectNodeTreeNodes,
   setNeedToSelectNodePaths,
   setNeedToSelectNodeUids,
+  setNodeUidPositions,
 } from "@_redux/main/nodeTree";
 import { TCmdkGroupData } from "@_types/main";
 
@@ -480,6 +481,9 @@ export const useElementHelper = () => {
     const contentInApp = parse5.serialize(htmlDom);
 
     !(didRedo || didUndo) &&
+      (await dispatch(setNodeUidPositions(nodeUidPositions)));
+
+    !(didRedo || didUndo) &&
       (await dispatch(setNeedToSelectNodeUids(selectedNodeUids)));
     if (selectedNodeUids.length > 0) {
       await dispatch(focusNodeTreeNode(selectedNodeUids[0]));
@@ -494,7 +498,6 @@ export const useElementHelper = () => {
       nodeTree,
       htmlDom,
       selectedNodeUids,
-      nodeUidPositions,
     };
   };
 
