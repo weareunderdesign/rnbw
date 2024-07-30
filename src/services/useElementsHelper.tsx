@@ -153,7 +153,7 @@ export const useElementHelper = () => {
         if (location1.startLine !== location2.startLine) {
           return location2.startLine - location1.startLine;
         }
-        return location2.startCode - location1.startCode;
+        return location2.startCol - location1.startCol;
       });
   };
 
@@ -166,7 +166,7 @@ export const useElementHelper = () => {
         if (location1.startLine !== location2.startLine) {
           return location2.startLine - location1.startLine;
         }
-        return location2.startCode - location1.startCode;
+        return location2.startCol - location1.startCol;
       });
   };
 
