@@ -229,6 +229,7 @@ export const useElementHelper = () => {
   const parseHtml = async (
     content: string,
     maxNodeUid: number | "ROOT" | null,
+    currentNodeUiPositions: Map<TNodeUid, TNodePositionInfo>,
     callback?: (validNodeUid: TValidNodeUid) => void,
   ): Promise<THtmlParserResponse> => {
     const codeViewInstanceModel = monacoEditorRef.current?.getModel();
@@ -421,9 +422,12 @@ export const useElementHelper = () => {
             const range = new Range(line, col, line, col + 1);
 
             // Check for existing decoration
-            uidIndex = uidDecorations?.findIndex(
-              (decoration) => decoration && decoration.range.equalsRange(range),
-            );
+            if (!(didUndo || didRedo)) {
+              uidIndex = uidDecorations?.findIndex(
+                (decoration) =>
+                  decoration && decoration.range.equalsRange(range),
+              );
+            }
           }
 
           if (uidIndex > -1) {
@@ -437,8 +441,28 @@ export const useElementHelper = () => {
             // Only used once, speed next findIndex up
             delete uidDecorations[uidIndex];
           } else {
-            // Generate new UID if no existing decoration found
-            uid = String(++_uid);
+            // Check whether there is an existing position info that
+            // does not yet have a decoration (due to undo/redo)
+            if ((didUndo || didRedo) && child.sourceCodeLocation) {
+              const location = child.sourceCodeLocation;
+              for (const [key, value] of currentNodeUiPositions?.entries()) {
+                if (
+                  value.location.startLine === location.startLine &&
+                  value.location.startCol === location.startCol &&
+                  value.location.endLine === location.endLine &&
+                  value.location.endCol === location.endCol
+                ) {
+                  uid = key;
+                  break;
+                }
+              }
+            }
+
+            if (uid === null) {
+              // Generate new UID if no existing decoration found
+              uid = String(++_uid);
+            }
+
             if (child.sourceCodeLocation) {
               nodeUidPositions.set(uid, {
                 decorationId: null,
@@ -480,17 +504,16 @@ export const useElementHelper = () => {
 
     const contentInApp = parse5.serialize(htmlDom);
 
-    !(didRedo || didUndo) &&
-      (await dispatch(setNodeUidPositions(nodeUidPositions)));
-
-    !(didRedo || didUndo) &&
-      (await dispatch(setNeedToSelectNodeUids(selectedNodeUids)));
-    if (selectedNodeUids.length > 0) {
-      await dispatch(focusNodeTreeNode(selectedNodeUids[0]));
-      await dispatch(selectNodeTreeNodes(selectedNodeUids));
-    } else {
-      await dispatch(focusNodeTreeNode(selectedItems[0]));
-      await dispatch(selectNodeTreeNodes(selectedItems));
+    if (!(didRedo || didUndo)) {
+      await dispatch(setNodeUidPositions(nodeUidPositions));
+      await dispatch(setNeedToSelectNodeUids(selectedNodeUids));
+      if (selectedNodeUids.length > 0) {
+        await dispatch(focusNodeTreeNode(selectedNodeUids[0]));
+        await dispatch(selectNodeTreeNodes(selectedNodeUids));
+      } else {
+        await dispatch(focusNodeTreeNode(selectedItems[0]));
+        await dispatch(selectNodeTreeNodes(selectedItems));
+      }
     }
 
     return {

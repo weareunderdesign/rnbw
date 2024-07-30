@@ -65,6 +65,7 @@ export const useNodeTreeEvent = () => {
 
     currentFileContent,
     selectedNodeUids,
+    nodeUidPositions,
 
     validNodeTree,
     needToSelectCode,
@@ -127,6 +128,7 @@ export const useNodeTreeEvent = () => {
         ? await parseHtml(
             currentFileContent,
             maxNodeUidRef.current,
+            nodeUidPositions,
             setMaxNodeUidRef,
           )
         : {
