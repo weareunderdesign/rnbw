@@ -270,8 +270,8 @@ export default function CodeView() {
           options: { stickiness: stickiness.NeverGrowsWhenTypingAtEdges },
         };
         // These are useful for debug purposes but not for production
-        newDecoration.options.hoverMessage = { value: uid };
-        newDecoration.options.inlineClassName = "uid-decoration";
+        // newDecoration.options.hoverMessage = { value: uid };
+        // newDecoration.options.inlineClassName = "uid-decoration";
         setDecorationUid(newDecoration, uid);
         newDecorations.push(newDecoration);
       }
