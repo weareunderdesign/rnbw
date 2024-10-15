@@ -65,7 +65,7 @@ to release `rnbw`, follow these simple steps:
 
 ### github action workflow overview
 
-the workflow file [`deploy.yml`](https://github.com/rnbwdev/rnbw/blob/main/.github/workflows/deploy.yml) runs **_Build_** and **_Deploy_** jobs.
+the workflow file [`deploy.yml`](https://github.com/weareunder/rnbw/blob/main/.github/workflows/deploy.yml) runs **_Build_** and **_Deploy_** jobs.
 
 1. **_Build_**: This job is responsible for preparing the project for deployment. It checks out the repository, detects the package manager, sets up Node.js, installs dependencies, builds the project, and uploads the built project.
 2. **_Deploy_**: This job handles the deployment to GitHub Pages.
