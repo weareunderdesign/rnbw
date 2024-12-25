@@ -480,11 +480,11 @@ export const onWebComponentDblClick = ({
   }
 };
 
-export const scrollToElement = (element: Element, behavior: ScrollBehavior) => {
+export const scrollToElement = (element: Element) => {
   element.scrollIntoView({
     block: "nearest",
     inline: "start",
-    behavior,
+    behavior: "auto",
   });
 };
 export const setSystemTheme = () => {

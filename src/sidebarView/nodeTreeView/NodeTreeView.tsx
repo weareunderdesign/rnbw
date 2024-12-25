@@ -122,7 +122,7 @@ const NodeTreeView = () => {
     const focusedElement = document.querySelector(
       `#NodeTreeView-${focusedItem}`,
     );
-    focusedElement && scrollToElement(focusedElement, "auto");
+    focusedElement && scrollToElement(focusedElement);
 
     focusedItemRef.current = focusedItem;
   }, [focusedItem]);
