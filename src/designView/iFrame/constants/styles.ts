@@ -64,4 +64,35 @@ body > * {
   -ms-user-select: none; /* IE 10 and IE 11 */
   user-select: none; /* Standard syntax */
 }
+
+/* Placeholder styles for non-existing media elements */
+img:not([src]),
+video:not([src]),
+audio:not([src]),
+script:not([src]),
+div:empty {
+  background-size: auto;
+  min-width: 80px;
+  min-height: 80px;
+  display: inline-block;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 10px;
+}
+
+/* Specific placeholder styles for different media types */
+img:not([src]) {
+  background-image: url('https://raincons.rnbw.dev/icons/image.svg');
+}
+
+video:not([src]) {
+  background-image: url('https://raincons.rnbw.dev/icons/video.svg');
+}
+
+audio:not([src]) {
+  background-image: url('https://raincons.rnbw.dev/icons/audio.svg');
+}
+
+script:not([src]) {
+  background-image: url('https://raincons.rnbw.dev/icons/code-js.svg');
+}
 `;
