@@ -108,9 +108,18 @@ export const getIndexHtmlContent = () => {
   });
 
   const doctype = "<!DOCTYPE html>\n";
-  const html = htmlElementsReferenceData["html"].Content
-    ? `<html>\n` + htmlElementsReferenceData["html"].Content + `\n</html>`
-    : `<html><head><title>Untitled</title></head><body><div><h1>Heading 1</h1></div></body></html>`;
+  const hardcodedHtml = `<html>
+  <head>
+    <title>Untitled</title>
+    <link rel="stylesheet" href="untitled.css">
+    <script src="untitled.js"></script>
+  </head>
+  <body>
+  </body>
+</html>
+  `;
+  const html = hardcodedHtml;
+  
   const indexHtmlContent = doctype + html;
   return indexHtmlContent;
 };
