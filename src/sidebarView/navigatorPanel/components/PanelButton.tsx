@@ -8,7 +8,6 @@ export const PanelButton = () => {
   const dispatch = useDispatch();
   const { showActionsPanel } = useAppState();
   const [isHover, setIsHovered] = useState(false);
-  const [isButtonHover, setIsButtonHover] = useState(false);
 
   useEffect(() => {
     const sidebarView = document.getElementById("ActionsPanel");
@@ -30,31 +29,14 @@ export const PanelButton = () => {
     };
   }, []);
 
-  const buttonStyle: React.CSSProperties = {
-    visibility: (!isHover && showActionsPanel) ? 'hidden' : 'visible',
-    padding: '4px',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: isButtonHover ? 'var(--color-secondary-background)' : 'transparent',
-    borderRadius: isButtonHover ? '4px' : '0',
-    cursor: 'pointer',
-  };
-
   return (
     <div
-      style={buttonStyle}
+      style={{ display: 'none' }}
       onClick={(e) => {
         e.stopPropagation();
         dispatch(setShowActionsPanel(!showActionsPanel));
         dispatch(setActivePanel("none"));
       }}
-      onMouseEnter={() => setIsButtonHover(true)}
-      onMouseLeave={() => setIsButtonHover(false)}
-    >
-      <SVGIconI {...{ class: "icon-xs" }}>
-        raincons/{showActionsPanel ? "left" : "right"}
-      </SVGIconI>
-    </div>
+    />
   );
 };
