@@ -39,7 +39,7 @@ export const useSync = () => {
 
   // scroll to the focused item
   const debouncedScrollToElement = useCallback(
-    debounce(scrollToElement, ShortDelay),
+    debounce((element) => scrollToElement(element), ShortDelay),
     [],
   );
   const focusedItemRef = useRef(focusedItem);
@@ -49,7 +49,7 @@ export const useSync = () => {
     const focusedElement = document.querySelector(
       `#FileTreeView-${generateQuerySelector(focusedItem)}`,
     );
-    focusedElement && debouncedScrollToElement(focusedElement, "auto");
+    focusedElement && debouncedScrollToElement(focusedElement);
 
     focusedItemRef.current = focusedItem;
   }, [focusedItem]);

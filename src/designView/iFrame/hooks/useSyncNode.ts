@@ -40,7 +40,7 @@ export const useSyncNode = (iframeRef: HTMLIFrameElement | null) => {
   const focusedItemRef = useRef<TNodeUid>(focusedItem);
 
   const debouncedScrollToElement = useCallback(
-    debounce(scrollToElement, ShortDelay),
+    debounce((element) => scrollToElement(element), ShortDelay),
     [],
   );
   useEffect(() => {
@@ -49,7 +49,7 @@ export const useSyncNode = (iframeRef: HTMLIFrameElement | null) => {
     const focusedElement = iframeRef?.contentWindow?.document?.querySelector(
       `[${StageNodeIdAttr}="${focusedItem}"]`,
     );
-    focusedElement && debouncedScrollToElement(focusedElement, "smooth");
+    focusedElement && debouncedScrollToElement(focusedElement);
 
     focusedItemRef.current = focusedItem;
   }, [focusedItem]);
