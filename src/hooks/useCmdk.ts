@@ -29,6 +29,7 @@ import { TCmdkKeyMap, TCmdkReferenceData } from "@_types/main";
 
 import { setSystemTheme } from "../helper";
 import useRnbw from "@_services/useRnbw";
+import { setReloadIframe } from "@src/_redux/main/designView";
 
 interface IUseCmdk {
   cmdkReferenceData: TCmdkReferenceData;
@@ -101,6 +102,11 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
   const onActions = useCallback(() => {
     if (cmdkOpen) return;
     dispatch(setCmdkPages(["Actions"]));
+  }, [cmdkOpen]);
+
+  const handleReload = useCallback(() => {
+    if (cmdkOpen) return;
+    dispatch(setReloadIframe(true));
   }, [cmdkOpen]);
   const onAdd = useCallback(() => {
     dispatch(setCmdkPages([...cmdkPages, "Add"]));
@@ -317,6 +323,9 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
         break;
       case "Clear":
         onClear();
+        break;
+      case "Reload State":
+        handleReload();
         break;
       case "Undo":
         onUndo();

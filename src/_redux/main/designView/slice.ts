@@ -7,6 +7,8 @@ const DesignViewReducerInitialState: TDesignViewReducerState = {
   iframeLoading: false,
   linkToOpen: null,
   syncConfigs: {},
+  setReloadIframe: false,
+  reloadIframe: false,
 };
 const DesignViewSlice = createSlice({
   name: "DesignView",
@@ -28,8 +30,15 @@ const DesignViewSlice = createSlice({
       const syncConfigs = action.payload;
       state.syncConfigs = syncConfigs;
     },
+    // New reducer for iframe reload
+    setReloadIframe: (state, action: PayloadAction<boolean>) => {
+     const reloadIframe = action.payload;
+     state.reloadIframe = reloadIframe;
+    },
   },
 });
-export const { setIframeSrc, setIframeLoading, setLinkToOpen, setSyncConfigs } =
+
+
+export const { setIframeSrc, setIframeLoading, setLinkToOpen, setSyncConfigs, setReloadIframe } =
   DesignViewSlice.actions;
 export const DesignViewReducer = DesignViewSlice.reducer;

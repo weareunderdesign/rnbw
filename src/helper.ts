@@ -42,6 +42,24 @@ import { FileNode } from "@_redux/main";
 export const addDefaultCmdkActions = (
   cmdkReferenceData: TCmdkReferenceData,
 ) => {
+  // Reload State (R)
+cmdkReferenceData["Reload State"] = {
+  Name: "Reload State",
+  Icon: "",
+  Description: "Reloads the current state",
+  "Keyboard Shortcut": [
+    {
+      cmd: false,
+      shift: false,
+      alt: false,
+      key: "KeyR",  // Added R key
+      click: false,
+    },
+  ],
+  Group: "default",
+  Context: "all",
+};
+
   // Clear
   cmdkReferenceData["Clear"] = {
     Name: "Clear",
@@ -51,7 +69,7 @@ export const addDefaultCmdkActions = (
       {
         cmd: true,
         shift: true,
-        alt: false,
+        alt: true,
         key: "KeyR",
         click: false,
       },

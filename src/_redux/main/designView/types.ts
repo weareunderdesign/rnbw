@@ -3,6 +3,8 @@ export type TDesignViewReducerState = {
   iframeLoading: boolean;
   linkToOpen: string | null;
   syncConfigs: DesignViewSyncConfigs;
+  reloadIframe: boolean,
+  setReloadIframe: boolean;
 };
 
 export type DesignViewSyncConfigs = {

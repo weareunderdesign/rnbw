@@ -6,8 +6,9 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { setReloadIframe } from '@_redux/main/designView';
 
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 import { LogAllow } from "@src/rnbwTSX";
 import { PreserveRnbwNode } from "@_api/file/handlers";
@@ -19,6 +20,8 @@ import { useAppState } from "@_redux/useAppState";
 import { jss, styles } from "./constants";
 import { markSelectedElements } from "./helpers";
 import { useCmdk, useMouseEvents, useSyncNode } from "./hooks";
+import { AppState } from "@src/_redux/_root";
+import { debounce } from "lodash";
 
 type AppStateReturnType = ReturnType<typeof useAppState>;
 export interface eventListenersStatesRefType extends AppStateReturnType {
@@ -70,6 +73,38 @@ export const IFrame = () => {
     onMouseOver,
   } = useMouseEvents();
 
+  const reloadIframe = useSelector((state: AppState) => state.main.designView.reloadIframe);
+
+  useEffect(() => { // Debounce (150ms) prevents rapid reloads when the "R" key is pressed repeatedly.
+    const safeReloadIframe = debounce(() => {
+      if (reloadIframe && iframeRefState?.contentWindow) {
+        try {
+          const currentSrc = iframeRefState.src;
+  
+          if (iframeSrc && currentSrc !== iframeSrc) {
+            iframeRefState.src = iframeSrc;
+          } else {
+            // Force reload by resetting the same src
+            iframeRefState.src = currentSrc;
+          }
+  
+          dispatch(setReloadIframe(false));
+          console.log("Iframe reload success!");
+
+        } catch (error) {
+          console.error("Iframe reload failed:", error);
+          dispatch(setReloadIframe(false));
+        }
+      }
+    }, 150); // 150ms debounce delay
+    safeReloadIframe();
+
+  return () => {
+    safeReloadIframe.cancel();
+  };
+}, [reloadIframe, iframeRefState, iframeSrc, dispatch]);
+
+  
   const addHtmlNodeEventListeners = useCallback(
     (htmlNode: HTMLElement) => {
       //NOTE: all the values required for the event listeners are stored in the eventListenersStatesRef because the event listeners are not able to access the latest values of the variables due to the closure of the event listeners

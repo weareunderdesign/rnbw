@@ -51,7 +51,7 @@ export const useAppState = () => {
         },
         future: nodeEventFuture,
       },
-      designView: { iframeSrc, iframeLoading, linkToOpen, syncConfigs },
+      designView: { iframeSrc, iframeLoading, linkToOpen, syncConfigs, setReloadIframe },
       codeView: {
         editingNodeUid: editingNodeUidInCodeView,
         codeViewTabSize,
@@ -153,7 +153,7 @@ export const useAppState = () => {
     iframeLoading,
     linkToOpen,
     syncConfigs,
-
+    setReloadIframe,
     editingNodeUidInCodeView,
     codeViewTabSize,
     codeErrors,
@@ -194,5 +194,6 @@ export const useAppState = () => {
     cmdkSearchContent,
     currentCommand,
     cmdkReferenceData,
+
   };
 };

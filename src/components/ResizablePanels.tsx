@@ -89,7 +89,7 @@ export default function ResizablePanels({
           minSize={showActionsPanel ? 10 : 0}
           order={1}
           style={{
-            minWidth: showActionsPanel ? "240px" : 0,
+            minWidth: showActionsPanel ? "330px" : 0,
           }}
           onResize={(size) => {
             setSizes([size, sizes[1], sizes[2]]);
