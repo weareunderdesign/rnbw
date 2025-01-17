@@ -245,7 +245,12 @@ export default function CodeView() {
     if (!editorModel) return;
 
     if (editorModel.getValue() !== currentFileContent) {
-      editorModel.setValue(currentFileContent);
+      if (!currentFileContent) {
+        editorModel.setValue("");
+        return;
+      } else {
+        editorModel.setValue(currentFileContent);
+      }
     }
   }, [currentFileContent]);
 
