@@ -1,6 +1,6 @@
 import useRnbw from "@_services/useRnbw";
-import { Range, editor } from "monaco-editor";
-import { diff_match_patch, Diff } from "diff-match-patch";
+import { Range } from "monaco-editor";
+import { diff_match_patch } from "diff-match-patch";
 
 import { sortUidsByMaxEndIndex } from "@src/sidebarView/nodeTreeView/helpers";
 import { useAppState } from "@_redux/useAppState";

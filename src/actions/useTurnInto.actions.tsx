@@ -1,5 +1,5 @@
 import useRnbw from "@_services/useRnbw";
-import { Range, editor } from "monaco-editor";
+import { Range } from "monaco-editor";
 
 import { PrettyCode, useElementHelper } from "@_services/useElementsHelper";
 import { toast } from "react-toastify";

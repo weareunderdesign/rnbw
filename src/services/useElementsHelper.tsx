@@ -229,7 +229,7 @@ export const useElementHelper = () => {
   const parseHtml = async (
     content: string,
     maxNodeUid: number | "ROOT" | null,
-    currentNodeUiPositions: Map<TNodeUid, TNodePositionInfo>,
+    currentNodeUidPositions: Map<TNodeUid, TNodePositionInfo>,
     callback?: (validNodeUid: TValidNodeUid) => void,
   ): Promise<THtmlParserResponse> => {
     const codeViewInstanceModel = monacoEditorRef.current?.getModel();
@@ -290,7 +290,6 @@ export const useElementHelper = () => {
       };
       const seedNodes: THtmlNode[] = [nodeTree[RootNodeUid]];
       let _uid = typeof maxNodeUid === "number" ? maxNodeUid : 0;
-      let _validUid = _uid;
 
       const getHtmlNodeAttribs = (
         uid: TNodeUid,
@@ -445,7 +444,8 @@ export const useElementHelper = () => {
             // does not yet have a decoration (due to undo/redo)
             if ((didUndo || didRedo) && child.sourceCodeLocation) {
               const location = child.sourceCodeLocation;
-              for (const [key, value] of currentNodeUiPositions?.entries()) {
+              // eslint-disable-next-line no-unsafe-optional-chaining
+              for (const [key, value] of currentNodeUidPositions?.entries()) {
                 if (
                   value.location.startLine === location.startLine &&
                   value.location.startCol === location.startCol &&

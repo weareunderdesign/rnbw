@@ -29,7 +29,6 @@ import {
   setNeedToSelectCode,
   setNeedToSelectNodeUids,
   setNodeTree,
-  setNodeUidPositions,
   setSelectedNodeUids,
 } from "@_redux/main/nodeTree";
 import { setIframeSrc } from "@_redux/main/designView";
