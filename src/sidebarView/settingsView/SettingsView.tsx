@@ -2,7 +2,7 @@ import React, { useCallback, useState } from "react";
 import { useDispatch } from "react-redux";
 
 import { setActivePanel } from "@_redux/main/processor";
-import { SVGIconI, SVGIconII, SVGIconIII } from "@src/components";
+import { SVGIcon } from "@src/components";
 
 import { Attribute, SettingsViewProps } from "../settingsPanel/types";
 import { useAppState } from "@_redux/useAppState";
@@ -145,31 +145,29 @@ export const SettingsView = ({
           >
             {attributes[attribute] ? (
               <div style={iconButtonStyle}>
-                <SVGIconIII
-                  {...{
-                    class: "icon-xs",
-                    onClick: () => cleanUpValue(attribute),
-                  }}
-                >
-                  raincons/checkbox
-                </SVGIconIII>
+                <SVGIcon
+                  name="checkbox"
+                  className="icon-xs"
+                  onClick={() => cleanUpValue(attribute)}
+                  key={attributes[attribute]}
+                />
               </div>
             ) : hoveredAttr === attribute ? (
               <div style={iconButtonStyle}>
-                <SVGIconI
-                  {...{
-                    class: "icon-xs",
-                    onClick: () => handleDelete(attribute),
-                  }}
-                >
-                  raincons/cross
-                </SVGIconI>
+                <SVGIcon
+                  name="cross"
+                  className="icon-xs"
+                  onClick={() => handleDelete(attribute)}
+                  key={attributes[attribute]}
+                />
               </div>
             ) : (
               <div style={iconButtonStyle}>
-                <SVGIconII {...{ class: "icon-xs" }}>
-                  raincons/checkbox-blank
-                </SVGIconII>
+                <SVGIcon
+                  name="checkbox-blank"
+                  className="icon-xs"
+                  key={attributes[attribute]}
+                />
               </div>
             )}
 

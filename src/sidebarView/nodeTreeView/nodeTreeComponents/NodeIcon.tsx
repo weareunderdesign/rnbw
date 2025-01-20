@@ -1,6 +1,6 @@
 import React from "react";
 
-import { SVGIconI } from "@src/components";
+import { SVGIcon } from "@src/components";
 import { THtmlElementsReference } from "@rnbws/rfrncs.design";
 
 const spanStyles: React.CSSProperties = {
@@ -26,7 +26,7 @@ export const NodeIcon = ({
   return (
     <>
       <div className="icon-xs">
-        <SVGIconI {...{ class: "icon-xs" }}>raincons/{icon} </SVGIconI>
+        <SVGIcon name={icon} className="icon-xs" />
       </div>
       <span className="text-s justify-stretch" style={spanStyles}>
         {name}

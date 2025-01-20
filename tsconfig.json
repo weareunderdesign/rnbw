@@ -31,6 +31,6 @@
       "@_actions/*": ["src/actions/*"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "custom-elements.d.ts"],
   "exclude": ["dist", "node_modules"]
 }
