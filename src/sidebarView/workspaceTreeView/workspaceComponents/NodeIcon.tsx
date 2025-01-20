@@ -1,5 +1,5 @@
 import React, { FC } from "react";
-import { SVGIconI } from "@src/components";
+import { SVGIcon } from "@src/components";
 import { TreeItem } from "react-complex-tree";
 import { TFilesReference } from "@rnbws/rfrncs.design";
 
@@ -12,28 +12,28 @@ export const NodeIcon: FC<NodeIconProps> = ({ fileReferenceData, item }) => {
   if (fileReferenceData) {
     return (
       <div className="icon-xs">
-        <SVGIconI {...{ class: "icon-xs" }}>
-          raincons/
-          {item.data?.data.kind === "file" &&
-          item.data?.data.name === "index" &&
-          item.data?.data.type === "html" &&
-          item.data?.parentUid === "ROOT"
-            ? "home"
-            : fileReferenceData &&
-                fileReferenceData["Icon"] &&
-                fileReferenceData["Icon"] !== "md"
-              ? fileReferenceData["Icon"]
-              : "page"}
-        </SVGIconI>
+        <SVGIcon
+          className="icon-xs"
+          name={
+            item.data?.data.kind === "file" &&
+            item.data?.data.name === "index" &&
+            item.data?.data.type === "html" &&
+            item.data?.parentUid === "ROOT"
+              ? "home"
+              : fileReferenceData &&
+                  fileReferenceData["Icon"] &&
+                  fileReferenceData["Icon"] !== "md"
+                ? fileReferenceData["Icon"]
+                : "page"
+          }
+        />
       </div>
     );
   }
 
   return (
     <div className="icon-xs">
-      <SVGIconI {...{ class: "icon-xs" }}>
-        raincons/{item.data?.isEntity ? "page" : "folder"}
-      </SVGIconI>
+      <SVGIcon name={item.data?.isEntity ? "page" : "folder"} />
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 
 import { SettingsFormProps } from "../settingsPanel/types";
-import { SVGIconI } from "@src/components";
+import { SVGIcon } from "@src/components";
 import useRnbw from "@_services/useRnbw";
 
 export const SettingsForm = ({
@@ -45,33 +45,33 @@ export const SettingsForm = ({
   };
 
   const buttonStyle: React.CSSProperties = {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    cursor: 'pointer',
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    cursor: "pointer",
   };
 
   const formStyle: React.CSSProperties = {
-    display: 'flex',
+    display: "flex",
     flexDirection: "row",
-    alignItems: 'center',
-    gap: '12px',
+    alignItems: "center",
+    gap: "12px",
   };
 
   const inputStyle: React.CSSProperties = {
-    wordWrap: 'break-word',
-    background: 'transparent',
-    outline: 'none',
-    border: 'none',
-    width: '100%',
-    display: 'inline-block',
+    wordWrap: "break-word",
+    background: "transparent",
+    outline: "none",
+    border: "none",
+    width: "100%",
+    display: "inline-block",
     padding: 0,
   };
 
   return (
     <form className="padding-s" style={formStyle}>
       <div style={buttonStyle} onClick={() => setShowForm(false)}>
-        <SVGIconI {...{ class: "icon-xs" }}>raincons/cross</SVGIconI>
+        <SVGIcon name="cross" className="icon-xs" />
       </div>
 
       <input
@@ -79,10 +79,10 @@ export const SettingsForm = ({
           ...inputStyle,
           maxWidth: "50px",
           boxShadow: isAttributeHovered
-            ? '0 1px 0 0 var(--color-tertiary-background)'
+            ? "0 1px 0 0 var(--color-tertiary-background)"
             : isAttributeFocused
-            ? '0 1px 0 0 var(--color-tertiary-background)'
-            : 'none',
+              ? "0 1px 0 0 var(--color-tertiary-background)"
+              : "none",
         }}
         ref={attributeRef}
         placeholder="Attribute"
@@ -102,10 +102,10 @@ export const SettingsForm = ({
           ...inputStyle,
           textAlign: "end",
           boxShadow: isValueHovered
-            ? '0 1px 0 0 var(--color-tertiary-background)'
+            ? "0 1px 0 0 var(--color-tertiary-background)"
             : isValueFocused
-            ? '0 1px 0 0 var(--color-tertiary-background)'
-            : 'none',
+              ? "0 1px 0 0 var(--color-tertiary-background)"
+              : "none",
         }}
         placeholder="Value"
         onKeyDown={handleKeyDown}

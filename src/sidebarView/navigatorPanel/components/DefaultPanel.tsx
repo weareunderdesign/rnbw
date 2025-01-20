@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 
-import { SVGIconI } from "@src/components";
+import { SVGIcon } from "@src/components";
 import { RootNodeUid } from "@src/rnbwTSX";
 import { useAppState } from "@_redux/useAppState";
 
@@ -30,7 +30,7 @@ export const DefaultPanel = () => {
   return (
     <>
       <div className="gap-s align-center" onClick={onProjectClick}>
-        <SVGIconI {...{ class: "icon-xs" }}>raincons/folder</SVGIconI>
+        <SVGIcon name="folder" className="icon-xs" />
         <span
           className="text-s"
           style={{
@@ -54,14 +54,17 @@ export const DefaultPanel = () => {
 
       {fileNode && (
         <div className="gap-s align-center" onClick={onFileClick}>
-          <SVGIconI {...{ class: "icon-xs" }}>
-            raincons/
-            {isHomeIcon(fileNode)
-              ? "home"
-              : filesReferenceData[fileExtension] && fileExtension !== "md"
-                ? filesReferenceData[fileExtension].Icon
-                : "page"}
-          </SVGIconI>
+          <SVGIcon
+            name={
+              isHomeIcon(fileNode)
+                ? "home"
+                : filesReferenceData[fileExtension] && fileExtension !== "md"
+                  ? filesReferenceData[fileExtension].Icon
+                  : "page"
+            }
+            className="icon-xs"
+          />
+
           <span
             className="text-s"
             style={{

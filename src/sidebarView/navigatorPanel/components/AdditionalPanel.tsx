@@ -57,12 +57,14 @@ export const AdditionalPanel: FC<AdditionalPanelProps> = ({
           {workspace.projects.map((_project, index) => {
             const isHovered = index === hoveredIndex;
             const isProjectSelected = isSelected(_project, project);
-            const iconBackgroundColor = isHovered || isProjectSelected
-              ? "var(--color-primary-background)"
-              : "var(--color-secondary-background)";
-            const iconColor = isHovered || isProjectSelected
-              ? "var(--color-primary-foreground)"
-              : "var(--color-secondary-foreground)";
+            const iconBackgroundColor =
+              isHovered || isProjectSelected
+                ? "var(--color-primary-background)"
+                : "var(--color-secondary-background)";
+            const iconColor =
+              isHovered || isProjectSelected
+                ? "var(--color-primary-foreground)"
+                : "var(--color-secondary-foreground)";
             const textOpacity = isHovered || isProjectSelected ? 1 : 0.5;
 
             return _project.context == "idb" ? (
@@ -100,9 +102,7 @@ export const AdditionalPanel: FC<AdditionalPanelProps> = ({
                         src={_project.favicon}
                       />
                     ) : (
-                      <SVGIcon {...{ class: "icon-xs" }}>
-                        raincons/folder
-                      </SVGIcon>
+                      <SVGIcon name="folder" className="icon-xs" />
                     )}
                   </div>
                   <span
