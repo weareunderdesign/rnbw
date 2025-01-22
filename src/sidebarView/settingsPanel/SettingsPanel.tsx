@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 import { StageNodeIdAttr, DataSequencedUid } from "@_api/file";
 import { useAppState } from "@_redux/useAppState";
 import { setActivePanel } from "@_redux/main/processor";
-import { SVGIconI } from "@src/components";
+import { SVGIcon } from "@src/components";
 
 import { SettingsView } from "../settingsView/SettingsView";
 import { SettingsForm } from "../settingsView/SettingsForm";
@@ -69,16 +69,23 @@ export default function SettingsPanel() {
         style={panelStyle}
       >
         <PanelHeader className="padding-s">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-          <div className="text-s">Settings</div>
           <div
-            style={buttonStyle}
-            onClick={() => {
-              setShowForm(true);
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              width: "100%",
             }}
           >
-            <SVGIconI className="icon-xs">raincons/plus</SVGIconI>
-          </div>
+            <div className="text-s">Settings</div>
+            <div
+              style={buttonStyle}
+              onClick={() => {
+                setShowForm(true);
+              }}
+            >
+              <SVGIcon name="plus" className="icon-xs" />
+            </div>
           </div>
         </PanelHeader>
 

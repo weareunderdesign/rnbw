@@ -45,9 +45,7 @@ export const CommandItem = ({
             {isSettingsGroup() ? (
               <div className="radius-m icon-xs align-center background-tertiary" />
             ) : typeof command.Icon === "string" && command.Icon !== "" ? (
-              <SVGIcon {...{ class: "icon-xs" }}>
-                raincons/{command.Icon}
-              </SVGIcon>
+              <SVGIcon name={command.Icon} className="icon-xs" />
             ) : (
               <div className="icon-xs"></div>
             )}

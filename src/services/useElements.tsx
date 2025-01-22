@@ -108,7 +108,7 @@ export default function useElements() {
     }
     const uid = sortedUids[0];
     const node = validNodeTree[uid];
-    let code = "";
+
     if (node) {
       if (node.displayName === "html" || node.displayName === "head") {
         toast.error("Adding not allowed");
@@ -334,7 +334,7 @@ export default function useElements() {
       code: copiedCode,
       startCol: editRange.startColumn,
     });
-    let code = copiedCode;
+    const code = copiedCode;
     const edit = {
       range: editRange,
       text: code,
@@ -866,8 +866,6 @@ export default function useElements() {
         helperModel.applyEdits([edit]);
       }
     });
-
-    const code = helperModel.getValue();
 
     if (!skipUpdate) {
       await findNodeToSelectAfterAction({
