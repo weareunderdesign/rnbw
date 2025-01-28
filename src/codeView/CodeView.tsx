@@ -37,7 +37,7 @@ export default function CodeView() {
     currentFileUid,
     currentFileContent,
     nodeUidPositions,
-
+    theme,
     nodeTree,
     validNodeTree,
     nFocusedItem,
@@ -55,7 +55,6 @@ export default function CodeView() {
     handleEditorDidMount,
     handleOnChange,
     handleKeyDown,
-    theme,
 
     language,
     updateLanguage,
@@ -120,7 +119,7 @@ export default function CodeView() {
         endLineNumber,
         endColumn,
       },
-      1,
+      1
     );
   }, [validNodeTree, nFocusedItem, activePanel]);
 
@@ -222,7 +221,7 @@ export default function CodeView() {
     const focusedNodeUid = getNodeUidByCodeSelection(
       codeSelection,
       nodeTree,
-      validNodeTree,
+      validNodeTree
     );
     if (focusedNodeUid && focusedItemRef.current !== focusedNodeUid) {
       focusedItemRef.current = focusedNodeUid;
@@ -291,6 +290,35 @@ export default function CodeView() {
   }, [nodeUidPositions]);
 
   return useMemo(() => {
+    // Define transparent theme
+    monaco.editor.defineTheme("transparent-theme", {
+      base: "vs",
+      inherit: true,
+      rules: [
+        { token: "comment", foreground: "6A9955", fontStyle: "italic" },
+        { token: "keyword", foreground: "569CD6" },
+        { token: "string", foreground: "CE9178" },
+        { token: "number", foreground: "B5CEA8" },
+        { token: "type", foreground: "4EC9B0" },
+        { token: "variable", foreground: "9CDCFE" },
+        { token: "function", foreground: "DCDCAA" },
+      ],
+      colors: {
+        "editor.background": "#00000000",
+        "editor.foreground": "#000000",
+        "editor.lineHighlightBackground": "#00000010",
+        "editorLineNumber.foreground": "#000000cc",
+        "editorCursor.foreground": "#000000",
+        "editorIndentGuide.background": "#00000015",
+        "editorIndentGuide.activeBackground": "#00000030",
+        "editor.selectionBackground": "#0066ff20",
+        "editor.inactiveSelectionBackground": "#00000015",
+        "editorBracketMatch.background": "#0066ff15",
+        "editorBracketMatch.border": "#0066ff40",
+      },
+    });
+
+
     return (
       <>
         <div
@@ -304,7 +332,7 @@ export default function CodeView() {
           style={{
             width: "100%",
             height: "100%",
-            zIndex: 999,
+            zIndex: 999999,
             overflow: "hidden",
             ...(codeErrors
               ? {
@@ -317,19 +345,35 @@ export default function CodeView() {
             transition: "0.3s all",
             borderLeft: 0,
           }}
-          className={`border-left background-primary ${codeErrors && "border"}`}
+          className={`border-left ${codeErrors && "border"}`}
           onClick={onPanelClick}
         >
           <Editor
             onMount={handleEditorDidMount}
-            theme={theme}
+            theme="transparent-theme"
             language={language}
-            defaultValue={""}
+            defaultValue={currentFileContent} // Change from defaultValue to value to prevent empty code view content when closing/opening it.
             onChange={(value) => handleOnChange(value, currentFileUid)}
             loading={""}
-            options={
-              editorConfigs as monaco.editor.IStandaloneEditorConstructionOptions
-            }
+            options={{
+              fontSize: 14,
+              fontFamily: 'Monaco, Menlo, "Courier New", monospace',
+              minimap: { enabled: false },
+              scrollBeyondLastLine: false,
+              lineNumbers: "on",
+              roundedSelection: true,
+              padding: { top: 16, bottom: 16 },
+              automaticLayout: true,
+              tabSize: 2,
+              wordWrap: "on",
+              renderLineHighlight: "all",
+              smoothScrolling: true,
+              cursorBlinking: "smooth",
+              cursorSmoothCaretAnimation: "on",
+            }}
+            // options={
+            //   editorConfigs as monaco.editor.IStandaloneEditorConstructionOptions
+            // }
           />
         </div>
       </>

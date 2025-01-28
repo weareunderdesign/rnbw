@@ -15,19 +15,40 @@ const IconButton = ({
   
     return (
       <div
-        className={`padding-xs radius-xs ${isHover ? "background-secondary" : ""}`}
+        className={`
+          padding-xs 
+          radius-xs 
+          flex 
+          items-center 
+          justify-center 
+          ${isHover ? "background-secondary" : ""}
+        `}
         onClick={(e) => {
           e.stopPropagation();
           onClick(e); 
         }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
       >
-        <SVGIconI {...{ class: "icon-xs bg-secondary" }}>{iconName}</SVGIconI>
+        <SVGIconI 
+          {...{ 
+            class: "icon-xs bg-secondary",
+            style: {
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }
+          }}
+        >
+          {iconName}
+        </SVGIconI>
       </div>
     );
   };
   
-  
-
-export default IconButton
+export default IconButton;

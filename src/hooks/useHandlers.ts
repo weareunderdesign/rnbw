@@ -110,6 +110,7 @@ export const useHandlers = () => {
             _fileTree,
             _initialFileUidToOpen,
           } = await loadLocalProject(
+            dispatch,
             projectHandle as FileSystemDirectoryHandle,
             osType,
           );
@@ -117,7 +118,7 @@ export const useHandlers = () => {
           clearProjectSession(dispatch);
 
           // build nohost idb
-          buildNohostIDB(handlerArr);
+          buildNohostIDB(dispatch, handlerArr);
 
           dispatch(
             setProject({
@@ -164,7 +165,7 @@ export const useHandlers = () => {
         dispatch(setDoingFileAction(true));
         try {
           const { _fileTree, _initialFileUidToOpen } =
-            await loadIDBProject(DefaultProjectPath);
+            await loadIDBProject(dispatch, DefaultProjectPath);
 
           clearProjectSession(dispatch);
 
@@ -202,6 +203,7 @@ export const useHandlers = () => {
           deletedUids,
           deletedUidsObj,
         } = await loadLocalProject(
+          dispatch,
           currentProjectFileHandle as FileSystemDirectoryHandle,
           osType,
           true,
@@ -253,7 +255,7 @@ export const useHandlers = () => {
           .map((uid) => fileTree[uid].data.path)
           .filter((path) => path);
 
-        buildNohostIDB(handlerArr, deletedUidsPath);
+        buildNohostIDB(dispatch, handlerArr, deletedUidsPath);
       } else {
         try {
           const {
@@ -261,7 +263,7 @@ export const useHandlers = () => {
             _initialFileUidToOpen,
             deletedUidsObj,
             deletedUids,
-          } = await loadIDBProject(DefaultProjectPath, true, fileTree);
+          } = await loadIDBProject(dispatch, DefaultProjectPath, true, fileTree);
           await dispatch(setFileTree(_fileTree));
           // need to open another file if the current open file is deleted
           if (deletedUidsObj[currentFileUid]) {

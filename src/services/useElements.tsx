@@ -30,9 +30,9 @@ import { Range } from "monaco-editor";
 import { useCallback, useContext, useMemo } from "react";
 import { useDispatch } from "react-redux";
 import { PrettyCode, isValidNode, useElementHelper } from "./useElementsHelper";
-import { toast } from "react-toastify";
 import * as parse5 from "parse5";
 import { setIsContentProgrammaticallyChanged } from "@_redux/main/reference";
+import { addToast } from "@src/_redux/main/toasts";
 
 export default function useElements() {
   const {
@@ -63,7 +63,7 @@ export default function useElements() {
   const codeViewInstanceModel = monacoEditorRef.current?.getModel();
   const selectedItems = useMemo(
     () => getObjKeys(nSelectedItemsObj),
-    [nSelectedItemsObj],
+    [nSelectedItemsObj]
   );
 
   //Create
@@ -76,7 +76,13 @@ export default function useElements() {
       nodeToAdd: [tagName],
     });
     if (!isAllowed) {
-      toast("Adding not allowed", { type: "error" });
+      dispatch(
+        addToast({
+          title: "Error",
+          message: "Adding not allowed",
+          type: "danger"
+        })
+      );
       return;
     }
 
@@ -103,7 +109,14 @@ export default function useElements() {
 
     const sortedUids = sortUidsAsc(selectedUids);
     if (sortedUids.length === 0) {
-      toast.error("Please select a node to add the new element");
+      dispatch(
+        addToast({
+          title: "Error",
+          message: "Please select a node to add the new element",
+          type: "danger"
+        })
+      );
+
       return;
     }
     const uid = sortedUids[0];
@@ -111,7 +124,13 @@ export default function useElements() {
     let code = "";
     if (node) {
       if (node.displayName === "html" || node.displayName === "head") {
-        toast.error("Adding not allowed");
+        dispatch(
+          addToast({
+            title: "Error",
+            message: "Adding not allowed",
+            type: "danger"
+          })
+        );
         return;
       }
 
@@ -129,7 +148,7 @@ export default function useElements() {
           rangeEndLine,
           rangeEndColumn,
           rangeEndLine,
-          rangeEndColumn,
+          rangeEndColumn
         ),
         text,
       };
@@ -164,7 +183,7 @@ export default function useElements() {
         const { startCol, startLine, endCol, endLine } =
           node.data.sourceCodeLocation;
         let text = codeViewInstanceModel.getValueInRange(
-          new Range(startLine, startCol, endLine, endCol),
+          new Range(startLine, startCol, endLine, endCol)
         );
 
         text = await PrettyCode({ code: text, startCol });
@@ -212,7 +231,7 @@ export default function useElements() {
         const text =
           codeViewInstanceModel &&
           codeViewInstanceModel.getValueInRange(
-            new Range(startLine, startCol, endLine, endCol),
+            new Range(startLine, startCol, endLine, endCol)
           );
         copiedCode += text;
       }
@@ -223,8 +242,8 @@ export default function useElements() {
 
       dispatch(
         setCopiedNodeDisplayName(
-          selectedItems.map((uid) => validNodeTree[uid].displayName),
-        ),
+          selectedItems.map((uid) => validNodeTree[uid].displayName)
+        )
       );
     }
     return copiedCode;
@@ -257,8 +276,8 @@ export default function useElements() {
 
     dispatch(
       setCopiedNodeDisplayName(
-        selectedItems.map((uid) => validNodeTree[uid].displayName),
-      ),
+        selectedItems.map((uid) => validNodeTree[uid].displayName)
+      )
     );
 
     setEditorModelValue(helperModel, codeViewInstanceModel);
@@ -302,7 +321,14 @@ export default function useElements() {
     dispatch(setCopiedNodeDisplayName([]));
     const targetUid = selectedUids[0];
     if (!isAllowed && !pasteContent) {
-      toast("Pasting not allowed", { type: "error" });
+      dispatch(
+        addToast({
+          title: "Error",
+          message: "Pasting not allowed",
+          type: "danger"
+        })
+      );
+
       return;
     }
 
@@ -327,7 +353,7 @@ export default function useElements() {
         startTag.endLine,
         startTag.endCol,
         startTag.endLine,
-        startTag.endCol,
+        startTag.endCol
       );
     }
     copiedCode = await PrettyCode({
@@ -379,7 +405,13 @@ export default function useElements() {
       checkFirstParents: true,
     });
     if (!isAllowed) {
-      toast("Grouping not allowed", { type: "error" });
+      dispatch(
+        addToast({
+          title: "Error",
+          message: "Grouping not allowed",
+          type: "danger"
+        })
+      );
       return;
     }
 
@@ -439,8 +471,8 @@ export default function useElements() {
             startTag.endLine,
             startTag.endCol,
             endTag.startLine,
-            endTag.startCol,
-          ),
+            endTag.startCol
+          )
         );
         if (!copiedCode) return;
       }
@@ -454,7 +486,7 @@ export default function useElements() {
           const { startLine, startCol, endLine, endCol } =
             node.data.sourceCodeLocation;
           const text = codeViewInstanceModel.getValueInRange(
-            new Range(startLine, startCol, endLine, endCol),
+            new Range(startLine, startCol, endLine, endCol)
           );
           copiedCode += text;
         }
@@ -515,7 +547,13 @@ export default function useElements() {
       checkFirstParents: true,
     });
     if (!isAllowed) {
-      toast("Pasting not allowed", { type: "error" });
+      dispatch(
+        addToast({
+          title: "Error",
+          message: "Pasting not allowed",
+          type: "danger"
+        })
+      );
       return;
     }
 
@@ -577,7 +615,7 @@ export default function useElements() {
 
     //make sure the movedNodePaths are unique and not undefined
     movedNodePaths = Array.from(new Set(movedNodePaths)).filter(
-      (path) => typeof path === "string",
+      (path) => typeof path === "string"
     );
     if (!targetPath) return;
 
@@ -621,10 +659,10 @@ export default function useElements() {
           /* We need to check if the diverged moved node is 
           before the diverged target node*/
           const divergentMovedNodeIndex = parseInt(
-            divergentMovedNode.split("_")[1],
+            divergentMovedNode.split("_")[1]
           );
           let divergentTargetNodeIndex = parseInt(
-            divergentTargetNode.split("_")[1],
+            divergentTargetNode.split("_")[1]
           );
 
           /* If the diverged moved node is before the diverged target node
@@ -663,13 +701,13 @@ export default function useElements() {
 
     //get selecteduids nodes name
     const movedNodeNames = selectedUids.map(
-      (uid) => validNodeTree[uid].displayName,
+      (uid) => validNodeTree[uid].displayName
     );
 
     //get index of the updatedTargetNodePath
     const updatedTargetNodePathArr = updatedTargetNodePath.split("_");
     const updatedTargetNodeIndex = parseInt(
-      updatedTargetNodePathArr[updatedTargetNodePathArr.length - 1],
+      updatedTargetNodePathArr[updatedTargetNodePathArr.length - 1]
     );
 
     const targetNodePathArr = updatedTargetNodePath.split(".");
@@ -699,7 +737,7 @@ export default function useElements() {
 
       const contentEditableElement =
         iframeRef.contentWindow?.document.querySelector(
-          `[${StageNodeIdAttr}="${contentEditableUid}"]`,
+          `[${StageNodeIdAttr}="${contentEditableUid}"]`
         ) as HTMLElement;
 
       if (!contentEditableElement) return;
@@ -709,7 +747,7 @@ export default function useElements() {
         .replace(/\n/, "")
         .replace(
           /data-rnbw-stage-node-id="\d+"|rnbwdev-rnbw-element-(select|hover)=""/g,
-          "",
+          ""
         );
 
       const focusedNode = nodeTree[contentEditableUid];
@@ -721,7 +759,7 @@ export default function useElements() {
             startTag.endLine,
             startTag.endCol,
             endTag.startLine,
-            endTag.startCol,
+            endTag.startCol
           ),
           text: content,
         };
@@ -740,7 +778,7 @@ export default function useElements() {
         uniqueNodePath && dispatch(setNeedToSelectNodePaths([uniqueNodePath]));
       }
     },
-    [codeViewInstanceModel],
+    [codeViewInstanceModel]
   );
 
   const updateSettings = async (params: IupdateSettings) => {
@@ -756,7 +794,7 @@ export default function useElements() {
         const attributes = `${acc} ${key}="${value}"`;
         return attributes;
       },
-      "",
+      ""
     );
     const updatedTag = `<${focusedNode.displayName}${attributesString}>`;
     /* Don't prettify the code with prettyCode function 
@@ -768,7 +806,13 @@ export default function useElements() {
       LogAllow && console.error("Error in pretty code", e);
       if (e.stack.includes("SyntaxError")) {
         isInvalid = true;
-        toast.error("Invalid settings value");
+        dispatch(
+          addToast({
+            title: "Error",
+            message: "Invalid settings value",
+            type: "danger"
+          })
+        );
       }
     });
     if (isInvalid) return { isSuccess: false, settings: oldSettings };
@@ -778,7 +822,7 @@ export default function useElements() {
       startTag.startLine,
       startTag.startCol,
       startTag.endLine,
-      startTag.endCol,
+      startTag.endCol
     );
     const edit = {
       range,
@@ -843,7 +887,7 @@ export default function useElements() {
     /* The user should not be able to delete the html, head, and body tags. */
     if (
       removalUids.some((uid) =>
-        ["html", "head", "body"].includes(validNodeTree[uid].displayName),
+        ["html", "head", "body"].includes(validNodeTree[uid].displayName)
       )
     ) {
       LogAllow && console.error("Deleting nodes not allowed");

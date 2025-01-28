@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import JSZip from "jszip";
 
 import { TBasicNodeData, TNode, TNodeTreeData, TNodeUid } from "../";
@@ -57,6 +58,7 @@ export type TIDBProjectLoaderBaseResponse = {
 
   deletedUids: TNodeUid[];
   deletedUidsObj: { [uid: TNodeUid]: true };
+  dispatch: Function,
 };
 export type TLocalProjectLoaderBaseResponse = {
   handlerArr: TFileHandlerInfo[];

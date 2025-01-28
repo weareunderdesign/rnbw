@@ -40,6 +40,7 @@ interface IUseCmdk {
 }
 export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
   const dispatch = useDispatch();
+  
   const navigate = useNavigate();
 
   const {
@@ -76,7 +77,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
 
     dispatch(setDoingFileAction(true));
     try {
-      await initIDBProject(DefaultProjectPath);
+      await initIDBProject(dispatch, DefaultProjectPath);
       await importProject("idb");
     } catch (err) {
       LogAllow && console.log("failed to init/load idb project");
@@ -117,7 +118,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
   const onDownload = useCallback(async () => {
     if (project.context !== "idb") return;
     try {
-      await downloadIDBProject(DefaultProjectPath);
+      await downloadIDBProject(dispatch, DefaultProjectPath);
     } catch (err) {
       LogAllow && console.log("failed to download project");
     }

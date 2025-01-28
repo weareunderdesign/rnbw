@@ -39,7 +39,6 @@ import { getObjKeys } from "@src/helper";
 import { useFileHelpers } from "./useFileHelpers";
 import { useHandlers } from "@src/hooks";
 import { FileChangeAlertMessage } from "@src/rnbwTSX";
-import { toast } from "react-toastify";
 import {
   FileTree_Event_RedoActionType,
   FileTree_Event_UndoActionType,
@@ -48,6 +47,7 @@ import {
   setLastFileAction,
 } from "@_redux/main/fileTree";
 import { LogAllow } from "@src/rnbwTSX";
+import { addToast } from "@src/_redux/main/toasts";
 export default function useFiles() {
   const dispatch = useDispatch();
   const {
@@ -81,14 +81,14 @@ export default function useFiles() {
       params: IcreateFile = {
         entityName: "untitled",
         extension: "html",
-      },
+      }
     ) => {
       //We run this function recursively to create a file with a unique name
       const { entityName = "untitled", extension = "html" } = params;
 
       //we check if the parent directory has permission to create a file
       const parentHandler = getParentHandler(
-        fFocusedItem,
+        fFocusedItem
       ) as FileSystemDirectoryHandle;
 
       if (
@@ -133,7 +133,7 @@ export default function useFiles() {
           const parentNodePath = fileTree[parentUid].data.path;
           await _writeIDBFile(
             _path.join(parentNodePath, uniqueIndexedName),
-            "",
+            ""
           );
         }
         const _fileAction: TFileAction = {
@@ -142,7 +142,14 @@ export default function useFiles() {
         };
         !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
       } catch (err) {
-        toast.error("An error occurred while creating the file");
+        dispatch(
+          addToast({
+            title: "Error",
+            message: "An error occurred while creating the file",
+            type: "danger"
+          })
+        );
+
         console.error(err);
       } finally {
         await reloadCurrentProject();
@@ -157,7 +164,7 @@ export default function useFiles() {
       fSelectedItemsObj,
       fExpandedItemsObj,
       project,
-    ],
+    ]
   );
   const createFolder = useCallback(
     async (params: IcreateFolder = {}): Promise<string | null> => {
@@ -166,7 +173,7 @@ export default function useFiles() {
 
       //we check if the parent directory has permission to create a directory
       const parentHandler = getParentHandler(
-        fFocusedItem,
+        fFocusedItem
       ) as FileSystemDirectoryHandle;
 
       if (
@@ -215,7 +222,14 @@ export default function useFiles() {
         };
         !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
       } catch (err) {
-        toast.error("An error occurred while creating the folder");
+        dispatch(
+          addToast({
+            title: "Error",
+            message: "An error occurred while creating the folder",
+            type: "danger"
+          })
+        );
+
         console.error(err);
       } finally {
         await reloadCurrentProject();
@@ -231,7 +245,7 @@ export default function useFiles() {
       fSelectedItemsObj,
       fExpandedItemsObj,
       project,
-    ],
+    ]
   );
 
   //Read
@@ -262,7 +276,7 @@ export default function useFiles() {
         panel: "file",
         type: "copy",
         uids: _uids,
-      }),
+      })
     );
   };
   const cutFiles = async (params: IcutFiles = {}) => {
@@ -277,7 +291,7 @@ export default function useFiles() {
         panel: "file",
         type: "cut",
         uids: _uids,
-      }),
+      })
     );
   };
 
@@ -337,13 +351,20 @@ export default function useFiles() {
 
         !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
       } catch (err) {
-        toast.error("An error occurred while renaming");
+        dispatch(
+          addToast({
+            title: "Error",
+            message: "An error occurred while renaming",
+            type: "danger"
+          })
+        );
+
         console.error(err);
       } finally {
         await reloadCurrentProject();
       }
     },
-    [fileTree, didUndo, didRedo, project, fileHandlers],
+    [fileTree, didUndo, didRedo, project, fileHandlers]
   );
   const undo = useCallback(async () => {
     if (fileEventPastLength === 0) {
@@ -414,8 +435,8 @@ export default function useFiles() {
                 targetNode.data.kind === "directory"
                   ? targetNode.data
                   : fileTree[targetNode.parentUid!].data,
-            }),
-        ),
+            })
+        )
       );
       try {
         await Promise.all(
@@ -441,7 +462,7 @@ export default function useFiles() {
                 newName: newNames[index],
               });
             }
-          }),
+          })
         );
 
         const _fileAction: TFileAction = {
@@ -451,7 +472,7 @@ export default function useFiles() {
               orgUid: uid,
               newUid: _path.join(
                 targetNode.isEntity ? targetNode.parentUid : targetNode.uid,
-                newNames[index],
+                newNames[index]
               ),
             })),
             isCopy,
@@ -460,7 +481,14 @@ export default function useFiles() {
 
         !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
       } catch (err) {
-        toast.error("An error occurred while pasting the file");
+        dispatch(
+          addToast({
+            title: "Error",
+            message: "An error occurred while pasting the file",
+            type: "danger"
+          })
+        );
+
         console.error(err);
       } finally {
         await reloadCurrentProject();
@@ -475,7 +503,7 @@ export default function useFiles() {
       project,
       fileTree,
       fileHandlers,
-    ],
+    ]
   );
 
   const move = async (params: Imove) => {
@@ -483,7 +511,14 @@ export default function useFiles() {
     try {
       paste({ uids, targetUid, deleteSource: true });
     } catch (err) {
-      toast.error("An error occurred while moving the file");
+      dispatch(
+        addToast({
+          title: "Error",
+          message: "An error occurred while moving the file",
+          type: "danger"
+        })
+      );
+
       console.error(err);
     }
   };
@@ -516,7 +551,7 @@ export default function useFiles() {
               fileTree,
             });
           }
-        }),
+        })
       );
       const _fileAction: TFileAction = {
         action: "remove",
@@ -524,7 +559,14 @@ export default function useFiles() {
       };
       !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
     } catch (err) {
-      toast.error("An error occurred while deleting the file");
+      dispatch(
+        addToast({
+          title: "Error",
+          message: "An error occurred while deleting the file",
+          type: "danger"
+        })
+      );
+
       console.error(err);
     } finally {
       await reloadCurrentProject();

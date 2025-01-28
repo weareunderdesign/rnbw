@@ -92,6 +92,9 @@ export const useAppState = () => {
         currentCommand,
         cmdkReferenceData,
       },
+      feedBack: {
+        records,
+      },
     },
   } = useSelector((state: AppState) => state);
 
@@ -195,5 +198,6 @@ export const useAppState = () => {
     currentCommand,
     cmdkReferenceData,
 
+    records,
   };
 };

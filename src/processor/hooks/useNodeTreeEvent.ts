@@ -29,7 +29,6 @@ import {
   setNeedToSelectCode,
   setNeedToSelectNodeUids,
   setNodeTree,
-  setNodeUidPositions,
   setSelectedNodeUids,
 } from "@_redux/main/nodeTree";
 import { setIframeSrc } from "@_redux/main/designView";
@@ -48,10 +47,10 @@ import {
   setLoadingFalse,
   setLoadingTrue,
 } from "@_redux/main/processor";
-import { toast } from "react-toastify";
 import { getObjKeys } from "@src/helper";
 import { getFileExtension } from "@src/sidebarView/navigatorPanel/helpers";
 import { useElementHelper } from "@_services/useElementsHelper";
+import { addToast } from "@src/_redux/main/toasts";
 
 export const useNodeTreeEvent = () => {
   const dispatch = useDispatch();
@@ -172,7 +171,13 @@ export const useNodeTreeEvent = () => {
           dispatch(setIframeSrc(`rnbw${previewPath}`));
         }
       } catch (err) {
-        toast.error("An error occurred while updating the file content");
+        dispatch(
+          addToast({
+            title: "Error",
+            message: "An error occurred while updating the file content",
+            type: "danger"
+          })
+        );
         LogAllow && console.error(err);
       }
 
@@ -337,10 +342,15 @@ export const useNodeTreeEvent = () => {
               isCodeErrorsExist.current = false;
             } catch (err) {
               isCodeErrorsExist.current = false;
-              toast("Some changes in the code are incorrect", {
-                type: "error",
-                toastId: "Some changes in the code are incorrect",
-              });
+              dispatch(
+                addToast({
+                  title: "Some changes in the code are incorrect",
+                  message:"Some changes in the code are incorrect",
+                  type: "danger"
+                })
+              );
+
+          
               console.error(err, "error");
             }
           }

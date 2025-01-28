@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react/jsx-no-comment-textnodes */
 import React, { useEffect, useRef, useState } from "react";
 import {
   Panel,
@@ -8,121 +10,132 @@ import {
 } from "react-resizable-panels";
 import { useAppState } from "@_redux/useAppState";
 import { ResizablePanelsProps } from "../rnbw";
+import { useLayoutMode } from "./context/LayoutModeContext";
+import { SVGIconI } from "./svgIcon";
 
 const actionsPanelWidth = 10;
-const codeViewWidth = 30;
 
 export default function ResizablePanels({
   sidebarView,
   designView,
-  codeView,
 }: ResizablePanelsProps) {
-  const { showActionsPanel, showCodeView } = useAppState();
-  const [sizes, setSizes] = useState([actionsPanelWidth, codeViewWidth, 0]);
+  const { showActionsPanel } = useAppState();
+  const { layoutMode } = useLayoutMode();
+  const [sizes, setSizes] = useState([actionsPanelWidth, 90]); // Adjusted to ensure total is 100
   const actionPanelRef = useRef<ImperativePanelHandle>(null);
-  const codeViewRef = useRef<ImperativePanelHandle>(null);
   const panelGroupRef = useRef<ImperativePanelGroupHandle>(null);
   const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
-    showActionsPanel
-      ? showCodeView
-        ? panelGroupRef.current?.setLayout([
-            actionsPanelWidth,
-            sizes[1],
-            100 - actionsPanelWidth - sizes[1],
-          ])
-        : actionPanelRef.current?.resize(actionsPanelWidth)
-      : showCodeView
-      ? panelGroupRef.current?.setLayout([0, sizes[1], 100 - sizes[1]])
-      : panelGroupRef.current?.setLayout([0, 0, 100]);
-  }, [showActionsPanel]);
+    if (showActionsPanel) {
+      const newSizes = [actionsPanelWidth, 100 - actionsPanelWidth];
+      setSizes(newSizes);
+      panelGroupRef.current?.setLayout(newSizes);
+    } else {
+      const newSizes = [0, 100];
+      setSizes(newSizes);
+      panelGroupRef.current?.setLayout(newSizes);
+    }
+  }, [showActionsPanel, layoutMode]);
 
-  useEffect(() => {
-    showCodeView
-      ? showActionsPanel
-        ? panelGroupRef.current?.setLayout([
-            sizes[0],
-            codeViewWidth,
-            100 - codeViewWidth - sizes[0],
-          ])
-        : codeViewRef.current?.resize(codeViewWidth)
-      : showActionsPanel
-      ? codeViewRef.current?.resize(0)
-      : panelGroupRef.current?.setLayout([0, 0, 100]);
-  }, [showCodeView]);
+  // Determine panel configurations based on visibility
+  const getPanelConfigurations = () => {
+    const panels = [];
+
+    if (showActionsPanel) {
+      panels.push({
+        id: "actions-panel",
+        size: sizes[0],
+        minSize: 10,
+        ref: actionPanelRef,
+        content: sidebarView,
+        visible: true,
+      });
+    }
+
+    panels.push({
+      id: "design-view",
+      size: sizes[1],
+      minSize: 30,
+      content: designView,
+      visible: true,
+    });
+
+    return panels;
+  };
 
   const wrapperStyle: React.CSSProperties = {
-    width: '2px',
-    height: '100%',
-    position: 'absolute',
+    width: "2px",
+    height: "100%",
+    position: "absolute",
     zIndex: 10,
+    transition: "width 0.3s ease",
   };
 
   const actionsPanelStyle: React.CSSProperties = {
-    width: '240px',
-    height: '100%',
-    transform: isHovered ? 'translateX(0px)' : 'translateX(-300px)',
+    width: "230px",
+    height: "100%",
+    transform: isHovered ? "translateX(0px)" : "translateX(-300px)",
+    transition: "width 0.3s ease",
   };
 
   return (
     <>
       {!showActionsPanel && (
-        <div 
+        <div
           style={wrapperStyle}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          <div style={actionsPanelStyle}>
-            {sidebarView}
-          </div>
+          <div style={actionsPanelStyle}>{sidebarView}</div>
         </div>
       )}
+
       <PanelGroup
         style={{ height: "100vh" }}
         direction="horizontal"
         ref={panelGroupRef}
       >
-        <Panel
-          ref={actionPanelRef}
-          defaultSize={sizes[0]}
-          minSize={showActionsPanel ? 10 : 0}
-          order={1}
-          style={{
-            minWidth: showActionsPanel ? "330px" : 0,
-          }}
-          onResize={(size) => {
-            setSizes([size, sizes[1], sizes[2]]);
-          }}
-        >
-          {showActionsPanel && sidebarView}
-        </Panel>
-        <PanelResizeHandle style={{ width: 0 }} />
-        <Panel
-          ref={codeViewRef}
-          defaultSize={sizes[1]}
-          minSize={showCodeView ? 10 : 0}
-          order={2}
-          style={{
-            minWidth: showCodeView ? "256px" : 0,
-          }}
-          onResize={(size) => {
-            setSizes([sizes[0], size, sizes[2]]);
-          }}
-        >
-          {codeView}
-        </Panel>
-        <PanelResizeHandle style={{ width: 3 }} />
-        <Panel
-          defaultSize={sizes[2]}
-          minSize={30}
-          order={3}
-          onResize={(size) => {
-            setSizes([sizes[0], sizes[1], size]);
-          }}
-        >
-          {designView}
-        </Panel>
+        {getPanelConfigurations().map((panel: any, index, array) => (
+          <React.Fragment key={panel.id}>
+            <Panel
+              id={panel.id}
+              ref={panel?.ref}
+              defaultSize={panel.size}
+              minSize={panel.minSize}
+              order={index + 1}
+              style={{
+                minWidth: showActionsPanel ? "315px" : 0,
+                transition: "width 0.3s ease",
+              }}
+            >
+              {panel.content}
+            </Panel>
+            {index < array.length - 1 && (
+              <PanelResizeHandle
+                style={{
+                  width: ".5rem",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <SVGIconI
+                  {...{
+                    class: "icon-xs bg-secondary",
+                    style: {
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    },
+                  }}
+                >
+                  raincons/resize
+                </SVGIconI>
+              </PanelResizeHandle>
+            )}
+          </React.Fragment>
+        ))}
       </PanelGroup>
     </>
   );

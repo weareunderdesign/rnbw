@@ -9,12 +9,14 @@ import {
   THtmlNodeTreeData,
   THtmlParserResponse,
 } from "../node/type/html";
-import { toast } from "react-toastify";
+import { addToast } from "@src/_redux/main/toasts";
+import { useDispatch } from "react-redux";
 
 export const StageNodeIdAttr = "data-rnbw-stage-node-id";
 export const PreserveRnbwNode = "data-rnbw-preserve-node";
 export const DataSequencedUid = "data-sequenced-uid";
 export const ValidStageNodeUid = "data-rnbw-stage-valid-uid";
+
 
 export const PARSING_ERROR_MESSAGES: Record<string, string> = {
   "unexpected-solidus-in-tag": "Unexpected symbol in tag",
@@ -32,6 +34,9 @@ export const parseHtml = (
   content: string,
   callback?: (validNodeUid: TValidNodeUid) => void,
 ): THtmlParserResponse => {
+  // const { showToast } = useToast();
+  const dispatch = useDispatch();
+
   const htmlDom = parse5.parse(content, {
     scriptingEnabled: true,
     sourceCodeLocationInfo: true,
@@ -41,10 +46,11 @@ export const parseHtml = (
       if (
         Object.prototype.hasOwnProperty.call(PARSING_ERROR_MESSAGES, err.code)
       ) {
-        toast(PARSING_ERROR_MESSAGES[err.code], {
-          type: "warning",
-          toastId: PARSING_ERROR_MESSAGES[err.code],
-        });
+          dispatch(addToast({
+            title: 'Success',
+            message: `${PARSING_ERROR_MESSAGES[err.code]}`,
+            type: 'success',
+          }));
       }
     },
   });

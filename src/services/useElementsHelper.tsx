@@ -1,3 +1,4 @@
+/* eslint-disable no-unsafe-optional-chaining */
 import * as prettier from "prettier/standalone";
 import * as htmlParser from "prettier/plugins/html";
 import * as parse5 from "parse5";
@@ -7,8 +8,8 @@ import { useContext, useMemo } from "react";
 import { MainContext } from "@_redux/main";
 import { elementsCmdk, getObjKeys } from "@src/helper";
 import { LogAllow, RainbowAppName } from "@src/rnbwTSX";
+import * as monaco from "monaco-editor";
 
-import { toast } from "react-toastify";
 import {
   THtmlDomNode,
   THtmlNode,
@@ -38,6 +39,7 @@ import {
   setNodeUidPositions,
 } from "@_redux/main/nodeTree";
 import { TCmdkGroupData } from "@_types/main";
+import { addToast } from "@src/_redux/main/toasts";
 
 export async function PrettyCode({
   code,
@@ -84,7 +86,7 @@ export async function PrettyCode({
       if (throwError) {
         throw e;
       } else {
-        toast.error(`Failed to format the code: ${msg.split(".")[0]}`);
+        // toast.error(`Failed to format the code: ${msg.split(".")[0]}`);
       }
     }
     return code;
@@ -109,7 +111,7 @@ export const useElementHelper = () => {
   const dispatch = useDispatch();
   const selectedItems = useMemo(
     () => getObjKeys(nSelectedItemsObj),
-    [nSelectedItemsObj],
+    [nSelectedItemsObj]
   );
   function getEditorModelWithCurrentCode() {
     /*The role of helperModel is to perform all the edit operations in it 
@@ -123,7 +125,7 @@ export const useElementHelper = () => {
   }
   function setEditorModelValue(
     sourceModel: editor.ITextModel,
-    targetModel: editor.ITextModel,
+    targetModel: editor.ITextModel
   ) {
     if (sourceModel && targetModel) {
       const uidDecorations = getUidDecorations(sourceModel);
@@ -137,7 +139,7 @@ export const useElementHelper = () => {
     if (!codeViewInstanceModel) {
       LogAllow &&
         console.error(
-          `Monaco Editor ${!codeViewInstanceModel ? "" : "Model"} is undefined`,
+          `Monaco Editor ${!codeViewInstanceModel ? "" : "Model"} is undefined`
         );
       return false;
     }
@@ -200,7 +202,7 @@ export const useElementHelper = () => {
         const text =
           codeViewInstanceModel &&
           codeViewInstanceModel.getValueInRange(
-            new Range(startLine, startCol, endLine, endCol),
+            new Range(startLine, startCol, endLine, endCol)
           );
         copiedCode += text;
 
@@ -230,7 +232,7 @@ export const useElementHelper = () => {
     content: string,
     maxNodeUid: number | "ROOT" | null,
     currentNodeUiPositions: Map<TNodeUid, TNodePositionInfo>,
-    callback?: (validNodeUid: TValidNodeUid) => void,
+    callback?: (validNodeUid: TValidNodeUid) => void
   ): Promise<THtmlParserResponse> => {
     const codeViewInstanceModel = monacoEditorRef.current?.getModel();
     const uidDecorations = getUidDecorations(codeViewInstanceModel);
@@ -240,15 +242,54 @@ export const useElementHelper = () => {
       scriptingEnabled: true,
       sourceCodeLocationInfo: true,
       onParseError: (err) => {
+        // Logging the Error
         console.error(err);
+        // Extract error location more robustly
+        const startLine = err.startLine;
+        const startCol = err.startCol;
 
         if (
           Object.prototype.hasOwnProperty.call(PARSING_ERROR_MESSAGES, err.code)
         ) {
-          toast(PARSING_ERROR_MESSAGES[err.code], {
-            type: "warning",
-            toastId: PARSING_ERROR_MESSAGES[err.code],
-          });
+          dispatch(
+            addToast({
+              title: "Parsing Error",
+              message: `${PARSING_ERROR_MESSAGES[err.code]}`,
+              type: "danger"
+            })
+          );
+
+          // Auto-select the problematic node
+          if (startLine && startCol) {
+            const editorInstance = monacoEditorRef.current;
+            console.log("editorInstance", editorInstance);
+            // getting the valid line and column
+            if (editorInstance) {
+              try {
+                // Ensure line and column are valid
+                const validLine = Math.max(1, startLine) - 1;
+                if (editorInstance) {
+                  const model = editorInstance.getModel();
+                  if (model) {
+                    const lineContent = model.getLineContent(validLine);
+                    // Create a range that highlights the specific location
+                    const range = new monaco.Range(
+                      validLine, // start the valid line that causes the error
+                      1, // start from the begeinning of the column
+                      validLine, // end the valid line that causes the error
+                      lineContent.length + 1 // highlighting the whole correct line columns
+                    );
+
+                    // Set selection and reveal the line
+                    editorInstance.setSelection(range);
+                    editorInstance.revealLineInCenter(validLine);
+                  }
+                }
+              } catch (selectError) {
+                console.error("Error selecting line:", selectError);
+              }
+            }
+          }
         }
       },
     });
@@ -290,11 +331,11 @@ export const useElementHelper = () => {
       };
       const seedNodes: THtmlNode[] = [nodeTree[RootNodeUid]];
       let _uid = typeof maxNodeUid === "number" ? maxNodeUid : 0;
-      let _validUid = _uid;
+      // let _validUid = _uid;
 
       const getHtmlNodeAttribs = (
         uid: TNodeUid,
-        attrs: { name: string; value: string }[],
+        attrs: { name: string; value: string }[]
       ): THtmlNodeAttribs => {
         const attribs: THtmlNodeAttribs = {
           [DataSequencedUid]: uid,
@@ -425,7 +466,7 @@ export const useElementHelper = () => {
             if (!(didUndo || didRedo)) {
               uidIndex = uidDecorations?.findIndex(
                 (decoration) =>
-                  decoration && decoration.range.equalsRange(range),
+                  decoration && decoration.range.equalsRange(range)
               );
             }
           }
@@ -591,7 +632,7 @@ export const useElementHelper = () => {
             tempPath = prevChild?.uniqueNodePath;
           } else {
             tempPath = `${parent.uniqueNodePath}.${nextChild?.data.tagName}_${parseInt(
-              selectedChildIndex,
+              selectedChildIndex
             )}`;
           }
         } else {
@@ -723,7 +764,7 @@ export const useElementHelper = () => {
             textNodeAllowed && addTextNodeToElements(data);
           }
           return Object.values(data["Elements"]).some(
-            (obj) => obj["Context"] === `Node-<${node}>`,
+            (obj) => obj["Context"] === `Node-<${node}>`
           );
         }
       });

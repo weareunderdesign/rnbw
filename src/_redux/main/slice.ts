@@ -13,6 +13,7 @@ import { ProjectReducer } from "./project";
 import { persistReducer } from "redux-persist";
 import createWebStorage from "redux-persist/es/storage/createWebStorage";
 import { DesignViewReducer } from "./designView";
+import { toastReducer } from "./toasts";
 
 export function createPersistStore() {
   const isServer = typeof window === "undefined";
@@ -58,4 +59,5 @@ export const MainReducer = combineReducers({
   codeView: CodeViewReducer,
 
   designView: DesignViewReducer,
+  feedBack: toastReducer
 });

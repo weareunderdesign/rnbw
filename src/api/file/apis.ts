@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import { Buffer } from "buffer";
 import { FileSystemFileHandle } from "file-system-access";
 import JSZip from "jszip";
@@ -11,6 +12,7 @@ import {
 import { TOsType } from "@_redux/global";
 import { SystemDirectories } from "../../commandMenu/SystemDirectories";
 import { verifyFileHandlerPermission } from "../../rnbw";
+
 
 import {
   fileHandlers,
@@ -38,26 +40,35 @@ import {
   _writeIDBFile,
 } from "./nohostApis";
 import { TFileHandlerInfo, TFileHandlerInfoObj, TZipFileInfo } from "./types";
-import { toast } from "react-toastify";
+import { addToast } from "@src/_redux/main/toasts";
 
-export const initIDBProject = (projectPath: string): Promise<void> => {
+export const initIDBProject = (dispatch: Function, projectPath: string): Promise<void> => {
+  
+
   return new Promise<void>((resolve, reject) => {
     // remove original
     _removeIDBDirectoryOrFile(projectPath)
       .then(() => {
         // create a new project
-        createIDBProject(projectPath)
+        createIDBProject(dispatch, projectPath)
           .then(() => resolve())
           .catch((err) => reject(err));
       })
       .catch((err) => {
-        toast.error("Error while removing IDB project");
+        dispatch(
+          addToast({
+            title: "Handler Error",
+            message: "Error while removing IDB project",
+            type: "danger"
+          })
+        );
+    
         LogAllow && console.error("error while removing IDB project", err);
       });
   });
 };
 
-export const createIDBProject = async (projectPath: string): Promise<void> => {
+export const createIDBProject = async (dispatch: Function, projectPath: string): Promise<void> => {
   try {
     // create project directory
     await _createIDBDirectory(projectPath);
@@ -70,7 +81,15 @@ export const createIDBProject = async (projectPath: string): Promise<void> => {
     // If all operations are successful, resolve the promise
     return Promise.resolve();
   } catch (err) {
-    toast.error("Error while creating IDB project");
+      
+      dispatch(
+        addToast({
+          title: "Error",
+          message: "Error while creating IDB project",
+          type: "danger"
+        })
+      );
+  
     // If an error occurs, log it and reject the promise
     LogAllow && console.error("error while creating IDB project", err);
     return Promise.reject(err);
@@ -78,6 +97,7 @@ export const createIDBProject = async (projectPath: string): Promise<void> => {
 };
 
 export const loadIDBProject = async (
+  dispatch: Function,
   projectPath: string,
   isReload: boolean = false,
   fileTree?: TFileNodeTreeData,
@@ -203,15 +223,26 @@ export const loadIDBProject = async (
       _initialFileUidToOpen,
       deletedUidsObj,
       deletedUids: Object.keys(deletedUidsObj),
+      dispatch: dispatch, 
     };
   } catch (err) {
-    toast.error("Error while loading IDB project");
+    
+
+    dispatch(
+      addToast({
+        title: "Handler Error",
+        message: "Error while loading IDB project",
+        type: "danger"
+      })
+    );
+
     LogAllow && console.error("error in loadIDBProject API", err);
     throw err;
   }
 };
 
 export const loadLocalProject = async (
+  dispatch: Function, 
   projectHandle: FileSystemDirectoryHandle,
   osType: TOsType,
   isReload: boolean = false,
@@ -363,7 +394,16 @@ export const loadLocalProject = async (
       deletedUids: Object.keys(deletedUidsObj),
     };
   } catch (err) {
-    toast.error("Error while loading local project");
+    
+
+    dispatch(
+      addToast({
+        title: "Handler Error",
+        message: "Error while loading local project",
+        type: "danger"
+      })
+    );
+
     LogAllow &&
       console.log(
         `error in ${isReload ? "reloadLocalProject" : "loadLocalProject"} API`,
@@ -374,6 +414,7 @@ export const loadLocalProject = async (
 };
 
 export const buildNohostIDB = async (
+  dispatch: Function, 
   handlerArr: TFileHandlerInfo[],
   deletedPaths: TNodeUid[] = [],
 ): Promise<void> => {
@@ -388,7 +429,17 @@ export const buildNohostIDB = async (
             }
           });
         } catch (err) {
-          toast.error("Error while removing IDB project");
+          
+
+          dispatch(
+            addToast({
+              title: "Handler Error",
+              message: "Error while removing IDB project",
+              type: "danger"
+            })
+          );
+      
+
           console.error("Error while removing IDB project", err);
         }
       }),
@@ -402,7 +453,17 @@ export const buildNohostIDB = async (
           try {
             await _createIDBDirectory(path);
           } catch (err) {
-            toast.error("Error while creating IDB directory");
+            
+          
+            dispatch(
+              addToast({
+                title: "Handler Error",
+                message: "Error while creating IDB directory",
+                type: "danger"
+              })
+            );
+        
+  
             console.error("Error while creating IDB directory", err);
           }
         }
@@ -415,7 +476,15 @@ export const buildNohostIDB = async (
           try {
             await _writeIDBFile(path, content as Uint8Array);
           } catch (err) {
-            toast.error("Error while writing IDB file");
+            
+          
+            dispatch(
+              addToast({
+                title: "Handler Error",
+                message: "Error while writing IDB file",
+                type: "danger"
+              })
+            );
             console.error("Error while writing IDB file", err);
           }
         }
@@ -424,17 +493,33 @@ export const buildNohostIDB = async (
 
     return; // Resolve the promise
   } catch (err) {
-    toast.error("Error while building IDB project");
+    
+          
+    dispatch(
+      addToast({
+        title: "Handler Error",
+        message: "Error while building IDB project",
+        type: "danger"
+      })
+    );
     console.error("Error in buildNohostIDB API", err);
     throw err; // Reject the promise
   }
 };
 
 export const downloadIDBProject = async (
+  dispatch: Function, 
   projectPath: string,
 ): Promise<void> => {
-  try {
-    toast("Downloading project, please wait...");
+  try {   
+    dispatch(
+      addToast({
+        title: "Handler Error",
+        message: "Downloading project, please wait...",
+        type: "danger"
+      })
+    );
+
     const zip = new JSZip();
 
     // Build project root
@@ -478,8 +563,15 @@ export const downloadIDBProject = async (
         }),
       );
     }
-    toast.success("Project downloaded successfully");
 
+          
+    dispatch(
+      addToast({
+        title: "Handler Error",
+        message: "Project downloaded successfully",
+        type: "danger"
+      })
+    );
     const projectBlob = await zip.generateAsync({ type: "blob" });
     const url = URL.createObjectURL(projectBlob);
     const link = document.createElement("a");
@@ -488,7 +580,13 @@ export const downloadIDBProject = async (
     link.click();
     URL.revokeObjectURL(url);
   } catch (err) {
-    toast.error("Error while downloading IDB project");
+    dispatch(
+      addToast({
+        title: "Handler Error",
+        message: "Error while downloading IDB project",
+        type: "danger"
+      })
+    );
     console.error("Error in downloadIDBProject API", err);
     throw err;
   }

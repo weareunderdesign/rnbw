@@ -1,16 +1,16 @@
 import { ReactNode } from "react";
 import { TOsType, TTheme } from "@_redux/global";
-import { toast } from "react-toastify";
 import MainPage from "./rnbwTSX";
 import ActionsPanel from "./sidebarView";
 import CodeView from "./codeView";
 import DesignView from "./designView";
 import App from "./rnbwTSX";
+import { addToast } from "./_redux/main/toasts";
+import { useDispatch } from "react-redux";
 
 export type ResizablePanelsProps = {
   sidebarView: ReactNode;
   designView: ReactNode;
-  codeView: ReactNode;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -76,6 +76,8 @@ export const generateQuerySelector = (path: string): string => {
 export const verifyFileHandlerPermission = async (
   fileHandle: FileSystemHandle,
 ): Promise<boolean> => {
+  const dispatch = useDispatch();
+
   if (fileHandle === undefined) return false;
 
   try {
@@ -86,7 +88,14 @@ export const verifyFileHandlerPermission = async (
 
     return false;
   } catch (err) {
-    toast.error("An error occurred while verifying file handler permission");
+    dispatch(
+      addToast({
+        title: "Handler Error",
+        message: "An error occurred while verifying file handler permission",
+        type: "danger"
+      })
+    );
+
     return false;
   }
 };

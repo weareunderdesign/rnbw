@@ -10,7 +10,6 @@ import persistStore from "redux-persist/es/persistStore";
 import { PersistGate } from "redux-persist/integration/react";
 
 import configureStore from "@_redux/_root";
-import { Loader, Notification } from "@src/components";
 import { ActionsPanel, CodeView, DesignView } from "./rnbw";
 import { isUnsavedProject } from "@_api/file";
 import { MainContext } from "@_redux/main";
@@ -23,6 +22,9 @@ import ResizablePanels from "@_components/ResizablePanels";
 import { debounce } from "@src/helper";
 import { CommandDialog } from "@src/commandMenu/CommandDialog";
 import { TNodeUid, TValidNodeUid } from "@_api/index";
+import { LayoutModeProvider } from "./components/context/LayoutModeContext";
+import { ToastProvider } from "./components/toast/ToastContext";
+import CodeViewOverlay from "./CodeViewOverlay";
 
 // Constants
 export const RootNodeUid = "ROOT";
@@ -86,7 +88,7 @@ function MainPage() {
 
   const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
   const prevFocusedElement = React.useRef<HTMLElement | null>(
-    window.document.activeElement as HTMLElement | null,
+    window.document.activeElement as HTMLElement | null
   );
   const maxNodeUidRef = React.useRef<TValidNodeUid>(0);
   const setMaxNodeUidRef = (maxNodeUid: TValidNodeUid) => {
@@ -136,7 +138,7 @@ function MainPage() {
       ) {
         if (
           !window.document.activeElement?.isEqualNode(
-            prevFocusedElement.current,
+            prevFocusedElement.current
           )
         ) {
           intervalRef.current && clearInterval(intervalRef.current);
@@ -221,20 +223,25 @@ function MainPage() {
         }}
       >
         <Processor></Processor>
-        <div
-          id="MainPage"
-          className={"view background-primary"}
-          style={{ display: "relative" }}
-          onClick={closeNavigator}
-        >
-          <Loader />
-          <ResizablePanels
-            sidebarView={<ActionsPanel />}
-            codeView={<CodeView />}
-            designView={<DesignView />}
-          />
-          <Notification />
-        </div>
+        <ToastProvider>
+          <div
+            id="MainPage"
+            className={"view background-primary"}
+            style={{ display: "relative" }}
+            onClick={closeNavigator}
+          >
+            <LayoutModeProvider>
+              <CodeViewOverlay>
+                <CodeView />
+              </CodeViewOverlay>
+
+              <ResizablePanels
+                sidebarView={<ActionsPanel />}
+                designView={<DesignView />}
+              />
+            </LayoutModeProvider>
+          </div>
+        </ToastProvider>
         <CommandDialog onClear={onClear} onJumpstart={onJumpstart} />
       </MainContext.Provider>
     </>
@@ -268,7 +275,7 @@ function App() {
         )}
       </>
     ),
-    [nohostReady],
+    [nohostReady]
   );
 }
 
@@ -278,14 +285,14 @@ const persistor = persistStore(store);
 
 // render #root
 const root = ReactDOMClient.createRoot(
-  document.getElementById("root") as HTMLElement,
+  document.getElementById("root") as HTMLElement
 );
 root.render(
   <Provider store={store}>
     <PersistGate loading={null} persistor={persistor}>
       <App />
     </PersistGate>
-  </Provider>,
+  </Provider>
 );
 
 export default App;

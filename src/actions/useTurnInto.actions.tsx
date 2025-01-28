@@ -1,10 +1,11 @@
 import useRnbw from "@_services/useRnbw";
-import { Range, editor } from "monaco-editor";
+import { Range } from "monaco-editor";
 
 import { PrettyCode, useElementHelper } from "@_services/useElementsHelper";
-import { toast } from "react-toastify";
 import { useContext } from "react";
 import { MainContext } from "@src/_redux/main";
+import { addToast } from "@src/_redux/main/toasts";
+import { useDispatch } from "react-redux";
 
 export default function useTurnInto() {
   const rnbw = useRnbw();
@@ -18,6 +19,7 @@ export default function useTurnInto() {
   } = useElementHelper();
 
   const selectedElements = rnbw.elements.getSelectedElements();
+  const dispatch = useDispatch();
 
   async function turnInto(tagName: string) {
     const sortedUids = sortUidsDsc(selectedElements);
@@ -31,7 +33,14 @@ export default function useTurnInto() {
       checkFirstParents: true,
     });
     if (!isAllowed) {
-      toast(`Turn into ${tagName} not allowed`, { type: "error" });
+      dispatch(
+        addToast({
+          title: "Error",
+          message: `Turn into ${tagName} not allowed`,
+          type: "danger"
+        })
+      );
+  
       return;
     }
 

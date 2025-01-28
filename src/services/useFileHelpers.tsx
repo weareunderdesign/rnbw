@@ -10,8 +10,8 @@ import { TNode, TNodeTreeData, TNodeUid } from "@_api/index";
 import { expandFileTreeNodes, setFileTree } from "@_redux/main/fileTree";
 import { useAppState } from "@_redux/useAppState";
 import { useDispatch } from "react-redux";
-import { toast } from "react-toastify";
 import { verifyFileHandlerPermission } from "../rnbw";
+import { addToast } from "@src/_redux/main/toasts";
 
 export const getUniqueIndexedName = async ({
   parentHandler,
@@ -36,6 +36,8 @@ export const getUniqueIndexedName = async ({
   let uniqueName = null;
   //We generate a unique indexed name for the file
   while (uniqueName === null) {
+    const dispatch = useDispatch();
+
     const indexedName = getIndexedName();
     try {
       //getFileHandle throws an error if the file does not exist
@@ -49,7 +51,13 @@ export const getUniqueIndexedName = async ({
       if (err.name === "NotFoundError") {
         uniqueName = indexedName;
       } else {
-        toast.error("An error occurred while creating the file");
+        dispatch(
+          addToast({
+            title: "Error",
+            message: "An error occurred while creating the file",
+            type: "danger"
+          })
+        );
       }
     }
   }
@@ -76,11 +84,19 @@ const generateNewNameForLocalDirectoryOrFile = async ({
         });
       }
     } catch (err) {
+      const dispatch = useDispatch();
+
       //@ts-expect-error - types are not updated
       if (err.name === "NotFoundError") {
         exists = false;
       } else {
-        toast.error("Error while generating a new name for a local directory.");
+        dispatch(
+          addToast({
+            title: "Error",
+            message: "Error while generating a new name for a local directory.",
+            type: "danger"
+          })
+        );
       }
     }
 
@@ -99,8 +115,6 @@ const generateNewNameForLocalDirectoryOrFile = async ({
   return newName;
 };
 export const useFileHelpers = () => {
-  const dispatch = useDispatch();
-
   const { fFocusedItem, fileTree, fileHandlers, fExpandedItemsObj } =
     useAppState();
 
@@ -121,6 +135,8 @@ export const useFileHelpers = () => {
     isFolder: boolean;
     ext: string;
   }) => {
+    const dispatch = useDispatch();
+
     // performs a deep clone of the file tree
     const _fileTree = structuredClone(fileTree) as TNodeTreeData;
 
@@ -136,6 +152,7 @@ export const useFileHelpers = () => {
       immediateDir.uid !== RootNodeUid &&
       !fExpandedItemsObj[immediateDir.uid]
     ) {
+
       dispatch(expandFileTreeNodes([immediateDir.uid]));
     }
 
@@ -165,8 +182,10 @@ export const useFileHelpers = () => {
     source: FileSystemDirectoryHandle,
     destination: FileSystemDirectoryHandle,
     parentHandler: FileSystemDirectoryHandle,
-    isCopy: boolean,
+    isCopy: boolean
   ) => {
+    const dispatch = useDispatch();
+
     const dirQueue = [
       {
         source,
@@ -216,12 +235,25 @@ export const useFileHelpers = () => {
         try {
           parentHandler.removeEntry(source.name, { recursive: true });
         } catch (err) {
-          toast.error("Error while moving a local directory.");
+          dispatch(
+            addToast({
+              title: "Error",
+              message: "Error while moving a local directory.",
+              type: "danger"
+            })
+          );
+
           console.error(err);
         }
       }
     } catch (err) {
-      toast.error("Error while moving a local directory.");
+      dispatch(
+        addToast({
+          title: "Error",
+          message: "Error while moving a local directory.",
+          type: "danger"
+        })
+      );
       console.error(err);
     }
   };
@@ -230,8 +262,10 @@ export const useFileHelpers = () => {
     parentHandler: FileSystemDirectoryHandle,
     targetHandler: FileSystemDirectoryHandle,
     newName: string,
-    isCopy: boolean,
+    isCopy: boolean
   ) => {
+    const dispatch = useDispatch();
+
     try {
       const newFile = await targetHandler.getFileHandle(newName, {
         create: true,
@@ -245,7 +279,14 @@ export const useFileHelpers = () => {
       !isCopy &&
         (await parentHandler.removeEntry(handler.name, { recursive: true }));
     } catch (err) {
-      toast.error("Error while moving a local file.");
+      dispatch(
+        addToast({
+          title: "Error",
+          message: "Error while moving a local file.",
+          type: "danger"
+        })
+      );
+
       throw "Error while moving a local file.";
     }
   };
@@ -290,6 +331,8 @@ export const useFileHelpers = () => {
       fileHandlers,
     });
     try {
+      const dispatch = useDispatch();
+
       if (
         !(await verifyFileHandlerPermission(handler)) ||
         !(await verifyFileHandlerPermission(parentHandler)) ||
@@ -322,17 +365,24 @@ export const useFileHelpers = () => {
             uniqueEntityName,
             {
               create: true,
-            },
+            }
           );
 
           await _moveLocalDirectory(
             handler as FileSystemDirectoryHandle,
             newHandler,
             parentHandler,
-            isCopy,
+            isCopy
           );
         } catch (err) {
-          toast.error("Error while moving a local directory.");
+          dispatch(
+            addToast({
+              title: "Error",
+              message: "Error while moving a local directory.",
+              type: "danger"
+            })
+          );
+
           console.log(err);
         }
       } else {
@@ -342,16 +392,32 @@ export const useFileHelpers = () => {
             parentHandler,
             targetHandler,
             uniqueEntityName,
-            isCopy,
+            isCopy
           );
         } catch (err) {
-          toast.error("Error while moving a local file.");
+          dispatch(
+            addToast({
+              title: "Error",
+              message: "Error while moving a local file.",
+              type: "danger"
+            })
+          );
+
           console.log(err);
         }
       }
       return true;
     } catch (err) {
-      toast.error("Error while moving a local directory or file.");
+      const dispatch = useDispatch();
+
+      dispatch(
+        addToast({
+          title: "Error",
+          message: "Error while moving a local directory or file.",
+          type: "danger"
+        })
+      );
+
       console.error(err);
       return false;
     }

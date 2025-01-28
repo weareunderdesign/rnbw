@@ -12,8 +12,8 @@ import { saveFileContent } from "../helpers";
 import { setCurrentCommand } from "@_redux/main/cmdk";
 import { addRunningAction, removeRunningAction } from "@_redux/main/processor";
 import { debounce } from "@src/helper";
-import { toast } from "react-toastify";
 import { MainContext } from "@_redux/main";
+import { addToast } from "@src/_redux/main/toasts";
 
 export const useSaveCommand = () => {
   const dispatch = useDispatch();
@@ -81,7 +81,13 @@ export const useSaveCommand = () => {
           iframe.src = iframeSrc;*/
         }
       } catch (err) {
-        toast.error("An error occurred while saving the file");
+        dispatch(
+          addToast({
+            title: "Error",
+            message: "An error occurred while saving the file",
+            type: "danger"
+          })
+        );
         console.error(err);
       } finally {
         isSaving.current = false;

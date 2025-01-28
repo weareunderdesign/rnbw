@@ -34,10 +34,10 @@ import {
   setNavigatorDropdownType,
 } from "@_redux/main/processor";
 import { AnyFunction } from "./rnbw";
-import { toast } from "react-toastify";
 import { NavigateFunction } from "react-router-dom";
 import { TFilesReference } from "@rnbws/rfrncs.design";
 import { FileNode } from "@_redux/main";
+import { addToast } from "./_redux/main/toasts";
 
 export const addDefaultCmdkActions = (
   cmdkReferenceData: TCmdkReferenceData,
@@ -459,7 +459,14 @@ export const onWebComponentDblClick = ({
               src.startsWith("https") ||
               src.startsWith("//")
             ) {
-              toast.error("rnbw couldn't find it's source file");
+              dispatch(
+                addToast({
+                  title: "rnbw Error",
+                  message: "rnbw couldn't find it's source file",
+                  type: "danger",
+                })
+              );
+    
               break;
             } else {
               dispatch(setNavigatorDropdownType("project"));
@@ -494,7 +501,14 @@ export const onWebComponentDblClick = ({
     }
   }
   if (!exist) {
-    toast.error("rnbw couldn't find it's source file");
+    dispatch(
+      addToast({
+        title: "rnbw Error",
+        message: "rnbw couldn't find it's source file",
+        type: "danger", 
+      })
+    );
+
   }
 };
 
