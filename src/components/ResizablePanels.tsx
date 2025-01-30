@@ -11,7 +11,7 @@ import {
 import { useAppState } from "@_redux/useAppState";
 import { ResizablePanelsProps } from "../rnbw";
 import { useLayoutMode } from "./context/LayoutModeContext";
-import { SVGIconI } from "./svgIcon";
+import SVGIcon from "./SvgIcon";
 
 const actionsPanelWidth = 10;
 
@@ -120,18 +120,15 @@ export default function ResizablePanels({
                   alignItems: "center",
                 }}
               >
-                <SVGIconI
-                  {...{
-                    class: "icon-xs bg-secondary",
-                    style: {
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    },
+                <SVGIcon
+                  name="resize"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
-                >
-                  raincons/resize
-                </SVGIconI>
+                  className="icon-xs bg-secondary"
+                />
               </PanelResizeHandle>
             )}
           </React.Fragment>

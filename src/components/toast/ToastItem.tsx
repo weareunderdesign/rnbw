@@ -1,7 +1,7 @@
 import { removeToast, TToast } from "@src/_redux/main/toasts";
 import React, {  useEffect, useState } from "react";
-import { SVGIconII } from "../svgIcon";
 import { useDispatch } from "react-redux";
+import SVGIcon from "../SvgIcon";
 
 const ToastItem: React.FC<TToast & { onCloseToast: () => void }> = ({
   id,
@@ -16,10 +16,10 @@ const ToastItem: React.FC<TToast & { onCloseToast: () => void }> = ({
 
   const getToastIcon = () => {
     switch (type) {
-      case 'success': return 'raincons/check-circle';
-      case 'danger': return 'raincons/error-circle';
-      case 'warning': return 'raincons/warning';
-      default: return 'raincons/info-circle';
+      case 'success': return 'check-circle';
+      case 'danger': return 'error-circle';
+      case 'warning': return 'warning';
+      default: return 'info-circle';
     }
   };
 
@@ -68,9 +68,8 @@ const ToastItem: React.FC<TToast & { onCloseToast: () => void }> = ({
     >
       {/* Status Icon */}
       <div style={{ marginRight: '12px', color: getToastColor() }}>
-        <SVGIconII className="icon-m">
-          {getToastIcon()}
-        </SVGIconII>
+        <SVGIcon name={getToastIcon()} prefix="raincons" className="icon-m" />
+
       </div>
 
       {/* Content */}
@@ -100,9 +99,7 @@ const ToastItem: React.FC<TToast & { onCloseToast: () => void }> = ({
         onMouseEnter={e => e.currentTarget.style.opacity = '1'}
         onMouseLeave={e => e.currentTarget.style.opacity = '0.6'}
       >
-        <SVGIconII className="icon-s">
-          raincons/cross
-        </SVGIconII>
+        <SVGIcon name="cross" prefix="raincons" className="icon-s" />
       </div>
 
       {/* Progress Bar */}

@@ -61,7 +61,7 @@ export const DefaultPanel = () => {
   return (
     <>
       <div className="gap-s align-center" onClick={onProjectClick}>
-        <IconButton iconName="raincons/emoji" onClick={onJumpstart} />
+        <IconButton iconName="emoji" onClick={onJumpstart} />
 
         <span className="text-s opacity-m">/</span>
 
@@ -128,10 +128,10 @@ export const DefaultPanel = () => {
         </div>
       )}
 
-      <IconButton iconName="raincons/plus" onClick={onAdd} />
-      <IconButton iconName="raincons/sync" onClick={handleReload} />
+      <IconButton iconName="plus" onClick={onAdd} />
+      <IconButton iconName="sync" onClick={handleReload} />
       <IconButton
-        iconName="raincons/code-html"
+        iconName="code-html"
         onClick={() => simulateKeyboardEvent("C")}
       />
     </>

@@ -24,7 +24,7 @@ import { CommandDialog } from "@src/commandMenu/CommandDialog";
 import { TNodeUid, TValidNodeUid } from "@_api/index";
 import { LayoutModeProvider } from "./components/context/LayoutModeContext";
 import { ToastProvider } from "./components/toast/ToastContext";
-import CodeViewOverlay from "./CodeViewOverlay";
+import CodeViewOverlay from "./components/CodeViewOverlay";
 
 // Constants
 export const RootNodeUid = "ROOT";

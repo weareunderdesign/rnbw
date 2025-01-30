@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { SVGIconI } from "../svgIcon";
+import SVGIcon from "../SvgIcon";
 
 const IconButton = ({
     iconName,
@@ -35,18 +35,16 @@ const IconButton = ({
           justifyContent: 'center',
         }}
       >
-        <SVGIconI 
-          {...{ 
-            class: "icon-xs bg-secondary",
-            style: {
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }
-          }}
-        >
-          {iconName}
-        </SVGIconI>
+        <SVGIcon
+        name={iconName}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+        className="icon-xs bg-secondary"
+       />
+          
       </div>
     );
   };
