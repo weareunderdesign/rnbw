@@ -51,6 +51,7 @@
   "devDependencies": {
     "@babel/core": "^7.19.6",
     "@types/diff-match-patch": "^1.0.36",
+    "@types/lodash": "^4.17.15",
     "@types/react": "^18.0.25",
     "@types/react-dom": "^18.0.9",
     "@types/react-redux": "^7.1.24",
