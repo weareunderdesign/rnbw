@@ -1,8 +1,8 @@
 import React, { useCallback, useMemo } from "react";
-import { SVGIconI } from "@src/components";
+import { SVGIcon } from "@src/components";
 import { RootNodeUid } from "@src/rnbwTSX";
 import { useAppState } from "@_redux/useAppState";
-import {  setReloadIframe } from '@_redux/main/designView';
+import { setReloadIframe } from "@_redux/main/designView";
 
 import { getFileExtension, getFileNameFromPath, isHomeIcon } from "../helpers";
 import { useNavigatorPanelHandlers } from "../hooks";
@@ -13,10 +13,7 @@ import { setCmdkPages } from "@src/_redux/main/cmdk";
 export const DefaultPanel = () => {
   const dispatch = useDispatch();
 
-  const {
-    cmdkOpen,
-    cmdkPages
-  } = useAppState();
+  const { cmdkOpen, cmdkPages } = useAppState();
 
   const { project, fileTree, currentFileUid } = useAppState();
 
@@ -40,12 +37,11 @@ export const DefaultPanel = () => {
   const onJumpstart = useCallback(() => {
     if (cmdkOpen) return;
     dispatch(setCmdkPages(["Jumpstart"]));
-  }, [cmdkOpen]);  
+  }, [cmdkOpen]);
 
   const onAdd = useCallback(() => {
     dispatch(setCmdkPages([...cmdkPages, "Add"]));
   }, [cmdkPages]);
-
 
   const simulateKeyboardEvent = (key: string) => {
     const event = new KeyboardEvent("keydown", {
@@ -56,7 +52,7 @@ export const DefaultPanel = () => {
       charCode: key.charCodeAt(0),
     });
     document.dispatchEvent(event);
-  }
+  };
 
   const handleReload = () => {
     dispatch(setReloadIframe(true));
@@ -64,14 +60,18 @@ export const DefaultPanel = () => {
 
   return (
     <>
-      <div className="gap-s align-center" onClick={onProjectClick}>      
-
-     <IconButton iconName="raincons/emoji" onClick={onJumpstart} />
+      <div className="gap-s align-center" onClick={onProjectClick}>
+        <IconButton iconName="emoji" onClick={onJumpstart} />
 
         <span className="text-s opacity-m">/</span>
 
-        <div onClick={(e) => { e.stopPropagation(); console.log("folder icon clicked"); }}>
-        <SVGIconI {...{ class: "icon-xs" }}>raincons/folder</SVGIconI>
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            console.log("folder icon clicked");
+          }}
+        >
+          <SVGIcon className="icon-xs" name="folder" />
         </div>
         <span
           className="text-s"
@@ -96,14 +96,16 @@ export const DefaultPanel = () => {
 
       {fileNode && (
         <div className="gap-s align-center" onClick={onFileClick}>
-          <SVGIconI {...{ class: "icon-xs" }}>
-            raincons/
-            {isHomeIcon(fileNode)
-              ? "home"
-              : filesReferenceData[fileExtension] && fileExtension !== "md"
-                ? filesReferenceData[fileExtension].Icon
-                : "page"}
-          </SVGIconI>
+          <SVGIcon
+            className="icon-xs"
+            name={
+              isHomeIcon(fileNode)
+                ? "home"
+                : filesReferenceData[fileExtension] && fileExtension !== "md"
+                  ? filesReferenceData[fileExtension].Icon
+                  : "page"
+            }
+          />
           <span
             className="text-s"
             style={{
@@ -125,10 +127,12 @@ export const DefaultPanel = () => {
         </div>
       )}
 
-    <IconButton iconName="raincons/plus" onClick={onAdd} />
-    <IconButton iconName="raincons/sync" onClick={handleReload} />
-    <IconButton iconName="raincons/code-html" onClick={()=> simulateKeyboardEvent("C")} />
-
+      <IconButton iconName="plus" onClick={onAdd} />
+      <IconButton iconName="sync" onClick={handleReload} />
+      <IconButton
+        iconName="code-html"
+        onClick={() => simulateKeyboardEvent("C")}
+      />
     </>
   );
 };

@@ -10,9 +10,19 @@ export const ItemArrow = React.memo(
         {item.isFolder ? (
           <div className="icon-xs">
             {context.isExpanded ? (
-              <SVGIcon name="down" className="icon-xs" onClick={onClick} />
+              <SVGIcon
+                name="down"
+                className="icon-xs"
+                onClick={onClick}
+                key="down"
+              />
             ) : (
-              <SVGIcon name="right" className="icon-xs" onClick={onClick} />
+              <SVGIcon
+                name="right"
+                className="icon-xs"
+                onClick={onClick}
+                key="right"
+              />
             )}
           </div>
         ) : (

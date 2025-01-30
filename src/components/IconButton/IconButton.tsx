@@ -1,33 +1,31 @@
 import React, { useState } from "react";
-import { SVGIconI } from "../svgIcon";
+import { SVGIcon } from "@src/components";
 
 const IconButton = ({
-    iconName,
-    onClick,
-  }: {
-    iconName: string;
-    onClick: (e: React.MouseEvent<HTMLDivElement>) => void;
-  }) => {
-    const [isHover, setIsHovered] = useState(false);
-  
-    const handleMouseEnter = () => setIsHovered(true);
-    const handleMouseLeave = () => setIsHovered(false);
-  
-    return (
-      <div
-        className={`padding-xs radius-xs ${isHover ? "background-secondary" : ""}`}
-        onClick={(e) => {
-          e.stopPropagation();
-          onClick(e); 
-        }}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-      >
-        <SVGIconI {...{ class: "icon-xs bg-secondary" }}>{iconName}</SVGIconI>
-      </div>
-    );
-  };
-  
-  
+  iconName,
+  onClick,
+}: {
+  iconName: string;
+  onClick: (e: React.MouseEvent<HTMLDivElement>) => void;
+}) => {
+  const [isHover, setIsHovered] = useState(false);
 
-export default IconButton
+  const handleMouseEnter = () => setIsHovered(true);
+  const handleMouseLeave = () => setIsHovered(false);
+
+  return (
+    <div
+      className={`padding-xs radius-xs ${isHover ? "background-secondary" : ""}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick(e);
+      }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <SVGIcon className="icon-xs bg-secondary" name={iconName} />
+    </div>
+  );
+};
+
+export default IconButton;
