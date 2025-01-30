@@ -1,6 +1,6 @@
 import React, { FC } from "react";
 
-import { SVGIconI } from "@src/components";
+import { SVGIcon } from "@src/components";
 import { useAppState } from "@_redux/useAppState";
 
 import { useNavigatorPanelHandlers } from "../hooks";
@@ -14,7 +14,7 @@ export const ProjectPanel: FC<{ unsavedProject: boolean }> = ({
   return (
     <>
       <div className="gap-s align-center" onClick={onProjectClick}>
-        <SVGIconI {...{ class: "icon-xs" }}>raincons/folder</SVGIconI>
+        <SVGIcon name="folder" className="icon-xs" />
         <span className="text-s">{project.name}</span>
         {unsavedProject && (
           <div

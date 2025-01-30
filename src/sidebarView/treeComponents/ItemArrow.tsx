@@ -1,6 +1,6 @@
 import React from "react";
 
-import { SVGIconI, SVGIconII } from "@src/components";
+import { SVGIcon } from "@src/components";
 import { ItemArrowProps } from "./types";
 
 export const ItemArrow = React.memo(
@@ -10,23 +10,9 @@ export const ItemArrow = React.memo(
         {item.isFolder ? (
           <div className="icon-xs">
             {context.isExpanded ? (
-              <SVGIconI
-                {...{
-                  class: "icon-xs",
-                  onClick,
-                }}
-              >
-                raincons/down
-              </SVGIconI>
+              <SVGIcon name="down" className="icon-xs" onClick={onClick} />
             ) : (
-              <SVGIconII
-                {...{
-                  class: "icon-xs",
-                  onClick,
-                }}
-              >
-                raincons/right
-              </SVGIconII>
+              <SVGIcon name="right" className="icon-xs" onClick={onClick} />
             )}
           </div>
         ) : (

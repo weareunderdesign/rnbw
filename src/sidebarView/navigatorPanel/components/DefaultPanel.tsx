@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from "react";
-import { SVGIconI } from "@src/components";
+import { SVGIcon } from "@src/components";
 import { RootNodeUid } from "@src/rnbwTSX";
 import { useAppState } from "@_redux/useAppState";
 import { setReloadIframe } from "@_redux/main/designView";
@@ -71,7 +71,7 @@ export const DefaultPanel = () => {
             console.log("folder icon clicked");
           }}
         >
-          <SVGIconI {...{ class: "icon-xs" }}>raincons/folder</SVGIconI>
+          <SVGIcon name="folder" className="icon-xs" />
         </div>
         <span
           className="text-s"
@@ -96,14 +96,17 @@ export const DefaultPanel = () => {
 
       {fileNode && (
         <div className="gap-s align-center" onClick={onFileClick}>
-          <SVGIconI {...{ class: "icon-xs" }}>
-            raincons/
-            {isHomeIcon(fileNode)
-              ? "home"
-              : filesReferenceData[fileExtension] && fileExtension !== "md"
-                ? filesReferenceData[fileExtension].Icon
-                : "page"}
-          </SVGIconI>
+          <SVGIcon
+            name={
+              isHomeIcon(fileNode)
+                ? "home"
+                : filesReferenceData[fileExtension] && fileExtension !== "md"
+                  ? filesReferenceData[fileExtension].Icon
+                  : "page"
+            }
+            className="icon-xs"
+          />
+
           <span
             className="text-s"
             style={{

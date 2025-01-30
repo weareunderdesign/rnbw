@@ -23,7 +23,7 @@ import {
   COMMANDS_TO_KEEP_MODAL_OPEN,
   PLACEHOLDERS,
 } from "./constants";
-import { SVGIcon, SVGIconIV } from "@src/components";
+import { SVGIcon } from "@src/components";
 
 const iconMappping = {
   New: "/images/jumpstart/new.svg",
@@ -186,11 +186,11 @@ export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
   };
 
   const actionButtonStyle: React.CSSProperties = {
-    padding: '4px',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    cursor: 'pointer',
+    padding: "4px",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    cursor: "pointer",
   };
 
   return (
@@ -212,7 +212,7 @@ export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
       >
         {isPageOpenedFromActions && (
           <div style={actionButtonStyle} onClick={onBackIconClick}>
-            <SVGIcon {...{ class: "icon-xs" }}>raincons/arrow-left</SVGIcon>
+            <SVGIcon name="arrow-left" className="icon-xs" />
           </div>
         )}
         <Command.Input
@@ -314,7 +314,7 @@ export const CommandDialog = ({ onClear, onJumpstart }: CommandDialogProps) => {
                   }
                   key={index}
                 >
-                  <SVGIconIV
+                  <SVGIcon
                     src={`${iconMappping?.[key as keyof typeof iconMappping]}`}
                     style={{ height: "160px", width: "160px" }}
                   />
