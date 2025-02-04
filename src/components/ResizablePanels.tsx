@@ -10,7 +10,7 @@ import { useAppState } from "@_redux/useAppState";
 import { ResizablePanelsProps } from "../rnbw";
 
 const actionsPanelWidth = 10;
-const codeViewWidth = 30;
+const defaultCodeViewWidth = 30;
 
 export default function ResizablePanels({
   sidebarView,
@@ -18,10 +18,11 @@ export default function ResizablePanels({
   codeView,
 }: ResizablePanelsProps) {
   const { showActionsPanel, showCodeView } = useAppState();
-  const [sizes, setSizes] = useState([actionsPanelWidth, codeViewWidth, 0]);
+  const [sizes, setSizes] = useState([actionsPanelWidth, 0]);
   const actionPanelRef = useRef<ImperativePanelHandle>(null);
   const codeViewRef = useRef<ImperativePanelHandle>(null);
   const panelGroupRef = useRef<ImperativePanelGroupHandle>(null);
+  const [codeViewWidth, setCodeViewWidth] = useState(defaultCodeViewWidth);
   const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
@@ -29,27 +30,22 @@ export default function ResizablePanels({
       ? showCodeView
         ? panelGroupRef.current?.setLayout([
             actionsPanelWidth,
-            sizes[1],
-            100 - actionsPanelWidth - sizes[1],
+            100 - actionsPanelWidth - sizes[0],
           ])
         : actionPanelRef.current?.resize(actionsPanelWidth)
       : showCodeView
-        ? panelGroupRef.current?.setLayout([0, sizes[1], 100 - sizes[1]])
-        : panelGroupRef.current?.setLayout([0, 0, 100]);
+        ? panelGroupRef.current?.setLayout([0, 100 - sizes[0]])
+        : panelGroupRef.current?.setLayout([0, 100]);
   }, [showActionsPanel]);
 
   useEffect(() => {
     showCodeView
       ? showActionsPanel
-        ? panelGroupRef.current?.setLayout([
-            sizes[0],
-            codeViewWidth,
-            100 - codeViewWidth - sizes[0],
-          ])
+        ? panelGroupRef.current?.setLayout([sizes[0], 100 - sizes[0]])
         : codeViewRef.current?.resize(codeViewWidth)
       : showActionsPanel
         ? codeViewRef.current?.resize(0)
-        : panelGroupRef.current?.setLayout([0, 0, 100]);
+        : panelGroupRef.current?.setLayout([0, 100]);
   }, [showCodeView]);
 
   const wrapperStyle: React.CSSProperties = {
@@ -90,7 +86,7 @@ export default function ResizablePanels({
             minWidth: showActionsPanel ? "330px" : 0,
           }}
           onResize={(size) => {
-            setSizes([size, sizes[1], sizes[2]]);
+            setSizes([size, sizes[1]]);
           }}
         >
           {showActionsPanel && sidebarView}
@@ -108,7 +104,7 @@ export default function ResizablePanels({
         >
           {designView}
         </Panel>
-        <Panel
+        {/* <Panel
           ref={codeViewRef}
           defaultSize={sizes[1]}
           minSize={showCodeView ? 10 : 0}
@@ -121,8 +117,39 @@ export default function ResizablePanels({
           }}
         >
           {codeView}
-        </Panel>
+        </Panel> */}
       </PanelGroup>
+      {showCodeView && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            width: "40%", // Adjust width as needed
+            height: "100%",
+            background: "rgba(255, 255, 255, 0.1)",
+            backdropFilter: "blur(10px)",
+            border: "1px solid rgba(255, 255, 255, 0.3)",
+            boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
+            zIndex: 1000,
+            overflow: "hidden",
+          }}
+        >
+          <PanelGroup direction="horizontal">
+            <Panel defaultSize={100} />
+            <PanelResizeHandle style={{ width: 3 }} />
+            <Panel
+              defaultSize={codeViewWidth}
+              minSize={defaultCodeViewWidth}
+              onResize={(size) => {
+                setCodeViewWidth(size);
+              }}
+            >
+              {codeView}
+            </Panel>
+          </PanelGroup>
+        </div>
+      )}
     </>
   );
 }
