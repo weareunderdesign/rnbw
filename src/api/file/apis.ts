@@ -26,7 +26,12 @@ import {
   TNodeUid,
   TValidNodeUid,
 } from "../";
-import { getInitialFileUidToOpen, sortFilesByASC } from "./helpers";
+import {
+  getIndexCssContent,
+  getIndexJsContent,
+  getInitialFileUidToOpen,
+  sortFilesByASC,
+} from "./helpers";
 import {
   _createIDBDirectory,
   _fs,
@@ -66,6 +71,16 @@ export const createIDBProject = async (projectPath: string): Promise<void> => {
     const indexHtmlPath = `${projectPath}/index.html`;
     const indexHtmlContent = getIndexHtmlContent();
     await _writeIDBFile(indexHtmlPath, indexHtmlContent);
+
+    // create index.css
+    const indexCssPath = `${projectPath}/index.css`;
+    const indexCssContent = getIndexCssContent();
+    await _writeIDBFile(indexCssPath, indexCssContent);
+
+    // create index.js
+    const indexJsPath = `${projectPath}/index.js`;
+    const indexJsContent = getIndexJsContent();
+    await _writeIDBFile(indexJsPath, indexJsContent);
 
     // If all operations are successful, resolve the promise
     return Promise.resolve();
