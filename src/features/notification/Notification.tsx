@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import "./notification.css";
+import { SVGIcon } from "@src/components";
+import React, { useEffect, useState } from "react";
 
 interface NotificationProps {
   id: string;
@@ -16,23 +16,80 @@ export const Notification: React.FC<NotificationProps> = ({
   duration,
   onClose,
 }) => {
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onClose(id);
-    }, duration);
+  const [progress, setProgress] = useState(100);
 
-    return () => clearTimeout(timer);
-  }, [id, duration, onClose]);
+  const getToastColor = () => {
+    switch (type) {
+      case "success":
+        return "#4CAF50";
+      case "error":
+        return "#F44336";
+      case "warning":
+        return "#FFA726";
+      default:
+        return "#2196F3";
+    }
+  };
+
+  const getToastIcon = () => {
+    switch (type) {
+      case "success":
+        return "checkbox";
+      case "error":
+        return "cross";
+      case "warning":
+        return "triangle";
+      default:
+        return "help";
+    }
+  };
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setProgress((prev) => {
+        if (prev <= 0) {
+          clearInterval(timer);
+          onClose(id);
+          return 0;
+        }
+        return prev - 100 / (duration / 100);
+      });
+    }, 100);
+
+    return () => clearInterval(timer);
+  }, [duration, id, onClose]);
 
   return (
-    <div className={`notification ${type}`}>
-      <div className="notification-content">
-        <span className={`icon ${type}`}></span>
+    <div
+      className="panel border radius-s"
+      style={{
+        width: "100%",
+      }}
+    >
+      <div
+        className="background-secondary padding-m gap-s align-center"
+        style={{
+          border: `1px solid ${getToastColor()}20`,
+        }}
+      >
+        <div style={{ color: getToastColor() }}>
+          <SVGIcon name={getToastIcon()} prefix="raincons" className="icon-s" />
+        </div>
         <p>{message}</p>
+
+        <span onClick={() => onClose(id)}>&times;</span>
+        <div
+          className="radius-s"
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            height: "3px",
+            width: `${progress}%`,
+            backgroundColor: getToastColor(),
+            transition: "width 0.1s linear",
+          }}
+        />
       </div>
-      <button className="close-btn" onClick={() => onClose(id)}>
-        &times;
-      </button>
     </div>
   );
 };

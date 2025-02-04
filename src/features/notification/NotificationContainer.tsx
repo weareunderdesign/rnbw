@@ -1,10 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, CSSProperties } from "react";
 import Notification from "./Notification";
 import eventEmitter from "@_services/eventEmitter";
 import { NotificationEvent } from "@src/types";
 import { nanoid } from "nanoid";
-import "./notification.css";
 
+const notificationContainerStyle: CSSProperties = {
+  position: "fixed",
+  top: "20px",
+  right: "20px",
+  zIndex: 1000,
+  display: "flex",
+  flexDirection: "column",
+  gap: "10px",
+};
 interface NotificationData extends NotificationEvent {
   id: string;
 }
@@ -31,7 +39,7 @@ export const NotificationContainer: React.FC = () => {
   };
 
   return (
-    <div className="notification-container">
+    <div style={notificationContainerStyle}>
       {notifications.map((notif) => (
         <Notification
           key={notif.id}

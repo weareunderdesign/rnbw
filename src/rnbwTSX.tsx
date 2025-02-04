@@ -24,7 +24,6 @@ import { debounce } from "@src/helper";
 import { CommandDialog } from "@src/commandMenu/CommandDialog";
 import { TNodeUid, TValidNodeUid } from "@_api/index";
 import NotificationContainer from "@src/features/notification";
-import { notify } from "./services/notificationService";
 
 // Constants
 export const RootNodeUid = "ROOT";
@@ -251,7 +250,6 @@ function App() {
       wb.register().then(() => {
         setNohostReady(true);
         LogAllow && console.log("nohost ready");
-        notify("success", "nohost ready");
       });
       window.location.href = "/#";
     }
