@@ -51,6 +51,7 @@ import { toast } from "react-toastify";
 import { getObjKeys } from "@src/helper";
 import { getFileExtension } from "@src/sidebarView/navigatorPanel/helpers";
 import { useElementHelper } from "@_services/useElementsHelper";
+import { notify } from "@src/services/notificationService";
 
 export const useNodeTreeEvent = () => {
   const dispatch = useDispatch();
@@ -171,6 +172,7 @@ export const useNodeTreeEvent = () => {
           dispatch(setIframeSrc(`rnbw${previewPath}`));
         }
       } catch (err) {
+        notify("error", "An error occurred while updating the file content");
         toast.error("An error occurred while updating the file content");
         LogAllow && console.error(err);
       }
@@ -336,6 +338,8 @@ export const useNodeTreeEvent = () => {
               isCodeErrorsExist.current = false;
             } catch (err) {
               isCodeErrorsExist.current = false;
+
+              notify("error", "Some changes in the code are incorrect");
               toast("Some changes in the code are incorrect", {
                 type: "error",
                 toastId: "Some changes in the code are incorrect",

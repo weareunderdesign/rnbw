@@ -6,6 +6,7 @@ import ActionsPanel from "./sidebarView";
 import CodeView from "./codeView";
 import DesignView from "./designView";
 import App from "./rnbwTSX";
+import { notify } from "./services/notificationService";
 
 export type ResizablePanelsProps = {
   sidebarView: ReactNode;
@@ -33,10 +34,10 @@ export const getCommandKey = (
   return osType === "Windows"
     ? e.ctrlKey
     : osType === "Mac"
-    ? e.metaKey
-    : osType === "Linux"
-    ? e.ctrlKey
-    : false;
+      ? e.metaKey
+      : osType === "Linux"
+        ? e.ctrlKey
+        : false;
 };
 
 export const getSystemTheme = (): TTheme => {
@@ -86,6 +87,10 @@ export const verifyFileHandlerPermission = async (
 
     return false;
   } catch (err) {
+    notify(
+      "error",
+      "An error occurred while verifying file handler permission",
+    );
     toast.error("An error occurred while verifying file handler permission");
     return false;
   }

@@ -33,6 +33,7 @@ import { PrettyCode, isValidNode, useElementHelper } from "./useElementsHelper";
 import { toast } from "react-toastify";
 import * as parse5 from "parse5";
 import { setIsContentProgrammaticallyChanged } from "@_redux/main/reference";
+import { notify } from "./notificationService";
 
 export default function useElements() {
   const {
@@ -76,6 +77,7 @@ export default function useElements() {
       nodeToAdd: [tagName],
     });
     if (!isAllowed) {
+      notify("error", "Adding not allowed");
       toast("Adding not allowed", { type: "error" });
       return;
     }
@@ -103,6 +105,7 @@ export default function useElements() {
 
     const sortedUids = sortUidsAsc(selectedUids);
     if (sortedUids.length === 0) {
+      notify("error", "Please select a node to add the new element");
       toast.error("Please select a node to add the new element");
       return;
     }
@@ -111,6 +114,7 @@ export default function useElements() {
 
     if (node) {
       if (node.displayName === "html" || node.displayName === "head") {
+        notify("error", "Adding not allowed");
         toast.error("Adding not allowed");
         return;
       }
@@ -302,6 +306,7 @@ export default function useElements() {
     dispatch(setCopiedNodeDisplayName([]));
     const targetUid = selectedUids[0];
     if (!isAllowed && !pasteContent) {
+      notify("error", "Pasting not allowed");
       toast("Pasting not allowed", { type: "error" });
       return;
     }
@@ -379,7 +384,7 @@ export default function useElements() {
       checkFirstParents: true,
     });
     if (!isAllowed) {
-      toast("Grouping not allowed", { type: "error" });
+      notify("error", "Grouping not allowed");
       return;
     }
 
@@ -515,7 +520,7 @@ export default function useElements() {
       checkFirstParents: true,
     });
     if (!isAllowed) {
-      toast("Pasting not allowed", { type: "error" });
+      notify("error", "Moving not allowed");
       return;
     }
 

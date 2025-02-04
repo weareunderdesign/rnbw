@@ -5,6 +5,7 @@ import { PrettyCode, useElementHelper } from "@_services/useElementsHelper";
 import { toast } from "react-toastify";
 import { useContext } from "react";
 import { MainContext } from "@src/_redux/main";
+import { notify } from "@src/services/notificationService";
 
 export default function useTurnInto() {
   const rnbw = useRnbw();
@@ -31,6 +32,7 @@ export default function useTurnInto() {
       checkFirstParents: true,
     });
     if (!isAllowed) {
+      notify("error", `Turn into ${tagName} not allowed`);
       toast(`Turn into ${tagName} not allowed`, { type: "error" });
       return;
     }

@@ -10,7 +10,7 @@ import persistStore from "redux-persist/es/persistStore";
 import { PersistGate } from "redux-persist/integration/react";
 
 import configureStore from "@_redux/_root";
-import { Loader, Notification } from "@src/components";
+import { Loader } from "@src/components";
 import { ActionsPanel, CodeView, DesignView } from "./rnbw";
 import { isUnsavedProject } from "@_api/file";
 import { MainContext } from "@_redux/main";
@@ -23,6 +23,8 @@ import ResizablePanels from "@_components/ResizablePanels";
 import { debounce } from "@src/helper";
 import { CommandDialog } from "@src/commandMenu/CommandDialog";
 import { TNodeUid, TValidNodeUid } from "@_api/index";
+import { NotificationContainer } from "./notification/NotificationContainer";
+import { notify } from "./services/notificationService";
 
 // Constants
 export const RootNodeUid = "ROOT";
@@ -233,7 +235,6 @@ function MainPage() {
             codeView={<CodeView />}
             designView={<DesignView />}
           />
-          <Notification />
         </div>
         <CommandDialog onClear={onClear} onJumpstart={onJumpstart} />
       </MainContext.Provider>
@@ -250,6 +251,7 @@ function App() {
       wb.register().then(() => {
         setNohostReady(true);
         LogAllow && console.log("nohost ready");
+        notify("success", "nohost ready");
       });
       window.location.href = "/#";
     }
@@ -258,6 +260,7 @@ function App() {
   return useMemo(
     () => (
       <>
+        <NotificationContainer />
         {nohostReady && (
           <Router>
             <Routes>

@@ -48,6 +48,7 @@ import {
   setLastFileAction,
 } from "@_redux/main/fileTree";
 import { LogAllow } from "@src/rnbwTSX";
+import { notify } from "./notificationService";
 export default function useFiles() {
   const dispatch = useDispatch();
   const {
@@ -142,6 +143,7 @@ export default function useFiles() {
         };
         !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
       } catch (err) {
+        notify("error", "An error occurred while creating the file");
         toast.error("An error occurred while creating the file");
         console.error(err);
       } finally {
@@ -215,6 +217,7 @@ export default function useFiles() {
         };
         !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
       } catch (err) {
+        notify("error", "An error occurred while creating the folder");
         toast.error("An error occurred while creating the folder");
         console.error(err);
       } finally {
@@ -337,6 +340,7 @@ export default function useFiles() {
 
         !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
       } catch (err) {
+        notify("error", "An error occurred while renaming");
         toast.error("An error occurred while renaming");
         console.error(err);
       } finally {
@@ -460,6 +464,7 @@ export default function useFiles() {
 
         !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
       } catch (err) {
+        notify("error", "An error occurred while pasting the file");
         toast.error("An error occurred while pasting the file");
         console.error(err);
       } finally {
@@ -483,6 +488,7 @@ export default function useFiles() {
     try {
       paste({ uids, targetUid, deleteSource: true });
     } catch (err) {
+      notify("error", "An error occurred while moving the file");
       toast.error("An error occurred while moving the file");
       console.error(err);
     }
@@ -524,6 +530,7 @@ export default function useFiles() {
       };
       !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
     } catch (err) {
+      notify("error", "An error occurred while deleting the file");
       toast.error("An error occurred while deleting the file");
       console.error(err);
     } finally {

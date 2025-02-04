@@ -39,6 +39,7 @@ import {
 } from "./nohostApis";
 import { TFileHandlerInfo, TFileHandlerInfoObj, TZipFileInfo } from "./types";
 import { toast } from "react-toastify";
+import { notify } from "@src/services/notificationService";
 
 export const initIDBProject = (projectPath: string): Promise<void> => {
   return new Promise<void>((resolve, reject) => {
@@ -51,6 +52,7 @@ export const initIDBProject = (projectPath: string): Promise<void> => {
           .catch((err) => reject(err));
       })
       .catch((err) => {
+        notify("error", "Error while removing IDB project");
         toast.error("Error while removing IDB project");
         LogAllow && console.error("error while removing IDB project", err);
       });
@@ -70,6 +72,7 @@ export const createIDBProject = async (projectPath: string): Promise<void> => {
     // If all operations are successful, resolve the promise
     return Promise.resolve();
   } catch (err) {
+    notify("error", "Error while creating IDB project");
     toast.error("Error while creating IDB project");
     // If an error occurs, log it and reject the promise
     LogAllow && console.error("error while creating IDB project", err);
@@ -205,6 +208,7 @@ export const loadIDBProject = async (
       deletedUids: Object.keys(deletedUidsObj),
     };
   } catch (err) {
+    notify("error", "Error while loading IDB project");
     toast.error("Error while loading IDB project");
     LogAllow && console.error("error in loadIDBProject API", err);
     throw err;
@@ -388,6 +392,7 @@ export const buildNohostIDB = async (
             }
           });
         } catch (err) {
+          notify("error", "Error while removing IDB project");
           toast.error("Error while removing IDB project");
           console.error("Error while removing IDB project", err);
         }
@@ -402,6 +407,7 @@ export const buildNohostIDB = async (
           try {
             await _createIDBDirectory(path);
           } catch (err) {
+            notify("error", "Error while creating IDB directory");
             toast.error("Error while creating IDB directory");
             console.error("Error while creating IDB directory", err);
           }
@@ -415,6 +421,7 @@ export const buildNohostIDB = async (
           try {
             await _writeIDBFile(path, content as Uint8Array);
           } catch (err) {
+            notify("error", "Error while writing IDB file");
             toast.error("Error while writing IDB file");
             console.error("Error while writing IDB file", err);
           }
@@ -424,6 +431,7 @@ export const buildNohostIDB = async (
 
     return; // Resolve the promise
   } catch (err) {
+    notify("error", "Error while building IDB project");
     toast.error("Error while building IDB project");
     console.error("Error in buildNohostIDB API", err);
     throw err; // Reject the promise
@@ -434,6 +442,7 @@ export const downloadIDBProject = async (
   projectPath: string,
 ): Promise<void> => {
   try {
+    notify("info", "Downloading project, please wait...");
     toast("Downloading project, please wait...");
     const zip = new JSZip();
 
@@ -488,6 +497,7 @@ export const downloadIDBProject = async (
     link.click();
     URL.revokeObjectURL(url);
   } catch (err) {
+    notify("error", "Error while downloading IDB project");
     toast.error("Error while downloading IDB project");
     console.error("Error in downloadIDBProject API", err);
     throw err;

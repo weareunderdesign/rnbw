@@ -38,6 +38,7 @@ import {
   setNodeUidPositions,
 } from "@_redux/main/nodeTree";
 import { TCmdkGroupData } from "@_types/main";
+import { notify } from "./notificationService";
 
 export async function PrettyCode({
   code,
@@ -84,6 +85,7 @@ export async function PrettyCode({
       if (throwError) {
         throw e;
       } else {
+        notify("error", `Failed to format the code: ${msg.split(".")[0]}`);
         toast.error(`Failed to format the code: ${msg.split(".")[0]}`);
       }
     }
@@ -245,6 +247,7 @@ export const useElementHelper = () => {
         if (
           Object.prototype.hasOwnProperty.call(PARSING_ERROR_MESSAGES, err.code)
         ) {
+          notify("error", PARSING_ERROR_MESSAGES[err.code]);
           toast(PARSING_ERROR_MESSAGES[err.code], {
             type: "warning",
             toastId: PARSING_ERROR_MESSAGES[err.code],

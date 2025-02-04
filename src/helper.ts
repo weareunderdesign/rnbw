@@ -38,27 +38,28 @@ import { toast } from "react-toastify";
 import { NavigateFunction } from "react-router-dom";
 import { TFilesReference } from "@rnbws/rfrncs.design";
 import { FileNode } from "@_redux/main";
+import { notify } from "./services/notificationService";
 
 export const addDefaultCmdkActions = (
   cmdkReferenceData: TCmdkReferenceData,
 ) => {
   // Reload State (R)
-cmdkReferenceData["Reload State"] = {
-  Name: "Reload State",
-  Icon: "",
-  Description: "Reloads the current state",
-  "Keyboard Shortcut": [
-    {
-      cmd: false,
-      shift: false,
-      alt: false,
-      key: "KeyR",  // Added R key
-      click: false,
-    },
-  ],
-  Group: "default",
-  Context: "all",
-};
+  cmdkReferenceData["Reload State"] = {
+    Name: "Reload State",
+    Icon: "",
+    Description: "Reloads the current state",
+    "Keyboard Shortcut": [
+      {
+        cmd: false,
+        shift: false,
+        alt: false,
+        key: "KeyR", // Added R key
+        click: false,
+      },
+    ],
+    Group: "default",
+    Context: "all",
+  };
 
   // Clear
   cmdkReferenceData["Clear"] = {
@@ -460,6 +461,7 @@ export const onWebComponentDblClick = ({
               src.startsWith("//")
             ) {
               toast.error("rnbw couldn't find it's source file");
+              notify("error", "rnbw couldn't find it's source file");
               break;
             } else {
               dispatch(setNavigatorDropdownType("project"));
@@ -494,7 +496,7 @@ export const onWebComponentDblClick = ({
     }
   }
   if (!exist) {
-    toast.error("rnbw couldn't find it's source file");
+    notify("error", "rnbw couldn't find it's source file");
   }
 };
 
