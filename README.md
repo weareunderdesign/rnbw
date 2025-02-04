@@ -72,7 +72,6 @@ rainbow is heavily dependent on incredible technologies. if you’re considering
 - [react-resizable-panels](https://github.com/bvaughn/react-resizable-panels) - for creating resizable panels
 - [react-top-loading-bar](https://github.com/klendi/react-top-loading-bar) - for showing a loading bar at the top
 - [workbox-window](https://developer.chrome.com/docs/workbox/) - service worker library for giving pwa features
-- [react-toastify](https://www.npmjs.com/package/react-toastify) - for showing toast style notifications
 - [idb-keyval](https://www.npmjs.com/package/idb-keyval) - promise-based keyval store implemented with indexeddb
 - [prettier](https://www.npmjs.com/package/prettier) - for prettifying the code
 - [jszip](https://stuk.github.io/jszip/) - for zipping the project files before downloading
