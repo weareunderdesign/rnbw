@@ -9,7 +9,6 @@ import {
   THtmlNodeTreeData,
   THtmlParserResponse,
 } from "../node/type/html";
-import { toast } from "react-toastify";
 import { notify } from "@src/services/notificationService";
 
 export const StageNodeIdAttr = "data-rnbw-stage-node-id";
@@ -43,10 +42,6 @@ export const parseHtml = (
         Object.prototype.hasOwnProperty.call(PARSING_ERROR_MESSAGES, err.code)
       ) {
         notify("warning", PARSING_ERROR_MESSAGES[err.code]);
-        toast(PARSING_ERROR_MESSAGES[err.code], {
-          type: "warning",
-          toastId: PARSING_ERROR_MESSAGES[err.code],
-        });
       }
     },
   });

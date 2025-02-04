@@ -1,21 +1,19 @@
 import React, { useState, useEffect } from "react";
-import NotificationComponent from "./NotificationComponent";
+import Notification from "./Notification";
 import eventEmitter from "@_services/eventEmitter";
-import { NotificationEvent } from "@_types/global";
-import "./notification.css";
+import { NotificationEvent } from "@src/types";
 import { nanoid } from "nanoid";
+import "./notification.css";
 
 interface NotificationData extends NotificationEvent {
   id: string;
 }
 
 export const NotificationContainer: React.FC = () => {
-  console.log("NotificationContainer mounted");
   const [notifications, setNotifications] = useState<NotificationData[]>([]);
 
   useEffect(() => {
     const addNotification = (event: NotificationEvent) => {
-      console.log("Received notification:", event);
       const id = nanoid();
       setNotifications((prev) => [...prev, { ...event, id }]);
     };
@@ -35,7 +33,7 @@ export const NotificationContainer: React.FC = () => {
   return (
     <div className="notification-container">
       {notifications.map((notif) => (
-        <NotificationComponent
+        <Notification
           key={notif.id}
           {...notif}
           duration={notif.duration || 5000}
@@ -45,3 +43,5 @@ export const NotificationContainer: React.FC = () => {
     </div>
   );
 };
+
+export default NotificationContainer;

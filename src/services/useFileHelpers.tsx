@@ -10,7 +10,6 @@ import { TNode, TNodeTreeData, TNodeUid } from "@_api/index";
 import { expandFileTreeNodes, setFileTree } from "@_redux/main/fileTree";
 import { useAppState } from "@_redux/useAppState";
 import { useDispatch } from "react-redux";
-import { toast } from "react-toastify";
 import { verifyFileHandlerPermission } from "../rnbw";
 import { notify } from "./notificationService";
 
@@ -51,7 +50,6 @@ export const getUniqueIndexedName = async ({
         uniqueName = indexedName;
       } else {
         notify("error", "An error occurred while creating the file");
-        toast.error("An error occurred while creating the file");
       }
     }
   }
@@ -86,7 +84,6 @@ const generateNewNameForLocalDirectoryOrFile = async ({
           "error",
           "Error while generating a new name for a local directory.",
         );
-        toast.error("Error while generating a new name for a local directory.");
       }
     }
 
@@ -222,13 +219,12 @@ export const useFileHelpers = () => {
         try {
           parentHandler.removeEntry(source.name, { recursive: true });
         } catch (err) {
-          toast.error("Error while moving a local directory.");
+          notify("error", "Error while moving a local directory.");
           console.error(err);
         }
       }
     } catch (err) {
       notify("error", "Error while moving a local directory.");
-      toast.error("Error while moving a local directory.");
       console.error(err);
     }
   };
@@ -253,7 +249,6 @@ export const useFileHelpers = () => {
         (await parentHandler.removeEntry(handler.name, { recursive: true }));
     } catch (err) {
       notify("error", "Error while moving a local file.");
-      toast.error("Error while moving a local file.");
       throw "Error while moving a local file.";
     }
   };
@@ -341,7 +336,6 @@ export const useFileHelpers = () => {
           );
         } catch (err) {
           notify("error", "Error while moving a local directory.");
-          toast.error("Error while moving a local directory.");
           console.log(err);
         }
       } else {
@@ -355,14 +349,12 @@ export const useFileHelpers = () => {
           );
         } catch (err) {
           notify("error", "Error while moving a local file.");
-          toast.error("Error while moving a local file.");
           console.log(err);
         }
       }
       return true;
     } catch (err) {
       notify("error", "Error while moving a local directory or file.");
-      toast.error("Error while moving a local directory or file.");
       console.error(err);
       return false;
     }

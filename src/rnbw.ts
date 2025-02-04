@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { TOsType, TTheme } from "@_redux/global";
-import { toast } from "react-toastify";
+
 import MainPage from "./rnbwTSX";
 import ActionsPanel from "./sidebarView";
 import CodeView from "./codeView";
@@ -91,7 +91,6 @@ export const verifyFileHandlerPermission = async (
       "error",
       "An error occurred while verifying file handler permission",
     );
-    toast.error("An error occurred while verifying file handler permission");
     return false;
   }
 };

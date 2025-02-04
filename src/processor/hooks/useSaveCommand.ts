@@ -12,7 +12,6 @@ import { saveFileContent } from "../helpers";
 import { setCurrentCommand } from "@_redux/main/cmdk";
 import { addRunningAction, removeRunningAction } from "@_redux/main/processor";
 import { debounce } from "@src/helper";
-import { toast } from "react-toastify";
 import { MainContext } from "@_redux/main";
 import { notify } from "@src/services/notificationService";
 
@@ -83,7 +82,7 @@ export const useSaveCommand = () => {
         }
       } catch (err) {
         notify("error", "An error occurred while saving the file");
-        toast.error("An error occurred while saving the file");
+
         console.error(err);
       } finally {
         isSaving.current = false;

@@ -8,7 +8,6 @@ import { MainContext } from "@_redux/main";
 import { elementsCmdk, getObjKeys } from "@src/helper";
 import { LogAllow, RainbowAppName } from "@src/rnbwTSX";
 
-import { toast } from "react-toastify";
 import {
   THtmlDomNode,
   THtmlNode,
@@ -37,7 +36,7 @@ import {
   setNeedToSelectNodeUids,
   setNodeUidPositions,
 } from "@_redux/main/nodeTree";
-import { TCmdkGroupData } from "@_types/main";
+import { TCmdkGroupData } from "@_types/main.types";
 import { notify } from "./notificationService";
 
 export async function PrettyCode({
@@ -86,7 +85,6 @@ export async function PrettyCode({
         throw e;
       } else {
         notify("error", `Failed to format the code: ${msg.split(".")[0]}`);
-        toast.error(`Failed to format the code: ${msg.split(".")[0]}`);
       }
     }
     return code;
@@ -247,11 +245,7 @@ export const useElementHelper = () => {
         if (
           Object.prototype.hasOwnProperty.call(PARSING_ERROR_MESSAGES, err.code)
         ) {
-          notify("error", PARSING_ERROR_MESSAGES[err.code]);
-          toast(PARSING_ERROR_MESSAGES[err.code], {
-            type: "warning",
-            toastId: PARSING_ERROR_MESSAGES[err.code],
-          });
+          notify("warning", PARSING_ERROR_MESSAGES[err.code]);
         }
       },
     });

@@ -9,7 +9,7 @@ interface NotificationProps {
   onClose: (id: string) => void;
 }
 
-export const NotificationComponent: React.FC<NotificationProps> = ({
+export const Notification: React.FC<NotificationProps> = ({
   id,
   type,
   message,
@@ -37,4 +37,4 @@ export const NotificationComponent: React.FC<NotificationProps> = ({
   );
 };
 
-export default NotificationComponent;
+export default Notification;

@@ -6,7 +6,7 @@ import { StageNodeIdAttr } from "@_api/file/handlers";
 import { TNode, TNodeTreeData, TNodeUid } from "@_api/types";
 import { RootNodeUid } from "@src/rnbwTSX";
 import { elementsCmdk } from "@src/helper";
-import { TCmdkGroupData, THtmlReferenceData } from "@_types/main";
+import { TCmdkGroupData, THtmlReferenceData } from "@_types/main.types";
 
 export const sortUidsByMaxEndIndex = (
   uids: TNodeUid[],

@@ -18,7 +18,6 @@ import {
   _removeIDBDirectoryOrFile,
   _writeIDBFile,
 } from "./nohostApis";
-import { toast } from "react-toastify";
 import { notify } from "@src/services/notificationService";
 
 // true: success, false: fail
@@ -50,7 +49,6 @@ const createLocalSingleDirectoryOrFile = async ({
     return true;
   } catch (err) {
     notify("error", "Error while creating a local directory or file.");
-    toast.error("Error while creating a local directory or file.");
     return false;
   }
 };
@@ -78,7 +76,6 @@ const createIDBSingleDirectoryOrFile = async ({
     return true;
   } catch (err) {
     notify("error", "Error while creating an idb directory or file.");
-    toast.error("Error while creating an idb directory or file.");
     return false;
   }
 };
@@ -116,7 +113,6 @@ export const removeSingleLocalDirectoryOrFile = async ({
     return true;
   } catch (err) {
     notify("error", "Error while removing a local directory or file.");
-    toast.error("Error while removing a local directory or file.");
     return false;
   }
 };
@@ -144,7 +140,6 @@ export const removeSingleIDBDirectoryOrFile = async ({
     return true;
   } catch (err) {
     notify("error", "Error while removing an idb directory or file.");
-    toast.error("Error while removing an idb directory or file.");
     return false;
   }
 };
@@ -194,13 +189,11 @@ const _moveLocalDirectory = async (
         parentHandler.removeEntry(source.name, { recursive: true });
       } catch (err) {
         notify("error", "Error while moving a local directory.");
-        toast.error("Error while moving a local directory.");
         console.error(err);
       }
     }
   } catch (err) {
     notify("error", "Error while moving a local directory.");
-    toast.error("Error while moving a local directory.");
     console.error(err);
   }
 };
@@ -225,7 +218,6 @@ const _moveLocalFile = async (
       (await parentHandler.removeEntry(handler.name, { recursive: true }));
   } catch (err) {
     notify("error", "Error while moving a local file.");
-    toast.error("Error while moving a local file.");
     throw "Error while moving a local file.";
   }
 };
@@ -306,7 +298,6 @@ export const moveLocalSingleDirectoryOrFile = async ({
         );
       } catch (err) {
         notify("error", "Error while moving a local directory.");
-        toast.error("Error while moving a local directory.");
         console.log(err);
       }
     } else {
@@ -320,14 +311,12 @@ export const moveLocalSingleDirectoryOrFile = async ({
         );
       } catch (err) {
         notify("error", "Error while moving a local file.");
-        toast.error("Error while moving a local file.");
         console.log(err);
       }
     }
     return true;
   } catch (err) {
     notify("error", "Error while moving a local directory or file.");
-    toast.error("Error while moving a local directory or file.");
     console.error(err);
     return false;
   }
@@ -371,7 +360,6 @@ const _moveIDBDirectory = async (
     !isCopy && (await _removeIDBDirectoryOrFile(nodeData.path));
   } catch (err) {
     notify("error", "Error while moving an idb directory.");
-    toast.error("Error while moving an idb directory.");
     throw "Error while moving an idb directory.";
   }
 };
@@ -390,7 +378,6 @@ const _moveIDBFile = async (
     !isCopy && (await _removeIDBDirectoryOrFile(nodeData.path));
   } catch (err) {
     notify("error", "Error while moving an idb file.");
-    toast.error("Error while moving an idb file.");
     throw "Error while moving an idb file.";
   }
 };
@@ -429,7 +416,6 @@ export const moveIDBSingleDirectoryOrFile = async ({
     return true;
   } catch (err) {
     notify("error", "Error while moving an idb directory or file.");
-    toast.error("Error while moving an idb directory or file.");
     return false;
   }
 };
@@ -463,7 +449,6 @@ const generateNewNameForLocalDirectoryOrFile = async ({
           "error",
           "Error while generating a new name for a local directory.",
         );
-        toast.error("Error while generating a new name for a local directory.");
       }
     }
 
@@ -506,7 +491,6 @@ export const generateNewNameForIDBDirectoryOrFile = async ({
           "error",
           "Error while generating a new name for a IDB directory.",
         );
-        toast.error("Error while generating a new name for a IDB directory.");
       }
     }
 

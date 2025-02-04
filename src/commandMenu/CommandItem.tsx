@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo } from "react";
 import { Command } from "cmdk";
 import { useAppState } from "@_redux/useAppState";
-import { TCmdkKeyMap } from "@_types/main";
+import { TCmdkKeyMap } from "@_types/main.types";
 import { SVGIcon } from "@src/components";
 import { CommandItemProps } from "./types";
 import { KeyboardShortcut } from "./KeyboardShortcut";

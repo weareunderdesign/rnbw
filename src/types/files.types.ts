@@ -33,7 +33,7 @@ interface IcutFiles {
   uids?: string[];
 }
 
-interface Iremove {
+interface IremoveFiles {
   uids?: string[];
 }
 
@@ -43,7 +43,7 @@ interface IpasteFiles {
   deleteSource?: boolean;
 }
 
-interface Imove {
+interface ImoveFiles {
   uids: string[];
   targetUid: string;
 }
@@ -54,9 +54,9 @@ export {
   IrenameFiles,
   IsetCurrentFile,
   IsetCurrentFileContent,
-  Iremove,
+  IremoveFiles,
   IcopyFiles,
   IcutFiles,
   IpasteFiles,
-  Imove,
+  ImoveFiles,
 };

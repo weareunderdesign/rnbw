@@ -6,10 +6,10 @@ import {
   IcutFiles,
   IgetFolderTree,
   IpasteFiles,
-  Iremove,
+  IremoveFiles,
   IsetCurrentFile,
   IsetCurrentFileContent,
-  Imove,
+  ImoveFiles,
   IrenameFiles,
 } from "@_types/files.types";
 import { useDispatch } from "react-redux";
@@ -39,7 +39,6 @@ import { getObjKeys } from "@src/helper";
 import { useFileHelpers } from "./useFileHelpers";
 import { useHandlers } from "@src/hooks";
 import { FileChangeAlertMessage } from "@src/rnbwTSX";
-import { toast } from "react-toastify";
 import {
   FileTree_Event_RedoActionType,
   FileTree_Event_UndoActionType,
@@ -144,7 +143,6 @@ export default function useFiles() {
         !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
       } catch (err) {
         notify("error", "An error occurred while creating the file");
-        toast.error("An error occurred while creating the file");
         console.error(err);
       } finally {
         await reloadCurrentProject();
@@ -218,7 +216,6 @@ export default function useFiles() {
         !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
       } catch (err) {
         notify("error", "An error occurred while creating the folder");
-        toast.error("An error occurred while creating the folder");
         console.error(err);
       } finally {
         await reloadCurrentProject();
@@ -341,7 +338,6 @@ export default function useFiles() {
         !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
       } catch (err) {
         notify("error", "An error occurred while renaming");
-        toast.error("An error occurred while renaming");
         console.error(err);
       } finally {
         await reloadCurrentProject();
@@ -465,7 +461,6 @@ export default function useFiles() {
         !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
       } catch (err) {
         notify("error", "An error occurred while pasting the file");
-        toast.error("An error occurred while pasting the file");
         console.error(err);
       } finally {
         await reloadCurrentProject();
@@ -483,19 +478,18 @@ export default function useFiles() {
     ],
   );
 
-  const move = async (params: Imove) => {
+  const move = async (params: ImoveFiles) => {
     const { targetUid, uids } = params;
     try {
       paste({ uids, targetUid, deleteSource: true });
     } catch (err) {
       notify("error", "An error occurred while moving the file");
-      toast.error("An error occurred while moving the file");
       console.error(err);
     }
   };
 
   //Delete
-  const remove = async (params: Iremove = {}) => {
+  const remove = async (params: IremoveFiles = {}) => {
     const { uids } = params;
     const selectedItems = getObjKeys(fSelectedItemsObj);
     const selectedUids = selectedItems.filter((uid) => !invalidFileNodes[uid]);
@@ -531,7 +525,6 @@ export default function useFiles() {
       !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
     } catch (err) {
       notify("error", "An error occurred while deleting the file");
-      toast.error("An error occurred while deleting the file");
       console.error(err);
     } finally {
       await reloadCurrentProject();

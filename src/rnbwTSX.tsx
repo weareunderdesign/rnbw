@@ -23,7 +23,7 @@ import ResizablePanels from "@_components/ResizablePanels";
 import { debounce } from "@src/helper";
 import { CommandDialog } from "@src/commandMenu/CommandDialog";
 import { TNodeUid, TValidNodeUid } from "@_api/index";
-import { NotificationContainer } from "./notification/NotificationContainer";
+import NotificationContainer from "@src/features/notification";
 import { notify } from "./services/notificationService";
 
 // Constants

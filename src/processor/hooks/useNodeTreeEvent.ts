@@ -47,7 +47,7 @@ import {
   setLoadingFalse,
   setLoadingTrue,
 } from "@_redux/main/processor";
-import { toast } from "react-toastify";
+
 import { getObjKeys } from "@src/helper";
 import { getFileExtension } from "@src/sidebarView/navigatorPanel/helpers";
 import { useElementHelper } from "@_services/useElementsHelper";
@@ -173,7 +173,6 @@ export const useNodeTreeEvent = () => {
         }
       } catch (err) {
         notify("error", "An error occurred while updating the file content");
-        toast.error("An error occurred while updating the file content");
         LogAllow && console.error(err);
       }
 
@@ -340,10 +339,6 @@ export const useNodeTreeEvent = () => {
               isCodeErrorsExist.current = false;
 
               notify("error", "Some changes in the code are incorrect");
-              toast("Some changes in the code are incorrect", {
-                type: "error",
-                toastId: "Some changes in the code are incorrect",
-              });
               console.error(err, "error");
             }
           }
