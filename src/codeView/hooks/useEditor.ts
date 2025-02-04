@@ -25,6 +25,8 @@ import { useSaveCommand } from "@src/processor/hooks";
 import { setIsCodeTyping } from "@_redux/main/reference";
 import { debounce } from "@src/helper";
 import { setFileTreeNodes } from "@_redux/main/fileTree";
+import { ParsingError } from "@src/features/codeView/ParsingErrorsPanel";
+import eventEmitter from "@src/services/eventEmitter";
 
 const useEditor = () => {
   const dispatch = useDispatch();
@@ -258,6 +260,19 @@ const useEditor = () => {
     }
   }, [undoRedoToggle]);
 
+  const [parsingErrors, setParsingErrors] = useState<ParsingError[]>([]);
+
+  const handleParseErrors = (errors: ParsingError[]) => {
+    setParsingErrors(errors);
+  };
+
+  useEffect(() => {
+    eventEmitter.on("parseError", handleParseErrors);
+    return () => {
+      eventEmitter.off("parseError", handleParseErrors);
+    };
+  }, []);
+
   return {
     handleEditorDidMount,
     handleOnChange,
@@ -270,6 +285,8 @@ const useEditor = () => {
     editorConfigs,
 
     codeSelection,
+    parsingErrors,
+    handleParseErrors,
   };
 };
 

@@ -1,7 +1,9 @@
 import { NotificationEvent } from "@src/types";
+import { ParsingError } from "@src/features/codeView/ParsingErrorsPanel";
 
 type EventMap = {
-  notification: [NotificationEvent]; // Keep this as is, but note the emit usage below
+  notification: [NotificationEvent];
+  parseError: [ParsingError[]];
   [key: string]: unknown[];
 };
 

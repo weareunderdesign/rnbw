@@ -18,7 +18,11 @@ export default function ResizablePanels({
   codeView,
 }: ResizablePanelsProps) {
   const { showActionsPanel, showCodeView } = useAppState();
-  const [sizes, setSizes] = useState([actionsPanelWidth, codeViewWidth, 0]);
+  const [sizes, setSizes] = useState([
+    actionsPanelWidth,
+    100 - actionsPanelWidth - codeViewWidth,
+    codeViewWidth,
+  ]);
   const actionPanelRef = useRef<ImperativePanelHandle>(null);
   const codeViewRef = useRef<ImperativePanelHandle>(null);
   const panelGroupRef = useRef<ImperativePanelGroupHandle>(null);
@@ -34,8 +38,8 @@ export default function ResizablePanels({
           ])
         : actionPanelRef.current?.resize(actionsPanelWidth)
       : showCodeView
-      ? panelGroupRef.current?.setLayout([0, sizes[1], 100 - sizes[1]])
-      : panelGroupRef.current?.setLayout([0, 0, 100]);
+        ? panelGroupRef.current?.setLayout([0, sizes[1], 100 - sizes[1]])
+        : panelGroupRef.current?.setLayout([0, 0, 100]);
   }, [showActionsPanel]);
 
   useEffect(() => {
@@ -43,39 +47,37 @@ export default function ResizablePanels({
       ? showActionsPanel
         ? panelGroupRef.current?.setLayout([
             sizes[0],
-            codeViewWidth,
             100 - codeViewWidth - sizes[0],
+            codeViewWidth,
           ])
         : codeViewRef.current?.resize(codeViewWidth)
       : showActionsPanel
-      ? codeViewRef.current?.resize(0)
-      : panelGroupRef.current?.setLayout([0, 0, 100]);
+        ? codeViewRef.current?.resize(0)
+        : panelGroupRef.current?.setLayout([0, 0, 100]);
   }, [showCodeView]);
 
   const wrapperStyle: React.CSSProperties = {
-    width: '2px',
-    height: '100%',
-    position: 'absolute',
+    width: "2px",
+    height: "100%",
+    position: "absolute",
     zIndex: 10,
   };
 
   const actionsPanelStyle: React.CSSProperties = {
-    width: '240px',
-    height: '100%',
-    transform: isHovered ? 'translateX(0px)' : 'translateX(-300px)',
+    width: "240px",
+    height: "100%",
+    transform: isHovered ? "translateX(0px)" : "translateX(-300px)",
   };
 
   return (
     <>
       {!showActionsPanel && (
-        <div 
+        <div
           style={wrapperStyle}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          <div style={actionsPanelStyle}>
-            {sidebarView}
-          </div>
+          <div style={actionsPanelStyle}>{sidebarView}</div>
         </div>
       )}
       <PanelGroup
@@ -99,7 +101,6 @@ export default function ResizablePanels({
         </Panel>
         <PanelResizeHandle style={{ width: 0 }} />
         <Panel
-          ref={codeViewRef}
           defaultSize={sizes[1]}
           minSize={showCodeView ? 10 : 0}
           order={2}
@@ -110,10 +111,11 @@ export default function ResizablePanels({
             setSizes([sizes[0], size, sizes[2]]);
           }}
         >
-          {codeView}
+          {designView}
         </Panel>
         <PanelResizeHandle style={{ width: 3 }} />
         <Panel
+          ref={codeViewRef}
           defaultSize={sizes[2]}
           minSize={30}
           order={3}
@@ -121,7 +123,7 @@ export default function ResizablePanels({
             setSizes([sizes[0], sizes[1], size]);
           }}
         >
-          {designView}
+          {codeView}
         </Panel>
       </PanelGroup>
     </>

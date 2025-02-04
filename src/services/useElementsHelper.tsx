@@ -38,6 +38,7 @@ import {
 } from "@_redux/main/nodeTree";
 import { TCmdkGroupData } from "@_types/main.types";
 import { notify } from "./notificationService";
+import eventEmitter from "./eventEmitter";
 
 export async function PrettyCode({
   code,
@@ -241,6 +242,14 @@ export const useElementHelper = () => {
       sourceCodeLocationInfo: true,
       onParseError: (err) => {
         console.error(err);
+        eventEmitter.emit("parseError", [
+          {
+            message: PARSING_ERROR_MESSAGES[err.code] || "HTML parsing error",
+            line: err.startLine,
+            column: err.startCol,
+            source: content,
+          },
+        ]);
 
         if (
           Object.prototype.hasOwnProperty.call(PARSING_ERROR_MESSAGES, err.code)

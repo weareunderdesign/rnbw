@@ -24,7 +24,7 @@ import { debounce } from "@src/helper";
 import { CommandDialog } from "@src/commandMenu/CommandDialog";
 import { TNodeUid, TValidNodeUid } from "@_api/index";
 import NotificationContainer from "@src/features/notification";
-import { notify } from "./services/notificationService";
+import { notify } from "@src/services/notificationService";
 
 // Constants
 export const RootNodeUid = "ROOT";

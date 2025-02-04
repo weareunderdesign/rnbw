@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from "react";
 
 import * as monaco from "monaco-editor";
@@ -27,6 +28,9 @@ import { useEditor } from "./hooks";
 import { getNodeUidByCodeSelection } from "./helpers";
 import { setEditingNodeUidInCodeView } from "@_redux/main/codeView";
 import { getFileExtension } from "../sidebarView/navigatorPanel/helpers";
+import { ParsingErrorsPanel } from "@src/features/codeView/ParsingErrorsPanel";
+
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
 loader.config({ monaco });
 
@@ -61,9 +65,11 @@ export default function CodeView() {
     updateLanguage,
 
     editorConfigs,
-
+    parsingErrors,
     codeSelection,
   } = useEditor();
+
+  const [showParsingErrors, setShowParsingErrors] = useState(false);
 
   monacoEditorRef.current?.onKeyDown(handleKeyDown);
 
@@ -295,49 +301,96 @@ export default function CodeView() {
     editorModel.deltaDecorations(oldDecorations, newDecorations);
   }, [nodeUidPositions]);
 
+  const handleErrorClick = useCallback(
+    (line: number, column: number) => {
+      if (monacoEditorRef.current) {
+        monacoEditorRef.current.revealPositionInCenter({
+          lineNumber: line,
+          column: column,
+        });
+        monacoEditorRef.current.setPosition({
+          lineNumber: line,
+          column: column,
+        });
+        monacoEditorRef.current.focus();
+      }
+    },
+    [monacoEditorRef],
+  );
+
+  const toggleParsingErrors = () => {
+    setShowParsingErrors(!showParsingErrors);
+  };
+
   return useMemo(() => {
     return (
-      <>
-        <div
-          id="CodeView"
-          onDragCapture={(e) => {
-            e.preventDefault();
-          }}
-          onDragOver={(e) => {
-            e.preventDefault();
-          }}
-          style={{
-            width: "100%",
-            height: "100%",
-            zIndex: 999,
-            overflow: "hidden",
-            ...(codeErrors
-              ? {
-                  outlineWidth: "1px",
-                  outlineStyle: "solid",
-                  outlineOffset: "-1px",
-                  outlineColor: "var(--color-negative)",
+      <div style={{ position: "relative", height: "100%" }}>
+        <PanelGroup direction="vertical" autoSaveId="CodeView">
+          <Panel defaultSize={90} minSize={20} order={1}>
+            <div
+              id="CodeView"
+              onDragCapture={(e) => {
+                e.preventDefault();
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+              }}
+              style={{
+                width: "100%",
+                height: "100%",
+                zIndex: 999,
+                overflow: "hidden",
+                ...(codeErrors
+                  ? {
+                      outlineWidth: "1px",
+                      outlineStyle: "solid",
+                      outlineOffset: "-1px",
+                      outlineColor: "var(--color-negative)",
+                    }
+                  : {}),
+                transition: "0.3s all",
+                borderLeft: 0,
+              }}
+              className={`border-left background-primary ${codeErrors && "border"}`}
+              onClick={onPanelClick}
+            >
+              <Editor
+                onMount={handleEditorDidMount}
+                theme={theme}
+                language={language}
+                defaultValue={""}
+                onChange={(value) => handleOnChange(value, currentFileUid)}
+                loading={""}
+                options={
+                  editorConfigs as monaco.editor.IStandaloneEditorConstructionOptions
                 }
-              : {}),
-            transition: "0.3s all",
-            borderLeft: 0,
-          }}
-          className={`border-left background-primary ${codeErrors && "border"}`}
-          onClick={onPanelClick}
-        >
-          <Editor
-            onMount={handleEditorDidMount}
-            theme={theme}
-            language={language}
-            defaultValue={""}
-            onChange={(value) => handleOnChange(value, currentFileUid)}
-            loading={""}
-            options={
-              editorConfigs as monaco.editor.IStandaloneEditorConstructionOptions
-            }
-          />
-        </div>
-      </>
+              />
+            </div>
+          </Panel>
+
+          {showParsingErrors && (
+            <>
+              <PanelResizeHandle />
+
+              <Panel defaultSize={10} order={2}>
+                <ParsingErrorsPanel
+                  errors={parsingErrors}
+                  onErrorClick={handleErrorClick}
+                />
+              </Panel>
+            </>
+          )}
+
+          <div className="row padding-xs background-secondary">
+            <div
+              onClick={toggleParsingErrors}
+              className="padding-m background-primary"
+            >
+              !
+            </div>
+          </div>
+        </PanelGroup>
+      </div>
     );
   }, [
     onPanelClick,
@@ -350,5 +403,7 @@ export default function CodeView() {
     currentFileContent,
     editorConfigs,
     codeErrors,
+    parsingErrors,
+    showParsingErrors,
   ]);
 }
