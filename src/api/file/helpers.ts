@@ -3,7 +3,7 @@ import {
   htmlElementsReferences,
   THtmlElementsReference,
 } from "@rnbws/rfrncs.design";
-import { THtmlElementsReferenceData } from "@_types/main";
+import { THtmlElementsReferenceData } from "@src/types";
 
 import {
   _path,
@@ -119,7 +119,7 @@ export const getIndexHtmlContent = () => {
 </html>
   `;
   const html = hardcodedHtml;
-  
+
   const indexHtmlContent = doctype + html;
   return indexHtmlContent;
 };

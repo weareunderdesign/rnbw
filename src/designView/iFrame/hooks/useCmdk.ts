@@ -6,7 +6,7 @@ import { LogAllow } from "@src/rnbwTSX";
 import { MainContext } from "@_redux/main";
 import { setCurrentCommand } from "@_redux/main/cmdk";
 import { getCommandKey } from "../../../rnbw";
-import { TCmdkKeyMap } from "@_types/main";
+import { TCmdkKeyMap } from "@src/types";
 
 import { getBodyChild, getValidElementWithUid } from "../helpers";
 import { setShowActionsPanel, setShowCodeView } from "@_redux/main/processor";
@@ -127,9 +127,7 @@ export const useCmdk = () => {
           if (!codeViewInstance || !codeViewInstanceModel) {
             LogAllow &&
               console.error(
-                `Monaco Editor ${
-                  !codeViewInstance ? "" : "Model"
-                } is undefined`,
+                `Monaco Editor ${!codeViewInstance ? "" : "Model"} is undefined`,
               );
           } else {
             action === "Save" &&

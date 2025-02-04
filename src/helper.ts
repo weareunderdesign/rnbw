@@ -25,7 +25,7 @@ import {
   TCmdkReference,
   TCmdkReferenceData,
   THtmlReferenceData,
-} from "@_types/main";
+} from "@src/types";
 import { AnyAction } from "@reduxjs/toolkit";
 import { THtmlNodeData } from "@_api/node";
 import { TFileNodeData, TFileNodeTreeData, createURLPath } from "@_api/index";
@@ -34,7 +34,6 @@ import {
   setNavigatorDropdownType,
 } from "@_redux/main/processor";
 import { AnyFunction } from "./rnbw";
-import { toast } from "react-toastify";
 import { NavigateFunction } from "react-router-dom";
 import { TFilesReference } from "@rnbws/rfrncs.design";
 import { FileNode } from "@_redux/main";
@@ -460,7 +459,6 @@ export const onWebComponentDblClick = ({
               src.startsWith("https") ||
               src.startsWith("//")
             ) {
-              toast.error("rnbw couldn't find it's source file");
               notify("error", "rnbw couldn't find it's source file");
               break;
             } else {

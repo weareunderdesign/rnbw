@@ -1,5 +1,5 @@
 import eventEmitter from "./eventEmitter";
-import { NotificationType, NotificationEvent } from "@_types/global";
+import { NotificationType, NotificationEvent } from "@src/types";
 
 export const notify = (
   type: NotificationType,

@@ -1,4 +1,4 @@
-import { TCmdkKeyMap, TCmdkReference } from "@_types/main";
+import { TCmdkKeyMap, TCmdkReference } from "@src/types";
 
 export type CommandItemProps = {
   command: TCmdkReference;

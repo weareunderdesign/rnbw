@@ -12,7 +12,7 @@ import {
   setCurrentCommand,
 } from "@_redux/main/cmdk";
 import { useAppState } from "@_redux/useAppState";
-import { TCmdkContext, TCmdkKeyMap, TCmdkReference } from "@_types/main";
+import { TCmdkContext, TCmdkKeyMap, TCmdkReference } from "@src/types";
 import { getCommandKey } from "../rnbw";
 import { useCmdkModal, useCmdkReferenceData, useHandlers } from "../hooks";
 import { CommandItem } from "./CommandItem";

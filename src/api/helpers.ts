@@ -5,7 +5,7 @@ import {
   RenameNodeActionPrefix,
   RootNodeUid,
 } from "@src/rnbwTSX";
-import { THtmlReferenceData } from "@_types/main";
+import { THtmlReferenceData } from "@src/types";
 
 import {
   TBasicNodeData,

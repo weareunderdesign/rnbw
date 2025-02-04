@@ -1,4 +1,4 @@
-import { NotificationEvent } from "@_types/global";
+import { NotificationEvent } from "@src/types";
 
 type EventMap = {
   notification: [NotificationEvent]; // Keep this as is, but note the emit usage below

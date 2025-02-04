@@ -1,4 +1,4 @@
-import { THtmlReferenceData } from "@_types/main";
+import { THtmlReferenceData } from "@src/types";
 
 export type TNode = {
   uid: TNodeUid;

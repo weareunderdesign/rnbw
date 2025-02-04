@@ -25,7 +25,7 @@ import {
 } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
 import { getCommandKey } from "../rnbw";
-import { TCmdkKeyMap, TCmdkReferenceData } from "@_types/main";
+import { TCmdkKeyMap, TCmdkReferenceData } from "@src/types";
 
 import { setSystemTheme } from "../helper";
 import useRnbw from "@_services/useRnbw";

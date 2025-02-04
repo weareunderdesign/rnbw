@@ -18,7 +18,7 @@ import {
   TCmdkReferenceData,
   THtmlReferenceData,
   TSession,
-} from "@_types/main";
+} from "@src/types";
 
 import {
   addDefaultCmdkActions,
