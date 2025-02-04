@@ -4,20 +4,35 @@ import eventEmitter from "@_services/eventEmitter";
 import { NotificationEvent } from "@src/types";
 import { nanoid } from "nanoid";
 
-const notificationContainerStyle: CSSProperties = {
+interface NotificationPosition {
+  vertical: "top" | "bottom";
+  horizontal: "left" | "right";
+}
+
+interface NotificationContainerProps {
+  position?: NotificationPosition;
+}
+
+const getPositionStyle = (position?: NotificationPosition): CSSProperties => ({
   position: "fixed",
-  top: "20px",
-  right: "20px",
+  bottom: position?.vertical === "top" ? undefined : "20px",
+  top: position?.vertical === "top" ? "20px" : undefined,
+  left: position?.horizontal === "right" ? undefined : "50%",
+  right: position?.horizontal === "right" ? "20px" : undefined,
+  transform: position?.horizontal === "right" ? undefined : "translateX(-50%)",
   zIndex: 1000,
   display: "flex",
-  flexDirection: "column",
+  flexDirection: "column-reverse",
   gap: "10px",
-};
+});
+
 interface NotificationData extends NotificationEvent {
   id: string;
 }
 
-export const NotificationContainer: React.FC = () => {
+export const NotificationContainer: React.FC<NotificationContainerProps> = ({
+  position,
+}) => {
   const [notifications, setNotifications] = useState<NotificationData[]>([]);
 
   useEffect(() => {
@@ -39,7 +54,7 @@ export const NotificationContainer: React.FC = () => {
   };
 
   return (
-    <div style={notificationContainerStyle}>
+    <div style={getPositionStyle(position)}>
       {notifications.map((notif) => (
         <Notification
           key={notif.id}

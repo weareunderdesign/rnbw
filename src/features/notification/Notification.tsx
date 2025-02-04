@@ -17,6 +17,7 @@ export const Notification: React.FC<NotificationProps> = ({
   onClose,
 }) => {
   const [progress, setProgress] = useState(100);
+  const [mounted, setMounted] = useState(false);
 
   const getToastColor = () => {
     switch (type) {
@@ -43,7 +44,13 @@ export const Notification: React.FC<NotificationProps> = ({
         return "help";
     }
   };
+
   useEffect(() => {
+    // Trigger mount animation
+    requestAnimationFrame(() => {
+      setMounted(true);
+    });
+
     const timer = setInterval(() => {
       setProgress((prev) => {
         if (prev <= 0) {
@@ -62,7 +69,11 @@ export const Notification: React.FC<NotificationProps> = ({
     <div
       className="panel border radius-s"
       style={{
+        minWidth: "250px",
         width: "100%",
+        transform: `translateY(${mounted ? 0 : "100%"})`,
+        opacity: mounted ? 1 : 0,
+        transition: "transform 0.4s ease-out, opacity 0.4s ease-out",
       }}
     >
       <div
