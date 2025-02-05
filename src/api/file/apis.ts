@@ -14,7 +14,7 @@ import { verifyFileHandlerPermission } from "../../rnbw";
 
 import {
   fileHandlers,
-  getIndexHtmlContent,
+  getUntitledHtmlContent,
   getSubNodeUidsByBfs,
   TFileHandlerCollection,
   TFileNode,
@@ -27,8 +27,8 @@ import {
   TValidNodeUid,
 } from "../";
 import {
-  getIndexCssContent,
-  getIndexJsContent,
+  getUntitledCssContent,
+  getUntitledJsContent,
   getInitialFileUidToOpen,
   sortFilesByASC,
 } from "./helpers";
@@ -67,20 +67,20 @@ export const createIDBProject = async (projectPath: string): Promise<void> => {
     // create project directory
     await _createIDBDirectory(projectPath);
 
-    // create index.html
-    const indexHtmlPath = `${projectPath}/index.html`;
-    const indexHtmlContent = getIndexHtmlContent();
-    await _writeIDBFile(indexHtmlPath, indexHtmlContent);
+    // create untitled.js
+    const untitledJsPath = `${projectPath}/untitled.js`;
+    const untitledJsContent = getUntitledJsContent();
+    await _writeIDBFile(untitledJsPath, untitledJsContent);
 
-    // create index.css
-    const indexCssPath = `${projectPath}/index.css`;
-    const indexCssContent = getIndexCssContent();
-    await _writeIDBFile(indexCssPath, indexCssContent);
+    // create untitled.css
+    const untitledCssPath = `${projectPath}/untitled.css`;
+    const untitledCssContent = getUntitledCssContent();
+    await _writeIDBFile(untitledCssPath, untitledCssContent);
 
-    // create index.js
-    const indexJsPath = `${projectPath}/index.js`;
-    const indexJsContent = getIndexJsContent();
-    await _writeIDBFile(indexJsPath, indexJsContent);
+    // create untitled.html
+    const untitledHtmlPath = `${projectPath}/untitled.html`;
+    const untitledHtmlContent = getUntitledHtmlContent();
+    await _writeIDBFile(untitledHtmlPath, untitledHtmlContent);
 
     // If all operations are successful, resolve the promise
     return Promise.resolve();

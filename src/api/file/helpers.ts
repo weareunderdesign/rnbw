@@ -97,7 +97,7 @@ export const getNormalizedPath = (
   const normalizedPath = _path.normalize(path);
   return { isAbsolutePath, normalizedPath };
 };
-export const getIndexHtmlContent = () => {
+export const getUntitledHtmlContent = () => {
   const htmlElementsReferenceData: THtmlElementsReferenceData = {};
   htmlElementsReferences.map((htmlRefElement: THtmlElementsReference) => {
     const pureTag =
@@ -111,11 +111,11 @@ export const getIndexHtmlContent = () => {
   const hardcodedHtml = `<html>
   <head>
     <title>Untitled</title>
-    <link rel="stylesheet" href="index.css">
-    <script src="index.js"></script>
+    <link rel="stylesheet" href="untitled.css">
+    <script src="untitled.js"></script>
   </head>
   <body>
-    <h1>Welcome to Rnbw!</h1>
+    
   </body>
 </html>
   `;
@@ -124,15 +124,15 @@ export const getIndexHtmlContent = () => {
   const indexHtmlContent = doctype + html;
   return indexHtmlContent;
 };
-export const getIndexCssContent = () => {
-  const css = "body { background-color: #fefefe; }";
-  const indexCssContent = css;
-  return indexCssContent;
+export const getUntitledCssContent = () => {
+  const css = "";
+  const untitledCssContent = css;
+  return untitledCssContent;
 };
-export const getIndexJsContent = () => {
-  const js = "alert('Welcome to Rnbw!');";
-  const indexJsContent = js;
-  return indexJsContent;
+export const getUntitledJsContent = () => {
+  const js = "";
+  const untitledJsContent = js;
+  return untitledJsContent;
 };
 export const getFullnameFromUid = (uid: TNodeUid): string => {
   const uidArr = uid.split(_path.sep);
