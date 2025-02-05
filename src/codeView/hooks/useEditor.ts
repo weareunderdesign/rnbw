@@ -113,7 +113,6 @@ const useEditor = () => {
   const handleEditorDidMount = useCallback(
     (editor: editor.IStandaloneCodeEditor) => {
       setMonacoEditorRef(editor);
-
       // override monaco-editor undo/redo
       editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyZ, () => {
         setUndoRedoToggle((prev) => ({
@@ -153,15 +152,20 @@ const useEditor = () => {
   // handleOnChange
   const onChange = useCallback(
     (value: string, changedFileUid: string) => {
-      if (changedFileUid === AppstateRef.current.currentFileUid) {
+      if (
+        changedFileUid === AppstateRef.current.currentFileUid ||
+        changedFileUid === ""
+      ) {
         dispatch(setCurrentFileContent(value));
       } else {
         const file = structuredClone(
           AppstateRef.current.fileTree[changedFileUid],
         );
-        const fileData = file.data;
-        fileData.content = value;
-        dispatch(setFileTreeNodes([file]));
+        if (file && file.data) {
+          const fileData = file.data;
+          fileData.content = value;
+          dispatch(setFileTreeNodes([file]));
+        }
       }
 
       if (!AppstateRef.current.isContentProgrammaticallyChanged) {

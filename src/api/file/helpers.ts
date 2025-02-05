@@ -111,10 +111,11 @@ export const getIndexHtmlContent = () => {
   const hardcodedHtml = `<html>
   <head>
     <title>Untitled</title>
-    <link rel="stylesheet" href="untitled.css">
-    <script src="untitled.js"></script>
+    <link rel="stylesheet" href="index.css">
+    <script src="index.js"></script>
   </head>
   <body>
+    <h1>Welcome to Rnbw!</h1>
   </body>
 </html>
   `;
@@ -122,6 +123,16 @@ export const getIndexHtmlContent = () => {
 
   const indexHtmlContent = doctype + html;
   return indexHtmlContent;
+};
+export const getIndexCssContent = () => {
+  const css = "body { background-color: #fefefe; }";
+  const indexCssContent = css;
+  return indexCssContent;
+};
+export const getIndexJsContent = () => {
+  const js = "alert('Welcome to Rnbw!');";
+  const indexJsContent = js;
+  return indexJsContent;
 };
 export const getFullnameFromUid = (uid: TNodeUid): string => {
   const uidArr = uid.split(_path.sep);
