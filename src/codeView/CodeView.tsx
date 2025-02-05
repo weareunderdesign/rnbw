@@ -310,12 +310,7 @@ export default function CodeView() {
             width: "100%",
             height: "100%",
             zIndex: 999,
-            minWidth: "400px",
             overflow: "hidden",
-            background: "rgba(255, 255, 255, 0.1)",
-            backdropFilter: "blur(1px)",
-            border: "1px solid rgba(255, 255, 255, 0.3)",
-            boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
             ...(codeErrors
               ? {
                   outlineWidth: "1px",
@@ -332,7 +327,7 @@ export default function CodeView() {
         >
           <Editor
             onMount={handleEditorDidMount}
-            // theme={theme}
+            theme={theme}
             language={language}
             defaultValue={""}
             onChange={(value) => handleOnChange(value, currentFileUid)}

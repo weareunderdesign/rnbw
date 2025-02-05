@@ -9,7 +9,6 @@ import {
 
 import { editor, KeyCode, KeyMod, Selection } from "monaco-editor";
 import { useDispatch } from "react-redux";
-import * as monaco from "monaco-editor";
 
 import { CodeViewSyncDelay_Long, DefaultTabSize } from "@src/rnbwTSX";
 import { MainContext } from "@_redux/main";
@@ -112,39 +111,6 @@ const useEditor = () => {
   const handleEditorDidMount = useCallback(
     (editor: editor.IStandaloneCodeEditor) => {
       setMonacoEditorRef(editor);
-      // Define a custom theme
-      monaco.editor.defineTheme("myCustomTheme", {
-        base: "vs-dark",
-        inherit: true,
-        rules: [
-          { token: "comment", foreground: "6d7380" },
-          { token: "keyword", foreground: "c678dd" },
-          { token: "number", foreground: "e5c07b" },
-          { token: "string", foreground: "98c379" },
-          { token: "operator", foreground: "56b6c2" },
-          { token: "identifier", foreground: "61afef" },
-        ],
-        colors: {
-          // Glassmorphism style
-          "editor.background": "#00000040", // Very transparent white
-          "editor.foreground": "#e4e4e4",
-          "editorCursor.foreground": "#ffffff",
-          "editor.lineHighlightBackground": "#ffffff15", // Subtle highlight
-          "editorLineNumber.foreground": "#ffffff60",
-          "editor.selectionBackground": "#ffffff20",
-          "editor.inactiveSelectionBackground": "#ffffff15",
-          "editorIndentGuide.background": "#ffffff20",
-          "editorIndentGuide.activeBackground": "#ffffff40",
-          "editor.selectionHighlightBackground": "#ffffff18",
-          "editor.wordHighlightBackground": "#ffffff18",
-          "editor.wordHighlightStrongBackground": "#ffffff20",
-          "editorBracketMatch.background": "#ffffff20",
-          "editorBracketMatch.border": "#ffffff40",
-        },
-      });
-      editor.getModel()?.updateOptions({ tabSize: DefaultTabSize });
-
-      monaco.editor.setTheme("myCustomTheme");
       // override monaco-editor undo/redo
       editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyZ, () => {
         setUndoRedoToggle((prev) => ({
@@ -184,15 +150,20 @@ const useEditor = () => {
   // handleOnChange
   const onChange = useCallback(
     (value: string, changedFileUid: string) => {
-      if (changedFileUid === AppstateRef.current.currentFileUid) {
+      if (
+        changedFileUid === AppstateRef.current.currentFileUid ||
+        changedFileUid === ""
+      ) {
         dispatch(setCurrentFileContent(value));
       } else {
         const file = structuredClone(
           AppstateRef.current.fileTree[changedFileUid],
         );
-        const fileData = file.data;
-        fileData.content = value;
-        dispatch(setFileTreeNodes([file]));
+        if (file && file.data) {
+          const fileData = file.data;
+          fileData.content = value;
+          dispatch(setFileTreeNodes([file]));
+        }
       }
 
       if (!AppstateRef.current.isContentProgrammaticallyChanged) {
