@@ -11,6 +11,5 @@ export const notify = (
     message,
     duration: duration || 5000, // Default duration of 5 seconds
   };
-  console.log("Emitting notification:", event);
   eventEmitter.emit("notification", event);
 };

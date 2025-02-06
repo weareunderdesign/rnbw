@@ -25,6 +25,7 @@ import { CommandDialog } from "@src/commandMenu/CommandDialog";
 import { TNodeUid, TValidNodeUid } from "@_api/index";
 import NotificationContainer from "@src/features/notification";
 import { notify } from "@src/services/notificationService";
+import { initRnbwServices } from "./services/rnbw.services";
 
 // Constants
 export const RootNodeUid = "ROOT";
@@ -246,6 +247,10 @@ function App() {
   const [nohostReady, setNohostReady] = useState(false);
 
   useEffect(() => {
+    // Initialize extension bridge
+    initRnbwServices();
+
+    // Rest of your initialization code
     if ("serviceWorker" in navigator) {
       const wb = new Workbox("/nohost-sw.js?route=rnbw");
       wb.register().then(() => {
