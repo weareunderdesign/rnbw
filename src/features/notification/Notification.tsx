@@ -1,5 +1,5 @@
 import { SVGIcon } from "@src/components";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 
 interface NotificationProps {
   id: string;
@@ -18,6 +18,8 @@ export const Notification: React.FC<NotificationProps> = ({
 }) => {
   const [progress, setProgress] = useState(100);
   const [mounted, setMounted] = useState(false);
+  const progressTimerRef = useRef<NodeJS.Timeout>();
+  const mountTimerRef = useRef<number>();
 
   const getToastColor = () => {
     switch (type) {
@@ -46,23 +48,32 @@ export const Notification: React.FC<NotificationProps> = ({
   };
 
   useEffect(() => {
-    // Trigger mount animation
-    requestAnimationFrame(() => {
+    mountTimerRef.current = requestAnimationFrame(() => {
       setMounted(true);
     });
 
-    const timer = setInterval(() => {
+    progressTimerRef.current = setInterval(() => {
       setProgress((prev) => {
         if (prev <= 0) {
-          clearInterval(timer);
-          onClose(id);
+          if (progressTimerRef.current) {
+            clearInterval(progressTimerRef.current);
+          }
+          // Schedule close for next tick to avoid state updates during render
+          setTimeout(() => onClose(id), 0);
           return 0;
         }
         return prev - 100 / (duration / 100);
       });
     }, 100);
 
-    return () => clearInterval(timer);
+    return () => {
+      if (mountTimerRef.current) {
+        cancelAnimationFrame(mountTimerRef.current);
+      }
+      if (progressTimerRef.current) {
+        clearInterval(progressTimerRef.current);
+      }
+    };
   }, [duration, id, onClose]);
 
   return (

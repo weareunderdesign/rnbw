@@ -1,4 +1,4 @@
-import React, { useState, useEffect, CSSProperties } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Notification from "./Notification";
 import eventEmitter from "@_services/eventEmitter";
 import { NotificationEvent } from "@src/types";
@@ -13,7 +13,9 @@ interface NotificationContainerProps {
   position?: NotificationPosition;
 }
 
-const getPositionStyle = (position?: NotificationPosition): CSSProperties => ({
+const getPositionStyle = (
+  position?: NotificationPosition,
+): React.CSSProperties => ({
   position: "fixed",
   bottom: position?.vertical === "top" ? undefined : "20px",
   top: position?.vertical === "top" ? "20px" : undefined,
@@ -35,23 +37,21 @@ export const NotificationContainer: React.FC<NotificationContainerProps> = ({
 }) => {
   const [notifications, setNotifications] = useState<NotificationData[]>([]);
 
+  const addNotification = useCallback((event: NotificationEvent) => {
+    const id = nanoid();
+    setNotifications((prev) => [...prev, { ...event, id }]);
+  }, []);
+
+  const removeNotification = useCallback((id: string) => {
+    setNotifications((prev) => prev.filter((notif) => notif.id !== id));
+  }, []);
+
   useEffect(() => {
-    const addNotification = (event: NotificationEvent) => {
-      const id = nanoid();
-      setNotifications((prev) => [...prev, { ...event, id }]);
-    };
-
     eventEmitter.on("notification", addNotification);
-
-    // Cleanup listener on unmount
     return () => {
       eventEmitter.off("notification", addNotification);
     };
-  }, []);
-
-  const removeNotification = (id: string) => {
-    setNotifications((prev) => prev.filter((notif) => notif.id !== id));
-  };
+  }, [addNotification]);
 
   return (
     <div style={getPositionStyle(position)}>
