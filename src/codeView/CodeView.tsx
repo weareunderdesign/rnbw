@@ -329,12 +329,9 @@ export default function CodeView() {
             onMount={handleEditorDidMount}
             theme={theme}
             language={language}
-            defaultValue={""}
+            value={currentFileContent}
             onChange={(value) => handleOnChange(value, currentFileUid)}
-            loading={""}
-            options={
-              editorConfigs as monaco.editor.IStandaloneEditorConstructionOptions
-            }
+            options={editorConfigs}
           />
         </div>
       </>
