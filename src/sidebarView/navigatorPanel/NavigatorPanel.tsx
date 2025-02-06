@@ -20,6 +20,10 @@ import {
 import { useFavicon, useNavigatorPanelHandlers } from "./hooks";
 import { PanelButton } from "./components/PanelButton";
 import { PanelHeader } from "@src/sidebarView/panelHeader";
+import IconButton from "@src/components/IconButton/IconButton";
+import { useDispatch } from "react-redux";
+import { setCmdkPages } from "@src/_redux/main/cmdk";
+import { setReloadIframe } from "@src/_redux/main/designView";
 
 export default function NavigatorPanel() {
   const {
@@ -32,9 +36,13 @@ export default function NavigatorPanel() {
     currentFileUid,
     filesReferenceData,
     showFilePanel,
+    cmdkPages,
+    cmdkOpen,
   } = useAppState();
 
   const { importProject } = useContext(MainContext);
+
+  const dispatch = useDispatch();
 
   const [faviconFallback, setFaviconFallback] = useState(false);
   useFavicon(setFaviconFallback);
@@ -72,6 +80,30 @@ export default function NavigatorPanel() {
       }
     }
   }, [unsavedProject, theme]);
+
+  const onJumpstart = useCallback(() => {
+    if (cmdkOpen) return;
+    dispatch(setCmdkPages(["Jumpstart"]));
+  }, [cmdkOpen]);
+
+  const onAdd = useCallback(() => {
+    dispatch(setCmdkPages([...cmdkPages, "Add"]));
+  }, [cmdkPages]);
+
+  const simulateKeyboardEvent = (key: string) => {
+    const event = new KeyboardEvent("keydown", {
+      bubbles: true,
+      cancelable: true,
+      key,
+      code: `Key${key.toUpperCase()}`,
+      charCode: key.charCodeAt(0),
+    });
+    document.dispatchEvent(event);
+  };
+
+  const handleReload = () => {
+    dispatch(setReloadIframe(true));
+  };
 
   useEffect(() => {
     updateFavicon();
@@ -111,15 +143,32 @@ export default function NavigatorPanel() {
         >
           <div
             className="gap-s"
-            style={{ overflow: "hidden", width: "100%" }}
+            style={{ overflow: "hidden", width: "100%", position: "relative" }}
             onClick={onPanelClick}
             ref={navigatorPanelRef}
           >
+            <IconButton iconName="emoji" onClick={onJumpstart} />
+
+            <span className="text-s opacity-m">/</span>
             {showFilePanel ? (
               <ProjectPanel unsavedProject={unsavedProject} />
             ) : (
               <DefaultPanel />
             )}
+            <div
+              className="gap-s align-center background-primary"
+              style={{
+                position: "absolute",
+                right: "0px",
+              }}
+            >
+              <IconButton iconName="plus" onClick={onAdd} />
+              <IconButton iconName="sync" onClick={handleReload} />
+              <IconButton
+                iconName="code-html"
+                onClick={() => simulateKeyboardEvent("C")}
+              />
+            </div>
           </div>
           <PanelButton />
         </PanelHeader>

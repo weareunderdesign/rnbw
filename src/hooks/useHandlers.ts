@@ -13,7 +13,7 @@ import {
 import {
   buildNohostIDB,
   createURLPath,
-  getIndexHtmlContent,
+  getUntitledHtmlContent,
   loadIDBProject,
   loadLocalProject,
 } from "@_api/file";
@@ -217,7 +217,7 @@ export const useHandlers = () => {
           await dispatch(
             setCurrentFileContent(
               _fileTree[_initialFileUidToOpen].data.content ||
-                getIndexHtmlContent(),
+                getUntitledHtmlContent(),
             ),
           );
           await dispatch(focusFileTreeNode(_initialFileUidToOpen));
@@ -240,7 +240,7 @@ export const useHandlers = () => {
               _fileTree[currentFileUid].data.content
                 ? _fileTree[currentFileUid].data.content
                 : _fileTree[currentFileUid].data.ext === "html"
-                  ? getIndexHtmlContent()
+                  ? getUntitledHtmlContent()
                   : "",
             ),
           );
