@@ -43,11 +43,12 @@ jobs:
         run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
       - name: Build project
         run: ${{ steps.detect-package-manager.outputs.runner }} npm run build
+      - name: List build directory contents
+        run: ls -la ./dist
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
-  # Deployment job
   deploy:
     environment:
       name: github-pages
