@@ -53,9 +53,7 @@ export default function ResizablePanels({
 
       if (showActionsPanel && actionsPanelRef.current) {
         actionsPanelRef.current.resize(calculatedWidth);
-        if (defaultActionsPanelWidthRef.current === 0) {
-          defaultActionsPanelWidthRef.current = calculatedWidth;
-        }
+        defaultActionsPanelWidthRef.current = calculatedWidth;
       }
     };
 
@@ -69,6 +67,7 @@ export default function ResizablePanels({
     };
   }, [showActionsPanel]);
 
+  console.log(isCodeViewHovered);
   return (
     <>
       {!showActionsPanel && (
@@ -97,7 +96,6 @@ export default function ResizablePanels({
             <Panel
               ref={actionsPanelRef}
               id="rnbw-actions-panel"
-              defaultSize={defaultActionsPanelWidthRef.current}
               minSize={
                 showActionsPanel ? defaultActionsPanelWidthRef.current : 0
               }
@@ -117,12 +115,8 @@ export default function ResizablePanels({
         <Panel
           ref={codeViewRef}
           id="rnbw-code-view"
-          defaultSize={showCodeView ? CODEVIEWWIDTH : 0}
-          minSize={showCodeView || isCodeViewHovered ? CODEVIEWWIDTH : 0}
+          minSize={showCodeView ? CODEVIEWWIDTH : 0}
           order={3}
-          style={{
-            maxWidth: showCodeView || isCodeViewHovered ? "unset" : 0,
-          }}
           onMouseEnter={() => setIsCodeViewHovered(true)}
           onMouseLeave={() => setIsCodeViewHovered(false)}
         >
