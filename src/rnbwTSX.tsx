@@ -3,13 +3,13 @@ import "@rnbws/renecss/dist/rene.min.css";
 import "@rnbws/svg-icon.js";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import * as ReactDOMClient from "react-dom/client";
-import { Provider, useDispatch } from "react-redux";
+import { Provider, useDispatch, useSelector } from "react-redux";
 import { HashRouter as Router, Route, Routes } from "react-router-dom";
 import { Workbox } from "workbox-window";
 import persistStore from "redux-persist/es/persistStore";
 import { PersistGate } from "redux-persist/integration/react";
 
-import configureStore from "@_redux/_root";
+import configureStore, { AppState } from "@_redux/_root";
 import { Loader } from "@src/components";
 import { ActionsPanel, CodeView, DesignView } from "./rnbw";
 import { isUnsavedProject } from "@_api/file";
@@ -24,7 +24,6 @@ import { debounce } from "@src/helper";
 import { CommandDialog } from "@src/commandMenu/CommandDialog";
 import { TNodeUid, TValidNodeUid } from "@_api/index";
 import NotificationContainer from "@src/features/notification";
-import { notify } from "@src/services/notificationService";
 import { initRnbwServices } from "./services/rnbw.services";
 
 // Constants
@@ -245,7 +244,9 @@ function MainPage() {
 
 function App() {
   const [nohostReady, setNohostReady] = useState(false);
-
+  const isEditorReady = useSelector(
+    (state: AppState) => state.main.editor.isEditorReady,
+  );
   useEffect(() => {
     // Initialize extension bridge
     initRnbwServices();
@@ -256,7 +257,6 @@ function App() {
       wb.register().then(() => {
         setNohostReady(true);
         LogAllow && console.log("nohost ready");
-        notify.info("success", "nohost ready");
       });
       window.location.href = "/#";
     }
@@ -265,7 +265,7 @@ function App() {
   return useMemo(
     () => (
       <>
-        <NotificationContainer />
+        {isEditorReady && <NotificationContainer />}
         {nohostReady && (
           <Router>
             <Routes>
@@ -276,7 +276,7 @@ function App() {
         )}
       </>
     ),
-    [nohostReady],
+    [nohostReady, isEditorReady],
   );
 }
 
