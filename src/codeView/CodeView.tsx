@@ -291,64 +291,44 @@ export default function CodeView() {
     // oldDecorations are removed, neDecorations are added
     editorModel.deltaDecorations(oldDecorations, newDecorations);
   }, [nodeUidPositions]);
-
-  // const handleErrorClick = useCallback(
-  //   (line: number, column: number) => {
-  //     if (monacoEditorRef.current) {
-  //       monacoEditorRef.current.revealPositionInCenter({
-  //         lineNumber: line,
-  //         column: column,
-  //       });
-  //       monacoEditorRef.current.setPosition({
-  //         lineNumber: line,
-  //         column: column,
-  //       });
-  //       monacoEditorRef.current.focus();
-  //     }
-  //   },
-  //   [monacoEditorRef]
-  // );
-
   return useMemo(() => {
     return (
-      <>
-        <div
-          id="CodeView"
-          onDragCapture={(e) => {
-            e.preventDefault();
-          }}
-          onDragOver={(e) => {
-            e.preventDefault();
-          }}
-          style={{
-            width: "100%",
-            height: "100%",
-            zIndex: 999,
-            overflow: "hidden",
-            ...(codeErrors
-              ? {
-                  outlineWidth: "1px",
-                  outlineStyle: "solid",
-                  outlineOffset: "-1px",
-                  outlineColor: "var(--color-negative)",
-                }
-              : {}),
-            transition: "0.3s all",
-            borderLeft: 0,
-          }}
-          className={`border-left background-primary ${codeErrors && "border"}`}
-          onClick={onPanelClick}
-        >
-          <Editor
-            onMount={handleEditorDidMount}
-            theme={theme}
-            language={language}
-            value={currentFileContent}
-            onChange={(value) => handleOnChange(value, currentFileUid)}
-            options={editorConfigs}
-          />
-        </div>
-      </>
+      <div
+        id="CodeView"
+        onDragCapture={(e) => {
+          e.preventDefault();
+        }}
+        onDragOver={(e) => {
+          e.preventDefault();
+        }}
+        style={{
+          width: "100%",
+          height: "100%",
+          zIndex: 999,
+          overflow: "hidden",
+          ...(codeErrors
+            ? {
+                outlineWidth: "1px",
+                outlineStyle: "solid",
+                outlineOffset: "-1px",
+                outlineColor: "var(--color-negative)",
+              }
+            : {}),
+          transition: "0.3s all",
+          borderLeft: 0,
+        }}
+        className={`border-left background-primary ${codeErrors && "border"}`}
+        onClick={onPanelClick}
+      >
+        <Editor
+          onMount={handleEditorDidMount}
+          theme={theme}
+          language={language}
+          value={currentFileContent}
+          onChange={(value) => handleOnChange(value, currentFileUid)}
+          options={editorConfigs}
+        />
+      </div>
     );
   }, [
     onPanelClick,
