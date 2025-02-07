@@ -156,16 +156,15 @@ export const Notification: React.FC<NotificationProps> = ({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <div
-        className="background-secondary padding-m gap-s align-center"
-        style={{
-          border: `1px solid ${getToastColor()}20`,
-        }}
-      >
+      <div className="background-secondary padding-m gap-s align-center">
         <div style={{ color: getToastColor() }}>
-          <SVGIcon name={getToastIcon()} prefix="raincons" className="icon-s" />
+          <SVGIcon
+            name={getToastIcon()}
+            prefix="raincons"
+            className="icon-xs"
+          />
         </div>
-        <p>{data.message}</p>
+        <span className="text-s">{data.message}</span>
 
         {/* <span
           style={{
@@ -181,7 +180,7 @@ export const Notification: React.FC<NotificationProps> = ({
           <SVGIcon
             name="settings"
             prefix="raincons"
-            className="icon-s"
+            className="icon-xs"
             onClick={handleParseErrorFix}
           />
         )}
