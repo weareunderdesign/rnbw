@@ -1,9 +1,11 @@
 import { SVGIcon } from "@src/components";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useContext } from "react";
 import {
+  ErrorNotificationData,
   InfoNotificationData,
   NotificationEvent,
 } from "@src/types/notification.types";
+import { MainContext } from "@src/_redux/main";
 
 interface NotificationProps extends NotificationEvent {
   id: string;
@@ -22,6 +24,7 @@ export const Notification: React.FC<NotificationProps> = ({
   const progressTimerRef = useRef<NodeJS.Timeout>();
   const mountTimerRef = useRef<number>();
   const isPaused = useRef(false);
+  const { monacoEditorRef } = useContext(MainContext);
 
   const getToastColor = () => {
     if (type === "info") {
@@ -81,6 +84,28 @@ export const Notification: React.FC<NotificationProps> = ({
     startProgressTimer();
   };
 
+  const handleParseErrorFix = () => {
+    if (type === "error") {
+      const errorData = data as ErrorNotificationData;
+      if (errorData.type !== "parse") return;
+
+      const error = errorData.error;
+      if (!error) return;
+
+      const editorModel = monacoEditorRef.current?.getModel();
+      if (!editorModel) return;
+
+      monacoEditorRef.current?.setSelection({
+        startLineNumber: error.startLine,
+        startColumn: error.startCol,
+        endLineNumber: error.endLine,
+        endColumn: error.endCol,
+      });
+
+      monacoEditorRef.current?.revealLineInCenter(error.startLine);
+    }
+  };
+
   useEffect(() => {
     mountTimerRef.current = requestAnimationFrame(() => {
       setMounted(true);
@@ -120,9 +145,9 @@ export const Notification: React.FC<NotificationProps> = ({
         <div style={{ color: getToastColor() }}>
           <SVGIcon name={getToastIcon()} prefix="raincons" className="icon-s" />
         </div>
-        {type === "info" && <p>{data.message}</p>}
+        <p>{data.message}</p>
 
-        <span
+        {/* <span
           style={{
             position: "absolute",
             top: "4px",
@@ -131,8 +156,15 @@ export const Notification: React.FC<NotificationProps> = ({
           onClick={() => removeNotification(id)}
         >
           &times;
-        </span>
-        <SVGIcon name="settings" prefix="raincons" className="icon-s" />
+        </span> */}
+        {type === "error" && (
+          <SVGIcon
+            name="settings"
+            prefix="raincons"
+            className="icon-s"
+            onClick={handleParseErrorFix}
+          />
+        )}
         {type === "info" && (
           <div
             className="radius-s"

@@ -1,3 +1,5 @@
+import { ParserError } from "parse5";
+
 export type NotificationType = "info" | "error" | "suggestion";
 export type InfoNotificationCategory = "success" | "error" | "info" | "warning";
 
@@ -7,12 +9,13 @@ export interface InfoNotificationData {
   category: InfoNotificationCategory;
 }
 
-interface ErrorNotificationData {
+export interface ErrorNotificationData {
   message: string;
   type: "parse";
+  error: ParserError;
 }
 
-interface SuggestionNotificationData {
+export interface SuggestionNotificationData {
   message: string;
 }
 

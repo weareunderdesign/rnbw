@@ -38,7 +38,6 @@ import {
 } from "@_redux/main/nodeTree";
 import { TCmdkGroupData } from "@_types/main.types";
 import { notify } from "./notificationService";
-import eventEmitter from "./eventEmitter";
 
 export async function PrettyCode({
   code,
@@ -241,20 +240,10 @@ export const useElementHelper = () => {
       scriptingEnabled: true,
       sourceCodeLocationInfo: true,
       onParseError: (err) => {
-        console.error(err);
-        eventEmitter.emit("parseError", [
-          {
-            message: PARSING_ERROR_MESSAGES[err.code] || "HTML parsing error",
-            action: () => {
-              alert("action");
-            },
-          },
-        ]);
-
         if (
           Object.prototype.hasOwnProperty.call(PARSING_ERROR_MESSAGES, err.code)
         ) {
-          notify.error("parse", PARSING_ERROR_MESSAGES[err.code]);
+          notify.error("parse", PARSING_ERROR_MESSAGES[err.code], err);
         }
       },
     });

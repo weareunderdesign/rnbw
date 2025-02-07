@@ -459,7 +459,7 @@ export const onWebComponentDblClick = ({
               src.startsWith("https") ||
               src.startsWith("//")
             ) {
-              notify("error", "rnbw couldn't find it's source file");
+              notify.info("error", "rnbw couldn't find it's source file");
               break;
             } else {
               dispatch(setNavigatorDropdownType("project"));
@@ -494,7 +494,7 @@ export const onWebComponentDblClick = ({
     }
   }
   if (!exist) {
-    notify("error", "rnbw couldn't find it's source file");
+    notify.info("error", "rnbw couldn't find it's source file");
   }
 };
 

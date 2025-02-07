@@ -1,34 +1,25 @@
+import { ParserError } from "parse5";
 import eventEmitter from "./eventEmitter";
-import {
-  InfoNotificationCategory,
-  NotificationEvent,
-  NotificationType,
-} from "@src/types";
+import { InfoNotificationCategory, NotificationEvent } from "@src/types";
 
 const emitNotification = (event: NotificationEvent) => {
   eventEmitter.emit("notification", event);
 };
 
-interface NotifyFunction {
-  (type: NotificationType, message: string, duration?: number): void;
-  info: (category: InfoNotificationCategory, message: string) => void;
-  error: (type: "parse", message: string) => void;
-  suggestion: (message: string) => void;
-}
-
-const notify = ((
-  type: NotificationType,
-  message: string,
-  duration?: number,
-) => {
+const notify = (notification: NotificationEvent) => {
+  const { type, data, duration } = notification;
   if (type === "info") {
-    emitNotification({ type, data: { message, category: "info" }, duration });
+    emitNotification({ type, data: { ...data, category: "info" }, duration });
   } else if (type === "error") {
-    emitNotification({ type, data: { message, type: "parse" }, duration });
+    emitNotification({
+      type,
+      data: { ...data, type: "parse" },
+      duration,
+    });
   } else {
-    emitNotification({ type, data: { message }, duration });
+    emitNotification({ type, data, duration });
   }
-}) as NotifyFunction;
+};
 
 notify.info = (category: InfoNotificationCategory, message: string) => {
   emitNotification({
@@ -40,12 +31,13 @@ notify.info = (category: InfoNotificationCategory, message: string) => {
   });
 };
 
-notify.error = (type: "parse", message: string) => {
+notify.error = (type: "parse", message: string, error: ParserError) => {
   emitNotification({
     type: "error",
     data: {
       message,
       type,
+      error,
     },
   });
 };
