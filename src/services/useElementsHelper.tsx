@@ -19,7 +19,6 @@ import {
   DataSequencedUid,
   getDecorationUid,
   getUidDecorations,
-  PARSING_ERROR_MESSAGES,
   StageNodeIdAttr,
   TNode,
   TNodePositionInfo,
@@ -235,15 +234,15 @@ export const useElementHelper = () => {
     const codeViewInstanceModel = monacoEditorRef.current?.getModel();
     const uidDecorations = getUidDecorations(codeViewInstanceModel);
     const nodeUidPositions = new Map<TNodeUid, TNodePositionInfo>();
-
+    let errorCount = 0;
     const htmlDom = parse5.parse(content, {
       scriptingEnabled: true,
       sourceCodeLocationInfo: true,
       onParseError: (err) => {
-        if (
-          Object.prototype.hasOwnProperty.call(PARSING_ERROR_MESSAGES, err.code)
-        ) {
-          notify.error("parse", PARSING_ERROR_MESSAGES[err.code], err);
+        const msg = err.code.split("-").join(" ");
+        if (errorCount < 1) {
+          notify.error("parse", msg, err);
+          errorCount++;
         }
       },
     });

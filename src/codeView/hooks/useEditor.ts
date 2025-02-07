@@ -25,6 +25,7 @@ import { useSaveCommand } from "@src/processor/hooks";
 import { setIsCodeTyping } from "@_redux/main/reference";
 import { debounce } from "@src/helper";
 import { setFileTreeNodes } from "@_redux/main/fileTree";
+import { setEditorInstance } from "@src/_redux/main/editorSlice";
 
 const useEditor = () => {
   const dispatch = useDispatch();
@@ -111,6 +112,7 @@ const useEditor = () => {
   const handleEditorDidMount = useCallback(
     (editor: editor.IStandaloneCodeEditor) => {
       setMonacoEditorRef(editor);
+      dispatch(setEditorInstance(editor));
       // override monaco-editor undo/redo
       editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyZ, () => {
         setUndoRedoToggle((prev) => ({

@@ -1,11 +1,12 @@
 import { SVGIcon } from "@src/components";
-import React, { useEffect, useState, useRef, useContext } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   ErrorNotificationData,
   InfoNotificationData,
   NotificationEvent,
 } from "@src/types/notification.types";
-import { MainContext } from "@src/_redux/main";
+import { useSelector } from "react-redux";
+import { AppState } from "@src/_redux/_root";
 
 interface NotificationProps extends NotificationEvent {
   id: string;
@@ -24,7 +25,9 @@ export const Notification: React.FC<NotificationProps> = ({
   const progressTimerRef = useRef<NodeJS.Timeout>();
   const mountTimerRef = useRef<number>();
   const isPaused = useRef(false);
-  const { monacoEditorRef } = useContext(MainContext);
+  const { editorInstance } = useSelector(
+    (state: AppState) => state.main.editor,
+  );
 
   const getToastColor = () => {
     if (type === "info") {
@@ -84,7 +87,7 @@ export const Notification: React.FC<NotificationProps> = ({
     startProgressTimer();
   };
 
-  const handleParseErrorFix = () => {
+  const handleParseErrorFix = useCallback(() => {
     if (type === "error") {
       const errorData = data as ErrorNotificationData;
       if (errorData.type !== "parse") return;
@@ -92,19 +95,33 @@ export const Notification: React.FC<NotificationProps> = ({
       const error = errorData.error;
       if (!error) return;
 
-      const editorModel = monacoEditorRef.current?.getModel();
-      if (!editorModel) return;
+      if (!editorInstance) return;
+      const model = editorInstance.getModel();
+      if (!model) return;
 
-      monacoEditorRef.current?.setSelection({
-        startLineNumber: error.startLine,
-        startColumn: error.startCol,
-        endLineNumber: error.endLine,
-        endColumn: error.endCol,
-      });
+      const content = model.getValue();
+      const lines = content.split("\n");
 
-      monacoEditorRef.current?.revealLineInCenter(error.startLine);
+      // Fix the specific error
+      const line = lines[error.startLine - 1];
+      const fixedLine =
+        line.slice(0, error.startCol - 1) +
+        ">" +
+        line.slice(error.startCol - 1);
+      lines[error.startLine - 1] = fixedLine;
+
+      // Ensure the tag is properly closed
+      const closingTag = `</h1>`;
+      lines.splice(error.startLine, 0, closingTag);
+
+      // const correctedContent = lines.join("\n");
+      // model.setValue(correctedContent);
     }
-  };
+  }, [editorInstance, type, data]);
+
+  useEffect(() => {
+    console.log("editorInstance", editorInstance);
+  }, [editorInstance]);
 
   useEffect(() => {
     mountTimerRef.current = requestAnimationFrame(() => {
@@ -165,20 +182,19 @@ export const Notification: React.FC<NotificationProps> = ({
             onClick={handleParseErrorFix}
           />
         )}
-        {type === "info" && (
-          <div
-            className="radius-s"
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              height: "3px",
-              width: `${progress}%`,
-              backgroundColor: getToastColor(),
-              transition: "width 0.1s linear",
-            }}
-          />
-        )}
+
+        <div
+          className="radius-s"
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            height: "3px",
+            width: `${progress}%`,
+            backgroundColor: getToastColor(),
+            transition: "width 0.1s linear",
+          }}
+        />
       </div>
     </div>
   );
