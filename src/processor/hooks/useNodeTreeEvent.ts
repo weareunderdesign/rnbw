@@ -172,7 +172,10 @@ export const useNodeTreeEvent = () => {
           dispatch(setIframeSrc(`rnbw${previewPath}`));
         }
       } catch (err) {
-        notify("error", "An error occurred while updating the file content");
+        notify.info(
+          "error",
+          "An error occurred while updating the file content",
+        );
         LogAllow && console.error(err);
       }
 
@@ -338,7 +341,7 @@ export const useNodeTreeEvent = () => {
             } catch (err) {
               isCodeErrorsExist.current = false;
 
-              notify("error", "Some changes in the code are incorrect");
+              notify.info("error", "Some changes in the code are incorrect");
               console.error(err, "error");
             }
           }

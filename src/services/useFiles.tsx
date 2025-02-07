@@ -142,7 +142,7 @@ export default function useFiles() {
         };
         !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
       } catch (err) {
-        notify("error", "An error occurred while creating the file");
+        notify.info("error", "An error occurred while creating the file");
         console.error(err);
       } finally {
         await reloadCurrentProject();
@@ -215,7 +215,7 @@ export default function useFiles() {
         };
         !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
       } catch (err) {
-        notify("error", "An error occurred while creating the folder");
+        notify.info("error", "An error occurred while creating the folder");
         console.error(err);
       } finally {
         await reloadCurrentProject();
@@ -337,7 +337,7 @@ export default function useFiles() {
 
         !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
       } catch (err) {
-        notify("error", "An error occurred while renaming");
+        notify.info("error", "An error occurred while renaming");
         console.error(err);
       } finally {
         await reloadCurrentProject();
@@ -460,7 +460,7 @@ export default function useFiles() {
 
         !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
       } catch (err) {
-        notify("error", "An error occurred while pasting the file");
+        notify.info("error", "An error occurred while pasting the file");
         console.error(err);
       } finally {
         await reloadCurrentProject();
@@ -483,7 +483,7 @@ export default function useFiles() {
     try {
       paste({ uids, targetUid, deleteSource: true });
     } catch (err) {
-      notify("error", "An error occurred while moving the file");
+      notify.info("error", "An error occurred while moving the file");
       console.error(err);
     }
   };
@@ -524,7 +524,7 @@ export default function useFiles() {
       };
       !didUndo && !didRedo && dispatch(setFileAction(_fileAction));
     } catch (err) {
-      notify("error", "An error occurred while deleting the file");
+      notify.info("error", "An error occurred while deleting the file");
       console.error(err);
     } finally {
       await reloadCurrentProject();

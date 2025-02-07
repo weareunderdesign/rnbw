@@ -87,7 +87,7 @@ export const verifyFileHandlerPermission = async (
 
     return false;
   } catch (err) {
-    notify(
+    notify.info(
       "error",
       "An error occurred while verifying file handler permission",
     );

@@ -41,7 +41,7 @@ export const parseHtml = (
       if (
         Object.prototype.hasOwnProperty.call(PARSING_ERROR_MESSAGES, err.code)
       ) {
-        notify("warning", PARSING_ERROR_MESSAGES[err.code]);
+        notify.error("parse", PARSING_ERROR_MESSAGES[err.code]);
       }
     },
   });

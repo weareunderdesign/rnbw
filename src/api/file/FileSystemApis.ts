@@ -48,7 +48,7 @@ const createLocalSingleDirectoryOrFile = async ({
     }
     return true;
   } catch (err) {
-    notify("error", "Error while creating a local directory or file.");
+    notify.info("error", "Error while creating a local directory or file.");
     return false;
   }
 };
@@ -75,7 +75,7 @@ const createIDBSingleDirectoryOrFile = async ({
     }
     return true;
   } catch (err) {
-    notify("error", "Error while creating an idb directory or file.");
+    notify.info("error", "Error while creating an idb directory or file.");
     return false;
   }
 };
@@ -112,7 +112,7 @@ export const removeSingleLocalDirectoryOrFile = async ({
     await parentHandler.removeEntry(entryName, { recursive: true });
     return true;
   } catch (err) {
-    notify("error", "Error while removing a local directory or file.");
+    notify.info("error", "Error while removing a local directory or file.");
     return false;
   }
 };
@@ -139,7 +139,7 @@ export const removeSingleIDBDirectoryOrFile = async ({
     await _removeIDBDirectoryOrFile(_path.join(parentNodeData.path, entryName));
     return true;
   } catch (err) {
-    notify("error", "Error while removing an idb directory or file.");
+    notify.info("error", "Error while removing an idb directory or file.");
     return false;
   }
 };
@@ -188,12 +188,12 @@ const _moveLocalDirectory = async (
       try {
         parentHandler.removeEntry(source.name, { recursive: true });
       } catch (err) {
-        notify("error", "Error while moving a local directory.");
+        notify.info("error", "Error while moving a local directory.");
         console.error(err);
       }
     }
   } catch (err) {
-    notify("error", "Error while moving a local directory.");
+    notify.info("error", "Error while moving a local directory.");
     console.error(err);
   }
 };
@@ -217,7 +217,7 @@ const _moveLocalFile = async (
     !isCopy &&
       (await parentHandler.removeEntry(handler.name, { recursive: true }));
   } catch (err) {
-    notify("error", "Error while moving a local file.");
+    notify.info("error", "Error while moving a local file.");
     throw "Error while moving a local file.";
   }
 };
@@ -297,7 +297,7 @@ export const moveLocalSingleDirectoryOrFile = async ({
           isCopy,
         );
       } catch (err) {
-        notify("error", "Error while moving a local directory.");
+        notify.info("error", "Error while moving a local directory.");
         console.log(err);
       }
     } else {
@@ -310,13 +310,13 @@ export const moveLocalSingleDirectoryOrFile = async ({
           isCopy,
         );
       } catch (err) {
-        notify("error", "Error while moving a local file.");
+        notify.info("error", "Error while moving a local file.");
         console.log(err);
       }
     }
     return true;
   } catch (err) {
-    notify("error", "Error while moving a local directory or file.");
+    notify.info("error", "Error while moving a local directory or file.");
     console.error(err);
     return false;
   }
@@ -359,7 +359,7 @@ const _moveIDBDirectory = async (
 
     !isCopy && (await _removeIDBDirectoryOrFile(nodeData.path));
   } catch (err) {
-    notify("error", "Error while moving an idb directory.");
+    notify.info("error", "Error while moving an idb directory.");
     throw "Error while moving an idb directory.";
   }
 };
@@ -377,7 +377,7 @@ const _moveIDBFile = async (
 
     !isCopy && (await _removeIDBDirectoryOrFile(nodeData.path));
   } catch (err) {
-    notify("error", "Error while moving an idb file.");
+    notify.info("error", "Error while moving an idb file.");
     throw "Error while moving an idb file.";
   }
 };
@@ -415,7 +415,7 @@ export const moveIDBSingleDirectoryOrFile = async ({
     }
     return true;
   } catch (err) {
-    notify("error", "Error while moving an idb directory or file.");
+    notify.info("error", "Error while moving an idb directory or file.");
     return false;
   }
 };
@@ -445,7 +445,7 @@ const generateNewNameForLocalDirectoryOrFile = async ({
       if (err.name === "NotFoundError") {
         exists = false;
       } else {
-        notify(
+        notify.info(
           "error",
           "Error while generating a new name for a local directory.",
         );
@@ -487,7 +487,7 @@ export const generateNewNameForIDBDirectoryOrFile = async ({
       if (err.name === "ENOENT") {
         exists = false;
       } else {
-        notify(
+        notify.info(
           "error",
           "Error while generating a new name for a IDB directory.",
         );

@@ -1,6 +1,5 @@
-import { notify } from "./notificationService";
-
 import { NotificationType } from "@src/types";
+import { notify } from "./notificationService";
 
 // Define the bridge interface
 interface Rnbw {

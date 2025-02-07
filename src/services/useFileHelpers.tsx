@@ -49,7 +49,7 @@ export const getUniqueIndexedName = async ({
       if (err.name === "NotFoundError") {
         uniqueName = indexedName;
       } else {
-        notify("error", "An error occurred while creating the file");
+        notify.info("error", "An error occurred while creating the file");
       }
     }
   }
@@ -80,7 +80,7 @@ const generateNewNameForLocalDirectoryOrFile = async ({
       if (err.name === "NotFoundError") {
         exists = false;
       } else {
-        notify(
+        notify.info(
           "error",
           "Error while generating a new name for a local directory.",
         );
@@ -219,12 +219,12 @@ export const useFileHelpers = () => {
         try {
           parentHandler.removeEntry(source.name, { recursive: true });
         } catch (err) {
-          notify("error", "Error while moving a local directory.");
+          notify.info("error", "Error while moving a local directory.");
           console.error(err);
         }
       }
     } catch (err) {
-      notify("error", "Error while moving a local directory.");
+      notify.info("error", "Error while moving a local directory.");
       console.error(err);
     }
   };
@@ -248,7 +248,7 @@ export const useFileHelpers = () => {
       !isCopy &&
         (await parentHandler.removeEntry(handler.name, { recursive: true }));
     } catch (err) {
-      notify("error", "Error while moving a local file.");
+      notify.info("error", "Error while moving a local file.");
       throw "Error while moving a local file.";
     }
   };
@@ -335,7 +335,7 @@ export const useFileHelpers = () => {
             isCopy,
           );
         } catch (err) {
-          notify("error", "Error while moving a local directory.");
+          notify.info("error", "Error while moving a local directory.");
           console.log(err);
         }
       } else {
@@ -348,13 +348,13 @@ export const useFileHelpers = () => {
             isCopy,
           );
         } catch (err) {
-          notify("error", "Error while moving a local file.");
+          notify.info("error", "Error while moving a local file.");
           console.log(err);
         }
       }
       return true;
     } catch (err) {
-      notify("error", "Error while moving a local directory or file.");
+      notify.info("error", "Error while moving a local directory or file.");
       console.error(err);
       return false;
     }

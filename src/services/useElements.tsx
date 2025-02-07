@@ -76,7 +76,7 @@ export default function useElements() {
       nodeToAdd: [tagName],
     });
     if (!isAllowed) {
-      notify("error", "Adding not allowed");
+      notify.info("error", "Adding not allowed");
       return;
     }
 
@@ -103,7 +103,7 @@ export default function useElements() {
 
     const sortedUids = sortUidsAsc(selectedUids);
     if (sortedUids.length === 0) {
-      notify("error", "Please select a node to add the new element");
+      notify.info("error", "Please select a node to add the new element");
       return;
     }
     const uid = sortedUids[0];
@@ -111,7 +111,7 @@ export default function useElements() {
 
     if (node) {
       if (node.displayName === "html" || node.displayName === "head") {
-        notify("error", "Adding not allowed");
+        notify.info("error", "Adding not allowed");
         return;
       }
 
@@ -302,7 +302,7 @@ export default function useElements() {
     dispatch(setCopiedNodeDisplayName([]));
     const targetUid = selectedUids[0];
     if (!isAllowed && !pasteContent) {
-      notify("error", "Pasting not allowed");
+      notify.info("error", "Pasting not allowed");
       return;
     }
 
@@ -379,7 +379,7 @@ export default function useElements() {
       checkFirstParents: true,
     });
     if (!isAllowed) {
-      notify("error", "Grouping not allowed");
+      notify.info("error", "Grouping not allowed");
       return;
     }
 
@@ -515,7 +515,7 @@ export default function useElements() {
       checkFirstParents: true,
     });
     if (!isAllowed) {
-      notify("error", "Moving not allowed");
+      notify.info("error", "Moving not allowed");
       return;
     }
 

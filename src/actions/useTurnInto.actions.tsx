@@ -31,7 +31,7 @@ export default function useTurnInto() {
       checkFirstParents: true,
     });
     if (!isAllowed) {
-      notify("error", `Turn into ${tagName} not allowed`);
+      notify.info("error", `Turn into ${tagName} not allowed`);
       return;
     }
 

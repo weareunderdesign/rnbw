@@ -256,7 +256,7 @@ function App() {
       wb.register().then(() => {
         setNohostReady(true);
         LogAllow && console.log("nohost ready");
-        notify("success", "nohost ready");
+        notify.info("success", "nohost ready");
       });
       window.location.href = "/#";
     }

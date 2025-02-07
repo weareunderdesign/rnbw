@@ -85,7 +85,7 @@ export async function PrettyCode({
       if (throwError) {
         throw e;
       } else {
-        notify("error", `Failed to format the code: ${msg.split(".")[0]}`);
+        notify.info("error", `Failed to format the code: ${msg.split(".")[0]}`);
       }
     }
     return code;
@@ -245,16 +245,16 @@ export const useElementHelper = () => {
         eventEmitter.emit("parseError", [
           {
             message: PARSING_ERROR_MESSAGES[err.code] || "HTML parsing error",
-            line: err.startLine,
-            column: err.startCol,
-            source: content,
+            action: () => {
+              alert("action");
+            },
           },
         ]);
 
         if (
           Object.prototype.hasOwnProperty.call(PARSING_ERROR_MESSAGES, err.code)
         ) {
-          notify("warning", PARSING_ERROR_MESSAGES[err.code]);
+          notify.error("parse", PARSING_ERROR_MESSAGES[err.code]);
         }
       },
     });

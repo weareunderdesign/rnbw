@@ -81,7 +81,7 @@ export const useSaveCommand = () => {
           iframe.src = iframeSrc;*/
         }
       } catch (err) {
-        notify("error", "An error occurred while saving the file");
+        notify.info("error", "An error occurred while saving the file");
 
         console.error(err);
       } finally {
