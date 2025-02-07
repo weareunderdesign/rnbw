@@ -1,15 +1,60 @@
 import eventEmitter from "./eventEmitter";
-import { NotificationType, NotificationEvent } from "@src/types";
+import {
+  InfoNotificationCategory,
+  NotificationEvent,
+  NotificationType,
+} from "@src/types";
 
-export const notify = (
+const emitNotification = (event: NotificationEvent) => {
+  eventEmitter.emit("notification", event);
+};
+
+interface NotifyFunction {
+  (type: NotificationType, message: string, duration?: number): void;
+  info: (category: InfoNotificationCategory, message: string) => void;
+  error: (type: "parse", message: string) => void;
+  suggestion: (message: string) => void;
+}
+
+const notify = ((
   type: NotificationType,
   message: string,
   duration?: number,
 ) => {
-  const event: NotificationEvent = {
-    type,
-    message,
-    duration: duration || 5000, // Default duration of 5 seconds
-  };
-  eventEmitter.emit("notification", event);
+  if (type === "info") {
+    emitNotification({ type, data: { message, category: "info" }, duration });
+  } else if (type === "error") {
+    emitNotification({ type, data: { message, type: "parse" }, duration });
+  } else {
+    emitNotification({ type, data: { message }, duration });
+  }
+}) as NotifyFunction;
+
+notify.info = (category: InfoNotificationCategory, message: string) => {
+  emitNotification({
+    type: "info",
+    data: {
+      message,
+      category,
+    },
+  });
 };
+
+notify.error = (type: "parse", message: string) => {
+  emitNotification({
+    type: "error",
+    data: {
+      message,
+      type,
+    },
+  });
+};
+
+notify.suggestion = (message: string) => {
+  emitNotification({
+    type: "suggestion",
+    data: { message },
+  });
+};
+
+export { notify };

@@ -27,11 +27,9 @@ const getPositionStyle = (
   flexDirection: "column-reverse",
   gap: "10px",
 });
-
 interface NotificationData extends NotificationEvent {
   id: string;
 }
-
 export const NotificationContainer: React.FC<NotificationContainerProps> = ({
   position,
 }) => {
@@ -60,7 +58,7 @@ export const NotificationContainer: React.FC<NotificationContainerProps> = ({
           key={notif.id}
           {...notif}
           duration={notif.duration || 5000}
-          onClose={removeNotification}
+          removeNotification={removeNotification}
         />
       ))}
     </div>
