@@ -14,6 +14,8 @@ import { persistReducer } from "redux-persist";
 import createWebStorage from "redux-persist/es/storage/createWebStorage";
 import { DesignViewReducer } from "./designView";
 
+import editorReducer from "./editorSlice";
+
 export function createPersistStore() {
   const isServer = typeof window === "undefined";
   if (isServer) {
@@ -56,6 +58,7 @@ export const MainReducer = combineReducers({
   nodeEvent: NodeEventReducer,
 
   codeView: CodeViewReducer,
+  editor: editorReducer,
 
   designView: DesignViewReducer,
 });
