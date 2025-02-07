@@ -18,14 +18,10 @@ export const Notification: React.FC<NotificationProps> = ({
   id,
   type,
   data,
-  duration = 5000,
   removeNotification,
 }) => {
-  const [progress, setProgress] = useState(100);
   const [mounted, setMounted] = useState(false);
-  const progressTimerRef = useRef<NodeJS.Timeout>();
   const mountTimerRef = useRef<number>();
-  const isPaused = useRef(false);
   const { editorInstance } = useSelector(
     (state: AppState) => state.main.editor,
   );
@@ -63,31 +59,6 @@ export const Notification: React.FC<NotificationProps> = ({
     return "help";
   };
 
-  const startProgressTimer = () => {
-    progressTimerRef.current = setInterval(() => {
-      setProgress((prev) => {
-        if (prev <= 0) {
-          clearInterval(progressTimerRef.current!);
-          setTimeout(() => removeNotification(id), 0);
-          return 0;
-        }
-        return prev - 100 / (duration / 100);
-      });
-    }, 100);
-  };
-
-  const handleMouseEnter = () => {
-    isPaused.current = true;
-    if (progressTimerRef.current) {
-      clearInterval(progressTimerRef.current);
-    }
-  };
-
-  const handleMouseLeave = () => {
-    isPaused.current = false;
-    startProgressTimer();
-  };
-
   const handleParseErrorFix = useCallback(() => {
     if (type === "error") {
       const errorData = data as ErrorNotificationData;
@@ -120,28 +91,20 @@ export const Notification: React.FC<NotificationProps> = ({
         }
       }
     }
-  }, [editorInstance, type, data]);
-
-  useEffect(() => {
-    console.log("editorInstance", editorInstance);
-  }, [editorInstance]);
+    removeNotification(id);
+  }, [editorInstance, type, data, id, removeNotification]);
 
   useEffect(() => {
     mountTimerRef.current = requestAnimationFrame(() => {
       setMounted(true);
     });
 
-    startProgressTimer();
-
     return () => {
       if (mountTimerRef.current) {
         cancelAnimationFrame(mountTimerRef.current);
       }
-      if (progressTimerRef.current) {
-        clearInterval(progressTimerRef.current);
-      }
     };
-  }, [duration, id, removeNotification]);
+  }, [id]);
 
   return (
     <div
@@ -153,8 +116,6 @@ export const Notification: React.FC<NotificationProps> = ({
         opacity: mounted ? 1 : 0,
         transition: "transform 0.4s ease-out, opacity 0.4s ease-out",
       }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
     >
       <div className="background-secondary padding-m gap-s align-center">
         <div style={{ color: getToastColor() }}>
@@ -165,17 +126,14 @@ export const Notification: React.FC<NotificationProps> = ({
           />
         </div>
         <span className="text-s">{data.message}</span>
-
-        {/* <span
-          style={{
-            position: "absolute",
-            top: "4px",
-            right: "10px",
-          }}
-          onClick={() => removeNotification(id)}
-        >
-          &times;
-        </span> */}
+        {type !== "error" && (
+          <SVGIcon
+            name="cross"
+            prefix="raincons"
+            className="icon-xs"
+            onClick={() => removeNotification(id)}
+          />
+        )}
         {type === "error" && (
           <SVGIcon
             name="settings"
@@ -184,19 +142,6 @@ export const Notification: React.FC<NotificationProps> = ({
             onClick={handleParseErrorFix}
           />
         )}
-
-        <div
-          className="radius-s"
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            height: "3px",
-            width: `${progress}%`,
-            backgroundColor: getToastColor(),
-            transition: "width 0.1s linear",
-          }}
-        />
       </div>
     </div>
   );
