@@ -1,3 +1,4 @@
+import * as monaco from "monaco-editor";
 import { SVGIcon } from "@src/components";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
@@ -99,23 +100,25 @@ export const Notification: React.FC<NotificationProps> = ({
       const model = editorInstance.getModel();
       if (!model) return;
 
-      const content = model.getValue();
-      const lines = content.split("\n");
+      // Ensure line and column are valid
+      const validLine = Math.max(1, error.startLine) - 1;
+      if (editorInstance) {
+        const model = editorInstance.getModel();
+        if (model) {
+          const lineContent = model.getLineContent(validLine);
+          // Create a range that highlights the specific location
+          const range = new monaco.Range(
+            validLine, // start the valid line that causes the error
+            1, // start from the begeinning of the column
+            validLine, // end the valid line that causes the error
+            lineContent.length + 1, // highlighting the whole correct line columns
+          );
 
-      // Fix the specific error
-      const line = lines[error.startLine - 1];
-      const fixedLine =
-        line.slice(0, error.startCol - 1) +
-        ">" +
-        line.slice(error.startCol - 1);
-      lines[error.startLine - 1] = fixedLine;
-
-      // Ensure the tag is properly closed
-      const closingTag = `</h1>`;
-      lines.splice(error.startLine, 0, closingTag);
-
-      // const correctedContent = lines.join("\n");
-      // model.setValue(correctedContent);
+          // Set selection and reveal the line
+          editorInstance.setSelection(range);
+          editorInstance.revealLineInCenter(validLine);
+        }
+      }
     }
   }, [editorInstance, type, data]);
 
