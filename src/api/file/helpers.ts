@@ -97,7 +97,7 @@ export const getNormalizedPath = (
   const normalizedPath = _path.normalize(path);
   return { isAbsolutePath, normalizedPath };
 };
-export const getUntitledHtmlContent = () => {
+export const getIndexHtmlContent = () => {
   const htmlElementsReferenceData: THtmlElementsReferenceData = {};
   htmlElementsReferences.map((htmlRefElement: THtmlElementsReference) => {
     const pureTag =
@@ -111,8 +111,8 @@ export const getUntitledHtmlContent = () => {
   const hardcodedHtml = `<html>
   <head>
     <title>Untitled</title>
-    <link rel="stylesheet" href="untitled.css">
-    <script src="untitled.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js"></script>
   </head>
   <body>
     
@@ -124,12 +124,12 @@ export const getUntitledHtmlContent = () => {
   const indexHtmlContent = doctype + html;
   return indexHtmlContent;
 };
-export const getUntitledCssContent = () => {
+export const getInitialCssContent = () => {
   const css = "";
   const untitledCssContent = css;
   return untitledCssContent;
 };
-export const getUntitledJsContent = () => {
+export const getInitialJsContent = () => {
   const js = "";
   const untitledJsContent = js;
   return untitledJsContent;
