@@ -15,6 +15,7 @@ import {
   _path,
   confirmAlert,
   FileSystemApis,
+  getIndexHtmlContent,
   getTargetHandler,
   isUnsavedProject,
   TFileNodeData,
@@ -56,7 +57,6 @@ export const useNodeActionsHandler = () => {
     fExpandedItemsObj: expandedItemsObj,
     fSelectedItemsObj,
     clipboardData,
-    htmlReferenceData,
     fileHandlers,
     invalidFileNodes,
   } = useAppState();
@@ -447,13 +447,7 @@ export const useNodeActionsHandler = () => {
           nodeData.kind === "file" &&
           nodeData.content === ""
         ) {
-          const doctype = "<!DOCTYPE html>\n";
-          const html = htmlReferenceData["elements"]["html"].Content
-            ? `<html>\n` +
-              htmlReferenceData["elements"]["html"].Content +
-              `\n</html>`
-            : "";
-          nodeData.content = doctype + html;
+          nodeData.content = getIndexHtmlContent();
         }
       }
 
