@@ -137,10 +137,16 @@ const useEditor = () => {
         const selection = editor.getSelection();
         if (event.source === "mouse") {
           if (selection && selection.isEmpty()) {
-            setCodeSelection();
+            // setCodeSelection();
+            _setCodeSelection(selection);
           }
         } else if (event.source === "keyboard") {
-          setCodeSelection();
+          // setCodeSelection();
+          if (selection && selection.isEmpty()) {
+            _setCodeSelection(selection);
+          } else {
+            _setCodeSelection(null);
+          }
         }
       });
     },
