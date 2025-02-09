@@ -82,6 +82,18 @@ export default function ResizablePanels({
     return () => window.removeEventListener("resize", handleResize);
   }, [showActionsPanel, showCodeView]); // Add dependencies
 
+  useEffect(() => {
+    if (!showCodeView) {
+      codeViewRef.current?.resize(0);
+    }
+  }, [showCodeView]);
+
+  useEffect(() => {
+    if (!showActionsPanel) {
+      actionsPanelRef.current?.resize(0);
+    }
+  }, [showActionsPanel]);
+
   return (
     <>
       {!showActionsPanel && (
@@ -107,41 +119,31 @@ export default function ResizablePanels({
         style={{ height: "100vh" }}
         direction="horizontal"
       >
-        {showActionsPanel && (
-          <>
-            <Panel
-              ref={actionsPanelRef}
-              id="rnbw-actions-panel"
-              minSize={
-                showActionsPanel ? defaultActionsPanelWidthRef.current : 0
-              }
-              order={1}
-            >
-              {sidebarView}
-            </Panel>
-            <PanelResizeHandle style={{ width: 0 }} />
-          </>
-        )}
+        <Panel
+          ref={actionsPanelRef}
+          id="rnbw-actions-panel"
+          minSize={showActionsPanel ? defaultActionsPanelWidthRef.current : 0}
+          order={1}
+        >
+          {sidebarView}
+        </Panel>
+        <PanelResizeHandle style={{ width: 0 }} />
 
         <Panel order={2} id="rnbw-design-view" minSize={10}>
           {designView}
         </Panel>
 
-        {showCodeView && (
-          <>
-            <PanelResizeHandle style={{ width: 3 }} />
-            <Panel
-              ref={codeViewRef}
-              id="rnbw-code-view"
-              minSize={showCodeView ? CODEVIEWWIDTH : 0}
-              order={3}
-              onMouseEnter={() => setIsCodeViewHovered(true)}
-              onMouseLeave={() => setIsCodeViewHovered(false)}
-            >
-              {codeView}
-            </Panel>
-          </>
-        )}
+        <PanelResizeHandle style={{ width: 3 }} />
+        <Panel
+          ref={codeViewRef}
+          id="rnbw-code-view"
+          minSize={showCodeView ? CODEVIEWWIDTH : 0}
+          order={3}
+          onMouseEnter={() => setIsCodeViewHovered(true)}
+          onMouseLeave={() => setIsCodeViewHovered(false)}
+        >
+          {codeView}
+        </Panel>
       </PanelGroup>
     </>
   );
