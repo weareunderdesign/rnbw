@@ -44,7 +44,7 @@ export default function CodeView() {
 
     activePanel,
     showCodeView,
-
+    wordWrap,
     editingNodeUidInCodeView,
     isCodeTyping,
     codeErrors,
@@ -291,6 +291,13 @@ export default function CodeView() {
     // oldDecorations are removed, neDecorations are added
     editorModel.deltaDecorations(oldDecorations, newDecorations);
   }, [nodeUidPositions]);
+
+  const memoizedEditorConfigs = useMemo(() => {
+    return {
+      ...editorConfigs,
+      wordWrap: wordWrap ? "on" : ("off" as "on" | "off"),
+    };
+  }, [wordWrap]);
   return useMemo(() => {
     return (
       <div
@@ -326,7 +333,7 @@ export default function CodeView() {
           language={language}
           value={currentFileContent}
           onChange={(value) => handleOnChange(value, currentFileUid)}
-          options={editorConfigs}
+          options={memoizedEditorConfigs}
         />
       </div>
     );

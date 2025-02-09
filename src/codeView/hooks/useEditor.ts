@@ -1,11 +1,4 @@
-import {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 
 import { editor, KeyCode, KeyMod, Selection } from "monaco-editor";
 import { useDispatch } from "react-redux";
@@ -70,30 +63,27 @@ const useEditor = () => {
     setLanguage(language);
   }, []);
 
-  const editorConfigs: editor.IEditorConstructionOptions = useMemo(
-    () => ({
-      contextmenu: true,
-      wordWrap: wordWrap ? "on" : "off",
-      minimap: { enabled: false },
-      automaticLayout: true,
-      selectionHighlight: false,
-      autoClosingBrackets: "always",
-      autoIndent: "full",
-      autoClosingQuotes: "always",
-      autoClosingOvertype: "always",
-      autoSurround: "languageDefined",
-      codeLens: false,
-      formatOnPaste: true,
-      formatOnType: true,
-      tabCompletion: "on",
-      suggestOnTriggerCharacters: true,
-      acceptSuggestionOnEnter: "on",
-      inlineSuggest: { enabled: true },
-      quickSuggestions: true,
-      snippetSuggestions: "inline",
-    }),
-    [wordWrap],
-  );
+  const editorConfigs: editor.IEditorConstructionOptions = {
+    contextmenu: true,
+    wordWrap: "on",
+    minimap: { enabled: false },
+    automaticLayout: true,
+    selectionHighlight: false,
+    autoClosingBrackets: "always",
+    autoIndent: "full",
+    autoClosingQuotes: "always",
+    autoClosingOvertype: "always",
+    autoSurround: "languageDefined",
+    codeLens: false,
+    formatOnPaste: true,
+    formatOnType: true,
+    tabCompletion: "on",
+    suggestOnTriggerCharacters: true,
+    acceptSuggestionOnEnter: "on",
+    inlineSuggest: { enabled: true },
+    quickSuggestions: true,
+    snippetSuggestions: "inline",
+  };
 
   // code selection
   const [codeSelection, _setCodeSelection] = useState<TCodeSelection | null>(
