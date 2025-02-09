@@ -1,7 +1,7 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 
 import { editor, KeyCode, KeyMod, Selection } from "monaco-editor";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 import { CodeViewSyncDelay_Long, DefaultTabSize } from "@src/rnbwTSX";
 import { MainContext } from "@_redux/main";
@@ -18,9 +18,13 @@ import { useSaveCommand } from "@src/processor/hooks";
 import { setIsCodeTyping } from "@_redux/main/reference";
 import { debounce } from "@src/helper";
 import { setFileTreeNodes } from "@_redux/main/fileTree";
-import { setEditorInstance } from "@src/_redux/main/editorSlice";
+import {
+  addEditorInstanceToMap,
+  setEditorInstance,
+} from "@src/_redux/main/editorSlice";
+import { AppState } from "@src/_redux/_root";
 
-const useEditor = () => {
+const useEditor = (instanceId: string) => {
   const dispatch = useDispatch();
   const {
     theme: _theme,
@@ -33,7 +37,6 @@ const useEditor = () => {
     activePanel,
   } = useAppState();
   const {
-    monacoEditorRef,
     setMonacoEditorRef,
 
     onUndo,
@@ -91,18 +94,22 @@ const useEditor = () => {
   );
   const codeSelectionRef = useRef<TCodeSelection | null>(null);
   const isCodeEditingView = useRef(false);
+  const editorInstancesMap = useSelector(
+    (state: AppState) => state.main.editor.editorInstancesMap,
+  );
+  const editorInstance = editorInstancesMap.get(instanceId);
 
   const setCodeSelection = useCallback(() => {
-    const monacoEditor = monacoEditorRef.current;
-    const _selection = monacoEditor?.getSelection();
+    const _selection = editorInstance?.getSelection();
     _setCodeSelection(_selection ? _selection : null);
-  }, []);
+  }, [editorInstance]);
 
   // handlerEditorDidMount
   const handleEditorDidMount = useCallback(
     (editor: editor.IStandaloneCodeEditor) => {
       setMonacoEditorRef(editor);
       dispatch(setEditorInstance(editor));
+      dispatch(addEditorInstanceToMap([instanceId, editor]));
       // override monaco-editor undo/redo
       editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyZ, () => {
         setUndoRedoToggle((prev) => ({
@@ -166,7 +173,7 @@ const useEditor = () => {
 
       if (!AppstateRef.current.isContentProgrammaticallyChanged) {
         const selectedRange: Selection | null =
-          monacoEditorRef.current?.getSelection() || null;
+          editorInstance?.getSelection() || null;
         dispatch(
           setNeedToSelectCode(
             selectedRange

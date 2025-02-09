@@ -11,7 +11,6 @@ import { notify } from "./services/notificationService";
 export type ResizablePanelsProps = {
   sidebarView: ReactNode;
   designView: ReactNode;
-  codeView: ReactNode;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

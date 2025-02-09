@@ -6,14 +6,14 @@ import {
   ImperativePanelHandle,
 } from "react-resizable-panels";
 import { useAppState } from "@_redux/useAppState";
-import { ResizablePanelsProps } from "../rnbw";
+import { CodeView, ResizablePanelsProps } from "../rnbw";
+import RnbwEditor from "@src/codeView/RnbwEditor";
 
 const CODEVIEWWIDTH = 25;
 
 export default function ResizablePanels({
   sidebarView,
   designView,
-  codeView,
 }: ResizablePanelsProps) {
   const { showActionsPanel, showCodeView } = useAppState();
   const actionsPanelRef = useRef<ImperativePanelHandle>(null);
@@ -111,7 +111,11 @@ export default function ResizablePanels({
         onMouseEnter={() => setIsCodeViewHovered(true)}
         onMouseLeave={() => setIsCodeViewHovered(false)}
       >
-        <div style={codeViewStyle}>{codeView}</div>
+        <div style={codeViewStyle}>
+          <CodeView>
+            <RnbwEditor instanceId="preview" />
+          </CodeView>
+        </div>
       </div>
 
       <PanelGroup
@@ -142,7 +146,9 @@ export default function ResizablePanels({
           onMouseEnter={() => setIsCodeViewHovered(true)}
           onMouseLeave={() => setIsCodeViewHovered(false)}
         >
-          {codeView}
+          <CodeView>
+            <RnbwEditor instanceId="editor" />
+          </CodeView>
         </Panel>
       </PanelGroup>
     </>
