@@ -4,8 +4,9 @@ import { useDispatch } from "react-redux";
 
 import { setActivePanel } from "@_redux/main/processor";
 import { useAppState } from "@_redux/useAppState";
+import RnbwEditor from "./RnbwEditor";
 
-export default function CodeView({ children }: { children?: React.ReactNode }) {
+export default function CodeView() {
   const dispatch = useDispatch();
   const { activePanel, codeErrors } = useAppState();
 
@@ -41,7 +42,7 @@ export default function CodeView({ children }: { children?: React.ReactNode }) {
       className={`border-left background-primary ${codeErrors && "border"}`}
       onClick={onPanelClick}
     >
-      {children}
+      <RnbwEditor />
     </div>
   );
 }

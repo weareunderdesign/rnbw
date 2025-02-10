@@ -9,10 +9,9 @@ import { Workbox } from "workbox-window";
 import persistStore from "redux-persist/es/persistStore";
 import { PersistGate } from "redux-persist/integration/react";
 
-import * as monaco from "monaco-editor";
 import configureStore, { AppState } from "@_redux/_root";
 import { Loader } from "@src/components";
-import { ActionsPanel, DesignView } from "./rnbw";
+import { ActionsPanel, CodeView, DesignView } from "./rnbw";
 import { isUnsavedProject } from "@_api/file";
 import { MainContext } from "@_redux/main";
 import { setCurrentCommand } from "@_redux/main/cmdk";
@@ -26,7 +25,6 @@ import { CommandDialog } from "@src/commandMenu/CommandDialog";
 import { TNodeUid, TValidNodeUid } from "@_api/index";
 import NotificationContainer from "@src/features/notification";
 import { initRnbwServices } from "./services/rnbw.services";
-import { loader } from "@monaco-editor/react";
 
 // Constants
 export const RootNodeUid = "ROOT";
@@ -73,7 +71,6 @@ DargItemImage.src =
 export const RainbowAppName = "rnbw";
 export const LogAllow = true;
 
-loader.config({ monaco });
 function MainPage() {
   const dispatch = useDispatch();
   const { currentFileUid, fileTree, autoSave, cmdkReferenceData } =
@@ -236,6 +233,7 @@ function MainPage() {
           <ResizablePanels
             sidebarView={<ActionsPanel />}
             designView={<DesignView />}
+            codeView={<CodeView />}
           />
         </div>
         <CommandDialog onClear={onClear} onJumpstart={onJumpstart} />

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 
 import * as monaco from "monaco-editor";
+import { loader } from "@monaco-editor/react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { RootNodeUid } from "@src/rnbwTSX";
@@ -23,7 +24,8 @@ import { setEditingNodeUidInCodeView } from "@_redux/main/codeView";
 import { getFileExtension } from "../sidebarView/navigatorPanel/helpers";
 import { AppState } from "@src/_redux/_root";
 
-export default function RnbwEditor({ instanceId }: { instanceId: string }) {
+loader.config({ monaco });
+export default function RnbwEditor() {
   const dispatch = useDispatch();
   const {
     fileTree,
@@ -43,10 +45,9 @@ export default function RnbwEditor({ instanceId }: { instanceId: string }) {
     codeErrors,
   } = useAppState();
 
-  const editorInstancesMap = useSelector(
-    (state: AppState) => state.main.editor.editorInstancesMap,
+  const editorInstance = useSelector(
+    (state: AppState) => state.main.editor.editorInstance,
   );
-  const editorInstance = editorInstancesMap.get(instanceId);
 
   const {
     handleEditorDidMount,
@@ -57,7 +58,7 @@ export default function RnbwEditor({ instanceId }: { instanceId: string }) {
     updateLanguage,
     editorConfigs,
     codeSelection,
-  } = useEditor(instanceId);
+  } = useEditor();
 
   editorInstance?.onKeyDown(handleKeyDown);
 
@@ -113,7 +114,7 @@ export default function RnbwEditor({ instanceId }: { instanceId: string }) {
 
   useEffect(() => {
     if (isCodeTyping || activePanel === "code") return;
-    const editorInstance = editorInstancesMap.get(instanceId);
+
     if (!editorInstance) return;
 
     if (focusedItemRef.current === nFocusedItem) {
@@ -171,7 +172,6 @@ export default function RnbwEditor({ instanceId }: { instanceId: string }) {
   useEffect(() => {
     if (activePanel === "code" || isCodeTyping || nFocusedItem === "") return;
 
-    const editorInstance = editorInstancesMap.get(instanceId);
     if (!editorInstance) return;
     const node = validNodeTree[nFocusedItem];
     if (!node) return;

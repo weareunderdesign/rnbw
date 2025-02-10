@@ -18,13 +18,10 @@ import { useSaveCommand } from "@src/processor/hooks";
 import { setIsCodeTyping } from "@_redux/main/reference";
 import { debounce } from "@src/helper";
 import { setFileTreeNodes } from "@_redux/main/fileTree";
-import {
-  addEditorInstanceToMap,
-  setEditorInstance,
-} from "@src/_redux/main/editorSlice";
+import { setEditorInstance } from "@src/_redux/main/editorSlice";
 import { AppState } from "@src/_redux/_root";
 
-const useEditor = (instanceId: string) => {
+const useEditor = () => {
   const dispatch = useDispatch();
   const {
     theme: _theme,
@@ -94,10 +91,9 @@ const useEditor = (instanceId: string) => {
   );
   const codeSelectionRef = useRef<TCodeSelection | null>(null);
   const isCodeEditingView = useRef(false);
-  const editorInstancesMap = useSelector(
-    (state: AppState) => state.main.editor.editorInstancesMap,
+  const editorInstance = useSelector(
+    (state: AppState) => state.main.editor.editorInstance,
   );
-  const editorInstance = editorInstancesMap.get(instanceId);
 
   const setCodeSelection = useCallback(() => {
     const _selection = editorInstance?.getSelection();
@@ -109,7 +105,6 @@ const useEditor = (instanceId: string) => {
     (editor: editor.IStandaloneCodeEditor) => {
       setMonacoEditorRef(editor);
       dispatch(setEditorInstance(editor));
-      dispatch(addEditorInstanceToMap([instanceId, editor]));
       // override monaco-editor undo/redo
       editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyZ, () => {
         setUndoRedoToggle((prev) => ({
