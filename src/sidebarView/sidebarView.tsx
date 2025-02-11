@@ -17,6 +17,9 @@ export default function ActionsPanel() {
     return fileNode && getFileExtension(fileNode) === "html";
   }, [fileTree, currentFileUid]);
 
+  const isSettingsPanelVisible =
+    selectedNodeUids.length == 1 && isCurrentFileHtml;
+
   return useMemo(() => {
     return (
       <div
@@ -34,14 +37,18 @@ export default function ActionsPanel() {
           style={{
             display: "flex",
             flexDirection: "column",
-            height: showFilePanel ? "20%" : "0%",
+            height: showFilePanel
+              ? isSettingsPanelVisible
+                ? "20%"
+                : "100%"
+              : "0%",
           }}
         >
           <WorkspaceTreeView />
         </div>
         {isCurrentFileHtml && <NodeTreeView />}
 
-        {selectedNodeUids.length == 1 && isCurrentFileHtml && <SettingsPanel />}
+        {isSettingsPanelVisible && <SettingsPanel />}
       </div>
     );
   }, [showFilePanel, selectedNodeUids, isCurrentFileHtml]);
