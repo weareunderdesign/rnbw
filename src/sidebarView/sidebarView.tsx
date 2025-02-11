@@ -28,7 +28,9 @@ export default function ActionsPanel() {
         style={{
           display: "flex",
           flexDirection: "column",
-          justifyContent: "space-between",
+          justifyContent: isSettingsPanelVisible
+            ? "space-between"
+            : "flex-start",
           height: "100%",
         }}
       >
@@ -40,7 +42,7 @@ export default function ActionsPanel() {
             height: showFilePanel
               ? isSettingsPanelVisible
                 ? "20%"
-                : "100%"
+                : "95%"
               : "0%",
           }}
         >
