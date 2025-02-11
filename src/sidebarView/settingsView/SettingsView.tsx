@@ -144,7 +144,7 @@ export const SettingsView = ({
             onMouseLeave={handleMouseLeave}
           >
             {attributes[attribute] ? (
-              <div style={iconButtonStyle}>
+              <div style={iconButtonStyle} key={attributes[attribute]}>
                 <SVGIcon
                   name="checkbox"
                   className="icon-xs"
@@ -153,7 +153,7 @@ export const SettingsView = ({
                 />
               </div>
             ) : hoveredAttr === attribute ? (
-              <div style={iconButtonStyle}>
+              <div style={iconButtonStyle} key={attributes[attribute]}>
                 <SVGIcon
                   name="cross"
                   className="icon-xs"
@@ -162,7 +162,7 @@ export const SettingsView = ({
                 />
               </div>
             ) : (
-              <div style={iconButtonStyle}>
+              <div style={iconButtonStyle} key={attributes[attribute]}>
                 <SVGIcon
                   name="checkbox-blank"
                   className="icon-xs"
