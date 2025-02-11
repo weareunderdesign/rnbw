@@ -40,7 +40,6 @@
     "react-complex-tree": "^2.0.0",
     "react-dom": "^18.2.0",
     "react-redux": "^7.2.9",
-    "react-resizable-panels": "^2.0.3",
     "react-router-dom": "^6.9.0",
     "react-top-loading-bar": "^2.3.1",
     "redux-persist": "^6.0.0",

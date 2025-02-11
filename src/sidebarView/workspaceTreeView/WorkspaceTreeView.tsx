@@ -183,6 +183,8 @@ export default function WorkspaceTreeView() {
         width: "100%",
         height: "100%",
         overflow: "auto",
+        msOverflowStyle: "none",
+        scrollbarWidth: "none",
       }}
       onClick={onPanelClick}
     >
@@ -329,7 +331,6 @@ export default function WorkspaceTreeView() {
                     {props.title}
                   </>
                 }
-                
               />
             );
           },
