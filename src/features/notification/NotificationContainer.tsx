@@ -52,7 +52,7 @@ export const NotificationContainer: React.FC<NotificationContainerProps> = ({
   }, [addNotification]);
 
   return (
-    <div style={getPositionStyle(position)} className="border radius-s">
+    <div style={getPositionStyle(position)}>
       {notifications.map((notif) => (
         <Notification
           key={notif.id}

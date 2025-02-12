@@ -108,7 +108,7 @@ export const Notification: React.FC<NotificationProps> = ({
 
   return (
     <div
-      className="panel border radius-s"
+      className="panel"
       style={{
         minWidth: "250px",
         width: "100%",
@@ -117,7 +117,7 @@ export const Notification: React.FC<NotificationProps> = ({
         transition: "transform 0.4s ease-out, opacity 0.4s ease-out",
       }}
     >
-      <div className="background-secondary padding-m gap-s align-center">
+      <div className="radius-s background-secondary padding-m gap-s align-center">
         <div style={{ color: getToastColor() }}>
           <SVGIcon
             name={getToastIcon()}
