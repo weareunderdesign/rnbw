@@ -1,6 +1,6 @@
 import * as monaco from "monaco-editor";
 import { SVGIcon } from "@src/components";
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useCallback } from "react";
 import {
   ErrorNotificationData,
   InfoNotificationData,
@@ -20,27 +20,9 @@ export const Notification: React.FC<NotificationProps> = ({
   data,
   removeNotification,
 }) => {
-  const [mounted, setMounted] = useState(false);
-  const mountTimerRef = useRef<number>();
   const { editorInstance } = useSelector(
     (state: AppState) => state.main.editor,
   );
-
-  const getToastColor = () => {
-    if (type === "info") {
-      const infoData = data as InfoNotificationData; // Type assertion since we know it's InfoNotificationData when type is "info"
-      if (infoData.category === "success") {
-        return "#4CAF50";
-      } else if (infoData.category === "error") {
-        return "#F44336";
-      } else if (infoData.category === "warning") {
-        return "#FFA726";
-      } else {
-        return "#2196F3";
-      }
-    }
-    return "#2196F3"; // default color
-  };
 
   const getToastIcon = () => {
     if (type === "info") {
@@ -94,55 +76,27 @@ export const Notification: React.FC<NotificationProps> = ({
     removeNotification(id);
   }, [editorInstance, type, data, id, removeNotification]);
 
-  useEffect(() => {
-    mountTimerRef.current = requestAnimationFrame(() => {
-      setMounted(true);
-    });
-
-    return () => {
-      if (mountTimerRef.current) {
-        cancelAnimationFrame(mountTimerRef.current);
-      }
-    };
-  }, [id]);
-
   return (
-    <div
-      className="panel"
-      style={{
-        minWidth: "250px",
-        width: "100%",
-        transform: `translateY(${mounted ? 0 : "100%"})`,
-        opacity: mounted ? 1 : 0,
-        transition: "transform 0.4s ease-out, opacity 0.4s ease-out",
-      }}
-    >
-      <div className="radius-s background-secondary padding-m gap-s align-center">
-        <div style={{ color: getToastColor() }}>
-          <SVGIcon
-            name={getToastIcon()}
-            prefix="raincons"
-            className="icon-xs"
-          />
-        </div>
-        <span className="text-s">{data.message}</span>
-        {type !== "error" && (
-          <SVGIcon
-            name="cross"
-            prefix="raincons"
-            className="icon-xs"
-            onClick={() => removeNotification(id)}
-          />
-        )}
-        {type === "error" && (
-          <SVGIcon
-            name="settings"
-            prefix="raincons"
-            className="icon-xs"
-            onClick={handleParseErrorFix}
-          />
-        )}
-      </div>
+    <div className="radius-s background-primary padding-m gap-s align-center box box-l shadow animate duration-normal ease-in">
+      <SVGIcon name={getToastIcon()} prefix="raincons" className="icon-xs" />
+
+      <span className="text-s">{data.message}</span>
+      {type !== "error" && (
+        <SVGIcon
+          name="cross"
+          prefix="raincons"
+          className="icon-xs"
+          onClick={() => removeNotification(id)}
+        />
+      )}
+      {type === "error" && (
+        <SVGIcon
+          name="right"
+          prefix="raincons"
+          className="icon-xs"
+          onClick={handleParseErrorFix}
+        />
+      )}
     </div>
   );
 };
