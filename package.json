@@ -22,7 +22,7 @@
   "dependencies": {
     "@monaco-editor/react": "^4.4.6",
     "@reduxjs/toolkit": "^2.1.0",
-    "@rnbws/renecss": "^0.0.2",
+    "@rnbws/renecss": "^0.0.6",
     "@rnbws/rfrncs.design": "^0.0.2",
     "@rnbws/svg-icon.js": "^0.0.1",
     "buffer": "^6.0.3",
