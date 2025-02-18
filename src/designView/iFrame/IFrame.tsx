@@ -39,6 +39,11 @@ export const IFrame = () => {
   const [iframeRefState, setIframeRefState] =
     useState<HTMLIFrameElement | null>(null);
   const [document, setDocument] = useState<Document | string | undefined>("");
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [zoomVelocity, setZoomVelocity] = useState(0);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 })
+  const zoomBreakpoints = [0.5, 1, 1.5, 2, 3];
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const isEditingRef = useRef(false);
   const dispatch = useDispatch();
@@ -73,6 +78,66 @@ export const IFrame = () => {
     onMouseOver,
   } = useMouseEvents();
 
+  const smoothZooming = useCallback(() => {
+    let animationFrame: number;
+    const smoothZoom = () => {
+      setZoomLevel((prevZoom) => {
+        const nextZoom = prevZoom + zoomVelocity;
+        const closestBreakpoint = zoomBreakpoints.reduce((prev, curr) => {
+          return Math.abs(curr - nextZoom) < Math.abs(prev - nextZoom) ? curr : prev;
+        }, prevZoom);
+        
+        return Math.min(Math.max(closestBreakpoint, 0.5), 3);
+      });
+
+      setZoomVelocity((prevVelocity) => {
+        const newVelocity = prevVelocity * 0.9;
+        return Math.abs(newVelocity) < 0.001 ? 0 : newVelocity;
+      });
+
+      animationFrame = requestAnimationFrame(smoothZoom);
+    };
+
+    animationFrame = requestAnimationFrame(smoothZoom);
+    return animationFrame;
+  }, [zoomVelocity, zoomBreakpoints]);
+
+  useEffect(() => {
+    if (zoomVelocity !== 0) {
+      const animationFrame = smoothZooming();
+      return () => cancelAnimationFrame(animationFrame);
+    }
+  }, [zoomVelocity, smoothZooming])
+
+  const handleWheel = useCallback(
+    (event: WheelEvent) => {
+      if (event.ctrlKey) {
+        event.preventDefault();
+        const delta = event.deltaY < 0 ? 0.02 : -0.02;
+        setZoomVelocity((prevVelocity) => prevVelocity + delta);
+      } else {
+        const { x, y } = panOffset;
+        const newPanOffset = {
+          x: x - event.deltaX * 0.3,
+          y: y - event.deltaY * 0.3,
+        };
+        setPanOffset(newPanOffset);
+      }
+    },
+    [panOffset]
+  );
+
+  useEffect(() => {
+    if (iframeRefState) {
+      const iframeDocument = iframeRefState.contentWindow?.document;
+      iframeDocument?.addEventListener("wheel", handleWheel, { passive: false });
+
+      return () => {
+        iframeDocument?.removeEventListener("wheel", handleWheel);
+      };
+    }
+  }, [iframeRefState, handleWheel])
+
   const reloadIframe = useSelector((state: AppState) => state.main.designView.reloadIframe);
 
   useEffect(() => { // Debounce (150ms) prevents rapid reloads when the "R" key is pressed repeatedly.
@@ -104,21 +169,60 @@ export const IFrame = () => {
   };
 }, [reloadIframe, iframeRefState, iframeSrc, dispatch]);
 
+  useEffect(() => {
+    iframeOnload();
+  }, [zoomLevel]);
+
+  useEffect(() => {
+    if (zoomVelocity !== 0) {
+      let animationFrame: number;
   
+      const smoothZoom = () => {
+        setZoomLevel((prevZoom) => {
+          const newZoom = prevZoom + zoomVelocity;
+          return Math.min(Math.max(newZoom, 0.5), 3);
+        });
+  
+        setZoomVelocity((prevVelocity) => {
+          const newVelocity = prevVelocity * 0.9;
+          return Math.abs(newVelocity) < 0.001 ? 0 : newVelocity;
+        });
+  
+        animationFrame = requestAnimationFrame(smoothZoom);
+      };
+  
+      animationFrame = requestAnimationFrame(smoothZoom);
+  
+      return () => cancelAnimationFrame(animationFrame);
+    }
+  }, [zoomVelocity]);
+
   const addHtmlNodeEventListeners = useCallback(
     (htmlNode: HTMLElement) => {
-      //NOTE: all the values required for the event listeners are stored in the eventListenersStatesRef because the event listeners are not able to access the latest values of the variables due to the closure of the event listeners
 
-      // enable cmdk
       htmlNode.addEventListener("keydown", (e: KeyboardEvent) => {
-        //handlePanelsToggle should be called before onKeyDown as on onKeyDown the contentEditiable editing is set to false and the panels are toggled. But we don't need to toggle the panels if the user is editing the contentEditable
         handlePanelsToggle(e, eventListenersStatesRef);
         onKeyDown(e, eventListenersStatesRef);
-        // to ensure that the events between the iframe and the document are executed sequentially and smoothly, we use the postMessage function
         window.parent.postMessage(
           { type: "keydown", key: e.key, code: e.code },
-          "*",
+          "*"
         );
+
+        if (e.ctrlKey || e.metaKey) {
+          if (e.key === "=" || e.key === "+") {
+            e.preventDefault();
+            setZoomVelocity((prevVelocity) => prevVelocity + 0.02);
+             // Smooth zoom in
+          } else if (e.key === "-") {
+            e.preventDefault();
+            setZoomVelocity((prevVelocity) => prevVelocity - 0.02); // Smooth zoom out
+          } else if (e.key === "0") {
+            e.preventDefault();
+            setZoomVelocity(1);
+            setZoomLevel(1);
+            setPanOffset({ x: 0, y: 0 })
+          }
+        }
       });
 
       htmlNode.addEventListener("mouseenter", () => {
@@ -154,20 +258,15 @@ export const IFrame = () => {
         "wheel",
         (event: WheelEvent) => {
           if (event.ctrlKey) {
-            event.preventDefault(); // Prevent default zoom behavior
+            event.preventDefault();
+            setZoomVelocity((prevVelocity) => {
+              const delta = event.deltaY < 0 ? 0.02 : -0.02;
+              return prevVelocity + delta;
+            });
           }
-          window.parent.postMessage(
-            {
-              type: "wheel",
-              deltaX: event.deltaX,
-              deltaY: event.deltaY,
-              ctrlKey: event.ctrlKey,
-              metaKey: event.metaKey,
-            },
-            "*",
-          );
+          
         },
-        { passive: false },
+        { passive: true }
       );
       htmlNode.addEventListener("mousedown", (event) => {
         window.parent.postMessage(
@@ -187,6 +286,7 @@ export const IFrame = () => {
       onClick,
       onDblClick,
       onKeyUp,
+      handlePanelsToggle
     ],
   );
 
@@ -201,30 +301,36 @@ export const IFrame = () => {
   }, [iframeRefState]);
   const iframeOnload = useCallback(() => {
     LogAllow && console.log("iframe loaded");
-
+  
     const _document = iframeRefState?.contentWindow?.document;
+    const body = _document?.body;
+    if (body) {
+      body.style.transformOrigin = "top left";
+      body.style.transition = "transform 0.2s ease-out";
+      const adjustedZoom = Math.max(zoomLevel, 0.5);
+      body.style.transform = `scale(${adjustedZoom}) translate(${panOffset.x}px, ${panOffset.y}px)`;
+      body.style.width = `${100 / adjustedZoom}%`;
+      body.style.height = `${100 / adjustedZoom}%`;
+    }
+  
     const htmlNode = _document?.documentElement;
     const headNode = _document?.head;
     setDocument(_document);
     if (htmlNode && headNode) {
       setIframeLoading(true);
-      // add rnbw css
       const style = _document.createElement("style");
       style.textContent = styles;
       style.setAttribute(PreserveRnbwNode, "true");
       headNode.appendChild(style);
-
-      // add image-validator js
+  
       const js = _document.createElement("script");
       js.setAttribute("image-validator", "true");
       js.setAttribute(PreserveRnbwNode, "true");
       js.textContent = jss;
       headNode.appendChild(js);
-
-      // define event handlers
+  
       addHtmlNodeEventListeners(htmlNode);
-
-      // disable contextmenu
+  
       _document.addEventListener("contextmenu", (e: MouseEvent) => {
         e.preventDefault();
       });
@@ -232,19 +338,12 @@ export const IFrame = () => {
         dispatch(setIframeLoading(false));
       }
     }
-
-    // mark selected elements on load
+  
     markSelectedElements(iframeRefState, selectedItemsRef.current, nodeTree);
     iframeRefState?.focus();
     dispatch(setIframeLoading(false));
   }, [
-    iframeRefState,
-    addHtmlNodeEventListeners,
-    selectedItemsRef,
-    nodeTree,
-    dispatch,
-    project,
-  ]);
+    iframeRefState, selectedItemsRef, nodeTree, dispatch, project, zoomLevel, panOffset]);
 
   // init iframe
   useEffect(() => {
@@ -336,9 +435,35 @@ export const IFrame = () => {
     appState,
   ]);
 
+  useEffect(() => {
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener("wheel", handleWheel, { passive: false });
+      
+      return () => {
+        container.removeEventListener("wheel", handleWheel);
+      };
+    }
+  }, [handleWheel]);
+  useEffect(() => {
+    const body = iframeRefState?.contentWindow?.document.body;
+    if (body) {
+      const adjustedZoom = Math.max(zoomLevel, 0.5);
+      body.style.transform = `scale(${adjustedZoom}) translate(${panOffset.x}px, ${panOffset.y}px)`;
+    }
+  }, [zoomLevel, panOffset]);
+
   return useMemo(() => {
     return (
-      <>
+      <div 
+        ref={containerRef}
+        style={{
+          width: "100%",
+          height: "100%",
+          overflow: "hidden",
+          position: "relative"
+        }}
+      >
         {iframeSrc && (
           <iframe
             key={renderableFileUid}
@@ -349,10 +474,205 @@ export const IFrame = () => {
               background: "white",
               width: "100%",
               height: "100%",
+              border: "none",
+              pointerEvents: "auto"
             }}
           />
         )}
-      </>
+      </div>
     );
   }, [iframeSrc]);
 };
+
+
+// export const IFrame = () => {
+//   const [iframeRefState, setIframeRefState] = useState<HTMLIFrameElement | null>(null);
+//   const [document, setDocument] = useState<Document | string | undefined>("");
+//   const [zoomLevel, setZoomLevel] = useState(1);
+//   const [zoomVelocity, setZoomVelocity] = useState(0);
+//   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+//   const [isDragging, setIsDragging] = useState(false);
+//   const [lastMousePosition, setLastMousePosition] = useState({ x: 0, y: 0 });
+//   const zoomBreakpoints = [0.5, 1, 1.5, 2, 3];
+//   const appState: AppStateReturnType = useAppState();
+//   const { nodeTree, project, validNodeTree, iframeSrc, renderableFileUid } =
+//   appState;
+//   const containerRef = useRef<HTMLDivElement>(null);
+
+//   // ... (keep other existing state and refs)
+
+//   // Add message handler for iframe communication
+//   useEffect(() => {
+//     const handleMessage = (event: MessageEvent) => {
+//       if (!iframeRefState?.contentWindow) return;
+      
+//       if (event.source === iframeRefState.contentWindow) {
+//         const { type, data } = event.data;
+        
+//         switch (type) {
+//           case 'wheel':
+//             handleWheel(data);
+//             break;
+//           case 'mousedown':
+//             handleMouseDown(data);
+//             break;
+//           case 'mouseup':
+//             handleMouseUp();
+//             break;
+//           case 'mousemove':
+//             handleMouseMove(data);
+//             break;
+//         }
+//       }
+//     };
+
+//     window.addEventListener('message', handleMessage);
+//     return () => window.removeEventListener('message', handleMessage);
+//   }, [iframeRefState]);
+
+//   const handleWheel = useCallback((event: WheelEvent) => {
+//     if (event.ctrlKey || event.metaKey) {
+//       event.preventDefault();
+//       const delta = event.deltaY < 0 ? 0.02 : -0.02;
+//       setZoomVelocity(prev => prev + delta);
+//     } else {
+//       setPanOffset(prev => ({
+//         x: prev.x - event.deltaX * 0.5,
+//         y: prev.y - event.deltaY * 0.5
+//       }));
+//     }
+//   }, []);
+
+//   const handleMouseDown = useCallback((event: MouseEvent) => {
+//     if (event.button === 0) { // Left mouse button
+//       setIsDragging(true);
+//       setLastMousePosition({
+//         x: event.clientX,
+//         y: event.clientY
+//       });
+//     }
+//   }, []);
+
+//   const handleMouseUp = useCallback(() => {
+//     setIsDragging(false);
+//   }, []);
+
+//   const handleMouseMove = useCallback((event: MouseEvent) => {
+//     if (!isDragging) return;
+    
+//     const deltaX = event.clientX - lastMousePosition.x;
+//     const deltaY = event.clientY - lastMousePosition.y;
+    
+//     setPanOffset(prev => ({
+//       x: prev.x + deltaX,
+//       y: prev.y + deltaY
+//     }));
+    
+//     setLastMousePosition({
+//       x: event.clientX,
+//       y: event.clientY
+//     });
+//   }, [isDragging, lastMousePosition]);
+
+//   // Add script to iframe on load to relay events
+//   const addIframeEventRelay = useCallback((iframeDocument: Document) => {
+//     const script = iframeDocument.createElement('script');
+//     script.textContent = `
+//       document.addEventListener('wheel', (e) => {
+//         window.parent.postMessage({ type: 'wheel', data: {
+//           deltaX: e.deltaX,
+//           deltaY: e.deltaY,
+//           ctrlKey: e.ctrlKey,
+//           metaKey: e.metaKey
+//         }}, '*');
+//         if (e.ctrlKey || e.metaKey) e.preventDefault();
+//       }, { passive: false });
+
+//       document.addEventListener('mousedown', (e) => {
+//         window.parent.postMessage({ type: 'mousedown', data: {
+//           button: e.button,
+//           clientX: e.clientX,
+//           clientY: e.clientY
+//         }}, '*');
+//       });
+
+//       document.addEventListener('mouseup', (e) => {
+//         window.parent.postMessage({ type: 'mouseup' }, '*');
+//       });
+
+//       document.addEventListener('mousemove', (e) => {
+//         window.parent.postMessage({ type: 'mousemove', data: {
+//           clientX: e.clientX,
+//           clientY: e.clientY
+//         }}, '*');
+//       });
+//     `;
+//     iframeDocument.head.appendChild(script);
+//   }, []);
+
+//   // Modified iframeOnload to include event relay setup
+//   const iframeOnload = useCallback(() => {
+//     LogAllow && console.log("iframe loaded");
+  
+//     const _document = iframeRefState?.contentWindow?.document;
+//     if (!_document) return;
+
+//     const body = _document.body;
+//     if (body) {
+//       body.style.transformOrigin = "top left";
+//       body.style.transition = "transform 0.1s ease-out";
+//       const adjustedZoom = Math.max(zoomLevel, 0.5);
+//       body.style.transform = `scale(${adjustedZoom}) translate(${panOffset.x}px, ${panOffset.y}px)`;
+//       body.style.width = `${100 / adjustedZoom}%`;
+//       body.style.height = `${100 / adjustedZoom}%`;
+//     }
+
+//     // Add event relay script
+//     addIframeEventRelay(_document);
+
+//     // ... (rest of your existing iframeOnload logic)
+//   }, [iframeRefState, addIframeEventRelay, zoomLevel, panOffset]);
+
+//   // Update transform when zoom or pan changes
+//   useEffect(() => {
+//     const body = iframeRefState?.contentWindow?.document.body;
+//     if (body) {
+//       const adjustedZoom = Math.max(zoomLevel, 0.5);
+//       body.style.transform = `scale(${adjustedZoom}) translate(${panOffset.x}px, ${panOffset.y}px)`;
+//       body.style.width = `${100 / adjustedZoom}%`;
+//       body.style.height = `${100 / adjustedZoom}%`;
+//     }
+//   }, [zoomLevel, panOffset, iframeRefState]);
+
+//   // ... (keep other existing effects)
+
+//   return useMemo(() => {
+//     return (
+//       <div 
+//         ref={containerRef}
+//         style={{
+//           width: "100%",
+//           height: "100%",
+//           overflow: "hidden",
+//           position: "relative"
+//         }}
+//       >
+//         {iframeSrc && (
+//           <iframe
+//             key={renderableFileUid}
+//             ref={setIframeRefState}
+//             id={"iframeId"}
+//             src={iframeSrc}
+//             style={{
+//               background: "white",
+//               width: "100%",
+//               height: "100%",
+//               border: "none",
+//               pointerEvents: "auto"
+//             }}
+//           />
+//         )}
+//       </div>
+//     );
+//   }, [iframeSrc]);
+// };

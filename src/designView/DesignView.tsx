@@ -76,6 +76,24 @@ const PanAndPinch: FC<{ children: ReactNode }> = ({ children }) => {
     updateContentSize();
   }, [transform.scale]);
 
+  const handleWheel = useCallback((e: WheelEvent) => {
+    if (e.ctrlKey || Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      e.preventDefault();
+      setTransform((prev) => ({
+        ...prev,
+        scale: Math.min(zoomFactor.max, Math.max(zoomFactor.min, prev.scale * (1 - e.deltaY * 0.001))),
+      }));
+    }
+  }, []);
+
+  useEffect(() => {
+    const scrollContainer = scrollableRef.current;
+    if (!scrollContainer) return;
+
+    scrollContainer.addEventListener("wheel", handleWheel, { passive: false });
+    return () => scrollContainer.removeEventListener("wheel", handleWheel);
+  }, [handleWheel]);
+
   const updateContentSize = () => {
     if (scrollableRef.current) {
       const { clientWidth, clientHeight } = scrollableRef.current;
@@ -96,14 +114,114 @@ const PanAndPinch: FC<{ children: ReactNode }> = ({ children }) => {
       };
     });
   };
+  
 
-  const onWheel = (e: WheelEvent) => {
-    if (e.ctrlKey || e.metaKey) {
-      const newScale = transform.scale - e.deltaY / 100;
-      if (newScale > zoomFactor.min && newScale < zoomFactor.max)
-        updateScale(newScale);
+  const handleZoom = useCallback((deltaY: number, clientX: number, clientY: number, shouldPreventDefault?: boolean) => {
+    if (shouldPreventDefault) {
+      try {
+        const event = window.event;
+        if (event && 'preventDefault' in event) {
+          event.preventDefault();
+        }
+      } catch (e) {}
     }
-  };
+
+    const rect = scrollableRef.current?.getBoundingClientRect();
+    if (rect) {
+      const mouseX = clientX - rect.left;
+      const mouseY = clientY - rect.top;
+
+      setTransform((prevTransform) => {
+        const zoomSpeed = 0.001;
+        const newScale = Math.min(
+          zoomFactor.max,
+          Math.max(
+            zoomFactor.min,
+            prevTransform.scale * (1 - deltaY * zoomSpeed)
+          )
+        );
+
+        const minCanvasWidth = 500;
+        const minCanvasHeight = 500;
+
+        const newWidth = Math.max(minCanvasWidth, rect.width * newScale);
+        const newHeight = Math.max(minCanvasHeight, rect.height * newScale);
+
+        const scaleFactor = newScale / prevTransform.scale;
+        const newX = mouseX - (mouseX - prevTransform.x) * scaleFactor;
+        const newY = mouseY - (mouseY - prevTransform.y) * scaleFactor;
+
+        return {
+          scale: newScale,
+          x: newX,
+          y: newY,
+        };
+      });
+      if (transform.scale !== 1) {
+        setCanvas(true);
+      }
+      updateContentSize();
+    }
+  }, [transform.scale, updateContentSize]);
+
+  const getViewportCenter = useCallback(() => {
+    if (scrollableRef.current) {
+      return {
+        x: scrollableRef.current.clientWidth / 2,
+        y: scrollableRef.current.clientHeight / 2,
+      };
+    }
+    return { x: 0, y: 0 };
+  }, []);
+
+  const smoothZoom = useCallback((delta: number, mouseX: number, mouseY: number) => {
+    setTransform((prevTransform) => {
+      const zoomSpeed = 0.001;
+      const newScale = Math.min(
+        zoomFactor.max,
+        Math.max(
+          zoomFactor.min,
+          prevTransform.scale * (1 - delta * zoomSpeed)
+        )
+      );
+  
+      const boundedScale = Math.max(zoomFactor.min, Math.min(newScale, zoomFactor.max));
+  
+      const viewport = getViewportCenter();
+      const zoomPointX = mouseX - viewport.x;
+      const zoomPointY = mouseY - viewport.y;
+  
+      const scaleFactor = boundedScale / prevTransform.scale;
+      const newX = zoomPointX - (zoomPointX - prevTransform.x) * scaleFactor;
+      const newY = zoomPointY - (zoomPointY - prevTransform.y) * scaleFactor;
+  
+      return {
+        scale: boundedScale,
+        x: newX,
+        y: newY,
+      };
+    });
+  }, [getViewportCenter]);
+  
+
+const onWheel = useCallback((e: WheelEvent) => {
+  if (e.ctrlKey || e.metaKey) {
+    e.preventDefault();
+    const rect = scrollableRef.current?.getBoundingClientRect();
+    if (rect) {
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      handleZoom(e.deltaY, mouseX, mouseY);
+    }
+  } else {
+    setTransform((prevTransform) => ({
+      ...prevTransform,
+      x: prevTransform.x - e.deltaX,
+      y: prevTransform.y - e.deltaY,
+    }));
+      updateScale(transform.scale + e.deltaY * zoomIndex);
+  }
+}, [handleZoom]);
 
   const handleOnMouseMove = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
@@ -119,41 +237,43 @@ const PanAndPinch: FC<{ children: ReactNode }> = ({ children }) => {
     }
   };
 
-  const handleOnKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    const { code, key, isTrusted } = e;
-    if (contentEditableUidRef.current) return;
-    if (code === "Space") {
-      if (isTrusted) e.preventDefault();
-      setSpacePressed(true);
-    }
+  const handleOnKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+  const { code, key, isTrusted, ctrlKey, metaKey } = e;
 
-    switch (key) {
-      case "-":
-      case "+":
-        {
-          const scaleChange = key === "-" ? -zoomIndex : zoomIndex;
-          const newScale = transform.scale + scaleChange;
-          if (newScale > zoomFactor.min && newScale < zoomFactor.max) {
-            updateScale(newScale);
-          }
-        }
-        break;
+  if (code === "Space") {
+    if (isTrusted) e.preventDefault();
+    setSpacePressed(true);
+  }
 
-      case "0":
+  switch (key) {
+    case "-":
+      smoothZoom(1000, getViewportCenter().x, getViewportCenter().y);
+      break;
+    case "+":
+      smoothZoom(-1000, getViewportCenter().x, getViewportCenter().y);
+      break;
+    case "0":
+      if (ctrlKey || metaKey) {
+        e.preventDefault();
+        console.log("Ctrl + 0 pressed: Resetting zoom and pan");
+        setTransform({ x: 0, y: 0, scale: 1 });
+      }
+      break;
       case "Escape":
         setTransform({ x: 0, y: 0, scale: 1 });
         setCanvas(false);
         break;
-
-      default: {
+    default:
+      {
         const numberKey = Number(key);
         if (numberKey >= 1 && numberKey <= 9) {
           updateScale(Number(`0.${key}`));
         }
         break;
       }
-    }
-  };
+      break;
+  }
+}, [getViewportCenter, smoothZoom]);
 
   const handleOnKeyUp = () => {
     setSpacePressed(false);
@@ -171,35 +291,55 @@ const PanAndPinch: FC<{ children: ReactNode }> = ({ children }) => {
     }
   };
 
-  const handleMessageFromIFrame = (e: MessageEvent) => {
-    if (e.data.ctrlKey) {
-      e.preventDefault();
-      e.stopPropagation();
+  const handleMessageFromIFrame = useCallback((e: MessageEvent) => {
+    if (e.data.type === "wheel" && (e.data.ctrlKey || e.data.metaKey)) {
+      handleZoom(e.data.deltaY, e.data.clientX, e.data.clientY, false);
+    } else if (e.data.type === "keydown") {
+      const { key } = e.data;
+      const viewport = scrollableRef.current?.getBoundingClientRect();
+      if (viewport) {
+        const centerX = viewport.left + viewport.width / 2;
+        const centerY = viewport.top + viewport.height / 2;
+        
+        switch (key) {
+          case "-":
+            handleZoom(1000, centerX, centerY, false);
+            setTransform({ x: 0, y: viewport.top, scale: 1 });
+            break;
+          case "+":
+            handleZoom(-1000, centerX, centerY, false);
+            break;
+          case "0":
+          case "Escape":
+            setTransform({ x: 0, y: 0, scale: 1 });
+            setCanvas(false);
+            break;
+          default: {
+            const numberKey = Number(key);
+            if (numberKey >= 1 && numberKey <= 9) {
+              const targetScale = Number(`0.${key}`);
+              setTransform(prev => ({
+                scale: targetScale,
+                x: centerX - (centerX - prev.x) * (targetScale / prev.scale),
+                y: centerY - (centerY - prev.y) * (targetScale / prev.scale),
+              }));
+            }
+            break;
+          }
+        }
+      }
+    } else if (e.data.type === "mouseup") {
+      handleOnKeyMouseUp(e.data);
+    } else if (e.data.type === "mousedown") {
+      handleOnKeyMouseDown(e.data);
+    } else if (e.data.type === "mousemove") {
+      handleOnMouseMove(e.data);
     }
-    switch (e.data.type) {
-      case "wheel":
-        onWheel(e.data);
-        break;
-      case "keydown":
-        handleOnKeyDown(e.data);
-        break;
-      case "mouseup":
-        handleOnKeyMouseUp(e.data);
-        break;
-      case "mousedown":
-        handleOnKeyMouseDown(e.data);
-        break;
-      case "mousemove":
-        handleOnMouseMove(e.data);
-        break;
-      default:
-        break;
-    }
-  };
+  }, [handleZoom, handleOnKeyMouseUp, handleOnKeyMouseDown, handleOnMouseMove]);
 
   const handleOnWheel = (e: WheelEvent) => {
     if (e.ctrlKey) {
-      e.preventDefault(); // Prevent default zoom behavior
+      e.preventDefault();
     }
     onWheel(e);
   };
@@ -225,49 +365,50 @@ const PanAndPinch: FC<{ children: ReactNode }> = ({ children }) => {
 
   return (
     <div
+    style={{
+      overflow:
+        contentSize.width > window.innerWidth ||
+        contentSize.height > window.innerHeight
+          ? "auto"
+          : "hidden",
+      width: "100%",
+      height: "100%",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+    }}
+    ref={scrollableRef}
+    onMouseMove={handleOnMouseMove}
+    onKeyDown={handleOnKeyDown}
+    onKeyUp={handleOnKeyUp}
+    tabIndex={0}
+  >
+    <div
+      className="background-secondary"
       style={{
-        overflow:
-          contentSize.width > window.innerWidth ||
-          contentSize.height > window.innerHeight
-            ? "auto"
-            : "hidden",
-        width: "100%",
-        height: "100%",
+        width: Math.max(contentSize.width, window.innerWidth),
+        height: Math.max(contentSize.height, window.innerHeight),
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
       }}
-      ref={scrollableRef}
-      onMouseMove={handleOnMouseMove}
-      onKeyDown={handleOnKeyDown}
-      onKeyUp={handleOnKeyUp}
-      tabIndex={0}
     >
       <div
-        className="background-secondary"
         style={{
-          width: Math.max(contentSize.width, window.innerWidth),
-          height: Math.max(contentSize.height, window.innerHeight),
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
+          width: canvas ? "50%" : "100%",
+          height: "100vh",
+          transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
+          transformOrigin: "center center",
+          transition: "transform 0.2s ease-out",
+          overflow: "visible",
         }}
       >
-        <div
-          style={{
-            width: canvas ? "50vw" : "100%",
-            height: "100vh",
-            transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
-            transformOrigin: "center center",
-            overflow: "visible",
-          }}
-        >
-          <Resize canvas={canvas} scale={transform.scale}>
-            {children}
-          </Resize>
-        </div>
+        <Resize canvas={canvas} scale={transform.scale}>
+          {children}
+        </Resize>
       </div>
     </div>
+  </div>
   );
 };
 
@@ -292,37 +433,34 @@ const Resize: FC<ResizeProps> = ({ children, scale, canvas }) => {
       const {
         offsetWidth: width,
         offsetHeight: height,
-        // offsetLeft: x,
-        // offsetTop: y,
       } = panel;
 
+      const minWidth = 500;
+      const minHeight = 500;
+
       const resizeTop = () => {
-        const newHeight = height - scaleMovement(movementY);
-        if (newHeight < 100) return;
+        const newHeight = Math.max(minHeight, height - scaleMovement(movementY));
         panel.style.height = `${newHeight}px`;
         panel.style.top = `${(initialSize.height - newHeight) / 2}px`;
         setCurrentSize((prev) => ({ ...prev, height: newHeight }));
       };
 
       const resizeRight = () => {
-        const newWidth = width + scaleMovement(movementX);
-        if (newWidth < 100) return;
+        const newWidth = Math.max(minWidth, width + scaleMovement(movementX));
         panel.style.width = `${newWidth}px`;
         panel.style.left = `${(initialSize.width - newWidth) / 2}px`;
         setCurrentSize((prev) => ({ ...prev, width: newWidth }));
       };
 
       const resizeBottom = () => {
-        const newHeight = height + scaleMovement(movementY);
-        if (newHeight < 100) return;
+        const newHeight = Math.max(minHeight, height + scaleMovement(movementY));
         panel.style.height = `${newHeight}px`;
         panel.style.top = `${(initialSize.height - newHeight) / 2}px`;
         setCurrentSize((prev) => ({ ...prev, height: newHeight }));
-      };
+      }
 
       const resizeLeft = () => {
-        const newWidth = width - scaleMovement(movementX);
-        if (newWidth < 100) return;
+        const newWidth = Math.max(minWidth, width - scaleMovement(movementX));
         panel.style.width = `${newWidth}px`;
         panel.style.left = `${(initialSize.width - newWidth) / 2}px`;
         setCurrentSize((prev) => ({ ...prev, width: newWidth }));
