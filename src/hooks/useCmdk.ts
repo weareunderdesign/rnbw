@@ -146,7 +146,7 @@ export const useCmdk = ({ cmdkReferenceData, importProject }: IUseCmdk) => {
     dispatch(setShowActionsPanel(!showActionsPanel));
   }, [showActionsPanel]);
   const onOpenGuidePage = useCallback(() => {
-    window.open("https://guide.rnbw.dev", "_blank", "noreferrer");
+    window.open("https://rnbw.design/guide", "_blank", "noreferrer");
   }, []);
   const onOpenSupportPage = useCallback(() => {
     window.open(
