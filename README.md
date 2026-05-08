@@ -85,7 +85,7 @@ rainbow is heavily dependent on incredible technologies. if you’re considering
   - validation - the validation mechanism is heavily based on the segmentation of nodes.
 - [rene.css](https://github.com/rnbwdev/rene.css) a utility-first css framework for styling clean, simple, and lightweight interfaces, fully customizable with variables, themes, and icons. easy syntax to quickly “get it” and create any design in any framework.
 - [svg-icon.js](https://github.com/rnbwdev/svg-icon.js) - an svg icon component for the web. optimized for smooth design and development experience. it fits into any web framework and can be used anyhow.
-- [raincons](https://github.com/rnbwdev/raincons) - 12x12 icon set.
+- [glyphs](https://github.com/bicyclesystems/glyphs) - 12x12 icon set.
 
 ## community
 

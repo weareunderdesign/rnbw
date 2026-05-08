@@ -1,8 +1,7 @@
 import React, { memo } from "react";
 
 export type SvgIconProps = {
-  name?: "page" | "folder" | string;
-  prefix?: string;
+  name?: string;
   className?: string;
   style?: React.CSSProperties;
   src?: string;
@@ -10,12 +9,10 @@ export type SvgIconProps = {
 };
 
 export const SVGIcon = memo((props: SvgIconProps) => {
-  const { name, className, prefix = "raincons", style, src, onClick } = props;
+  const { name, className, style, src, onClick } = props;
 
   return (
-    <svg-icon class={className} style={style} src={src} onClick={onClick}>
-      {name ? `${prefix}/${name}` : ""}
-    </svg-icon>
+    <svg-icon class={className} name={name} style={style} src={src} onClick={onClick} />
   );
 });
 SVGIcon.displayName = "SVGIcon";

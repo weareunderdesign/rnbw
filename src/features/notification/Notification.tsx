@@ -78,13 +78,12 @@ export const Notification: React.FC<NotificationProps> = ({
 
   return (
     <div className="radius-s background-primary padding-m gap-s align-center justify-center flex-1 flex width-full shadow animate duration-normal ease-in">
-      <SVGIcon name={getToastIcon()} prefix="raincons" className="icon-xs" />
+      <SVGIcon name={getToastIcon()} className="icon-xs" />
 
       <span className="text-s">{data.message}</span>
       {type !== "error" && (
         <SVGIcon
           name="cross"
-          prefix="raincons"
           className="icon-xs"
           onClick={() => removeNotification(id)}
         />
@@ -92,7 +91,6 @@ export const Notification: React.FC<NotificationProps> = ({
       {type === "error" && (
         <SVGIcon
           name="right"
-          prefix="raincons"
           className="icon-xs"
           onClick={handleParseErrorFix}
         />
