@@ -1,7 +1,7 @@
 const navTemplate = `
                 <div class="row flex width-full gap-m align-center justify-center">
                         <a id="nav-item-1"
-                            href="https://rnbw.dev"
+                            href="https://rnbw.design"
                             class="align-center justify-center nav justify-start padding-l gap-m radius-s background-primary border">
                             <svg class="icon-s" viewBox="0 0 12 12" fill="currentColor"><use href="#oval"/></svg>
                             <div>

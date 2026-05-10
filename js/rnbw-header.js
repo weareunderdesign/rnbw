@@ -32,7 +32,7 @@ const headerTemplate = `
         <div class="text-s">high-quality,</br> design and</br>development tools</div>
     </div>
     <div class="gap-m justify-end flex-1">
-        <a href="https://rnbw.dev" id="nav-item" class="align-center justify-center column text-m gap-xs">
+        <a href="https://rnbw.design" id="nav-item" class="align-center justify-center column text-m gap-xs">
             <div class="row gap-xs">
                 <span class="default-icon">${LOGO_DEFAULT}</span>
                 <span class="hover-icon hidden">${LOGO_HOVER}</span>
