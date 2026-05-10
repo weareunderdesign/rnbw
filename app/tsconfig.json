@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "outDir": "./dist",
+    "noImplicitAny": true,
+    "module": "commonjs",
+    "target": "es6",
+    "esModuleInterop": true,
+    //
+    "strict": true,
+    "sourceMap": true,
+    "typeRoots": ["node_modules/@types"],
+    //
+    "jsx": "react",
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "Node",
+    "baseUrl": ".",
+    "paths": {
+      "@src/*": ["src/*"],
+      "@_api/*": ["src/api/*"],
+      "@_redux/*": ["src/_redux/*"],
+      "@_ref/*": ["src/_ref/*"],
+      "@_app/*": ["src/app/*"],
+      "@_components/*": ["src/components/*"],
+      "@_constants/*": ["src/constants/*"],
+      "@_hooks/*": ["src/hooks/*"],
+      "@_pages/*": ["src/pages/*"],
+      "@_services/*": ["src/services/*"],
+      "@_types/*": ["src/types/*"],
+      "@_actions/*": ["src/actions/*"]
+    }
+  },
+  "include": ["src/**/*", "custom-elements.d.ts"],
+  "exclude": ["dist", "node_modules"]
+}

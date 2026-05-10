@@ -1,95 +1,36 @@
-# rnbw 0.1
+# welcome to rnbw.dev
+ rnbw.dev, including the user guide, our api and developer documentation, serves as our comprehensive design manifesto. rnbw is a powerful design and development tool, and rnbw.dev is aimed to help anyone conceptualizing, realizing, and using.
+ this repository contains a detailed guide that covers everything from starting your first project in rnbw to doing complex stuff.
 
-welcome to rnbw!
+ ## get started
 
-## get started
+to dive into rnbw, visit [rnbw.dev](https://rnbw.dev) and explore its potential. for detailed information, go to [rnbw.dev](https://rnbw.dev).
 
-to learn rnbw, go to https://rnbw.design/guide.
+## our approach
+at rnbw, we are dedicated to a ux-driven approach. this means our priority is the user experience, ensuring we tackle the right challenges. the code? it's just the physical representation of our well-considered designs.
 
-## run it locally:
+## design-first strategy
+we adopt a design-first strategy.
 
-1. npm install
-2. npm start
-3. visit `http://localhost:8080/`
+1. **documenting the current design:** we begin by detailing the product as it currently stands.
+2. **envisioning the future design:** next, we update our design documents to mirror how we envision the product evolving.
+3. **developing to match:** we implement changes to the product only after it meets our updated design specifications.
 
-## architecture
+## how to contribute
 
-rainbow has three core parts:
+we value the community's contribution to improving and enriching rnbw. your input is crucial in sculpting the future of rnbw! feel free to create an issue or submit a pull request if you have any suggestions, corrections, or enhancements.
+you can choose an issue that sparks your interest to jump directly into our design challenges. we look forward to your contributions!
 
-1. action panel (left panel - react-complex-tree)
-   1. files tree view
-   2. nodes tree view
-      1. settings panel
-2. stage (live preview and design editor)
-3. code (code editor - monaco-editor)
+here’s how you can get involved:
 
-each time you change any part, the other parts change as well. this means there’s a unique id for each node so that we can detect which node has been changed and update its states globally.
+### proposing design
+- engage with the team to discuss potential changes or enhancements.
+- upon consensus, trigger the update by saying, “add it to the design!”
 
-each object with events is called a “node” - so when the nodes change, the global state also changes.
+### updating rnbw.dev
+- integrate the agreed changes into the design, ensuring detailed descriptions and visuals.
+- your updates not only enhance the design but also signal that development can proceed.
 
-## codebase
+## support
 
-`/config` - we will use it for some project config settings. such as “toast-duration”.
-
-`/_node` - all of the node apis including parse,serialize file would be there.
-
-`/_redux` - redux code goes into this folder. each reducer has its sub-folder.
-
-`/app` - the code related to the root app component goes here.
-
-`/components` - all of the react fc goes here.
-
-`/pages` - the in-project pages we are gonna build. they will work inside the browser- router
-
-`/services` - functions or constants useful for coding.
-
-`/types` - the global interfaces or types we use in the app.
-
-for each react-redux-reducer, we must keep the following structure.
-
-```
-/template
-	index.ts - import/export everything in index.ts. use path alias to import.
-	selectors.ts
-	slice.ts
-	types.ts - an interface or type for each code part or fc.
-```
-
-## dependencies
-
-rainbow is heavily dependent on incredible technologies. if you’re considering contributing code, study the below packages and libraries and get ready to fully customize them .
-
-- [react](https://github.com/facebook/react) - 💁‍♂️
-- [@monaco-editor/react](https://github.com/suren-atoyan/monaco-react) - the code editor.
-- [react-complex-tree](https://github.com/lukasbach/react-complex-tree) - an non-opinionated accessible tree component.
-- [⌘k](https://github.com/pacocoursey/cmdk) is a command menu react component.
-- [redux](https://github.com/reduxjs/redux)
-      - @reduxjs/toolkit
-      - redux-injectors
-      - [redux-undo](https://github.com/omnidan/redux-undo)
-- [parse5](https://github.com/inikulin/parse5)
-- [file-system-access](https://www.npmjs.com/package/file-system-access) - file system apis
-- [react-resizable-panels](https://github.com/bvaughn/react-resizable-panels) - for creating resizable panels
-- [react-top-loading-bar](https://github.com/klendi/react-top-loading-bar) - for showing a loading bar at the top
-- [workbox-window](https://developer.chrome.com/docs/workbox/) - service worker library for giving pwa features
-- [idb-keyval](https://www.npmjs.com/package/idb-keyval) - promise-based keyval store implemented with indexeddb
-- [prettier](https://www.npmjs.com/package/prettier) - for prettifying the code
-- [jszip](https://stuk.github.io/jszip/) - for zipping the project files before downloading
-- [morphdom](https://github.com/patrick-steele-idem/morphdom) - dom-diffing lib to update stage without reloading
-- [buffer](https://www.npmjs.com/package/buffer) - it’s a polyfill. the buffer module from node.js, for the browser.
-
-### dependencies by rainbow
-
-- [references](https://github.com/rnbwdev/references) - an open collection of web references.
-  - inventory - rainbow is using it as the source of information for rainbow node types.
-  - validation - the validation mechanism is heavily based on the segmentation of nodes.
-- [rene.css](https://github.com/rnbwdev/rene.css) a utility-first css framework for styling clean, simple, and lightweight interfaces, fully customizable with variables, themes, and icons. easy syntax to quickly “get it” and create any design in any framework.
-- [glyphs](https://github.com/bicyclecomputer/glyphs) - 12x12 icon set.
-
-## community
-
-join the [community](https://github.com/orgs/rnbwdev/discussions) to chat with other community members, ask questions ideas, and share your work.
-
-## license
-
-[GNU General Public License, version 3](https://www.gnu.org/licenses/gpl-3.0.en.html)
+need help or want to be a part of our community? [join us](https://github.com/orgs/weareunder/discussions).

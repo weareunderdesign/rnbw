@@ -1,0 +1,6 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="120" height="120" fill="#F5F5F5"/>
+<g opacity="0.25">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M50 50H70V70H50V50ZM72 72V70V50V48H70H50H48V50V70V72H50H70H72ZM60 57C60 58.6567 58.6567 60 57 60C55.3433 60 54 58.6567 54 57C54 55.3433 55.3433 54 57 54C58.6567 54 60 55.3433 60 57ZM68 68H56L68 56V68Z" fill="#111111"/>
+</g>
+</svg>

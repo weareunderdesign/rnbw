@@ -1,0 +1,70 @@
+body,
+#CodeView *:hover,
+#iframeId *:hover {
+  cursor: default !important;
+}
+
+#root #NodeTreeView::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+#root #NodeTreeView ul,
+#root #FileTreeView ul,
+#root #SettingsView ul {
+  padding: 0px;
+  list-style-type: none;
+}
+
+[cmdk-overlay] {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+[cmdk-dialog] {
+  position: fixed;
+  top: 50vh;
+  left: 50vw;
+  transform: translate(-50%, -50%);
+  max-height: 100vh;
+}
+
+@media (max-width: 768px) {
+  [cmdk-dialog] {
+    display: none;
+  }
+}
+
+[cmdk-root] {
+  width: 50vw;
+  max-width: 800px;
+}
+
+[cmdk-input] {
+  outline: none;
+  border: none;
+  width: 100%;
+  margin-bottom: 0px;
+}
+
+[cmdk-list] {
+  min-width: 195px;
+  width: auto;
+  scroll-padding-block-start: 8px;
+  scroll-padding-block-end: 8px;
+}
+
+[cmdk-item] {
+  cursor: pointer;
+}
+
+[cmdk-item][aria-selected="true"] {
+  background-color: var(--color-secondary-background);
+  color: var(--color-secondary-foreground);
+  border-radius: 4px;
+}
+
+.uid-decoration {
+  color: black !important;
+  background-color: lightgreen;
+}

@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="x-ua-compatible" content="ie=edge" />
+  <title>quick start guide - get started easily | rnbw</title>
+  <meta name="description"
+    content="explore our quick start guide to easily get started with rnbw. learn key features, navigation, and tips to kickstart your projects." />
+  <meta name="keywords" content="quick start, guide, getting started, rnbw, tutorial, navigation, features, projects" />
+  <meta property="og:title" content="quick start guide - get started easily | rnbw" />
+  <meta property="og:description"
+    content="explore our quick start guide to easily get started with rnbw. learn key features, navigation, and tips to kickstart your projects." />
+    <meta property="og:image" content="https://rnbw.design/images/rnbw.dev.png">
+    <meta property="twitter:image" content="https://rnbw.design/images/rnbw.dev.png">
+  <meta property="og:type" content="website" />
+
+  <link rel="icon" href="images/favicon-light.png" />
+  <link rel="stylesheet" href="https://renecss.org/rene.css" />
+  <!-- <script defer src="./js/main.js"></script> -->
+<script defer data-domain="rnbw.design" src="https://plausible.io/js/script.js"></script>
+<script defer src="https://bicyclecomputer.github.io/glyphs/glyphs.js"></script>
+</head>
+
+<body>
+  <rnbw-header></rnbw-header>
+  <div class="row" style="flex-wrap: nowrap">
+    <div>
+      <aside class="column justify-between sticky padding-l">
+      </aside>
+    </div>
+    <div class="view column align-center justify-center">
+      <div class="column padding-xl width-full gap-xl border-bottom" style="max-width:1140px">
+        <div class="row">
+          <div class="flex-1">
+            <div class="flex-1 gap-m justify-start align-start" id="develop">
+              <h2 id="weareunder">develop</h2>
+              <span class="text-m padding-s border radius-s">beta</span>
+            </div>
+          </div>
+          <div class="flex-1"></div>
+          <div class="flex-1">
+            <p>rnbw.dev</p>
+          </div>
+          <div class="flex-1 padding-s">
+            <div style="
+                  display: flex;
+                  flex-direction: row;
+                  align-items: flex-end;
+                ">
+              <p style="margin: 0">v0.1</p>
+              <span class="text-s" style="padding-bottom: 0.225rem; padding-left: 0.5rem">edit</span>
+            </div>
+            <span class="text-m">2024 march</span>
+          </div>
+        </div>
+        <div class="background-secondary flex-1 align-center justify-center padding-xl radius-s border" style="min-height: 600px"></div>
+        <div class="row gap-xl">
+          <div class="flex-1">
+            <p>
+              in rnbw, your design is your code, and your code is your design.
+              you can develop not just inside rnbw but also for rnbw to
+              enhance it with the desired feature.&nbsp;
+            </p>
+          </div>
+          <div class="flex-1">
+            <p>
+              you can create custom actions and extensions that improve or
+              extend rnbw's ux. all of this becomes possible with the help of
+              the rnbw apis.
+            </p>
+          </div>
+        </div>
+      </div>
+
+
+
+      <div class="column padding-xl width-full gap-xl" style="max-width:1140px">
+        <div>
+          <div id="develop-api">
+            <h3>9.1 api</h3>
+          </div>
+          <div class="row gap-xl">
+            <div class="flex-1">
+              <p>
+                rnbw apis supports various operation on rnbw which are related
+                to project files, node tree, and code view. you can get the
+                details like current open file, or open an existing file.
+              </p>
+            </div>
+            <div class="flex-1">
+              <p>
+                find the current selected node, and much more. you can use the
+                different apis together to expand the limits of what you can do
+                with rnbw.
+              </p>
+            </div>
+          </div>
+          <div class="row gap-xl">
+            <div class="flex-1">
+              <p>
+                As rnbw is built on top of react and typescript, therefore APIs
+                in rnbw are exposed via react custom hook.&nbsp;As rnbw APIs are
+                react custom hooks, so they can be consumed only in a react
+                component or another react custom hook.
+              </p>
+            </div>
+            <div class="flex-1">
+              <p>To get access to rnbw APIs all you need to do is:&nbsp;</p>
+              <code class="padding-l radius-s background-secondary border">const rnbw = useRnbw()</code>
+            </div>
+          </div>
+          <h4 id="files">9.1.1 files</h4>
+          <div class="row gap-xl">
+            <div class="flex-1">
+              <p>Every files in rnbw consists of a tree of folders and files. at the root of every files is a folder
+                node, and from that node
+                stems sub folder or files.
+              </p>
+              <p>Files have a number of properties associated with them. some of these are global properties, that exist
+                on every file, whereas
+                other file properties will be specific to the type of file or
+                folder.
+              </p>
+            </div>
+            <div class="flex-1">
+              <code class="padding-l radius-s background-secondary border"> example</code>
+            </div>
+          </div>
+        </div>
+        <div class="column gap-xl">
+          <div>
+            <h5>create</h5>
+          </div>
+          <design class="row gap-xl">
+            <div class="flex-1">
+              <p> Creates a new file with the provided name and extension.&nbsp;</p>
+              <div>
+                <p>params: An object containing the following properties</p>
+                <ul>
+                  <li>entityName: (string) - The name of the file. Defaults to "untitled" if no value is passed.</li>
+                  <li>extension: (string) - Extension for the file.&nbsp;Defaults to "html" if no value is passed.</li>
+
+                </ul>
+              </div>
+
+            </div>
+            <div class="flex-1 column gap-l">
+              <div class="flex-1">
+                <code
+                  class="padding-l radius-s background-secondary border">                  rnbw.files.createFile(params)</code>
+              </div>
+              <h6>Example</h6>
+              <div class="flex-1">
+                <code
+                  class="padding-l radius-s background-secondary border">rnbw.files.createFile("about", "html")</code>
+              </div>
+            </div>
+          </design>
+          <design class="row gap-xl">
+            <div class="flex-1">
+              <p>
+                Creates a new folder with the provided name. If no name is
+                provided the default folder name is `untitled`.
+              </p>
+              <div>
+                <p>params: An object containing the following properties</p>
+                <ul>
+                  <li>
+                    entityName: (string) - The name of the file. Defaults to "untitled" if no
+                    value is passed.
+                  </li>
+
+                </ul>
+              </div>
+
+            </div>
+            <div class="flex-1 column gap-l">
+              <code
+                class="padding-l radius-s background-secondary border">                  rnbw.files.createFolder(params)</code>
+              <h6>Example</h6>
+              <code class="padding-l radius-s background-secondary border">rnbw.files.createFolder("styles")</code>
+            </div>
+          </design>
+        </div>
+
+        <div class="column gap-xl">
+          <div>
+            <h5>read</h5>
+          </div>
+          <div class="row gap-xl">
+            <div class="flex-1">
+              <p>
+                Returns the tree of the files in the folder that is opened
+                currently in "rnbw".
+              </p>
+            </div>
+            <design class="flex-1 column gap-l">
+              <code class="padding-l radius-s background-secondary border">rnbw.files.getRootTree()</code>
+              <div class="column gap-m">
+                <h6>Example</h6>
+                <code class="padding-l radius-s background-secondary border">rnbw.files.getRootTree()</code>
+                <div class="column gap-l">
+                  <h6>Output</h6>
+                  <code class="padding-l radius-s background-secondary border">
+                      <pre>
+{   
+ ROOT:{  
+   uid:'ROOT',                                
+   parentUid: null,     
+   name: 'rainbw',
+   isFile: false,
+   children: [
+    'ROOT/index.html',
+    'ROOT/index.js',
+    'ROOT/styles.css',
+   ],
+   url: '/rnbw',
+  },
+ 'ROOT/index.html': {
+   ...
+  },
+ 'ROOT/index.js': {
+  ...
+  },
+  'ROOT/styles.css': {
+  ...
+  }
+}
+                          </pre
+                      >
+                    </code>
+                </div>
+              </div>
+            </design>
+          </div>
+
+          <div class="row gap-xl">
+            <div class="flex-1">
+              <p>Returns the details of the Folder whose uid is passed</p>
+              <div>
+                <p>params: An object containing the following properties</p>
+                <ul>
+                  <li> uid: (string) - The uid of the file.</li>
+                </ul>
+              </div>
+            </div>
+            <design class="flex-1 column gap-l">
+              <code class="padding-l radius-s background-secondary border">rnbw.files.getFolderTree(params)</code><span>
+                <div class="column gap-m">
+                  <h6>Example</h6>
+                  <code
+                    class="padding-l radius-s background-secondary border">rnbw.files.getFolderTree("ROOT/styles")</code>
+                  <h6>Output</h6>
+                  <code class="padding-l radius-s background-secondary border">
+                      <pre>
+'ROOT/styles': {
+    uid: 'ROOT/styles',
+    parentUid: 'ROOT',
+    name: 'styles',
+    isFile: false,
+    children: [
+        'ROOT/styles/footer.css',
+        'ROOT/styles/navbar.css'
+    ],
+    url: '/rainbow/styles',
+}
+                        </pre
+                      >
+                    </code>
+                </div>
+              </span>
+            </design>
+          </div>
+
+          <design class="row gap-xl">
+            <div class="flex-1">
+              <p>Returns the current file details</p>
+            </div>
+            <div class="flex-1 column gap-l">
+              <code class="padding-l radius-s background-secondary border">
+              rnbw.files.getCurrentFile()
+              </code>
+              <div class="column gap-m">
+                <h6>Example</h6>
+                <code class="padding-l radius-s background-secondary border">rnbw.files.getCurrentFile() //Assuming index.html is the
+                    current file</code>
+                <h6>Output</h6>
+                <code class="padding-l radius-s background-secondary border">
+                    <pre>
+'ROOT/index.html': {
+    uid: 'ROOT/index.html',
+    parentUid: 'ROOT',
+    name: 'index',
+    isFile: true,
+    url: '/rainbow/index.html',
+    extension:'html',
+    content: 'content of the file currently',
+},
+                        </pre
+                    >
+                  </code>
+              </div>
+            </div>
+          </design>
+
+          <span> </span>
+          <design class="row gap-xl">
+            <div class="flex-1">
+              <p> Sets the `rnbw's clipboard state` with the uids passed along with the type as "copy". </p>
+              <div>
+                <p>params: An object containing the following properties</p>
+                <ul>
+                  <li>uids: (string [ ]) - The uids of the files. Defaults to selected files uids if no uids are passed.
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="flex-1 column gap-l">
+              <code class="padding-l radius-s background-secondary border">rnbw.files.copyFiles(params)</code>
+              <div class="column gap-m">
+                <h6>Example</h6>
+                <span><code
+                    class="padding-l radius-s background-secondary border">rnbw.files.copyFiles({<br />uids: ['ROOT/index.html',<br />&nbsp; &nbsp;
+                                                                                                          &nbsp; &nbsp; 'ROOT/about.html']<br />&nbsp;})</code></span>
+
+                <h6>Output</h6>
+                <code class="padding-l radius-s background-secondary border">
+                    <div>clipboardData: {</div>
+                    <div>&nbsp; &nbsp; &nbsp; &nbsp; panel: 'file',</div>
+                    <div>&nbsp; &nbsp; &nbsp; &nbsp; type: 'copy',</div>
+                    <div>&nbsp; &nbsp; &nbsp; &nbsp; uids: [</div>
+                    <div>
+                      &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 'ROOT/index.html',
+                    </div>
+                    <div>
+                      &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 'ROOT/about.html'
+                    </div>
+                    <div>&nbsp; &nbsp; &nbsp; &nbsp; ]</div>
+                    <div>&nbsp; &nbsp; &nbsp; },</div>
+                  </code>
+              </div>
+            </div>
+          </design>
+          <div class="row gap-xl">
+            <div class="flex-1">
+              <p> Sets the `rnbw's clipboard state` with the uids passed along with the type as&nbsp;"cut".
+              </p>
+              <div>
+                <p>params: An object containing the following properties</p>
+                <ul>
+                  <li>
+                    uids: (string [ ]) - The uids of the files. Defaults to selected files
+                    uids if no uids are passed.
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <design class="flex-1 column gap-l">
+              <code class="padding-l radius-s background-secondary border">rnbw.files.cutFiles(params)</code>
+              <div class="column gap-m">
+                <h6>Example</h6>
+                <span><code
+                    class="padding-l radius-s background-secondary border">rnbw.files.cutFiles({<br>uids: ['ROOT/index.html',<br>&nbsp; &nbsp; &nbsp; &nbsp; 'ROOT/about.html']<br>&nbsp;})</code></span>
+
+                <h6>Output</h6>
+                <code class="padding-l radius-s background-secondary border">
+                    <div>clipboardData: {</div>
+                    <div>&nbsp; &nbsp; &nbsp; &nbsp; panel: 'file',</div>
+                    <div>&nbsp; &nbsp; &nbsp; &nbsp; type: 'cut',</div>
+                    <div>&nbsp; &nbsp; &nbsp; &nbsp; uids: [</div>
+                    <div>
+                      &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 'ROOT/index.html',
+                    </div>
+                    <div>
+                      &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 'ROOT/about.html'
+                    </div>
+                    <div>&nbsp; &nbsp; &nbsp; &nbsp; ]</div>
+                    <div>&nbsp; &nbsp; &nbsp; },</div>
+                  </code>
+              </div>
+            </design>
+          </div>
+
+          <design class="row gap-xl">
+            <div class="flex-1">
+              <p>
+                Returns the uids of the selected files and directories in the
+                file tree
+              </p>
+            </div>
+            <div class="flex-1 column gap-l">
+              <code class="padding-l radius-s background-secondary border">rnbw.files.getSelectedFiles()</code>
+              <div class="column gap-m">
+                <h6>Example</h6>
+                <span>
+                  <code class="padding-l radius-s background-secondary border">rnbw.files.getSelectedFiles()</code>
+                </span>
+
+                <h6>Output</h6>
+                <code class="padding-l radius-s background-secondary border">
+                ['ROOT/styles/footer.css',<br>&nbsp;'ROOT/styles/navbar.css']
+                  </code>
+              </div>
+            </div>
+          </design>
+        </div>
+        <div class="column gap-xl">
+          <div>
+            <h5>update</h5>
+          </div>
+          <div class="row gap-xl">
+            <div class="flex-1 column gap-s">
+              <p> Sets the file whose uid is passed as the&nbsp; current active file.</p>
+              <div>
+                <p>params: An object containing the following properties</p>
+                <ul>
+                  <li> uid: (string) - The uid of the file.</li>
+                </ul>
+              </div>
+              <div>
+
+                <ul>
+
+
+
+
+                </ul>
+              </div>
+            </div>
+            <design class="flex-1 column gap-l">
+              <code class="padding-l radius-s background-secondary border">rnbw.files.setCurrentFile(params)</code>
+              <div class="column gap-m">
+                <h6>Example</h6>
+                <code
+                  class="padding-l radius-s background-secondary border">rnbw.files.setCurrentFile({<br>uid:'ROOT/about.html'<br>})                  </code>
+              </div>
+            </design>
+          </div>
+          <design class="row gap-xl">
+            <div class="flex-1 column gap-s">
+              <p>
+                Updates the content of the current file with the content that
+                is passed.
+              </p>
+              <div>
+                <p>params: An object containing the following properties</p>
+                <ul>
+                  <li>content: (string) - The content is going to be string that we want to update our file with.</li>
+                </ul>
+              </div>
+              <div>
+
+
+              </div>
+            </div>
+            <div class="flex-1 column gap-l">
+              <code
+                class="padding-l radius-s background-secondary border">rnbw.files.setCurrentFileContent(params)</code>
+              <div class="column gap-m">
+                <h6>Example</h6>
+                <code
+                  class="padding-l radius-s background-secondary border">rnbw.files.setCurrentFileContent({<br>content:'<br>&lt;html&gt; <br>&lt;body&gt; <br>&lt;p&gt; hello rnbw &lt;/p&gt;<br>&lt;/body&gt;<br>&lt;/html&gt;')                  </code>
+              </div>
+            </div>
+          </design>
+          <design class="row gap-xl">
+            <div class="flex-1 column gap-s">
+              <p>Renames the file or folder with the name provided.</p>
+              <div>
+                <p>params: An object containing the following properties</p>
+                <ul>
+                  <li>uid: (string) - The uid of the file.</li>
+                  <li>newName: (string) - The new name of the file.</li>
+                  <li> extension: (string) - Extension for the file.</li>
+                </ul>
+              </div>
+
+            </div>
+            <div class="flex-1 column gap-l">
+              <code class="padding-l radius-s background-secondary border">rnbw.files.rename(params)</code>
+              <div class="column gap-m">
+                <h6>Example</h6>
+                <code
+                  class="padding-l radius-s background-secondary border">rnbw.files.rename({<br>uid:'ROOT/about.html', <br>newName:'about-us',<br>extension:'html'<br>})                  </code>
+              </div>
+            </div>
+          </design>
+          <design class="row gap-xl">
+            <div class="flex-1">
+              <p> Undo the state of the files one step at a time.</p>
+            </div>
+            <div class="flex-1 column gap-l">
+              <code class="padding-l radius-s background-secondary border">rnbw.files.undo()</code><span>
+                <div class="column gap-m">
+                  <h6>Example</h6>
+                  <code class="padding-l radius-s background-secondary border">rnbw.files.undo() </code>
+                </div>
+              </span>
+            </div>
+          </design>
+          <design class="row gap-xl">
+            <div class="flex-1">
+              <p> Redo the state of the files one step at a time.</p>
+            </div>
+            <div class="flex-1 column gap-l">
+              <code class="padding-l radius-s background-secondary border">rnbw.files.redo()</code><span>
+                <div class="column gap-m">
+                  <h6>Example</h6>
+                  <span><code class="padding-l radius-s background-secondary border">rnbw.files.redo()
+                        </code></span>
+                </div>
+              </span>
+            </div>
+          </design>
+          <design class="row gap-xl">
+            <div class="flex-1">
+              <p> Pastes the copied or cut files and folders to the location of the
+                "destination Uid"
+              </p>
+              <div>
+                <p>params: An object containing the following properties</p>
+                <ul>
+                  <li>uids: (string) - The uids of the file to be pasted</li>
+                  <li>targetUid: (string) - The uid of the file or folder where it will be pasted. Defaults to selected
+                    file uid.</li>
+                  <li>deleteSource: (boolean) - if it's true then the original files are deleted after copying. Defaults
+                    to false.</li>
+                </ul>
+              </div>
+            </div>
+            <div class="flex-1 column gap-l">
+              <code class="padding-l radius-s background-secondary border">rnbw.files.paste(params)</code>
+              <div class="column gap-m">
+                <h6>Example</h6>
+                <code
+                  class="padding-l radius-s background-secondary border">rnbw.files.paste({<br>uids:["ROOT/styles","ROOT/js/index.js"],<br>targetUid: "ROOT/src",<br>deleteSource: false<br>})                  </code>
+              </div>
+            </div>
+          </design>
+
+          <design class="row gap-xl">
+            <div class="flex-1">
+              <p> Moves the file(s) or folder(s) that are currently selected to
+                the passed destination id.</p>
+              <div>
+                <p>params: An object containing the following properties</p>
+                <ul>
+                  <li>uids: (string) - The uids of the file to be moved</li>
+                  <li>
+                    targetUid: (string) - The uid of the file or folder where it will be
+                    pasted. Defaults to selected file uid.
+                  </li>
+
+                </ul>
+              </div>
+
+
+            </div>
+            <div class="flex-1 column gap-l">
+              <code class="padding-l radius-s background-secondary border">rnbw.files.move(params)</code><span>
+                <div class="column gap-m">
+                  <h6>Example</h6>
+                  <code class="padding-l radius-s background-secondary border">rnbw.files.move({<br />uids:["ROOT/styles","ROOT/js/index.js"],<br />targetUid:
+                             "ROOT/src",<br />})
+                           </code>
+                </div>
+              </span>
+            </div>
+          </design>
+        </div>
+        <div class="column gap-xl">
+          <div>
+            <h5 id="delete">delete</h5>
+          </div>
+          <div class="row gap-xl">
+            <div class="flex-1">
+              <p>deletes the selected file(s) or folder(s).</p>
+              <div>
+                <p>params: An object containing the following properties</p>
+                <ul>
+                  <li>uids: (string) - The uids of the file to be removed</li>
+
+                </ul>
+              </div>
+            </div>
+            <design class="flex-1 column gap-l">
+              <code class="padding-l radius-s background-secondary border">rnbw.files.remove(params)</code>
+              <div class="column gap-m">
+                <h6>Example</h6>
+                <span><code
+                    class="padding-l radius-s background-secondary border">rnbw.files.remove({<br>uids:[<br>'ROOT/about.html',<br>'ROOT/contact.html']<br>})</code></span>
+              </div>
+            </design>
+          </div>
+
+        </div>
+        <div>
+          <h4 id="elements">9.1.1 elements</h4>
+          <div class="row gap-xl">
+            <div class="flex-1">
+              <p> Whenever an HTML file is opened in rnbw, a node tree is
+                created.</p>
+            </div>
+            <div class="flex-1">
+              <code class="padding-l radius-s background-secondary border">
+                  <pre>example</pre>
+                </code>
+            </div>
+          </div>
+        </div>
+        <div class="column gap-xl">
+          <div>
+            <h5>create</h5>
+          </div>
+          <div class="row gap-xl">
+            <div class="flex-1">
+              <p>
+                Adds a specified HTML element or comment tag to the code view
+                based on the provided parameters.
+              </p>
+              <div>
+                <p>params: An object containing the following properties</p>
+                <ul>
+                  <li>
+                    tagName: (string) The name of the HTML tag to be added.
+                  </li>
+                  <li> skipUpdate: (boolean - optional) - If true, the code view will not be updated after adding the
+                    element. Default is false.
+                  </li>
+                </ul>
+                <p>
+                  Returns the updated code, if successful.
+                </p>
+              </div>
+            </div>
+            <div class="flex-1 column gap-l">
+              <code class="padding-l radius-s background-secondary border">
+                  <pre>rnbw.elements.add(params)</pre>
+                </code>
+              <design class="column gap-m">
+                <h6>Example</h6>
+                <code class="padding-l radius-s background-secondary border">
+                    <pre>
+const result: string = rnbw.elements.add
+({  tagName: 'div'});</pre
+                    >
+                  </code>
+              </design>
+            </div>
+          </div>
+          <div class="row gap-xl">
+            <div class="flex-1">
+              <p>
+                Adds a copy of the selected html element as the child of the
+                selected element's parent.&nbsp;
+              </p>
+              <div>
+                <p>
+                  params: An object containing the following properties
+                  (optional):
+                </p>
+                <ul>
+                  <li> skipUpdate: (boolean - optional) - If true, the code view will not be updated after duplicating
+                    the element. Default is
+                    false.
+                  </li>
+                </ul>
+              </div>
+              <p>Returns the updated code, if successful.</p>
+            </div>
+            <div class="flex-1 column gap-l">
+              <code class="padding-l radius-s background-secondary border">
+                  <pre>rnbw.elements.duplicate(params)</pre>
+                </code>
+              <design class="column gap-m">
+                <h6>Example</h6>
+                <code class="padding-l radius-s background-secondary border">
+                    <pre>const result: string = rnbw.elements.duplicate()</pre>
+                  </code>
+              </design>
+            </div>
+          </div>
+        </div>
+        <div class="column gap-xl">
+          <div>
+            <h5 id="read2">read</h5>
+          </div>
+          <div class="row gap-xl">
+            <div class="flex-1">
+              <p>returns the details of the element whose uid is passed</p>
+              <div>
+                <p>params:&nbsp;</p>
+                <ul>
+                  <li> uid: (string) - uid of the element whose detail is required.</li>
+                </ul>
+              </div>
+            </div>
+            <design class="flex-1 column gap-l">
+              <code class="padding-l radius-s background-secondary border">rnbw.elements.getElement(elementUid)</code>
+              <div class="column gap-m">
+                <h6>Example</h6>
+                <span><code
+                    class="padding-l radius-s background-secondary border">rnbw.elements.getElement("761")</code></span>
+
+                <h6>Output</h6>
+                <code class="padding-l radius-s background-secondary border">
+                    <pre>
+{
+  uid: "62",
+  parentUid: "40",
+  name: "div",
+  children: ["114", "115", "116", "117", "118"],
+  tagName: "div",
+  textContent: "",
+  attribs: {
+    class: "page gap-xl",
+    id: "code",
+  },
+  sourceCodeLocation: {
+    startLine: 714,
+    startCol: 9,
+    startOffset: 36632,
+    endLine: 728,
+    endCol: 15,
+    endOffset: 37258,
+    startTag:{...},
+    endTag: {...}
+  },
+}
+                        </pre
+                    >
+                  </code>
+              </div>
+            </design>
+          </div>
+          <design class="row gap-xl">
+            <div class="flex-1">
+              <p>Returns the "uids" of the elements selected on the stage.</p>
+            </div>
+            <div class="flex-1 column gap-l">
+              <code class="padding-l radius-s background-secondary border">rnbw.elements.getSelectedElements()</code>
+              <div class="column gap-m">
+                <h6>Example</h6>
+                <span><code
+                    class="padding-l radius-s background-secondary border">rnbw.elements.getSelectedElements()</code></span>
+
+                <h6>Output</h6>
+                <code class="padding-l radius-s background-secondary border">
+                    ["761","854"]
+                  </code>
+              </div>
+            </div>
+          </design>
+          <design class="row gap-xl">
+            <div class="flex-1">
+              <p> Returns the settings object of the elements whose uid is passed.</p>
+              <div>
+                <p>params:&nbsp;</p>
+                <ul>
+                  <li>uid: (string) - uid of the element whose detail is required. Defaults to selected element.</li>
+                </ul>
+              </div>
+            </div>
+            <div class="flex-1 column gap-l">
+              <code class="padding-l radius-s background-secondary border">rnbw.elements.getElementSettings()</code>
+              <div class="column gap-m">
+                <h6>Example</h6>
+                <code class="padding-l radius-s background-secondary border">rnbw.elements.getElementSettings()</code>
+
+                <h6>Output</h6>
+                <code
+                  class="padding-l radius-s background-secondary border">                    {<br>class:"flex-1 column" <br >style: "border: 1px solid white"<br>}</code>
+              </div>
+            </div>
+          </design>
+
+          <design class="row gap-xl">
+            <div class="flex-1">
+              <p>
+                Copies the code of items in the code view to the clipboard.
+                Optionally, it can update the clipboard with the copied code.
+              </p>
+              <p>
+                If multiple elements are selected then the elements are sorted
+                by their "uid (unique Id)". And then the codes are joined
+                together and copied to the system clipboard.
+              </p>
+              <div>
+                <p>
+                  params: An object containing the following properties
+                  (optional):
+                </p>
+                <ul>
+                  <li>
+                    <div> uids: (string[ ] - optional) - An array of unique identifiers (UIDs) of the
+                      selected items. If not provided, defaults to the currently selected items.
+                    </div>
+                  </li>
+                  <li> skipUpdate: (boolean - optional) - If true, the clipboard will be updated with the code of the
+                    copied element.</li>
+
+                </ul>
+                <p>Returns the copied code, if successful.</p>
+              </div>
+            </div>
+            <div class="flex-1 column gap-l">
+              <code class="padding-l radius-s background-secondary border">rnbw.elements.copy(params)</code>
+              <div class="column gap-m">
+                <h6>Example</h6>
+                <code class="padding-l radius-s background-secondary border">rnbw.elements.copy()</code>
+              </div>
+            </div>
+          </design>
+        </div>
+        <div class="column gap-xl">
+          <div>
+            <h5 id="update2">update</h5>
+          </div>
+          <design class="row gap-xl">
+            <div class="flex-1">
+              <p>
+                Selects the elements whose uids are passed replacing the
+                existing selected elements.
+              </p>
+              <p>If the uids passed doesn't exist then it does nothing.</p>
+            </div>
+            <div class="flex-1 column gap-l">
+              <code
+                class="padding-l radius-s background-secondary border">rnbw.elements.setSelectedElements(elementsUid)</code>
+              <div class="column gap-m">
+                <h6>Example</h6>
+                <code
+                  class="padding-l radius-s background-secondary border">rnbw.elements.setSelectedElements(["215","456"])</code>
+              </div>
+            </div>
+          </design>
+          <design class="row gap-xl">
+            <div class="flex-1">
+              <p> Cuts the selected element.</p>
+              <p>Returns the cut code, and the updated code after cut, if successful.</p>
+            </div>
+            <div class="flex-1 column gap-l">
+              <code class="padding-l radius-s background-secondary border">rnbw.elements.cut()</code>
+              <div class="column gap-m">
+                <h6>Example</h6>
+                <code class="padding-l radius-s background-secondary border">rnbw.elements.cut()</code>
+              </div>
+            </div>
+          </design>
+          <div class="row gap-xl">
+            <div class="flex-1">
+              <p>
+                Pasted the cut or copied elements at a specified position with
+                respect to the selected element.
+              </p>
+              <div>
+                <p>
+                  params: An object containing the following properties
+                  (optional):
+                </p>
+                <ul>
+                  <li> content: (string - optional) - The content to be pasted. If
+                    not provided, the content will be retrieved from the
+                    clipboard.
+                  </li>
+                  <li> skipUpdate: (boolean - optional) - If true, the code view
+                    will not be updated after pasting the content. Default is
+                    false.
+                  </li>
+                  <li> pastePosition: (string - optional) - Specifies where to paste
+                    the content in relation to the target node. Possible
+                    values are "before", "after", or "inside". Default is
+                    "after".
+                  </li>
+                  <li> targetUid: (string - optional) - The unique identifier (UID)
+                    of the target node. If not provided, the focused node will
+                    be the target node.
+                  </li>
+                  <li> pasteContent: (string - optional). The content to be pasted.
+                    If provided, it takes precedence over the clipboard
+                    content.
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <design class="flex-1 column gap-m">
+              <code
+                class="padding-l radius-s background-secondary border">rnbw.elements.paste(params: Ipaste = {})</code>
+              <div class="column gap-m">
+                <h6>Example</h6>
+                <code
+                  class="padding-l radius-s background-secondary border">const result: Promise&lt;string&gt; = paste();</code>
+              </div>
+            </design>
+          </div>
+
+          <div class="row gap-xl">
+            <div class="flex-1">
+              <p> groups the selected elements by wrapping them in a &lt;div&gt;
+                container.
+              </p>
+              <div>
+                <p>params: an object containing the following properties (optional):</p>
+                <ul>
+                  <li>
+                    <div> uids: (string[ ] - optional) - An array of unique identifiers (UIDs) of the
+                      selected items. If not provided, defaults to the currently selected
+                      items.
+                    </div>
+                  </li>
+                  <li> skipUpdate: (boolean - optional) - If true, the code view will not be updated
+                    after adding the element. Default is false.
+                  </li>
+                </ul>
+                <p>Returns the updated code, if successful.</p>
+              </div>
+            </div>
+            <design class="flex-1 column gap-m">
+              <code class="padding-l radius-s background-secondary border">rnbw.elements.group(params)</code>
+              <div class="column gap-m">
+                <h6>Example</h6>
+                <code class="padding-l radius-s background-secondary border">rnbw.elements.group()</code>
+              </div>
+            </design>
+          </div>
+          <div class="row gap-xl">
+            <div class="flex-1">
+              <p>Ungroups the selected elements.</p>
+              <div>
+                <p>params: An object containing the following properties (optional):</p>
+                <ul>
+                  <li>
+                    <div> uids: (string[ ] - optional) - An array of unique identifiers (UIDs) of the
+                      selected items. If not provided, defaults to the currently selected
+                      items.
+                    </div>
+                  </li>
+                  <li> skipUpdate: (boolean - optional) - If true, the code view will not be updated
+                    after adding the element. Default is false.
+                  </li>
+                </ul>
+              </div>
+              <p>Returns the updated code, if successful.</p>
+
+            </div>
+            <design class="flex-1 column gap-m">
+              <code class="padding-l radius-s background-secondary border">rnbw.elements.ungroup(params)</code>
+              <div class="column gap-m">
+                <h6>Example</h6>
+                <code class="padding-l radius-s background-secondary border">rnbw.elements.ungroup()</code>
+              </div>
+            </design>
+          </div>
+          <div class="row gap-xl">
+            <div class="flex-1">
+              <p>
+                Moves the selected elements inside the target element based on
+                the position.
+              </p>
+              <div>
+                <p>params: An object containing the following properties:</p>
+                <ul>
+                  <li>
+                    targetUid: (string) The unique identifier (UID) of the
+                    target node where the selected nodes will be moved.
+                  </li>
+                  <li> skipUpdate: (boolean -optional) - If true, the code view
+                    will not be updated after pasting the content. Default is
+                    false.
+                  </li>
+                  <li>
+                    isBetween: (boolean) Specifies whether the target position
+                    is between nodes or inside a parent node.
+                  </li>
+                  <li>
+                    position: (number) The position index where the selected
+                    nodes will be moved.
+                  </li>
+                  <li>
+                    selectedUids: (string[ ]) An array of unique identifiers
+                    (UIDs) of the selected nodes to be moved.
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <design class="flex-1 column gap-m">
+              <code class="padding-l radius-s background-secondary border">rnbw.elements.move(params)</code>
+              <div class="column gap-m">
+                <h6>Example</h6>
+                <code class="padding-l radius-s background-secondary border">rnbw.elements.<span
+                      style="
+                        background-color: var(--color-secondary-background);
+                      "
+                      >move({</span
+                    >
+                    <div>&nbsp; targetUid: '202',</div>
+                    <div>&nbsp; isBetween: true,</div>
+                    <div>&nbsp; position: 2,</div>
+                    <div>&nbsp; selectedUids: ['356', '357', '358x']</div>
+                    <div>});</div>
+                  </code>
+              </div>
+            </design>
+          </div>
+
+          <div class="row gap-xl">
+            <div class="flex-1">
+              <p>
+                Updates the setting of the selected element. Attributes for
+                the elements are passed in the form of key value pairs.
+              </p>
+              <div>
+                <p>params: An object containing the following properties:</p>
+                <ul>
+                  <li>
+                    settings: An object representing the settings to be
+                    updated. Each key-value pair corresponds to an attribute
+                    name and its new value.
+                  </li>
+                  <li> skipUpdate: (boolean -optional). If true, the code view
+                    will not be updated after pasting the content. Default is
+                    false.
+                  </li>
+                </ul>
+              </div>
+              <p>Returns:</p>
+              <ul>
+                <li>isSuccess: true/false</li>
+                <li>settings (updated settings object)</li>
+                <li>code (updated code)</li>
+              </ul>
+            </div>
+            <div class="flex-1 column gap-l">
+              <code
+                class="padding-l radius-s background-secondary border">rnbw.elements.updateSettings(params)</code><code
+                class="padding-l radius-s background-secondary border">rnbw.elements.updateSetting({<br />settings:{<br />class:"flex-1 column",<br />id:"hero-section"<br />}})</code>
+            </div>
+          </div>
+          <div class="row gap-xl">
+            <div class="flex-1">
+              <p>Undo the state of the elements by 1 step.</p>
+            </div>
+            <design class="flex-1 column gap-m">
+              <code class="padding-l radius-s background-secondary border">rnbw.elements.undo()</code>
+              <div class="column gap-m">
+                <h6>Example</h6>
+                <code class="padding-l radius-s background-secondary border">rnbw.elements.undo()
+                  </code>
+              </div>
+            </design>
+          </div>
+          <div class="row gap-xl">
+            <div class="flex-1">
+              <p>Redo the state of the elements by 1 step.</p>
+            </div>
+            <design class="flex-1 column gap-m">
+              <code class="padding-l radius-s background-secondary border">rnbw.elements.redo()</code>
+              <div class="column gap-m">
+                <h6>Example</h6>
+                <code class="padding-l radius-s background-secondary border">rnbw.elements.redo()
+                  </code>
+              </div>
+            </design>
+          </div>
+        </div>
+        <div class="column gap-xl">
+          <div>
+            <h5 id="delete2">delete</h5>
+          </div>
+          <div class="row gap-xl">
+            <div class="flex-1">
+              <p><span style="color: rgb(255, 255, 255);">Deletes the elements whose uids are passed.</span>
+              <div>
+                <p>params: An object containing the following properties:</p>
+                <ul>
+                  <li> uids: (string [ ] - optional)- uids of the elements to be removed. Defaults to selected element.
+                  </li>
+                  <li> skipUpdate: (boolean - optional) - If true, the code view will not be updated after removing the
+                    selected elements. Default is false.
+                  </li>
+                </ul>
+              </div>
+              <p>Returns the updated code, if successful.</p>
+              </p>
+            </div>
+            <design class="flex-1 column gap-l">
+              <code class="padding-l radius-s background-secondary border">rnbw.elements.remove(params)</code>
+              <div class="column gap-m">
+                <h6>Example</h6>
+                <code
+                  class="padding-l radius-s background-secondary border">rnbw.elements.remove({<br>uids:["261","351","401"],<br>skipUpdate:false<br>})</code>
+              </div>
+            </design>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="column padding-xl width-full gap-xl" style="max-width:1140px">
+        <div id="develop-actions">
+          <h3>9.2 actions</h3>
+        </div>
+        <div class="row gap-xl">
+          <div class="flex-1">
+            <p>
+              in rnbw, your design is your code, and your code is your design.
+              you can develop not just inside rnbw but also for rnbw to
+              enhance it with the desired feature.&nbsp;
+            </p>
+          </div>
+          <div class="flex-1">
+            <p>
+              you can create custom actions and extensions that improve or
+              extend rnbw's ux. all of this becomes possible with the help of
+              the rnbw apis.
+            </p>
+          </div>
+        </div>
+        <div class="row gap-xl">
+          <div class="flex-1">
+            <p>
+              To compose the actions we use the rnbw APIs which are exposed
+              via useRnbw custom hook. As hooks can be used either in a React
+              component or a react custom hook so actions are also react
+              custom hooks.
+            </p>
+          </div>
+          <div class="flex-1">
+            <p>
+              There are two types of actions - internal and external. Internal
+              actions are those which are developed by rnbw team and external
+              actions are developed by the contributors of rnbw.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex-1 column gap-l">
+          <h4 id="findaction">9.2.1 find action purpose</h4>
+          <div class="row gap-xl">
+            <div class="flex-1">
+              <p>
+                Think of a use case which you think will enhance your
+                experience with rnbw. It can be related to something you want
+                to do with your html content or something with the files.
+              </p>
+            </div>
+            <div class="flex-1 column gap-l">
+              <code class="padding-l radius-s background-secondary border">//action examples<br /><br />Remove all the attributes from
+                  an element<br />or<br />Remove all the empty folders in a
+                  project</code>
+            </div>
+          </div>
+        </div>
+        <div class="flex-1 column gap-l">
+          <h4 id="createcustom">9.2.2 create a custom hook</h4>
+          <div class="row gap-xl">
+            <div class="flex-1">
+              <p>
+                All the actions reside inside the "action" folder in the root
+                of the "rnbw". Now head to the actions directory inside rnbw
+                and create a custom hook file for you action.
+              </p>
+            </div>
+            <div class="flex-1 column gap-l">
+              <code class="padding-l radius-s background-secondary border">//syntax<br />rnbw &gt; actions &gt;
+                  use&lt;action&gt;.action.tsx<br /><br />//example<br />rnbw
+                  &gt; actions &gt; useRemoveAllAttributes.action.tsx</code>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h4 id="defineaction">9.2.3 define the action</h4>
+          <div class="row gap-xl">
+            <div class="flex-1">
+              <p>
+                Each action returns a config.The config contains following
+                things:
+              </p>
+              <div class="flex-1">
+                <ul>
+                  <li rnbw-text-element="true">
+                    name: the name of the action
+                  </li>
+                  <li rnbw-text-element="true">
+                    execute: a function that performs the operation expected
+                    from the action. Get everything you need perform your
+                    action using the rnbw api.
+                  </li>
+                  <li rnbw-text-element="true">
+                    description: a short description about what the action
+                    does.
+                  </li>
+                  <li rnbw-text-element="true">
+                    shortcuts: provides a list of shortcuts that can trigger
+                    the action if all the condition are for it to trigger are
+                    met.
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="flex-1 column gap-l">
+              <code class="padding-l radius-s background-secondary border">
+                  <pre>export default function useTurnInto() {    <div>const rnbw = useRnbw();  <div>const selectedElements =   <div>rnbw.elements.getSelectedElements();
+  function turnInto(tagName: string) {
+     /*perform all the steps 
+      the get the desired results.*/
+  }
+
+  const config = {
+    name: "Turn Into",
+    execute: turnInto,
+    description: "Turn selected 
+    elements into a new tag",
+    shortcuts: ["cmd+shift+t"],
+  };
+
+  return config;
+}
+</div></div></div></pre
+                  >
+                </code>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h4 id="usingactions">9.2.4 using actions</h4>
+          <div class="row gap-xl">
+            <div class="flex-1">
+              <p> you can use your custom action similar to any react custom
+                hook in rnbw.
+              </p>
+              <div class="flex-1"></div>
+            </div>
+            <div class="flex-1 column gap-l">
+              <code class="padding-l radius-s background-secondary border">
+                  <pre>
+const action = useTurnInto()
+const actionName = action.name
+const execute = action.execute
+const description = action.description
+const shortcuts = action.shortcuts</pre
+                  >
+                </code>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="column padding-xl width-full gap-xl" style="max-width:1140px">
+        <div id="develop-extensions">
+          <h3>9.3 extensions</h3>
+        </div>
+        <div class="row gap-xl">
+          <div class="flex-1">
+            <p>
+              extensions are created by the rnbw community to extend the
+              functionality of rnbw. extensions can be as simple as showing
+              some information or can be used to perform one or more actions.
+            </p>
+          </div>
+          <div class="flex-1">
+            <p>
+              users and organisations can use the power of extensions to
+              customize and enhance their experience to create more efficient
+              workflows.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="column padding-xl width-full gap-xl" style="max-width:1140px">
+        <div id="develop-contribute">
+          <h3>9.4 contribute</h3>
+        </div>
+        <div class="row gap-xl">
+          <div class="flex-1">
+            <p>
+              a big welcome and thank you for considering contributing to
+              rainbow! contributions are always welcome, and you can quickly
+              get your fix or improvement slated for the next release.
+            </p>
+          </div>
+          <div class="flex-1">
+            <p style="display: inline-block;">
+              the contributors’ community can be found on <a href="https://github.com/orgs/weareunder/discussions">
+                <span style="text-decoration: underline;">github discussions</span></a> where you can ask questions, voice ideas, and
+              share your projects.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <rnbw-footer></rnbw-footer>
+</body>
+<script src="js/rnbw-header.js"></script>
+<script src="js/rnbw-footer.js"></script>
+<script src="js/rnbw-preview.js"></script>
+<script src="js/rnbw-map.js"></script>
+<script src="js/table-of-contents.js"></script>
+
+</html>
