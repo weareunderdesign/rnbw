@@ -1,4 +1,7 @@
 # welcome to rnbw.design
+
+> rnbw was our hand-built, pre-ai design tool. it's no longer actively developed. its ideas live on in [bicycle](https://bicycle.computer) — a bicycle for the mind. rnbw is the predecessor, not the same product.
+
  rnbw.design, including the user guide, our api and developer documentation, serves as our comprehensive design manifesto. rnbw is a powerful design and development tool, and rnbw.design is aimed to help anyone conceptualizing, realizing, and using.
  this repository contains a detailed guide that covers everything from starting your first project in rnbw to doing complex stuff.
 
