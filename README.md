@@ -7,7 +7,7 @@
 
  ## get started
 
-to dive into rnbw, visit [rnbw.design](https://rnbw.design) and explore its potential. for detailed information, go to [rnbw.design](https://rnbw.design).
+rnbw.design is offline. for what came next, see [bicycle](https://bicycle.computer). this repo remains as the source archive of rnbw.
 
 ## our approach
 at rnbw, we are dedicated to a ux-driven approach. this means our priority is the user experience, ensuring we tackle the right challenges. the code? it's just the physical representation of our well-considered designs.
